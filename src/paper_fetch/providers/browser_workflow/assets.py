@@ -109,6 +109,7 @@ def _download_failure_match_tokens(failure: Mapping[str, Any]) -> set[str]:
 
 
 _BROWSER_WORKFLOW_RETRYABLE_ASSET_REASON_TOKENS = (
+    "aws_waf_challenge",
     "browser_context_error",
     "cloudflare_challenge",
     "file_fetch_error",

@@ -22,7 +22,7 @@ from ..extraction.html.provider_rules import (
 from ..models import AssetProfile
 from ..provider_catalog import BodyTextThresholds, ProviderRouteSpec, ProviderSpec
 from ..publisher_identity import normalize_doi
-from ..reason_codes import NOT_CONFIGURED, PDF_FALLBACK
+from ..reason_codes import PDF_FALLBACK
 from ..runtime import RuntimeContext
 from ..utils import empty_asset_results, normalize_text
 from . import _iop_html, browser_workflow
@@ -30,8 +30,6 @@ from ._registry import ProviderBundle, register_provider_bundle
 from .base import (
     ProviderFailure,
     RawFulltextPayload,
-    build_provider_status_check,
-    summarize_capability_status,
 )
 from .browser_runtime import BrowserRuntimeFailure
 
@@ -67,18 +65,6 @@ register_provider_bundle(
                     kind="metadata",
                     source="crossref_metadata",
                     concurrency=2,
-                ),
-                ProviderRouteSpec(
-                    name="tdm_xml",
-                    kind="xml",
-                    source="iop_xml",
-                    implementation_status="unsupported",
-                    rate_policy="endpoint_not_documented",
-                    acceptance_policy="jats_body",
-                    notes=(
-                        "No stable public or credentialed IOP journal-article XML/TDM "
-                        "endpoint was documented in the 2026-07 access review."
-                    ),
                 ),
                 ProviderRouteSpec(
                     name="browser_html",
@@ -218,34 +204,6 @@ class IopClient(browser_workflow.BrowserWorkflowClient):
         "abstract_only",
         "metadata_only",
     )
-
-    def probe_status(self):
-        runtime = super().probe_status()
-        return summarize_capability_status(
-            self.name,
-            official_provider=self.official_provider,
-            checks=[
-                *runtime.checks,
-                build_provider_status_check(
-                    "tdm_xml",
-                    NOT_CONFIGURED,
-                    (
-                        "IOP XML/TDM is not configured: the access review did not "
-                        "identify a stable official journal-article endpoint. "
-                        "Browser HTML/PDF routes remain available when their runtime is ready."
-                    ),
-                    details={
-                        "implementation_status": "unsupported",
-                        "reviewed_at": "2026-07-28",
-                        "network_checked": False,
-                    },
-                ),
-            ],
-            notes=[
-                *runtime.notes,
-                "IOP supplementary files remain public article assets; this does not imply a journal-article TDM XML API.",
-            ],
-        )
 
     def html_candidates(self, doi: str, metadata: Mapping[str, Any]) -> list[str]:
         normalized_doi = normalize_doi(doi)

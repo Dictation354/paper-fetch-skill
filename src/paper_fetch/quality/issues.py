@@ -13,6 +13,7 @@ from ..models import (
     filtered_body_sections,
     strip_markdown_images,
 )
+from ..extraction.html.semantics import normalize_heading
 from ..provider_catalog import provider_for_source, sources_by_provider
 from ..publisher_identity import ASCII_DOI_CORE_PATTERN
 from ..section_vocab import PRIMARY_ABSTRACT_HEADINGS
@@ -145,8 +146,6 @@ def collect_issue_flags(
         )
     ):
         issue_flags.append("empty_authors")
-    if len(envelope.warnings) >= 3:
-        issue_flags.append("high_warning_count")
     return sorted(set(issue_flags))
 
 
@@ -190,20 +189,29 @@ def has_inflated_abstract(
 
 
 def is_authorless_briefing_like(article: Any, *, provider: str | None = None) -> bool:
-    headings = [
-        normalize_text(getattr(section, "heading", "")).lower()
-        for section in filtered_body_sections(getattr(article, "sections", []) or [])
-        if normalize_text(getattr(section, "heading", ""))
-    ]
-    if not headings:
-        return False
     provider_name = (
         provider
         or provider_for_source(getattr(article, "source", ""))
         or getattr(article, "source", "")
     )
+    normalized_provider = normalize_text(provider_name).lower()
     signatures = authorless_heading_signatures_for_provider(provider_name)
     if not signatures:
+        return False
+    metadata = getattr(article, "metadata", None)
+    article_type = normalize_heading(
+        normalize_text(getattr(metadata, "article_type", None))
+    )
+    if normalized_provider in {"springer", "nature", "springer_nature"} and (
+        article_type == "research briefing"
+    ):
+        return True
+    headings = [
+        normalize_heading(normalize_text(getattr(section, "heading", "")))
+        for section in filtered_body_sections(getattr(article, "sections", []) or [])
+        if normalize_text(getattr(section, "heading", ""))
+    ]
+    if not headings:
         return False
     heading_set = set(headings)
     return any(

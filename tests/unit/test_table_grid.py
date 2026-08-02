@@ -97,8 +97,12 @@ def test_html_jats_and_cals_share_multilevel_header_contract() -> None:
     assert jats.rows == expected_rows
     assert cals.headers == expected_headers
     assert cals.rows == expected_rows
-    assert jats.status == TableConversionStatus.LAYOUT_DEGRADED
-    assert cals.status == TableConversionStatus.LAYOUT_DEGRADED
+    assert jats.status == TableConversionStatus.NORMALIZED
+    assert cals.status == TableConversionStatus.NORMALIZED
+    assert TableConversionReason.MERGED_SPAN_EXPANDED in jats.reasons
+    assert TableConversionReason.MERGED_SPAN_EXPANDED in cals.reasons
+    assert not jats.layout_degraded
+    assert not cals.layout_degraded
 
 
 def test_full_width_groups_are_normalized_without_layout_degradation() -> None:

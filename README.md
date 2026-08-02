@@ -76,7 +76,8 @@ agent 安装 skill 后，可以识别 `paper-fetch-skill` 的适用边界，并�
 
 - Windows：下载并运行 `paper-fetch-skill-windows-x86_64-setup.exe`。
 - Linux：下载匹配 Python ABI 的 `paper-fetch-skill-offline-linux-x86_64-cp*.sh`。
-- macOS：下载匹配架构和 Python ABI 的 `paper-fetch-skill-offline-macos-<arch>-cp*.tar.gz`。
+- macOS：在 macOS 15+ Apple Silicon 上下载匹配 Python ABI 的
+  `paper-fetch-skill-offline-macos-arm64-cp*.tar.gz`。
 
 每个 `v*` Release 同时提供 `SHA256SUMS`、CycloneDX SBOM 和 GitHub build-provenance attestation。
 
@@ -122,6 +123,14 @@ source ~/.local/share/paper-fetch-skill/activate-offline.sh
 paper-fetch --help
 ```
 
+安装器会在修改 shell、skill、MCP 或用户配置前检查 arm64、标准 GIL CPython
+ABI 与解释器架构、最低 macOS 15.0、checksum，并递归检查整个 bundle 的
+quarantine。安装目标只允许不存在、空目录或带 ownership manifest 和安装标记的
+已有目录。若从浏览器下载的 bundle 因 quarantine
+被拒绝，请先核验 Release 来源与 `SHA256SUMS`，再按安装器提示显式执行
+`xattr -dr com.apple.quarantine <解压后的-bundle>` 后重试；安装器不会静默
+绕过 Gatekeeper。
+
 完整安装、升级、卸载和离线包矩阵见 [`docs/deployment.md`](docs/deployment.md)。
 
 ### 2. 抓取一篇论文
@@ -130,7 +139,7 @@ paper-fetch --help
 paper-fetch --query "10.1186/1471-2105-11-421" --output-dir ./papers
 ```
 
-未显式传 `--output` 且指定 `--output-dir` 时，CLI 会把主输出写到该目录，不向 stdout 打印正文。默认文件名使用安全化的论文 stem，优先包含作者、年份和标题；元数据不足时回退 DOI 或标题。需要精确路径时使用 `--output ./papers/article.md`。
+未显式传 `--output` 且指定 `--output-dir` 时，CLI 会把主输出写到该目录，不向 stdout 打印正文。默认文件名使用安全化的论文 stem，优先包含作者、年份和标题；元数据不足时回退 DOI，仍无法识别时使用规范化 query 的短 SHA-256 摘要，避免批量任务中的匿名文件名冲突且不暴露完整 URL。需要精确路径时使用 `--output ./papers/article.md`。
 
 ### 3. 批量抓取
 
@@ -162,25 +171,34 @@ paper-fetch --query-file ./queries.txt \
 带配置文件注册：
 
 ```bash
+# Linux
 ./scripts/install-codex-skill.sh --register-mcp --env-file ~/.config/paper-fetch/.env
+
+# macOS
+./scripts/install-codex-skill.sh --register-mcp \
+  --env-file "$HOME/Library/Application Support/paper-fetch/.env"
 ```
 
 只安装到当前项目可加 `--project`。安装后重启对应 host，让它重新扫描 skills 和 MCP 配置。手动 MCP 注册和各 host 路径细节见 [`docs/deployment.md`](docs/deployment.md)。
 
 ## 常用配置
 
-默认配置文件位置：
+默认配置文件位置由 `platformdirs` 决定：
 
 ```text
-~/.config/paper-fetch/.env
+Linux: ~/.config/paper-fetch/.env
+macOS: ~/Library/Application Support/paper-fetch/.env
 ```
 
-创建配置文件：
+Linux 创建配置文件：
 
 ```bash
 mkdir -p ~/.config/paper-fetch
 cp .env.example ~/.config/paper-fetch/.env
 ```
+
+macOS 可用离线安装器的 `--user-config` 合并受管理配置块，或自行创建
+`~/Library/Application Support/paper-fetch/.env`。
 
 Elsevier 官方 XML/API 和 PDF fallback 需要从 <https://dev.elsevier.com/> 申请 key：
 
@@ -188,12 +206,24 @@ Elsevier 官方 XML/API 和 PDF fallback 需要从 <https://dev.elsevier.com/> �
 ELSEVIER_API_KEY="..."
 ```
 
-部分 browser-backed provider 可能需要本机 browser runtime 或手动登录态。默认 Camoufox 在第一次实际抓取时可按需下载 runtime；静态诊断不会下载。需要预检或登录时可运行：
+部分 browser-backed provider 需要本机 browser runtime 或手动登录态。离线包只
+包含 Camoufox / Playwright 的 Python 包，不包含 Camoufox 浏览器 binary；fetch
+不会自动下载浏览器。进入受限网络或离线环境前，必须在联网状态先用离线
+runtime 下载 Camoufox binary，再运行 `browser-preflight` 验证 provider：
 
 ```bash
+source ~/.local/share/paper-fetch-skill/activate-offline.sh
+python -m camoufox fetch
 paper-fetch browser-preflight
 paper-fetch auth wiley
 ```
+
+不想依赖已激活 shell 时，也可以运行
+`~/.local/share/paper-fetch-skill/runtime/paper-fetch-python -m camoufox fetch`。
+`browser-preflight` 会访问网络并启动浏览器做验证，但不会代替
+`python -m camoufox fetch` 下载 binary。当前原生 Mac 验证覆盖 Python 包导入
+和在线准备入口，尚未关闭“预置后真正断网启动 Camoufox”的审计项，因此 macOS
+tarball 不能被描述为完整离线浏览器包。
 
 当前 browser-backed auth/preflight provider 包括 `wiley`、`science`、`pnas`、`ams`、`mdpi`、`royalsocietypublishing`、`annualreviews`、`acs`、`iop`、`aip`。AMS 默认直接启动 Camoufox 尝试站点的静默 JavaScript 验证；已有 provider storage-state 时会自动复用，静默验证失败时可运行 `paper-fetch auth ams` 完成人工验证并保存状态。完整 provider、运行时和环境变量说明见 [`docs/providers.md`](docs/providers.md) 与 [`docs/browser-runtime.md`](docs/browser-runtime.md)。
 
@@ -203,6 +233,8 @@ paper-fetch auth wiley
 - [`docs/browser-backends.md`](docs/browser-backends.md)：后端选择、Camoufox runtime、headed 认证、离线准备和 live 验收。
 - [`docs/cli.md`](docs/cli.md)：CLI 输出、artifact、批量抓取和错误码。
 - [`docs/providers.md`](docs/providers.md)：provider 能力、环境变量和运行时配置。
+- [`docs/macos-adaptation-changes.md`](docs/macos-adaptation-changes.md)：v4 Mac 适配变更、边界和从 Windows / WSL 同步上游的流程。
+- [`docs/macos-adaptation-audit.md`](docs/macos-adaptation-audit.md)：Windows、WSL、原生 Mac 的证据矩阵与开放审计项。
 - [`docs/README.md`](docs/README.md)：完整文档导航。
 - [`docs/architecture/overview.md`](docs/architecture/overview.md)：架构边界和维护者视角。
 - [`onboarding/README.md`](onboarding/README.md)：自助添加新 provider。

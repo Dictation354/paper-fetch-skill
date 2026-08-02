@@ -17,6 +17,7 @@ from ._article_markdown_xml import (
     normalize_compact_text,
     xml_local_name,
 )
+from ..extraction.table_grid import TableConversionStatus
 from ..extraction.markdown_render.figures import add_figure_once, render_figure_block
 from ..extraction.markdown_render.tables import (
     add_table_once,
@@ -57,6 +58,7 @@ __all__ = [
     "render_inline_text",
     "render_structured_table_block",
     "render_table_block",
+    "table_conversion_note",
     "xml_local_name",
 ]
 
@@ -233,6 +235,25 @@ def fallback_table_heading(raw_value: str | None) -> str:
     if match:
         return f"Table {match.group(1)}"
     return normalized
+
+
+def table_conversion_note(status: TableConversionStatus) -> str | None:
+    """Return a user-facing note only when table conversion really degraded."""
+
+    if status == TableConversionStatus.LAYOUT_DEGRADED:
+        return (
+            "Source table span or column metadata was invalid or inconsistent and "
+            "was repaired during Markdown conversion; cell text was retained, but "
+            "the source layout could not be verified exactly."
+        )
+    if status == TableConversionStatus.FALLBACK:
+        return (
+            "Irregular table structure could not be represented as a reliable "
+            "Markdown grid; cell text was retained as a readable list."
+        )
+    if status == TableConversionStatus.SEMANTIC_LOSS:
+        return "Some table content could not be preserved during Markdown conversion."
+    return None
 
 
 def normalize_lines(lines: list[str]) -> str:

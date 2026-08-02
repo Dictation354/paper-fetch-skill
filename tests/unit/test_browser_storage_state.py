@@ -178,7 +178,7 @@ def test_storage_state_lock_timeout_preserves_existing_file(tmp_path: Path) -> N
         },
     )
     runtime_context = RuntimeContext(env={})
-    runtime_context.ensure_deadline(0.01)
+    runtime_context.initialize_deadline(0.01)
     locked = mock.Mock()
     locked.acquire.side_effect = FileLockTimeout(str(config.storage_state_path))
 

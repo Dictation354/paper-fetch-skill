@@ -95,7 +95,6 @@ def _envelope(
         else trace
     )
     article.quality.asset_failures = list(asset_failures or [])
-    article.quality.trace = events
     article.quality.source_trail = source_trail_from_trace(events)
     apply_quality_assessment(
         article,
@@ -115,7 +114,7 @@ def _envelope(
         has_abstract=article.quality.has_abstract,
         warnings=article.quality.warnings,
         source_trail=article.quality.source_trail,
-        trace=article.quality.trace,
+        trace=events,
         token_estimate=article.quality.token_estimate,
         quality=article.quality,
         article=article if include_article else None,
@@ -322,9 +321,9 @@ def test_asset_summary_extension_preserves_preview_placeholder_and_archive_facts
     assert report.asset.placeholder_suspected == 1
     assert report.asset.not_archived == 1
     assert set(report.provenance.warning_codes) >= {
-        "asset_preview",
+        "asset_fidelity_degraded",
         "asset_placeholder_suspected",
-        "asset_not_archived",
+        "asset_remote_only",
     }
 
 
@@ -466,13 +465,43 @@ def test_asset_trace_failure_is_not_misclassified_as_fetch_fallback() -> None:
     assert report.overall == OverallAcceptanceStatus.DEGRADED
 
 
+def test_audited_body_assets_ignore_remote_only_unrequested_supplements() -> None:
+    summary = AssetAcceptanceSummary(
+        requested=True,
+        profile="body",
+        audited=True,
+        discovered=1,
+        total=1,
+        remote_link_count=1,
+        remote_only_count=1,
+        issue_codes=(),
+    )
+
+    report = evaluate_fetch_acceptance(
+        _envelope(),
+        asset_profile="body",
+        asset_summary=summary,
+    )
+
+    assert report.asset.status == AssetAcceptanceStatus.COMPLETE
+    assert report.asset.issue_codes == ()
+    assert report.overall == OverallAcceptanceStatus.COMPLETE
+
+
 def test_warning_message_text_is_never_used_as_a_classifier() -> None:
     report = evaluate_fetch_acceptance(
-        _envelope(warnings=["formula missing table failed no_access"]),
+        _envelope(
+            warnings=[
+                "HTML route was unavailable.",
+                "PDF fallback succeeded.",
+                "PDF artifact was saved.",
+                "formula missing table failed no_access",
+            ]
+        ),
         asset_profile="none",
     )
 
-    assert report.provenance.unstructured_warning_count == 1
+    assert report.provenance.unstructured_warning_count == 4
     assert report.provenance.warning_codes == ()
     assert report.provenance.failure_codes == ()
     assert report.overall == OverallAcceptanceStatus.COMPLETE
@@ -545,6 +574,35 @@ def test_recovered_rate_limit_remains_structured_degradation() -> None:
     assert report.overall == OverallAcceptanceStatus.DEGRADED
 
 
+def test_recovered_metadata_lookup_failure_does_not_degrade_fulltext() -> None:
+    report = evaluate_fetch_acceptance(
+        _envelope(
+            trace=[
+                trace_event("resolve", "doi_selected", "ok"),
+                trace_event(
+                    "metadata",
+                    "crossref",
+                    "fail",
+                    code="crossref_not_found",
+                    provider="crossref",
+                    route="api",
+                ),
+                trace_event(
+                    "fulltext",
+                    "arxiv_html",
+                    "ok",
+                    provider="arxiv",
+                    route="html",
+                ),
+            ]
+        ),
+        asset_profile="none",
+    )
+
+    assert report.provenance.failure_codes == ()
+    assert report.overall == OverallAcceptanceStatus.COMPLETE
+
+
 def test_same_envelope_has_identical_acceptance_after_existing_payload_adapters() -> (
     None
 ):
@@ -592,22 +650,22 @@ def test_same_envelope_has_identical_acceptance_after_existing_payload_adapters(
     assert adapted == direct
 
 
-def test_report_round_trip_schema_and_additive_v1_compatibility() -> None:
+def test_report_round_trip_schema_and_additive_v2_compatibility() -> None:
     report = evaluate_fetch_acceptance(_envelope(), asset_profile="none")
     payload = json.loads(report.to_json())
     schema = fetch_acceptance_json_schema()
 
     Draft202012Validator.check_schema(schema)
     Draft202012Validator(schema).validate(payload)
-    assert payload["schema_version"] == 1
-    assert payload["minimum_reader_schema_version"] == 1
+    assert payload["schema_version"] == 2
+    assert payload["minimum_reader_schema_version"] == 2
     assert parse_fetch_acceptance_report(payload) == report
 
-    payload["future_additive_field"] = {"accepted_by_v1_reader": True}
+    payload["future_additive_field"] = {"accepted_by_v2_reader": True}
     assert parse_fetch_acceptance_report(payload) == report
 
 
-@pytest.mark.parametrize("schema_version", [None, 2])
+@pytest.mark.parametrize("schema_version", [None, 1, 3])
 def test_missing_or_incompatible_schema_version_is_rejected(
     schema_version: int | None,
 ) -> None:

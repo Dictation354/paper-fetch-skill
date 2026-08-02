@@ -9,9 +9,11 @@ from paper_fetch.extraction.html.signals import (
     MARKDOWN_ACCESS_NOISE_LABELS,
     detect_html_access_signals,
     detect_html_block,
+    detect_challenge_provider,
     html_failure_message,
     matched_access_gate_patterns,
     summarize_html,
+    summarize_visible_html,
 )
 from paper_fetch.quality.html_signals import (
     AAAS_DATALAYER_PATTERN,
@@ -61,9 +63,34 @@ class HtmlAccessSignalsTests(unittest.TestCase):
         )
 
         self.assertEqual(
-            detect_html_access_signals("", text, 202),
-            ["cloudflare_challenge"],
+            detect_html_access_signals(
+                "",
+                text,
+                202,
+                html_text=(
+                    "<html><script src='https://example.token.awswaf.com/"
+                    "challenge.js'></script><noscript>" + text + "</noscript></html>"
+                ),
+                response_headers={"x-amzn-waf-action": "challenge"},
+            ),
+            ["aws_waf_challenge"],
         )
+        self.assertEqual(
+            detect_challenge_provider(
+                html_text="<script src='https://example.token.awswaf.com/challenge.js'>",
+            ),
+            "aws_waf",
+        )
+
+    def test_visible_html_summary_drops_hidden_challenge_fallbacks(self) -> None:
+        html = (
+            "<html><body><article id='article'>Full IEEE text</article>"
+            "<noscript>JavaScript is disabled; verify you're not a robot.</noscript>"
+            "<script>const captcha = true;</script></body></html>"
+        )
+
+        self.assertEqual(summarize_visible_html(html), "Full IEEE text")
+        self.assertIn("not a robot", summarize_html(html))
 
     def test_detect_html_block_treats_check_access_as_paywall(self) -> None:
         failure = detect_html_block(

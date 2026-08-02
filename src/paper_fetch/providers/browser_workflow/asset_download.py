@@ -342,6 +342,114 @@ def _annotate_split_browser_recovery(
     }
 
 
+def _attempt_from_failure(
+    stage: str,
+    failure: Mapping[str, Any],
+    *,
+    browser_backend: str = "",
+) -> dict[str, Any]:
+    diagnostic = failure.get("diagnostic")
+    details = diagnostic if isinstance(diagnostic, Mapping) else {}
+    status = failure.get("status", failure.get("status_code"))
+    if status is None:
+        status = details.get("status", details.get("status_code"))
+    return {
+        key: value
+        for key, value in {
+            "stage": stage,
+            "browser_backend": browser_backend or None,
+            "status": status,
+            "content_type": failure.get("content_type") or details.get("content_type"),
+            "reason": failure.get("reason") or details.get("reason"),
+            "error_category": failure.get("error_category")
+            or details.get("error_category"),
+        }.items()
+        if value not in (None, "")
+    }
+
+
+def _matching_failure(
+    asset: Mapping[str, Any], failures: list[dict[str, Any]]
+) -> Mapping[str, Any] | None:
+    asset_tokens = _download_asset_match_tokens(asset)
+    return next(
+        (
+            failure
+            for failure in failures
+            if asset_tokens & _download_asset_match_tokens(failure)
+        ),
+        None,
+    )
+
+
+def _annotate_split_preview_fallback(
+    result: Mapping[str, Any],
+    *,
+    direct_failures: list[dict[str, Any]],
+    browser_failures: list[dict[str, Any]],
+) -> dict[str, list[dict[str, Any]]]:
+    assets = [dict(asset) for asset in list(result.get("assets") or [])]
+    failures = [dict(failure) for failure in list(result.get("asset_failures") or [])]
+
+    for outcome, recovered in [
+        *((asset, True) for asset in assets),
+        *((failure, False) for failure in failures),
+    ]:
+        direct_failure = _matching_failure(outcome, direct_failures)
+        browser_failure = _matching_failure(outcome, browser_failures)
+        browser_backend = normalize_text(
+            str(
+                outcome.get("browser_backend")
+                or (browser_failure or {}).get("browser_backend")
+                or ""
+            )
+        )
+        attempts: list[dict[str, Any]] = []
+        if direct_failure is not None:
+            attempts.append(_attempt_from_failure("direct", direct_failure))
+        if browser_failure is not None:
+            attempts.append(
+                _attempt_from_failure(
+                    "browser",
+                    browser_failure,
+                    browser_backend=browser_backend,
+                )
+            )
+        if recovered:
+            final_fetcher = normalize_text(
+                str(
+                    outcome.get("final_fetcher")
+                    or browser_backend
+                    or "selected_browser"
+                )
+            )
+            attempts.append(
+                {
+                    key: value
+                    for key, value in {
+                        "stage": "preview_fallback",
+                        "browser_backend": browser_backend or None,
+                        "content_type": outcome.get("content_type"),
+                        "reason": "recovered",
+                        "final_fetcher": final_fetcher,
+                    }.items()
+                    if value not in (None, "")
+                }
+            )
+        else:
+            attempts.append(
+                _attempt_from_failure(
+                    "preview_fallback",
+                    outcome,
+                    browser_backend=browser_backend,
+                )
+            )
+        if attempts:
+            outcome["recovery_attempts"] = attempts
+
+    return {"assets": assets, "asset_failures": failures}
+
+
 def _asset_profile_from_plan_profile(profile: Any) -> AssetProfile:
     value: Any
     if isinstance(profile, Mapping):
@@ -489,6 +597,18 @@ def _run_browser_asset_download_attempt(
         seed_urls_getter=seed_urls_getter,
         fetcher_factory=file_fetcher_factory,
     )
+    figure_page_browser_requires_caller_thread = bool(
+        recovery.runtime is not None
+        and normalize_text(str(getattr(recovery.runtime, "backend", ""))).lower()
+        == "camoufox"
+        and normalize_text(recovery.provider).lower()
+        in _SILVERCHAIR_FIGURE_PAGE_PROVIDERS
+    )
+    body_asset_download_concurrency = (
+        1
+        if figure_page_browser_requires_caller_thread
+        else attempt_settings.get("asset_download_concurrency")
+    )
     try:
 
         def download_body_assets() -> Mapping[str, Any]:
@@ -500,6 +620,7 @@ def _run_browser_asset_download_attempt(
                 plan.candidate_builder
                 or deps._browser_workflow_image_download_candidates
             )
+            is_ieee_recovery = normalize_text(recovery.provider).lower() == "ieee"
             common_kwargs = {
                 "article_id": plan.article_id,
                 "output_dir": plan.output_dir,
@@ -517,9 +638,7 @@ def _run_browser_asset_download_attempt(
                     assets=attempt_body_assets,
                     candidate_builder=base_candidate_builder,
                     image_document_fetcher=image_document_fetcher,
-                    asset_download_concurrency=attempt_settings.get(
-                        "asset_download_concurrency"
-                    ),
+                    asset_download_concurrency=body_asset_download_concurrency,
                     fetch_policy=plan.fetch_policy,
                     **common_kwargs,
                 )
@@ -533,9 +652,7 @@ def _run_browser_asset_download_attempt(
                 assets=attempt_body_assets,
                 candidate_builder=full_candidate_builder,
                 image_document_fetcher=None,
-                asset_download_concurrency=attempt_settings.get(
-                    "asset_download_concurrency"
-                ),
+                asset_download_concurrency=body_asset_download_concurrency,
                 fetch_policy="direct_then_browser",
                 **common_kwargs,
             )
@@ -561,12 +678,18 @@ def _run_browser_asset_download_attempt(
                     fetch_policy="browser_first",
                     **common_kwargs,
                 )
+                browser_failures = [
+                    dict(failure)
+                    for failure in list(browser_result.get("asset_failures") or [])
+                ]
                 browser_result = _annotate_split_browser_recovery(
                     browser_result, eligible_failures
                 )
                 merged_result = _merge_download_attempt_results(
                     direct_result, browser_result
                 )
+            else:
+                browser_failures = []
 
             preview_assets = [
                 asset
@@ -592,9 +715,21 @@ def _run_browser_asset_download_attempt(
                 ),
                 image_document_fetcher=image_document_fetcher,
                 asset_download_concurrency=1,
-                fetch_policy="direct_then_browser",
+                fetch_policy=(
+                    "browser_first"
+                    if is_ieee_recovery
+                    and image_document_fetcher is not None
+                    and browser_failures
+                    else "direct_then_browser"
+                ),
                 **common_kwargs,
             )
+            if is_ieee_recovery:
+                preview_result = _annotate_split_preview_fallback(
+                    preview_result,
+                    direct_failures=eligible_failures,
+                    browser_failures=browser_failures,
+                )
             return _merge_download_attempt_results(merged_result, preview_result)
 
         def download_supplementary_assets() -> Mapping[str, Any]:

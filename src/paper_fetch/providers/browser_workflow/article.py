@@ -18,8 +18,6 @@ from ...publisher_identity import normalize_doi
 from ...runtime import RuntimeContext
 from ...tracing import (
     fulltext_marker,
-    merge_trace,
-    source_trail_from_trace,
     trace_from_markers,
 )
 from ...utils import dedupe_authors, extend_unique, normalize_text
@@ -306,9 +304,6 @@ def _finalize_abstract_only_provider_article(
     warnings: list[str] | None = None,
 ):
     marker = fulltext_marker(provider_name, ABSTRACT_ONLY)
-    article.quality.trace = merge_trace(
-        article.quality.trace, trace_from_markers([marker])
-    )
-    article.quality.source_trail = source_trail_from_trace(article.quality.trace)
+    extend_unique(article.quality.source_trail, [marker])
     extend_unique(article.quality.warnings, list(warnings or []))
     return article

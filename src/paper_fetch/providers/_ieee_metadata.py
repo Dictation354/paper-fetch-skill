@@ -17,7 +17,6 @@ from ..publisher_identity import normalize_doi
 from ..reason_codes import PDF_FALLBACK
 from ..tracing import fulltext_marker, trace_from_markers
 from ..utils import dedupe_authors, normalize_text, strip_html_tags
-from ._asset_retry import merge_asset_retry_results
 from ._html_authors import AuthorExtractionPipeline, AuthorStep
 from ._ieee_url import (
     IEEE_REFERENCES_URL_TEMPLATE,
@@ -579,10 +578,9 @@ def build_ieee_article_model(
             *ieee_html.IEEE_DOWNLOAD_MERGE_FIELDS,
         ),
     )
-    assets = merge_asset_retry_results(
+    assets = ieee_html.reconcile_ieee_downloaded_assets(
         extracted_assets,
         downloaded_asset_results,
-        policy=ieee_html.IEEE_ASSET_RETRY_POLICY,
     )
     availability_diagnostics = (
         dict(content.diagnostics.get("availability_diagnostics") or {})

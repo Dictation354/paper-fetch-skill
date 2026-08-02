@@ -62,6 +62,34 @@ def _fixed_deps(
     )
 
 
+def _build_record(
+    tmp_path: Path,
+    *,
+    args: argparse.Namespace | None = None,
+    result: cli.SingleFetchResult | None = None,
+    error: Exception | None = None,
+):
+    deps = _fixed_deps()
+    return cli._build_cli_manifest_record(
+        cli.CliManifestBuildContext(
+            args=args or _args(),
+            output_dir=tmp_path,
+            artifact_mode="none",
+            run_id=RUN_ID,
+            tool_version="3.1.0",
+            deps=deps,
+        ),
+        cli.CliManifestAttempt(
+            index=1,
+            query="10.1000/acceptance",
+            started_at=STARTED_AT,
+            completed_at=COMPLETED_AT,
+        ),
+        result=result,
+        error=error,
+    )
+
+
 def test_single_manifest_is_explicit_atomic_and_hashes_final_output(
     tmp_path: Path,
 ) -> None:
@@ -301,19 +329,7 @@ def test_failed_manifest_preserves_managed_chrome_stage_code_and_summary(
         ],
     )
 
-    record = cli._build_cli_manifest_record(
-        _args(),
-        index=1,
-        query="10.1000/acceptance",
-        output_dir=tmp_path,
-        artifact_mode="none",
-        run_id=RUN_ID,
-        tool_version="3.1.0",
-        started_at=STARTED_AT,
-        completed_at=COMPLETED_AT,
-        error=error,
-        deps=_fixed_deps(),
-    )
+    record = _build_record(tmp_path, error=error)
 
     assert record.record_status == ManifestRecordStatus.FAILED
     assert record.error is not None
@@ -340,18 +356,9 @@ def test_successful_pdf_fallback_keeps_html_browser_failure_degraded(
         ]
     )
 
-    record = cli._build_cli_manifest_record(
-        _args(),
-        index=1,
-        query="10.1000/acceptance",
-        output_dir=tmp_path,
-        artifact_mode="none",
-        run_id=RUN_ID,
-        tool_version="3.1.0",
-        started_at=STARTED_AT,
-        completed_at=COMPLETED_AT,
+    record = _build_record(
+        tmp_path,
         result=cli.SingleFetchResult(envelope),
-        deps=_fixed_deps(),
     )
 
     assert record.status == "ok"
@@ -406,18 +413,10 @@ def test_cli_adapter_exposes_fulltext_limited_and_asset_acceptance(
     asset_status: AssetAcceptanceStatus,
 ) -> None:
     args = _args(asset_profile=asset_profile)
-    record = cli._build_cli_manifest_record(
-        args,
-        index=1,
-        query="10.1000/acceptance",
-        output_dir=tmp_path,
-        artifact_mode="none",
-        run_id=RUN_ID,
-        tool_version="3.1.0",
-        started_at=STARTED_AT,
-        completed_at=COMPLETED_AT,
+    record = _build_record(
+        tmp_path,
+        args=args,
         result=cli.SingleFetchResult(envelope),
-        deps=_fixed_deps(),
     )
 
     assert record.status == "ok"
@@ -434,18 +433,9 @@ def test_cli_adapter_publishes_semantic_losses(tmp_path: Path) -> None:
             formula_missing_count=3,
         )
     )
-    record = cli._build_cli_manifest_record(
-        _args(),
-        index=1,
-        query="10.1000/acceptance",
-        output_dir=tmp_path,
-        artifact_mode="none",
-        run_id=RUN_ID,
-        tool_version="3.1.0",
-        started_at=STARTED_AT,
-        completed_at=COMPLETED_AT,
+    record = _build_record(
+        tmp_path,
         result=cli.SingleFetchResult(envelope),
-        deps=_fixed_deps(),
     )
 
     assert record.semantic_losses.table_fallback_count == 2

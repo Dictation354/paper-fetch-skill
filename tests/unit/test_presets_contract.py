@@ -704,7 +704,9 @@ class PresetRuntimeContractTests(unittest.TestCase):
                 )
 
             self.assertEqual(local["status"], "hit")
-            self.assertEqual(local["preferred"]["markdown"]["path"], str(markdown_path))
+            self.assertEqual(
+                local["preferred"]["markdown"]["path"], str(markdown_path.resolve())
+            )
             create_connection.assert_not_called()
 
             create_cached_fetch_envelope(

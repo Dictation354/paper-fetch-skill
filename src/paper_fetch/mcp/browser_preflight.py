@@ -12,56 +12,26 @@ from mcp.server.mcpserver import Context
 from mcp.types import CallToolResult
 
 from ..provider_catalog import browser_preflight_provider_names
-from ..browser_preflight import BrowserPreflightResult
+from ..browser_preflight import (
+    BrowserPreflightResult,
+    BrowserPreflightRuntimeOptions,
+    browser_preflight_next_action,
+)
 from ..utils import normalize_text
 from ._deps import MCPDeps, default_mcp_deps
 from .batch import report_progress, run_blocking_call
 from .results import _tool_result, error_payload_from_exception, with_schema_version
 from .schemas import BrowserPreflightRequest
 
-_CHALLENGE_REASON_CODES = {
-    "cloudflare_challenge",
-    "iop_captcha_challenge",
-    "iop_radware_challenge",
-}
-_AUTH_REQUIRED_REASON_CODES = {
-    "abstract_only",
-    "no_access",
-    "publisher_access_denied",
-    "publisher_paywall",
-    "redirected_to_abstract",
-}
-_CANCELLED_REASON_CODES = {"cancelled", "request_cancelled"}
 _PREFLIGHT_STATUSES = (
     "ready",
     "challenge",
     "auth_required",
+    "network_timeout",
+    "extraction_error",
     "runtime_error",
     "cancelled",
 )
-
-
-def _preflight_status(result: BrowserPreflightResult) -> str:
-    if result.ok:
-        return "ready"
-    reason_code = normalize_text(result.reason).lower()
-    if reason_code in _CANCELLED_REASON_CODES:
-        return "cancelled"
-    if reason_code in _CHALLENGE_REASON_CODES:
-        return "challenge"
-    if reason_code in _AUTH_REQUIRED_REASON_CODES:
-        return "auth_required"
-    return "runtime_error"
-
-
-def _next_action(provider: str, status: str) -> str:
-    if status == "ready":
-        return "run the requested fetch"
-    if status in {"challenge", "auth_required"}:
-        return f"paper-fetch auth {provider}"
-    if status == "cancelled":
-        return f"rerun browser_preflight for {provider}"
-    return f"inspect provider_status for {provider}, fix local runtime, then retry"
 
 
 def _storage_state_payload(
@@ -91,28 +61,23 @@ def _result_payload(
     detail: str,
     save_storage_state: bool,
 ) -> dict[str, Any]:
-    status = _preflight_status(result)
-    reason_code = normalize_text(result.reason).lower() or (
-        "browser_preflight_ready" if result.ok else "browser_preflight_failed"
-    )
-    reason = normalize_text(result.message) or (
-        "Publisher browser HTML preflight completed successfully."
-        if result.ok
-        else "Publisher browser HTML preflight failed."
-    )
     compact = {
         "provider": result.provider,
-        "status": status,
-        "reason_code": reason_code,
-        "reason": reason,
-        "next_action": _next_action(result.provider, status),
+        "status": result.status,
+        "reason_code": result.reason_code,
+        "stage": result.stage,
+        "message": result.message,
+        "next_action": browser_preflight_next_action(
+            result.provider,
+            result.status,
+        ),
     }
     if detail == "compact":
         return compact
     return {
         **compact,
         "provider_label": result.provider_label,
-        "ready": result.ok,
+        "ready": result.ready,
         "target_url": result.target_url,
         "final_url": result.final_url,
         "title": result.title,
@@ -143,7 +108,16 @@ def _response_payload(
     }
     if counts["cancelled"]:
         overall_status = "cancelled"
-    elif counts["runtime_error"] or counts["auth_required"] or counts["challenge"]:
+    elif any(
+        counts[status]
+        for status in (
+            "runtime_error",
+            "extraction_error",
+            "network_timeout",
+            "auth_required",
+            "challenge",
+        )
+    ):
         overall_status = "partial" if counts["ready"] else "action_required"
     else:
         overall_status = "ready"
@@ -206,7 +180,6 @@ def browser_preflight_payload(
         providers=[request.provider] if request.provider is not None else None,
         timeout_ms=request.timeout_ms,
         browser_user_agent=request.browser_user_agent,
-        env=env,
         cancel_check=cancel_check,
         target_url=request.test_url,
         storage_state_path=(
@@ -217,6 +190,7 @@ def browser_preflight_payload(
         save_storage_state=request.save_storage_state,
         cancel_as_result=True,
         on_result=on_result,
+        runtime_options=BrowserPreflightRuntimeOptions(env=env),
     )
     return _response_payload(results, request=request)
 
@@ -257,13 +231,12 @@ async def browser_preflight_tool_async(
     loop = asyncio.get_running_loop()
 
     def on_result(result: BrowserPreflightResult, completed: int, count: int) -> None:
-        status = _preflight_status(result)
         future = asyncio.run_coroutine_threadsafe(
             report_progress(
                 ctx,
                 completed,
                 count,
-                f"Preflight {result.provider}: {status}",
+                f"Preflight {result.provider}: {result.status}",
             ),
             loop,
         )

@@ -2160,38 +2160,6 @@
           ]
         },
         {
-          "acceptance_policy": "jats_body",
-          "asset_scope": "body",
-          "auth_supported": false,
-          "browser_optional": false,
-          "browser_preflight": false,
-          "browser_required": false,
-          "concurrency": 2,
-          "hosts": [
-            "iopscience.iop.org"
-          ],
-          "implementation_status": "unsupported",
-          "kind": "xml",
-          "name": "tdm_xml",
-          "notes": "No stable public or credentialed IOP journal-article XML/TDM endpoint was documented in the 2026-07 access review.",
-          "order": 1,
-          "qps": null,
-          "rate_limit_wait_budget_seconds": 5.0,
-          "rate_policy": "endpoint_not_documented",
-          "required_packages": [],
-          "requires_formula_tools": false,
-          "requires_pdf_conversion": false,
-          "requires_playwright": false,
-          "source": "iop_xml",
-          "timeout_seconds": 20,
-          "transient_retry_categories": [
-            "timeout",
-            "connection_reset",
-            "connection_closed",
-            "temporary_dns"
-          ]
-        },
-        {
           "acceptance_policy": "provider_html_body",
           "asset_scope": "body",
           "auth_supported": true,
@@ -2206,7 +2174,7 @@
           "kind": "html",
           "name": "browser_html",
           "notes": null,
-          "order": 2,
+          "order": 1,
           "qps": null,
           "rate_limit_wait_budget_seconds": 5.0,
           "rate_policy": "selected_browser_serial",
@@ -2240,7 +2208,7 @@
           "kind": "pdf",
           "name": "browser_pdf",
           "notes": null,
-          "order": 3,
+          "order": 2,
           "qps": null,
           "rate_limit_wait_budget_seconds": 5.0,
           "rate_policy": "selected_browser_serial",

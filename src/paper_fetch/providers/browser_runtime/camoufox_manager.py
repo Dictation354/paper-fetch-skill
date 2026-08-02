@@ -2,17 +2,39 @@
 
 from __future__ import annotations
 
+from contextlib import redirect_stdout
+from pathlib import Path
 import importlib
+import sys
 import threading
 from typing import Any
 
 
-def _launch_executable_path(binary_path: str | None) -> str:
+def _launch_executable_path(binary_path: str | None) -> str | None:
     if binary_path:
         return binary_path
     pkgman = importlib.import_module("camoufox.pkgman")
-    runtime_path = pkgman.camoufox_path(download_if_missing=False)
-    return str(pkgman.launch_path(runtime_path))
+    # Keep the no-download guard, but let Camoufox resolve its managed bundle.
+    # On macOS, passing Contents/MacOS/camoufox as a custom executable makes
+    # Camoufox look beside it for metadata stored under Contents/Resources.
+    pkgman.camoufox_path(download_if_missing=False)
+    return None
+
+
+def _launch_firefox_major_version(executable_path: str) -> int | None:
+    """Read Camoufox's own version metadata beside a prepared executable."""
+
+    pkgman = importlib.import_module("camoufox.pkgman")
+    executable = Path(executable_path).resolve()
+    for candidate in (executable.parent, executable.parent.parent):
+        try:
+            version = pkgman.Version.from_path(candidate)
+            major = int(str(version.version or "").split(".", 1)[0])
+        except (AttributeError, LookupError, OSError, TypeError, ValueError):
+            continue
+        if major > 0:
+            return major
+    return None
 
 
 class CamoufoxBrowserManager:
@@ -29,6 +51,7 @@ class CamoufoxBrowserManager:
         self._owner_thread_id: int | None = None
         self._playwright: Any | None = None
         self._browser: Any | None = None
+        self._firefox_major_version: int | None = None
 
     def _assert_owner_thread(self) -> None:
         thread_id = threading.get_ident()
@@ -48,15 +71,29 @@ class CamoufoxBrowserManager:
         playwright_api = importlib.import_module("playwright.sync_api")
         self._playwright = playwright_api.sync_playwright().start()
         try:
+            executable_path = _launch_executable_path(self.binary_path)
+            self._firefox_major_version = (
+                _launch_firefox_major_version(executable_path)
+                if executable_path is not None
+                else None
+            )
             launch_kwargs: dict[str, Any] = {
                 "headless": self.headless,
-                "executable_path": _launch_executable_path(self.binary_path),
             }
-            self._browser = sync_api.NewBrowser(
-                self._playwright,
-                persistent_context=False,
-                **launch_kwargs,
-            )
+            if executable_path is not None:
+                launch_kwargs["executable_path"] = executable_path
+            if self._firefox_major_version is not None:
+                launch_kwargs["ff_version"] = self._firefox_major_version
+                launch_kwargs["i_know_what_im_doing"] = True
+            # MCP reserves stdout exclusively for JSON-RPC. Camoufox may emit
+            # first-run addon extraction progress while building launch options,
+            # so route third-party startup output to stderr at this boundary.
+            with redirect_stdout(sys.stderr):
+                self._browser = sync_api.NewBrowser(
+                    self._playwright,
+                    persistent_context=False,
+                    **launch_kwargs,
+                )
         except Exception:
             self._playwright.stop()
             self._playwright = None
@@ -66,7 +103,10 @@ class CamoufoxBrowserManager:
     def new_context(self, **context_kwargs: Any) -> Any:
         self._assert_owner_thread()
         sync_api = importlib.import_module("camoufox.sync_api")
-        return sync_api.NewContext(self.browser(), **context_kwargs)
+        browser = self.browser()
+        if self._firefox_major_version is not None:
+            context_kwargs.setdefault("ff_version", str(self._firefox_major_version))
+        return sync_api.NewContext(browser, **context_kwargs)
 
     def close(self) -> None:
         if self._browser is None and self._playwright is None:
@@ -75,6 +115,7 @@ class CamoufoxBrowserManager:
         browser, playwright = self._browser, self._playwright
         self._browser = None
         self._playwright = None
+        self._firefox_major_version = None
         try:
             if browser is not None:
                 browser.close()
@@ -113,16 +154,27 @@ class CamoufoxPersistentContextManager:
         playwright_api = importlib.import_module("playwright.sync_api")
         self._playwright = playwright_api.sync_playwright().start()
         try:
+            executable_path = _launch_executable_path(self.binary_path)
+            firefox_major_version = (
+                _launch_firefox_major_version(executable_path)
+                if executable_path is not None
+                else None
+            )
             launch_kwargs: dict[str, Any] = {
                 "headless": self.headless,
                 "user_data_dir": self.user_data_dir,
-                "executable_path": _launch_executable_path(self.binary_path),
             }
-            self._context = sync_api.NewBrowser(
-                self._playwright,
-                persistent_context=True,
-                **launch_kwargs,
-            )
+            if executable_path is not None:
+                launch_kwargs["executable_path"] = executable_path
+            if firefox_major_version is not None:
+                launch_kwargs["ff_version"] = firefox_major_version
+                launch_kwargs["i_know_what_im_doing"] = True
+            with redirect_stdout(sys.stderr):
+                self._context = sync_api.NewBrowser(
+                    self._playwright,
+                    persistent_context=True,
+                    **launch_kwargs,
+                )
         except Exception:
             self._playwright.stop()
             self._playwright = None

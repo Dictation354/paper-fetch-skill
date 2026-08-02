@@ -6,8 +6,9 @@
 
 ## MCP Tools
 
+- 所有 tool 成功/失败 JSON payload 顶层使用 `schema_version=2`。新 fetch/cache payload 的完整 trace 只在顶层出现；`quality.trace` 已删除。旧 v1 FetchEnvelope cache 只在读取时按顶层 → quality → article quality 的顺序迁移，新写入不再生成 v1。
 - `resolve_paper(query | title, authors, year)`: 在抓取前规范化 DOI、URL 或标题查询，并尽早暴露歧义。标题输入必须先解析出 DOI 或落地页，再交给 `fetch_paper(...)`。
-- `fetch_paper(...)`: 返回稳定 JSON 载荷，顶层包含溯源信息、`token_estimate_breakdown={abstract,body,refs}`，并按需附带 `article`、`markdown`、`metadata`；当 `save_markdown=true` 时，响应会改为紧凑结果，只保留路径、元数据和诊断字段。
+- `fetch_paper(...)`: 返回稳定 JSON 载荷；成功响应包含兼容态 `status="ok"`、七分面紧凑 `acceptance`、溯源信息、`token_estimate_breakdown={abstract,body,refs}`，并按需附带 `article`、`markdown`、`metadata`。`acceptance.overall` 才是任务级结论；当 `save_markdown=true` 时，响应会改为紧凑结果，只保留路径、元数据、acceptance 和诊断字段。
 - `list_cached(cache_mode="index|refresh|rescan")` / `get_cached(doi, download_dir=..., detail="full|compact", preferred_only=false, modes=..., strategy=..., include_refs=..., max_tokens=...)`: 多轮会话重新抓取前，在同一个显式 cache scope 内检查缓存；已知 DOI 优先使用请求敏感的 `get_cached` compact 结果。
 - `has_fulltext(query)`: 使用解析结果、Crossref 元数据、轻量 Elsevier 元数据探测和落地页 HTML meta 做低成本全文可用性探测，不触发完整抓取流程。
 - `provider_status(provider=None, group=None, detail="full|compact")`: 返回 catalog-backed 本地静态诊断，不调用远程出版商 API；已知 provider 时应筛选，避免把全 catalog checks 放入上下文。
@@ -27,8 +28,8 @@
 - MCP 与 CLI 直接共用 `run_browser_provider_preflight()` 和 provider HTML bootstrap。未传 `provider` 时，两者都按 browser runtime catalog 顺序检查全部 provider，并使用各自内置样例；不会默认执行该 live 工具。
 - `test_url` 和 `storage_state_path` 只允许与一个显式 `provider` 一起使用。`test_url` 必须是无内嵌凭据的 HTTP(S) URL；`timeout_ms` 范围为 `1..600000`。`save_storage_state=false` 只关闭本轮保存，仍可读取已有 storage-state；默认 `true` 可能创建或原子更新 provider storage-state 文件。
 - 工具 annotations 为 open-world、非只读、非 destructive、非 idempotent：它会使用 Camoufox runtime 打开出版社页面，也可能写 storage-state。它不调用 PDF fallback，且 `auth_attempted=false`；challenge、验证码、付费或登录边界不会被自动绕过。
-- 每个 provider 独立返回 `ready`、`challenge`、`auth_required`、`runtime_error` 或 `cancelled`，并给出 `reason_code`、`reason` 和 `next_action`。前一个 provider 的 challenge/runtime failure 不会删除其它已完成结果；取消会保留取消前的结果，并停止调度后续 provider。
-- `detail="compact"` 的每项严格只有 `provider/status/reason_code/reason/next_action`；`full` 另含 provider label、目标/最终 URL、title、storage-state 保存诊断和 browser runtime diagnostics。顶层始终显式报告 `pdf_fallback_attempted=false`、`auth_attempted=false` 和逐状态汇总。
+- 每个 provider 独立返回 `ready`、`challenge`、`auth_required`、`network_timeout`、`extraction_error`、`runtime_error` 或 `cancelled`，并给出唯一 `status/reason_code/stage/message/next_action` 契约。前一个 provider 的 challenge/runtime failure 不会删除其它已完成结果；取消会保留取消前的结果，并停止调度后续 provider。
+- `detail="compact"` 的每项严格只有 `provider/status/reason_code/stage/message/next_action`；`full` 另含 provider label、脱敏目标/最终 URL、title、storage-state 保存诊断和 browser/page diagnostics。顶层始终显式报告 `pdf_fallback_attempted=false`、`auth_attempted=false` 和逐状态汇总。
 - browser runtime 失败沿用 fetch trace 的稳定 code：`managed_chrome_profile_in_use`、`managed_chrome_exited_before_cdp`、`managed_chrome_cdp_timeout`、`cdp_connect_failed`、`browser_context_create_failed`、`browser_page_create_failed`。full diagnostics 在可用时保留 `stage`、`exit_code`、脱敏 `stderr_summary` 和 `diagnostic_path`；确认 stale singleton 后 runtime 会受控恢复并至多重启一次，无法确认时不会删除 profile 状态。
 - 支持 progress 的宿主会收到开始、逐 provider 完成和最终完成通知。`challenge` / `auth_required` 的下一步是显式人工 auth；`runtime_error` 先修复静态配置或本地 runtime；`ready` 才继续目标 fetch。
 
@@ -97,8 +98,8 @@
 - 支持 MCP 资源列表通知的宿主，可能在 `fetch_paper(...)`、`list_cached()` 或 `get_cached()` 改变缓存资源 URI 时收到 `resources/list_changed`。
 - `strategy.asset_profile="body"` 或 `all` 时，可能额外返回少量关键本地图像，作为 `ImageContent` 输出；但 `save_markdown=true` 时不会附带 inline `ImageContent`。
 - 可选 `strategy.inline_image_budget={max_images,max_bytes_per_image,max_total_bytes}` 用于调节默认内联图像上限：`3` 张图、每张 `2 MiB`、总计 `8 MiB`；任一最终值为 `0` 都会禁用内联图像。
-- 如果返回了资源，判断图片缺失前先检查 `article.assets[*].render_state`、`download_tier`、`content_type`、`downloaded_bytes`、`width` 和 `height`。
-- `article.quality.semantic_losses.table_layout_degraded_count` 表示 Markdown 中表格布局被压平；`table_semantic_loss_count` 才是表格内容可能真的丢失的更强信号。
+- 如果返回了资源，判断图片缺失前先检查 `article.assets[*].render_state`、`download_tier`、`preview_accepted`、`content_type`、`downloaded_bytes`、`width` 和 `height`。发生 direct/browser 恢复时还可读取向后兼容的 `browser_backend`、`final_fetcher` 和 `recovery_attempts`；CLI JSON、MCP 与 cache sidecar 原样往返这些字段。资产摘要满足 `preview = accepted_preview + fallback_preview`；跨 adapter 机器分类只读取 `issue_codes`，不从 warning 文案重分类。
+- `article.quality.semantic_losses.table_layout_degraded_count` 表示源表 span/列定义异常导致布局无法可靠验证；合法合并单元格成功展开只属于规范化，不计为降级；`table_semantic_loss_count` 才是表格内容可能真的丢失的更强信号。
 - 返回 Markdown 前，公式中的 LaTeX 会先对常见出版商宏做规范化处理，例如 `\updelta`、`\mspace{Nmu}`。
 
 ## Local Markdown and Cache Identity

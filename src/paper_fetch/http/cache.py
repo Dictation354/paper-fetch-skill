@@ -147,7 +147,15 @@ def redact_url_for_diagnostics(url: str) -> str:
     if not url:
         return url
     parsed = urllib.parse.urlsplit(url)
-    return urllib.parse.urlunsplit((parsed.scheme, parsed.netloc, parsed.path, "", ""))
+    hostname = str(parsed.hostname or "")
+    if ":" in hostname and not hostname.startswith("["):
+        hostname = f"[{hostname}]"
+    try:
+        port = parsed.port
+    except ValueError:
+        port = None
+    netloc = f"{hostname}:{port}" if hostname and port is not None else hostname
+    return urllib.parse.urlunsplit((parsed.scheme, netloc, parsed.path, "", ""))
 
 
 def diagnostic_url_payload(url: str) -> dict[str, str]:

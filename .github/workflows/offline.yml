@@ -8,7 +8,7 @@ on:
         required: false
         type: string
       posix_tooling_ref:
-        description: Trusted commit whose POSIX packaging script should overlay an immutable source ref
+        description: Trusted commit whose POSIX builder, installer, and verifier should overlay an immutable source ref
         required: false
         type: string
       windows_tooling_ref:
@@ -52,16 +52,16 @@ jobs:
           - os: ubuntu-latest
             python-version: "3.14"
             target: linux-x86_64-cp314
-          - os: macos-latest
+          - os: macos-15
             python-version: "3.11"
             target: macos-arm64-cp311
-          - os: macos-latest
+          - os: macos-15
             python-version: "3.12"
             target: macos-arm64-cp312
-          - os: macos-latest
+          - os: macos-15
             python-version: "3.13"
             target: macos-arm64-cp313
-          - os: macos-latest
+          - os: macos-15
             python-version: "3.14"
             target: macos-arm64-cp314
     runs-on: ${{ matrix.os }}
@@ -69,26 +69,50 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ inputs.ref || github.sha }}
-      - name: Overlay trusted POSIX release tooling
+      - uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: ${{ matrix.python-version }}
+          full: "true"
+      - name: Validate immutable source macOS adaptation contract
+        run: python scripts/validate_macos_adaptation.py
+      - name: Validate trusted POSIX tooling revision
         if: ${{ inputs.posix_tooling_ref != '' }}
         env:
           TOOLING_REF: ${{ inputs.posix_tooling_ref }}
         run: |
-          git fetch --no-tags --depth=1 origin "$TOOLING_REF"
-          git show "$TOOLING_REF:scripts/build-offline-package.sh" \
-            > scripts/build-offline-package.sh
-          git show "$TOOLING_REF:src/paper_fetch/formula/install.py" \
-            > src/paper_fetch/formula/install.py
+          if [[ ! "$TOOLING_REF" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "posix_tooling_ref must be an immutable 40-character commit SHA." >&2
+            exit 1
+          fi
+      - name: Check out trusted POSIX release tooling
+        if: ${{ inputs.posix_tooling_ref != '' }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.posix_tooling_ref }}
+          path: .posix-release-tooling
+          persist-credentials: false
+      - name: Validate trusted macOS adaptation tooling
+        if: ${{ inputs.posix_tooling_ref != '' }}
+        working-directory: .posix-release-tooling
+        run: python scripts/validate_macos_adaptation.py
+      - name: Overlay trusted POSIX release tooling
+        if: ${{ inputs.posix_tooling_ref != '' }}
+        run: |
+          install -m 0755 \
+            .posix-release-tooling/scripts/build-offline-package.sh \
+            scripts/build-offline-package.sh
+          install -m 0755 \
+            .posix-release-tooling/install-offline.sh \
+            install-offline.sh
+          install -m 0755 \
+            .posix-release-tooling/scripts/verify-offline-package.sh \
+            scripts/verify-offline-package.sh
       - name: Check out dependency snapshot tooling
         if: ${{ inputs.frozen_dependencies }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ inputs.dependency_tooling_ref }}
           path: .dependency-refresh-automation
-      - uses: ./.github/actions/setup-python-deps
-        with:
-          python-version: ${{ matrix.python-version }}
-          full: "true"
       - name: Set up pinned Haskell toolchain
         id: formula-haskell
         uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
@@ -115,6 +139,8 @@ jobs:
       - name: Build full offline package
         env:
           PYTHON_BIN: python
+          MACOSX_DEPLOYMENT_TARGET: "15.0"
+          PAPER_FETCH_OFFLINE_TOOLING_REVISION: ${{ inputs.posix_tooling_ref }}
         run: |
           set -euo pipefail
           if [ "${{ inputs.frozen_dependencies }}" = "true" ]; then
@@ -129,12 +155,25 @@ jobs:
           fi
           scripts/build-offline-package.sh --output-dir dist
       - name: Verify offline package
-        if: ${{ runner.os == 'Linux' }}
-        run: scripts/verify-offline-package.sh dist/*.sh
+        env:
+          PAPER_FETCH_OFFLINE_SKIP_FETCH_SMOKE: "1"
+        run: |
+          shopt -s nullglob
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            packages=(dist/*.tar.gz)
+          else
+            packages=(dist/*.sh)
+          fi
+          if [ "${#packages[@]}" -ne 1 ]; then
+            echo "Expected exactly one offline package, found ${#packages[@]}." >&2
+            exit 1
+          fi
+          scripts/verify-offline-package.sh "${packages[0]}"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: offline-${{ runner.os }}-${{ matrix.python-version }}
           path: dist/*
+          if-no-files-found: error
 
   windows:
     runs-on: windows-latest
@@ -142,6 +181,22 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ inputs.ref || github.sha }}
+      - uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: "3.13"
+          full: "true"
+      - name: Validate immutable source macOS adaptation contract
+        run: python scripts/validate_macos_adaptation.py
+      - name: Validate trusted Windows tooling revision
+        if: ${{ inputs.windows_tooling_ref != '' }}
+        shell: bash
+        env:
+          TOOLING_REF: ${{ inputs.windows_tooling_ref }}
+        run: |
+          if [[ ! "$TOOLING_REF" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "windows_tooling_ref must be an immutable 40-character commit SHA." >&2
+            exit 1
+          fi
       - name: Overlay trusted Windows release tooling
         if: ${{ inputs.windows_tooling_ref != '' }}
         shell: bash
@@ -151,18 +206,12 @@ jobs:
           git fetch --no-tags --depth=1 origin "$TOOLING_REF"
           git show "$TOOLING_REF:scripts/build-offline-package-windows.ps1" \
             > scripts/build-offline-package-windows.ps1
-          git show "$TOOLING_REF:src/paper_fetch/formula/install.py" \
-            > src/paper_fetch/formula/install.py
       - name: Check out dependency snapshot tooling
         if: ${{ inputs.frozen_dependencies }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ inputs.dependency_tooling_ref }}
           path: .dependency-refresh-automation
-      - uses: ./.github/actions/setup-python-deps
-        with:
-          python-version: "3.13"
-          full: "true"
       - name: Set up pinned Haskell toolchain
         id: formula-haskell
         uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
@@ -188,6 +237,8 @@ jobs:
           path: ${{ runner.temp }}/dependency-manifest
       - name: Build Windows full offline installer
         shell: pwsh
+        env:
+          PAPER_FETCH_OFFLINE_TOOLING_REVISION: ${{ inputs.windows_tooling_ref }}
         run: |
           if ("${{ inputs.frozen_dependencies }}" -eq "true") {
             $snapshotRoot = Join-Path $env:RUNNER_TEMP "dependency-snapshot"
@@ -207,3 +258,4 @@ jobs:
         with:
           name: offline-Windows-3.13
           path: dist/*
+          if-no-files-found: error

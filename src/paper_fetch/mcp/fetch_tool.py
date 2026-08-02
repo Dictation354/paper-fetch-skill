@@ -26,6 +26,11 @@ from ..workflow.pipeline import FetchPipeline, FetchPipelineCacheHooks
 from ..workflow.request_builder import build_fetch_pipeline_request
 from ..workflow.rendering import save_markdown_to_disk
 from ..workflow.types import effective_asset_profile
+from ..workflow.acceptance import evaluate_fetch_acceptance
+from .acceptance_payloads import (
+    compact_acceptance_payload,
+    expected_doi_from_query,
+)
 from .batch import report_progress, run_blocking_call
 from .cache_payloads import _MCP_DEFAULT_DOWNLOAD_DIR, _resolve_download_dir
 from .cache_index import read_scoped_file
@@ -359,6 +364,17 @@ def _response_payload_from_envelope(
     envelope: FetchEnvelope, request: FetchPaperRequest
 ) -> dict[str, Any]:
     payload = _payload_from_envelope(envelope, request)
+    acceptance = evaluate_fetch_acceptance(
+        envelope,
+        asset_profile=effective_asset_profile(
+            request.strategy.asset_profile,
+            source_name=envelope.source,
+        ),
+        requested_outputs=request.requested_modes(),
+        expected_doi=expected_doi_from_query(request.query),
+    )
+    payload["status"] = "ok"
+    payload["acceptance"] = compact_acceptance_payload(acceptance)
     if not request.save_markdown:
         return payload
 

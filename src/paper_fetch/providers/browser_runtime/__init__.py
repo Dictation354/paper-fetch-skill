@@ -5,9 +5,10 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any
 
+from .context import browser_context
 from .seed import (
-    CLOUDFLARE_COOKIE_NAMES,
     _CLOUDFLARE_COOKIE_PREFIXES,
+    CLOUDFLARE_COOKIE_NAMES,
     browser_context_seed_from_mapping,
     browser_context_seed_from_session,
     browser_context_seed_to_mapping,
@@ -19,6 +20,7 @@ from .seed import (
 from .types import (
     BrowserContextSeed,
     BrowserFetchedHtml,
+    BrowserHtmlFetchOptions,
     BrowserHtmlReadiness,
     BrowserImagePayload,
     BrowserRuntimeBackend,
@@ -28,7 +30,6 @@ from .types import (
     BrowserStagedStorageState,
     BrowserWarmResult,
 )
-from .context import browser_context
 
 _API_EXPORTS = {
     "DEFAULT_BROWSER_RUNTIME_BACKEND",
@@ -55,6 +56,7 @@ __all__ = [
     "_CLOUDFLARE_COOKIE_PREFIXES",
     "BrowserContextSeed",
     "BrowserFetchedHtml",
+    "BrowserHtmlFetchOptions",
     "BrowserHtmlReadiness",
     "BrowserImagePayload",
     "BrowserRuntimeBackend",

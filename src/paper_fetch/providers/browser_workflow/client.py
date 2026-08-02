@@ -518,9 +518,7 @@ class BrowserWorkflowClient(ProviderClient):
             )
             self.deps.ensure_runtime_ready(runtime)
         camoufox_backend = bool(runtime is not None and runtime.backend == "camoufox")
-        asset_download_concurrency = (
-            1 if camoufox_backend else resolve_asset_download_concurrency(context.env)
-        )
+        asset_download_concurrency = resolve_asset_download_concurrency(context.env)
         recovery = BrowserAssetRecoveryContext(
             runtime=runtime,
             provider=self.name,

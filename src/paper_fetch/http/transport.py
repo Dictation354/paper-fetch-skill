@@ -10,10 +10,12 @@ import urllib.error
 import urllib.parse
 import contextlib
 from contextlib import nullcontext
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
 
 from cachetools import TTLCache
 import urllib3
@@ -60,6 +62,30 @@ _SENSITIVE_REDIRECT_HEADERS = frozenset(
     {"authorization", "cookie", "proxy-authorization", "referer"}
 )
 logger = logging.getLogger("paper_fetch.http")
+_HTTP_TIMING_COLLECTOR: ContextVar[Callable[[str, float], None] | None] = ContextVar(
+    "paper_fetch_http_timing_collector", default=None
+)
+
+
+@contextmanager
+def http_timing_collector(
+    collector: Callable[[str, float], None] | None,
+) -> Iterator[None]:
+    """Collect request and retry wall-clock durations for the active fetch."""
+
+    token = _HTTP_TIMING_COLLECTOR.set(collector)
+    try:
+        yield
+    finally:
+        _HTTP_TIMING_COLLECTOR.reset(token)
+
+
+def _record_http_timing(stage: str, elapsed: float) -> None:
+    collector = _HTTP_TIMING_COLLECTOR.get()
+    if collector is None:
+        return
+    with contextlib.suppress(Exception):
+        collector(stage, max(0.0, elapsed))
 
 
 @dataclass(frozen=True)
@@ -87,6 +113,21 @@ class HttpRequestPolicy:
     max_response_bytes: int | None = None
     max_compressed_response_bytes: int | None = None
     cooldown_scope: str | None = None
+
+
+@dataclass(frozen=True)
+class _HttpRequestInput:
+    method: str
+    url: str
+    headers: Mapping[str, str] | None
+    query: Mapping[str, str] | None
+    timeout: int
+    retry_on_rate_limit: bool
+    rate_limit_retries: int
+    max_rate_limit_wait_seconds: int
+    retry_on_transient: bool
+    transient_retries: int
+    request_policy: HttpRequestPolicy | None
 
 
 class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
@@ -428,6 +469,44 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         transient_retries: int = DEFAULT_TRANSIENT_RETRIES,
         request_policy: HttpRequestPolicy | None = None,
     ) -> dict[str, Any]:
+        started_at = time.monotonic()
+        try:
+            return self._request_impl(
+                _HttpRequestInput(
+                    method=method,
+                    url=url,
+                    headers=headers,
+                    query=query,
+                    timeout=timeout,
+                    retry_on_rate_limit=retry_on_rate_limit,
+                    rate_limit_retries=rate_limit_retries,
+                    max_rate_limit_wait_seconds=max_rate_limit_wait_seconds,
+                    retry_on_transient=retry_on_transient,
+                    transient_retries=transient_retries,
+                    request_policy=request_policy,
+                )
+            )
+        finally:
+            _record_http_timing(
+                "http_seconds",
+                time.monotonic() - started_at,
+            )
+
+    def _request_impl(
+        self,
+        request_input: _HttpRequestInput,
+    ) -> dict[str, Any]:
+        method = request_input.method
+        url = request_input.url
+        headers = request_input.headers
+        query = request_input.query
+        timeout = request_input.timeout
+        retry_on_rate_limit = request_input.retry_on_rate_limit
+        rate_limit_retries = request_input.rate_limit_retries
+        max_rate_limit_wait_seconds = request_input.max_rate_limit_wait_seconds
+        retry_on_transient = request_input.retry_on_transient
+        transient_retries = request_input.transient_retries
+        request_policy = request_input.request_policy
         policy = request_policy or HttpRequestPolicy()
         response_limit = (
             self.max_response_bytes
@@ -606,6 +685,10 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                                 host_semaphore=host_semaphore,
                             ),
                         )
+                        _record_http_timing(
+                            "retry_seconds",
+                            time.monotonic() - request_started_at,
+                        )
                         continue
                     response_payload = {
                         "status_code": int(response.status),
@@ -669,6 +752,10 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                                 host_semaphore=host_semaphore,
                             ),
                         )
+                        _record_http_timing(
+                            "retry_seconds",
+                            time.monotonic() - request_started_at,
+                        )
                         continue
                     finally:
                         exc.close()
@@ -700,6 +787,10 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                             ),
                         )
                         transient_attempts_made += 1
+                        _record_http_timing(
+                            "retry_seconds",
+                            time.monotonic() - request_started_at,
+                        )
                         continue
                     emit_structured_log(
                         logger,
@@ -747,6 +838,10 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                             ),
                         )
                         transient_attempts_made += 1
+                        _record_http_timing(
+                            "retry_seconds",
+                            time.monotonic() - request_started_at,
+                        )
                         continue
                     emit_structured_log(
                         logger,

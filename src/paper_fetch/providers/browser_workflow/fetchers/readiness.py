@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+import time
 from typing import Any
 from collections.abc import Mapping
 
@@ -22,6 +23,9 @@ ATYPON_BODY_READY_SELECTORS: Mapping[str, tuple[str, ...]] = {
         ".article-section__content",
     ),
     "science": (
+        "[data-extent='bodymatter']",
+        "[property='articleBody']",
+        "#bodymatter",
         ".article__fulltext",
         ".article-view",
     ),
@@ -49,6 +53,11 @@ ATYPON_BODY_READY_SELECTORS: Mapping[str, tuple[str, ...]] = {
         ".article-body",
         ".article-full-text",
         ".article-text",
+    ),
+    "aip": (
+        ".article-body .widget-ArticleFulltext",
+        ".widget-ArticleFulltext",
+        ".article-body",
     ),
 }
 
@@ -174,9 +183,10 @@ def wait_for_atypon_body_dom_ready(
         )
 
     min_chars = provider_body_text_thresholds(normalized_provider).short_body_min_chars
-    timeout_budget_ms = max(0, int(float(timeout_seconds or 0) * 1000))
+    timeout_budget_seconds = max(0.0, float(timeout_seconds or 0))
     interval_ms = max(1, int(poll_interval_ms))
-    elapsed_ms = 0
+    started_at = time.monotonic()
+    operation_deadline = started_at + timeout_budget_seconds
     previous_ready_fingerprint = ""
     last_result = BodyDomReadinessResult(
         attempted=True,
@@ -192,6 +202,7 @@ def wait_for_atypon_body_dom_ready(
             )
         except Exception:
             payload = None
+        elapsed_ms = max(0, int((time.monotonic() - started_at) * 1000))
         current = _coerce_readiness_payload(
             payload,
             provider=normalized_provider,
@@ -205,17 +216,30 @@ def wait_for_atypon_body_dom_ready(
         else:
             previous_ready_fingerprint = ""
 
-        if elapsed_ms >= timeout_budget_ms:
+        remaining_seconds = operation_deadline - time.monotonic()
+        if remaining_seconds <= 0:
             if last_result.ready:
-                return replace(last_result, ready=False)
-            return last_result
+                return replace(
+                    last_result,
+                    ready=False,
+                    elapsed_ms=max(
+                        last_result.elapsed_ms,
+                        int((time.monotonic() - started_at) * 1000),
+                    ),
+                )
+            return replace(
+                last_result,
+                elapsed_ms=max(
+                    last_result.elapsed_ms,
+                    int((time.monotonic() - started_at) * 1000),
+                ),
+            )
 
-        wait_ms = min(interval_ms, timeout_budget_ms - elapsed_ms)
+        wait_ms = min(interval_ms, max(1, int(remaining_seconds * 1000)))
         wait_for_timeout = getattr(page, "wait_for_timeout", None)
         if callable(wait_for_timeout):
             with contextlib.suppress(Exception):
                 wait_for_timeout(wait_ms)
-        elapsed_ms += wait_ms
 
 
 __all__ = [

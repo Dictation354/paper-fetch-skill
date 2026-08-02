@@ -7,42 +7,50 @@ import contextlib
 import logging
 import time
 import urllib.parse
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
-from collections.abc import Callable, Mapping
 
 from bs4 import BeautifulSoup
 
+from ..extraction.html.signals import (
+    detect_html_block,
+    summarize_html,
+    summarize_visible_html,
+)
 from ..extraction.image_payloads import (
     image_dimensions_from_bytes,
     image_mime_type_from_bytes,
 )
 from ..http import RequestCancelledError, diagnostic_url_payload
-from ..extraction.html.signals import detect_html_block, summarize_html
+from ..page_diagnostics import PageDiagnosticRequest, capture_page_diagnostic
 from ..quality.html_availability import choose_parser, extract_page_title
 from ..quality.html_signals import looks_like_abstract_redirect
 from ..quality.reason_codes import REDIRECTED_TO_ABSTRACT
-from ..runtime_browser import (
-    ManagedBrowserError,
-    browser_page_user_agent,
-)
 from ..reason_codes import (
     BROWSER_CONTEXT_CREATE_FAILED,
     BROWSER_PAGE_CREATE_FAILED,
 )
+from ..runtime_browser import (
+    ManagedBrowserError,
+    browser_page_user_agent,
+)
 from ..utils import normalize_text
+from .browser_runtime.context import open_browser_context
 from .browser_runtime.seed import (
+    browser_context_seed_from_mapping,
+    filter_browser_cookies_for_url,
     merge_browser_context_seeds,
 )
 from .browser_runtime.types import (
     BrowserFetchedHtml,
+    BrowserHtmlFetchOptions,
     BrowserHtmlReadiness,
     BrowserRuntimeConfig,
     BrowserRuntimeFailure,
     BrowserStagedStorageState,
     BrowserWarmResult,
 )
-from .browser_runtime.context import open_browser_context
 from .browser_workflow.fetchers.context import (
     _browser_response_headers,
     _browser_response_status,
@@ -71,11 +79,30 @@ DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS = 120000
 DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS = 8
 DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS = 1
 DEFAULT_BROWSER_HTML_READINESS = BrowserHtmlReadiness()
+DEFAULT_BROWSER_HTML_FETCH_OPTIONS = BrowserHtmlFetchOptions()
 _IMAGE_PAYLOAD_MIN_IMAGE_DIMENSION = 1
 _IMAGE_RESPONSE_BLOCKED_BY_HTML_WRAPPER = "image_response_blocked_by_html_wrapper"
 _IMAGE_PAYLOAD_RESPONSE_ATTR = "_paper_fetch_top_level_response"
 _IMAGE_PAYLOAD_TIMEOUT_ATTR = "_paper_fetch_image_payload_timeout_ms"
 _IMAGE_PAYLOAD_FAILURE_ATTR = "_paper_fetch_image_payload_failure"
+_SELECTOR_TEXT_READINESS_SCRIPT = """
+({ selector, expectedText }) => {
+  let node = null;
+  try {
+    node = document.querySelector(selector);
+  } catch (error) {
+    return false;
+  }
+  if (!node) {
+    return false;
+  }
+  if (!expectedText) {
+    return true;
+  }
+  const markup = node.outerHTML || node.textContent || '';
+  return markup.includes(expectedText);
+}
+"""
 
 PlaywrightRuntimeConfig = BrowserRuntimeConfig
 PlaywrightBrowserFailure = BrowserRuntimeFailure
@@ -354,8 +381,14 @@ def _capture_image_payload(
             title = extract_page_title(BeautifulSoup(html, choose_parser())) or ""
         except Exception:
             title = ""
-    summary = summarize_html(html) if normalize_text(html) else ""
-    detected = detect_html_block(title or "", summary, status)
+    summary = summarize_visible_html(html) if normalize_text(html) else ""
+    detected = detect_html_block(
+        title or "",
+        summary,
+        status,
+        html_text=html,
+        response_headers=headers,
+    )
     reason = (
         detected.reason
         if detected is not None
@@ -498,7 +531,9 @@ def _wait_for_browser_html_readiness(
     if return_image_payload:
         return None
 
+    readiness_operation_started = time.monotonic()
     normalized_selector = normalize_text(readiness.selector)
+    selector_text = normalize_text(readiness.selector_text)
     body_readiness = None
     selector_wait_attempted = False
     if readiness.wait_for_article_body:
@@ -521,6 +556,18 @@ def _wait_for_browser_html_readiness(
         )
         candidate_trace["dom_readiness_attempted"] = body_readiness.attempted
         candidate_trace["dom_readiness_ready"] = body_readiness.ready
+        candidate_trace["dom_readiness_selector"] = getattr(
+            body_readiness, "selector", None
+        )
+        candidate_trace["dom_readiness_text_length"] = getattr(
+            body_readiness, "text_length", 0
+        )
+        candidate_trace["dom_readiness_paragraph_count"] = getattr(
+            body_readiness, "paragraph_count", 0
+        )
+        candidate_trace["dom_readiness_heading_count"] = getattr(
+            body_readiness, "heading_count", 0
+        )
     elif normalized_selector and wait_seconds > 0:
         _raise_if_cancelled(runtime_context)
         selector_wait_attempted = True
@@ -537,16 +584,31 @@ def _wait_for_browser_html_readiness(
         )
         selector_started = time.monotonic()
         try:
-            page.wait_for_selector(
-                normalized_selector,
-                state="attached",
-                timeout=selector_timeout_ms,
-            )
-        except Exception:
+            if selector_text:
+                page.wait_for_function(
+                    _SELECTOR_TEXT_READINESS_SCRIPT,
+                    arg={
+                        "selector": normalized_selector,
+                        "expectedText": selector_text,
+                    },
+                    timeout=selector_timeout_ms,
+                )
+            else:
+                page.wait_for_selector(
+                    normalized_selector,
+                    state="attached",
+                    timeout=selector_timeout_ms,
+                )
+        except Exception as exc:
             candidate_trace["selector_readiness_ready"] = False
+            candidate_trace["selector_readiness_error_type"] = type(exc).__name__
         else:
             candidate_trace["selector_readiness_ready"] = True
         candidate_trace["selector_readiness_attempted"] = True
+        candidate_trace["selector_readiness_required"] = bool(
+            readiness.require_selector
+        )
+        candidate_trace["selector_readiness_expected_text"] = selector_text or None
         candidate_trace["selector_readiness_seconds"] = round(
             time.monotonic() - selector_started,
             3,
@@ -570,7 +632,61 @@ def _wait_for_browser_html_readiness(
                 min(max(0, int(wait_seconds)) * 1000, remaining_wait_ms)
             )
         _raise_if_cancelled(runtime_context)
+    if wait_seconds > 0:
+        readiness_elapsed = max(
+            0.0,
+            time.monotonic() - readiness_operation_started,
+        )
+        candidate_trace["dom_readiness_seconds"] = round(
+            readiness_elapsed,
+            3,
+        )
+        if runtime_context is not None and hasattr(
+            runtime_context, "accumulate_stage_timing"
+        ):
+            with contextlib.suppress(Exception):
+                runtime_context.accumulate_stage_timing(
+                    "dom_readiness_seconds",
+                    elapsed=readiness_elapsed,
+                )
     return body_readiness
+
+
+def _browser_html_summary(publisher: str, html_text: str) -> str:
+    if normalize_text(publisher).lower() == "ieee":
+        return summarize_visible_html(html_text)
+    return summarize_html(html_text)
+
+
+def _browser_page_failure_details(
+    *,
+    trace: Mapping[str, Any],
+    runtime_context: RuntimeContext | None,
+    request: PageDiagnosticRequest,
+) -> dict[str, Any]:
+    details: dict[str, Any] = {
+        "trace": dict(trace),
+        "stage": request.stage,
+        "final_url": diagnostic_url_payload(request.final_url or ""),
+        "response_status": request.response_status,
+        "title_summary": (request.title or "")[:500] or None,
+        "page_summary": (request.summary or "")[:1000] or None,
+    }
+    if request.failure_code == "aws_waf_challenge":
+        details.update(
+            {
+                "challenge_provider": "aws_waf",
+                "legacy_reason_code": "cloudflare_challenge",
+            }
+        )
+    if runtime_context is None:
+        return details
+    diagnostic = capture_page_diagnostic(runtime_context, request)
+    details["failure_diagnostic"] = diagnostic
+    diagnostic_path = normalize_text(str(diagnostic.get("diagnostic_path") or ""))
+    if diagnostic_path:
+        details["diagnostic_path"] = diagnostic_path
+    return details
 
 
 def _lightweight_seed_rejection(
@@ -617,6 +733,45 @@ def _capture_page_screenshot(
     return payload if isinstance(payload, str) else None
 
 
+def _seed_browser_html_context(
+    browser_context: Any,
+    *,
+    browser_context_seed: Mapping[str, Any] | None,
+    candidate_url: str | None,
+    trace: dict[str, Any],
+) -> None:
+    """Apply a transient provider-scoped cookie seed before page navigation."""
+
+    typed_seed = browser_context_seed_from_mapping(browser_context_seed)
+    cookies = filter_browser_cookies_for_url(
+        list(typed_seed.get("browser_cookies") or []),
+        candidate_url,
+    )
+    seed_trace: dict[str, Any] = {
+        "provided": browser_context_seed is not None,
+        "cookie_count": len(cookies),
+        "applied": False,
+        "user_agent_reused": False,
+    }
+    trace["browser_context_seed"] = seed_trace
+    if not cookies:
+        seed_trace["reason"] = "no_compatible_cookies"
+        return
+    try:
+        browser_context.add_cookies(cookies)
+    except Exception as exc:
+        seed_trace["reason"] = "cookie_injection_failed"
+        seed_trace["error_type"] = type(exc).__name__
+        raise PlaywrightBrowserFailure(
+            "invalid_browser_context_seed",
+            "Failed to apply transient browser cookies before HTML retry.",
+            browser_context_seed=typed_seed,
+            details={"trace": trace},
+        ) from exc
+    seed_trace["applied"] = True
+    seed_trace["reason"] = "cookies_applied"
+
+
 def fetch_html_with_playwright(
     candidate_urls: list[str],
     *,
@@ -624,13 +779,15 @@ def fetch_html_with_playwright(
     config: PlaywrightRuntimeConfig,
     wait_seconds: int = DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS,
     max_timeout_ms: int | None = None,
-    return_image_payload: bool = False,
-    return_screenshot: bool = False,
     disable_media: bool = False,
-    lightweight_seed_only: bool = False,
     readiness: BrowserHtmlReadiness = DEFAULT_BROWSER_HTML_READINESS,
     runtime_context: RuntimeContext | None = None,
+    browser_context_seed: Mapping[str, Any] | None = None,
+    options: BrowserHtmlFetchOptions = DEFAULT_BROWSER_HTML_FETCH_OPTIONS,
 ) -> BrowserFetchedHtml:
+    return_image_payload = options.return_image_payload
+    return_screenshot = options.return_screenshot
+    lightweight_seed_only = options.lightweight_seed_only
     if not candidate_urls:
         raise PlaywrightBrowserFailure(
             "empty_html_attempts", "No publisher HTML candidates were attempted."
@@ -667,13 +824,11 @@ def fetch_html_with_playwright(
     }
     overall_started = time.monotonic()
     local_deadline = overall_started + (timeout_ms / 1000.0)
-    if runtime_context is not None:
-        runtime_context.ensure_deadline(timeout_ms / 1000.0)
-        if runtime_context.deadline_monotonic is not None:
-            local_deadline = min(
-                local_deadline,
-                runtime_context.deadline_monotonic,
-            )
+    if runtime_context is not None and runtime_context.deadline_monotonic is not None:
+        local_deadline = min(
+            local_deadline,
+            runtime_context.deadline_monotonic,
+        )
     trace["timeout_budget_ms"] = timeout_ms
 
     def remaining_timeout_ms() -> int:
@@ -707,6 +862,14 @@ def fetch_html_with_playwright(
                     "ignored_context_options": [],
                     "storage_state_cookie_count": None,
                 }
+            _seed_browser_html_context(
+                browser_context,
+                browser_context_seed=browser_context_seed,
+                candidate_url=candidate_urls[0] if candidate_urls else None,
+                trace=trace,
+            )
+        except PlaywrightBrowserFailure:
+            raise
         except ManagedBrowserError as exc:
             trace["browser_connect_seconds"] = round(
                 time.monotonic() - connect_started, 3
@@ -835,8 +998,14 @@ def fetch_html_with_playwright(
                         title = normalize_text(str(page.title() or ""))
                     except Exception:
                         title = ""
-                    summary = summarize_html(html)
-                    detected = detect_html_block(title, summary, status)
+                    summary = _browser_html_summary(publisher, html)
+                    detected = detect_html_block(
+                        title,
+                        summary,
+                        status,
+                        html_text=html,
+                        response_headers=headers,
+                    )
                     browser_context_seed = _context_seed(
                         browser_context,
                         final_url=final_url,
@@ -909,11 +1078,11 @@ def fetch_html_with_playwright(
                     or normalized_url
                 )
                 html = str(page.content() or "")
-                title = (
-                    normalize_text(str(page.title() or ""))
-                    or extract_page_title(BeautifulSoup(html, choose_parser()))
-                    or ""
-                )
+                title = normalize_text(str(page.title() or ""))
+                if not title and normalize_text(publisher).lower() != "ieee":
+                    title = (
+                        extract_page_title(BeautifulSoup(html, choose_parser())) or ""
+                    )
                 status = _browser_response_status(response, zero_as_none=False)
                 headers = _browser_response_headers(response)
                 candidate_trace["status"] = status
@@ -923,7 +1092,7 @@ def fetch_html_with_playwright(
                 candidate_trace["final_url_sha256"] = diagnostic_url_payload(
                     final_url
                 ).get("url_sha256")
-                summary = summarize_html(html)
+                summary = _browser_html_summary(publisher, html)
                 browser_context_seed = _context_seed(
                     browser_context,
                     final_url=final_url,
@@ -996,7 +1165,17 @@ def fetch_html_with_playwright(
                 )
                 continue
 
-            detected = detect_html_block(title or "", summary, status)
+            required_selector_ready = bool(
+                readiness.require_selector
+                and candidate_trace.get("selector_readiness_ready")
+            )
+            detected = detect_html_block(
+                title or "",
+                summary,
+                status,
+                html_text="" if required_selector_ready else html,
+                response_headers={} if required_selector_ready else headers,
+            )
             if detected is not None and not return_image_payload:
                 candidate_trace["duration_seconds"] = round(
                     time.monotonic() - candidate_started, 3
@@ -1006,7 +1185,66 @@ def fetch_html_with_playwright(
                     detected.reason,
                     detected.message,
                     browser_context_seed=browser_context_seed,
-                    details={"trace": trace},
+                    details=_browser_page_failure_details(
+                        trace=trace,
+                        runtime_context=runtime_context,
+                        request=PageDiagnosticRequest(
+                            provider=publisher,
+                            route="browser_html",
+                            attempt=max(1, len(list(trace.get("candidates") or []))),
+                            failure_code=detected.reason,
+                            stage="block_detection",
+                            html_text=html,
+                            doi=config.doi,
+                            target_url=normalized_url,
+                            final_url=final_url,
+                            backend=config.backend,
+                            response_status=status,
+                            title=title or "",
+                            summary=summary,
+                            details={"browser_runtime_trace": dict(trace)},
+                        ),
+                    ),
+                )
+                continue
+            if (
+                readiness.require_selector
+                and not return_image_payload
+                and not bool(candidate_trace.get("selector_readiness_ready"))
+            ):
+                reason = "browser_article_not_ready"
+                message = (
+                    "Publisher browser page did not expose the required article "
+                    "container before the readiness timeout."
+                )
+                candidate_trace["duration_seconds"] = round(
+                    time.monotonic() - candidate_started, 3
+                )
+                candidate_trace["block_reason"] = reason
+                last_failure = PlaywrightBrowserFailure(
+                    reason,
+                    message,
+                    browser_context_seed=browser_context_seed,
+                    details=_browser_page_failure_details(
+                        trace=trace,
+                        runtime_context=runtime_context,
+                        request=PageDiagnosticRequest(
+                            provider=publisher,
+                            route="browser_html",
+                            attempt=max(1, len(list(trace.get("candidates") or []))),
+                            failure_code=reason,
+                            stage="dom_readiness",
+                            html_text=html,
+                            doi=config.doi,
+                            target_url=normalized_url,
+                            final_url=final_url,
+                            backend=config.backend,
+                            response_status=status,
+                            title=title or "",
+                            summary=summary,
+                            details={"browser_runtime_trace": dict(trace)},
+                        ),
+                    ),
                 )
                 continue
             if not normalize_text(html) and image_payload is None:
@@ -1145,8 +1383,9 @@ def warm_browser_context_with_playwright(
             candidate_urls,
             publisher=publisher,
             config=config,
+            browser_context_seed=merged_seed,
             runtime_context=runtime_context,
-            lightweight_seed_only=lightweight,
+            options=BrowserHtmlFetchOptions(lightweight_seed_only=lightweight),
         )
     except PlaywrightBrowserFailure as exc:
         trace = exc.details.get("trace")

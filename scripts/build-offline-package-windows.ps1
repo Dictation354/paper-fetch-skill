@@ -45,6 +45,17 @@ function Write-Log {
     Write-Host "==> $Message"
 }
 
+function Get-OfflineToolingRevision {
+    $revision = [string]$env:PAPER_FETCH_OFFLINE_TOOLING_REVISION
+    if ([string]::IsNullOrEmpty($revision)) {
+        return $null
+    }
+    if ($revision -cnotmatch '\A[0-9A-Fa-f]{40}\z') {
+        throw "PAPER_FETCH_OFFLINE_TOOLING_REVISION must be a 40-character hexadecimal Git revision."
+    }
+    return $revision.ToLowerInvariant()
+}
+
 function Invoke-Native {
     if ($args.Count -lt 1) {
         throw "Invoke-Native requires a command."
@@ -419,7 +430,8 @@ function Write-ManifestAndChecksums {
         [string]$Staging,
         [string]$Version,
         [string]$PythonTag,
-        [string]$SetupBaseName
+        [string]$SetupBaseName,
+        [AllowNull()][string]$ToolingRevision
     )
 
     Write-Log "Writing standalone manifest and checksums"
@@ -469,6 +481,9 @@ function Write-ManifestAndChecksums {
                 post_install_helper = "scripts/windows-installer-helper.ps1"
             }
         }
+    }
+    if (-not [string]::IsNullOrEmpty($ToolingRevision)) {
+        $payload["tooling_revision"] = $ToolingRevision
     }
     $payload | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $Staging "offline-manifest.json") -Encoding UTF8
 
@@ -564,6 +579,7 @@ function Build-InnoInstaller {
     Write-Host $setupPath
 }
 
+$toolingRevision = Get-OfflineToolingRevision
 $pythonTag = Assert-Target
 if ([string]::IsNullOrWhiteSpace($PackageName)) {
     $PackageName = $WindowsSetupBaseName
@@ -586,5 +602,5 @@ Add-SkillAgentManifest $staging
 Write-DefaultOfflineEnv $staging
 Write-OfflineReadme $staging
 Assert-RuntimeOnlyStaging $staging
-Write-ManifestAndChecksums -Staging $staging -Version $version -PythonTag $pythonTag -SetupBaseName $PackageName
+Write-ManifestAndChecksums -Staging $staging -Version $version -PythonTag $pythonTag -SetupBaseName $PackageName -ToolingRevision $toolingRevision
 Build-InnoInstaller -Staging $staging -Version $version -SetupBaseName $PackageName

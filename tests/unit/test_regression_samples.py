@@ -616,7 +616,12 @@ class RegressionSampleTests(unittest.TestCase):
             provider_client=science_provider.ScienceClient(FixtureTransport({}), {}),
         )
 
-        self.assertEqual(article.source, SCIENCE_SAMPLE.expected_source)
+        self.assertTrue(
+            SCIENCE_SAMPLE.accepts_live_result(
+                source=article.source,
+                source_trail=article.quality.source_trail,
+            )
+        )
         self.assertEqual(article.metadata.title, SCIENCE_SAMPLE.title)
         self.assertTrue(article.quality.has_fulltext)
         self.assertIn("fulltext:science_html_ok", article.quality.source_trail)
@@ -672,7 +677,12 @@ class RegressionSampleTests(unittest.TestCase):
             provider_client=wiley_provider.WileyClient(FixtureTransport({}), {}),
         )
 
-        self.assertEqual(article.source, WILEY_SAMPLE.expected_source)
+        self.assertTrue(
+            WILEY_SAMPLE.accepts_live_result(
+                source=article.source,
+                source_trail=article.quality.source_trail,
+            )
+        )
         self.assertEqual(article.metadata.title, WILEY_SAMPLE.title)
         self.assertTrue(article.quality.has_fulltext)
         self.assertTrue(article.metadata.abstract)
@@ -740,7 +750,12 @@ class RegressionSampleTests(unittest.TestCase):
             provider_client=wiley_provider.WileyClient(FixtureTransport({}), {}),
         )
 
-        self.assertEqual(article.source, WILEY_PDF_FALLBACK_SAMPLE.expected_source)
+        self.assertTrue(
+            WILEY_PDF_FALLBACK_SAMPLE.accepts_live_result(
+                source=article.source,
+                source_trail=article.quality.source_trail,
+            )
+        )
         self.assertEqual(article.metadata.title, WILEY_PDF_FALLBACK_SAMPLE.title)
         self.assertTrue(article.quality.has_fulltext)
         self.assertIn("fulltext:wiley_pdf_api_ok", article.quality.source_trail)
@@ -792,7 +807,12 @@ class RegressionSampleTests(unittest.TestCase):
             provider_client=pnas_provider.PnasClient(FixtureTransport({}), {}),
         )
 
-        self.assertEqual(article.source, PNAS_SAMPLE.expected_source)
+        self.assertTrue(
+            PNAS_SAMPLE.accepts_live_result(
+                source=article.source,
+                source_trail=article.quality.source_trail,
+            )
+        )
         self.assertEqual(article.metadata.title, PNAS_SAMPLE.title)
         self.assertTrue(article.quality.has_fulltext)
         self.assertIn("fulltext:pnas_html_ok", article.quality.source_trail)

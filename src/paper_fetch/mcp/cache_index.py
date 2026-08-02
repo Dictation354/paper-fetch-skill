@@ -243,20 +243,33 @@ def _write_index_unlocked(
 
 
 def _scoped_file(download_dir: Path, path_text: str) -> Path | None:
-    root = download_dir.expanduser().resolve()
+    root_alias = download_dir.expanduser().absolute()
+    try:
+        root = root_alias.resolve(strict=True)
+    except OSError:
+        return None
     path = Path(path_text).expanduser()
     if not path.is_absolute():
-        working_directory_candidate = path.resolve()
-        try:
-            working_directory_candidate.relative_to(root)
-        except ValueError:
-            path = root / path
-        else:
+        working_directory_candidate = path.absolute()
+        if any(
+            working_directory_candidate.is_relative_to(candidate_root)
+            for candidate_root in (root_alias, root)
+        ):
             path = working_directory_candidate
+        else:
+            path = root_alias / path
     try:
         absolute = path.absolute()
-        relative = absolute.relative_to(root)
-        current = root
+        for candidate_root in (root_alias, root):
+            try:
+                relative = absolute.relative_to(candidate_root)
+            except ValueError:
+                continue
+            lexical_root = candidate_root
+            break
+        else:
+            return None
+        current = lexical_root
         for part in relative.parts:
             current = current / part
             if current.is_symlink():

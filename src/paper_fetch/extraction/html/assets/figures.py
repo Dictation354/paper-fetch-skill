@@ -27,6 +27,7 @@ from .dom import (
     _soup_attr_url,
     looks_like_full_size_asset_url,
 )
+from .silverchair import silverchair_download_image_url
 
 from bs4 import BeautifulSoup, Tag
 
@@ -355,6 +356,22 @@ def _image_full_size_url_from_soup(
     anchor_url = _image_anchor_url(image, node, source_url)
     if anchor_url and looks_like_full_size_asset_url(anchor_url):
         return anchor_url
+
+    expected_image = normalize_text(
+        str(
+            image.get("path-from-xml")
+            or image.get("data-path-from-xml")
+            or _image_preview_url_from_soup(image, source_url)
+            or ""
+        )
+    )
+    silverchair_url = silverchair_download_image_url(
+        node,
+        source_url,
+        expected_image_basename=expected_image,
+    )
+    if silverchair_url:
+        return silverchair_url
 
     if single_image:
         return _figure_full_size_url_from_soup(node, source_url)

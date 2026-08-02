@@ -102,6 +102,7 @@ class MetadataOutput(TypedDict, total=False):
     authors: list[str]
     abstract: str | None
     journal: str | None
+    article_type: str | None
     published: str | None
     keywords: list[str]
     license_urls: list[str]
@@ -141,6 +142,7 @@ class AssetOutput(TypedDict, total=False):
     downloaded_bytes: int | None
     width: int | None
     height: int | None
+    preview_accepted: bool
     provenance: list[str]
 
 
@@ -218,6 +220,7 @@ class AssetDiagnosticOutput(TypedDict, total=False):
     byte_count: int | None
     width: int | None
     height: int | None
+    preview_accepted: bool
     sha256: str | None
     failure_code: str | None
     provenance: list[str]
@@ -229,6 +232,8 @@ class AssetKindSummaryOutput(TypedDict, total=False):
     requested: int
     full_size: int
     preview: int
+    accepted_preview: int
+    fallback_preview: int
     failed: int
     placeholder_suspected: int
     not_requested: int
@@ -251,6 +256,8 @@ class AssetQualitySummaryOutput(TypedDict, total=False):
     local: int
     full_size: int
     preview: int
+    accepted_preview: int
+    fallback_preview: int
     failed: int
     placeholder_suspected: int
     not_requested: int
@@ -258,6 +265,7 @@ class AssetQualitySummaryOutput(TypedDict, total=False):
     remote_link_count: int
     remote_only_count: int
     failure_codes: list[str]
+    issue_codes: list[str]
     by_kind: AssetByKindOutput
     diagnostics: list[AssetDiagnosticOutput]
 
@@ -270,7 +278,6 @@ class QualityOutput(TypedDict, total=False):
     token_estimate_breakdown: TokenEstimateBreakdownOutput
     warnings: list[str]
     source_trail: list[str]
-    trace: list[TraceEventOutput]
     confidence: str
     flags: list[str]
     body_metrics: BodyMetricsOutput
@@ -290,6 +297,19 @@ class ArticleOutput(TypedDict, total=False):
     quality: QualityOutput
 
 
+class FetchAcceptanceSummaryOutput(TypedDict, total=False):
+    overall: str
+    identity: str
+    fetch: str
+    content: str
+    asset: str
+    output: str
+    provenance: str
+    has_fulltext: bool
+    has_abstract: bool
+    token_estimate: int
+
+
 class FetchPaperOutput(ErrorPayloadOutput, total=False):
     doi: str | None
     source: str
@@ -303,6 +323,8 @@ class FetchPaperOutput(ErrorPayloadOutput, total=False):
     markdown: str | None
     metadata: MetadataOutput | None
     saved_markdown_path: str | None
+    acceptance: FetchAcceptanceSummaryOutput
+    diagnostic_artifacts: list[dict[str, Any]]
 
 
 class CacheEntryOutput(TypedDict, total=False):
@@ -457,19 +479,6 @@ class BatchCheckOutput(ErrorPayloadOutput, total=False):
     abort_reason: ErrorPayloadOutput | None
 
 
-class BatchFetchAcceptanceOutput(TypedDict, total=False):
-    overall: str
-    identity: str
-    fetch: str
-    content: str
-    asset: str
-    output: str
-    provenance: str
-    has_fulltext: bool
-    has_abstract: bool
-    token_estimate: int
-
-
 class BatchFetchArtifactOutput(TypedDict, total=False):
     path: str
     kind: str
@@ -496,7 +505,7 @@ class BatchFetchItemOutput(TypedDict, total=False):
     source: str | None
     reused: bool
     cache_hit: bool
-    acceptance: BatchFetchAcceptanceOutput
+    acceptance: FetchAcceptanceSummaryOutput
     fallback_codes: list[str]
     warning_codes: list[str]
     failure_codes: list[str]
@@ -623,7 +632,8 @@ class BrowserPreflightItemOutput(TypedDict, total=False):
     status: str
     ready: bool
     reason_code: str
-    reason: str
+    stage: str | None
+    message: str | None
     next_action: str
     target_url: str | None
     final_url: str | None
@@ -638,6 +648,8 @@ class BrowserPreflightSummaryOutput(TypedDict, total=False):
     ready: int
     challenge: int
     auth_required: int
+    network_timeout: int
+    extraction_error: int
     runtime_error: int
     cancelled: int
 

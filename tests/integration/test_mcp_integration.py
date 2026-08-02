@@ -365,7 +365,9 @@ SERVER_SCRIPT = textwrap.dedent(
         result = BrowserPreflightResult(
             provider=provider,
             provider_label="Wiley",
-            ok=True,
+            status="ready",
+            reason_code="browser_preflight_ready",
+            stage="complete",
             target_url=target_url or "https://onlinelibrary.wiley.com/doi/full/10.1111/example",
             final_url=target_url or "https://onlinelibrary.wiley.com/doi/full/10.1111/example",
             title="Wiley preflight sample",
@@ -678,6 +680,21 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             progress_callback=progress_callback,
                         )
                         self.assertFalse(custom_fetch.is_error)
+                        self.assertEqual(
+                            custom_fetch.structured_content["status"], "ok"
+                        )
+                        self.assertEqual(
+                            custom_fetch.structured_content["acceptance"]["fetch"],
+                            "ok",
+                        )
+                        self.assertEqual(
+                            custom_fetch.structured_content["acceptance"]["content"],
+                            "fulltext",
+                        )
+                        self.assertEqual(
+                            custom_fetch.structured_content["acceptance"]["output"],
+                            "complete",
+                        )
                         self.assertEqual(
                             custom_fetch.structured_content["article"], None
                         )

@@ -79,12 +79,17 @@ def browser_risk_providers() -> list[str]:
     return providers
 
 
-def _expected_source_for_sample(manifest: dict[str, Any], purpose: str) -> str | None:
+def _accepted_sources_for_sample(
+    manifest: dict[str, Any],
+    purpose: str,
+) -> tuple[str, ...]:
     route_sources = manifest.get("route_sources")
     if not isinstance(route_sources, dict):
-        return normalize_text(str(manifest.get("display_source") or "")) or None
+        source = normalize_text(str(manifest.get("display_source") or ""))
+        return (source,) if source else ()
     if purpose == "pdf_fallback":
-        return normalize_text(route_sources.get("pdf_fallback")) or None
+        source = normalize_text(route_sources.get("pdf_fallback"))
+        return (source,) if source else ()
     main_path = (
         manifest.get("main_path") if isinstance(manifest.get("main_path"), list) else []
     )
@@ -93,8 +98,9 @@ def _expected_source_for_sample(manifest: dict[str, Any], purpose: str) -> str |
         if step_name in {"article_html", "landing_html", "xml"} and route_sources.get(
             step_name
         ):
-            return normalize_text(route_sources.get(step_name))
-    return normalize_text(str(manifest.get("display_source") or "")) or None
+            return (normalize_text(route_sources.get(step_name)),)
+    source = normalize_text(str(manifest.get("display_source") or ""))
+    return (source,) if source else ()
 
 
 def collect_manifest_samples(manifest: dict[str, Any]) -> list[dict[str, Any]]:
@@ -114,7 +120,9 @@ def collect_manifest_samples(manifest: dict[str, Any]) -> list[dict[str, Any]]:
             {
                 "purpose": str(purpose),
                 "doi": normalize_doi(str(sample["doi"])),
-                "expected_source": _expected_source_for_sample(manifest, str(purpose)),
+                "accepted_sources": list(
+                    _accepted_sources_for_sample(manifest, str(purpose))
+                ),
             }
         )
     extra_fixtures = manifest.get("extra_fixtures")
@@ -127,7 +135,9 @@ def collect_manifest_samples(manifest: dict[str, Any]) -> list[dict[str, Any]]:
                 {
                     "purpose": purpose,
                     "doi": normalize_doi(str(sample["doi"])),
-                    "expected_source": _expected_source_for_sample(manifest, purpose),
+                    "accepted_sources": list(
+                        _accepted_sources_for_sample(manifest, purpose)
+                    ),
                 }
             )
     return samples
@@ -264,7 +274,13 @@ def evaluate_sample(
 ) -> dict[str, Any]:
     result = runner(provider, str(sample["doi"]))
     actual_source = normalize_text(result.get("source")) or None
-    expected_source = sample.get("expected_source")
+    accepted_sources = tuple(
+        dict.fromkeys(
+            source
+            for raw_source in sample.get("accepted_sources") or []
+            if (source := normalize_text(raw_source))
+        )
+    )
     categories: list[str] = []
     status = str(result.get("status") or "")
     error_blob = " ".join(
@@ -276,11 +292,12 @@ def evaluate_sample(
         )
         if value
     )
-    if expected_source and actual_source and actual_source != expected_source:
+    if accepted_sources and actual_source and actual_source not in accepted_sources:
         categories.append("source_mismatch")
     if (
         sample["purpose"] != "pdf_fallback"
         and actual_source
+        and actual_source not in accepted_sources
         and re.search(r"(?:^|_)pdf(?:_|$)", actual_source)
     ):
         categories.append("pdf_fallback_silent_degradation")
@@ -304,7 +321,7 @@ def evaluate_sample(
     return {
         "purpose": sample["purpose"],
         "doi": sample["doi"],
-        "expected_source": expected_source,
+        "accepted_sources": list(accepted_sources),
         "actual_source": actual_source,
         "status": status,
         "source_mismatch": "source_mismatch" in categories,

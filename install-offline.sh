@@ -11,9 +11,12 @@ RUN_SMOKE=1
 UNINSTALL=0
 PURGE=0
 INSTALL_ROOT=""
+PURGE_INSTALL_ROOT=""
 OFFLINE_ENV_FILE=""
 REUSE_ENV_FILE=0
 INSTALLER_MANIFEST_FILE=""
+HOST_PLATFORM=""
+HOST_ARCH=""
 
 MANAGED_BEGIN="# BEGIN paper-fetch offline managed"
 MANAGED_END="# END paper-fetch offline managed"
@@ -87,7 +90,7 @@ load_installer_manifest() {
   local value
   while IFS= read -r value; do
     values+=("$value")
-  done < <("$PYTHON_BIN" -c '
+  done < <("$PYTHON_BIN" -I -c '
 import json
 import sys
 
@@ -172,8 +175,10 @@ Options:
   --install-dir <path>    Install runtime files here. Default: ~/.local/share/paper-fetch-skill.
   --preset=headless|headful
                             Select managed browser headless/headful runtime env. Default: headless.
-  --user-config           Also merge the offline runtime block into ~/.config/paper-fetch/.env.
-  --no-user-config        Do not touch ~/.config/paper-fetch/.env. This is the default.
+  --user-config           Also merge the offline runtime block into the platform user config.
+                          Linux: ~/.config/paper-fetch/.env
+                          macOS: ~/Library/Application Support/paper-fetch/.env
+  --no-user-config        Do not touch the platform user config. This is the default.
   --reuse-env-file <path> Use an existing offline.env without modifying it.
   --skip-smoke            Skip local command smoke checks after installation.
   --uninstall             Remove user-level shell, skill, and MCP integration without deleting the install directory.
@@ -328,7 +333,7 @@ mcp_name_regex() {
 }
 
 offline_manifest_value() {
-  "$PYTHON_BIN" -c '
+  "$PYTHON_BIN" -I -c '
 import json
 import sys
 
@@ -360,37 +365,196 @@ file_mode() {
   stat -c '%a' "$1" 2>/dev/null || stat -f '%Lp' "$1" 2>/dev/null || true
 }
 
+canonical_path() {
+  "$PYTHON_BIN" -I - "$1" <<'PY'
+from pathlib import Path
+import sys
+
+print(Path(sys.argv[1]).resolve(strict=False))
+PY
+}
+
+check_target_is_not_home_or_ancestor() {
+  local canonical_target="$1"
+  local action="$2"
+  local canonical_home
+
+  case "$canonical_target" in
+    /) die "Refusing to $action unsafe directory: $canonical_target" ;;
+  esac
+
+  [ -n "${HOME:-}" ] || die "HOME is required to validate the $action directory."
+  canonical_home="$(canonical_path "$HOME")"
+  case "$canonical_home/" in
+    "$canonical_target/"*)
+      die "Refusing to $action HOME or an ancestor of HOME: $canonical_target"
+      ;;
+  esac
+}
+
+install_manifest_is_owned() {
+  local manifest="$1"
+  [ -f "$manifest" ] || return 1
+
+  "$PYTHON_BIN" -I - "$manifest" <<'PY' >/dev/null 2>&1
+from __future__ import annotations
+
+import json
+from pathlib import Path
+import sys
+
+try:
+    manifest = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+except (OSError, UnicodeError, json.JSONDecodeError):
+    raise SystemExit(1)
+
+target = manifest.get("target")
+owned = (
+    manifest.get("schema_version") == 3
+    and manifest.get("project") == "paper-fetch-skill"
+    and manifest.get("entrypoint") == "install-offline.sh"
+    and isinstance(target, dict)
+    and isinstance(target.get("platform"), str)
+    and isinstance(target.get("arch"), str)
+    and isinstance(target.get("python_tag"), str)
+)
+raise SystemExit(0 if owned else 1)
+PY
+}
+
+directory_is_empty() {
+  local first_entry
+  first_entry="$(find "$1" -mindepth 1 -maxdepth 1 -print -quit)"
+  [ -z "$first_entry" ]
+}
+
+check_install_target() {
+  local canonical_install_root canonical_bundle_root target_manifest
+
+  canonical_install_root="$(canonical_path "$INSTALL_ROOT")"
+  canonical_bundle_root="$(canonical_path "$BUNDLE_ROOT")"
+  check_target_is_not_home_or_ancestor "$canonical_install_root" "install into"
+
+  if [ "$canonical_install_root" = "$canonical_bundle_root" ]; then
+    return 0
+  fi
+  if [ ! -e "$INSTALL_ROOT" ] && [ ! -L "$INSTALL_ROOT" ]; then
+    return 0
+  fi
+  [ -d "$INSTALL_ROOT" ] \
+    || die "Refusing to install into a non-directory target: $INSTALL_ROOT"
+  if directory_is_empty "$canonical_install_root"; then
+    return 0
+  fi
+
+  target_manifest="$canonical_install_root/offline-manifest.json"
+  install_manifest_is_owned "$target_manifest" \
+    || die "Refusing to replace a non-empty unowned install directory: $canonical_install_root"
+  [ -s "$canonical_install_root/runtime/python-bin" ] \
+    || die "Refusing to replace a non-empty directory without the runtime/python-bin installer marker: $canonical_install_root"
+}
+
 check_platform() {
   require_file "$BUNDLE_ROOT/offline-manifest.json"
 
-  local platform arch manifest_platform manifest_arch
-  platform="$(host_platform)" || die "This offline bundle supports Linux and macOS only; detected $(uname -s)."
-  arch="$(host_arch)" || die "This offline bundle supports x86_64 and arm64 only; detected $(uname -m)."
+  local manifest_platform manifest_arch manifest_minimum_os_version host_os_version
+  HOST_PLATFORM="$(host_platform)" || die "This offline bundle supports Linux and macOS only; detected $(uname -s)."
+  HOST_ARCH="$(host_arch)" || die "This offline bundle supports x86_64 and arm64 only; detected $(uname -m)."
   manifest_platform="$(offline_manifest_value target.platform)"
   manifest_arch="$(offline_manifest_value target.arch)"
   [ -n "$manifest_platform" ] || die "offline-manifest.json is missing target.platform."
   [ -n "$manifest_arch" ] || die "offline-manifest.json is missing target.arch."
 
-  case "$platform:$arch" in
-    linux:x86_64|macos:x86_64|macos:arm64) ;;
+  case "$HOST_PLATFORM:$HOST_ARCH" in
+    linux:x86_64|macos:arm64) ;;
     linux:arm64) die "Linux offline bundles currently support x86_64 only; detected arm64." ;;
-    *) die "Unsupported offline target host: $platform/$arch." ;;
+    macos:x86_64) die "macOS offline bundles currently support Apple Silicon arm64 only; detected x86_64." ;;
+    *) die "Unsupported offline target host: $HOST_PLATFORM/$HOST_ARCH." ;;
   esac
 
-  [ "$platform" = "$manifest_platform" ] || die "bundle targets $manifest_platform; detected $platform."
-  [ "$arch" = "$manifest_arch" ] || die "bundle targets $manifest_arch; detected $arch."
+  [ "$HOST_PLATFORM" = "$manifest_platform" ] \
+    || die "bundle targets $manifest_platform; detected $HOST_PLATFORM."
+  [ "$HOST_ARCH" = "$manifest_arch" ] \
+    || die "bundle targets $manifest_arch; detected $HOST_ARCH."
+
+  if [ "$HOST_PLATFORM" = "macos" ]; then
+    manifest_minimum_os_version="$(offline_manifest_value target.minimum_os_version)"
+    [ -n "$manifest_minimum_os_version" ] \
+      || die "offline-manifest.json is missing target.minimum_os_version for macOS."
+    command -v sw_vers >/dev/null 2>&1 \
+      || die "sw_vers is required to verify the macOS version."
+    host_os_version="$(sw_vers -productVersion)"
+    "$PYTHON_BIN" -I - "$host_os_version" "$manifest_minimum_os_version" <<'PY' \
+      || die "This bundle requires macOS $manifest_minimum_os_version or newer; detected macOS $host_os_version."
+from __future__ import annotations
+
+import re
+import sys
+
+
+def version_tuple(value: str) -> tuple[int, ...]:
+    parts = value.strip().split(".")
+    if not parts or any(re.fullmatch(r"\d+", part) is None for part in parts):
+        raise SystemExit(1)
+    return tuple(int(part) for part in parts)
+
+
+detected = version_tuple(sys.argv[1])
+minimum = version_tuple(sys.argv[2])
+width = max(len(detected), len(minimum))
+detected += (0,) * (width - len(detected))
+minimum += (0,) * (width - len(minimum))
+raise SystemExit(0 if detected >= minimum else 1)
+PY
+  fi
 }
 
 check_python() {
   command -v "$PYTHON_BIN" >/dev/null 2>&1 || die "python3 was not found on PATH."
   require_file "$BUNDLE_ROOT/offline-manifest.json"
 
-  local version tag manifest_tag
-  version="$("$PYTHON_BIN" -c 'import sys; print(".".join(map(str, sys.version_info[:3])))')"
-  tag="$("$PYTHON_BIN" -c 'import sys; print(f"cp{sys.version_info.major}{sys.version_info.minor}" if sys.implementation.name == "cpython" else sys.implementation.name)')"
-  manifest_tag="$("$PYTHON_BIN" -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8")).get("target", {}).get("python_tag", ""))' "$BUNDLE_ROOT/offline-manifest.json")"
+  local probe version implementation tag interpreter_arch soabi abi_flags gil_disabled
+  local manifest_tag expected_soabi_prefix
+  probe="$("$PYTHON_BIN" -I -c '
+# PAPER_FETCH_INTERPRETER_PROBE
+import platform
+import sys
+import sysconfig
+
+version = ".".join(map(str, sys.version_info[:3]))
+implementation = sys.implementation.name
+tag = (
+    f"cp{sys.version_info.major}{sys.version_info.minor}"
+    if implementation == "cpython"
+    else implementation
+)
+machine = platform.machine().lower()
+machine = {"amd64": "x86_64", "aarch64": "arm64"}.get(machine, machine)
+soabi = str(sysconfig.get_config_var("SOABI") or "")
+abi_flags = str(getattr(sys, "abiflags", "") or "-")
+gil_disabled = "1" if sysconfig.get_config_var("Py_GIL_DISABLED") else "0"
+print("|".join((version, implementation, tag, machine, soabi, abi_flags, gil_disabled)))
+')"
+  IFS='|' read -r version implementation tag interpreter_arch soabi abi_flags gil_disabled <<< "$probe"
+  manifest_tag="$("$PYTHON_BIN" -I -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8")).get("target", {}).get("python_tag", ""))' "$BUNDLE_ROOT/offline-manifest.json")"
   [ -n "$manifest_tag" ] || die "offline-manifest.json is missing target.python_tag."
+
+  [ "$implementation" = "cpython" ] \
+    || die "Offline bundles require standard GIL CPython; detected $implementation $version."
+  case "$tag" in
+    cp311|cp312|cp313|cp314) ;;
+    *) die "Offline bundles require standard GIL CPython 3.11, 3.12, 3.13, or 3.14; detected $version ($tag)." ;;
+  esac
   [ "$tag" = "$manifest_tag" ] || die "bundle requires CPython $manifest_tag; detected Python $version ($tag)."
+  [ "$interpreter_arch" = "$HOST_ARCH" ] \
+    || die "bundle requires Python interpreter architecture $HOST_ARCH; detected $interpreter_arch Python $version."
+  [ "$abi_flags" = "-" ] && [ "$gil_disabled" = "0" ] \
+    || die "Offline bundles require standard GIL CPython without debug or free-threaded ABI flags; detected SOABI ${soabi:-<empty>}."
+  expected_soabi_prefix="cpython-${tag#cp}-"
+  case "$soabi" in
+    "$expected_soabi_prefix"*) ;;
+    *) die "Offline bundles require standard SOABI ${expected_soabi_prefix}*; detected ${soabi:-<empty>}." ;;
+  esac
 }
 
 write_runtime_python_file() {
@@ -402,6 +566,116 @@ write_runtime_python_file() {
 
 verify_checksums() {
   require_file "$BUNDLE_ROOT/sha256sums.txt"
+  log "Validating bundled payload inventory"
+  "$PYTHON_BIN" -I - "$BUNDLE_ROOT" <<'PY'
+from __future__ import annotations
+
+import os
+from pathlib import Path, PurePosixPath
+import re
+import stat
+import sys
+
+
+def fail(message: str) -> "NoReturn":
+    raise SystemExit(f"unsafe offline checksum inventory: {message}")
+
+
+bundle_root = Path(sys.argv[1])
+checksum_path = bundle_root / "sha256sums.txt"
+try:
+    checksum_mode = checksum_path.lstat().st_mode
+except OSError as exc:
+    fail(f"cannot inspect sha256sums.txt: {exc}")
+if stat.S_ISLNK(checksum_mode) or not stat.S_ISREG(checksum_mode):
+    fail("sha256sums.txt must be a real regular file")
+
+try:
+    checksum_lines = checksum_path.read_text(encoding="utf-8").splitlines()
+except (OSError, UnicodeError) as exc:
+    fail(f"cannot read sha256sums.txt: {exc}")
+
+entry_pattern = re.compile(r"([0-9A-Fa-f]{64})  (\./.+)\Z")
+expected: set[str] = set()
+for line_number, line in enumerate(checksum_lines, start=1):
+    match = entry_pattern.fullmatch(line)
+    if match is None:
+        fail(f"line {line_number} is not '<sha256>  ./<relative-path>'")
+    inventory_path = match.group(2)
+    relative_text = inventory_path[2:]
+    if "\\" in relative_text or any(
+        ord(character) < 32 or ord(character) == 127
+        for character in relative_text
+    ):
+        fail(f"line {line_number} contains an unsafe path: {inventory_path!r}")
+    parts = relative_text.split("/")
+    normalized = PurePosixPath(relative_text).as_posix()
+    if (
+        not relative_text
+        or relative_text.startswith("/")
+        or any(part in ("", ".", "..") for part in parts)
+        or normalized != relative_text
+    ):
+        fail(f"line {line_number} is not a normalized relative path: {inventory_path!r}")
+    if relative_text == "sha256sums.txt":
+        fail("sha256sums.txt must not list itself")
+    if relative_text in expected:
+        fail(f"duplicate path on line {line_number}: {inventory_path!r}")
+
+    cursor = bundle_root
+    for part in parts:
+        cursor /= part
+        try:
+            mode = cursor.lstat().st_mode
+        except OSError as exc:
+            fail(f"listed payload path is missing: {inventory_path!r}: {exc}")
+        if stat.S_ISLNK(mode):
+            fail(f"payload symlink is not allowed: {inventory_path!r}")
+    if not stat.S_ISREG(mode):
+        fail(f"listed payload path is not a regular file: {inventory_path!r}")
+    expected.add(relative_text)
+
+actual: set[str] = set()
+for current_root, directory_names, file_names in os.walk(
+    bundle_root,
+    topdown=True,
+    followlinks=False,
+):
+    current = Path(current_root)
+    for name in directory_names:
+        candidate = current / name
+        try:
+            mode = candidate.lstat().st_mode
+        except OSError as exc:
+            fail(f"cannot inspect payload directory {candidate}: {exc}")
+        if stat.S_ISLNK(mode):
+            relative = candidate.relative_to(bundle_root).as_posix()
+            fail(f"payload symlink is not allowed: './{relative}'")
+        if not stat.S_ISDIR(mode):
+            relative = candidate.relative_to(bundle_root).as_posix()
+            fail(f"payload path is not a directory: './{relative}'")
+    for name in file_names:
+        candidate = current / name
+        relative = candidate.relative_to(bundle_root).as_posix()
+        try:
+            mode = candidate.lstat().st_mode
+        except OSError as exc:
+            fail(f"cannot inspect payload file './{relative}': {exc}")
+        if stat.S_ISLNK(mode):
+            fail(f"payload symlink is not allowed: './{relative}'")
+        if not stat.S_ISREG(mode):
+            fail(f"payload path is not a regular file: './{relative}'")
+        if candidate == checksum_path:
+            continue
+        actual.add(relative)
+
+unlisted = sorted(actual - expected)
+if unlisted:
+    fail("unlisted payload file(s): " + ", ".join(f"./{path}" for path in unlisted[:10]))
+missing = sorted(expected - actual)
+if missing:
+    fail("listed payload file(s) are missing: " + ", ".join(f"./{path}" for path in missing[:10]))
+PY
   log "Verifying bundled file checksums"
   if command -v sha256sum >/dev/null 2>&1; then
     (cd "$BUNDLE_ROOT" && sha256sum --check sha256sums.txt --quiet)
@@ -448,6 +722,22 @@ check_bundle_assets() {
   [ -x "$BUNDLE_ROOT/formula-tools/bin/texmath" ] || die "Bundled texmath is not executable: $BUNDLE_ROOT/formula-tools/bin/texmath"
 
   require_file "$BUNDLE_ROOT/skills/$SKILL_NAME/SKILL.md"
+}
+
+check_macos_quarantine() {
+  [ "$HOST_PLATFORM" = "macos" ] || return 0
+  command -v xattr >/dev/null 2>&1 \
+    || die "xattr is required to verify the macOS offline bundle."
+
+  local quarantine_output
+  if quarantine_output="$(xattr -r -s -v "$BUNDLE_ROOT" 2>&1)"; then
+    :
+  else
+    die "Could not recursively inspect macOS quarantine attributes; refusing to install the bundle: $quarantine_output"
+  fi
+  if grep -E -q ': com\.apple\.quarantine$' <<< "$quarantine_output"; then
+    die "macOS quarantine is present within the offline bundle. Run 'xattr -dr com.apple.quarantine \"$BUNDLE_ROOT\"' after verifying the release, then retry the installer."
+  fi
 }
 
 mcp_python_bin() {
@@ -542,6 +832,21 @@ select_shell_startup_file() {
   esac
 }
 
+resolve_managed_file_target() {
+  local target="$1"
+  local link depth=0
+  while [ -L "$target" ]; do
+    depth=$((depth + 1))
+    [ "$depth" -le 32 ] || die "Refusing to edit a shell startup symlink loop: $1"
+    link="$(readlink "$target")"
+    case "$link" in
+      /*) target="$link" ;;
+      *) target="$(dirname "$target")/$link" ;;
+    esac
+  done
+  printf '%s\n' "$target"
+}
+
 write_posix_shell_block() {
   local key
   printf '%s\n' "$MANAGED_BEGIN"
@@ -563,19 +868,20 @@ write_fish_shell_block() {
 }
 
 write_shell_startup_file() {
-  local tmp mode
+  local tmp mode edit_target
 
   select_shell_startup_file
+  edit_target="$(resolve_managed_file_target "$SHELL_STARTUP_TARGET")"
   tmp="$(mktemp)"
   mode=""
-  mkdir -p "$(dirname "$SHELL_STARTUP_TARGET")"
-  if [ -f "$SHELL_STARTUP_TARGET" ]; then
-    mode="$(file_mode "$SHELL_STARTUP_TARGET")"
+  mkdir -p "$(dirname "$edit_target")"
+  if [ -f "$edit_target" ]; then
+    mode="$(file_mode "$edit_target")"
     awk -v begin="$MANAGED_BEGIN" -v end="$MANAGED_END" '
       $0 == begin { skip = 1; next }
       $0 == end { skip = 0; next }
       !skip { print }
-    ' "$SHELL_STARTUP_TARGET" > "$tmp"
+    ' "$edit_target" > "$tmp"
   else
     : > "$tmp"
   fi
@@ -589,9 +895,9 @@ write_shell_startup_file() {
     fi
   } >> "$tmp"
 
-  mv "$tmp" "$SHELL_STARTUP_TARGET"
+  mv "$tmp" "$edit_target"
   if [ -n "$mode" ]; then
-    chmod "$mode" "$SHELL_STARTUP_TARGET"
+    chmod "$mode" "$edit_target"
   fi
   log "Updated shell startup file at $SHELL_STARTUP_TARGET"
 }
@@ -751,28 +1057,31 @@ PY
 remove_managed_block_from_file() {
   local target="$1"
   local remove_if_empty="${2:-0}"
-  local tmp mode
+  local tmp mode edit_target
 
-  [ -f "$target" ] || return 0
+  [ -f "$target" ] || [ -L "$target" ] || return 0
+  edit_target="$(resolve_managed_file_target "$target")"
+  [ -f "$edit_target" ] || return 0
+  grep -F -x -q "$MANAGED_BEGIN" "$edit_target" || return 0
   tmp="$(mktemp)"
-  mode="$(file_mode "$target")"
+  mode="$(file_mode "$edit_target")"
   awk -v begin="$MANAGED_BEGIN" -v end="$MANAGED_END" '
     $0 == begin { skip = 1; next }
     $0 == end { skip = 0; next }
     !skip { print }
-  ' "$target" > "$tmp"
+  ' "$edit_target" > "$tmp"
 
   if [ "$remove_if_empty" = "1" ] && ! grep -q '[^[:space:]]' "$tmp"; then
-    rm -f "$tmp" "$target"
+    rm -f "$tmp" "$edit_target"
     log "Removed empty managed file $target"
     return 0
   fi
 
-  mv "$tmp" "$target"
+  mv "$tmp" "$edit_target"
   if [ -n "$mode" ]; then
-    chmod "$mode" "$target"
+    chmod "$mode" "$edit_target"
   fi
-  log "Removed managed shell block from $target"
+  log "Removed managed block from $target"
 }
 
 remove_shell_startup_blocks() {
@@ -782,6 +1091,15 @@ remove_shell_startup_blocks() {
   remove_managed_block_from_file "$HOME/.zshrc"
   remove_managed_block_from_file "$HOME/.profile"
   remove_managed_block_from_file "$HOME/.config/fish/conf.d/paper-fetch-offline.fish" 1
+}
+
+remove_user_config_blocks() {
+  [ -n "${HOME:-}" ] || die "HOME is required for --uninstall."
+
+  remove_managed_block_from_file "$HOME/.config/paper-fetch/.env" 1
+  remove_managed_block_from_file \
+    "$HOME/Library/Application Support/paper-fetch/.env" \
+    1
 }
 
 remove_installed_skills() {
@@ -885,6 +1203,7 @@ PY
 uninstall_user_integrations() {
   remove_installed_skills
   remove_shell_startup_blocks
+  remove_user_config_blocks
   unregister_codex_mcp
   unregister_claude_mcp
   unregister_antigravity_mcp
@@ -895,12 +1214,48 @@ uninstall_user_integrations() {
 }
 
 purge_install_root() {
-  [ -n "$INSTALL_ROOT" ] || die "INSTALL_ROOT is required for --purge."
-  case "$INSTALL_ROOT" in
-    /|"") die "Refusing to purge unsafe install directory: $INSTALL_ROOT" ;;
+  [ -n "$PURGE_INSTALL_ROOT" ] \
+    || die "Validated purge target is required for --purge."
+  case "$PURGE_INSTALL_ROOT" in
+    /|"") die "Refusing to purge unsafe install directory: $PURGE_INSTALL_ROOT" ;;
   esac
-  rm -rf "$INSTALL_ROOT"
-  echo "Install directory deleted: $INSTALL_ROOT"
+  rm -rf -- "$PURGE_INSTALL_ROOT"
+  echo "Install directory deleted: $PURGE_INSTALL_ROOT"
+}
+
+check_purge_target() {
+  [ -n "$INSTALL_ROOT" ] || die "INSTALL_ROOT is required for --purge."
+  local lexical_install_root canonical_install_root target_manifest
+  lexical_install_root="$("$PYTHON_BIN" -I - "$INSTALL_ROOT" <<'PY'
+import os
+import sys
+
+print(os.path.abspath(sys.argv[1]))
+PY
+)"
+  [ ! -L "$lexical_install_root" ] \
+    || die "Refusing to purge through a symbolic-link install directory: $INSTALL_ROOT"
+  [ -d "$INSTALL_ROOT" ] \
+    || die "Refusing to purge a missing install directory: $INSTALL_ROOT"
+
+  canonical_install_root="$(canonical_path "$INSTALL_ROOT")"
+  check_target_is_not_home_or_ancestor "$canonical_install_root" "purge"
+
+  target_manifest="$canonical_install_root/offline-manifest.json"
+  install_manifest_is_owned "$target_manifest" \
+    || die "Refusing to purge a directory without an owned offline-manifest.json: $canonical_install_root"
+  [ -s "$canonical_install_root/runtime/python-bin" ] \
+    || die "Refusing to purge a directory without the runtime/python-bin installer marker: $canonical_install_root"
+  PURGE_INSTALL_ROOT="$lexical_install_root"
+}
+
+user_config_env_file() {
+  [ -n "${HOME:-}" ] || die "HOME is required for --user-config."
+  if [ "$HOST_PLATFORM" = "macos" ]; then
+    printf '%s\n' "$HOME/Library/Application Support/paper-fetch/.env"
+  else
+    printf '%s\n' "$HOME/.config/paper-fetch/.env"
+  fi
 }
 
 write_managed_env_file() {
@@ -1160,9 +1515,13 @@ install_runtime_payload() {
 }
 
 main() {
+  local config_env_file
   load_installer_manifest
 
   if [ "$UNINSTALL" = "1" ]; then
+    if [ "$PURGE" = "1" ]; then
+      check_purge_target
+    fi
     uninstall_user_integrations
     if [ "$PURGE" = "1" ]; then
       purge_install_root
@@ -1173,6 +1532,8 @@ main() {
   check_platform
   check_python
   verify_checksums
+  check_macos_quarantine
+  check_install_target
   verify_skill_bundle_integrity \
     "$BUNDLE_ROOT" \
     "$BUNDLE_ROOT/skills/$SKILL_NAME" \
@@ -1195,9 +1556,9 @@ main() {
   write_activate_script
 
   if [ "$MERGE_USER_CONFIG" = "1" ]; then
-    [ -n "${HOME:-}" ] || die "HOME is required for --user-config."
-    log "Merging offline runtime block into $HOME/.config/paper-fetch/.env"
-    write_managed_env_file "$HOME/.config/paper-fetch/.env"
+    config_env_file="$(user_config_env_file)"
+    log "Merging offline runtime block into $config_env_file"
+    write_managed_env_file "$config_env_file"
   fi
 
   install_skills
@@ -1226,8 +1587,9 @@ main() {
   echo "Install directory: $INSTALL_ROOT"
   echo "Open a new shell, or activate the current one with: source $INSTALL_ROOT/activate-offline.sh"
   echo "Default browser backend: Camoufox (headless: $(browser_headless_value))"
-  echo "The first real fetch may download the Camoufox runtime; doctor and provider status never download it."
-  echo "For a fully offline host, preinstall the complete Camoufox runtime before fetching."
+  echo "The Camoufox browser binary is not bundled, and paper-fetch does not download it automatically during fetch."
+  echo "While online, run '$INSTALL_ROOT/runtime/paper-fetch-python -m camoufox fetch' to download it."
+  echo "Then run 'paper-fetch browser-preflight' to verify the runtime before moving fully offline."
   echo "Browser backend: Camoufox."
   echo "Restart Codex, Claude Code, and the Antigravity CLI so they rescan skills and MCP registration."
   echo "Elsevier setup: request a key at https://dev.elsevier.com/, then add ELSEVIER_API_KEY=\"...\" to $OFFLINE_ENV_FILE before fetching Elsevier papers."

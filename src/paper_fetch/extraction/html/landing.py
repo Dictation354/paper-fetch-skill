@@ -58,7 +58,7 @@ def _status_code(response: Mapping[str, Any]) -> int:
     return int(response.get("status_code") or 0)
 
 
-def _build_result(
+def build_landing_html_result(
     response: Mapping[str, Any],
     *,
     current_url: str,
@@ -106,7 +106,7 @@ def fetch_landing_html(
         status_code = _status_code(response)
         redirect_location = _redirect_location(response)
         if status_code not in REDIRECT_STATUS_CODES or not redirect_location:
-            return _build_result(
+            return build_landing_html_result(
                 response,
                 current_url=current_url,
                 decoder=decoder,
@@ -124,7 +124,7 @@ def fetch_landing_html(
     if raise_on_redirect_limit:
         raise LandingRedirectLimitExceeded(landing_url, max(0, int(max_redirects)))
 
-    return _build_result(
+    return build_landing_html_result(
         response,
         current_url=current_url,
         decoder=decoder,

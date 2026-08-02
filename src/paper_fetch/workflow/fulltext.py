@@ -40,6 +40,7 @@ from ..tracing import (
     fallback_marker,
     fulltext_marker,
     merge_trace,
+    project_source_trail_trace,
     resolve_marker,
     route_marker,
     trace_from_markers,
@@ -541,6 +542,7 @@ def fetch_article(
     assert runtime.artifact_store is not None
     try:
         active_env = runtime.env
+        runtime.fetch_trace = []
         active_transport = runtime.transport
         client_registry = dict(runtime.get_clients())
         resolver = resolve_paper_fn or resolve_paper
@@ -623,6 +625,7 @@ def fetch_article(
                     source_trail=source_trail,
                     trace=trace,
                 )
+                runtime.fetch_trace = project_source_trail_trace(source_trail, trace)
                 break
             source_trail.append(
                 route_marker(f"provider_candidate_{candidate_provider}_rejected")
@@ -644,7 +647,7 @@ def fetch_article(
                 [fallback_marker(f"{provider_name}_html_managed_by_provider")],
             )
 
-        return _fallback_to_metadata_only(
+        fallback_article = _fallback_to_metadata_only(
             metadata=metadata,
             resolved=resolved,
             strategy=strategy,
@@ -653,6 +656,8 @@ def fetch_article(
             trace=trace,
             provider_failure=_primary_provider_failure(provider_failures),
         )
+        runtime.fetch_trace = project_source_trail_trace(source_trail, trace)
+        return fallback_article
     finally:
         if owns_runtime:
             runtime.close()

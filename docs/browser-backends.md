@@ -20,7 +20,8 @@ python -m pip install "paper-fetch-skill[full]"
 
 离线安装包始终按 `full` 构建，但不重新分发浏览器 binary。完全离线环境需提前
 准备 Camoufox active runtime，包括相邻配置、addons 和字体；只复制可执行文件
-不足以组成可用 runtime。
+不足以组成可用 runtime。联网准备阶段应显式运行 `python -m camoufox fetch`，
+普通抓取随后使用 Camoufox package 管理的 active runtime。
 
 ## 选择与配置
 
@@ -33,7 +34,7 @@ python -m pip install "paper-fetch-skill[full]"
 |---|---|
 | `PAPER_FETCH_BROWSER_BACKEND` | 唯一合法值为 `camoufox` |
 | `PAPER_FETCH_BROWSER_HEADLESS` | managed runtime 是否 headless |
-| `PAPER_FETCH_BROWSER_BINARY_PATH` | 已准备好的 Camoufox runtime executable 覆盖 |
+| `PAPER_FETCH_BROWSER_BINARY_PATH` | 仅用于自行维护、且支持 Camoufox custom-executable metadata 语义的 executable 覆盖 |
 | `PAPER_FETCH_BROWSER_PROFILE_DIR` | provider storage-state/profile 目录覆盖 |
 | `PAPER_FETCH_BROWSER_USER_DATA_DIR` | profile 目录的后备覆盖 |
 | `PAPER_FETCH_BROWSER_TIMEOUT_MS` | browser navigation timeout |
@@ -42,6 +43,13 @@ python -m pip install "paper-fetch-skill[full]"
 默认状态位于 platformdirs 用户数据目录下的
 `publisher-browser-profiles/<provider>-camoufox/storage-state.json`。不同 provider
 不共享登录态。
+
+macOS 官方 managed app bundle 把 executable 放在 `Contents/MacOS`，把运行属性表
+放在 `Contents/Resources`。不要把官方 cache 内的
+`Contents/MacOS/camoufox` 配置为 `PAPER_FETCH_BROWSER_BINARY_PATH`；这样会把
+managed bundle 错当成 custom executable。官方 runtime 应保持该变量未设置，
+由 `python -m camoufox fetch` 和 Camoufox active-version 配置共同管理。只有自定义
+runtime 明确实现 Camoufox 的 custom-path metadata 布局时才使用该覆盖。
 
 低层 `PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT` 只影响显式传入 CDP endpoint 的
 开发/测试调用，不选择生产 backend，也不提供旧后端兼容。

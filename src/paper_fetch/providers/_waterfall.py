@@ -11,8 +11,8 @@ from ..tracing import (
     TraceContext,
     TraceEvent,
     merge_trace,
+    project_source_trail_trace,
     source_trail_from_trace,
-    trace_from_markers,
     trace_event,
 )
 from .base import ProviderFailure, RawFulltextPayload, combine_provider_failures
@@ -111,27 +111,7 @@ def _trace_with_markers(
     markers: list[str],
     payload_trace: list[TraceEvent],
 ) -> list[TraceEvent]:
-    remaining = list(payload_trace)
-    events: list[TraceEvent] = []
-    for marker_event in trace_from_markers(markers):
-        matching_index = next(
-            (
-                index
-                for index, event in enumerate(remaining)
-                if event.marker() == marker_event.marker()
-            ),
-            None,
-        )
-        if matching_index is None:
-            events.append(marker_event)
-        else:
-            events.append(remaining.pop(matching_index))
-    events.extend(
-        event
-        for event in remaining
-        if event.code is not None or event.message is not None
-    )
-    return events
+    return project_source_trail_trace(markers, payload_trace)
 
 
 def _failure_with_marker(
@@ -180,7 +160,7 @@ def _failure_with_state(
     source_trail: list[str] = []
     missing_env: list[str] = []
     retry_after_values: list[int] = []
-    trace: list[TraceEvent] = []
+    state_trace: list[TraceEvent] = []
 
     _append_unique_text(warnings, state.warnings)
     _append_unique_text(warnings, failure.warnings)
@@ -189,13 +169,21 @@ def _failure_with_state(
     _append_unique_text(source_trail, failure.source_trail)
     for _label, state_failure in state.failures:
         _append_unique_text(missing_env, state_failure.missing_env)
-        trace = merge_trace(trace, state_failure.trace)
+        state_trace = merge_trace(state_trace, state_failure.trace)
         if state_failure.retry_after_seconds is not None:
             retry_after_values.append(state_failure.retry_after_seconds)
     _append_unique_text(missing_env, failure.missing_env)
     if failure.retry_after_seconds is not None:
         retry_after_values.append(failure.retry_after_seconds)
-    trace = merge_trace(trace, failure.trace)
+    trace = list(state_trace)
+    if (
+        failure.trace
+        and failure.trace != state_trace
+        and all(
+            failure is not state_failure for _label, state_failure in state.failures
+        )
+    ):
+        trace = merge_trace(trace, failure.trace)
 
     return failure.with_updates(
         retry_after_seconds=max(retry_after_values) if retry_after_values else None,
@@ -302,21 +290,27 @@ def run_provider_waterfall(
             _append_unique_text(payload_warnings, [step.success_warning])
         payload.warnings = payload_warnings
 
+        source_trail: list[str] = []
         if step.success_markers:
             source_trail = list(state.initial_source_trail)
             if step.include_failure_trail_on_success:
                 _append_unique_text(source_trail, state.failure_source_trail)
             _append_unique_text(source_trail, list(step.success_markers))
-            payload.trace = _trace_with_markers(source_trail, payload.trace)
         elif state.source_trail:
             source_trail = list(state.source_trail)
             _append_unique_text(source_trail, source_trail_from_trace(payload.trace))
-            payload.trace = _trace_with_markers(source_trail, payload.trace)
         prior_failure_trace = [
             event for _label, failure in state.failures for event in failure.trace
         ]
+        payload.trace = (
+            _trace_with_markers(
+                source_trail,
+                merge_trace(prior_failure_trace, payload.trace),
+            )
+            if source_trail
+            else merge_trace(prior_failure_trace, payload.trace)
+        )
         payload.trace = merge_trace(
-            prior_failure_trace,
             payload.trace,
             [
                 trace_event(

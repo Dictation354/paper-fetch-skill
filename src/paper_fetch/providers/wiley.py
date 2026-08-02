@@ -181,7 +181,7 @@ def _fetch_wiley_tdm_pdf_result(
 ) -> PdfFetchResult:
     active_timeout = timeout
     if context is not None:
-        context.ensure_deadline(timeout)
+        context.initialize_deadline(timeout)
         active_timeout = max(1, int(math.ceil(context.remaining_seconds(timeout))))
     request_headers = {"Accept": PDF_ACCEPT_HEADER, **dict(headers)}
     maximum_pdf_bytes = pdf_max_bytes()

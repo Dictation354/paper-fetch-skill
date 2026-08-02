@@ -377,7 +377,7 @@ extraction_hints:
     publication_keywords: []
   asset_retry:
     name: ieee
-    key_fn: paper_fetch.providers._ieee_html:_ieee_asset_retry_key
+    key_fn: paper_fetch.providers._ieee_asset_identity:_ieee_asset_retry_key
     retryable_failure: paper_fetch.providers._asset_retry:is_retryable_asset_failure
     failure_match: null
   metadata_merge: []

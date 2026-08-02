@@ -24,7 +24,7 @@ from pydantic import (
 )
 
 from .models import AssetProfile, FetchEnvelope
-from .tracing import TraceEvent, merge_trace, trace_from_markers
+from .tracing import TraceEvent, trace_from_markers
 from .utils import normalize_text
 from .workflow.acceptance import (
     AcceptanceOutputKind,
@@ -183,6 +183,8 @@ class ManifestOutputArtifactSpec(_ManifestModel):
     path: str = Field(min_length=1)
     kind: str = Field(min_length=1)
     legacy_field: LegacyArtifactField | None = None
+    route: str | None = None
+    failure_code: str | None = None
     completed_at: AwareDatetime | None = None
 
     @field_validator("path", mode="before")
@@ -197,6 +199,8 @@ class ManifestOutputArtifact(_ManifestModel):
     path: str = Field(min_length=1)
     kind: str = Field(min_length=1)
     legacy_field: LegacyArtifactField | None = None
+    route: str | None = None
+    failure_code: str | None = None
     size: int | None = Field(default=None, ge=0)
     sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     mtime: AwareDatetime | None = None
@@ -383,10 +387,7 @@ def _semantic_losses_from_acceptance(
 def _trace_from_envelope(envelope: FetchEnvelope | None) -> list[TraceEvent]:
     if envelope is None:
         return []
-    article_trace = (
-        envelope.article.quality.trace if envelope.article is not None else []
-    )
-    return merge_trace(envelope.trace, envelope.quality.trace, article_trace)
+    return list(envelope.trace)
 
 
 def _error_extra_sequence(error: ManifestError, field: str) -> Sequence[Any]:
@@ -461,6 +462,8 @@ def _snapshot_artifact(
             path=spec.path,
             kind=spec.kind,
             legacy_field=spec.legacy_field,
+            route=spec.route,
+            failure_code=spec.failure_code,
             completed_at=artifact_completed_at,
             verification_status=ArtifactVerificationStatus.MISSING,
         )
@@ -469,6 +472,8 @@ def _snapshot_artifact(
             path=spec.path,
             kind=spec.kind,
             legacy_field=spec.legacy_field,
+            route=spec.route,
+            failure_code=spec.failure_code,
             completed_at=artifact_completed_at,
             verification_status=ArtifactVerificationStatus.UNREADABLE,
         )
@@ -482,6 +487,8 @@ def _snapshot_artifact(
             path=spec.path,
             kind=spec.kind,
             legacy_field=spec.legacy_field,
+            route=spec.route,
+            failure_code=spec.failure_code,
             size=size,
             mtime=mtime,
             completed_at=artifact_completed_at,
@@ -491,6 +498,8 @@ def _snapshot_artifact(
         path=spec.path,
         kind=spec.kind,
         legacy_field=spec.legacy_field,
+        route=spec.route,
+        failure_code=spec.failure_code,
         size=size,
         sha256=sha256,
         mtime=mtime,

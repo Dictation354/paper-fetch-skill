@@ -89,7 +89,15 @@ DEFAULT_SITE_RULE: dict[str, Any] = {
 }
 
 SCIENCE_SITE_RULE_OVERRIDES: dict[str, Any] = {
-    "candidate_selectors": [".article__fulltext", ".article-view"],
+    "candidate_selectors": [
+        "article[typeof='ScholarlyArticle'] section#bodymatter[data-extent='bodymatter'][property='articleBody']",
+        "article[typeof='ScholarlyArticle'] [data-extent='bodymatter']",
+        "[data-extent='bodymatter']",
+        "[property='articleBody']",
+        "#bodymatter",
+        ".article__fulltext",
+        ".article-view",
+    ],
     "remove_selectors": [
         "header .social-share",
         ".jump-to-nav",

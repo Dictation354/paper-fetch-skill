@@ -8,6 +8,7 @@ from paper_fetch.providers.base import ProviderFetchResult
 from paper_fetch.tracing import (
     TraceContext,
     merge_trace,
+    nearest_rank_percentile,
     summarize_trace_attempts,
     trace_event,
 )
@@ -63,8 +64,10 @@ def test_official_provider_structured_fallback_trace_reaches_article() -> None:
     )
 
     assert result is article
-    assert browser_failure in article.quality.trace
     assert browser_failure in workflow_trace
+    assert browser_failure.marker() in article.quality.source_trail
+    assert article.quality.source_trail.count(browser_failure.marker()) == 1
+    assert not hasattr(article.quality, "trace")
 
 
 def test_trace_attempts_preserve_retries_and_report_provider_percentiles() -> None:
@@ -105,3 +108,4 @@ def test_trace_attempts_preserve_retries_and_report_provider_percentiles() -> No
         "p50_duration_ms": 20.0,
         "p95_duration_ms": 100.0,
     }
+    assert nearest_rank_percentile([100.0, 10.0, 20.0], 0.50) == 20.0

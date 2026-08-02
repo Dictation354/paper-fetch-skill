@@ -54,6 +54,13 @@
 5. [`architecture/probe-semantics.md`](architecture/probe-semantics.md)
 6. [`onboarding/README.md`](../onboarding/README.md)
 
+主要在 Windows / WSL 开发、但会改 Unix 安装器、离线发布、平台目录、公式工具
+或 Camoufox / Playwright 边界的维护者，还应继续阅读：
+
+7. [`macos-adaptation-changes.md`](macos-adaptation-changes.md)
+8. [`macos-adaptation-audit.md`](macos-adaptation-audit.md)
+9. [`macos-adaptation-contract.toml`](macos-adaptation-contract.toml)
+
 ## 文档分工
 
 - [`../README.md`](../README.md)
@@ -82,6 +89,12 @@
 - [`deployment.md`](deployment.md)
   - 讲安装、配置入口、MCP 注册、更新和最小验证。
   - 讲 Wiley / Science / PNAS / AMS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI 的 repo-local 浏览器工作流、本地 `scripts/dev-preflight.sh` 门禁和 CI 测试耗时信号。
+- [`macos-adaptation-changes.md`](macos-adaptation-changes.md)
+  - 记录基于上游 v4.1.0 的 Mac 差异、用户可见边界、不可变标签与受信任 tooling overlay 策略，以及以后从 Windows / WSL 在最新 `upstream/main` 上重放独立适配提交的流程。
+- [`macos-adaptation-audit.md`](macos-adaptation-audit.md)
+  - 用稳定 case ID 区分 Ubuntu / Windows portable gate、WSL 和原生 macOS 证据，明确 Mach-O、原生 Zsh、xattr、Gatekeeper、cache alias 与真正断网 Camoufox launch 的边界。
+- [`macos-adaptation-contract.toml`](macos-adaptation-contract.toml)
+  - Mac 适配的机器可读事实源；修改 Unix 安装、离线构建/验证、平台目录、公式工具、Camoufox / Playwright 边界或 release CI 时必须同步 validator、测试和人类文档。
 - [`architecture/overview.md`](architecture/overview.md)
   - 讲当前系统分层、端到端业务流程、数据契约和扩展点。
 - [`architecture/probe-semantics.md`](architecture/probe-semantics.md)
@@ -155,13 +168,18 @@
 ### `semantic_losses`
 
 - `ArticleModel.quality` 下的语义降级计数。
-- `table_layout_degraded_count` 表示 Markdown 版式降级，但单元格语义仍保留。
+- `table_layout_degraded_count` 表示源表 span/列定义非法或不一致，虽已修复为可读表格，但原布局无法可靠验证；合法 `rowspan`/`colspan` 成功展开只属于规范化，不计为降级。
 - `table_semantic_loss_count` 才表示表格语义内容发生丢失。
 
 ### `asset_failures`
 
 - `ArticleModel.quality.asset_failures` 与顶层 `quality.asset_failures` 下的失败资产诊断。
 - 会保留 `status`、`content_type`、`title_snippet`、`body_snippet`、`reason`，以及 asset-level challenge recovery 的 `recovery_attempts`。
+
+### 资产恢复诊断
+
+- `article.assets[*].browser_backend`、`final_fetcher` 和 `recovery_attempts` 都是可选的向后兼容字段；纯 direct 成功可以只记录 `final_fetcher="direct_http"`，没有恢复动作的旧 payload 也可以不包含这些字段。
+- `recovery_attempts` 按实际顺序保留 `direct`、`browser`，以及必要时的 `preview_fallback`；cache、CLI JSON 和 MCP payload 会原样往返这些结构化事实。
 
 ### `max_tokens`
 

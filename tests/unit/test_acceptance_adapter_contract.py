@@ -15,6 +15,7 @@ from paper_fetch.mcp.fetch_cache import (
 )
 from paper_fetch.mcp.schemas import FetchPaperRequest
 from paper_fetch.models import AssetQualitySummary, SemanticLosses
+from paper_fetch.tracing import TraceContext, trace_event
 from paper_fetch.workflow.acceptance import (
     FetchAcceptanceReport,
     evaluate_fetch_acceptance,
@@ -37,10 +38,30 @@ def _contract_envelope():
         failed=1,
         placeholder_suspected=1,
         failure_codes=["image_fetch_error"],
+        issue_codes=[
+            "asset_download_failure",
+            "asset_placeholder_suspected",
+        ],
     )
     envelope.quality.asset_summary = asset_summary
     assert envelope.article is not None
     envelope.article.quality.asset_summary = asset_summary
+    envelope.trace = [
+        trace_event(
+            "fulltext",
+            "example_html",
+            "fail",
+            code="browser_connect_timeout",
+            context=TraceContext(attempt=1, attempt_id="html-1"),
+        ),
+        trace_event(
+            "fulltext",
+            "example_html",
+            "fail",
+            code="browser_connect_timeout",
+            context=TraceContext(attempt=2, attempt_id="html-2"),
+        ),
+    ]
     return envelope
 
 
@@ -139,3 +160,19 @@ def test_cli_mcp_cache_and_manifest_adapters_share_acceptance_contract(
     assert manifest_record.acceptance == expected
     assert cli_record.acceptance == expected
     assert cache_payload["acceptance"] == _summary(expected)
+    assert tuple(mcp_payload["quality"]["asset_summary"]["issue_codes"]) == (
+        "asset_download_failure",
+        "asset_placeholder_suspected",
+    )
+    assert manifest_record.asset_summary.issue_codes == (
+        "asset_download_failure",
+        "asset_placeholder_suspected",
+    )
+    assert cli_record.asset_summary.issue_codes == (
+        "asset_download_failure",
+        "asset_placeholder_suspected",
+    )
+    assert expected.provenance.trace_event_count == 2
+    assert len(mcp_payload["trace"]) == 2
+    assert len(manifest_record.trace) == 2
+    assert len(cli_record.trace) == 2

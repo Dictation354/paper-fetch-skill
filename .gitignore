@@ -19,6 +19,7 @@ __pycache__/
 coverage.xml
 htmlcov/
 build/
+.offline-build/
 dist/
 pip-wheel-metadata/
 rollout-*.jsonl

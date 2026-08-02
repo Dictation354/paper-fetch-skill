@@ -26,11 +26,11 @@ from ..reason_codes import (
     PDF_FALLBACK,
     RATE_LIMITED,
 )
-from ..tracing import TraceEvent, merge_trace
+from ..tracing import TraceEvent
 from ..utils import normalize_text
 
-FETCH_ACCEPTANCE_SCHEMA_VERSION = 1
-FETCH_ACCEPTANCE_MIN_READER_VERSION = 1
+FETCH_ACCEPTANCE_SCHEMA_VERSION = 2
+FETCH_ACCEPTANCE_MIN_READER_VERSION = 2
 
 
 class OverallAcceptanceStatus(StrEnum):
@@ -166,12 +166,32 @@ class AssetAcceptanceSummary(_AcceptanceModel):
     local: int = Field(default=0, ge=0)
     full_size: int = Field(default=0, ge=0)
     preview: int = Field(default=0, ge=0)
+    accepted_preview: int = Field(default=0, ge=0)
+    fallback_preview: int = Field(default=0, ge=0)
     failed: int = Field(default=0, ge=0)
     placeholder_suspected: int = Field(default=0, ge=0)
     not_archived: int = Field(default=0, ge=0)
     remote_link_count: int = Field(default=0, ge=0)
     remote_only_count: int = Field(default=0, ge=0)
     failure_codes: tuple[str, ...] = ()
+    issue_codes: tuple[str, ...] = ()
+
+    @model_validator(mode="before")
+    @classmethod
+    def migrate_legacy_preview_counts(cls, value: Any) -> Any:
+        if not isinstance(value, Mapping):
+            return value
+        payload = dict(value)
+        if "accepted_preview" not in payload and "fallback_preview" not in payload:
+            payload["accepted_preview"] = 0
+            payload["fallback_preview"] = max(int(payload.get("preview") or 0), 0)
+        return payload
+
+    @model_validator(mode="after")
+    def validate_preview_counts(self) -> AssetAcceptanceSummary:
+        if self.preview != self.accepted_preview + self.fallback_preview:
+            raise ValueError("preview must equal accepted_preview + fallback_preview")
+        return self
 
 
 class AssetAcceptanceFacet(AssetAcceptanceSummary):
@@ -213,8 +233,8 @@ class ProvenanceAcceptanceFacet(_AcceptanceModel):
 class FetchAcceptanceReport(_AcceptanceModel):
     """Canonical acceptance report shared by all external adapters."""
 
-    schema_version: Literal[1]
-    minimum_reader_schema_version: Literal[1]
+    schema_version: Literal[2]
+    minimum_reader_schema_version: Literal[2]
     overall: OverallAcceptanceStatus
     identity: IdentityAcceptanceFacet
     fetch: FetchAcceptanceFacet
@@ -289,12 +309,10 @@ def _quality_for(envelope: FetchEnvelope | None) -> Quality:
 
 
 def _trace_for(envelope: FetchEnvelope | None, quality: Quality) -> list[TraceEvent]:
+    del quality
     if envelope is None:
         return []
-    article_trace = (
-        envelope.article.quality.trace if envelope.article is not None else []
-    )
-    return merge_trace(envelope.trace, quality.trace, article_trace)
+    return list(envelope.trace)
 
 
 def _title_for(
@@ -449,6 +467,12 @@ def _audited_asset_summary(
             return summary.get(field, default)
         return getattr(summary, field, default)
 
+    preview = max(int(value("preview") or 0), 0)
+    accepted_preview = max(int(value("accepted_preview") or 0), 0)
+    fallback_preview = max(int(value("fallback_preview") or 0), 0)
+    if accepted_preview + fallback_preview != preview:
+        accepted_preview = 0
+        fallback_preview = preview
     return AssetAcceptanceSummary(
         requested=bool(value("requested", profile != "none")),
         profile=profile,
@@ -476,13 +500,16 @@ def _audited_asset_summary(
         total=max(int(value("total") or 0), 0),
         local=max(int(value("local") or 0), 0),
         full_size=max(int(value("full_size") or 0), 0),
-        preview=max(int(value("preview") or 0), 0),
+        preview=preview,
+        accepted_preview=accepted_preview,
+        fallback_preview=fallback_preview,
         failed=max(int(value("failed") or 0), 0),
         placeholder_suspected=max(int(value("placeholder_suspected") or 0), 0),
         not_archived=max(int(value("not_archived") or 0), 0),
         remote_link_count=max(int(value("remote_link_count") or 0), 0),
         remote_only_count=max(int(value("remote_only_count") or 0), 0),
         failure_codes=_normalized_codes(value("failure_codes", ())),
+        issue_codes=_normalized_codes(value("issue_codes", ())),
     )
 
 
@@ -500,13 +527,20 @@ def _asset_summary_from_envelope(
     remote_link_count = sum(item[0] for item in remote_counts)
     remote_only_count = sum(item[1] for item in remote_counts)
     local = sum(bool(normalize_text(asset.path)) for asset in assets)
-    preview = (
-        sum(
-            normalize_text(asset.download_tier).lower() == "preview" for asset in assets
-        )
+    from ..quality.assets import preview_asset_is_accepted
+
+    preview_assets = (
+        [
+            asset
+            for asset in assets
+            if normalize_text(asset.download_tier).lower() == "preview"
+        ]
         if requested
-        else 0
+        else []
     )
+    accepted_preview = sum(preview_asset_is_accepted(asset) for asset in preview_assets)
+    fallback_preview = len(preview_assets) - accepted_preview
+    preview = accepted_preview + fallback_preview
     failures = list(quality.asset_failures) if requested else []
     discovered = len(assets) + len(failures)
     attempted = (
@@ -519,6 +553,16 @@ def _asset_summary_from_envelope(
         else 0
     )
     not_archived = remote_only_count if requested else 0
+    failure_codes = _normalized_codes(
+        [_asset_failure_code(failure) for failure in failures]
+    )
+    issue_codes: list[str] = []
+    if failures:
+        issue_codes.append("asset_download_failure")
+    if fallback_preview:
+        issue_codes.append("asset_fidelity_degraded")
+    if requested and remote_only_count:
+        issue_codes.append("asset_remote_only")
     return AssetAcceptanceSummary(
         requested=requested,
         profile=profile,
@@ -530,13 +574,14 @@ def _asset_summary_from_envelope(
         local=local,
         full_size=max(local - preview, 0),
         preview=preview,
+        accepted_preview=accepted_preview,
+        fallback_preview=fallback_preview,
         failed=len(failures),
         not_archived=not_archived,
         remote_link_count=remote_link_count,
         remote_only_count=remote_only_count,
-        failure_codes=_normalized_codes(
-            [_asset_failure_code(failure) for failure in failures]
-        ),
+        failure_codes=failure_codes,
+        issue_codes=tuple(issue_codes),
     )
 
 
@@ -548,11 +593,22 @@ def _asset_facet(
         discovered,
         summary.local + summary.failed + summary.not_archived,
     )
+    issue_codes = list(summary.issue_codes)
+    if not issue_codes:
+        if summary.failed:
+            issue_codes.append("asset_download_failure")
+        if summary.fallback_preview:
+            issue_codes.append("asset_fidelity_degraded")
+        if summary.placeholder_suspected:
+            issue_codes.append("asset_placeholder_suspected")
+        if summary.remote_only_count and not summary.audited:
+            issue_codes.append("asset_remote_only")
     normalized_summary = summary.model_copy(
         update={
             "discovered": discovered,
             "attempted": attempted,
             "total": discovered,
+            "issue_codes": tuple(dict.fromkeys(issue_codes)),
         }
     )
     if not normalized_summary.requested:
@@ -565,14 +621,7 @@ def _asset_facet(
         status = AssetAcceptanceStatus.UNKNOWN
     elif normalized_summary.failed and normalized_summary.local == 0:
         status = AssetAcceptanceStatus.FAILED
-    elif any(
-        (
-            normalized_summary.failed,
-            normalized_summary.preview,
-            normalized_summary.placeholder_suspected,
-            normalized_summary.not_archived,
-        )
-    ):
+    elif normalized_summary.issue_codes:
         status = AssetAcceptanceStatus.DEGRADED
     else:
         status = AssetAcceptanceStatus.COMPLETE
@@ -657,13 +706,7 @@ def _structured_warning_codes(
     if losses.formula_missing_count:
         codes.append("formula_missing")
     if asset.requested:
-        codes.extend(asset.failure_codes)
-        if asset.preview:
-            codes.append("asset_preview")
-        if asset.placeholder_suspected:
-            codes.append("asset_placeholder_suspected")
-        if asset.not_archived:
-            codes.append("asset_not_archived")
+        codes.extend(asset.issue_codes)
     return codes
 
 
@@ -702,7 +745,15 @@ def _provenance_facet(
     else:
         status = ProvenanceAcceptanceStatus.MISSING
 
-    trace_failures = [event for event in trace if _trace_is_failure(event)]
+    trace_failures = [
+        event
+        for event in trace
+        if _trace_is_failure(event)
+        and not (
+            content.status == ContentAcceptanceStatus.FULLTEXT
+            and normalize_text(event.stage).lower() in {"resolve", "metadata"}
+        )
+    ]
     fallback_events = [
         event
         for event in trace
@@ -837,10 +888,13 @@ def evaluate_fetch_acceptance(
         if not requested:
             updates.update(
                 preview=0,
+                accepted_preview=0,
+                fallback_preview=0,
                 failed=0,
                 placeholder_suspected=0,
                 not_archived=0,
                 failure_codes=(),
+                issue_codes=(),
             )
         summary = asset_summary.model_copy(update=updates)
 
@@ -889,9 +943,9 @@ def evaluate_fetch_acceptance(
 def parse_fetch_acceptance_report(
     payload: Mapping[str, Any],
 ) -> FetchAcceptanceReport:
-    """Load schema v1; additive unknown fields are ignored by compatibility rule."""
+    """Load the public v2 acceptance contract."""
 
-    return FetchAcceptanceReport.model_validate(payload)
+    return FetchAcceptanceReport.model_validate(dict(payload))
 
 
 def fetch_acceptance_json_schema() -> dict[str, Any]:

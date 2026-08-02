@@ -138,7 +138,7 @@ def test_provider_governance_keeps_routes_manifests_fixtures_docs_and_debt_synce
 
     assert report.errors == ()
     assert report.provider_count == 19
-    assert report.route_count == 60
+    assert report.route_count == 59
     assert report.route_family_count == 38
     assert report.waived_route_family_count == 8
     assert report.negative_coverage_count == 15

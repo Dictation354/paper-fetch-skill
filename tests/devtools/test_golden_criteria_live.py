@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
+from dataclasses import replace
 from datetime import datetime, UTC
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from paper_fetch_devtools.golden_criteria.live import (
     ISSUE_CATEGORIES,
     SUPPORTED_PROVIDERS,
     apply_expected_outcome,
+    build_performance_summaries,
     iter_golden_criteria_samples,
     issue_categories_for_result,
     load_manifest,
@@ -396,9 +398,10 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
             report_markdown = (output_root / "report.md").read_text(encoding="utf-8")
             self.assertIn("## Coverage Overview", report_markdown)
             self.assertIn(
-                "| Sample | Provider | DOI | Status | Content | Source | Assets | Seconds | Resolve | Metadata | Fulltext | Asset | Formula | Render | Fetch | Materialize | Review | Issues |",
+                "| Sample | Provider | DOI | Status | Content | Source | Assets | Seconds | Resolve | Metadata | Fulltext | Browser | DOM Ready | HTTP | Retry | Asset | Formula | Render | Fetch | Materialize | Review | Issues |",
                 report_markdown,
             )
+            self.assertIn("## Provider Route Performance", report_markdown)
             self.assertIn("## Recurring Issue Groups", report_markdown)
             self.assertIn("## Prioritized Solutions", report_markdown)
             report_json = json.loads(
@@ -566,7 +569,7 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
 
         self.assertNotIn("asset_download_failure", categories)
 
-    def test_unlocalized_ieee_mediastore_link_with_local_asset_is_asset_issue(
+    def test_unlocalized_ieee_link_is_not_reclassified_without_asset_issue_code(
         self,
     ) -> None:
         large_url = "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932570/garg7-0932570-large.gif"
@@ -596,9 +599,9 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
                 status="fulltext", envelope=envelope
             )
 
-        self.assertIn("asset_download_failure", categories)
+        self.assertNotIn("asset_download_failure", categories)
 
-    def test_formula_only_preview_fallback_is_not_an_asset_issue(self) -> None:
+    def test_fallback_preview_uses_fidelity_issue_code(self) -> None:
         article = sample_article()
         article.assets = [
             Asset(
@@ -613,15 +616,14 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
             "download:wiley_assets_saved_profile_body",
             "download:wiley_assets_preview_fallback",
         ]
-        envelope.warnings = [
-            "Wiley figure downloads fell back to preview images for 1 asset(s) because full-size/original downloads were unavailable."
-        ]
+        envelope.quality.asset_summary.issue_codes = ["asset_fidelity_degraded"]
 
         categories = issue_categories_for_result(status="fulltext", envelope=envelope)
 
         self.assertNotIn("asset_download_failure", categories)
+        self.assertIn("asset_fidelity_degraded", categories)
 
-    def test_non_formula_preview_fallback_remains_an_asset_issue(self) -> None:
+    def test_asset_issue_codes_are_projected_without_warning_inference(self) -> None:
         article = sample_article()
         article.assets = [
             Asset(
@@ -632,19 +634,19 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
             )
         ]
         envelope = build_envelope(article)
-        envelope.source_trail = [
-            "download:wiley_assets_saved_profile_body",
-            "download:wiley_assets_preview_fallback",
-        ]
-        envelope.warnings = [
-            "Wiley figure downloads fell back to preview images for 1 asset(s) because full-size/original downloads were unavailable."
+        envelope.quality.asset_summary.issue_codes = [
+            "asset_download_failure",
+            "asset_placeholder_suspected",
+            "asset_remote_only",
         ]
 
         categories = issue_categories_for_result(status="fulltext", envelope=envelope)
 
         self.assertIn("asset_download_failure", categories)
+        self.assertIn("asset_placeholder_suspected", categories)
+        self.assertIn("asset_remote_only", categories)
 
-    def test_related_assets_could_not_be_downloaded_warning_is_asset_issue(
+    def test_asset_warning_text_is_not_a_machine_classification_source(
         self,
     ) -> None:
         article = sample_article()
@@ -655,9 +657,9 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
 
         categories = issue_categories_for_result(status="fulltext", envelope=envelope)
 
-        self.assertIn("asset_download_failure", categories)
+        self.assertNotIn("asset_download_failure", categories)
 
-    def test_quality_asset_failures_are_asset_issue(self) -> None:
+    def test_quality_asset_summary_issue_code_is_asset_issue(self) -> None:
         article = sample_article()
         article.quality.asset_failures = [
             {
@@ -667,6 +669,7 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
                 "reason": "Network error for image: timed out.",
             }
         ]
+        article.quality.asset_summary.issue_codes = ["asset_download_failure"]
         envelope = build_envelope(article)
 
         categories = issue_categories_for_result(status="fulltext", envelope=envelope)
@@ -957,3 +960,53 @@ def _result(*, status: str, review_status: str, categories: list[str]):
         issue_categories=categories,
         elapsed_seconds=0.0,
     )
+
+
+def test_performance_summaries_group_by_provider_route_and_stage() -> None:
+    first = replace(
+        _result(status="fulltext", review_status="ok", categories=[]),
+        sample_id="first",
+        stage_timings={
+            "browser_seconds": 9.0,
+            "dom_readiness_seconds": 7.0,
+            "http_seconds": 2.0,
+            "retry_seconds": 0.5,
+            "asset_seconds": 3.0,
+            "render_seconds": 1.0,
+            "total_seconds": 12.0,
+        },
+    )
+    second = replace(
+        first,
+        sample_id="second",
+        stage_timings={
+            "browser_seconds": 3.0,
+            "dom_readiness_seconds": 2.0,
+            "http_seconds": 4.0,
+            "retry_seconds": 1.5,
+            "asset_seconds": 5.0,
+            "render_seconds": 2.0,
+            "total_seconds": 8.0,
+        },
+    )
+    single = replace(
+        first,
+        sample_id="single",
+        source="elsevier_pdf",
+        stage_timings={"total_seconds": 20.0},
+    )
+
+    summaries = build_performance_summaries([first, second, single])
+    by_key = {(item.provider, item.route, item.stage): item for item in summaries}
+
+    browser = by_key[("elsevier", "elsevier_xml", "browser_seconds")]
+    assert browser.sample_count == 2
+    assert browser.observed_seconds is None
+    assert browser.p50_seconds == 3.0
+    assert browser.p95_seconds == 9.0
+
+    observed = by_key[("elsevier", "elsevier_pdf", "total_seconds")]
+    assert observed.sample_count == 1
+    assert observed.observed_seconds == 20.0
+    assert observed.p50_seconds is None
+    assert observed.p95_seconds is None

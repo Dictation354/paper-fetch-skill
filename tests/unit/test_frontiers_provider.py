@@ -300,14 +300,12 @@ def test_frontiers_jats_semantically_expands_non_global_table_spans() -> None:
     )
     assert re.search(r"(?m)^\|\s*CO<sub>2</sub>\s*\|\s*1\s*\|\s*2\s*\|", markdown)
     assert re.search(r"(?m)^\|\s*CO<sub>2</sub>\s*\|\s*3\s*\|\s*4\s*\|", markdown)
-    assert article.quality.semantic_losses.table_layout_degraded_count == 1
+    assert article.quality.semantic_losses.table_layout_degraded_count == 0
     assert article.quality.semantic_losses.table_semantic_loss_count == 0
-    assert "table_layout_degraded" in article.quality.flags
+    assert "table_layout_degraded" not in article.quality.flags
     assert "table_semantic_loss" not in article.quality.flags
     assert raw_payload.content.diagnostics is not None
-    assert raw_payload.content.diagnostics["extraction"]["conversion_notes"] == [
-        "- Table 1: Merged table spans were semantically expanded into rectangular Markdown cells; rowspan/colspan layout fidelity was reduced."
-    ]
+    assert raw_payload.content.diagnostics["extraction"]["conversion_notes"] == []
 
 
 def test_frontiers_jats_supports_cals_named_table_spans() -> None:
@@ -365,7 +363,7 @@ def test_frontiers_jats_supports_cals_named_table_spans() -> None:
         r"(?m)^\|\s*CO<sub>2</sub>\s*\|\s*1\s*\|\s*2\s*\|",
         markdown,
     )
-    assert article.quality.semantic_losses.table_layout_degraded_count == 1
+    assert article.quality.semantic_losses.table_layout_degraded_count == 0
     assert article.quality.semantic_losses.table_fallback_count == 0
     assert article.quality.semantic_losses.table_semantic_loss_count == 0
 
@@ -404,6 +402,12 @@ def test_frontiers_jats_headerless_invalid_span_keeps_first_data_row() -> None:
     assert re.search(r"(?m)^\|\s*second row\s*\|\s*2\s*\|", markdown)
     assert article.quality.semantic_losses.table_layout_degraded_count == 1
     assert article.quality.semantic_losses.table_semantic_loss_count == 0
+    assert raw_payload.content.diagnostics is not None
+    assert raw_payload.content.diagnostics["extraction"]["conversion_notes"] == [
+        "- Table 1: Source table span or column metadata was invalid or inconsistent "
+        "and was repaired during Markdown conversion; cell text was retained, but "
+        "the source layout could not be verified exactly."
+    ]
 
 
 def test_frontiers_asset_download_resolves_xml_image_filename(tmp_path: Path) -> None:

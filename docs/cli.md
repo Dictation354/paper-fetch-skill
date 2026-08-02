@@ -112,9 +112,9 @@ paper-fetch browser-preflight
 paper-fetch browser-preflight --provider wiley --provider science --timeout-ms 120000
 ```
 
-预检会按 runtime catalog 中 `requires_browser_runtime=True` 的 provider 顺序使用内置样例 DOI/URL 构造正常 HTML candidates，并复用 provider HTML bootstrap、同一 browser context 重试和 availability 判定。内置样例优先选择结构较轻、已有 fixture 覆盖的 full-text 页面，降低预热耗时；成功时会保存对应 `publisher-browser-profiles/<provider>/storage-state.json`。失败时 stdout 输出稳定 `Code`，并在可用时输出 `Stage`、Chrome `Exit code`、脱敏 stderr 摘要和 diagnostic artifact；challenge/auth 失败的 stderr 才提示人工认证，browser runtime 失败则提示先修复运行时。该命令只验证 HTML 路径，不触发 PDF fallback；它会真实访问出版社样例页，不同于 MCP `provider_status()` 的本地能力检查。
+预检会按 runtime catalog 中 `requires_browser_runtime=True` 的 provider 顺序使用内置样例 DOI/URL 构造正常 HTML candidates，并复用 provider HTML bootstrap、同一 browser context 重试和 availability 判定。内置样例优先选择结构较轻、已有 fixture 覆盖的 full-text 页面，降低预热耗时；成功时会保存对应 `publisher-browser-profiles/<provider>/storage-state.json`。IEEE 会等待最多 15 秒，只有匹配文章号的 `#article` 才算 ready；初始 HTTP 202 不会单独决定结果，持续 AWS WAF 页报告 `aws_waf_challenge`，顶层状态仍为 `challenge`。结果使用唯一 `status/reason_code/stage/message` 契约：`challenge/auth_required` 才建议人工认证，`network_timeout` 建议重试，`extraction_error` 指向页面/selector 诊断，`runtime_error` 先修复本地运行时，`cancelled` 显式重跑。失败时 stdout 还会在可用时输出脱敏 final URL、Chrome exit/stderr 与 diagnostic artifact。该命令只验证 HTML 路径，不触发 PDF fallback；它会真实访问出版社样例页，不同于 MCP `provider_status()` 的本地能力检查。
 
-MCP 的 `browser_preflight` 直接调用同一个 preflight 核心。无参数时与 CLI 一样检查全部 browser provider；单 provider 可传 `provider`，并可同时指定 `test_url`、`timeout_ms`、`browser_user_agent`、`storage_state_path`、`save_storage_state` 和 `detail="full|compact"`。`test_url` / `storage_state_path` 要求显式单 provider；默认 `save_storage_state=true`，因此该 open-world 工具不是只读操作。返回逐 provider `ready/challenge/auth_required/runtime_error/cancelled`、下一步与进度；compact 每项只保留路由字段。一个 provider 失败不抹掉其它已完成结果，取消保留已完成结果并停止后续调度。该工具始终报告未尝试 PDF fallback 和 auth；需要登录或处理 challenge 时只建议用户显式运行 `paper-fetch auth <provider>`。
+MCP 的 `browser_preflight` 直接调用同一个 preflight 核心。无参数时与 CLI 一样检查全部 browser provider；单 provider 可传 `provider`，并可同时指定 `test_url`、`timeout_ms`、`browser_user_agent`、`storage_state_path`、`save_storage_state` 和 `detail="full|compact"`。`test_url` / `storage_state_path` 要求显式单 provider；默认 `save_storage_state=true`，因此该 open-world 工具不是只读操作。返回逐 provider `ready/challenge/auth_required/network_timeout/extraction_error/runtime_error/cancelled`、下一步与进度；compact 每项只保留路由字段。一个 provider 失败不抹掉其它已完成结果，取消保留已完成结果并停止后续调度。该工具始终报告未尝试 PDF fallback 和 auth；需要登录或处理 challenge 时只建议用户显式运行 `paper-fetch auth <provider>`。
 
 普通 `paper-fetch fetch --query ...` 默认使用 managed headless Camoufox；`PAPER_FETCH_BROWSER_HEADLESS` 控制 headed/headless。只有 `paper-fetch auth <provider>` 或显式关闭 headless 时才显示窗口。
 
@@ -148,6 +148,8 @@ paper-fetch fetch --query-file ./queries.txt \
 - `markdown`：`<output-dir>/<paper-stem>.md`
 - `json`：`<output-dir>/<paper-stem>.json`
 - `both`：`<output-dir>/<paper-stem>.both.json`
+
+论文元数据无法提供标题且 query 也不含 DOI 时，`paper-stem` 使用规范化 query 的 16 位 SHA-256 摘要（例如 `unknown_unknown_article_<digest>`）。该回退在并发和续跑之间保持稳定，避免不同 URL 结果争用同一个匿名文件名，也不会把完整 query 写入文件名。
 
 如果未提供 `--output-dir`，CLI 使用默认下载目录。默认事件文件是 `<output-dir>/batch-results.jsonl`，可用 `--batch-results <path>` 覆盖；原子 run 摘要默认写在事件文件同目录的 `run-manifest.json`，可用 `--run-manifest <path>` 覆盖。JSONL 每行是一条 schema v2 attempt record；旧的 `index`、`query`、`status`、`doi`、`source`、`output_path`、`saved_markdown_path`、`warnings` 和 `error` 九个顶层字段保持原名和原语义，旧消费者可以继续只读取这些字段。v2 只做增量扩展，不要求消费者一次理解所有新增字段。
 
@@ -315,7 +317,7 @@ CLI 先在 run lock 内执行只读审计。只有 query、工具版本和关键
 - 显式 `--output -` 会强制打印到 stdout，即使同时提供 `--output-dir`。
 - 显式 `--output <path>` 会把主输出写到该路径，`--output-dir` 只作为 artifact / 资产目录。
 
-当 `--output-dir` 承接主输出时，默认文件名来自安全化论文 stem：优先使用首作者姓氏、可选 `_et_al`、年份和标题；元数据不足时回退 DOI 或标题。格式决定后缀：
+当 `--output-dir` 承接主输出时，默认文件名来自安全化论文 stem：优先使用首作者姓氏、可选 `_et_al`、年份和标题；元数据不足时回退 query 中的 DOI，仍无法识别时使用规范化 query 的 16 位 SHA-256 摘要。格式决定后缀：
 
 | 格式 | 主输出文件 |
 | --- | --- |
@@ -385,7 +387,7 @@ CLI 默认：
 
 `--artifact-mode markdown-assets` 保存 Markdown、按 `--asset-profile` 保存本地资产，并保留 PDF fallback 源文件；PDF 源文件名优先使用 provider 抓取后合并的标题、作者和年份元数据。不会保存 provider 原始 HTML/XML、调试 JSON sidecar 或 HTTP textual cache。
 
-`--artifact-mode all` 保留完整调试 artifact，包括 provider HTML/PDF、辅助 artifact、HTTP textual cache 和调试 JSON sidecar 等。
+`--artifact-mode all` 保留完整调试 artifact，包括 provider HTML/PDF、辅助 artifact、HTTP textual cache 和调试 JSON sidecar。已到达页面但 extraction/availability 失败时，另在 `diagnostics/<provider>/<doi-or-url-digest>/<route>-<attempt>/` 保存 `diagnostic.json` 与 `page-sanitized.html`；后者删除脚本、表单、事件属性、email 和 URL query/userinfo，不保存原始失败 HTML 或截图。批量成功与终态失败 record 都将这些文件列为 `kind=diagnostic` 并快照 size/SHA-256。
 
 `--artifact-mode none` 不保存 provider artifact 或资产；显式 `--output <path>`、`--save-markdown`，以及未显式 `--output` 时由 `--output-dir` 承接的主输出仍可写文件。
 

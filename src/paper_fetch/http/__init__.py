@@ -76,6 +76,7 @@ from .transport import (
     HttpTransport,
     HttpTransportOptions,
     _PreparedRequest,
+    http_timing_collector,
     logger,
 )
 from .url_policy import (
@@ -140,6 +141,7 @@ __all__ = [
     "decode_json_object_response",
     "decompress_gzip_body",
     "diagnostic_url_payload",
+    "http_timing_collector",
     "is_pdf_content_type",
     "is_textual_content_type",
     "is_timeout_network_error",

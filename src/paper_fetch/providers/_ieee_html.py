@@ -7,7 +7,6 @@ import re
 from typing import Any
 from collections.abc import Mapping
 
-from ..extraction.html.asset_fields import DEFAULT_ASSET_URL_FIELDS
 from ..extraction.html.assets import extract_scoped_html_assets
 from ..extraction.html.parsing import choose_parser
 from ..extraction.html.provider_rules import IEEE_EXTRACTION_CLEANUP_SELECTORS
@@ -17,7 +16,13 @@ from ..reason_codes import NO_RESULT
 from ..runtime import RuntimeContext
 from ..utils import normalize_text
 from ._html_section_markdown import render_container_markdown
-from ._asset_retry import AssetRetryPolicy, is_retryable_asset_failure
+from ._ieee_asset_identity import (
+    IEEE_ASSET_RETRY_POLICY as IEEE_ASSET_RETRY_POLICY,
+    IEEE_ASSET_URL_FIELDS,
+    IEEE_DOWNLOAD_MERGE_FIELDS as IEEE_DOWNLOAD_MERGE_FIELDS,
+    _dedupe_ieee_assets_by_priority,
+    reconcile_ieee_downloaded_assets as reconcile_ieee_downloaded_assets,
+)
 from ._ieee_block_page import _looks_like_ieee_block_page
 from ._ieee_supplementary import (
     _extract_ieee_supplementary_assets,
@@ -35,59 +40,8 @@ from .base import ProviderFailure
 
 from bs4 import BeautifulSoup, Tag
 
-IEEE_ASSET_KIND_PRIORITY = {"formula": 10, "figure": 20, "table": 30}
-IEEE_ASSET_URL_FIELDS = (*DEFAULT_ASSET_URL_FIELDS, "download_url", "figure_page_url")
-IEEE_STRONG_ASSET_IDENTITY_FIELDS = tuple(
-    field
-    for field in IEEE_ASSET_URL_FIELDS
-    if field in {"download_url", "source_url", "full_size_url", "url"}
-)
-IEEE_WEAK_ASSET_IDENTITY_FIELDS = tuple(
-    field
-    for field in IEEE_ASSET_URL_FIELDS
-    if field not in IEEE_STRONG_ASSET_IDENTITY_FIELDS
-)
-IEEE_DOWNLOAD_MERGE_FIELDS = (
-    "path",
-    "download_url",
-    "source_url",
-    "original_url",
-    "figure_page_url",
-    "content_type",
-    "width",
-    "height",
-    "download_tier",
-    "downloaded_bytes",
-    "preview_accepted",
-)
 IEEE_SECTION_MARKER_PATTERN = re.compile(
     r"^SECTION\s+(?:[IVXLCDM]+|\d+)\s*[.:]?$", flags=re.IGNORECASE
-)
-IEEE_ASSET_RETRY_KEY_FIELDS = (
-    "download_url",
-    "source_url",
-    "full_size_url",
-    "url",
-    "original_url",
-    "preview_url",
-    "figure_page_url",
-    "path",
-    "link",
-)
-
-
-def _ieee_asset_retry_key(asset: Mapping[str, Any]) -> tuple[Any, ...]:
-    for field in IEEE_ASSET_RETRY_KEY_FIELDS:
-        value = normalize_text(str(asset.get(field) or ""))
-        if value:
-            return (value,)
-    return ("",)
-
-
-IEEE_ASSET_RETRY_POLICY = AssetRetryPolicy(
-    name="ieee",
-    key_fn=_ieee_asset_retry_key,
-    retryable_failure=is_retryable_asset_failure,
 )
 
 
@@ -99,6 +53,13 @@ class IeeeHtmlExtraction:
     abstract_sections: list[dict[str, Any]]
     extracted_assets: list[dict[str, Any]]
     marker_counts: dict[str, int]
+
+
+def _find_ieee_article(html_text: str) -> Tag | None:
+    html_for_parse = re.sub(r"^\s*<\?xml[^>]*>\s*", "", html_text)
+    soup = BeautifulSoup(html_for_parse, choose_parser())
+    article = soup.select_one("#article")
+    return article if isinstance(article, Tag) else None
 
 
 def _clean_ieee_article(article: Tag) -> None:
@@ -361,175 +322,6 @@ def _ieee_asset_has_ignored_url(asset: Mapping[str, Any]) -> bool:
     return False
 
 
-def _ieee_asset_kind(asset: Mapping[str, Any]) -> str:
-    return normalize_text(
-        str(asset.get("kind") or asset.get("asset_type") or "")
-    ).lower()
-
-
-def _ieee_asset_priority(asset: Mapping[str, Any]) -> int:
-    return IEEE_ASSET_KIND_PRIORITY.get(_ieee_asset_kind(asset), 0)
-
-
-def _ieee_asset_field_has_value(value: Any) -> bool:
-    if value is None:
-        return False
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, (int, float)):
-        return value != 0
-    return bool(normalize_text(str(value)))
-
-
-def _merge_ieee_missing_asset_fields(
-    target: dict[str, Any], source: Mapping[str, Any], fields: tuple[str, ...]
-) -> None:
-    for field in fields:
-        if not _ieee_asset_field_has_value(
-            target.get(field)
-        ) and _ieee_asset_field_has_value(source.get(field)):
-            target[field] = source[field]
-
-
-def _unique_ieee_assets(assets: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    unique: list[dict[str, Any]] = []
-    seen: set[int] = set()
-    for asset in assets:
-        identity = id(asset)
-        if identity not in seen:
-            seen.add(identity)
-            unique.append(asset)
-    return unique
-
-
-def _ieee_asset_values_for_fields(
-    asset: Mapping[str, Any], fields: tuple[str, ...]
-) -> list[str]:
-    values: list[str] = []
-    seen: set[str] = set()
-    for field in fields:
-        value = normalize_text(str(asset.get(field) or ""))
-        if value and value not in seen:
-            seen.add(value)
-            values.append(value)
-    return values
-
-
-def _ieee_asset_identity_values(asset: Mapping[str, Any]) -> list[str]:
-    return _ieee_asset_values_for_fields(
-        asset, (*IEEE_ASSET_URL_FIELDS, "path", "link")
-    )
-
-
-def _ieee_asset_identity_index(
-    assets: list[dict[str, Any]],
-    *,
-    fields: tuple[str, ...] | None = None,
-) -> dict[str, list[dict[str, Any]]]:
-    index: dict[str, list[dict[str, Any]]] = {}
-    for asset in assets:
-        values = (
-            _ieee_asset_values_for_fields(asset, fields)
-            if fields is not None
-            else _ieee_asset_identity_values(asset)
-        )
-        for value in values:
-            bucket = index.setdefault(value, [])
-            if all(existing is not asset for existing in bucket):
-                bucket.append(asset)
-    return index
-
-
-def _ieee_index_matches(
-    index: Mapping[str, list[dict[str, Any]]], values: list[str]
-) -> list[dict[str, Any]]:
-    matches: list[dict[str, Any]] = []
-    seen: set[int] = set()
-    for value in values:
-        for asset in index.get(value, []):
-            identity = id(asset)
-            if identity not in seen:
-                seen.add(identity)
-                matches.append(asset)
-    return matches
-
-
-def _select_ieee_asset_survivor(
-    candidates: list[dict[str, Any]], current_assets: list[dict[str, Any]]
-) -> dict[str, Any]:
-    current_order = {id(asset): index for index, asset in enumerate(current_assets)}
-    fallback_order = len(current_assets)
-    return max(
-        candidates,
-        key=lambda asset: (
-            _ieee_asset_priority(asset),
-            -current_order.get(id(asset), fallback_order),
-        ),
-    )
-
-
-def _asset_identity_index_in_list(
-    assets: list[dict[str, Any]], target: dict[str, Any]
-) -> int | None:
-    for index, asset in enumerate(assets):
-        if asset is target:
-            return index
-    return None
-
-
-def _merge_ieee_asset_group(
-    current_assets: list[dict[str, Any]],
-    candidates: list[dict[str, Any]],
-    *,
-    merge_fields: tuple[str, ...],
-) -> dict[str, Any]:
-    candidates = _unique_ieee_assets(candidates)
-    survivor = _select_ieee_asset_survivor(candidates, current_assets)
-    existing_positions = [
-        position
-        for position in (
-            _asset_identity_index_in_list(current_assets, candidate)
-            for candidate in candidates
-        )
-        if position is not None
-    ]
-    insert_at = min(existing_positions) if existing_positions else len(current_assets)
-    for candidate in candidates:
-        if candidate is not survivor:
-            _merge_ieee_missing_asset_fields(survivor, candidate, merge_fields)
-    survivor_position = _asset_identity_index_in_list(current_assets, survivor)
-    for index in range(len(current_assets) - 1, -1, -1):
-        asset = current_assets[index]
-        if (
-            any(asset is candidate for candidate in candidates)
-            and asset is not survivor
-        ):
-            del current_assets[index]
-    if survivor_position is None:
-        current_assets.insert(min(insert_at, len(current_assets)), survivor)
-    return survivor
-
-
-def _dedupe_ieee_assets_by_priority(
-    assets: list[dict[str, Any]],
-    *,
-    merge_fields: tuple[str, ...],
-) -> list[dict[str, Any]]:
-    deduped: list[dict[str, Any]] = []
-    for asset in assets:
-        identity_index = _ieee_asset_identity_index(deduped)
-        overlaps = _ieee_index_matches(
-            identity_index, _ieee_asset_identity_values(asset)
-        )
-        if overlaps:
-            _merge_ieee_asset_group(
-                deduped, [*overlaps, asset], merge_fields=merge_fields
-            )
-            continue
-        deduped.append(asset)
-    return deduped
-
-
 def _absolute_ieee_html_asset_fields(
     asset: dict[str, Any], source_url: str
 ) -> dict[str, Any]:
@@ -568,10 +360,8 @@ def _extract_ieee_html(
             "IEEE dynamic HTML endpoint returned an access, challenge, or unable page.",
         )
 
-    html_for_parse = re.sub(r"^\s*<\?xml[^>]*>\s*", "", html_text)
-    soup = BeautifulSoup(html_for_parse, choose_parser())
-    article = soup.select_one("#article")
-    if not isinstance(article, Tag):
+    article = _find_ieee_article(html_text)
+    if article is None:
         raise ProviderFailure(
             NO_RESULT, "IEEE dynamic HTML endpoint did not include #article."
         )

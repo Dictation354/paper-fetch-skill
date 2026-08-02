@@ -4,6 +4,8 @@ from dataclasses import replace
 from pathlib import Path
 from unittest import mock
 
+import pytest
+
 from paper_fetch import browser_preflight
 from paper_fetch.config import (
     BROWSER_TIMEOUT_MS_ENV_VAR,
@@ -18,6 +20,35 @@ from paper_fetch.providers.browser_runtime import (
 from paper_fetch.providers.base import ProviderStatusResult, build_provider_status_check
 from paper_fetch.providers.browser_workflow import html_extraction
 from paper_fetch.providers.browser_workflow.shared import default_browser_workflow_deps
+
+
+@pytest.mark.parametrize(
+    ("reason_code", "stage", "expected"),
+    [
+        ("request_cancelled", None, "cancelled"),
+        ("aws_waf_challenge", "page", "challenge"),
+        ("cloudflare_challenge", "page", "challenge"),
+        ("publisher_access_denied", "availability", "auth_required"),
+        ("browser_connect_timeout", "browser_connect", "network_timeout"),
+        ("article_container_not_found", "html_extraction", "extraction_error"),
+        ("empty_article_shell", "html_extraction", "extraction_error"),
+        ("managed_chrome_cdp_timeout", "managed_chrome_startup", "runtime_error"),
+        ("unknown_html_failure", "html_extraction", "extraction_error"),
+        ("unknown_runtime_failure", "browser_context_create", "runtime_error"),
+    ],
+)
+def test_preflight_failure_classification_is_code_and_stage_driven(
+    reason_code,
+    stage,
+    expected,
+) -> None:
+    assert (
+        browser_preflight.classify_browser_preflight_failure(
+            reason_code,
+            stage=stage,
+        )
+        == expected
+    )
 
 
 def _runtime_config(tmp_path: Path, *, provider: str, doi: str) -> BrowserRuntimeConfig:
@@ -143,14 +174,16 @@ def test_browser_preflight_adds_provider_storage_path_for_camoufox(
         results = browser_preflight.run_browser_provider_preflight(
             providers=["wiley"],
             timeout_ms=45000,
-            env={
-                XDG_DATA_HOME_ENV_VAR: str(tmp_path),
-            },
+            runtime_options=browser_preflight.BrowserPreflightRuntimeOptions(
+                env={
+                    XDG_DATA_HOME_ENV_VAR: str(tmp_path),
+                }
+            ),
         )
 
     assert len(results) == 1
     result = results[0]
-    assert result.ok is True
+    assert result.ready is True
     assert result.provider == "wiley"
     assert (
         result.final_url == "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.15322"
@@ -237,7 +270,7 @@ def test_browser_preflight_uses_custom_target_and_disables_storage_write(
             save_storage_state=False,
         )
 
-    assert result.ok is True
+    assert result.ready is True
     assert result.target_url == target_url
     assert result.storage_state_path == state_path
     assert captured["doi"] == "10.1111/custom.123"
@@ -251,6 +284,98 @@ def test_browser_preflight_uses_custom_target_and_disables_storage_write(
     assert runtime.user_data_dir is None
     assert runtime.profile_dir is None
     assert runtime.persist_storage_state is False
+
+
+def test_ieee_preflight_requires_matching_article_with_full_readiness_window(
+    tmp_path: Path,
+) -> None:
+    captured: dict[str, object] = {}
+
+    def load_runtime_config(env, *, provider, doi):
+        del env
+        return _runtime_config(tmp_path, provider=provider, doi=doi)
+
+    def fetch_html_with_browser(candidate_urls, *, publisher, config, **kwargs):
+        del config
+        captured["candidate_urls"] = list(candidate_urls)
+        captured["publisher"] = publisher
+        captured.update(kwargs)
+        return BrowserFetchedHtml(
+            source_url=candidate_urls[0],
+            final_url=candidate_urls[0],
+            html=("<html><body><article id='article'>10772041</article></body></html>"),
+            response_status=200,
+            response_headers={"content-type": "text/html"},
+            title="IEEE article",
+            summary="10772041",
+            browser_context_seed={},
+        )
+
+    with (
+        mock.patch.object(
+            browser_preflight, "load_runtime_config", side_effect=load_runtime_config
+        ),
+        mock.patch.object(browser_preflight, "ensure_runtime_ready"),
+        mock.patch.object(
+            browser_preflight,
+            "fetch_html_with_browser",
+            side_effect=fetch_html_with_browser,
+        ),
+    ):
+        result = browser_preflight.preflight_browser_provider(
+            "ieee",
+            env={XDG_DATA_HOME_ENV_VAR: str(tmp_path)},
+            save_storage_state=False,
+        )
+
+    assert result.ready is True
+    readiness = captured["readiness"]
+    assert isinstance(readiness, browser_preflight.BrowserHtmlReadiness)
+    assert readiness.selector == "#article"
+    assert readiness.selector_text == "10772041"
+    assert readiness.require_selector is True
+    assert captured["wait_seconds"] == 15
+
+
+def test_preflight_preserves_captured_page_diagnostic_without_artifact_file(
+    tmp_path: Path,
+) -> None:
+    captured_page = {
+        "failure_code": "aws_waf_challenge",
+        "raw_html": {"byte_count": 2058, "sha256": "a" * 64},
+        "html_shape": {"tag_counts": {"script": 3, "noscript": 1}},
+        "diagnostic_path": None,
+    }
+    runtime = browser_preflight.RuntimeContext(
+        env={},
+        download_dir=tmp_path,
+        artifact_mode="none",
+    )
+    try:
+        with mock.patch.object(
+            browser_preflight,
+            "capture_page_diagnostic",
+            side_effect=AssertionError("must not replace the captured page"),
+        ):
+            result = browser_preflight._failure_result(
+                "ieee",
+                target_url="https://ieeexplore.ieee.org/document/10772041/",
+                reason_code="aws_waf_challenge",
+                stage="selector_readiness",
+                diagnostics={
+                    "challenge_provider": "aws_waf",
+                    "legacy_reason_code": "cloudflare_challenge",
+                    "failure_diagnostic": captured_page,
+                },
+                diagnostic_context=runtime,
+            )
+    finally:
+        runtime.close()
+
+    assert result.status == "challenge"
+    assert result.diagnostics is not None
+    assert result.diagnostics["failure_diagnostic"] == captured_page
+    assert result.diagnostics["challenge_provider"] == "aws_waf"
 
 
 def test_browser_preflight_uses_provider_html_candidates_for_aip(
@@ -304,7 +429,7 @@ def test_browser_preflight_uses_provider_html_candidates_for_aip(
             env={XDG_DATA_HOME_ENV_VAR: str(tmp_path)},
         )
 
-    assert result.ok is True
+    assert result.ready is True
     assert result.provider == "aip"
     assert captured["candidate_urls"] == [
         (
@@ -367,7 +492,7 @@ def test_browser_preflight_uses_provider_html_candidates_for_royal_society(
             env={XDG_DATA_HOME_ENV_VAR: str(tmp_path)},
         )
 
-    assert result.ok is True
+    assert result.ready is True
     assert result.provider == "royalsocietypublishing"
     assert captured["candidate_urls"] == [
         "https://royalsocietypublishing.org/doi/10.1098/rsos.201200",
@@ -435,19 +560,29 @@ def test_browser_preflight_records_failure_and_continues(tmp_path: Path) -> None
     ):
         results = browser_preflight.run_browser_provider_preflight(
             providers=["science", "wiley"],
-            env={XDG_DATA_HOME_ENV_VAR: str(tmp_path)},
+            runtime_options=browser_preflight.BrowserPreflightRuntimeOptions(
+                env={XDG_DATA_HOME_ENV_VAR: str(tmp_path)},
+                download_dir=tmp_path / "preflight-output",
+                artifact_mode="all",
+            ),
         )
 
     assert [result.provider for result in results] == ["science", "wiley"]
-    assert results[0].ok is False
-    assert results[0].reason == "managed_chrome_exited_before_cdp"
+    assert results[0].ready is False
+    assert results[0].status == "runtime_error"
+    assert results[0].reason_code == "managed_chrome_exited_before_cdp"
     assert results[0].diagnostics is not None
     assert results[0].diagnostics["browser_failure"]["exit_code"] == 12
+    diagnostic_path = Path(results[0].diagnostics["diagnostic_path"])
+    assert diagnostic_path.is_file()
+    diagnostic = results[0].diagnostics["failure_diagnostic"]
+    assert diagnostic["stage"] == "managed_chrome_startup"
+    assert diagnostic["raw_html"] is None
     assert (
         results[0].storage_state_path
         == tmp_path / "profiles" / "science" / "storage-state.json"
     )
-    assert results[1].ok is True
+    assert results[1].ready is True
 
 
 def test_browser_preflight_cancellation_keeps_completed_provider_result() -> None:
@@ -458,7 +593,8 @@ def test_browser_preflight_cancellation_keeps_completed_provider_result() -> Non
         return browser_preflight.BrowserPreflightResult(
             provider=provider,
             provider_label=provider.upper(),
-            ok=True,
+            status="ready",
+            reason_code="browser_preflight_ready",
         )
 
     def on_result(result, completed, total):
@@ -477,13 +613,14 @@ def test_browser_preflight_cancellation_keeps_completed_provider_result() -> Non
             cancel_check=lambda: cancelled,
             cancel_as_result=True,
             on_result=on_result,
-            env={},
+            runtime_options=browser_preflight.BrowserPreflightRuntimeOptions(env={}),
         )
 
     assert [result.provider for result in results] == ["science", "wiley"]
-    assert results[0].ok is True
-    assert results[1].ok is False
-    assert results[1].reason == "request_cancelled"
+    assert results[0].ready is True
+    assert results[1].ready is False
+    assert results[1].status == "cancelled"
+    assert results[1].reason_code == "request_cancelled"
     assert progress == [("science", 1, 3), ("wiley", 2, 3)]
 
 
@@ -534,15 +671,16 @@ def test_browser_preflight_does_not_use_pdf_fallback(tmp_path: Path) -> None:
             env={XDG_DATA_HOME_ENV_VAR: str(tmp_path)},
         )
 
-    assert result.ok is False
-    assert result.reason == "publisher_access_denied"
+    assert result.ready is False
+    assert result.status == "auth_required"
+    assert result.reason_code == "publisher_access_denied"
 
 
 def test_browser_preflight_reports_missing_builtin_target() -> None:
     with mock.patch.dict(browser_preflight.AUTH_TARGETS, {}, clear=True):
         result = browser_preflight.preflight_browser_provider("wiley", env={})
 
-    assert result.ok is False
+    assert result.ready is False
     assert result.provider == "wiley"
-    assert result.reason == "error"
+    assert result.reason_code == "error"
     assert "No built-in browser preflight URL" in (result.message or "")

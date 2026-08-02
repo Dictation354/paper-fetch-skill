@@ -19,7 +19,23 @@ def _preflight_result(
     return BrowserPreflightResult(
         provider=provider,
         provider_label=provider.upper(),
-        ok=ok,
+        status=(
+            "ready"
+            if ok
+            else classify_browser_preflight_failure(
+                reason,
+                stage="preflight",
+            )
+        ),
+        reason_code=reason
+        or ("browser_preflight_ready" if ok else "browser_preflight_failed"),
+        stage="complete" if ok else "preflight",
+        message=message
+        or (
+            "Publisher browser HTML preflight completed successfully."
+            if ok
+            else "Browser preflight failed."
+        ),
         target_url=f"https://{provider}.example.test/article",
         final_url=f"https://{provider}.example.test/final" if ok else None,
         title=f"{provider} sample" if ok else None,
@@ -32,8 +48,6 @@ def _preflight_result(
                 }
             }
         },
-        reason=reason,
-        message=message,
     )
 
 
@@ -91,11 +105,17 @@ def test_browser_preflight_payload_passes_scoped_live_and_storage_options(
 
 def test_browser_preflight_payload_keeps_per_provider_action_states() -> None:
     results = [
-        _preflight_result(
-            "science",
-            ok=False,
-            reason="cloudflare_challenge",
-            message="Challenge detected.",
+        replace(
+            _preflight_result(
+                "ieee",
+                ok=False,
+                reason="aws_waf_challenge",
+                message="AWS WAF challenge detected.",
+            ),
+            diagnostics={
+                "challenge_provider": "aws_waf",
+                "legacy_reason_code": "cloudflare_challenge",
+            },
         ),
         _preflight_result(
             "wiley",
@@ -128,7 +148,13 @@ def test_browser_preflight_payload_keeps_per_provider_action_states() -> None:
     assert payload["summary"]["auth_required"] == 1
     assert payload["summary"]["runtime_error"] == 1
     assert payload["summary"]["ready"] == 1
-    assert payload["results"][0]["next_action"] == "paper-fetch auth science"
+    assert payload["results"][0]["next_action"] == "paper-fetch auth ieee"
+    assert payload["results"][0]["reason_code"] == "aws_waf_challenge"
+    assert payload["results"][0]["diagnostics"]["challenge_provider"] == "aws_waf"
+    assert (
+        payload["results"][0]["diagnostics"]["legacy_reason_code"]
+        == "cloudflare_challenge"
+    )
     assert payload["results"][3]["next_action"] == "run the requested fetch"
 
 
@@ -149,7 +175,8 @@ def test_browser_preflight_compact_has_only_routing_fields() -> None:
             "provider": "wiley",
             "status": "ready",
             "reason_code": "browser_preflight_ready",
-            "reason": "Publisher browser HTML preflight completed successfully.",
+            "stage": "complete",
+            "message": "Publisher browser HTML preflight completed successfully.",
             "next_action": "run the requested fetch",
         }
     ]

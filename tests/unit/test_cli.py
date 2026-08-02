@@ -14,7 +14,7 @@ from unittest import mock
 from paper_fetch import cli as paper_fetch_cli
 from paper_fetch.config import DOWNLOAD_DIR_ENV_VAR
 from paper_fetch import service as paper_fetch
-from paper_fetch.models import Asset, RenderOptions
+from paper_fetch.models import ArticleModel, Asset, Metadata, RenderOptions
 from paper_fetch.providers.base import ProviderFailure
 
 from ._paper_fetch_support import build_envelope, sample_article
@@ -529,7 +529,9 @@ class CliTests(unittest.TestCase):
             preflight_result = paper_fetch_cli.BrowserPreflightResult(
                 provider="wiley",
                 provider_label="Wiley",
-                ok=True,
+                status="ready",
+                reason_code="browser_preflight_ready",
+                stage="complete",
                 target_url="https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414",
                 final_url="https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414",
                 storage_state_path=state_path,
@@ -574,17 +576,22 @@ class CliTests(unittest.TestCase):
 
     def test_browser_preflight_subcommand_reports_auth_hint_on_failure(self) -> None:
         preflight_result = paper_fetch_cli.BrowserPreflightResult(
-            provider="wiley",
-            provider_label="Wiley",
-            ok=False,
-            target_url="https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414",
-            reason="cloudflare_challenge",
-            message="Encountered a challenge or CAPTCHA page while loading publisher HTML.",
+            provider="ieee",
+            provider_label="IEEE",
+            status="challenge",
+            reason_code="aws_waf_challenge",
+            stage="page",
+            target_url="https://ieeexplore.ieee.org/document/10772041/",
+            message="Encountered an AWS WAF challenge page while loading publisher HTML.",
+            diagnostics={
+                "challenge_provider": "aws_waf",
+                "legacy_reason_code": "cloudflare_challenge",
+            },
         )
         stdout = io.StringIO()
         stderr = io.StringIO()
         original_argv = sys.argv
-        sys.argv = ["paper_fetch.py", "browser-preflight", "--provider", "wiley"]
+        sys.argv = ["paper_fetch.py", "browser-preflight", "--provider", "ieee"]
         try:
             with (
                 mock.patch.object(
@@ -600,15 +607,17 @@ class CliTests(unittest.TestCase):
             sys.argv = original_argv
 
         self.assertEqual(exit_code, 1)
-        self.assertIn("failed: Wiley (wiley)", stdout.getvalue())
-        self.assertIn("paper-fetch auth wiley", stderr.getvalue())
+        self.assertIn("challenge: IEEE (ieee)", stdout.getvalue())
+        self.assertIn("aws_waf_challenge", stdout.getvalue())
+        self.assertIn("paper-fetch auth ieee", stderr.getvalue())
 
     def test_browser_preflight_reports_structured_runtime_failure(self) -> None:
         preflight_result = paper_fetch_cli.BrowserPreflightResult(
             provider="wiley",
             provider_label="Wiley",
-            ok=False,
-            reason="managed_chrome_exited_before_cdp",
+            status="runtime_error",
+            reason_code="managed_chrome_exited_before_cdp",
+            stage="managed_chrome_startup",
             message="Managed Chrome exited before CDP was ready.",
             diagnostics={
                 "browser_failure": {
@@ -641,11 +650,23 @@ class CliTests(unittest.TestCase):
         self.assertIn("Exit code: 12", stdout.getvalue())
         self.assertIn("Chrome stderr: profile startup failed", stdout.getvalue())
         self.assertIn("Diagnostic artifact: /tmp/browser-diagnostic", stdout.getvalue())
-        self.assertIn("[managed_chrome_exited_before_cdp]", stderr.getvalue())
+        self.assertIn(
+            "[runtime_error/managed_chrome_exited_before_cdp]",
+            stderr.getvalue(),
+        )
         self.assertNotIn("paper-fetch auth", stderr.getvalue())
 
     def test_main_writes_markdown_json_and_both_to_stdout(self) -> None:
         article = sample_article()
+        article.assets = [
+            Asset(
+                kind="figure",
+                heading="Figure 1",
+                browser_backend="camoufox",
+                final_fetcher="camoufox",
+                recovery_attempts=[{"stage": "direct", "status": 403}],
+            )
+        ]
         original_fetch = paper_fetch_cli.fetch_paper
         try:
             paper_fetch_cli.fetch_paper = lambda *args, **kwargs: build_envelope(
@@ -686,9 +707,16 @@ class CliTests(unittest.TestCase):
                     payload = json.loads(rendered)
                     if output_format == "json":
                         self.assertEqual(payload["doi"], "10.1016/test")
+                        serialized_asset = payload["assets"][0]
                     else:
                         self.assertIn("article", payload)
                         self.assertIn("markdown", payload)
+                        serialized_asset = payload["article"]["assets"][0]
+                    self.assertEqual(serialized_asset["browser_backend"], "camoufox")
+                    self.assertEqual(serialized_asset["final_fetcher"], "camoufox")
+                    self.assertEqual(
+                        serialized_asset["recovery_attempts"][0]["status"], 403
+                    )
         finally:
             paper_fetch_cli.fetch_paper = original_fetch
 
@@ -2225,6 +2253,7 @@ class CliTests(unittest.TestCase):
 
     def test_main_batch_writes_markdown_files_and_results_jsonl(self) -> None:
         captured: list[dict[str, object]] = []
+        resolved_queries: list[str] = []
 
         def fake_fetch(query, *args, **kwargs):
             del args
@@ -2234,6 +2263,18 @@ class CliTests(unittest.TestCase):
             article.metadata.title = f"Article {query}"
             return paper_fetch.build_fetch_envelope(
                 article, modes=kwargs["modes"], render=kwargs["render"]
+            )
+
+        def fake_resolve(query, *, context=None):
+            del context
+            resolved_queries.append(query)
+            return paper_fetch.ResolvedQuery(
+                query=query,
+                query_kind="doi",
+                doi=query,
+                landing_url="https://example.test/article",
+                provider_hint="crossref",
+                confidence=1.0,
             )
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -2253,6 +2294,9 @@ class CliTests(unittest.TestCase):
                 mock.patch.object(
                     paper_fetch_cli, "fetch_paper", side_effect=fake_fetch
                 ),
+                mock.patch.object(
+                    paper_fetch_cli, "resolve_paper", side_effect=fake_resolve
+                ),
                 contextlib.redirect_stdout(stdout),
                 contextlib.redirect_stderr(stderr),
             ):
@@ -2265,6 +2309,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(stderr.getvalue(), "")
             self.assertTrue(output_dir.is_dir())
             self.assertEqual(len(captured), 2)
+            self.assertEqual(resolved_queries, ["10.1000/a", "10.1000/b"])
             self.assertTrue(
                 (output_dir / "Example_et_al_2026_Article_10.1000_a.md").exists()
             )
@@ -2304,28 +2349,27 @@ class CliTests(unittest.TestCase):
                 all(item["saved_markdown_path"] is None for item in result_lines)
             )
 
-    def test_main_batch_continues_after_failure_and_returns_status_exit_code(
-        self,
-    ) -> None:
-        calls: list[str] = []
+    def test_main_batch_disambiguates_metadata_poor_url_outputs(self) -> None:
+        queries = [
+            "https://example.test/preprints/first",
+            "https://example.test/preprints/second",
+        ]
 
         def fake_fetch(query, *args, **kwargs):
-            del args, kwargs
-            calls.append(query)
-            if query == "10.1000/b":
-                raise ProviderFailure(
-                    "no_access", "Forbidden", warnings=["license required"]
-                )
-            article = sample_article()
-            article.doi = query
-            article.metadata.title = f"Article {query}"
-            return build_envelope(article)
+            del query, args
+            article = ArticleModel(
+                doi=None,
+                source="crossref",
+                metadata=Metadata(),
+            )
+            return paper_fetch.build_fetch_envelope(
+                article, modes=kwargs["modes"], render=kwargs["render"]
+            )
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            output_dir = Path(tmpdir) / "papers"
+            output_dir = Path(tmpdir) / "downloads"
             query_file = Path(tmpdir) / "queries.txt"
-            results_path = Path(tmpdir) / "summary" / "results.jsonl"
-            query_file.write_text("10.1000/a\n10.1000/b\n10.1000/c\n", encoding="utf-8")
+            query_file.write_text("\n".join(queries), encoding="utf-8")
             stdout = io.StringIO()
             stderr = io.StringIO()
 
@@ -2343,6 +2387,115 @@ class CliTests(unittest.TestCase):
                     [
                         "--query-file",
                         str(query_file),
+                        "--format",
+                        "both",
+                        "--output-dir",
+                        str(output_dir),
+                        "--artifact-mode",
+                        "none",
+                        "--asset-profile",
+                        "none",
+                        "--batch-concurrency",
+                        "2",
+                    ]
+                )
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(stderr.getvalue(), "")
+            expected_names = {
+                "unknown_unknown_article_74e87976ecc179f5.both.json",
+                "unknown_unknown_article_0dfd199975f49eeb.both.json",
+            }
+            self.assertEqual(
+                {path.name for path in output_dir.glob("*.both.json")},
+                expected_names,
+            )
+            result_lines = [
+                json.loads(line)
+                for line in (output_dir / "batch-results.jsonl")
+                .read_text(encoding="utf-8")
+                .splitlines()
+            ]
+            self.assertEqual([item["status"] for item in result_lines], ["ok", "ok"])
+            self.assertEqual(
+                {Path(item["output_path"]).name for item in result_lines},
+                expected_names,
+            )
+
+    def test_formatted_output_filename_prefers_fallback_query_doi(self) -> None:
+        envelope = build_envelope(
+            ArticleModel(
+                doi=None,
+                source="crossref",
+                metadata=Metadata(),
+            )
+        )
+
+        self.assertEqual(
+            paper_fetch_cli._formatted_output_filename(
+                envelope,
+                output_format="both",
+                fallback_query="https://doi.org/10.1000/example",
+            ),
+            "unknown_unknown_10.1000_example.both.json",
+        )
+
+    def test_main_batch_continues_after_failure_and_returns_status_exit_code(
+        self,
+    ) -> None:
+        calls: list[str] = []
+        resolved_queries: list[str] = []
+
+        def fake_fetch(query, *args, **kwargs):
+            del args, kwargs
+            calls.append(query)
+            if query == "10.1000/b":
+                raise ProviderFailure(
+                    "no_access", "Forbidden", warnings=["license required"]
+                )
+            article = sample_article()
+            article.doi = query
+            article.metadata.title = f"Article {query}"
+            return build_envelope(article)
+
+        def fake_resolve(query, *, context=None):
+            del context
+            resolved_queries.append(query)
+            return paper_fetch.ResolvedQuery(
+                query=query,
+                query_kind="doi",
+                doi=query,
+                landing_url="https://example.test/article",
+                provider_hint="crossref",
+                confidence=1.0,
+            )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir) / "papers"
+            query_file = Path(tmpdir) / "queries.txt"
+            results_path = Path(tmpdir) / "summary" / "results.jsonl"
+            query_file.write_text("10.1000/a\n10.1000/b\n10.1000/c\n", encoding="utf-8")
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+
+            with (
+                mock.patch.object(
+                    paper_fetch_cli, "build_runtime_env", return_value={}
+                ),
+                mock.patch.object(
+                    paper_fetch_cli, "fetch_paper", side_effect=fake_fetch
+                ),
+                mock.patch.object(
+                    paper_fetch_cli, "resolve_paper", side_effect=fake_resolve
+                ),
+                contextlib.redirect_stdout(stdout),
+                contextlib.redirect_stderr(stderr),
+            ):
+                exit_code = paper_fetch_cli.main(
+                    [
+                        "--query-file",
+                        str(query_file),
                         "--output-dir",
                         str(output_dir),
                         "--batch-results",
@@ -2352,6 +2505,10 @@ class CliTests(unittest.TestCase):
 
             self.assertEqual(exit_code, 3)
             self.assertEqual(calls, ["10.1000/a", "10.1000/b", "10.1000/c"])
+            self.assertEqual(
+                resolved_queries,
+                ["10.1000/a", "10.1000/b", "10.1000/c"],
+            )
             self.assertEqual(stdout.getvalue(), "")
             self.assertEqual(stderr.getvalue(), "")
             self.assertTrue(
@@ -2374,6 +2531,105 @@ class CliTests(unittest.TestCase):
             self.assertEqual(result_lines[1]["warnings"], ["license required"])
             self.assertEqual(result_lines[1]["error"]["reason"], "Forbidden")
             self.assertEqual(result_lines[2]["index"], 3)
+
+    def test_failed_batch_manifest_retains_page_diagnostic_artifacts(self) -> None:
+        def fake_fetch(query, *args, **kwargs):
+            del query, args
+            context = kwargs["context"]
+            diagnostic_dir = (
+                context.download_dir
+                / "diagnostics"
+                / "springer"
+                / "10.1000_failure"
+                / "html-1"
+            )
+            diagnostic_dir.mkdir(parents=True, exist_ok=True)
+            diagnostic_path = diagnostic_dir / "diagnostic.json"
+            page_path = diagnostic_dir / "page-sanitized.html"
+            diagnostic_path.write_text('{"schema_version": 1}', encoding="utf-8")
+            page_path.write_text("<html><body>Preview</body></html>", encoding="utf-8")
+            context.diagnostic_artifacts.extend(
+                [
+                    {
+                        "path": str(diagnostic_path),
+                        "kind": "diagnostic",
+                        "route": "html",
+                        "failure_code": "publisher_paywall",
+                    },
+                    {
+                        "path": str(page_path),
+                        "kind": "diagnostic",
+                        "route": "html",
+                        "failure_code": "publisher_paywall",
+                    },
+                ]
+            )
+            raise ProviderFailure("no_result", "Springer HTML preview only.")
+
+        def fake_resolve(query, *, context=None):
+            del context
+            return paper_fetch.ResolvedQuery(
+                query=query,
+                query_kind="doi",
+                doi=query,
+                landing_url="https://example.test/article",
+                provider_hint="springer",
+                confidence=1.0,
+            )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir) / "papers"
+            query_file = Path(tmpdir) / "queries.txt"
+            query_file.write_text("10.1000/failure\n", encoding="utf-8")
+
+            with (
+                mock.patch.object(
+                    paper_fetch_cli,
+                    "build_runtime_env",
+                    return_value={},
+                ),
+                mock.patch.object(
+                    paper_fetch_cli,
+                    "fetch_paper",
+                    side_effect=fake_fetch,
+                ),
+                mock.patch.object(
+                    paper_fetch_cli,
+                    "resolve_paper",
+                    side_effect=fake_resolve,
+                ),
+            ):
+                exit_code = paper_fetch_cli.main(
+                    [
+                        "--query-file",
+                        str(query_file),
+                        "--output-dir",
+                        str(output_dir),
+                        "--artifact-mode",
+                        "all",
+                    ]
+                )
+
+            record = json.loads(
+                (output_dir / "batch-results.jsonl").read_text(encoding="utf-8")
+            )
+
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(record["record_status"], "failed")
+        diagnostic_artifacts = [
+            artifact
+            for artifact in record["output_artifacts"]
+            if artifact["kind"] == "diagnostic"
+        ]
+        self.assertEqual(len(diagnostic_artifacts), 2)
+        self.assertTrue(
+            all(
+                artifact["verification_status"] == "verified"
+                and artifact["size"] > 0
+                and artifact["sha256"]
+                for artifact in diagnostic_artifacts
+            )
+        )
 
     def test_parse_max_tokens_accepts_full_text_and_integers(self) -> None:
         self.assertEqual(paper_fetch_cli.parse_max_tokens("full_text"), "full_text")

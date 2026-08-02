@@ -166,6 +166,21 @@ def _asset_provenance(asset: AssetLike) -> list[str]:
     return _dedupe_strings(values)
 
 
+def preview_asset_is_accepted(asset: AssetLike) -> bool:
+    """Classify a preview from explicit evidence or the shared size threshold."""
+
+    if bool(_field(asset, "preview_accepted")):
+        return True
+    try:
+        width = int(_field(asset, "width") or 0)
+        height = int(_field(asset, "height") or 0)
+    except (TypeError, ValueError):
+        return False
+    from ..extraction.html.assets.dom import preview_dimensions_are_acceptable
+
+    return preview_dimensions_are_acceptable(width, height)
+
+
 def _failure_code(failure: Mapping[str, Any]) -> str | None:
     for field in ("code", "error_category", "reason"):
         code = normalize_text(str(failure.get(field) or "")).lower()
@@ -310,6 +325,10 @@ def _diagnose_asset(
         byte_count=byte_count,
         width=width,
         height=height,
+        preview_accepted=(
+            _text_field(asset, "download_tier").lower() == "preview"
+            and preview_asset_is_accepted(asset)
+        ),
         sha256=sha256,
         failure_code=path_failure_code,
         provenance=_asset_provenance(asset),
@@ -439,6 +458,10 @@ def build_asset_quality_summary(
             and diagnostic.status != "failed"
         ):
             counts.preview += 1
+            if diagnostic.preview_accepted:
+                counts.accepted_preview += 1
+            else:
+                counts.fallback_preview += 1
         elif path_exists and diagnostic.status != "failed":
             counts.full_size += 1
 
@@ -448,6 +471,27 @@ def build_asset_quality_summary(
         and _asset_requested(diagnostic.kind, diagnostic.request_profile)
         for diagnostic in diagnostics
     )
+    failed = sum(item.failed for item in by_kind.values())
+    placeholder_suspected = sum(item.placeholder_suspected for item in by_kind.values())
+    accepted_preview = sum(item.accepted_preview for item in by_kind.values())
+    fallback_preview = sum(item.fallback_preview for item in by_kind.values())
+    remote_only_requested = sum(
+        1
+        for _asset, diagnostic, has_remote, path_exists, _identity in typed_rows
+        if has_remote
+        and not path_exists
+        and _asset_requested(diagnostic.kind, diagnostic.request_profile)
+        and archive_enabled
+    )
+    issue_codes: list[str] = []
+    if failed:
+        issue_codes.append("asset_download_failure")
+    if fallback_preview:
+        issue_codes.append("asset_fidelity_degraded")
+    if placeholder_suspected:
+        issue_codes.append("asset_placeholder_suspected")
+    if remote_only_requested:
+        issue_codes.append("asset_remote_only")
     return AssetQualitySummary(
         audited=True,
         requested=asset_profile != "none",
@@ -458,11 +502,11 @@ def build_asset_quality_summary(
         total=len(diagnostics),
         local=local,
         full_size=sum(item.full_size for item in by_kind.values()),
-        preview=sum(item.preview for item in by_kind.values()),
-        failed=sum(item.failed for item in by_kind.values()),
-        placeholder_suspected=sum(
-            item.placeholder_suspected for item in by_kind.values()
-        ),
+        preview=accepted_preview + fallback_preview,
+        accepted_preview=accepted_preview,
+        fallback_preview=fallback_preview,
+        failed=failed,
+        placeholder_suspected=placeholder_suspected,
         not_requested=sum(item.not_requested for item in by_kind.values()),
         not_archived=sum(item.not_archived for item in by_kind.values()),
         remote_link_count=remote_link_count,
@@ -474,6 +518,7 @@ def build_asset_quality_summary(
                 if diagnostic.failure_code
             }
         ),
+        issue_codes=issue_codes,
         by_kind=by_kind,
         diagnostics=diagnostics,
     )
@@ -486,4 +531,5 @@ __all__ = [
     "PLACEHOLDER_SUSPECT_MAX_DIMENSION",
     "build_asset_quality_summary",
     "logical_asset_kind",
+    "preview_asset_is_accepted",
 ]

@@ -65,8 +65,16 @@ def test_live_external_state_is_scheduled_low_frequency_and_serial() -> None:
     assert "schedule:" in workflow
     assert '"17 3 * * 2"' in workflow
     assert '"41 4 1,15 * *"' in workflow
-    assert "tests/live -q -n 0" in workflow
-    assert "--force-enable-socket" in workflow
+    assert "tests/live/test_live_publishers.py" in workflow
+    assert "tests/live/test_live_mcp.py" in workflow
+    assert "tests/live/test_live_ieee_protected.py" not in workflow
+    assert "-q -n 0" in workflow
+    assert "--force-enable-socket" not in workflow
+    assert "--junitxml=artifacts/live-publishers.xml" in workflow
+    assert "junit_family=legacy" in workflow
+    assert "artifacts/live-publishers/live-acceptance.json" not in workflow
+    assert "artifacts/live-publishers" in workflow
+    assert "install-formula-tools.sh" in workflow
     assert "tests/integration/test_golden_corpus.py -q" in workflow
     assert "python -m camoufox fetch" in workflow
     assert "scripts/run_provider_drift_report.py" in workflow
@@ -82,14 +90,19 @@ def test_offline_builds_full_extra_for_supported_python_matrix() -> None:
     assert "build-offline-package-windows.ps1" in workflow
     assert "posix_tooling_ref" in workflow
     assert "windows_tooling_ref" in workflow
-    assert 'git show "$TOOLING_REF:scripts/build-offline-package.sh"' in workflow
+    assert "path: .posix-release-tooling" in workflow
+    assert ".posix-release-tooling/scripts/build-offline-package.sh" in workflow
+    assert ".posix-release-tooling/install-offline.sh" in workflow
+    assert ".posix-release-tooling/scripts/verify-offline-package.sh" in workflow
+    assert ".posix-release-tooling/src/paper_fetch/formula/install.py" not in workflow
+    assert "working-directory: .posix-release-tooling" in workflow
+    assert "Validate immutable source macOS adaptation contract" in workflow
+    assert "posix_tooling_ref must be an immutable 40-character commit SHA" in workflow
+    assert "PAPER_FETCH_OFFLINE_TOOLING_REVISION" in workflow
     assert (
         'git show "$TOOLING_REF:scripts/build-offline-package-windows.ps1"' in workflow
     )
-    assert (
-        workflow.count('git show "$TOOLING_REF:src/paper_fetch/formula/install.py"')
-        == 2
-    )
+    assert 'git show "$TOOLING_REF:src/paper_fetch/formula/install.py"' not in workflow
     assert "haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553" in workflow
     assert 'ghc-version: "9.10.3"' in workflow
     assert 'cabal-version: "3.12.1.0"' in workflow
@@ -100,6 +113,79 @@ def test_offline_builds_full_extra_for_supported_python_matrix() -> None:
     assert "scripts/resolve_offline_dependencies.py verify" in workflow
     assert "PIP_NO_INDEX" in workflow
     assert "PIP_FIND_LINKS" in workflow
+
+
+def test_offline_windows_tooling_ref_is_immutable_and_provenanced() -> None:
+    workflow = _workflow_text("offline.yml")
+    windows_job = workflow.index("  windows:")
+    source_setup = workflow.index(
+        "- uses: ./.github/actions/setup-python-deps",
+        windows_job,
+    )
+    source_contract = workflow.index(
+        "- name: Validate immutable source macOS adaptation contract",
+        windows_job,
+    )
+    validation = workflow.index("- name: Validate trusted Windows tooling revision")
+    overlay = workflow.index("- name: Overlay trusted Windows release tooling")
+    fetch = workflow.index('git fetch --no-tags --depth=1 origin "$TOOLING_REF"')
+    show = workflow.index(
+        'git show "$TOOLING_REF:scripts/build-offline-package-windows.ps1"'
+    )
+    build = workflow.index("- name: Build Windows full offline installer")
+
+    assert windows_job < source_setup < source_contract < validation
+    assert validation < overlay < fetch < show < build
+    assert (
+        "windows_tooling_ref must be an immutable 40-character commit SHA" in workflow
+    )
+    assert 'if [[ ! "$TOOLING_REF" =~ ^[0-9a-fA-F]{40}$ ]]' in workflow
+    assert (
+        "PAPER_FETCH_OFFLINE_TOOLING_REVISION: ${{ inputs.windows_tooling_ref }}"
+    ) in workflow
+
+
+def test_offline_workflow_verifies_macos_packages_on_pinned_arm64_runner() -> None:
+    workflow = _workflow_text("offline.yml")
+
+    assert workflow.count("os: macos-15") == 4
+    for tag in ("cp311", "cp312", "cp313", "cp314"):
+        assert f"target: macos-arm64-{tag}" in workflow
+    assert "macos-latest" not in workflow
+    assert "python scripts/validate_macos_adaptation.py" in workflow
+    assert 'MACOSX_DEPLOYMENT_TARGET: "15.0"' in workflow
+    assert "packages=(dist/*.tar.gz)" in workflow
+    assert "packages=(dist/*.sh)" in workflow
+    assert 'if [ "${#packages[@]}" -ne 1 ]' in workflow
+    assert 'scripts/verify-offline-package.sh "${packages[0]}"' in workflow
+    assert 'PAPER_FETCH_OFFLINE_SKIP_FETCH_SMOKE: "1"' in workflow
+    assert "if-no-files-found: error" in workflow
+
+
+def test_regular_ci_includes_native_macos_offline_gate() -> None:
+    workflow = _workflow_text("ci.yml")
+
+    assert "macos-contract-portable:" in workflow
+    assert "os: [ubuntu-latest, windows-latest]" in workflow
+    assert "scripts/test-macos-contract.sh" in workflow
+    assert (
+        "scripts/test-macos-contract.ps1 -Python .venv/Scripts/python.exe" in workflow
+    )
+    assert "macos-native:" in workflow
+    assert "runs-on: macos-15" in workflow
+    assert 'python-version: "3.14"' in workflow
+    assert "python scripts/validate_macos_adaptation.py" in workflow
+    assert 'test "$(uname -m)" = "arm64"' in workflow
+    assert "uv run python -m camoufox fetch official/152.0.4-beta.28" in workflow
+    assert 'PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST: "1"' in workflow
+    assert "tests/integration/test_camoufox_native_macos.py -q -n 0" in workflow
+    assert "test_cache_scope_accepts_equivalent_filesystem_alias_for_root" in workflow
+    assert "haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553" in workflow
+    assert 'MACOSX_DEPLOYMENT_TARGET: "15.0"' in workflow
+    assert "scripts/build-offline-package.sh --output-dir dist" in workflow
+    assert "scripts/verify-offline-package.sh" in workflow
+    assert "paper-fetch-skill-offline-macos-arm64-cp314.tar.gz" in workflow
+    assert 'PAPER_FETCH_OFFLINE_SKIP_FETCH_SMOKE: "1"' in workflow
 
 
 def test_release_emits_sbom_checksums_and_build_provenance() -> None:

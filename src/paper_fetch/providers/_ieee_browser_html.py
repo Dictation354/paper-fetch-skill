@@ -4,12 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import contextlib
-from dataclasses import dataclass
 import time
 from typing import Any
 
-from ..extraction.html import decode_html
-from ..extraction.html.signals import detect_html_block, summarize_html
+from ..extraction.html.signals import detect_html_block, summarize_visible_html
 from ..failure import FailureDiagnostics
 from ..http import RequestCancelledError, redact_url_for_diagnostics
 from ..http.headers import header_value
@@ -25,6 +23,17 @@ from ..utils import normalize_text
 from . import _ieee_html as ieee_html
 from . import _ieee_metadata as ieee_metadata
 from . import _ieee_url as ieee_url
+from ._ieee_browser_readiness import (
+    _BrowserFailureContext,
+    _RestHtmlSelection,
+    _capture_rest_html,
+    _page_content,
+    _page_has_article,
+    _page_title,
+    _playwright_response_headers,
+    _playwright_response_status,
+    _unready_browser_failure,
+)
 from ._payloads import (
     build_provider_payload,
     provider_failure_diagnostics as _provider_failure_diagnostics,
@@ -41,7 +50,6 @@ from .browser_runtime import (
 
 IEEE_BROWSER_HTML_NAVIGATION_TIMEOUT_MS = 60000
 IEEE_BROWSER_HTML_REST_WAIT_TIMEOUT_MS = 15000
-IEEE_BROWSER_HTML_DOM_WAIT_TIMEOUT_MS = 5000
 IEEE_BROWSER_HTML_POLL_INTERVAL_MS = 250
 
 
@@ -83,64 +91,6 @@ def _browser_failure_as_provider_failure(
     )
 
 
-def _playwright_response_headers(response: Any | None) -> dict[str, str]:
-    if response is None:
-        return {}
-    try:
-        headers = response.all_headers()
-    except Exception:
-        headers = getattr(response, "headers", {}) or {}
-    return {
-        normalize_text(str(key)).lower(): str(value)
-        for key, value in dict(headers or {}).items()
-        if normalize_text(str(key))
-    }
-
-
-def _playwright_response_status(response: Any | None) -> int | None:
-    if response is None:
-        return None
-    try:
-        return int(getattr(response, "status", 0) or 0) or None
-    except Exception:
-        return None
-
-
-@dataclass(frozen=True)
-class _CapturedRestHtml:
-    source_url: str
-    headers: dict[str, str]
-    html_text: str
-    status: int | None
-
-
-def _capture_rest_html(
-    rest_responses: list[Any],
-    rest_url: str,
-) -> _CapturedRestHtml | None:
-    for response in reversed(rest_responses):
-        try:
-            body = response.body()
-        except Exception:
-            continue
-        if not isinstance(body, (bytes, bytearray)) or not body:
-            continue
-        headers = _playwright_response_headers(response)
-        return _CapturedRestHtml(
-            source_url=ieee_url._absolute_ieee_url(
-                str(getattr(response, "url", "") or rest_url),
-                rest_url,
-            ),
-            headers=headers,
-            html_text=decode_html(
-                bytes(body),
-                content_type=header_value(headers, "content-type"),
-            ),
-            status=_playwright_response_status(response),
-        )
-    return None
-
-
 def fetch_ieee_browser_html_payload(
     *,
     provider_name: str,
@@ -175,15 +125,22 @@ def fetch_ieee_browser_html_payload(
     navigation_response = None
     browser_final_url = document_url
     navigation_status: int | None = None
+    navigation_headers: dict[str, str] = {}
     payload_source = ""
     response_status: int | None = None
     response_headers: dict[str, str] = {}
     source_url = document_url
     html_text = ""
     browser_context_seed: dict[str, Any] = {}
+    rest_selection = _RestHtmlSelection(
+        selected=None,
+        latest_invalid=None,
+        response_count=0,
+        invalid_response_count=0,
+    )
     request_started = time.monotonic()
     with contextlib.suppress(AttributeError):
-        context.ensure_deadline(runtime_config.timeout_ms / 1000.0)
+        context.initialize_deadline(runtime_config.timeout_ms / 1000.0)
 
     try:
         _remaining_timeout_ms(context, runtime_config.timeout_ms)
@@ -239,22 +196,32 @@ def fetch_ieee_browser_html_payload(
             normalize_text(str(getattr(page, "url", "") or "")) or document_url
         )
         navigation_status = _playwright_response_status(navigation_response)
+        navigation_headers = _playwright_response_headers(navigation_response)
 
-        if not rest_responses:
-            rest_wait_deadline = time.monotonic() + (
-                _remaining_timeout_ms(context, IEEE_BROWSER_HTML_REST_WAIT_TIMEOUT_MS)
-                / 1000.0
+        rest_wait_deadline = time.monotonic() + (
+            _remaining_timeout_ms(context, IEEE_BROWSER_HTML_REST_WAIT_TIMEOUT_MS)
+            / 1000.0
+        )
+        rest_selection = _capture_rest_html(rest_responses, rest_url, article_number)
+        has_article_dom = _page_has_article(page, article_number)
+        while (
+            rest_selection.selected is None
+            and not has_article_dom
+            and time.monotonic() < rest_wait_deadline
+        ):
+            wait_ms = min(
+                IEEE_BROWSER_HTML_POLL_INTERVAL_MS,
+                _remaining_timeout_ms(context, IEEE_BROWSER_HTML_POLL_INTERVAL_MS),
+                max(1, int((rest_wait_deadline - time.monotonic()) * 1000)),
             )
-            while not rest_responses and time.monotonic() < rest_wait_deadline:
-                wait_ms = min(
-                    IEEE_BROWSER_HTML_POLL_INTERVAL_MS,
-                    _remaining_timeout_ms(context, IEEE_BROWSER_HTML_POLL_INTERVAL_MS),
-                    max(1, int((rest_wait_deadline - time.monotonic()) * 1000)),
-                )
-                page.wait_for_timeout(wait_ms)
-                context.raise_if_cancelled()
+            page.wait_for_timeout(wait_ms)
+            context.raise_if_cancelled()
+            rest_selection = _capture_rest_html(
+                rest_responses, rest_url, article_number
+            )
+            has_article_dom = _page_has_article(page, article_number)
 
-        captured_rest_html = _capture_rest_html(rest_responses, rest_url)
+        captured_rest_html = rest_selection.selected
         if captured_rest_html is not None:
             source_url = captured_rest_html.source_url
             response_headers = captured_rest_html.headers
@@ -263,32 +230,27 @@ def fetch_ieee_browser_html_payload(
             payload_source = "rest_response"
 
         if not html_text:
-            with contextlib.suppress(PlaywrightTimeoutError):
-                page.wait_for_selector(
-                    "#article",
-                    timeout=_remaining_timeout_ms(
-                        context, IEEE_BROWSER_HTML_DOM_WAIT_TIMEOUT_MS
+            if not has_article_dom:
+                page_html = _page_content(page)
+                page_title = _page_title(page)
+                raise _unready_browser_failure(
+                    _BrowserFailureContext(
+                        runtime_context=context,
+                        provider_name=provider_name,
+                        landing_attempt=landing_attempt,
+                        runtime_config=runtime_config,
+                        document_url=document_url,
+                        rest_url=rest_url,
+                        final_url=browser_final_url,
+                        navigation_status=navigation_status,
+                        navigation_headers=navigation_headers,
                     ),
+                    navigation_timed_out=navigation_timed_out,
+                    rest_selection=rest_selection,
+                    page_html=page_html,
+                    page_title=page_title,
                 )
-            try:
-                has_article = page.locator("#article").count() > 0
-            except Exception:
-                has_article = False
-            if not has_article:
-                failure_kind = (
-                    "browser_navigation_timeout"
-                    if navigation_timed_out
-                    else "browser_article_not_ready"
-                )
-                raise BrowserRuntimeFailure(
-                    failure_kind,
-                    "IEEE browser HTML fallback did not capture REST full-text HTML or #article DOM.",
-                    details={
-                        "stage": "dom_readiness",
-                        "document_url": redact_url_for_diagnostics(document_url),
-                    },
-                )
-            html_text = str(page.content() or "")
+            html_text = _page_content(page)
             browser_final_url = (
                 normalize_text(str(getattr(page, "url", "") or "")) or browser_final_url
             )
@@ -305,11 +267,21 @@ def fetch_ieee_browser_html_payload(
                         "article_number": article_number,
                     },
                 )
-        title = ""
-        with contextlib.suppress(Exception):
-            title = normalize_text(str(page.title() or ""))
-        html_summary = summarize_html(html_text)
-        detected = detect_html_block(title, html_summary, response_status)
+        title = _page_title(page)
+        html_summary = summarize_visible_html(html_text)
+        detected = detect_html_block(
+            title,
+            html_summary,
+            response_status,
+        )
+        if detected is not None:
+            detected = detect_html_block(
+                title,
+                html_summary,
+                response_status,
+                html_text=html_text,
+                response_headers=response_headers,
+            )
         if detected is not None:
             raise BrowserRuntimeFailure(
                 detected.reason,
@@ -318,6 +290,14 @@ def fetch_ieee_browser_html_payload(
                     "stage": "block_detection",
                     "status": response_status,
                     "payload_source": payload_source,
+                    **(
+                        {
+                            "challenge_provider": "aws_waf",
+                            "legacy_reason_code": "cloudflare_challenge",
+                        }
+                        if detected.reason == "aws_waf_challenge"
+                        else {}
+                    ),
                 },
             )
 
@@ -381,6 +361,10 @@ def fetch_ieee_browser_html_payload(
                     "final_url": redact_url_for_diagnostics(browser_final_url),
                     "navigation_status": navigation_status,
                     "response_status": response_status,
+                    "rest_response_count": rest_selection.response_count,
+                    "invalid_rest_response_count": (
+                        rest_selection.invalid_response_count
+                    ),
                     "timeout_budget_ms": runtime_config.timeout_ms,
                     "elapsed_ms": round((time.monotonic() - request_started) * 1000, 3),
                     "remaining_ms": max(

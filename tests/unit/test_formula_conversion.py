@@ -34,6 +34,44 @@ class FormulaConversionTests(unittest.TestCase):
             '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>',
         )
 
+    def test_scoped_runtime_env_reaches_implicit_formula_conversion(self) -> None:
+        raw_mathml = (
+            '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
+        )
+        captured_env: dict[str, str] = {}
+
+        def fake_texmath(raw, *, display_mode, env):
+            captured_env.update(env)
+            return formula_conversion.FormulaConversionResult(
+                backend="texmath",
+                status="ok",
+                latex="x",
+                raw_mathml=raw,
+                error=None,
+                duration_ms=1,
+                display_mode=display_mode,
+            )
+
+        runtime_env = {
+            "PAPER_FETCH_FORMULA_TOOLS_DIR": "/prepared/formula-tools",
+        }
+        with (
+            mock.patch.object(
+                formula_conversion,
+                "convert_with_texmath",
+                side_effect=fake_texmath,
+            ),
+            formula_conversion.formula_runtime_env(runtime_env),
+        ):
+            result = formula_conversion.convert_mathml_string(
+                raw_mathml,
+                display_mode=False,
+                backend="texmath",
+            )
+
+        self.assertEqual(result.status, "ok")
+        self.assertEqual(captured_env, runtime_env)
+
     def test_looks_like_mathml_element_excludes_tex_math(self) -> None:
         tex_math_node = ET.fromstring("<tex-math>x^2</tex-math>")
         math_node = ET.fromstring(

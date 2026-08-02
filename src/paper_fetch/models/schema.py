@@ -83,7 +83,7 @@ QualityConfidence = Literal["high", "medium", "low"]
 
 
 TRUNCATION_WARNING = "Output truncated to satisfy token budget."
-EXTRACTION_REVISION = 3
+EXTRACTION_REVISION = 4
 
 
 @dataclass
@@ -92,6 +92,7 @@ class Metadata:
     authors: list[str] = field(default_factory=list)
     abstract: str | None = None
     journal: str | None = None
+    article_type: str | None = None
     published: str | None = None
     keywords: list[str] = field(default_factory=list)
     license_urls: list[str] = field(default_factory=list)
@@ -153,6 +154,10 @@ class Asset:
     downloaded_bytes: int | None = None
     width: int | None = None
     height: int | None = None
+    preview_accepted: bool = False
+    browser_backend: str | None = None
+    final_fetcher: str | None = None
+    recovery_attempts: list[dict[str, Any]] = field(default_factory=list)
     provenance: list[str] = field(default_factory=list)
 
 
@@ -169,6 +174,7 @@ class AssetDiagnostic:
     byte_count: int | None = None
     width: int | None = None
     height: int | None = None
+    preview_accepted: bool = False
     sha256: str | None = None
     failure_code: str | None = None
     provenance: list[str] = field(default_factory=list)
@@ -183,6 +189,8 @@ class AssetKindSummary:
     requested: int = 0
     full_size: int = 0
     preview: int = 0
+    accepted_preview: int = 0
+    fallback_preview: int = 0
     failed: int = 0
     placeholder_suspected: int = 0
     not_requested: int = 0
@@ -213,6 +221,8 @@ class AssetQualitySummary:
     local: int = 0
     full_size: int = 0
     preview: int = 0
+    accepted_preview: int = 0
+    fallback_preview: int = 0
     failed: int = 0
     placeholder_suspected: int = 0
     not_requested: int = 0
@@ -220,6 +230,7 @@ class AssetQualitySummary:
     remote_link_count: int = 0
     remote_only_count: int = 0
     failure_codes: list[str] = field(default_factory=list)
+    issue_codes: list[str] = field(default_factory=list)
     by_kind: dict[AssetLogicalKind, AssetKindSummary] = field(
         default_factory=_empty_asset_kind_summaries
     )
@@ -263,7 +274,6 @@ class Quality:
     has_abstract: bool = False
     warnings: list[str] = field(default_factory=list)
     source_trail: list[str] = field(default_factory=list)
-    trace: list[TraceEvent] = field(default_factory=list)
     token_estimate_breakdown: TokenEstimateBreakdown = field(
         default_factory=TokenEstimateBreakdown
     )
@@ -296,10 +306,6 @@ class Quality:
             self.token_estimate_breakdown
         )
         self.extraction_revision = int(self.extraction_revision or EXTRACTION_REVISION)
-        if self.trace and not self.source_trail:
-            self.source_trail = source_trail_from_trace(self.trace)
-        elif self.source_trail and not self.trace:
-            self.trace = trace_from_markers(self.source_trail)
         if self.content_kind == "fulltext":
             self.has_fulltext = True
         elif self.content_kind == "abstract_only":
@@ -382,6 +388,7 @@ class FetchEnvelope:
     article: ArticleModel | None = None
     markdown: str | None = None
     metadata: Metadata | None = None
+    diagnostic_artifacts: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -418,9 +425,6 @@ class FetchEnvelope:
         self.quality.source_trail = _dedupe_strings(
             [*self.quality.source_trail, *self.source_trail]
         )
-        self.quality.trace = list(self.quality.trace or self.trace)
-        if self.trace and not self.quality.trace:
-            self.quality.trace = list(self.trace)
         if self.token_estimate and not self.quality.token_estimate:
             self.quality.token_estimate = self.token_estimate
         if (
@@ -435,7 +439,6 @@ class FetchEnvelope:
         self.has_abstract = self.quality.has_abstract
         self.warnings = list(self.quality.warnings)
         self.source_trail = list(self.quality.source_trail)
-        self.trace = list(self.quality.trace)
         self.token_estimate = self.quality.token_estimate
         self.token_estimate_breakdown = self.quality.token_estimate_breakdown
 

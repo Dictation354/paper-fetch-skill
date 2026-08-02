@@ -1,1 +1,18 @@
+* text=auto
+
+# POSIX entrypoints must stay LF-only after Windows checkouts.
+*.sh text eol=lf
+
+# Source, contracts, workflows, and documentation are cross-platform text.
+*.py text eol=lf
+*.toml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+
+# Native Windows launchers use Windows line endings.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
 tests/fixtures/golden_criteria/*/original.html whitespace=-blank-at-eol

@@ -253,10 +253,40 @@ def trace_from_markers(markers: list[str] | tuple[str, ...] | None) -> list[Trac
     ]
 
 
-def _percentile(values: list[float], percentile: float) -> float | None:
-    if not values:
+def project_source_trail_trace(
+    markers: list[str] | tuple[str, ...] | None,
+    structured_trace: list[TraceEvent] | tuple[TraceEvent, ...] | None,
+) -> list[TraceEvent]:
+    """Project markers once while preserving every structured retry event."""
+
+    remaining = list(structured_trace or [])
+    projected: list[TraceEvent] = []
+    for marker_event in trace_from_markers(markers):
+        matching = [
+            event for event in remaining if event.marker() == marker_event.marker()
+        ]
+        if matching:
+            projected.extend(matching)
+            matching_ids = {id(event) for event in matching}
+            remaining = [event for event in remaining if id(event) not in matching_ids]
+        else:
+            projected.append(marker_event)
+    projected.extend(remaining)
+    return projected
+
+
+def nearest_rank_percentile(
+    values: Iterable[float],
+    percentile: float,
+) -> float | None:
+    """Return a rounded nearest-rank percentile for non-empty samples."""
+
+    if not 0 < percentile <= 1:
+        raise ValueError("percentile must be in the interval (0, 1]")
+    samples = list(values)
+    if not samples:
         return None
-    ordered = sorted(values)
+    ordered = sorted(samples)
     index = max(0, math.ceil(percentile * len(ordered)) - 1)
     return round(ordered[index], 3)
 
@@ -310,7 +340,7 @@ def summarize_trace_attempts(
             "failure_rate": (
                 round(bucket.failures / bucket.attempts, 6) if bucket.attempts else 0.0
             ),
-            "p50_duration_ms": _percentile(bucket.durations_ms, 0.50),
-            "p95_duration_ms": _percentile(bucket.durations_ms, 0.95),
+            "p50_duration_ms": nearest_rank_percentile(bucket.durations_ms, 0.50),
+            "p95_duration_ms": nearest_rank_percentile(bucket.durations_ms, 0.95),
         }
     return summaries

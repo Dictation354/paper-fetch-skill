@@ -260,6 +260,8 @@ class RuntimeContext:
     parse_cache: dict[tuple[Hashable, ...], Any] = field(default_factory=dict)
     session_cache: dict[tuple[Hashable, ...], Any] = field(default_factory=dict)
     stage_timings: dict[str, float] = field(default_factory=dict)
+    fetch_trace: list[Any] = field(default_factory=list)
+    diagnostic_artifacts: list[dict[str, Any]] = field(default_factory=list)
     request_started_at: float = field(default_factory=time.monotonic)
     deadline_monotonic: float | None = None
     _parse_cache_lock: threading.RLock = field(
@@ -315,6 +317,9 @@ class RuntimeContext:
             )
         self.stage_timings.setdefault("asset_seconds", 0.0)
         self.stage_timings.setdefault("browser_seconds", 0.0)
+        self.stage_timings.setdefault("dom_readiness_seconds", 0.0)
+        self.stage_timings.setdefault("http_seconds", 0.0)
+        self.stage_timings.setdefault("retry_seconds", 0.0)
         self.stage_timings.setdefault("formula_seconds", 0.0)
 
     def get_clients(self) -> Mapping[str, object]:
@@ -377,15 +382,12 @@ class RuntimeContext:
         if self.cancelled:
             raise RequestCancelledError("Request cancelled.")
 
-    def ensure_deadline(self, timeout_seconds: float) -> float:
-        """Set one monotonic request deadline without resetting an existing budget."""
+    def initialize_deadline(self, timeout_seconds: float) -> float:
+        """Initialize the request deadline once from the request start time."""
 
-        timeout_value = max(0.0, float(timeout_seconds))
-        candidate = self.request_started_at + timeout_value
         if self.deadline_monotonic is None:
-            self.deadline_monotonic = candidate
-        else:
-            self.deadline_monotonic = min(self.deadline_monotonic, candidate)
+            timeout_value = max(0.0, float(timeout_seconds))
+            self.deadline_monotonic = self.request_started_at + timeout_value
         return self.deadline_monotonic
 
     def remaining_seconds(self, maximum: float | None = None) -> float:
