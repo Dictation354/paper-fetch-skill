@@ -6,6 +6,8 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 4.2.0 - 2026-08-02
+
 ### 新增
 
 - 以 `Dictation354/paper-fetch-skill` v4.1.0

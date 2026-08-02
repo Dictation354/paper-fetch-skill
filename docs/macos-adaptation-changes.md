@@ -317,8 +317,9 @@ contract gate；这些结果用于早期发现漂移，不会提升为原生 Mac
 8. 涉及离线包时，再手动运行 `Offline packages` workflow，并核对四个 arm64
    Python ABI tarball 均经过原生 verifier。
 9. 发布适配结果前提升 fork 版本并创建新的不可变标签。不得移动或复用上游
-   `v4.1.0`；标签、Python metadata、changelog 与 release notes 必须指向 fork
-   的新版本。
+   `v4.1.0`；validator 会要求 `pyproject.toml` 的发布版本严格高于
+   `source_baseline.version`，标签、Python metadata、changelog 与 release notes
+   必须指向 fork 的新版本。
 
 对不可变适配标签做“工具链修复重跑”是另一个受限场景。目标源码 checkout 必须
 先通过自身的当前 macOS contract，包括 browser/full extra 与 lockfile 的精确

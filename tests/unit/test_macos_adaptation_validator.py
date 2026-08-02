@@ -57,6 +57,39 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             diagnostic,
         )
 
+    def test_adapted_release_version_must_advance_past_baseline(self) -> None:
+        contract = validator.load_contract()
+        for project_version, should_pass in (("4.2.0", True), ("4.1.0", False)):
+            with self.subTest(project_version=project_version):
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    repo_root = Path(tmpdir)
+                    (repo_root / "pyproject.toml").write_text(
+                        "[project]\n"
+                        f'version = "{project_version}"\n'
+                        'requires-python = ">=3.11"\n',
+                        encoding="utf-8",
+                    )
+                    errors: list[str] = []
+                    validator._validate_support_values(
+                        contract,
+                        repo_root=repo_root,
+                        errors=errors,
+                    )
+
+                version_errors = [
+                    error for error in errors if error.startswith("project.version")
+                ]
+                if should_pass:
+                    self.assertEqual(version_errors, [])
+                else:
+                    self.assertEqual(
+                        version_errors,
+                        [
+                            "project.version must be greater than "
+                            "source_baseline.version for an adapted release"
+                        ],
+                    )
+
     def test_build_install_and_native_verifier_safety_drift_is_rejected(
         self,
     ) -> None:

@@ -417,8 +417,21 @@ def _validate_support_values(
         errors.append(f"cannot load pyproject.toml: {exc}")
         return
     project = pyproject.get("project", {})
-    if project.get("version") != contract.get("source_baseline", {}).get("version"):
-        errors.append("source_baseline.version drifted from pyproject.toml")
+    project_version = project.get("version")
+    baseline_version = contract.get("source_baseline", {}).get("version")
+    try:
+        parsed_project_version = Version(str(project_version))
+        parsed_baseline_version = Version(str(baseline_version))
+    except InvalidVersion:
+        errors.append(
+            "project.version and source_baseline.version must be valid versions"
+        )
+    else:
+        if parsed_project_version <= parsed_baseline_version:
+            errors.append(
+                "project.version must be greater than source_baseline.version "
+                "for an adapted release"
+            )
     if project.get("requires-python") != online.get("python_spec"):
         errors.append("support.online.python_spec drifted from pyproject.toml")
 

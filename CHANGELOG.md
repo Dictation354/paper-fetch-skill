@@ -6,6 +6,8 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 4.2.0 - 2026-08-02
+
 ### Added
 
 - Rebuilt the macOS adaptation against `Dictation354/paper-fetch-skill` v4.1.0 (`fc3bd96e8d781667a2e86e90dc6e8e35a8a26fa7`) with a machine-readable contract, validator, layered audit matrix, and portable Windows/WSL maintenance gates. The contract documents how to replay the isolated adaptation on a refreshed upstream main branch and keeps `/mnt/*` WSL checkouts limited to static evidence.
