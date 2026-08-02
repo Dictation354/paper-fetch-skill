@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 CLOUDFLARE_CHALLENGE = "cloudflare_challenge"
+AWS_WAF_CHALLENGE = "aws_waf_challenge"
 PUBLISHER_NOT_FOUND = "publisher_not_found"
 PUBLISHER_ACCESS_DENIED = "publisher_access_denied"
 PUBLISHER_PAYWALL = "publisher_paywall"
@@ -12,6 +13,7 @@ ABSTRACT_ONLY = "abstract_only"
 METADATA_ONLY = "metadata_only"
 BODY_SUFFICIENT = "body_sufficient"
 INSUFFICIENT_BODY = "insufficient_body"
+EMPTY_ARTICLE_SHELL = "empty_article_shell"
 NO_ACCESS = "no_access"
 STRUCTURED_ARTICLE_NOT_FULLTEXT = "structured_article_not_fulltext"
 STRUCTURED_MISSING_BODY_SECTIONS = "structured_missing_body_sections"
@@ -29,11 +31,13 @@ CITATION_ABSTRACT_HTML_URL = "citation_abstract_html_url"
 __all__ = [
     "ABSTRACT_ONLY",
     "ACCESS_PAGE_URL",
+    "AWS_WAF_CHALLENGE",
     "BODY_SUFFICIENT",
     "CITATION_ABSTRACT_HTML_URL",
     "CLOUDFLARE_CHALLENGE",
     "DATA_ARTICLE_ACCESS_ABSTRACT",
     "DATA_ARTICLE_ACCESS_NO",
+    "EMPTY_ARTICLE_SHELL",
     "FINAL_URL_MATCHES_CITATION_ABSTRACT_HTML_URL",
     "FULLTEXT",
     "INSUFFICIENT_BODY",

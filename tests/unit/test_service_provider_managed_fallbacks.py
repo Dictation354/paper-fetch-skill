@@ -9,7 +9,6 @@ from paper_fetch import service as paper_fetch
 from paper_fetch.providers import elsevier as elsevier_provider
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.tracing import trace_from_markers
-
 from ._paper_fetch_support import (
     StubProvider,
     fetch_paper_model,
@@ -48,7 +47,6 @@ def _abstract_only_article_factory(source: str):
         article.quality.source_trail = [
             event.marker() for event in raw_payload.trace if event.marker()
         ]
-        article.quality.trace = trace_from_markers(article.quality.source_trail)
         article.quality.warnings = list(raw_payload.warnings)
         return article
 
@@ -69,7 +67,6 @@ def _metadata_only_article_factory(source: str):
         article.quality.source_trail = [
             event.marker() for event in raw_payload.trace if event.marker()
         ]
-        article.quality.trace = trace_from_markers(article.quality.source_trail)
         article.quality.warnings = list(raw_payload.warnings)
         return article
 

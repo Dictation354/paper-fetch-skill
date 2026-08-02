@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import warnings
+from collections.abc import Mapping
+from typing import Any
 
 from ...utils import normalize_text
 from ...quality.reason_codes import (
     ABSTRACT_ONLY,
+    AWS_WAF_CHALLENGE,
     CLOUDFLARE_CHALLENGE,
+    EMPTY_ARTICLE_SHELL,
     INSUFFICIENT_BODY,
     PUBLISHER_ACCESS_DENIED,
     PUBLISHER_NOT_FOUND,
@@ -15,10 +20,11 @@ from ...quality.reason_codes import (
     STRUCTURED_ARTICLE_NOT_FULLTEXT,
     STRUCTURED_MISSING_BODY_SECTIONS,
 )
+from .html_tags import HTML_DROP_TAGS
 from .parsing import choose_parser
 from .ui_tokens import SPRINGER_PREVIEW_PHRASE
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
 
 CHALLENGE_PATTERNS = (
     "just a moment",
@@ -37,6 +43,12 @@ CHALLENGE_PATTERNS = (
     "aws waf",
     "awswaf",
 )
+AWS_WAF_HTML_PATTERNS = (
+    "token.awswaf.com",
+    "awswaf.com",
+    "awswaf",
+)
+AWS_WAF_HEADER_NAMES = frozenset({"x-amzn-waf-action"})
 CLOUDFLARE_CHALLENGE_TITLE_TOKENS = tuple(
     token
     for token in CHALLENGE_PATTERNS
@@ -133,6 +145,7 @@ NOT_FOUND_PATTERNS = (
     "content not found",
 )
 FAILURE_MESSAGES = {
+    AWS_WAF_CHALLENGE: "Encountered an AWS WAF challenge page while loading publisher HTML.",
     CLOUDFLARE_CHALLENGE: "Encountered a challenge or CAPTCHA page while loading publisher HTML.",
     PUBLISHER_NOT_FOUND: "Publisher page was not found for this DOI.",
     PUBLISHER_ACCESS_DENIED: "Publisher denied access to the full-text page.",
@@ -140,6 +153,7 @@ FAILURE_MESSAGES = {
     REDIRECTED_TO_ABSTRACT: "Publisher redirected the full-text URL to an abstract page.",
     ABSTRACT_ONLY: "Publisher HTML only exposed abstract-level content without article body text.",
     INSUFFICIENT_BODY: "HTML extraction did not produce enough article body text.",
+    EMPTY_ARTICLE_SHELL: "Publisher HTML returned an empty article shell without a body DOM.",
     STRUCTURED_ARTICLE_NOT_FULLTEXT: "Structured full text did not indicate complete article availability.",
     STRUCTURED_MISSING_BODY_SECTIONS: "Structured full text did not include article body sections beyond the abstract and references.",
 }
@@ -150,12 +164,44 @@ class HtmlExtractionFailure(Exception):
         super().__init__(message)
         self.reason = reason
         self.message = message
+        self.details: dict[str, object] | None = None
         self.html_result: object | None = None
 
 
 def summarize_html(html_text: str, limit: int = 1000) -> str:
     soup = BeautifulSoup(html_text, choose_parser())
     return " ".join(soup.stripped_strings)[:limit]
+
+
+def summarize_visible_html(html_text: str, limit: int = 1000) -> str:
+    """Summarize human-visible HTML without hidden challenge/script fallbacks."""
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", XMLParsedAsHTMLWarning)
+        soup = BeautifulSoup(html_text, choose_parser())
+    for node in list(soup.find_all(HTML_DROP_TAGS)):
+        node.decompose()
+    return " ".join(soup.stripped_strings)[:limit]
+
+
+def detect_challenge_provider(
+    *,
+    html_text: str = "",
+    response_headers: Mapping[str, Any] | None = None,
+) -> str | None:
+    """Identify a challenge vendor from raw response evidence when available."""
+
+    normalized_headers = {
+        normalize_text(str(key)).lower(): normalize_text(str(value)).lower()
+        for key, value in dict(response_headers or {}).items()
+        if normalize_text(str(key))
+    }
+    normalized_html = normalize_text(html_text).lower()
+    if AWS_WAF_HEADER_NAMES.intersection(normalized_headers) or any(
+        pattern in normalized_html for pattern in AWS_WAF_HTML_PATTERNS
+    ):
+        return "aws_waf"
+    return None
 
 
 def html_failure_message(reason: str) -> str:
@@ -181,19 +227,30 @@ def detect_html_access_signals(
     redirected_to_abstract: bool = False,
     include_paywall_text: bool = True,
     explicit_no_access: bool = False,
+    html_text: str = "",
+    response_headers: Mapping[str, Any] | None = None,
 ) -> list[str]:
     signals: list[str] = []
     if redirected_to_abstract:
         signals.append(REDIRECTED_TO_ABSTRACT)
 
     combined = normalize_text(" ".join([title, text])).lower()
-    if any(pattern in combined for pattern in CHALLENGE_PATTERNS):
+    challenge_provider = detect_challenge_provider(
+        html_text=html_text,
+        response_headers=response_headers,
+    )
+    if challenge_provider == "aws_waf":
+        signals.append(AWS_WAF_CHALLENGE)
+    elif any(pattern in combined for pattern in CHALLENGE_PATTERNS):
         signals.append(CLOUDFLARE_CHALLENGE)
     if response_status == 404 or any(
         pattern in combined for pattern in NOT_FOUND_PATTERNS
     ):
         signals.append(PUBLISHER_NOT_FOUND)
-    if response_status in {401, 402, 403} and CLOUDFLARE_CHALLENGE not in signals:
+    if response_status in {401, 402, 403} and not {
+        AWS_WAF_CHALLENGE,
+        CLOUDFLARE_CHALLENGE,
+    }.intersection(signals):
         signals.append(PUBLISHER_ACCESS_DENIED)
     if explicit_no_access:
         signals.append(PUBLISHER_ACCESS_DENIED)
@@ -203,9 +260,20 @@ def detect_html_access_signals(
 
 
 def detect_html_block(
-    title: str, text: str, response_status: int | None
+    title: str,
+    text: str,
+    response_status: int | None,
+    *,
+    html_text: str = "",
+    response_headers: Mapping[str, Any] | None = None,
 ) -> HtmlExtractionFailure | None:
-    signals = detect_html_access_signals(title, text, response_status)
+    signals = detect_html_access_signals(
+        title,
+        text,
+        response_status,
+        html_text=html_text,
+        response_headers=response_headers,
+    )
     if not signals:
         return None
     reason = signals[0]

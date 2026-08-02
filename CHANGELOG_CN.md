@@ -81,6 +81,29 @@
   runtime 执行 `python -m camoufox fetch`，再运行
   `paper-fetch browser-preflight` 验证；预置后真正断网的 Camoufox launch
   仍是开放审计项，因此不宣称完整离线浏览器支持。
+### 变更
+
+- MCP fetch/error 与 acceptance payload 升级到 schema v2：`FetchEnvelope.trace` 成为唯一完整 trace owner，metadata/asset 保留 `article_type` 与 `preview_accepted`，资产摘要用稳定 issue code 区分 accepted/fallback preview；旧 v1 FetchEnvelope cache 仅保留读取迁移。
+- publisher live 样本改为声明 source 与 trail 的联合合法 outcome，browser provider 使用复用 storage state 的 lazy preflight，live socket 由 marker 自动放行，不再依赖全局 force-enable。Springer 成功基准替换为 OA 研究论文，历史 Nature 新闻只保留为独立 access-gate 行为样本。
+- publisher catalog live 从全文 smoke 提升为 `asset_profile=body` 硬验收门；JSON/JUnit artifact 会区分“已记录 provider 全部 complete”和“存在 skip/未记录 provider”，IEEE 受保护 GIF 恢复拆为仅授权 runner 显式启用的独立套件。
+- 删除未实现的 IOP XML/TDM 占位 route，catalog/status/docs 只公开真实可执行的 IOP HTML、PDF、metadata 与 supplementary 能力。
+
+### 修复
+
+- IEEE preflight、浏览器 landing/全文和共享资产 seed 现在最多等待 15 秒，且只接受文章号匹配的 `#article`；持续存在的 AWS WAF HTTP 202 页面精确报告 `aws_waf_challenge` 和兼容诊断，已在窗口内恢复的文章页不再因初始响应被误拒。受保护 large 资产仍保持 direct-first、一次 preview 预热和完整的 full-size 恢复/降级 provenance。
+- 稳定 AIP 及共享 browser workflow 的冷启动 HTML 重试：fast 尝试产生的 provider-scoped 临时 cookies 会传给正常尝试，但未验收状态不会提前持久化；HTTP 200 的 head-only 页面现在报告 `empty_article_shell`，诊断保留两轮尝试、响应状态和 DOM readiness，PDF 继续作为终态兜底。
+- 修复 publisher live 测试误读浏览器静态能力的问题：改读嵌套的 `browser_runtime.available`，隔离各 provider 的 profile/storage state，并在 pytest 隔离期间复用 Camoufox 已准备的可执行文件与依赖 cache；显式启动复用相邻版本元数据，启动进度不再污染 MCP JSON-RPC stdout。
+- 将页面创建前的 browser 失败也保存为隐私安全诊断 JSON，把请求作用域的公式工具配置传入隐式 MathML 转换，修正 body-only 资产及 provenance 验收语义，并在不跨线程使用 Camoufox page 的前提下恢复 Silverchair 签名原图。
+- live workflow 会准备公式工具、仅串行执行普通 publisher/MCP 套件、输出 legacy-compatible JUnit 属性和结构化 acceptance artifact；IEEE 受保护覆盖留给明确授权的 runner。
+- 修复 IEEE 浏览器 DOM 提取把非可见脚本/模板中的 `captcha` 或访问 token 误判为 block page 的问题；可见 challenge 仍会被拒绝，验证时保持页面自身 REST 子请求正常放行。
+- 为成功的 MCP 单篇抓取响应补齐文档约定的 `status=ok` 与七分面紧凑 acceptance，并与批量抓取复用同一套统一验收及投影逻辑。
+- 将成功展开的 HTML/JATS/CALS 行列跨度改判为正常表格规范化：保留结构化 reason，但不再误发版式降级 warning；非法 span/列定义仍保守降级，并提升 extraction revision 以淘汰带旧质量语义的缓存。
+- 修复 request deadline 初始化、AIP/Science DOM readiness 与 browser preflight 分类：fast-path 本地 cap 不再耗尽后续 fallback，页面/提取失败会保留隐私安全的诊断产物。
+- Springer/Nature HTML 改为复用安全 cookie-aware requester，并对 `cookies_not_supported` 只用全新 session 重试一次；同时保留 Research Briefing article type，合法无署名 briefing 不再误报 `empty_authors`。
+- IEEE small/large 资产按 canonical logical identity 对账；direct 资产恢复并发，共享 page 的 browser recovery 仍串行；资产下载失败、保真降级、占位和 remote-only 使用互不替代的稳定分类。
+- 移除 trace 三层重复拼接和按 warning 数量降级的质量启发式；真实 retry 的同 code 仍按顺序保留，任意数量的操作通知不再自动降低内容质量。
+- 普通 unit 强制零外部 socket attempt，补齐三个 batch resolver fake seam；doctor 诊断 source checkout 未激活 `.venv` 与 MCP 版本不兼容，成功和终态失败 manifest 都保留诊断文件。
+- 新增独立 browser/DOM/HTTP/retry/asset/render 计时及 provider-route-stage nearest-rank 性能摘要：单样本只显示 observed，多样本显示 p50/p95。
 
 ## 4.1.0 - 2026-07-29
 

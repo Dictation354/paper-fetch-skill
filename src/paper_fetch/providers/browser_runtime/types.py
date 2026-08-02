@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol, TypedDict
-from collections.abc import Iterator, Mapping
 
 
 @dataclass(frozen=True)
@@ -41,6 +41,17 @@ class BrowserHtmlReadiness:
 
     wait_for_article_body: bool = True
     selector: str | None = None
+    selector_text: str | None = None
+    require_selector: bool = False
+
+
+@dataclass(frozen=True)
+class BrowserHtmlFetchOptions:
+    """Select specialized HTML-fetch result modes without widening the facade."""
+
+    return_image_payload: bool = False
+    return_screenshot: bool = False
+    lightweight_seed_only: bool = False
 
 
 @dataclass(frozen=True)

@@ -5,9 +5,100 @@ from ._mcp_support import *
 from paper_fetch.mcp.fetch_cache import PUBLIC_CREDENTIAL_SCOPE
 from paper_fetch.providers.browser_runtime.backends import camoufox as camoufox_backend
 from paper_fetch.runtime import RuntimeContext
+from paper_fetch.tracing import TraceContext, trace_event
 
 
 class McpPayloadCacheTests(unittest.TestCase):
+    def test_v1_trace_migration_uses_top_level_then_quality_then_article(self) -> None:
+        base = sample_envelope(
+            modes={"article", "markdown"},
+            doi="10.1000/trace-migration",
+        ).to_dict()
+        top = [
+            {
+                "stage": "fulltext",
+                "component": "top",
+                "outcome": "fail",
+                "code": "top_failure",
+            }
+        ]
+        quality = [
+            {
+                "stage": "fulltext",
+                "component": "quality",
+                "outcome": "fail",
+                "code": "quality_failure",
+            }
+        ]
+        article = [
+            {
+                "stage": "fulltext",
+                "component": "article",
+                "outcome": "fail",
+                "code": "article_failure",
+            }
+        ]
+        base["trace"] = top
+        base["quality"]["trace"] = quality
+        base["article"]["quality"]["trace"] = article
+
+        migrated = mcp_tools._envelope_from_payload(base)
+        self.assertEqual([event.code for event in migrated.trace], ["top_failure"])
+
+        base["trace"] = []
+        migrated = mcp_tools._envelope_from_payload(base)
+        self.assertEqual(
+            [event.code for event in migrated.trace],
+            ["quality_failure"],
+        )
+
+        base["quality"]["trace"] = []
+        migrated = mcp_tools._envelope_from_payload(base)
+        self.assertEqual(
+            [event.code for event in migrated.trace],
+            ["article_failure"],
+        )
+
+    def test_v2_writer_has_one_top_level_trace_owner_and_preserves_retries(
+        self,
+    ) -> None:
+        request = mcp_tools.FetchPaperRequest(
+            query="10.1000/trace-v2",
+            modes=["article", "markdown"],
+        )
+        envelope = sample_envelope(
+            modes={"article", "markdown"},
+            doi=request.query,
+        )
+        envelope.trace = [
+            trace_event(
+                "fulltext",
+                "springer_html",
+                "fail",
+                code="publisher_paywall",
+                context=TraceContext(attempt=1, attempt_id="html-1"),
+            ),
+            trace_event(
+                "fulltext",
+                "springer_html",
+                "fail",
+                code="publisher_paywall",
+                context=TraceContext(attempt=2, attempt_id="html-2"),
+            ),
+        ]
+
+        payload = mcp_tools._payload_from_envelope(envelope, request)
+        round_trip = mcp_tools._envelope_from_payload(payload)
+
+        self.assertEqual(payload["schema_version"], 2)
+        self.assertEqual(len(payload["trace"]), 2)
+        self.assertNotIn("trace", payload["quality"])
+        self.assertNotIn("trace", payload["article"]["quality"])
+        self.assertEqual(
+            [event.attempt_id for event in round_trip.trace],
+            ["html-1", "html-2"],
+        )
+
     def test_build_server_exposes_output_schemas_for_all_tools(self) -> None:
         server = build_server()
         expected_contract_fields = {
@@ -78,6 +169,26 @@ class McpPayloadCacheTests(unittest.TestCase):
         self.assertEqual(
             definitions["AssetQualitySummaryOutput"]["properties"]["by_kind"],
             {"$ref": "#/$defs/AssetByKindOutput"},
+        )
+        acceptance = definitions["FetchAcceptanceSummaryOutput"]["properties"]
+        self.assertEqual(
+            set(acceptance),
+            {
+                "overall",
+                "identity",
+                "fetch",
+                "content",
+                "asset",
+                "output",
+                "provenance",
+                "has_fulltext",
+                "has_abstract",
+                "token_estimate",
+            },
+        )
+        self.assertEqual(
+            schema["properties"]["acceptance"],
+            {"$ref": "#/$defs/FetchAcceptanceSummaryOutput"},
         )
 
     def test_provider_status_tool_returns_success_when_providers_are_unconfigured(
@@ -734,6 +845,16 @@ class McpPayloadCacheTests(unittest.TestCase):
             "conversion_degraded",
             "conversion_degraded",
         ]
+        payload["assets"][0]["browser_backend"] = "camoufox"
+        payload["assets"][0]["final_fetcher"] = "camoufox"
+        payload["assets"][0]["recovery_attempts"] = [
+            {"stage": "direct", "status": 403},
+            {
+                "stage": "browser",
+                "browser_backend": "camoufox",
+                "reason": "recovered",
+            },
+        ]
         article = mcp_tools._article_from_payload(payload)
 
         self.assertIsNotNone(article)
@@ -745,6 +866,9 @@ class McpPayloadCacheTests(unittest.TestCase):
         self.assertEqual(asset.download_url, "https://example.test/figure-preview.png")
         self.assertEqual(asset.width, 640)
         self.assertEqual(asset.height, 480)
+        self.assertEqual(asset.browser_backend, "camoufox")
+        self.assertEqual(asset.final_fetcher, "camoufox")
+        self.assertEqual(asset.recovery_attempts[0]["status"], 403)
         self.assertEqual(asset.provenance, ["conversion_degraded"])
 
     def test_fetch_envelope_payload_preserves_quality_asset_failures(self) -> None:
@@ -762,24 +886,39 @@ class McpPayloadCacheTests(unittest.TestCase):
                 "content_type": "text/html; charset=UTF-8",
                 "title_snippet": "Just a moment...",
                 "body_snippet": "Just a moment... Please enable JavaScript and Cookies.",
-                "reason": "cloudflare_challenge",
+                "reason": "aws_waf_challenge",
+                "challenge_provider": "aws_waf",
+                "legacy_reason_code": "cloudflare_challenge",
                 "recovery_attempts": [
                     {
                         "status": "failed",
                         "url": "https://example.test/figure-page",
-                        "reason": "cloudflare_challenge",
+                        "reason": "aws_waf_challenge",
                     }
                 ],
             }
         ]
         envelope.quality = envelope.article.quality
+        envelope.article.assets = [
+            Asset(
+                kind="figure",
+                heading="Figure 1",
+                download_tier="full_size",
+                browser_backend="camoufox",
+                final_fetcher="camoufox",
+                recovery_attempts=[
+                    {"stage": "direct", "status": 403},
+                    {"stage": "browser", "reason": "recovered"},
+                ],
+            )
+        ]
 
         payload = mcp_tools._payload_from_envelope(envelope, request)
         round_trip = mcp_tools._envelope_from_payload(payload)
 
         self.assertEqual(payload["quality"]["asset_failures"][0]["status"], 403)
         self.assertEqual(
-            payload["quality"]["asset_failures"][0]["reason"], "cloudflare_challenge"
+            payload["quality"]["asset_failures"][0]["reason"], "aws_waf_challenge"
         )
         self.assertIsNotNone(round_trip)
         assert round_trip is not None
@@ -789,6 +928,18 @@ class McpPayloadCacheTests(unittest.TestCase):
         self.assertEqual(
             round_trip.quality.asset_failures[0]["recovery_attempts"][0]["status"],
             "failed",
+        )
+        self.assertEqual(
+            round_trip.quality.asset_failures[0]["challenge_provider"], "aws_waf"
+        )
+        self.assertEqual(
+            round_trip.quality.asset_failures[0]["legacy_reason_code"],
+            "cloudflare_challenge",
+        )
+        self.assertEqual(payload["article"]["assets"][0]["browser_backend"], "camoufox")
+        self.assertEqual(round_trip.article.assets[0].final_fetcher, "camoufox")
+        self.assertEqual(
+            round_trip.article.assets[0].recovery_attempts[0]["status"], 403
         )
 
     def test_fetch_paper_payload_prefer_cache_misses_when_revision_differs(

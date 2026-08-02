@@ -1184,6 +1184,7 @@ class HttpTransportCacheTests(unittest.TestCase):
     def test_transient_http_5xx_is_retried_with_exponential_backoff(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
         call_count = 0
+        timings: list[tuple[str, float]] = []
 
         def fake_urlopen(request, timeout=20):
             nonlocal call_count
@@ -1196,16 +1197,24 @@ class HttpTransportCacheTests(unittest.TestCase):
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
             with mock.patch.object(http_module.time, "sleep") as mocked_sleep:
-                response = transport.request(
-                    "GET",
-                    "https://example.test/article",
-                    headers={"Accept": "text/plain"},
-                    retry_on_transient=True,
-                )
+                with http_module.http_timing_collector(
+                    lambda stage, seconds: timings.append((stage, seconds))
+                ):
+                    response = transport.request(
+                        "GET",
+                        "https://example.test/article",
+                        headers={"Accept": "text/plain"},
+                        retry_on_transient=True,
+                    )
 
         self.assertEqual(call_count, 3)
         self.assertEqual(response["body"], b"ok")
         self.assertEqual(mocked_sleep.call_args_list, [mock.call(0.5), mock.call(1.0)])
+        self.assertEqual(
+            [stage for stage, _seconds in timings],
+            ["retry_seconds", "retry_seconds", "http_seconds"],
+        )
+        self.assertTrue(all(seconds >= 0 for _stage, seconds in timings))
 
     def test_urllib3_read_timeout_is_retried_with_exponential_backoff(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)

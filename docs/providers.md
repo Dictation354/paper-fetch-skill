@@ -40,7 +40,7 @@
 | `frontiers` | Frontiers domain / DOI routing | `canonical JATS XML -> canonical PDF -> landing discovery -> JATS XML/PDF -> metadata fallback` | XML 路线支持 `none` / `body` / `all`：正文图 direct-first；绝对 supplementary URL 仅在 `all` 归档，未发布直链的相对附件明确标为 `not_archived`；PDF fallback 可导出 PDF 图片 | 强 | Frontiers 通过 `10.3389/` DOI prefix 和 `www.frontiersin.org` 路由；XML 成功公开为 `frontiers_xml`，PDF fallback 公开为 `frontiers_pdf` |
 | `oxfordacademic` | DOI prefix/domain routing for Oxford Academic public articles | `direct HTTP article HTML -> direct HTTP PDF fallback -> metadata fallback` | HTML 路线支持 `none` / `body` / `all`，正文 figure/formula 和 supplementary 使用 Silverchair 共享资产下载器并 direct-first；下载后改写本地链接。PDF fallback 使用稳定 article-pdf URL，只接受已验证 PDF，并可导出 PDF 图片 | 中 | `oxfordacademic_html` / `oxfordacademic_pdf` |
 | `acs` | 依赖 Crossref routing | `selected-browser Silverchair HTML -> browser-seeded publisher PDF/ePDF with browser-navigation direct PDF preflight -> provider-managed abstract_only` | HTML 路线支持 `none` / `body` / `all`，识别当前 `.article-body` / `.widget-ArticleFulltext`、`.fig.fig-section`、`.ref-list` 和 `.widget-ArticleDataSupplements`；PDF/ePDF fallback 在 `body/all` 且允许落盘时提取 PDF 图片到 `<doi>_assets/` | 中 | ACS 通过 `10.1021/` DOI、用户指定的 `www.acs.org` 域和实际文章 host `pubs.acs.org` 路由，公开 source 为 `acs` |
-| `iop` | Crossref routing | selected-browser article HTML -> browser-seeded IOP PDF -> provider-managed abstract_only -> metadata fallback | HTML body figures plus two-stage supplementary downloads; PDF fallback assets | 中 | IOP uses 10.1088/ routing; Radware/hCaptcha pages are rejected; public sources `iop_html` / `iop_pdf`; catalog 单独声明经 access review 后暂无稳定公共 TDM XML/API route |
+| `iop` | Crossref routing | selected-browser article HTML -> browser-seeded IOP PDF -> provider-managed abstract_only -> metadata fallback | HTML body figures plus two-stage supplementary downloads; PDF fallback assets | 中 | IOP uses 10.1088/ routing; Radware/hCaptcha pages are rejected; public sources only `iop_html` / `iop_pdf`; no IOP XML/TDM route is registered |
 | `aip` | 依赖 Crossref routing | `selected-browser AIP article HTML -> browser-seeded AIP PDF -> provider-managed abstract_only -> metadata fallback` | HTML 路线支持 `none` / `body` / `all`；PDF fallback 在 `body/all` 且允许落盘时提取 PDF 图片到 `<doi>_assets/` | 中 | AIP 通过 `10.1063/` DOI 和 `pubs.aip.org` 路由；HTML 成功公开 `aip_html`，PDF fallback 公开 `aip_pdf` |
 
 说明：
@@ -132,7 +132,7 @@ resolve DOI / landing URL
 - 路由信号来自 `www.frontiersin.org` / `frontiersin.org` 域名、Crossref publisher alias `Frontiers Media S.A.`，以及 DOI prefix `10.3389/`。
 - Frontiers canonical XML 路径需要 journal slug，例如 `/journals/marine-science/articles/10.3389/fmars.2023.1101972/xml`。metadata、source URL 或 fulltext link 已含 canonical `/journals/{journal}/articles/{doi}` 时，provider 直接按 `/xml -> /pdf` 顺序尝试，不请求 landing；只有 direct route 不可用、旧 URL 或缺 journal slug 时，才通过 landing redirect/metadata 发现 route。diagnostics 的 `route_discovery.reason` 与 `landing_requested` 会解释为何进入 landing。
 - XML 成功时公开 `source="frontiers_xml"`，source trail 为 `fulltext:frontiers_xml_ok`；XML 不可用、返回 HTML wrapper 或正文不可用时继续尝试 direct HTTP PDF，成功时公开 `source="frontiers_pdf"`。
-- XML renderer 复用 `paper_fetch.providers._article_markdown_jats` 的通用 JATS 层覆盖标题、作者、摘要、正文 section、图表 caption、tables、references 和 supplementary links。JATS 的 HTML-like table 与 CALS `tgroup/colspec` 都进入共享 XML adapter：表头前的整表宽度分组提升为普通文本，正文分组保留为首列行，多层表头按列扁平化，rowspan/局部 colspan/`namest`/`nameend` 做语义展开并以 `table_layout_degraded` 标记 Markdown 无法保留的合并布局。
+- XML renderer 复用 `paper_fetch.providers._article_markdown_jats` 的通用 JATS 层覆盖标题、作者、摘要、正文 section、图表 caption、tables、references 和 supplementary links。JATS 的 HTML-like table 与 CALS `tgroup/colspec` 都进入共享 XML adapter：表头前的整表宽度分组提升为普通文本，正文分组保留为首列行，多层表头按列扁平化，合法 rowspan/局部 colspan/`namest`/`nameend` 做语义展开并视为正常规范化；只有非法或不一致的 span/列定义才标记 `table_layout_degraded`。
 - Frontiers XML 的 figure `xlink:href` 通常是相对 `.tif` 文件名；provider 会把可识别文件名改写为 `/files/Articles/{article_id}/xml-images/{stem}.webp`，再用共享 direct-first asset download。JATS 资产保留原始 `source_href`：明确的绝对 HTTP(S) supplementary URL 可下载；仅由 XML base URL 拼接出来的相对文件名不猜测附件路径，而是指向 canonical full page 的 `#supplementary-material`，并记录 `archive_state=not_archived` 与逐资产失败原因。
 - `asset_profile=body` 默认下载正文 figure 且忽略 supplementary；`asset_profile=all` 额外归档明确绝对 supplementary URL，并把无法归档的条目显式报告为 partial asset failure。PDF fallback 在 `body/all` 且允许 artifact 落盘时会保存 `pymupdf4llm` 导出的 PDF 正文图片到 `<doi>_assets/`。
 - Frontiers 没有 provider-owned HTML fallback；XML 和 PDF 都不可用时直接进入 metadata-only fallback。
@@ -204,7 +204,7 @@ resolve DOI / landing URL
 - IEEE HTML cleanup 只声明 Xplore REST fragment 或站点专属增量，例如 `accesstype`、`select` / `textarea`、`.zoom-container`、`.document-actions`、`button[data-docId]` 和 `javascript:` action 链接；`script` / `style` / `noscript` / `iframe` / `button` / `input` 等通用 chrome 继续由默认站点规则和 browser workflow 负责。
 - IEEE `tex-math` / `disp-formula` 会复用共享公式规则输出 LaTeX，不应退化成 `[Formula unavailable]`；如果仍然缺公式，`article.quality.semantic_losses.formula_missing_count` 会反映 Markdown 中的缺失占位数量。
 - IEEE `ref-type="bibr"` 数字引用会进入共享 citation sentinel/normalize 链路，清理后不应遗留 `,,`、`(e.g., and)` 这类标点残留。
-- 动态 HTML 中 IEEE `figure-full` / `figure-full table` 块里的 `/mediastore/IEEE/content/media/...` 正文图片和表格图片会先按 Xplore 域名绝对化，作为内联图片锚定在首次 caption 位置，并统一用 `https://ieeexplore.ieee.org/document/{article_number}/` 作为 seed 与 mediastore `Referer` 下载正文资产；full-size direct 候选遇到 `401/403`、HTML challenge 或可恢复网络错误后，图片、表格、multimedia 和 supplementary browser fetcher 会串行复用同一论文页 context/page，等待 HTTP 202 验证完成并取得最新 cookie 后从页面内发起请求，且不会把共享 page 导航到资产 URL。browser full-size 仍失败时才降级 preview。已内联图表通过 `render_state=inline` 避免在尾部 Figures / Tables 附录重复追加。`/assets/img/icon.support.gif` 这类 Xplore UI / 占位图标会在 HTML 清洗和资产列表中被过滤，不作为论文资产下载。
+- 动态 HTML 中 IEEE `figure-full` / `figure-full table` 块里的 `/mediastore/IEEE/content/media/...` 正文图片和表格图片会先按 Xplore 域名绝对化，作为内联图片锚定在首次 caption 位置，并统一用 `https://ieeexplore.ieee.org/document/{article_number}/` 作为 seed 与 mediastore `Referer` 下载正文资产；full-size direct 候选遇到 `401/403`、HTML challenge 或可恢复网络错误后，图片、表格、multimedia 和 supplementary browser fetcher 会串行复用同一论文页 context/page，等待 HTTP 202 验证完成并取得最新 cookie 后从页面内发起请求，且不会把共享 page 导航到资产 URL。seed readiness 只接受文章号匹配的 `#article`，仅看到对应 `/rest/document/` resource 不算就绪，可见 challenge 继续 fail closed。首次 large 图片恢复会在同一页面先加载该资产的 preview，成功载荷保留在 memoization 中，然后立即请求 large；后续 large 复用已预热页面且不重复 preview 预热。browser full-size 仍失败时才使用缓存或同页取得的 preview。已内联图表通过 `render_state=inline` 避免在尾部 Figures / Tables 附录重复追加。`/assets/img/icon.support.gif` 这类 Xplore UI / 占位图标会在 HTML 清洗和资产列表中被过滤，不作为论文资产下载。
 - IEEE 资产去重以 Xplore 页面结构为更强语义信号；当同一 mediastore URL 同时被识别为 table / figure 和通用 formula 图片时，保留 table / figure，并把下载结果回填到高优先级资产上。
 - IEEE landing metadata 中的 Index Terms / Author Keywords / IEEE Keywords 会合并到 `metadata.keywords`；references 优先从 IEEE `/rest/document/{article_number}/references` 的可见 citation text 构建。该 route 成功返回非空 references 时会完全覆盖 Crossref / metadata fallback，不追加未匹配的 DOI-only 或 title-only 条目；只有该 route 不可用或返回空 references 时才保留 fallback references。
 - 动态 HTML 中的正文图片、表格图片和公式节点按普通 `asset_profile=body|all` 语义接入；`asset_profile=all` 会额外下载明确 Supplementary / Supporting Material / Multimedia 附件区域中的文件，或 landing metadata 明确暴露 `sections.multimedia=true` 后从 `/rest/document/{article_number}/multimedia` payload 识别出的文件，且不局限于图片 content-type；普通正文里的 `data` / `dataset` / `code` / `media` 链接不会仅凭文本或后缀被归类为 supplementary。
@@ -372,12 +372,13 @@ resolve
   - HTML cleanup 复用 browser workflow，并注册 IOPScience article chrome 清理、author metadata、figure caption cleanup、citation_reference references fallback 和 PDF 候选回填。
   - 已提交 replay 覆盖 HTML body table、formula image、figure caption、references、supplementary media link，以及 seeded-browser `iop_pdf` fallback。
   - selected-browser HTML fetch 会等待 IOP `articleBody` / `.article-content` 正文 DOM；正文已稳定时，页面外层残留的 Radware/PerfDrive shell 信号不会覆盖正文判定。
-  - Radware Bot Manager、PerfDrive 与 hCaptcha 独立挑战页会作为 access/challenge signal fail closed，不会保存为正文或图片资产。经 access review，没有确认可用于此单篇抓取产品面的稳定公共 TDM XML/API endpoint；catalog 因而把该 route 明确登记为 `unsupported`，不会用猜测 URL 替代。后续接入必须先完成授权、quota/429 和 schema drift 验证。参考 IOP 的 [data availability policy](https://publishingsupport.iopscience.iop.org/iop-publishing-data-availability-policy/) 与 [supplementary material guidance](https://publishingsupport.iopscience.iop.org/questions/supplementary-material-and-data-in-journal-articles/)。
+  - Radware Bot Manager、PerfDrive 与 hCaptcha 独立挑战页会作为 access/challenge signal fail closed，不会保存为正文或图片资产。经 access review，没有确认可用于此单篇抓取产品面的稳定公共 TDM XML/API endpoint，因此 runtime catalog 不注册 IOP XML/TDM route，也不会用猜测 URL 替代。后续接入必须先完成授权、quota/429 和 schema drift 验证。参考 IOP 的 [data availability policy](https://publishingsupport.iopscience.iop.org/iop-publishing-data-availability-policy/) 与 [supplementary material guidance](https://publishingsupport.iopscience.iop.org/questions/supplementary-material-and-data-in-journal-articles/)。
   - `asset_profile=body` / `all` 会使用 provider-neutral scoped asset discovery 发现正文资源；PDF fallback 在 `body/all` 且允许 artifact 落盘时会保存 PDF 导出的正文图片，committed replay 里资源合约按 best-effort 记录。
   - 成功时公开 `source="iop_html"` 或 `source="iop_pdf"`。
 - `aip`
   - 固定顺序是 `selected-browser AIP article HTML -> browser-seeded AIP PDF -> abstract-only / metadata-only`。
   - 通过 `10.1063/` DOI、`pubs.aip.org` 域名和 AIP Publishing publisher alias 路由；HTML 候选使用 `/doi/full/{doi}` / `/doi/{doi}`，PDF 候选使用 Atypon `/doi/epdf/{doi}` / `/doi/pdf/{doi}`。
+  - 冷启动 fast HTML 若只得到 HTTP 200 的无 `<body>` 空文章壳，会记录 `empty_article_shell`；正常 HTML 重试在内存中复用首轮 provider-scoped cookies，但首轮未验收的 staged storage-state 不会落盘。只有重试后 HTML 提取成功才提交状态，真正的 HTML 终态失败仍保留 seeded PDF fallback。
   - HTML cleanup 复用 browser workflow，并注册 AIP article/citation/download/metrics chrome 清理、author metadata、retained back matter、figure modal duplicate cleanup、citation_reference references fallback 和 PDF 候选回填。
   - 已提交 replay 覆盖 HTML body sections、body figure assets、Markdown table、MathML/LaTeX formula、supplementary material、references，以及 seeded-browser `aip_pdf` fallback route tests。
   - `asset_profile=body` / `all` 会使用 provider-neutral scoped asset discovery 发现正文资源；PDF fallback 在 `body/all` 且允许 artifact 落盘时会保存 PDF 导出的正文图片。
@@ -670,12 +671,15 @@ CLI、Python API、MCP 当前默认值如下：
 - `arxiv` 对网络异常类失败顺序重试一次，不重试 404 或非图片 payload。
 - `download_tier=preview` 只有满足最小宽高才视为可接受 preview。
 - 宽扁但面积足够的真实论文图可标记为 `preview_accepted`。
-- `preview_accepted` 只保留 source trail / asset diagnostics，不写普通 warning。
+- `preview_accepted` 作为公开 asset 字段保留到 cache/MCP；资产摘要把 preview 拆为 `accepted_preview` 与 `fallback_preview`，并强制二者之和等于兼容字段 `preview`。只有 accepted preview 且没有其它 issue 时，asset acceptance 仍为 complete。
+- `issue_codes` 是 golden review、acceptance、manifest 与 MCP 的唯一稳定资产分类来源：真实下载失败使用 `asset_download_failure`，fallback/conversion 保真损失使用 `asset_fidelity_degraded`，占位证据使用 `asset_placeholder_suspected`，明确请求归档但终态只有远端链接使用 `asset_remote_only`。普通 warning 文案和 preview 总数不再参与机器分类。
 - 小图标和占位图仍会作为 preview fallback 失败或降级信号。
 - IEEE dynamic HTML 成功路径从 cleaned `#article` fragment 抽取正文图、表和公式资产。
+- IEEE 正文资产按去 query/fragment 且归一 `-small/-large/-full/-thumb/-thumbnail/-preview` 后缀的 mediastore path 建立首选 identity，再回退 anchor 与 kind+label。direct 与 browser recovery 共用该 identity，恢复结果覆盖原逻辑记录的本地路径/尺寸/tier/provenance，保留原 caption/anchor/顺序，最终 body identity 必须唯一。
 - IEEE `asset_profile=all` 会额外下载明确附件区域或 landing multimedia payload。
 - Copernicus XML 成功路径会从 JATS/XML 抽取正文图、表、公式和明确 supplementary links。
 - Springer HTML 成功路径只从 cleaned body/content scope 抽取正文图片。
+- Springer/Nature HTML route 每个 attempt 创建独立的安全 cookie-aware opener，重定向链内保存并回放 cookie；若 final URL 首次出现 `cookies_not_supported`，丢弃 session 并用全新 opener 完整重试一次，第二次仍失败才进入既有 PDF waterfall。session 不跨 fetch/provider 共享，Cookie/Set-Cookie/Authorization 不进入 diagnostics。
 - Elsevier XML 的 `body` 只下载 `image` / `table_asset`。
 - Elsevier XML 的 `all` 额外下载 `supplementary` references。
 - Elsevier supplementary 统一映射到 `kind="supplementary"`、`section="supplementary"` 和 `download_tier="supplementary_file"`。
@@ -736,7 +740,7 @@ CLI、Python API、MCP 当前默认值如下：
 - 公式图片资产不参与 figure asset 抽取、跨引用内联或 figure slot 消耗；同一图片 URL 同时命中 figure 和 formula 时保留 formula 语义。
 - 这可以避免正文图在尾部重复，或导出残留可本地化远端图。
 - 文章组装阶段也会用 `article.assets[*]` 把正文里的远程 figure / table / formula image 链接改写为已下载本地路径，再做 Markdown 图片块边界和短 alt 归一化，避免图片和标题、正文句子或公式块粘连。
-- 下载资产会保留 `download_tier`、`download_url`、`original_url`、`preview_url`、`full_size_url`、`content_type`、`downloaded_bytes`、`width`、`height`。
+- 下载资产会保留 `download_tier`、`download_url`、`original_url`、`preview_url`、`full_size_url`、`content_type`、`downloaded_bytes`、`width`、`height`，以及可选的 `browser_backend`、`final_fetcher`、`recovery_attempts`。
 - 下载失败的资产会保留到 `article.quality.asset_failures` 与顶层 `quality.asset_failures`。
 - 失败诊断包含 `status`、`content_type`、`title_snippet`、`body_snippet` 和 `reason`。Cloudflare challenge 只记录失败并进入普通候选/seed refresh retry。
 - 图片 payload MIME 识别由 `filetype` 负责，JPEG/PNG/GIF/WebP 尺寸读取由 `imagesize` 负责；无法识别时仍按 unknown/空宽高处理，不引入 Pillow。
@@ -829,7 +833,7 @@ CLI 主输出、artifact 与命令组合的用户语义见 [`cli.md`](cli.md)；
 - `article.assets[*]`
   - 对下载资产保留 `render_state`、`anchor_key`、`download_tier`、`download_url`、`original_url`、`content_type`、`downloaded_bytes`、`width`、`height` 等诊断字段
 - `article.quality.semantic_losses`
-  - 表格区分 `table_layout_degraded_count` 和 `table_semantic_loss_count`；前者表示 Markdown 版式降级，后者才表示语义内容丢失
+  - 表格区分 `table_layout_degraded_count` 和 `table_semantic_loss_count`；前者表示源 span/列定义异常导致布局无法可靠验证，后者才表示语义内容丢失；合法合并单元格成功展开不计入二者
 - `article.quality.asset_failures`
   - 对失败资产保留 `status`、`content_type`、`title_snippet`、`body_snippet` 与 `reason`
 
@@ -1048,6 +1052,13 @@ IEEE direct landing/REST HTML/PDF/资产与 selected-browser recovery 路线当�
 - `provider_status()` 中会稳定表现为本地 `html_route` 与 `pdf_fallback` 已就绪
 - 不需要 IEEE API key
 - 是否能拿到全文仍取决于 IEEE Xplore 当前对操作者运行环境的合法访问上下文，以及 endpoint/browser route 是否返回真实 full-text HTML 或 PDF
+- IEEE preflight、selected-browser landing 和正式 selected-browser HTML recovery 共用最长 15 秒的文章 readiness 语义：只有 `#article` 存在且其中包含当前文章号才算 ready。导航最初返回 HTTP 202 或先出现 `/rest/document/` 请求都不会提前判定成功或失败；页面在窗口内转成匹配文章 DOM 后继续正常提取，超时后才按最终页面证据分类。
+- selected-browser HTML recovery 会同时等待当前文章号的 `/rest/document/{article_number}/` 响应和页面 DOM `#article`。REST 候选只有在状态为 2xx（或运行时未提供状态）、content type 为 HTML/XML（或未提供）、正文包含 `#article` 且文章号匹配时才可用；所有已捕获候选都会按新到旧检查，因此较新的 shell/error 或其它文章响应不会覆盖较早的有效全文。
+- readiness 窗口内 REST 未就绪但 DOM 已出现 `#article` 时直接使用 DOM；若只收到无效 REST，则分类为可重试的 `browser_rest_wait_timeout`，完全没有有效 REST/DOM 时分类为 `browser_article_not_ready`。已知 challenge/access 页面仍优先保留原 block 分类。`artifact_mode=all` 时会通过共享 page diagnostics 保存脱敏后的无效 REST 与 DOM 证据。
+- IEEE 资产共享页使用同样的 15 秒 seed readiness 窗口：必须出现包含当前文章号的 `#article` 才能开始 large 恢复，performance resource 中仅出现 `/rest/document/{article_number}/` 不会提前放行。首次 large 恢复前只预热一次对应 preview；最终资产通过可选的 `browser_backend`、`final_fetcher` 和 `recovery_attempts` 保留 direct 失败、browser large 恢复以及必要时的 preview fallback。
+- 页面自身的 REST 子请求保持正常放行；DOM-only 验证可以不消费 REST response body，但不能通过网络拦截制造不符合真实页面行为的失败。IEEE block-page 检测只扫描去除 `script/style/svg/noscript/template` 后的可见文本，因此内联脚本中的 `captcha` 不会覆盖已经就绪的真实 `#article`；可见 challenge/access 文案仍会被拒绝。
+- 原始 HTML 中的 `*.token.awswaf.com` / `awswaf` 或响应头 `x-amzn-waf-action` 会把持续存在的验证页精确分类为 `aws_waf_challenge`，同时在 diagnostics 保留 `challenge_provider=aws_waf` 与兼容字段 `legacy_reason_code=cloudflare_challenge`；对外 `status` 仍为 `challenge`。该分类基于等待结束后的页面证据，不会把已恢复为匹配文章 DOM 的初始 HTTP 202 误判成最终失败。
+- headless 与 headed 使用同一套选择和 readiness 规则；失败不会自动切换 headed，也不会自动发起登录或人工验证。
 
 <a id="wiley-science-pnas-browser-workflow"></a>
 ### Wiley / Science / PNAS / AMS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI
@@ -1101,6 +1112,7 @@ IEEE direct landing/REST HTML/PDF/资产与 selected-browser recovery 路线当�
 #### Browser HTML readiness
 
 - `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `royalsocietypublishing` / `acs` / `iop` / `aip` / `mdpi` 的 browser HTML fetch 会先等待 provider 正文 DOM 命中并连续两次轮询稳定，再执行 pre-extraction challenge / paywall 判定。
+- browser HTML fast path 失败后的正常重试复用首轮内存 `BrowserContextSeed` 中与目标 provider 匹配的 cookies，不覆盖 Camoufox 指纹/User-Agent，也不提前提交未通过正文验收的 storage-state；诊断保留两轮状态、HTTP status、DOM readiness 和脱敏页面形态。
 - ACS 当前 readiness selector 是 `.article-body` 与 `.widget-ArticleFulltext`；旧 Atypon wrapper 不再承担 ACS canonical replay 的就绪判定。
 - 如果稳定正文 DOM 已出现，即使页面 shell 仍残留 Cloudflare / challenge 文案，也会继续进入 Markdown 抽取和 availability 判定；只有等待超时仍无可抽取正文 DOM 时，才把 challenge / paywall 作为 HTML route fallback 条件。
 
@@ -1111,7 +1123,7 @@ IEEE direct landing/REST HTML/PDF/资产与 selected-browser recovery 路线当�
 - `asset_profile=all` 使用有界两阶段流程：文章页只识别 `#supplDataLink` 或同 DOI `/article/{doi}/data[N]` 索引，不把索引 HTML 当附件；随后把同一个 selected-backend `BrowserRuntimeConfig`、storage-state、文章浏览器 cookie 和 Referer 传给索引/附件 fetcher，只从 `#supplementarydata` 中接受 `id=SM数字` 的文件链接。生产路径配置缺失时返回逐资产结构化失败，不会静默落入 legacy Chrome/CDP。Office 文档、压缩包、数据表、图片或视频都不受通用后缀白名单限制。
 - figure 的 Standard/High-resolution 操作链接、页脚 WeChat QR、索引页未编号链接不会进入 supplementary。索引被 challenge 阻断、父 DOI 不匹配、缺少明确 scope 或没有真实附件时，会写入 `article.quality.asset_failures`，因此资产验收不会误报 `complete`。
 - publisher 返回的 AWS 签名附件 URL 仅用于即时下载；最终资产和失败诊断会脱敏 `X-Amz-*`、`Signature`、`AWSAccessKeyId` 参数。独立 Radware/hCaptcha 页面仍 fail closed，HTML/PDF 成功 source 分别是 `iop_html` / `iop_pdf`。
-- 当前没有声明可用的 IOP TDM XML/API route；runtime catalog 以 `implementation_status=unsupported` 保留 review 结论，避免 status/docs 把不存在的稳定 endpoint 误报为能力。
+- 当前没有注册 IOP TDM XML/API route；provider status 只汇总实际可执行的 metadata、`iop_html`、`iop_pdf` 与 supplementary 能力，不会因不存在的占位 route 被降为 partial。
 
 <a id="royalsocietypublishing"></a>
 ### Royal Society Publishing

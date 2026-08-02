@@ -170,5 +170,9 @@ def bootstrap_browser_workflow(
                     result.pdf_candidates.insert(0, pdf_candidate)
         result.html_failure_reason = exc.reason
         result.html_failure_message = exc.message
+        details = getattr(exc, "details", None)
+        result.html_failure_diagnostics = (
+            dict(details) if isinstance(details, Mapping) else None
+        )
 
     return result

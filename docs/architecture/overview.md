@@ -60,7 +60,7 @@ Date: 2026-07-29
 
 - MCP runtime 基于官方 Python SDK 2.x 的 `MCPServer` 与 stdio transport，不再维护自定义 stdin reader/stream pump；server 同时服务 2025 握手协议与 2026-07-28 无状态协议，动态 resource 变更在旧协议走 `notifications/resources/list_changed`，在新协议走 `subscriptions/listen` bus。
 - payload/tool 入口通过 `paper_fetch.mcp._deps.MCPDeps` 显式注入 runtime env、service、provider registry 与 cache index 依赖；生产默认由 `default_mcp_deps()` 装配，测试通过构造定制 deps 注入。
-- 所有 MCP tool JSON payload 顶层都带 `schema_version=1`；错误 payload 保留兼容字段 `status` / `reason`，并补充 `code`、`http_status`、`error_category`、`retry_after_seconds`、`provider`、`warnings` 和 `source_trail` 供 host 做机器判断。
+- 所有 MCP tool JSON payload 顶层都带 `schema_version=2`；错误 payload 保留兼容字段 `status` / `reason`，并补充 `code`、`http_status`、`error_category`、`retry_after_seconds`、`provider`、`warnings`、顶层唯一完整 `trace` 和 `source_trail` 供 host 做机器判断。v2 的 `quality` 不再复制完整 trace。
 - MCPServer/Pydantic 仍生成并保留完整 typed output contract；注册工具时只从发布到 `tools/list` 的 output schema 移除展示性 `title` 注解和可选字段的 `default: null`。压缩器识别 `properties`、`$defs` 等命名 schema 映射，真实的 `title`/`default` 字段名与全部验证约束保持不变。
 - `resource://paper-fetch/provider-catalog` 由轻量 MCP catalog adapter 在读取时直接投影 runtime `ProviderSpec` 和 `SOURCE_PROVIDER_MAP`；provider/source、browser/runtime、status/preflight 与资产默认不在 server instructions、tool description 或 skill contract 中维护第二张静态表。
 - MCP 上下文有独立回归预算：server instructions 不超过 1500 字符，`fetch_paper` description 不超过 1200 字符，全部 tool description 合计不超过 5000 字符，`tool_count * instructions_length + descriptions_length` 宿主 narrative 不超过 24000 字符。Native tools/list 总字节和 input/output schema 字节分别快照，新工具需单独说明并更新基线，不把 schema 体积混入文案预算。十工具契约在压缩展示性 output-schema 元数据、同时保留命名字段后的基线分别为 `69459` / `65961` bytes，当前 instructions/fetch description/全部 descriptions/host narrative 为 `1093/985/2601/13531` 字符。
@@ -139,7 +139,9 @@ Date: 2026-07-29
 
 因此 transport/adapter 的旧 `status=ok`、正文事实 `has_fulltext` 和任务级 `overall` 是三个不同维度，任何调用方都不得互相替代解释。metadata-only 可以同时是 `status=ok`、`fetch.status=ok`、`has_fulltext=false`、`overall=limited`。
 
-验收 schema 当前为 v1。每份报告都必须序列化 `schema_version=1` 和 `minimum_reader_schema_version=1`。v1 内只允许新增可忽略字段；v1 reader 忽略未知字段。既有字段含义、必填性或枚举值不得原地改变，任何不兼容变更必须提升 schema version（并在需要时提升最低 reader version）。缺少版本或版本不受支持的报告必须拒绝，不能猜测迁移。`FetchAcceptanceReport.model_json_schema()` / `fetch_acceptance_json_schema()` 是 JSON Schema 唯一生成入口。
+验收 schema 当前为 v2。每份报告都必须序列化 `schema_version=2` 和 `minimum_reader_schema_version=2`。v2 增加 `accepted_preview`、`fallback_preview` 与稳定 `issue_codes`，并要求 `preview == accepted_preview + fallback_preview`；reader 可忽略未知 additive field，但缺少版本、v1 或未来不支持的版本必须拒绝，不能猜测迁移。`FetchAcceptanceReport.model_json_schema()` / `fetch_acceptance_json_schema()` 是 JSON Schema 唯一生成入口。
+
+`FetchEnvelope.trace` 是一次 fetch 的唯一完整 trace owner。provider/waterfall 先在局部列表累积事件，workflow 最终只写入 envelope 一次；`Quality` 仅保留去重后的 article source-trail 摘要。acceptance、manifest 与 MCP 都只投影 envelope 顶层 trace，两个不同 attempt 的同 code 会保留为两条真实事件。旧 v1 FetchEnvelope cache 读取时按“顶层 trace → quality.trace → article.quality.trace”提升一次，新写入统一为 v2 且只写顶层。
 
 #### 版本化 manifest record
 
@@ -232,7 +234,9 @@ provider 身份与能力配置统一来自 provider entry module 顶部注册的
 入口：`src/paper_fetch/runtime.py`、`artifacts.py`、`mcp/fetch_cache.py`
 
 - `RuntimeContext` 显式承载运行时依赖；`parse_cache` 是进程内、单 context 生命周期的解析 memo（key 含 provider、role、source、body sha256、parser 和配置指纹），访问器由 `RLock` 保护，`get_or_set` 对同 key 原子执行一次 supplier，dict/list 读取返回拷贝，XML root 只读复用。
-- Browser runtime 使用 backend facade 和集中 storage-state manager；auth、preflight、HTML fetch、seeded PDF fallback 共享 provider-scoped `storage-state.json` 路径、写锁和 atomic write。managed Chrome stderr 使用有界脱敏尾部，启动、CDP 连接、context 和 page 阶段分别发布稳定 code，preflight、provider trace、manifest 与 PDF fallback acceptance 保留同一结构化失败事实。Browser-backed image fetch 对单图 seed warm、page fetch、request-context fetch、直接导航和 image wait 共用一个 wall-clock budget；PDF fallback 只用 lightweight browser warm 采集 cookies/user-agent/final URL，已有 cookie seed 时不再对同一 seed URL 做第二次 browser navigation。External CDP 默认借用既有 context，并在 diagnostics 中报告被忽略的 context options；`PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT=1` 可要求在外部浏览器中创建新 context。
+- Browser runtime 使用 backend facade 和集中 storage-state manager；auth、preflight、HTML fetch、seeded PDF fallback 共享 provider-scoped `storage-state.json` 路径、写锁和 atomic write。preflight 的唯一状态契约为 `ready/challenge/auth_required/network_timeout/extraction_error/runtime_error/cancelled`，CLI/MCP 共用核心 reason-code 分类和 next action。managed Chrome stderr 使用有界脱敏尾部，启动、CDP 连接、context 和 page 阶段分别发布稳定 code，preflight、provider trace、manifest 与 PDF fallback acceptance 保留同一结构化失败事实。Browser-backed image fetch 对单图 seed warm、page fetch、request-context fetch、直接导航和 image wait 共用一个 wall-clock budget；PDF fallback 只用 lightweight browser warm 采集 cookies/user-agent/final URL，已有 cookie seed 时不再对同一 seed URL 做第二次 browser navigation。External CDP 默认借用既有 context，并在 diagnostics 中报告被忽略的 context options；`PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT=1` 可要求在外部浏览器中创建新 context。
+- `artifact_mode=all` 下，已到达页面但 extraction/availability 失败的 HTML route 会在 `diagnostics/<provider>/<doi-or-url-digest>/<route>-<attempt>/` 保存 `diagnostic.json` 与隐私清洗后的 `page-sanitized.html`。自动流程不保存原始失败 HTML 或截图；query、userinfo、email、表单、脚本及事件属性会被删除/脱敏，2 MiB 上限只在 DOM 节点边界截断。成功或终态失败的 CLI/MCP manifest 都把这些文件作为 `kind=diagnostic` additive artifact 快照保存 size/SHA-256。
+- `RuntimeContext.stage_timings` 使用独立 monotonic 计时器记录 browser、DOM readiness、HTTP、retry、asset、formula 与 render；golden live 报告另保留总耗时，并按 `provider + route + stage` 聚合。单样本只输出 observed duration，至少两个样本才复用 tracing 的 nearest-rank 算法输出 p50/p95，禁止从 trace duration 求和。
 - 本地转换工具链使用进程内有界缓存降低重复探测：Ghostscript/libvips 候选路径、`--version` probe 和工具 env overlay 按相关 env/目录/文件指纹失效；公式转换保留 MathML 结果缓存和 `mathml-to-latex` worker 复用；PDF fallback 对无图片导出路径的同一 PDF hash 复用 Markdown 渲染结果，并在成功结果 diagnostics 中记录 hash、字节数、页数、cache status 和耗时。
 - `ArtifactStore` / `DownloadPolicy` 管理 artifact mode：provider PDF/binary local copy、PDF fallback 源文件、provider 原始 HTML、Markdown 保存、asset 诊断、HTTP textual cache 开关，以及 fetch-envelope/cache-index JSON 的原子写入。
 - `FetchCache` 管理 MCP fetch-envelope sidecar reuse/write 语义与 cache index refresh；sidecar version、`EXTRACTION_REVISION` 校验、resource URI 与 scoped cache resource 语义稳定，实际 JSON materialization 委托给 `ArtifactStore`。MCP cache index 读取会校验 `INDEX_VERSION`；旧版/坏 schema 默认拒绝作为可信 manifest，`list_cached(cache_mode="index")` 只读 manifest，`refresh` 只校验/修剪现有 manifest，`rescan` 只从可证明 DOI 归属的 fetch-envelope sidecar 重建。`get_cached(detail="compact")` 仍由该 facade 读取确定性 sidecar：请求兼容唯一调用 `cached_request_matches()`，质量摘要调用统一 `evaluate_fetch_acceptance()`，request fingerprint 复用 manifest canonical hash；adapter 只裁剪 full/preferred/compact 视图，不复制匹配或验收规则。查询先使用当前 runtime 的摘要化 `credential_scope`；带凭据 scope 在精确 sidecar 缺失或 scope 不匹配时可安全复用 public sidecar，public scope 绝不反向读取 API token 或 storage-state sidecar。
@@ -312,7 +316,7 @@ workflow 尽量拿到 Crossref metadata 与 publisher metadata（`elsevier` 仍�
 
 固定返回形状的公开抓取结果。始终承载 `doi`、`source`、`has_fulltext`、`warnings`、`source_trail`、`token_estimate`、`token_estimate_breakdown`；按 `modes` 决定是否附带 `article` / `markdown` / `metadata`。
 
-MCP tool 返回的是在业务 payload 顶层追加 `schema_version=1` 的 JSON-safe 形状；这不是 `FetchEnvelope` sidecar 的缓存版本。失败时 `status` 仍是旧客户端可读的粗粒度状态，细粒度失败原因放在 `code` / `error_category`，HTTP 与限流细节放在 `http_status` / `retry_after_seconds`。
+MCP tool 返回的是在业务 payload 顶层追加 `schema_version=2` 的 JSON-safe 形状；FetchEnvelope sidecar 新写入也使用 v2，但两者仍是不同契约。失败时 `status` 仍是旧客户端可读的粗粒度状态，细粒度失败原因放在 `code` / `error_category`，HTTP 与限流细节放在 `http_status` / `retry_after_seconds`。
 
 ### `ArticleModel`
 
@@ -322,7 +326,7 @@ MCP tool 返回的是在业务 payload 顶层追加 `schema_version=1` 的 JSON-
 - 文章组装先用已下载资产把正文远程 figure/table/formula 链接改写成本地路径，再做 Markdown 图片块边界和短 alt 归一化；image alt 由 `paper_fetch.markdown.images` 生成，caption 不进入 `![alt]`。
 - structured metadata 进 front matter 前解开 HTML entity，避免 `&amp;` 泄漏。
 - `assets[*].download_tier` / `download_url` / `content_type` / `downloaded_bytes` / `width` / `height` 是下载诊断，不应被下游丢弃。
-- `quality.semantic_losses.table_layout_degraded_count` 表示版式降级，`table_semantic_loss_count` 才表示语义内容丢失。
+- `quality.semantic_losses.table_layout_degraded_count` 表示源表 span/列定义异常导致布局无法可靠验证；合法合并单元格成功展开只记录规范化 reason，`table_semantic_loss_count` 才表示语义内容丢失。
 
 ### `provider_status`
 

@@ -24,6 +24,7 @@ from ._article_markdown_common import (
     iter_descendants,
     normalize_table_cell_text,
     render_inline_text,
+    table_conversion_note,
     xml_local_name,
 )
 from ..utils import normalize_text
@@ -268,21 +269,14 @@ def _table_entry(
             entry["original_url"] = graphic_alternatives[0]["url"]
             entry["alternatives"] = graphic_alternatives
         if lossy:
-            if (
-                render_result is not None
-                and render_result.status == TableConversionStatus.FALLBACK
-            ):
-                message = (
-                    "Irregular table structure could not be represented as a reliable Markdown grid; "
-                    "cell text was retained as a readable list."
-                )
-            else:
-                message = (
-                    "Merged table spans were semantically expanded into rectangular Markdown cells; "
-                    "rowspan/colspan layout fidelity was reduced."
-                )
-            entry["lossy_message"] = message
-            entry["conversion_notes"] = [message]
+            message = (
+                table_conversion_note(render_result.status)
+                if render_result is not None
+                else None
+            )
+            if message:
+                entry["lossy_message"] = message
+                entry["conversion_notes"] = [message]
         return entry, lossy
     if caption or graphic_alternatives:
         fallback_message = (

@@ -48,6 +48,15 @@ jobs:
             --cov=paper_fetch --cov-branch \
             --cov-report=term-missing --cov-report=xml
           uv run python scripts/report_coverage_focus.py
+      - name: IEEE AWS WAF, readiness, and asset recovery regressions
+        run: |
+          PYTHONPATH=src uv run pytest -q \
+            tests/unit/test_html_access_signals.py \
+            tests/unit/test_browser_preflight.py \
+            tests/unit/test_camoufox_backend.py \
+            tests/unit/test_ieee_provider_routes.py \
+            tests/unit/test_ieee_provider_asset_downloads.py \
+            -k "aws_waf or matching_article or mismatched_article or ieee_block_page or preview_warm"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: coverage-xml
@@ -81,8 +90,10 @@ jobs:
         run: |
           PYTHONPATH=src uv run pytest -q \
             tests/unit/test_config.py \
+            tests/unit/test_mcp_fetch_acceptance.py \
             tests/unit/test_models_render.py \
-            tests/unit/test_provider_catalog.py
+            tests/unit/test_provider_catalog.py \
+            tests/unit/test_table_grid.py
       - name: Build wheel
         run: uv build --wheel
       - name: Smoke isolated wheel

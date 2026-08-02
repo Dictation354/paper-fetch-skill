@@ -158,9 +158,15 @@ class McpServerResourceTests(unittest.IsolatedAsyncioTestCase):
             default_dir = Path(tmpdir) / "default"
             isolated_dir = Path(tmpdir) / "isolated"
             ctx = FakeContext()
+            resolved_queries: list[str] = []
 
             def fake_fetch(query, **kwargs):
                 return sample_envelope(modes=kwargs["modes"], doi=query)
+
+            def fake_resolve(query, *, context=None):
+                del context
+                resolved_queries.append(query)
+                return sample_resolved_query(query)
 
             with (
                 mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
@@ -169,6 +175,9 @@ class McpServerResourceTests(unittest.IsolatedAsyncioTestCase):
                 ),
                 mock.patch.object(
                     mcp_tools, "service_fetch_paper", side_effect=fake_fetch
+                ),
+                mock.patch.object(
+                    mcp_tools, "service_resolve_paper", side_effect=fake_resolve
                 ),
             ):
                 server = build_server()
@@ -187,6 +196,7 @@ class McpServerResourceTests(unittest.IsolatedAsyncioTestCase):
                 )
 
         self.assertFalse(result.is_error)
+        self.assertEqual(sorted(resolved_queries), ["10.1000/one", "10.1000/two"])
         self.assertEqual(result.structured_content["summary"]["saved_markdown"], 2)
         scope_id = cache_scope_id(isolated_dir)
         expected_prefix = scoped_cached_resource_uri_prefix(scope_id)

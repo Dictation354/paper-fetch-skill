@@ -40,10 +40,6 @@ from ..models import (
     AssetProfile,
     FetchEnvelope,
 )
-from ..publisher_identity import (
-    extract_doi,
-    extract_doi_from_url,
-)
 from ..runtime import RuntimeContext
 from ..reason_codes import RATE_LIMITED
 from ..workflow.batch_runner import (
@@ -67,6 +63,10 @@ from ..workflow.batch_routing import (
     resolve_provider_lane,
 )
 from ._deps import MCPDeps, default_mcp_deps
+from .acceptance_payloads import (
+    compact_acceptance_payload,
+    expected_doi_from_query,
+)
 from .batch import _mcp_batch_failure, report_progress
 from .cache_index import (
     cache_scope_id,
@@ -104,10 +104,11 @@ class BatchFetchOutcome:
     envelope: FetchEnvelope | None = None
     saved_markdown: SavedMarkdownResult | None = None
     error: Exception | None = None
+    diagnostic_artifacts: tuple[dict[str, Any], ...] = ()
 
 
 def _expected_doi(query: str) -> str | None:
-    return extract_doi_from_url(query) or extract_doi(query)
+    return expected_doi_from_query(query)
 
 
 def _lane_for_query(query: str) -> str:
@@ -301,6 +302,25 @@ def _record_from_batch_result(
                     legacy_field=LegacyArtifactField.SAVED_MARKDOWN_PATH,
                 ),
             )
+        diagnostic_artifacts = (
+            outcome.envelope.diagnostic_artifacts
+            if outcome.envelope is not None
+            else outcome.diagnostic_artifacts
+        )
+        if diagnostic_artifacts:
+            artifacts = (
+                *artifacts,
+                *tuple(
+                    ManifestOutputArtifactSpec(
+                        path=str(item.get("path")),
+                        kind="diagnostic",
+                        route=str(item.get("route") or "") or None,
+                        failure_code=(str(item.get("failure_code") or "") or None),
+                    )
+                    for item in diagnostic_artifacts
+                    if str(item.get("path") or "").strip()
+                ),
+            )
         error_payload = (
             _error_payload_for_outcome(outcome.error)
             if outcome.error is not None
@@ -438,22 +458,6 @@ def _compact_messages(values: Sequence[str]) -> list[str]:
     return [str(value)[:400] for value in values[:8]]
 
 
-def _compact_acceptance(record: ManifestRecord) -> dict[str, Any]:
-    acceptance = record.acceptance
-    return {
-        "overall": acceptance.overall.value,
-        "identity": acceptance.identity.status.value,
-        "fetch": acceptance.fetch.status.value,
-        "content": acceptance.content.status.value,
-        "asset": acceptance.asset.status.value,
-        "output": acceptance.output.status.value,
-        "provenance": acceptance.provenance.status.value,
-        "has_fulltext": acceptance.content.has_fulltext,
-        "has_abstract": acceptance.content.has_abstract,
-        "token_estimate": acceptance.content.token_estimate,
-    }
-
-
 def _artifact_payloads(
     record: ManifestRecord, *, resource_uri: str | None
 ) -> list[dict[str, Any]]:
@@ -462,6 +466,8 @@ def _artifact_payloads(
         payload = {
             "path": artifact.path,
             "kind": artifact.kind,
+            "route": artifact.route,
+            "failure_code": artifact.failure_code,
             "size": artifact.size,
             "sha256": artifact.sha256,
             "completed_at": artifact.completed_at.isoformat(),
@@ -551,7 +557,7 @@ def _compact_run_payload(
             "source": record.source,
             "reused": record.index not in attempted_indices,
             "cache_hit": cache_hits.get(key, False),
-            "acceptance": _compact_acceptance(record),
+            "acceptance": compact_acceptance_payload(record.acceptance),
             "fallback_codes": list(record.fallback_codes),
             "warning_codes": list(record.warning_codes),
             "failure_codes": list(record.failure_codes),
@@ -805,12 +811,18 @@ async def _execute_batch_fetch(
                         completed_at=manifest_deps.clock(),
                         envelope=envelope,
                         saved_markdown=saved,
+                        diagnostic_artifacts=tuple(
+                            dict(item) for item in item_context.diagnostic_artifacts
+                        ),
                     )
                 except Exception as error:  # every submitted item gets one record
                     return BatchFetchOutcome(
                         started_at=started_at,
                         completed_at=manifest_deps.clock(),
                         error=error,
+                        diagnostic_artifacts=tuple(
+                            dict(item) for item in item_context.diagnostic_artifacts
+                        ),
                     )
                 finally:
                     item_context.close()

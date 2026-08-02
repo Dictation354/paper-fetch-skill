@@ -875,6 +875,48 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         )
         image_fetcher.close.assert_called_once()
 
+    def test_silverchair_figure_page_resolution_stays_on_camoufox_owner_thread(
+        self,
+    ) -> None:
+        plan = BrowserAssetDownloadPlan(
+            article_id="10.1021/example",
+            output_dir=Path("/tmp/browser-assets"),
+            asset_profile="body",
+            body_assets=[
+                {
+                    "kind": "figure",
+                    "heading": "Figure 1",
+                    "figure_page_url": "https://example.test/figure-page",
+                    "section": "body",
+                }
+            ],
+            supplementary_assets=[],
+        )
+        recovery = BrowserAssetRecoveryContext(
+            runtime=SimpleNamespace(backend="camoufox", headless=True),
+            provider="acs",
+            user_agent="test-agent",
+            browser_context_seed={},
+            browser_cookies=[],
+            active_seed_urls=["https://example.test/article"],
+        )
+        calls: list[dict[str, object]] = []
+
+        def mocked_download_assets(_kind, *_args, **kwargs):
+            calls.append(kwargs)
+            return {"assets": [], "asset_failures": []}
+
+        run_browser_asset_download_attempt(
+            plan,
+            recovery,
+            image_fetcher_factory=mock.Mock(return_value=None),
+            file_fetcher_factory=mock.Mock(return_value=None),
+            opener_requester={"asset_download_concurrency": 4},
+            deps=browser_workflow_deps(download_assets=mocked_download_assets),
+        )
+
+        self.assertEqual(calls[0]["asset_download_concurrency"], 1)
+
     def test_browser_workflow_asset_retry_policy_skips_deterministic_failures(
         self,
     ) -> None:

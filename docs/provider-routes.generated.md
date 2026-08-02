@@ -55,9 +55,8 @@
 | `acs` | 1 | `browser_html` | `html` / `acs` | `available` / `browser-required` | 120s; c=1; qps=provider; wait=5.0s | `provider_html_body` / `body` |
 | `acs` | 2 | `browser_pdf` | `pdf` / `acs` | `available` / `browser-required` | 120s; c=1; qps=provider; wait=5.0s | `validated_pdf` / `body` |
 | `iop` | 0 | `metadata` | `metadata` / `crossref_metadata` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `metadata_identity` / `body` |
-| `iop` | 1 | `tdm_xml` | `xml` / `iop_xml` | `unsupported` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `jats_body` / `body` |
-| `iop` | 2 | `browser_html` | `html` / `iop_html` | `available` / `browser-required` | 120s; c=1; qps=provider; wait=5.0s | `provider_html_body` / `body` |
-| `iop` | 3 | `browser_pdf` | `pdf` / `iop_pdf` | `available` / `browser-required` | 120s; c=1; qps=provider; wait=5.0s | `validated_pdf` / `body` |
+| `iop` | 1 | `browser_html` | `html` / `iop_html` | `available` / `browser-required` | 120s; c=1; qps=provider; wait=5.0s | `provider_html_body` / `body` |
+| `iop` | 2 | `browser_pdf` | `pdf` / `iop_pdf` | `available` / `browser-required` | 120s; c=1; qps=provider; wait=5.0s | `validated_pdf` / `body` |
 | `aip` | 0 | `metadata` | `metadata` / `metadata` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `metadata_identity` / `body` |
 | `aip` | 1 | `browser_html` | `html` / `aip_html` | `available` / `browser-required` | 120s; c=1; qps=provider; wait=5.0s | `provider_html_body` / `body` |
 | `aip` | 2 | `browser_pdf` | `pdf` / `aip_pdf` | `available` / `browser-required` | 120s; c=1; qps=provider; wait=5.0s | `validated_pdf` / `body` |

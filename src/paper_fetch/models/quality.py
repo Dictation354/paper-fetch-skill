@@ -316,6 +316,8 @@ def _coerce_asset_kind_summary(value: Any) -> AssetKindSummary:
             "requested": value.requested,
             "full_size": value.full_size,
             "preview": value.preview,
+            "accepted_preview": value.accepted_preview,
+            "fallback_preview": value.fallback_preview,
             "failed": value.failed,
             "placeholder_suspected": value.placeholder_suspected,
             "not_requested": value.not_requested,
@@ -325,11 +327,19 @@ def _coerce_asset_kind_summary(value: Any) -> AssetKindSummary:
         payload = value
     else:
         payload = {}
+    accepted_preview = _nonnegative_int(payload.get("accepted_preview"))
+    fallback_preview = _nonnegative_int(payload.get("fallback_preview"))
+    preview = _nonnegative_int(payload.get("preview"))
+    if "accepted_preview" not in payload and "fallback_preview" not in payload:
+        fallback_preview = preview
+    preview = accepted_preview + fallback_preview
     return AssetKindSummary(
         total=_nonnegative_int(payload.get("total")),
         requested=_nonnegative_int(payload.get("requested")),
         full_size=_nonnegative_int(payload.get("full_size")),
-        preview=_nonnegative_int(payload.get("preview")),
+        preview=preview,
+        accepted_preview=accepted_preview,
+        fallback_preview=fallback_preview,
         failed=_nonnegative_int(payload.get("failed")),
         placeholder_suspected=_nonnegative_int(payload.get("placeholder_suspected")),
         not_requested=_nonnegative_int(payload.get("not_requested")),
@@ -349,6 +359,7 @@ def _coerce_asset_diagnostic(value: Any) -> AssetDiagnostic | None:
             "byte_count": value.byte_count,
             "width": value.width,
             "height": value.height,
+            "preview_accepted": value.preview_accepted,
             "sha256": value.sha256,
             "failure_code": value.failure_code,
             "provenance": value.provenance,
@@ -368,6 +379,7 @@ def _coerce_asset_diagnostic(value: Any) -> AssetDiagnostic | None:
         byte_count=_optional_nonnegative_int(payload.get("byte_count")),
         width=_optional_nonnegative_int(payload.get("width")),
         height=_optional_nonnegative_int(payload.get("height")),
+        preview_accepted=bool(payload.get("preview_accepted")),
         sha256=normalize_text(payload.get("sha256")).lower() or None,
         failure_code=normalize_text(payload.get("failure_code")).lower() or None,
         provenance=coerce_asset_provenance(payload.get("provenance")),
@@ -390,6 +402,8 @@ def coerce_asset_quality_summary(value: Any) -> AssetQualitySummary:
             "local": value.local,
             "full_size": value.full_size,
             "preview": value.preview,
+            "accepted_preview": value.accepted_preview,
+            "fallback_preview": value.fallback_preview,
             "failed": value.failed,
             "placeholder_suspected": value.placeholder_suspected,
             "not_requested": value.not_requested,
@@ -397,6 +411,7 @@ def coerce_asset_quality_summary(value: Any) -> AssetQualitySummary:
             "remote_link_count": value.remote_link_count,
             "remote_only_count": value.remote_only_count,
             "failure_codes": value.failure_codes,
+            "issue_codes": value.issue_codes,
             "by_kind": value.by_kind,
             "diagnostics": value.diagnostics,
         }
@@ -422,6 +437,12 @@ def coerce_asset_quality_summary(value: Any) -> AssetQualitySummary:
         )
         if (diagnostic := _coerce_asset_diagnostic(item)) is not None
     ]
+    accepted_preview = _nonnegative_int(payload.get("accepted_preview"))
+    fallback_preview = _nonnegative_int(payload.get("fallback_preview"))
+    preview = _nonnegative_int(payload.get("preview"))
+    if "accepted_preview" not in payload and "fallback_preview" not in payload:
+        fallback_preview = preview
+    preview = accepted_preview + fallback_preview
     return AssetQualitySummary(
         audited=bool(payload.get("audited")),
         requested=bool(payload.get("requested")),
@@ -445,7 +466,9 @@ def coerce_asset_quality_summary(value: Any) -> AssetQualitySummary:
         total=_nonnegative_int(payload.get("total")),
         local=_nonnegative_int(payload.get("local")),
         full_size=_nonnegative_int(payload.get("full_size")),
-        preview=_nonnegative_int(payload.get("preview")),
+        preview=preview,
+        accepted_preview=accepted_preview,
+        fallback_preview=fallback_preview,
         failed=_nonnegative_int(payload.get("failed")),
         placeholder_suspected=_nonnegative_int(payload.get("placeholder_suspected")),
         not_requested=_nonnegative_int(payload.get("not_requested")),
@@ -453,6 +476,7 @@ def coerce_asset_quality_summary(value: Any) -> AssetQualitySummary:
         remote_link_count=_nonnegative_int(payload.get("remote_link_count")),
         remote_only_count=_nonnegative_int(payload.get("remote_only_count")),
         failure_codes=_dedupe_strings(payload.get("failure_codes")),
+        issue_codes=_dedupe_strings(payload.get("issue_codes")),
         by_kind=by_kind,
         diagnostics=diagnostics,
     )
@@ -624,7 +648,6 @@ def _clone_quality(quality: Quality) -> Quality:
         has_abstract=quality.has_abstract,
         warnings=list(quality.warnings),
         source_trail=list(quality.source_trail),
-        trace=list(quality.trace),
         token_estimate_breakdown=coerce_token_estimate_breakdown(
             quality.token_estimate_breakdown
         ),

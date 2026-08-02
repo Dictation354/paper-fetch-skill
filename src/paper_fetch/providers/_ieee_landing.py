@@ -9,18 +9,20 @@ from collections.abc import Mapping
 from ..extraction.html.landing import LandingRedirectLimitExceeded, fetch_landing_html
 from ..extraction.html.assets import browser_asset_recovery_allowed
 from ..extraction.html.signals import detect_html_block, summarize_html
+from ..failure import FailureDiagnostics
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, RequestFailure
 from ..http.headers import header_value
 from ..publisher_identity import normalize_doi
 from ..reason_codes import ERROR, NO_RESULT, NOT_SUPPORTED
 from ..runtime import RuntimeContext
-from ..utils import choose_public_landing_page_url
+from ..utils import choose_public_landing_page_url, normalize_text
 from . import _ieee_metadata as ieee_metadata
 from . import _ieee_url as ieee_url
 from . import browser_runtime
 from .base import ProviderFailure, map_request_failure
 
 MAX_IEEE_LANDING_REDIRECTS = 8
+IEEE_LANDING_BROWSER_READINESS_WAIT_SECONDS = 15
 
 
 def resolve_ieee_landing_url(
@@ -65,7 +67,11 @@ def fetch_ieee_landing_attempt(
             retry_on_transient=True,
         )
         detected = detect_html_block(
-            "", summarize_html(landing_fetch.html_text), landing_fetch.status_code
+            "",
+            summarize_html(landing_fetch.html_text),
+            landing_fetch.status_code,
+            html_text=landing_fetch.html_text,
+            response_headers=landing_fetch.headers,
         )
         if detected is not None:
             raise ProviderFailure(detected.reason, detected.message)
@@ -142,20 +148,39 @@ def fetch_ieee_landing_attempt(
         doi=normalized_doi,
     )
     try:
+        expected_article_number = (
+            ieee_url._article_number_from_metadata(metadata)
+            or ieee_url._article_number_from_url(landing_url)
+            or ""
+        )
         browser_result = browser_runtime.fetch_html_with_browser(
             [landing_url],
             publisher=client.name,
             config=runtime_config,
             runtime_context=runtime_context,
-            wait_seconds=1,
+            readiness=browser_runtime.BrowserHtmlReadiness(
+                wait_for_article_body=False,
+                selector="#article",
+                selector_text=expected_article_number or None,
+                require_selector=True,
+            ),
+            wait_seconds=IEEE_LANDING_BROWSER_READINESS_WAIT_SECONDS,
             disable_media=True,
         )
     except browser_runtime.BrowserRuntimeFailure as exc:
         raise ProviderFailure(
-            ERROR,
+            exc.kind,
             (
                 "IEEE landing retrieval failed through direct HTTP and the selected "
                 f"{runtime_config.backend} browser ({exc.message})."
+            ),
+            diagnostics=FailureDiagnostics(
+                provider=client.name,
+                route="landing_browser",
+                stage=normalize_text(str(exc.details.get("stage") or "")) or None,
+                error_category=exc.kind,
+                retryable=False,
+                details=dict(exc.details),
             ),
         ) from exc
     return build_ieee_landing_attempt(

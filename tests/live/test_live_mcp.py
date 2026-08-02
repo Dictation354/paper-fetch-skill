@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import os
 import sys
 import tempfile
@@ -9,13 +10,13 @@ from pathlib import Path
 from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
+from paper_fetch.publisher_identity import normalize_doi
 from tests.live._runtime_env import (
     build_isolated_live_env,
-    require_selected_browser_or_skip,
+    preflight_selected_browser_or_skip,
 )
 from tests.provider_benchmark_samples import (
     provider_benchmark_sample,
-    source_trail_matches,
 )
 from tests.paths import REPO_ROOT, SRC_DIR
 
@@ -34,6 +35,7 @@ COPERNICUS_SAMPLE = provider_benchmark_sample("copernicus")
 
 class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
     runtime_env_tempdir: tempfile.TemporaryDirectory | None = None
+    preflight_cache: dict = {}
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -42,6 +44,7 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
                 "Set PAPER_FETCH_RUN_LIVE=1 to run live MCP smoke tests."
             )
         cls.env, cls.runtime_env_tempdir = build_isolated_live_env()
+        cls.preflight_cache = {}
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -113,7 +116,13 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
     ) -> None:
         self._require_env(*sample.required_env)
         if needs_browser_runtime:
-            require_selected_browser_or_skip(self, self.env)
+            await asyncio.to_thread(
+                preflight_selected_browser_or_skip,
+                self,
+                provider=sample.provider,
+                env=self.env,
+                cache=self.preflight_cache,
+            )
 
         result, progress_updates, log_messages = await self._call_fetch(
             query=sample.doi,
@@ -121,16 +130,30 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
             env_override=env_override,
         )
 
-        self.assertFalse(result.is_error)
-        self.assertEqual(result.structured_content["source"], sample.expected_source)
+        self.assertFalse(
+            result.is_error,
+            {
+                "content": getattr(result, "content", None),
+                "structured_content": getattr(result, "structured_content", None),
+            },
+        )
+        self.assertEqual(
+            normalize_doi(result.structured_content["doi"]),
+            normalize_doi(sample.doi),
+        )
         self.assertTrue(result.structured_content["has_fulltext"])
         self.assertTrue(
-            source_trail_matches(
-                result.structured_content["source_trail"],
-                sample.accepted_live_source_trail_groups,
+            sample.accepts_live_result(
+                source=result.structured_content["source"],
+                source_trail=result.structured_content["source_trail"],
             ),
             result.structured_content["source_trail"],
         )
+        acceptance = result.structured_content["acceptance"]
+        self.assertEqual(acceptance["fetch"], "ok")
+        self.assertEqual(acceptance["content"], "fulltext")
+        self.assertEqual(acceptance["identity"], "resolved")
+        self.assertEqual(acceptance["output"], "complete")
         self.assertEqual(progress_updates[-1], (4, 4, "fetch_paper complete"))
         self.assertTrue(
             any(

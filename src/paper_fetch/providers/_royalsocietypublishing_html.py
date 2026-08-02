@@ -8,12 +8,13 @@ from html import escape
 import re
 from typing import Any
 from collections.abc import Mapping
-from urllib.parse import quote, unquote, urljoin, urlparse
+from urllib.parse import quote, urljoin, urlparse
 
 from bs4 import BeautifulSoup, Tag
 
 from ..extraction.html._metadata import merge_html_metadata, parse_html_metadata
 from ..extraction.html.assets import extract_scoped_html_assets
+from ..extraction.html.assets.silverchair import silverchair_download_image_url
 from ..extraction.html.figure_links import inject_inline_figure_links
 from ..extraction.html.parsing import choose_parser
 from ..extraction.html.renderer import (
@@ -608,61 +609,11 @@ def _silverchair_download_image_url(
     *,
     expected_figure_basename: str,
 ) -> str:
-    for anchor in node.find_all("a", href=True):
-        href = normalize_text(str(anchor.get("href") or ""))
-        if not href:
-            continue
-        wrapper_url = urljoin(source_url, href)
-        parsed_wrapper = urlparse(wrapper_url)
-        if not parsed_wrapper.path.lower().endswith("/downloadfile/downloadimage.aspx"):
-            continue
-
-        query_segments = parsed_wrapper.query.split("&")
-        image_value = ""
-        outer_signature_segments: dict[str, str] = {}
-        for segment in query_segments:
-            key, separator, value = segment.partition("=")
-            if not separator:
-                continue
-            normalized_key = unquote(key).strip().lower()
-            if normalized_key == "image" and not image_value:
-                image_value = value
-            elif normalized_key in {"expires", "signature", "key-pair-id"}:
-                outer_signature_segments.setdefault(normalized_key, segment)
-        if not image_value:
-            continue
-
-        image_url = urljoin(source_url, unquote(image_value))
-        parsed_image = urlparse(image_url)
-        image_host = normalize_text(parsed_image.hostname or "").lower()
-        if (
-            parsed_image.scheme not in {"http", "https"}
-            or not image_host
-            or (
-                image_host != "silverchair-cdn.com"
-                and not image_host.endswith(".silverchair-cdn.com")
-            )
-        ):
-            continue
-        image_basename = _royal_figure_basename(image_url)
-        if expected_figure_basename and image_basename != expected_figure_basename:
-            continue
-
-        nested_keys = {
-            unquote(segment.partition("=")[0]).strip().lower()
-            for segment in parsed_image.query.split("&")
-            if segment
-        }
-        missing_signature_segments = [
-            segment
-            for key, segment in outer_signature_segments.items()
-            if key not in nested_keys
-        ]
-        if missing_signature_segments:
-            separator = "&" if parsed_image.query else "?"
-            image_url = f"{image_url}{separator}{'&'.join(missing_signature_segments)}"
-        return image_url
-    return ""
+    return silverchair_download_image_url(
+        node,
+        source_url,
+        expected_image_basename=expected_figure_basename,
+    )
 
 
 def _royal_society_figure_assets(

@@ -89,6 +89,22 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(ctx.session.messages[0]["data"]["query"], "10.1000/example")
         self.assertEqual(captured["context"].artifact_mode, "markdown-assets")
         self.assertIsNone(captured["context"].transport.disk_cache_dir)
+        self.assertEqual(result.structured_content["status"], "ok")
+        self.assertEqual(
+            result.structured_content["acceptance"],
+            {
+                "overall": "degraded",
+                "identity": "resolved",
+                "fetch": "ok",
+                "content": "fulltext",
+                "asset": "not_requested",
+                "output": "complete",
+                "provenance": "partial",
+                "has_fulltext": True,
+                "has_abstract": True,
+                "token_estimate": 128,
+            },
+        )
 
     async def test_fetch_paper_tool_async_sets_cancellation_flag_for_worker_transport(
         self,
@@ -266,7 +282,7 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
             )
 
         self.assertFalse(result.is_error)
-        self.assertEqual(result.structured_content["schema_version"], 1)
+        self.assertEqual(result.structured_content["schema_version"], 2)
         self.assertTrue(result.structured_content["aborted"])
         self.assertEqual(
             result.structured_content["abort_reason"]["status"], "rate_limited"

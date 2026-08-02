@@ -55,6 +55,9 @@ _FORMULA_TIMING_COLLECTOR: ContextVar[Callable[[float], None] | None] = ContextV
 _FORMULA_TIMING_DEPTH: ContextVar[int] = ContextVar(
     "paper_fetch_formula_timing_depth", default=0
 )
+_FORMULA_RUNTIME_ENV: ContextVar[Mapping[str, str] | None] = ContextVar(
+    "paper_fetch_formula_runtime_env", default=None
+)
 
 
 def _stop_mathml_workers() -> None:
@@ -363,6 +366,17 @@ def formula_timing_collector(
         yield
     finally:
         _FORMULA_TIMING_COLLECTOR.reset(token)
+
+
+@contextmanager
+def formula_runtime_env(env: Mapping[str, str]) -> Iterator[None]:
+    """Scope implicit formula conversion to the active request environment."""
+
+    token = _FORMULA_RUNTIME_ENV.set(dict(env))
+    try:
+        yield
+    finally:
+        _FORMULA_RUNTIME_ENV.reset(token)
 
 
 def _record_formula_timing(started_at: float) -> None:
@@ -1200,7 +1214,7 @@ def convert_mathml_string(
     depth = _FORMULA_TIMING_DEPTH.get()
     depth_token = _FORMULA_TIMING_DEPTH.set(depth + 1)
     try:
-        runtime_env = dict(env or os.environ)
+        runtime_env = dict(env or _FORMULA_RUNTIME_ENV.get() or os.environ)
         explicitly_selected = bool(
             (backend or runtime_env.get("MATHML_CONVERTER_BACKEND") or "").strip()
         )

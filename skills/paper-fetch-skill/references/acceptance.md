@@ -16,12 +16,17 @@
 
 顶层兼容 `status=ok` 只表示调用没有抛出运行时失败；`has_fulltext` 是内容事实；`overall` 才是任务验收结论。三者不能互换。摘要或 metadata 可以是成功返回，但最多是 `limited`，不能报告成全文完成。
 
+MCP 单篇 `fetch_paper` 成功响应直接返回紧凑 `acceptance`；`batch_fetch` 在每个 result 中返回同形摘要。两者的七分面状态必须由同一个统一验收报告投影，不能从 warning 文本或 `has_fulltext` 另行推断。
+
+当前 acceptance wire schema 是 v2（`schema_version=2`、`minimum_reader_schema_version=2`）。asset 分面分别记录 `accepted_preview`、`fallback_preview` 与有序去重 `issue_codes`，同时保留 `preview` 且要求它等于前两者之和。只有 accepted preview 且无其它 issue 时可以 complete；fallback preview 是 `asset_fidelity_degraded`，不等同于 `asset_download_failure`。
+
 ## 响应验收
 
 - 核对响应的规范 identity 与原始输入映射；歧义、DOI mismatch 或身份不足按 [`workflow.md`](workflow.md) 的 BLOCKING 白名单处理。
 - 核对 `content` 是否满足当前 [`presets.md`](presets.md) 的文本意图；任务只需摘要时可接受 limited，用户明确需要全文时不能升级结论。
 - 只有请求了资产才检查 asset 完整度。允许保留的远程链接、被接受的 preview 和 `asset_profile=none` 不是自动失败；结构化 asset failure 和 placeholder 仍需报告。
 - 核对请求输出集合，保留 table/formula/asset 降级、fallback code 和 source trail。普通 warning 不按字符串猜测类别。
+- envelope、acceptance 和 manifest 的完整 trace event count 必须一致；两个 retry 的同 code 是两条事实，不能按 marker 去重。`quality` 中的 source trail 只是摘要，不得回拼成第二份 trace。
 
 ## 文件、路径与 hash 验收
 

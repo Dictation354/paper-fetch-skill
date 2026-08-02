@@ -25,6 +25,7 @@ from paper_fetch.providers.browser_runtime.camoufox_manager import (
     CamoufoxBrowserManager,
     CamoufoxPersistentContextManager,
     _launch_executable_path,
+    _launch_firefox_major_version,
 )
 from paper_fetch.providers.browser_runtime.context import context_options_for_config
 from paper_fetch.providers.browser_runtime import context as browser_runtime_context
@@ -175,6 +176,10 @@ def test_camoufox_manager_reuses_browser_and_creates_fresh_contexts(
         raise AssertionError(name)
 
     monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.camoufox_manager._launch_firefox_major_version",
+        lambda _path: 152,
+    )
+    monkeypatch.setattr(
         "paper_fetch.providers.browser_runtime.camoufox_manager.importlib.import_module",
         import_module,
     )
@@ -189,7 +194,53 @@ def test_camoufox_manager_reuses_browser_and_creates_fresh_contexts(
         persistent_context=False,
         headless=True,
         executable_path="/runtime/camoufox",
+        ff_version=152,
+        i_know_what_im_doing=True,
     )
+    assert new_context.call_args_list == [
+        mock.call(browser, accept_downloads=True, ff_version="152"),
+        mock.call(browser, accept_downloads=True, ff_version="152"),
+    ]
+
+
+def test_camoufox_startup_output_is_kept_off_protocol_stdout(
+    monkeypatch, capsys
+) -> None:
+    browser = SimpleNamespace(close=mock.Mock())
+    playwright = SimpleNamespace(stop=mock.Mock())
+    playwright_manager = SimpleNamespace(start=mock.Mock(return_value=playwright))
+
+    def new_browser(*_args, **_kwargs):
+        print("Extracting addon (UBO): Complete")
+        return browser
+
+    def import_module(name: str):
+        if name == "playwright.sync_api":
+            return SimpleNamespace(
+                sync_playwright=mock.Mock(return_value=playwright_manager)
+            )
+        if name == "camoufox.sync_api":
+            return SimpleNamespace(NewBrowser=new_browser)
+        raise AssertionError(name)
+
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.camoufox_manager._launch_firefox_major_version",
+        lambda _path: None,
+    )
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.camoufox_manager.importlib.import_module",
+        import_module,
+    )
+    manager = CamoufoxBrowserManager(
+        binary_path="/runtime/camoufox",
+        headless=True,
+    )
+
+    assert manager.browser() is browser
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "Extracting addon (UBO): Complete" in captured.err
+    manager.close()
 
 
 def test_camoufox_official_runtime_path_is_resolved_by_package(monkeypatch) -> None:
@@ -285,12 +336,18 @@ def test_camoufox_persistent_official_runtime_path_is_resolved_by_package(
 def test_camoufox_persistent_explicit_binary_path_is_forwarded(
     monkeypatch, tmp_path
 ) -> None:
+    version_type = SimpleNamespace(
+        from_path=mock.Mock(side_effect=OSError("no adjacent metadata"))
+    )
+    pkgman = SimpleNamespace(Version=version_type)
     context = SimpleNamespace(close=mock.Mock())
     playwright = SimpleNamespace(stop=mock.Mock())
     playwright_manager = SimpleNamespace(start=mock.Mock(return_value=playwright))
     new_browser = mock.Mock(return_value=context)
 
     def import_module(name: str):
+        if name == "camoufox.pkgman":
+            return pkgman
         if name == "playwright.sync_api":
             return SimpleNamespace(
                 sync_playwright=mock.Mock(return_value=playwright_manager)
@@ -319,6 +376,7 @@ def test_camoufox_persistent_explicit_binary_path_is_forwarded(
         user_data_dir=str(tmp_path / "profile"),
         executable_path="/custom/camoufox",
     )
+    assert version_type.from_path.call_count == 2
 
 
 def test_camoufox_manager_stops_playwright_when_runtime_readiness_check_fails(
@@ -369,6 +427,28 @@ def test_camoufox_first_launch_requires_prepared_official_runtime(monkeypatch) -
     assert _launch_executable_path(None) is None
     pkgman.camoufox_path.assert_called_once_with(download_if_missing=False)
     pkgman.launch_path.assert_not_called()
+
+
+def test_explicit_camoufox_executable_reuses_adjacent_version_metadata(
+    tmp_path, monkeypatch
+) -> None:
+    runtime_dir = tmp_path / "camoufox-runtime"
+    runtime_dir.mkdir()
+    executable = runtime_dir / "camoufox-bin"
+    executable.touch()
+    version = SimpleNamespace(version="152.0.4")
+    version_type = SimpleNamespace(from_path=mock.Mock(return_value=version))
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.camoufox_manager.importlib.import_module",
+        lambda name: (
+            SimpleNamespace(Version=version_type)
+            if name == "camoufox.pkgman"
+            else pytest.fail(f"unexpected module import: {name}")
+        ),
+    )
+
+    assert _launch_firefox_major_version(str(executable)) == 152
+    version_type.from_path.assert_called_once_with(runtime_dir)
 
 
 def test_camoufox_static_probe_reads_runtime_without_fetching(
@@ -491,6 +571,7 @@ class _Page:
         self.url = "https://example.test/article"
         self.goto_kwargs: dict[str, object] = {}
         self.route_handler = None
+        self.wait_for_function = mock.Mock()
         self.wait_for_selector = mock.Mock()
         self.wait_for_timeout = mock.Mock()
 
@@ -518,8 +599,15 @@ class _Page:
 class _Context:
     def __init__(self) -> None:
         self.page = _Page()
+        self.added_cookies: list[dict[str, object]] = []
+        self.events: list[str] = []
+
+    def add_cookies(self, cookies):
+        self.events.append("add_cookies")
+        self.added_cookies.extend(cookies)
 
     def new_page(self):
+        self.events.append("new_page")
         return self.page
 
     def cookies(self, _urls=None):
@@ -527,6 +615,120 @@ class _Context:
 
     def close(self) -> None:
         pass
+
+
+def test_camoufox_html_retry_applies_provider_seed_before_page_creation(
+    monkeypatch, tmp_path
+) -> None:
+    context = _Context()
+    config = BrowserRuntimeConfig(
+        provider="aip",
+        doi="10.1063/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "wait_for_atypon_body_dom_ready",
+        lambda *_args, **_kwargs: SimpleNamespace(attempted=True, ready=True),
+    )
+
+    result = _playwright_browser.fetch_html_with_playwright(
+        ["https://pubs.aip.org/aip/adv/article/1/1/example"],
+        publisher="aip",
+        config=config,
+        wait_seconds=0,
+        browser_context_seed={
+            "browser_cookies": [
+                {
+                    "name": "__cf_bm",
+                    "value": "private-value",
+                    "domain": ".aip.org",
+                    "path": "/",
+                },
+                {
+                    "name": "unrelated",
+                    "value": "drop-me",
+                    "domain": ".example.test",
+                    "path": "/",
+                },
+            ],
+            "browser_user_agent": "must-not-override-camoufox",
+        },
+    )
+
+    assert context.events[:2] == ["add_cookies", "new_page"]
+    assert [cookie["name"] for cookie in context.added_cookies] == ["__cf_bm"]
+    seed_trace = result.diagnostics["browser_runtime_trace"]["browser_context_seed"]
+    assert seed_trace == {
+        "provided": True,
+        "cookie_count": 1,
+        "applied": True,
+        "user_agent_reused": False,
+        "reason": "cookies_applied",
+    }
+    assert "private-value" not in str(result.diagnostics)
+    assert "must-not-override-camoufox" not in str(result.diagnostics)
+
+
+def test_camoufox_html_retry_rejects_invalid_seed_without_logging_cookie_value(
+    monkeypatch, tmp_path
+) -> None:
+    context = _Context()
+    context.add_cookies = mock.Mock(
+        side_effect=RuntimeError("invalid cookie private-cookie-value")
+    )
+    config = BrowserRuntimeConfig(
+        provider="aip",
+        doi="10.1063/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+
+    with pytest.raises(browser_runtime.BrowserRuntimeFailure) as captured:
+        _playwright_browser.fetch_html_with_playwright(
+            ["https://pubs.aip.org/aip/adv/article/1/1/example"],
+            publisher="aip",
+            config=config,
+            browser_context_seed={
+                "browser_cookies": [
+                    {
+                        "name": "__cf_bm",
+                        "value": "private-cookie-value",
+                        "domain": ".aip.org",
+                        "path": "/",
+                    }
+                ]
+            },
+        )
+
+    assert captured.value.kind == "invalid_browser_context_seed"
+    assert "private-cookie-value" not in captured.value.message
+    assert "private-cookie-value" not in str(captured.value.details)
+    assert captured.value.details["trace"]["browser_context_seed"] == {
+        "provided": True,
+        "cookie_count": 1,
+        "applied": False,
+        "user_agent_reused": False,
+        "reason": "cookie_injection_failed",
+        "error_type": "RuntimeError",
+    }
 
 
 def test_camoufox_html_navigation_uses_commit_and_keeps_images(
@@ -812,3 +1014,140 @@ def test_camoufox_figure_page_without_selector_uses_fixed_wait(
     trace = result.diagnostics["browser_runtime_trace"]
     assert trace["article_body_wait_enabled"] is False
     assert trace["selector_wait_enabled"] is False
+
+
+def test_ieee_required_selector_waits_for_matching_article_number(
+    monkeypatch, tmp_path
+) -> None:
+    context = _Context()
+    challenge_html = (
+        "<html><head><script src='https://example.token.awswaf.com/challenge.js'>"
+        "</script></head><body><div id='challenge-container'></div>"
+        "<noscript>Verify you're not a robot.</noscript></body></html>"
+    )
+    context.page.content = mock.Mock(return_value=challenge_html)
+
+    def complete_waf_challenge(_expression, *, arg, timeout):
+        assert arg == {"selector": "#article", "expectedText": "10772041"}
+        assert timeout == 15000
+        context.page.content.return_value = (
+            "<html><body><article id='article'>10772041</article></body></html>"
+        )
+
+    context.page.wait_for_function.side_effect = complete_waf_challenge
+    response = SimpleNamespace(
+        status=202,
+        headers={
+            "content-type": "text/html",
+            "server": "CloudFront",
+            "x-amzn-waf-action": "challenge",
+        },
+    )
+    response.all_headers = lambda: dict(response.headers)
+    context.page.goto = mock.Mock(return_value=response)
+    config = BrowserRuntimeConfig(
+        provider="ieee",
+        doi="10.1109/TIM.2024.3509573",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+
+    result = _playwright_browser.fetch_html_with_playwright(
+        ["https://ieeexplore.ieee.org/document/10772041/"],
+        publisher="ieee",
+        config=config,
+        wait_seconds=15,
+        readiness=BrowserHtmlReadiness(
+            wait_for_article_body=False,
+            selector="#article",
+            selector_text="10772041",
+            require_selector=True,
+        ),
+    )
+
+    context.page.wait_for_function.assert_called_once()
+    trace = result.diagnostics["browser_runtime_trace"]
+    assert trace["candidates"][0]["selector_readiness_ready"] is True
+    assert trace["candidates"][0]["selector_readiness_expected_text"] == "10772041"
+
+
+def test_ieee_required_selector_preserves_aws_waf_timeout_diagnostic(
+    monkeypatch, tmp_path
+) -> None:
+    browser_context = _Context()
+    browser_context.page.wait_for_function.side_effect = RuntimeError(
+        "selector timeout"
+    )
+    challenge_html = (
+        "<html><head><title></title>"
+        "<script src='https://example.token.awswaf.com/challenge.js'></script>"
+        "</head><body><div id='challenge-container'></div>"
+        "<noscript>JavaScript is disabled. Verify you're not a robot.</noscript>"
+        "</body></html>"
+    )
+    browser_context.page.content = mock.Mock(return_value=challenge_html)
+    browser_context.page.title = mock.Mock(return_value="")
+    response = SimpleNamespace(
+        status=202,
+        headers={
+            "content-type": "text/html",
+            "server": "CloudFront",
+            "x-amzn-waf-action": "challenge",
+        },
+    )
+    response.all_headers = lambda: dict(response.headers)
+    browser_context.page.goto = mock.Mock(return_value=response)
+    config = BrowserRuntimeConfig(
+        provider="ieee",
+        doi="10.1109/TIM.2024.3509573",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    runtime = RuntimeContext(
+        env={},
+        download_dir=tmp_path,
+        artifact_mode="all",
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, browser_context),
+    )
+    try:
+        with pytest.raises(browser_runtime.BrowserRuntimeFailure) as raised:
+            _playwright_browser.fetch_html_with_playwright(
+                ["https://ieeexplore.ieee.org/document/10772041/"],
+                publisher="ieee",
+                config=config,
+                wait_seconds=15,
+                readiness=BrowserHtmlReadiness(
+                    wait_for_article_body=False,
+                    selector="#article",
+                    selector_text="10772041",
+                    require_selector=True,
+                ),
+                runtime_context=runtime,
+            )
+
+        failure = raised.value
+        assert failure.kind == "aws_waf_challenge"
+        assert failure.details["challenge_provider"] == "aws_waf"
+        assert failure.details["legacy_reason_code"] == "cloudflare_challenge"
+        assert failure.details["response_status"] == 202
+        diagnostic = failure.details["failure_diagnostic"]
+        assert diagnostic["raw_html"]["byte_count"] > 0
+        assert diagnostic["page_summary"] is None
+        assert diagnostic["diagnostic_path"]
+    finally:
+        runtime.close()

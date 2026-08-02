@@ -269,6 +269,7 @@ def payload_from_envelope(
     envelope: FetchEnvelope, request: FetchPaperRequest
 ) -> dict[str, Any]:
     payload = envelope.to_dict()
+    payload["schema_version"] = 2
     if "article" not in request.requested_modes():
         payload["article"] = None
     return payload
@@ -396,6 +397,7 @@ def metadata_from_payload(value: Mapping[str, Any] | None) -> Metadata | None:
         ],
         abstract=normalize_text(value.get("abstract")) or None,
         journal=normalize_text(value.get("journal")) or None,
+        article_type=normalize_text(value.get("article_type")) or None,
         published=normalize_text(value.get("published")) or None,
         keywords=[
             normalize_text(item)
@@ -491,6 +493,20 @@ def _coerce_cached_int(value: Any) -> int | None:
     return int(text) if text.isdigit() else None
 
 
+def _cached_preview_accepted(entry: Mapping[str, Any]) -> bool:
+    value = entry.get("preview_accepted")
+    if isinstance(value, bool):
+        return value
+    if normalize_text(entry.get("download_tier")).lower() != "preview":
+        return False
+    from ..extraction.html.assets.dom import preview_dimensions_are_acceptable
+
+    return preview_dimensions_are_acceptable(
+        _coerce_cached_int(entry.get("width")) or 0,
+        _coerce_cached_int(entry.get("height")) or 0,
+    )
+
+
 def quality_from_payload(value: Mapping[str, Any] | None) -> Quality:
     payload = value or {}
     from ..models.schema import ContentKind, QualityConfidence
@@ -512,7 +528,6 @@ def quality_from_payload(value: Mapping[str, Any] | None) -> Quality:
             for item in payload.get("source_trail") or []
             if normalize_text(item)
         ],
-        trace=trace_from_payload(payload.get("trace")),
         token_estimate_breakdown=coerce_token_estimate_breakdown(
             payload.get("token_estimate_breakdown")
         ),
@@ -601,6 +616,14 @@ def article_from_payload(value: Mapping[str, Any] | None) -> ArticleModel | None
                 downloaded_bytes=_coerce_cached_int(entry.get("downloaded_bytes")),
                 width=_coerce_cached_int(entry.get("width")),
                 height=_coerce_cached_int(entry.get("height")),
+                preview_accepted=_cached_preview_accepted(entry),
+                browser_backend=normalize_text(entry.get("browser_backend")) or None,
+                final_fetcher=normalize_text(entry.get("final_fetcher")) or None,
+                recovery_attempts=[
+                    dict(attempt)
+                    for attempt in entry.get("recovery_attempts") or []
+                    if isinstance(attempt, Mapping)
+                ],
                 provenance=coerce_asset_provenance(entry.get("provenance")),
             )
             for entry in value.get("assets") or []
@@ -620,9 +643,27 @@ def envelope_from_payload(payload: Mapping[str, Any]) -> FetchEnvelope:
         else None
     )
     breakdown = coerce_token_estimate_breakdown(payload.get("token_estimate_breakdown"))
-    quality_payload = (
-        payload.get("quality") if isinstance(payload.get("quality"), Mapping) else None
+    raw_quality_payload = payload.get("quality")
+    quality_payload: Mapping[str, Any] | None = (
+        raw_quality_payload if isinstance(raw_quality_payload, Mapping) else None
     )
+    raw_article_payload = payload.get("article")
+    article_payload: Mapping[str, Any] = (
+        raw_article_payload if isinstance(raw_article_payload, Mapping) else {}
+    )
+    raw_article_quality_payload = article_payload.get("quality")
+    article_quality_payload: Mapping[str, Any] = (
+        raw_article_quality_payload
+        if isinstance(raw_article_quality_payload, Mapping)
+        else {}
+    )
+    trace = trace_from_payload(payload.get("trace"))
+    if not trace:
+        trace = trace_from_payload(
+            quality_payload.get("trace") if quality_payload is not None else None
+        )
+    if not trace:
+        trace = trace_from_payload(article_quality_payload.get("trace"))
     quality = quality_from_payload(quality_payload)
     if breakdown == TokenEstimateBreakdown():
         if article is not None:
@@ -655,13 +696,18 @@ def envelope_from_payload(payload: Mapping[str, Any]) -> FetchEnvelope:
             for item in payload.get("source_trail") or []
             if normalize_text(item)
         ],
-        trace=trace_from_payload(payload.get("trace")),
+        trace=trace,
         token_estimate=int(payload.get("token_estimate") or 0),
         token_estimate_breakdown=breakdown,
         quality=quality,
         article=article,
         markdown=payload.get("markdown"),
         metadata=metadata,
+        diagnostic_artifacts=[
+            dict(item)
+            for item in payload.get("diagnostic_artifacts") or []
+            if isinstance(item, Mapping)
+        ],
     )
 
 
@@ -713,7 +759,6 @@ def mark_envelope_cached_with_current_revision(envelope: FetchEnvelope) -> None:
     envelope.quality.extraction_revision = FETCH_ENVELOPE_EXTRACTION_REVISION
     envelope.warnings = list(envelope.quality.warnings)
     envelope.source_trail = list(envelope.quality.source_trail)
-    envelope.trace = list(envelope.quality.trace)
     envelope.token_estimate = envelope.quality.token_estimate
     envelope.token_estimate_breakdown = envelope.quality.token_estimate_breakdown
     if envelope.article is not None:
@@ -726,7 +771,6 @@ def mark_envelope_cached_with_current_revision(envelope: FetchEnvelope) -> None:
         envelope.quality = envelope.article.quality
         envelope.warnings = list(envelope.article.quality.warnings)
         envelope.source_trail = list(envelope.article.quality.source_trail)
-        envelope.trace = list(envelope.article.quality.trace)
         envelope.token_estimate = envelope.article.quality.token_estimate
         envelope.token_estimate_breakdown = (
             envelope.article.quality.token_estimate_breakdown

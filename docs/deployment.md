@@ -401,7 +401,7 @@ offline manifest schema 3 保留 `version`、`git_revision`、`built_at_utc`、`
 - wheel/sdist 构建与内容检查。
 - Ubuntu / Windows portable Mac contract gate，以及固定 `macos-15` arm64、CPython 3.14 的原生 cache-alias test + build + verifier gate；Windows / WSL 静态结果不能替代该 gate。
 
-`dependency-refresh.yml` 每周和手动运行 `uv lock --upgrade`，用于发现兼容范围内的新依赖问题，但不回写分支。`live.yml` 仅手动触发；依赖共享外部状态的 live 测试按设计使用 `-n 0` 串行运行，完整 golden corpus 继续复用项目并行配置。`offline.yml` 是可手动调用的 reusable workflow，独立构建 Linux、macOS、Windows full 离线包；macOS 四个 ABI 产物固定在 `macos-15` 构建并运行原生 tar verifier。`release.yml` 只在稳定版本标签或显式手动发布时调用离线构建，生成 Python distributions、CycloneDX SBOM、`SHA256SUMS` 与 GitHub build provenance，再发布不可变资产。所有第三方 actions 固定到完整 commit SHA。
+`dependency-refresh.yml` 每周和手动运行 `uv lock --upgrade`，用于发现兼容范围内的新依赖问题，但不回写分支。`live.yml` 可手动触发，并按低频 schedule 运行 publisher drift/live 与完整 golden；依赖共享外部状态的 live 测试按设计使用 `-n 0` 串行运行，完整 golden corpus 继续复用项目并行配置。`offline.yml` 是可手动调用的 reusable workflow，独立构建 Linux、macOS、Windows full 离线包；macOS 四个 ABI 产物固定在 `macos-15` 构建并运行原生 tar verifier。`release.yml` 只在稳定版本标签或显式手动发布时调用离线构建，生成 Python distributions、CycloneDX SBOM、`SHA256SUMS` 与 GitHub build provenance，再发布不可变资产。所有第三方 actions 固定到完整 commit SHA。
 
 在 Windows / WSL 修改 Mac 相关范围时，先运行
 `python scripts/validate_macos_adaptation.py`，再运行
@@ -423,7 +423,7 @@ scripts/clean-local-artifacts.sh --days 7
 
 `elsevier` 不依赖本地浏览器链路；它只需要官方 API 凭据，并走 `官方 DOI XML/API -> PII XML/API fallback -> 官方 API PDF fallback -> metadata-only`。
 
-`ieee` 不需要 IEEE API key；它走 `direct landing -> selected-browser landing recovery -> direct REST HTML -> selected-browser HTML -> direct HTTP PDF -> selected-browser PDF`。正文 figure/table/formula、multimedia discovery 和 supplementary file 同样 direct-first，只在 `401/403`、HTML challenge 或网络失败时使用所选浏览器；`404/410/429` 不启动浏览器。资产 browser recovery 会让图片和附件 fetcher 串行复用同一篇已就绪论文页的 context/page、最新 cookies 和论文页 Referer，并保持共享 page 不跳转到资产 URL；它不自动登录、不处理验证码，也不绕过访问权限。
+`ieee` 不需要 IEEE API key；它走 `direct landing -> selected-browser landing recovery -> direct REST HTML -> selected-browser HTML -> direct HTTP PDF -> selected-browser PDF`。preflight、browser landing、正式 HTML 和资产 seed 都允许页面在最长 15 秒内从初始 HTTP 202/shell 转成文章页，且只有包含当前文章号的 `#article` 才算 ready；单独观察到 REST resource 或其它文章 DOM 不会提前放行。正文 figure/table/formula、multimedia discovery 和 supplementary file 同样 direct-first，只在 `401/403`、HTML challenge 或网络失败时使用所选浏览器；`404/410/429` 不启动浏览器。资产 browser recovery 会让图片和附件 fetcher 串行复用同一篇已就绪论文页的 context/page、最新 cookies 和论文页 Referer，并保持共享 page 不跳转到资产 URL。首次 large 图片恢复会先在同页加载一次对应 preview，再立即请求 large；后续资产复用该预热页，large 最终失败时才把缓存 preview 作为 fallback。公开资产可通过 `browser_backend`、`final_fetcher` 和 `recovery_attempts` 审计 direct/browser/preview 恢复过程。持续存在的 AWS WAF 页报告 `reason_code=aws_waf_challenge`、`status=challenge` 和 provider/legacy 兼容诊断；该链路不自动登录、不处理验证码，也不绕过访问权限。
 
 `wiley`、`science`、`pnas`、`ams`、`annualreviews`、`royalsocietypublishing`、`acs`、`iop`、`aip`、`mdpi` 进入 provider-owned Camoufox browser workflow。完整配置与 headed 预检见 [`browser-backends.md`](browser-backends.md)。是否能拿到全文仍取决于 publisher 访问权限、paywall/challenge 与远端站点行为。
 
@@ -567,14 +567,23 @@ paper-fetch --query "10.1186/1471-2105-11-421"
 
 CLI 默认打印 Markdown 到终端；如果指定 `--output-dir` 且未显式传 `--output`，主输出会用安全化论文 stem 加 `.md`、`.json` 或 `.both.json` 后缀写入该目录，正文不会打印到终端。完整输出、artifact、资产下载和错误码语义见 [`cli.md`](cli.md)。
 
-如果你在仓库源码目录里做 repo-local 验证，先安装测试依赖，并推荐显式带上 `PYTHONPATH=src`。默认 `pytest` 覆盖 `tests/unit` + `tests/integration` + `tests/devtools` 并启用多进程并行；`tests/live` 需要显式指定路径并串行运行：
+如果你在仓库源码目录里做 repo-local 验证，先从 lockfile 同步并激活仓库 `.venv`。不要使用系统 site-packages 代替项目环境；当前项目要求 MCP 2.x，而系统解释器中残留的 MCP 1.x 会在测试收集前产生不兼容。完整 unit 命令复用 `pyproject.toml` 的 xdist 配置：
 
 ```bash
-python3 -m pip install '.[dev]'
+uv sync --frozen
+source .venv/bin/activate
+PYTHONPATH=src python3 -m pytest tests/unit -q
+```
+
+完整本地门和其它分层验证继续使用：
+
+```bash
 bash scripts/dev-preflight.sh
 PYTHONPATH=src pytest tests/unit/test_cli.py tests/unit/test_service_*.py tests/unit/test_mcp_*.py
 PYTHONPATH=src pytest
 ```
+
+`paper-fetch doctor` / install provenance 在 source checkout 下会记录当前 `sys.prefix`。仓库 `.venv` 已存在但未激活时报告 `source_checkout_project_venv_not_active` 并给出 `source .venv/bin/activate`；同时从 `pyproject.toml` 读取 `mcp>=2,<3`，用当前解释器的已安装版本报告 `project_dependency_missing` 或 `project_dependency_incompatible`。离线 bundle 和普通已安装环境不执行仓库 `.venv` 一致性检查。
 
 `scripts/dev-preflight.sh` 是本地完整门禁入口：优先使用 repo-local `.venv/bin/python`，不存在时退回 `python3`，也可显式设置 `PYTHON_BIN=/path/to/python`。脚本依次运行 `ruff format --check`、`ruff check`、完整生产包 `mypy`（`pyproject.toml` 配置 `no_site_packages = true`）、复杂度、provider route/catalog/manifest/fixture/docs 治理与版本一致性门禁、`tests/unit --durations=30`、`tests/devtools --durations=30`、`scripts/validate_extraction_rules.py --ci` 和 `tests/integration --durations=30`；如果缺少 ruff / mypy / pytest，会提示先运行 `scripts/dev-bootstrap.sh` 或指定已安装依赖的解释器。快速迭代可用 `--fast`，需要单独排除 integration 或 type check 时使用 `--skip-integration` / `--skip-typecheck`。
 
@@ -604,13 +613,45 @@ browser runtime 与 installer 的 branch coverage；`.coverage`、`coverage.xml`
 PAPER_FETCH_RUN_FULL_GOLDEN=1 PYTHONPATH=src python3 -m pytest tests/integration/test_golden_corpus.py -q
 ```
 
-未设置 `PAPER_FETCH_RUN_LIVE=1` 时，`tests/live/test_live_publishers.py` 和 `tests/live/test_live_mcp.py` 应稳定 skip。额外验证 live smoke 时，`arxiv` 不需要 browser runtime；包括 `ams` 在内的 browser-backed provider 启动 Camoufox 并按 publisher 复用独立 storage-state。`ieee` 不需要 API key，但 fulltext/资产 smoke 预期当前机器具备合法 Xplore 访问上下文。live 测试依赖外部状态，建议串行运行：
+未设置 `PAPER_FETCH_RUN_LIVE=1` 时，`tests/live/test_live_publishers.py` 和 `tests/live/test_live_mcp.py` 应稳定 skip。额外验证 live 时，`arxiv` 不需要 browser runtime；包括 `ams` 在内的 browser-backed provider 先按静态报告中的 `browser_runtime.available` 检查本地能力，再启动 Camoufox 做真实页面预检。pytest 隔离 XDG data/runtime、通用 profile 和所有 provider storage-state；Camoufox 的 browser bundle、版本元数据、字体和默认 addon 则复用隔离前由官方包管理器确认的 dependency cache，避免 live/MCP 子进程重复下载 runtime。每家 provider 的状态仍写入临时 `<provider>-camoufox/storage-state.json`，不会进入该共享 dependency cache。
+
+publisher catalog 不是宽松的全文 smoke：每个已执行样本都请求 `asset_profile=body` 并硬性要求 `acceptance.overall=complete`，同时写出 `live-acceptance.json`。JSON 会区分 catalog 总数、已记录 provider、未记录 provider、已记录结果是否全 complete，以及全 catalog 是否全部执行并 complete；因此 challenge skip 不会被伪装为全量完成。非 challenge/auth/cancelled 的 preflight 失败必须保留可读取的隐私安全诊断 artifact，否则测试本身失败。live 测试依赖共享外部状态，必须串行运行；JUnit 使用与 `record_property` 兼容的 legacy family：
 
 ```bash
-PAPER_FETCH_RUN_LIVE=1 PYTHONPATH=src python3 -m pytest tests/live/test_live_publishers.py tests/live/test_live_mcp.py -q -n 0 --force-enable-socket
+PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_LIVE_ARTIFACT_DIR=artifacts/live-publishers \
+  PYTHONPATH=src python3 -m pytest \
+  tests/live/test_live_publishers.py tests/live/test_live_mcp.py \
+  -q -n 0 -o junit_family=legacy \
+  --junitxml=artifacts/live-publishers.xml
 ```
 
-GitHub Actions 的手动 live job 通过 `run_live` 输入显式启用全部 live tests；只有在具备相应出版社访问授权和凭据的 runner/network 上才应运行。
+GitHub Actions 的手动 live job 通过 `run_live` 输入显式启用普通 publisher/MCP live tests；IEEE 受保护专项不在该 job 中。只有在具备相应出版社访问授权和凭据的 runner/network 上才应运行。
+
+需要验证 AIP 冷启动 HTML 稳定性时，额外显式启用五个隔离 profile 的串行测试；每次都必须得到 `aip_html` 与完整 acceptance，不能以 `aip_pdf` 降级通过：
+
+```bash
+PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_RUN_AIP_COLD_STABILITY=1 \
+  PAPER_FETCH_LIVE_ARTIFACT_DIR=artifacts/aip-cold-start \
+  PYTHONPATH=src python3 -m pytest \
+  tests/live/test_live_publishers.py::test_aip_cold_start_stability_uses_html_for_five_fresh_profiles \
+  -q -n 0
+```
+
+该测试依赖同一远端 publisher lane 和本机 Camoufox runtime，必须使用 `-n 0`；失败诊断写入显式 artifact 目录。定期/手动 GitHub live job 会启用此检查并上传诊断，不影响普通 push/PR CI。
+
+IEEE 大型 GIF 资产专项与普通 publisher suite 分离；未确认 runner 具备合法 Xplore 访问上下文时不得启用。在获授权的隔离 runner 上显式运行：
+
+```bash
+PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_RUN_IEEE_BROWSER_LIVE=1 \
+  PAPER_FETCH_LIVE_ARTIFACT_DIR=artifacts/live-ieee-protected \
+  PYTHONPATH=src python3 -m pytest \
+  tests/live/test_live_ieee_protected.py -q -n 0 \
+  -o junit_family=legacy --junitxml=artifacts/live-ieee-protected.xml
+```
+
+该专项要求统一 `acceptance.overall=complete`、13 个正文资产全部为 `full_size`，目标大型 GIF 有有效 header、可解析且非零的尺寸，并由生成的 Markdown 使用本地路径引用。测试保持 direct-first：本轮 direct 成功时接受 `final_fetcher=direct_http`；只有 direct 失败并进入恢复时，才硬性核对 Camoufox backend 以及 `direct(403) -> browser` trace。每次 `run-*` 目录会保存 `asset-hashes.json`，其中包含目标 SHA-256、全部正文资产 size/hash、fetcher/recovery trace 和 acceptance。普通 `live.yml` 不包含该模块；授权 runner 应单独保存 JUnit 和整个 `artifacts/live-ieee-protected/`。
+
+专项 preflight 若在 15 秒 readiness 窗口后仍停留于 AWS WAF HTTP 202 页面，会保留页面关闭前采集的脱敏诊断并以 `aws_waf_challenge` skip；这代表当前网络/会话仍未取得文章 DOM，不可解释为已成功访问。只有后续抓取和上述资产硬门全部通过，才可关闭 PF-LIVE-007。
 
 ## 相关文档
 

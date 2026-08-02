@@ -440,7 +440,11 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertIs(mocked_fetch.call_args_list[0].kwargs["disable_media"], True)
         self.assertEqual(mocked_fetch.call_args_list[1].kwargs["wait_seconds"], 8)
         self.assertEqual(mocked_fetch.call_args_list[1].kwargs["warm_wait_seconds"], 1)
-        self.assertLess(
+        self.assertGreater(
+            mocked_fetch.call_args_list[1].kwargs["max_timeout_ms"],
+            100000,
+        )
+        self.assertLessEqual(
             mocked_fetch.call_args_list[1].kwargs["max_timeout_ms"],
             runtime.timeout_ms,
         )
@@ -2003,7 +2007,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 call.kwargs["asset_download_concurrency"]
                 for call in mocked_download_assets.call_args_list
             ],
-            [1, 1],
+            [6, 6],
         )
         self.assertEqual(
             [call.args[0] for call in mocked_download_assets.call_args_list],
@@ -2083,7 +2087,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 call.kwargs["asset_download_concurrency"]
                 for call in mocked_download_assets.call_args_list
             ],
-            [1, 1],
+            [6, 6],
         )
         self.assertEqual(
             [call.args[0] for call in mocked_download_assets.call_args_list],

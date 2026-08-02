@@ -168,13 +168,18 @@
 ### `semantic_losses`
 
 - `ArticleModel.quality` 下的语义降级计数。
-- `table_layout_degraded_count` 表示 Markdown 版式降级，但单元格语义仍保留。
+- `table_layout_degraded_count` 表示源表 span/列定义非法或不一致，虽已修复为可读表格，但原布局无法可靠验证；合法 `rowspan`/`colspan` 成功展开只属于规范化，不计为降级。
 - `table_semantic_loss_count` 才表示表格语义内容发生丢失。
 
 ### `asset_failures`
 
 - `ArticleModel.quality.asset_failures` 与顶层 `quality.asset_failures` 下的失败资产诊断。
 - 会保留 `status`、`content_type`、`title_snippet`、`body_snippet`、`reason`，以及 asset-level challenge recovery 的 `recovery_attempts`。
+
+### 资产恢复诊断
+
+- `article.assets[*].browser_backend`、`final_fetcher` 和 `recovery_attempts` 都是可选的向后兼容字段；纯 direct 成功可以只记录 `final_fetcher="direct_http"`，没有恢复动作的旧 payload 也可以不包含这些字段。
+- `recovery_attempts` 按实际顺序保留 `direct`、`browser`，以及必要时的 `preview_fallback`；cache、CLI JSON 和 MCP payload 会原样往返这些结构化事实。
 
 ### `max_tokens`
 

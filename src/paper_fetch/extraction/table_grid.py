@@ -422,7 +422,6 @@ def normalize_table(
 
     normalized_reasons = _unique_reasons(result_reasons)
     degraded_reasons = {
-        TableConversionReason.MERGED_SPAN_EXPANDED,
         TableConversionReason.INVALID_SPAN,
         TableConversionReason.INVALID_DECLARED_WIDTH,
         TableConversionReason.INVALID_COLUMN_SPEC,

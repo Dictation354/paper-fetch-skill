@@ -298,7 +298,7 @@ def _pdf_deadline(
 ) -> float:
     timeout_value = max(0.0, float(timeout_seconds))
     if context is not None:
-        return context.ensure_deadline(timeout_value)
+        return context.initialize_deadline(timeout_value)
     return time.monotonic() + timeout_value
 
 

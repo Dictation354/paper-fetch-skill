@@ -6,17 +6,20 @@ import contextlib
 from dataclasses import dataclass, replace
 from importlib import util as importlib_util
 from pathlib import Path
-from typing import Any
+import re
+from typing import Any, Literal
 from collections.abc import Callable, Iterable, Mapping
 
 from .auth import AUTH_TARGETS, AuthTarget
+from .artifacts import ArtifactMode
 from .config import (
     BROWSER_TIMEOUT_MS_ENV_VAR,
     BROWSER_USER_AGENT_ENV_VAR,
     build_runtime_env,
     configured_browser_backend,
 )
-from .http import RequestCancelledError
+from .http import RequestCancelledError, diagnostic_url_payload
+from .page_diagnostics import PageDiagnosticRequest, capture_page_diagnostic
 from .publisher_identity import extract_doi, extract_doi_from_url
 from .provider_catalog import browser_preflight_provider_names
 from .providers.base import ProviderFailure
@@ -38,23 +41,163 @@ from .providers.browser_workflow.shared import (
     default_browser_workflow_deps,
 )
 from .providers.registry import build_clients
-from .reason_codes import ERROR
+from .reason_codes import (
+    BROWSER_CONTEXT_CREATE_FAILED,
+    BROWSER_PAGE_CREATE_FAILED,
+    CDP_CONNECT_FAILED,
+    ERROR,
+    MANAGED_CHROME_CDP_TIMEOUT,
+    MANAGED_CHROME_EXITED_BEFORE_CDP,
+    MANAGED_CHROME_PROFILE_IN_USE,
+)
 from .runtime import RuntimeContext
 from .utils import normalize_text, provider_display_name
+
+
+BrowserPreflightStatus = Literal[
+    "ready",
+    "challenge",
+    "auth_required",
+    "network_timeout",
+    "extraction_error",
+    "runtime_error",
+    "cancelled",
+]
+
+_CHALLENGE_REASON_CODES = frozenset(
+    {
+        "aws_waf_challenge",
+        "cloudflare_challenge",
+        "iop_captcha_challenge",
+        "iop_radware_challenge",
+    }
+)
+_AUTH_REQUIRED_REASON_CODES = frozenset(
+    {
+        "abstract_only",
+        "no_access",
+        "publisher_access_denied",
+        "publisher_paywall",
+        "redirected_to_abstract",
+    }
+)
+_NETWORK_TIMEOUT_REASON_CODES = frozenset(
+    {
+        "timeout",
+        "pool_timeout",
+        "browser_connect_timeout",
+        "browser_navigation_timeout",
+        "browser_rest_wait_timeout",
+    }
+)
+_EXTRACTION_REASON_CODES = frozenset(
+    {
+        "article_container_not_found",
+        "browser_article_not_ready",
+        "empty_article_shell",
+        "insufficient_body",
+        "structured_article_not_fulltext",
+        "structured_missing_body_sections",
+        "publisher_not_found",
+    }
+)
+IEEE_PREFLIGHT_READINESS_WAIT_SECONDS = 15
+_CANCELLED_REASON_CODES = frozenset({"cancelled", "request_cancelled"})
+_RUNTIME_REASON_CODES = frozenset(
+    {
+        BROWSER_CONTEXT_CREATE_FAILED,
+        BROWSER_PAGE_CREATE_FAILED,
+        CDP_CONNECT_FAILED,
+        MANAGED_CHROME_CDP_TIMEOUT,
+        MANAGED_CHROME_EXITED_BEFORE_CDP,
+        MANAGED_CHROME_PROFILE_IN_USE,
+        "browser_backend_invalid",
+        "browser_dependency_missing",
+        "browser_runtime_configuration_error",
+        "state_save_failed",
+    }
+)
 
 
 @dataclass(frozen=True)
 class BrowserPreflightResult:
     provider: str
     provider_label: str
-    ok: bool
+    status: BrowserPreflightStatus
+    reason_code: str
+    stage: str | None = None
+    message: str | None = None
     target_url: str | None = None
     final_url: str | None = None
     title: str | None = None
     storage_state_path: Path | None = None
     diagnostics: dict[str, Any] | None = None
-    reason: str | None = None
-    message: str | None = None
+
+    @property
+    def ready(self) -> bool:
+        return self.status == "ready"
+
+
+@dataclass(frozen=True)
+class BrowserPreflightRuntimeOptions:
+    env: Mapping[str, str] | None = None
+    download_dir: Path | None = None
+    artifact_mode: ArtifactMode = "none"
+
+
+def classify_browser_preflight_failure(
+    reason_code: str | None,
+    *,
+    stage: str | None = None,
+    diagnostics: Mapping[str, Any] | None = None,
+) -> BrowserPreflightStatus:
+    """Classify one stable failure code without inspecting message text."""
+
+    code = normalize_text(reason_code).lower() or ERROR
+    if code in _CANCELLED_REASON_CODES:
+        return "cancelled"
+    if code in _CHALLENGE_REASON_CODES:
+        return "challenge"
+    if code in _AUTH_REQUIRED_REASON_CODES:
+        return "auth_required"
+    if code in _NETWORK_TIMEOUT_REASON_CODES:
+        return "network_timeout"
+    if code in _EXTRACTION_REASON_CODES:
+        return "extraction_error"
+    if code in _RUNTIME_REASON_CODES:
+        return "runtime_error"
+
+    details = diagnostics if isinstance(diagnostics, Mapping) else {}
+    normalized_stage = normalize_text(stage).lower()
+    page_reached = bool(
+        details.get("final_url")
+        or details.get("response_status")
+        or details.get("readiness")
+        or details.get("extraction")
+        or normalized_stage
+        in {
+            "availability",
+            "dom_readiness",
+            "extraction",
+            "html_extraction",
+            "page",
+        }
+    )
+    return "extraction_error" if page_reached else "runtime_error"
+
+
+def browser_preflight_next_action(provider: str, status: BrowserPreflightStatus) -> str:
+    if status == "ready":
+        return "run the requested fetch"
+    if status in {"challenge", "auth_required"}:
+        return f"paper-fetch auth {provider}"
+    if status == "network_timeout":
+        return f"retry browser-preflight or fetch for {provider}"
+    if status == "extraction_error":
+        return f"inspect page diagnostics and selectors for {provider}"
+    if status == "cancelled":
+        return f"rerun browser-preflight for {provider}"
+    return f"inspect provider_status for {provider} and fix the local runtime"
 
 
 def _runtime_with_preflight_storage(
@@ -272,20 +415,125 @@ def _failure_result(
     provider: str,
     *,
     target_url: str | None = None,
+    final_url: str | None = None,
+    title: str | None = None,
     storage_state_path: Path | None = None,
-    reason: str | None = None,
+    reason_code: str | None = None,
+    stage: str | None = None,
     message: str | None = None,
     diagnostics: Mapping[str, Any] | None = None,
+    diagnostic_context: RuntimeContext | None = None,
 ) -> BrowserPreflightResult:
+    normalized_reason = normalize_text(reason_code).lower() or ERROR
+    normalized_stage = normalize_text(stage) or None
+    diagnostic_payload = dict(diagnostics or {})
+    existing_page_diagnostic = diagnostic_payload.get("failure_diagnostic")
+    has_captured_page_diagnostic = bool(
+        isinstance(existing_page_diagnostic, Mapping)
+        and (
+            existing_page_diagnostic.get("raw_html") is not None
+            or existing_page_diagnostic.get("html_shape") is not None
+            or normalize_text(
+                str(existing_page_diagnostic.get("diagnostic_path") or "")
+            )
+        )
+    )
+    if (
+        diagnostic_context is not None
+        and not normalize_text(str(diagnostic_payload.get("diagnostic_path") or ""))
+        and not has_captured_page_diagnostic
+    ):
+        diagnostic_backend = None
+        with contextlib.suppress(Exception):
+            diagnostic_backend = configured_browser_backend(
+                diagnostic_context.env or {}
+            )
+        failure_diagnostic = capture_page_diagnostic(
+            diagnostic_context,
+            PageDiagnosticRequest(
+                provider=provider,
+                route="preflight",
+                attempt=1,
+                failure_code=normalized_reason,
+                stage=normalized_stage or "preflight",
+                html_text=None,
+                doi=extract_doi(target_url or "") or None,
+                target_url=target_url,
+                final_url=final_url,
+                backend=diagnostic_backend,
+                details=diagnostic_payload,
+            ),
+        )
+        diagnostic_payload["failure_diagnostic"] = failure_diagnostic
+        if diagnostic_path := normalize_text(
+            str(failure_diagnostic.get("diagnostic_path") or "")
+        ):
+            diagnostic_payload["diagnostic_path"] = diagnostic_path
+    if target_url:
+        diagnostic_payload.setdefault(
+            "target_url",
+            diagnostic_url_payload(target_url),
+        )
+    if final_url:
+        diagnostic_payload.setdefault(
+            "final_url",
+            diagnostic_url_payload(final_url),
+        )
     return BrowserPreflightResult(
         provider=provider,
         provider_label=provider_display_name(provider),
-        ok=False,
-        target_url=target_url,
-        storage_state_path=storage_state_path,
-        diagnostics=dict(diagnostics or {}),
-        reason=normalize_text(reason) or ERROR,
+        status=classify_browser_preflight_failure(
+            normalized_reason,
+            stage=normalized_stage,
+            diagnostics=diagnostic_payload,
+        ),
+        reason_code=normalized_reason,
+        stage=normalized_stage,
         message=normalize_text(message) or "Browser preflight failed.",
+        target_url=diagnostic_url_payload(target_url).get("url")
+        if target_url
+        else None,
+        final_url=diagnostic_url_payload(final_url).get("url") if final_url else None,
+        title=normalize_text(title) or None,
+        storage_state_path=storage_state_path,
+        diagnostics=diagnostic_payload,
+    )
+
+
+def _ready_result(
+    provider: str,
+    *,
+    target_url: str | None,
+    final_url: str | None,
+    title: str | None,
+    storage_state_path: Path | None,
+    diagnostics: Mapping[str, Any] | None,
+) -> BrowserPreflightResult:
+    diagnostic_payload = dict(diagnostics or {})
+    if target_url:
+        diagnostic_payload.setdefault(
+            "target_url",
+            diagnostic_url_payload(target_url),
+        )
+    if final_url:
+        diagnostic_payload.setdefault(
+            "final_url",
+            diagnostic_url_payload(final_url),
+        )
+    return BrowserPreflightResult(
+        provider=provider,
+        provider_label=provider_display_name(provider),
+        status="ready",
+        reason_code="browser_preflight_ready",
+        stage="complete",
+        message="Publisher browser HTML preflight completed successfully.",
+        target_url=diagnostic_url_payload(target_url).get("url")
+        if target_url
+        else None,
+        final_url=diagnostic_url_payload(final_url).get("url") if final_url else None,
+        title=title,
+        storage_state_path=storage_state_path,
+        diagnostics=diagnostic_payload,
     )
 
 
@@ -311,22 +559,38 @@ def _preflight_generic_browser_route(
     storage_state_path: Path | None,
     save_storage_state: bool,
     cancel_check: Callable[[], bool] | None,
+    download_dir: Path | None,
+    artifact_mode: ArtifactMode,
 ) -> BrowserPreflightResult:
     """Preflight an optional browser recovery route without requiring its client
     to inherit the browser-workflow provider base class.
     """
 
-    runtime = load_runtime_config(env, provider=provider_key, doi=target.doi)
-    runtime = _runtime_with_preflight_storage(
-        runtime,
-        env=env,
-        provider=provider_key,
-        storage_state_path=storage_state_path,
-        save_storage_state=save_storage_state,
+    context = RuntimeContext(
+        env=dict(env),
+        cancel_check=cancel_check,
+        download_dir=download_dir,
+        artifact_mode=artifact_mode,
     )
-    ensure_runtime_ready(runtime)
-    context = RuntimeContext(env=dict(env), cancel_check=cancel_check)
+    runtime: BrowserRuntimeConfig | None = None
     try:
+        runtime = load_runtime_config(env, provider=provider_key, doi=target.doi)
+        runtime = _runtime_with_preflight_storage(
+            runtime,
+            env=env,
+            provider=provider_key,
+            storage_state_path=storage_state_path,
+            save_storage_state=save_storage_state,
+        )
+        ensure_runtime_ready(runtime)
+        ieee_article_match = (
+            re.search(r"/document/([^/?#]+)", target.url)
+            if provider_key == "ieee"
+            else None
+        )
+        ieee_article_number = normalize_text(
+            ieee_article_match.group(1) if ieee_article_match else ""
+        )
         html_result = fetch_html_with_browser(
             [target.url],
             publisher=provider_key,
@@ -334,8 +598,12 @@ def _preflight_generic_browser_route(
             readiness=BrowserHtmlReadiness(
                 wait_for_article_body=False,
                 selector="#article" if provider_key == "ieee" else None,
+                selector_text=ieee_article_number or None,
+                require_selector=provider_key == "ieee",
             ),
-            wait_seconds=2,
+            wait_seconds=(
+                IEEE_PREFLIGHT_READINESS_WAIT_SECONDS if provider_key == "ieee" else 2
+            ),
             runtime_context=context,
         )
         diagnostics = dict(html_result.diagnostics or {})
@@ -350,23 +618,78 @@ def _preflight_generic_browser_route(
                 return _failure_result(
                     provider_key,
                     target_url=target.url,
+                    final_url=html_result.final_url,
                     storage_state_path=_storage_state_path(runtime),
-                    reason="state_save_failed",
+                    reason_code="state_save_failed",
+                    stage="storage_state_save",
                     message=(
                         "Publisher page passed preflight, but the accepted browser "
                         "storage state could not be saved."
                     ),
                     diagnostics=diagnostics,
+                    diagnostic_context=context,
                 )
-        return BrowserPreflightResult(
-            provider=provider_key,
-            provider_label=provider_display_name(provider_key),
-            ok=True,
+        return _ready_result(
+            provider_key,
             target_url=target.url,
             final_url=html_result.final_url,
             title=html_result.title,
             storage_state_path=_storage_state_path(runtime),
             diagnostics=diagnostics,
+        )
+    except RequestCancelledError:
+        raise
+    except BrowserRuntimeFailure as exc:
+        final_url_value = exc.details.get("final_url")
+        final_url = (
+            normalize_text(str(final_url_value.get("url") or ""))
+            if isinstance(final_url_value, Mapping)
+            else normalize_text(str(final_url_value or ""))
+        )
+        return _failure_result(
+            provider_key,
+            target_url=target.url,
+            final_url=final_url or None,
+            title=normalize_text(str(exc.details.get("title_summary") or "")) or None,
+            storage_state_path=(
+                _storage_state_path(runtime)
+                if runtime is not None
+                else storage_state_path
+            ),
+            reason_code=exc.kind,
+            stage=normalize_text(str(exc.details.get("stage") or "")) or None,
+            message=exc.message,
+            diagnostics=exc.details,
+            diagnostic_context=context,
+        )
+    except ProviderFailure as exc:
+        return _failure_result(
+            provider_key,
+            target_url=target.url,
+            storage_state_path=(
+                _storage_state_path(runtime)
+                if runtime is not None
+                else storage_state_path
+            ),
+            reason_code=exc.code,
+            stage=exc.stage,
+            message=exc.message,
+            diagnostics=exc.details,
+            diagnostic_context=context,
+        )
+    except Exception as exc:  # noqa: BLE001 - preserve one provider result.
+        return _failure_result(
+            provider_key,
+            target_url=target.url,
+            storage_state_path=(
+                _storage_state_path(runtime)
+                if runtime is not None
+                else storage_state_path
+            ),
+            reason_code=ERROR,
+            stage="preflight",
+            message=normalize_text(str(exc)) or exc.__class__.__name__,
+            diagnostic_context=context,
         )
     finally:
         context.close()
@@ -464,6 +787,8 @@ def preflight_browser_provider(
     storage_state_path: Path | None = None,
     save_storage_state: bool = True,
     cancel_check: Callable[[], bool] | None = None,
+    download_dir: Path | None = None,
+    artifact_mode: ArtifactMode = "none",
 ) -> BrowserPreflightResult:
     provider_key = normalize_text(provider).lower()
     if provider_key not in browser_preflight_provider_names():
@@ -473,7 +798,8 @@ def preflight_browser_provider(
     if target is None:
         return _failure_result(
             provider_key,
-            reason=ERROR,
+            reason_code=ERROR,
+            stage="target_resolution",
             message=(
                 f"No built-in browser preflight URL or usable custom URL/DOI is "
                 f"configured for {provider_display_name(provider_key)}."
@@ -491,6 +817,8 @@ def preflight_browser_provider(
                 storage_state_path=storage_state_path,
                 save_storage_state=save_storage_state,
                 cancel_check=cancel_check,
+                download_dir=download_dir,
+                artifact_mode=artifact_mode,
             )
         client = _provider_client(provider_key, env=env)
         deps = _preflight_deps(
@@ -499,7 +827,12 @@ def preflight_browser_provider(
             explicit_storage_state_path=storage_state_path,
             save_storage_state=save_storage_state,
         )
-        context = RuntimeContext(env=dict(env), cancel_check=cancel_check)
+        context = RuntimeContext(
+            env=dict(env),
+            cancel_check=cancel_check,
+            download_dir=download_dir,
+            artifact_mode=artifact_mode,
+        )
         bootstrap = deps.bootstrap_browser_workflow(
             client,
             target.doi,
@@ -509,13 +842,34 @@ def preflight_browser_provider(
         )
         raw_payload = bootstrap.html_payload
         if raw_payload is None:
+            failure_diagnostics = dict(bootstrap.html_failure_diagnostics or {})
+            page_diagnostic = failure_diagnostics.get("page_diagnostic")
+            if not isinstance(page_diagnostic, Mapping):
+                page_diagnostic = {}
+            final_diagnostic = page_diagnostic.get("final")
+            if not isinstance(final_diagnostic, Mapping):
+                final_diagnostic = {}
+            browser_failure = failure_diagnostics.get("browser_failure")
+            if not isinstance(browser_failure, Mapping):
+                browser_failure = {}
+            failure_stage = (
+                normalize_text(str(failure_diagnostics.get("stage") or ""))
+                or normalize_text(str(browser_failure.get("stage") or ""))
+                or "html_extraction"
+            )
             return _failure_result(
                 provider_key,
                 target_url=target.url,
+                final_url=normalize_text(str(final_diagnostic.get("url") or ""))
+                or None,
+                title=normalize_text(str(page_diagnostic.get("title_summary") or ""))
+                or None,
                 storage_state_path=storage_path["value"],
-                reason=bootstrap.html_failure_reason,
+                reason_code=bootstrap.html_failure_reason,
+                stage=failure_stage,
                 message=bootstrap.html_failure_message,
-                diagnostics=bootstrap.html_failure_diagnostics,
+                diagnostics=failure_diagnostics,
+                diagnostic_context=context,
             )
         save_result = _preflight_storage_state_save(raw_payload)
         if (
@@ -527,12 +881,14 @@ def preflight_browser_provider(
                 provider_key,
                 target_url=target.url,
                 storage_state_path=storage_path["value"],
-                reason="state_save_failed",
+                reason_code="state_save_failed",
+                stage="storage_state_save",
                 message=(
                     "Publisher page passed preflight, but the accepted browser "
                     "storage state could not be saved."
                 ),
                 diagnostics={"storage_state_save": dict(save_result)},
+                diagnostic_context=context,
             )
     except RequestCancelledError:
         raise
@@ -541,17 +897,22 @@ def preflight_browser_provider(
             provider_key,
             target_url=target.url,
             storage_state_path=storage_path["value"],
-            reason=exc.kind,
+            reason_code=exc.kind,
+            stage=normalize_text(str(exc.details.get("stage") or "")) or None,
             message=exc.message,
             diagnostics=getattr(exc, "details", None),
+            diagnostic_context=context,
         )
     except ProviderFailure as exc:
         return _failure_result(
             provider_key,
             target_url=target.url,
             storage_state_path=storage_path["value"],
-            reason=exc.code,
+            reason_code=exc.code,
+            stage=exc.stage,
             message=exc.message,
+            diagnostics=exc.details,
+            diagnostic_context=context,
         )
     except Exception as exc:  # noqa: BLE001 - preflight records per-provider failures.
         message = normalize_text(str(exc)) or exc.__class__.__name__
@@ -559,18 +920,18 @@ def preflight_browser_provider(
             provider_key,
             target_url=target.url,
             storage_state_path=storage_path["value"],
-            reason=ERROR,
+            reason_code=ERROR,
+            stage="preflight",
             message=message,
+            diagnostic_context=context,
         )
     finally:
         if context is not None:
             with contextlib.suppress(Exception):
                 context.close()
 
-    return BrowserPreflightResult(
-        provider=provider_key,
-        provider_label=provider_display_name(provider_key),
-        ok=True,
+    return _ready_result(
+        provider_key,
         target_url=target.url,
         final_url=normalize_text(raw_payload.source_url) or None,
         title=_preflight_title_from_payload(raw_payload),
@@ -586,16 +947,17 @@ def run_browser_provider_preflight(
     providers: Iterable[str] | None = None,
     timeout_ms: int | None = None,
     browser_user_agent: str | None = None,
-    env: Mapping[str, str] | None = None,
     cancel_check: Callable[[], bool] | None = None,
     target_url: str | None = None,
     storage_state_path: Path | None = None,
     save_storage_state: bool = True,
     cancel_as_result: bool = False,
     on_result: Callable[[BrowserPreflightResult, int, int], None] | None = None,
+    runtime_options: BrowserPreflightRuntimeOptions | None = None,
 ) -> list[BrowserPreflightResult]:
+    active_runtime_options = runtime_options or BrowserPreflightRuntimeOptions()
     runtime_env = _runtime_env(
-        env,
+        active_runtime_options.env,
         timeout_ms=timeout_ms,
         browser_user_agent=browser_user_agent,
     )
@@ -620,7 +982,8 @@ def run_browser_provider_preflight(
             result = _failure_result(
                 provider,
                 target_url=target_url,
-                reason="request_cancelled",
+                reason_code="request_cancelled",
+                stage="not_started",
                 message="Browser preflight was cancelled before this provider ran.",
             )
             results.append(result)
@@ -635,6 +998,8 @@ def run_browser_provider_preflight(
                 storage_state_path=storage_state_path,
                 save_storage_state=save_storage_state,
                 cancel_check=cancel_check,
+                download_dir=active_runtime_options.download_dir,
+                artifact_mode=active_runtime_options.artifact_mode,
             )
         except RequestCancelledError:
             if not cancel_as_result:
@@ -643,7 +1008,8 @@ def run_browser_provider_preflight(
                 provider,
                 target_url=target_url,
                 storage_state_path=storage_state_path,
-                reason="request_cancelled",
+                reason_code="request_cancelled",
+                stage="preflight",
                 message="Browser preflight was cancelled while this provider ran.",
             )
             results.append(result)

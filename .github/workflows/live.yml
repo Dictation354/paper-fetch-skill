@@ -38,14 +38,33 @@ jobs:
           full: "true"
       - name: Prepare selected Camoufox runtime explicitly
         run: uv run python -m camoufox fetch
+      - name: Prepare formula conversion backend explicitly
+        run: PAPER_FETCH_INSTALL_PYTHON_BIN=.venv/bin/python ./install-formula-tools.sh
       - name: Run shared-state live tests serially
         env:
           PAPER_FETCH_RUN_LIVE: "1"
           PAPER_FETCH_BROWSER_BACKEND: "camoufox"
+          PAPER_FETCH_RUN_AIP_COLD_STABILITY: "1"
+          PAPER_FETCH_LIVE_ARTIFACT_DIR: artifacts/live-publishers
+          PAPER_FETCH_FORMULA_TOOLS_DIR: .formula-tools
           CROSSREF_MAILTO: ${{ secrets.CROSSREF_MAILTO }}
           ELSEVIER_API_KEY: ${{ secrets.ELSEVIER_API_KEY }}
           WILEY_TDM_CLIENT_TOKEN: ${{ secrets.WILEY_TDM_CLIENT_TOKEN }}
-        run: PYTHONPATH=src uv run pytest tests/live -q -n 0 --force-enable-socket
+        run: >-
+          PYTHONPATH=src uv run pytest
+          tests/live/test_live_publishers.py
+          tests/live/test_live_mcp.py
+          -q -n 0
+          --junitxml=artifacts/live-publishers.xml
+          -o junit_family=legacy
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ always() }}
+        with:
+          name: live-publisher-acceptance
+          path: |
+            artifacts/live-publishers
+            artifacts/live-publishers.xml
+          if-no-files-found: warn
       - name: Run browser-risk provider drift report serially
         env:
           PAPER_FETCH_RUN_LIVE: "1"

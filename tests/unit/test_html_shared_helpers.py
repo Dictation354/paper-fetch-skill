@@ -289,6 +289,41 @@ class SharedHtmlHelperTests(unittest.TestCase):
             "https://pubs.acs.org/view-large/figure/165496527/ao4c03987_0001.tif",
         )
 
+    def test_extract_figure_assets_unwraps_signed_silverchair_original(self) -> None:
+        preview_url = (
+            "https://acs.silverchair-cdn.com/acs/content_public/journal/"
+            "m_ao4c03987_0007.png?Expires=1&Signature=preview"
+        )
+        original_url = (
+            "https://acs.silverchair-cdn.com/acs/content_public/journal/"
+            "ao4c03987_0007.png?Expires=2&Signature=full&Key-Pair-Id=test"
+        )
+        wrapper_url = (
+            "https://acs.silverchair-cdn.com/DownloadFile/DownloadImage.aspx?"
+            f"image={original_url}&sec=165496551"
+        )
+        html = f"""
+        <div data-id="fig7" class="fig fig-section">
+          <a href="/view-large/figure/165496551/ao4c03987_0007.tif">
+            <img class="content-image" src="{preview_url}"
+                 path-from-xml="ao4c03987_0007.tif" />
+          </a>
+          <a class="download-slide" href="{wrapper_url}">Download slide</a>
+          <div class="fig-label">Figure 7</div>
+          <div class="fig-caption">Catalyst reuse.</div>
+        </div>
+        """
+
+        assets = html_assets.extract_figure_assets(
+            html,
+            "https://pubs.acs.org/acsodf/article/example",
+        )
+
+        self.assertEqual(len(assets), 1)
+        self.assertEqual(assets[0]["url"], original_url)
+        self.assertEqual(assets[0]["full_size_url"], original_url)
+        self.assertEqual(assets[0]["preview_url"], preview_url)
+
     def test_silverchair_figure_section_images_are_not_formula_assets(self) -> None:
         html = """
 <html>

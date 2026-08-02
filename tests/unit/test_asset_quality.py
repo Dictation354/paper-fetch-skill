@@ -44,7 +44,6 @@ def _svg(width: int, height: int) -> bytes:
 
 def _fulltext_envelope(article: ArticleModel) -> FetchEnvelope:
     event = trace_event("fulltext", "ams", "ok")
-    article.quality.trace = [event]
     return FetchEnvelope(
         doi=article.doi,
         source=article.source,
@@ -330,6 +329,117 @@ def test_wiley_preview_is_asset_degradation_not_text_failure() -> None:
     assert report.asset.preview == 1
     assert report.content.status == ContentAcceptanceStatus.FULLTEXT
     assert report.overall == OverallAcceptanceStatus.DEGRADED
+
+
+def test_accepted_preview_is_complete_and_fallback_preview_is_fidelity_only() -> None:
+    accepted_asset = Asset(
+        kind="figure",
+        heading="Figure 1",
+        path=str(VALID_JPEG),
+        download_tier="preview",
+        preview_accepted=True,
+    )
+    accepted = build_asset_quality_summary(
+        [accepted_asset],
+        asset_profile="body",
+        archive_enabled=True,
+    )
+    accepted_article = ArticleModel(
+        doi="10.1000/accepted-preview",
+        source="arxiv_html",
+        metadata=Metadata(title="Accepted preview", abstract="Abstract"),
+        sections=[
+            Section(
+                heading="Body",
+                level=2,
+                kind="body",
+                text="Full text body. " * 50,
+            )
+        ],
+        assets=[accepted_asset],
+    )
+    accepted_article.quality.asset_summary = accepted
+
+    accepted_report = evaluate_fetch_acceptance(
+        _fulltext_envelope(accepted_article),
+        asset_profile="body",
+    )
+
+    assert accepted.preview == 1
+    assert accepted.accepted_preview == 1
+    assert accepted.fallback_preview == 0
+    assert accepted.issue_codes == []
+    assert accepted_report.asset.status == AssetAcceptanceStatus.COMPLETE
+
+    fallback_asset = Asset(
+        kind="figure",
+        heading="Figure 2",
+        path=str(VALID_PNG),
+        download_tier="preview",
+    )
+    fallback = build_asset_quality_summary(
+        [fallback_asset],
+        asset_profile="body",
+        archive_enabled=True,
+    )
+
+    assert fallback.preview == 1
+    assert fallback.accepted_preview == 0
+    assert fallback.fallback_preview == 1
+    assert fallback.failed == 0
+    assert fallback.issue_codes == ["asset_fidelity_degraded"]
+
+
+def test_asset_issue_codes_distinguish_failure_placeholder_and_archive_policy(
+    tmp_path: Path,
+) -> None:
+    missing = build_asset_quality_summary(
+        [
+            Asset(
+                kind="figure",
+                heading="Missing",
+                path=str(tmp_path / "missing.png"),
+            )
+        ],
+        asset_profile="body",
+        archive_enabled=True,
+    )
+    placeholder_path = tmp_path / "placeholder.png"
+    placeholder_path.write_bytes(b"")
+    placeholder = build_asset_quality_summary(
+        [
+            Asset(
+                kind="figure",
+                heading="Placeholder",
+                path=str(placeholder_path),
+            )
+        ],
+        asset_profile="body",
+        archive_enabled=True,
+    )
+    remote_asset = Asset(
+        kind="figure",
+        heading="Remote",
+        url="https://example.test/remote.png",
+    )
+    remote_requested = build_asset_quality_summary(
+        [remote_asset],
+        asset_profile="body",
+        archive_enabled=True,
+    )
+    remote_not_archived = build_asset_quality_summary(
+        [remote_asset],
+        asset_profile="body",
+        archive_enabled=False,
+    )
+
+    assert missing.failure_codes == ["missing_path"]
+    assert missing.issue_codes == ["asset_download_failure"]
+    assert placeholder.issue_codes == ["asset_placeholder_suspected"]
+    assert "asset_remote_only" in remote_requested.issue_codes
+    assert "asset_fidelity_degraded" not in remote_requested.issue_codes
+    assert remote_not_archived.issue_codes == []
+    assert remote_not_archived.not_archived == 1
 
 
 def test_artifact_store_audit_records_policy_without_mutating_text_quality(

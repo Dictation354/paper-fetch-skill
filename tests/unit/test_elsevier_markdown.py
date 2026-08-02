@@ -491,7 +491,9 @@ class ElsevierMarkdownTests(unittest.TestCase):
         """rule: rule-elsevier-formula-rendering"""
         self._assert_formula_placeholder_is_visible_and_counted_when_conversion_fails()
 
-    def test_elsevier_complex_table_spans_are_semantically_expanded(self) -> None:
+    def test_elsevier_complex_table_spans_are_normalized_without_quality_loss(
+        self,
+    ) -> None:
         """rule: rule-elsevier-complex-table-span-degradation"""
         xml_body = _load_elsevier_scenario_xml("elsevier_complex_table_span")
 
@@ -502,7 +504,7 @@ class ElsevierMarkdownTests(unittest.TestCase):
         )
         _assert_markdown_table_row(self, markdown, ["Hydrometric", "Station A", "10"])
         _assert_markdown_table_row(self, markdown, ["Hydrometric", "Station B", "20"])
-        self.assertIn("Merged table spans were semantically expanded", markdown)
+        self.assertNotIn("Merged table spans were semantically expanded", markdown)
 
     def test_elsevier_real_multilevel_header_is_flattened_without_body_header_row(
         self,
@@ -571,7 +573,7 @@ class ElsevierMarkdownTests(unittest.TestCase):
         self.assertEqual(structure.semantic_losses.table_layout_degraded_count, 1)
         self.assertEqual(structure.semantic_losses.table_semantic_loss_count, 0)
 
-    def test_elsevier_real_complex_table_records_layout_degradation_quality(
+    def test_elsevier_real_complex_table_records_successful_normalization(
         self,
     ) -> None:
         """rule: rule-elsevier-complex-table-span-degradation"""
@@ -599,13 +601,10 @@ class ElsevierMarkdownTests(unittest.TestCase):
             inline_figure_keys=sorted(structure.used_figure_keys),
             inline_table_keys=sorted(structure.used_table_keys),
         )
-        self.assertGreater(
-            article.quality.semantic_losses.table_layout_degraded_count, 0
-        )
-        self.assertIn("table_layout_degraded", article.quality.flags)
-        self.assertIn(
-            "- Table 1: Merged table spans were semantically expanded into rectangular Markdown cells; rowspan/colspan layout fidelity was reduced.",
-            structure.conversion_notes,
+        self.assertEqual(article.quality.semantic_losses.table_layout_degraded_count, 0)
+        self.assertNotIn("table_layout_degraded", article.quality.flags)
+        self.assertFalse(
+            any(note.startswith("- Table 1:") for note in structure.conversion_notes)
         )
 
     def test_elsevier_inline_boundary_newlines_are_normalized(self) -> None:
@@ -945,7 +944,7 @@ refers to the tie.</ce:para>
         self.assertLess(caption_idx, header_idx)
         self.assertLess(header_idx - reference_idx, 500)
 
-    def _assert_real_elsevier_complex_body_table_prefers_lossy_markdown_over_image_fallback(
+    def _assert_real_elsevier_complex_body_table_prefers_normalized_markdown_over_image_fallback(
         self,
     ) -> None:
         markdown = self._render_real_elsevier_body_table_markdown()
@@ -965,11 +964,7 @@ refers to the tie.</ce:para>
             ],
             allow_more_cells=True,
         )
-        self.assertIn("## Conversion Notes", markdown)
-        self.assertIn(
-            "- Table 1: Merged table spans were semantically expanded into rectangular Markdown cells; rowspan/colspan layout fidelity was reduced.",
-            markdown,
-        )
+        self.assertNotIn("Merged table spans were semantically expanded", markdown)
         self.assertNotIn("- Table 1: None", markdown)
         self.assertNotIn("![Table 1]", markdown)
 
@@ -1008,11 +1003,9 @@ refers to the tie.</ce:para>
                 for asset in article.assets
             )
         )
-        self.assertGreater(
-            article.quality.semantic_losses.table_layout_degraded_count, 0
-        )
+        self.assertEqual(article.quality.semantic_losses.table_layout_degraded_count, 0)
         self.assertEqual(article.quality.semantic_losses.table_lossy_count, 0)
-        self.assertIn("table_layout_degraded", article.quality.flags)
+        self.assertNotIn("table_layout_degraded", article.quality.flags)
         self.assertNotIn("table_semantic_loss", article.quality.flags)
         self.assertNotIn("## Additional Tables", rendered)
         self.assertEqual(rendered.count("Study area and data used in this study."), 1)
@@ -1086,8 +1079,8 @@ refers to the tie.</ce:para>
                 self._assert_real_elsevier_body_table_is_inserted_near_reference,
             ),
             (
-                "real_complex_body_table_prefers_lossy_markdown",
-                self._assert_real_elsevier_complex_body_table_prefers_lossy_markdown_over_image_fallback,
+                "real_complex_body_table_prefers_normalized_markdown",
+                self._assert_real_elsevier_complex_body_table_prefers_normalized_markdown_over_image_fallback,
             ),
             (
                 "real_consumed_table_not_appended_by_article_model",

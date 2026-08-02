@@ -111,6 +111,7 @@ def _context(
     cli_version: str = "4.1.0",
     cli_path: Path | None = None,
     source_root: Path | None = None,
+    sys_prefix: Path | None = None,
 ) -> ProvenanceContext:
     distribution_root = root / "executing-environment" / "site-packages"
     metadata_path = (
@@ -127,6 +128,12 @@ def _context(
         / "paper_fetch"
         / "provenance.py",
         executable=root / "executing-environment" / "bin" / "python",
+        sys_prefix=sys_prefix
+        or (
+            source_root / ".venv"
+            if source_root is not None
+            else root / "executing-environment"
+        ),
         argv0=str(effective_cli_path),
         home=home,
         env={},
@@ -314,6 +321,88 @@ def test_source_distribution_and_path_cli_drift_include_all_paths(
         "path": str(old_cli),
     }
     assert report["offline_manifest"]["status"] == "not_applicable"
+
+
+def test_source_checkout_reports_inactive_project_venv(tmp_path: Path) -> None:
+    source_root = tmp_path / "source"
+    _write(
+        source_root / "pyproject.toml",
+        (
+            '[project]\nname = "paper-fetch-skill"\nversion = "4.1.0"\n'
+            'dependencies = ["mcp>=2,<3"]\n'
+        ),
+    )
+    _write(source_root / ".venv" / "bin" / "activate")
+    home = tmp_path / "home"
+    home.mkdir()
+
+    report = install_provenance_payload(
+        context=_context(
+            tmp_path,
+            home,
+            source_root=source_root,
+            sys_prefix=tmp_path / "system-python",
+        )
+    )
+
+    environment = report["source_project_environment"]
+    assert report["status"] == "drift"
+    assert environment["status"] == "degraded"
+    assert environment["project_venv_active"] is False
+    assert environment["activation_command"] == (
+        f"source {source_root / '.venv' / 'bin' / 'activate'}"
+    )
+    assert "source_checkout_project_venv_not_active" in {
+        issue["reason_code"] for issue in report["issues"]
+    }
+
+
+def test_source_checkout_reports_incompatible_mcp_dependency(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source_root = tmp_path / "source"
+    _write(
+        source_root / "pyproject.toml",
+        (
+            '[project]\nname = "paper-fetch-skill"\nversion = "4.1.0"\n'
+            'dependencies = ["mcp>=2,<3"]\n'
+        ),
+    )
+    _write(source_root / ".venv" / "bin" / "activate")
+    home = tmp_path / "home"
+    home.mkdir()
+    monkeypatch.setattr(
+        "paper_fetch.provenance.importlib.metadata.version", lambda _: "1.28.1"
+    )
+
+    report = install_provenance_payload(
+        context=_context(tmp_path, home, source_root=source_root)
+    )
+
+    assert report["status"] == "drift"
+    assert report["source_project_environment"]["mcp"] == {
+        "status": "incompatible",
+        "reason_code": "project_dependency_incompatible",
+        "requirement": "mcp<3,>=2",
+        "installed_version": "1.28.1",
+        "pyproject_path": str(source_root / "pyproject.toml"),
+    }
+
+
+def test_offline_runtime_does_not_require_source_project_venv(
+    tmp_path: Path,
+) -> None:
+    install_root, home = _create_install(tmp_path)
+
+    report = install_provenance_payload(
+        install_root=install_root,
+        context=_context(tmp_path, home),
+    )
+
+    assert report["status"] == "ready"
+    assert report["source_project_environment"]["status"] == "not_applicable"
+    assert report["source_project_environment"]["issues"] == []
 
 
 def test_skill_integrity_rejects_extra_files_and_symlinks(tmp_path: Path) -> None:

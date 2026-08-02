@@ -490,7 +490,7 @@ metadata
 <a id="rule-image-download-validates-real-images"></a>
 ### 图片下载必须验证真实图片内容
 
-- 这条规则约束的是：正文图片下载不能把 Cloudflare challenge HTML、Chrome 图片查看器壳或过小的站点图标当成论文图片保存；preview 图只有尺寸达标并在 source trail 中标记为 accepted 时才能作为可接受降级。下载后的统一审计必须用 `filetype` 读取真实 MIME、用 `imagesize` 读取尺寸，并记录文件实际字节数和 `SHA256`，不能信任扩展名、响应头或 provider 声明值代替文件事实。
+- 这条规则约束的是：正文图片下载不能把 Cloudflare challenge HTML、Chrome 图片查看器壳或过小的站点图标当成论文图片保存；preview 图只有尺寸达标或 provider 明确接受，并在 `Asset.preview_accepted` 中保存该事实时，才算可接受结果。下载后的统一审计必须用 `filetype` 读取真实 MIME、用 `imagesize` 读取尺寸，并记录文件实际字节数和 `SHA256`，不能信任扩展名、响应头或 provider 声明值代替文件事实。
 - 如果违反，用户会看到：正文缺图，或本地图片文件其实是 HTML / 站点图标，后续渲染和 live review 都无法解释失败原因。
 - 它对应的阶段是：`asset-download`、`asset-validation`、`availability-quality`。
 - Owner：`paper_fetch.extraction.html.assets` 与 `paper_fetch.providers.browser_workflow.fetchers`。
@@ -509,15 +509,15 @@ metadata
   - Service / live review 覆盖：
     - [`../tests/unit/test_service_probe_and_assets.py`](../tests/unit/test_service_probe_and_assets.py) 中的 `test_fetch_paper_accepts_preview_images_with_sufficient_dimensions`
     - [`../tests/devtools/test_golden_criteria_live.py`](../tests/devtools/test_golden_criteria_live.py) 中的 `test_science_preview_accepted_is_not_an_asset_issue`
-    - [`../tests/devtools/test_golden_criteria_live.py`](../tests/devtools/test_golden_criteria_live.py) 中的 `test_formula_only_preview_fallback_is_not_an_asset_issue`
-    - [`../tests/devtools/test_golden_criteria_live.py`](../tests/devtools/test_golden_criteria_live.py) 中的 `test_non_formula_preview_fallback_remains_an_asset_issue`
+    - [`../tests/devtools/test_golden_criteria_live.py`](../tests/devtools/test_golden_criteria_live.py) 中的 `test_fallback_preview_uses_fidelity_issue_code`
+    - [`../tests/unit/test_asset_quality.py`](../tests/unit/test_asset_quality.py) 中的 `test_accepted_preview_is_complete_and_fallback_preview_is_fidelity_only`
   - 统一真实性审计：
     - [`../tests/unit/test_asset_quality.py`](../tests/unit/test_asset_quality.py) 中的 `test_valid_png_jpeg_svg_and_pseudo_extension_record_real_facts`
     - [`../tests/unit/test_asset_quality.py`](../tests/unit/test_asset_quality.py) 中的 `test_placeholder_signals_are_suspected_and_never_delete_files`
     - [`../tests/unit/test_asset_quality.py`](../tests/unit/test_asset_quality.py) 中的 `test_missing_path_and_explicit_failure_are_definite_and_classified`
 - 边界说明：
-  - `download_tier="preview"` 不是天然错误；当下载阶段判定 preview 尺寸满足阈值，或 provider 明确把该 preview 标记为可接受，并在 source trail 中记录 `download:*_assets_preview_accepted` 时，它是诊断标签，不应写入普通 warning，也不应自动映射为 `asset_download_failure`。
-  - formula-only preview fallback 是公式图片语义的降级呈现，不自动归为 `asset_download_failure`；figure/table preview fallback 仍按资产问题处理，除非已有 accepted 诊断。
+- `download_tier="preview"` 不是天然错误；当下载阶段判定 preview 尺寸满足阈值，或 provider 明确把该 preview 标记为可接受，并设置 `preview_accepted=true` 时，它不应写入普通 warning，也不产生 asset issue。source trail 只保留摘要诊断，不能代替该结构化字段。
+- 任意 kind 的 fallback preview 都产生 `asset_fidelity_degraded`，但不产生 `asset_download_failure`；只有 accepted preview 且无其它 issue 时，资产分面保持 `complete`。
   - `Blank.svg` / `Blank.png` URL、零字节、异常小文件或尺寸、无效真实 MIME、MIME 与扩展名不一致，以及多个不同逻辑正文图共享完全相同 `SHA256`，都只是保守的 `placeholder_suspected` 信号。审计器不会据此删除、覆盖或改写文件，也不会声称已经完成视觉语义判断。
   - 明确的下载 failure diagnostic、声明了本地路径但文件不存在或不可读，才属于确定的资产失败；这些失败仍不能把已经成功的正文内容改判成抓取失败。
   - `asset_profile=none` 时，保留下来的远程链接逐项记为 `not_requested`，不能对它们执行本地存在性失败判定；请求了对应 kind、但 no-download / artifact policy 禁止归档时记为 `not_archived`。`body` profile 不请求 supplement，`all` 才请求 supplement 和 decoration。
@@ -577,7 +577,7 @@ metadata
 <a id="rule-table-flatten-or-list"></a>
 ### 表格能展平就转 Markdown 表，展不平就退成可读列表
 
-- 这条规则约束的是：HTML、JATS 和 CALS 表格先进入同一个 provider-neutral cell/row IR 与占位网格规范化器；多级表头、rowspan 和局部 colspan 能安全展开时生成 Markdown 表，重叠、越界、ragged 或超限网格则退成保留 cell 文本的可读列表。无可靠编号和 caption 的表格不能额外输出孤立 `**Table**` 标题；无可靠表头时不能把 `Column 1` 这类内部占位当成用户可见表头。表头前覆盖整表宽度的标题提升为普通文本，正文中的整表宽度分组保留为首列分组行；不同分组下的列名仍要扁平化为 `Configuration / n_r`、`Inference / MMLU` 这类可读表头。
+- 这条规则约束的是：HTML、JATS 和 CALS 表格先进入同一个 provider-neutral cell/row IR 与占位网格规范化器；多级表头、rowspan 和局部 colspan 能安全展开时生成 Markdown 表并归为正常规范化，重叠、越界、ragged 或超限网格则退成保留 cell 文本的可读列表。无可靠编号和 caption 的表格不能额外输出孤立 `**Table**` 标题；无可靠表头时不能把 `Column 1` 这类内部占位当成用户可见表头。表头前覆盖整表宽度的标题提升为普通文本，正文中的整表宽度分组保留为首列分组行；不同分组下的列名仍要扁平化为 `Configuration / n_r`、`Inference / MMLU` 这类可读表头。
 - 如果违反，用户会看到：要么本来能读懂的表被糟糕地压扁成错列的 Markdown 表，要么复杂表直接丢信息，没有任何可读 fallback，或者表格前出现孤立 `****` / `Column N` / 整行重复的分组标题，甚至出现 header / separator 列数不一致的坏 GFM pipe table。
 - 它对应的阶段是：`table-rendering`、`markdown-normalization`。
 - Owner：`paper_fetch.extraction.table_grid`、`paper_fetch.extraction.xml_tables` 与 Markdown/HTML compatibility adapters。
@@ -606,7 +606,7 @@ metadata
 - 边界说明：
   - 这条规则不是要求所有表格最终都必须长成 Markdown 表。
   - 当结构已经超出安全展平范围时，退成列表是符合规则的正确结果，不是降级失败。
-  - 整表宽度分组只改变物理 merge 表达，不触发 `table_layout_degraded`；rowspan、局部 colspan 和非法 span 仍触发该质量标记。
+  - 合法的整表宽度分组、rowspan 和局部 colspan 成功展开后只记录规范化 reason，不触发 `table_layout_degraded`；非法或不一致的 span/列定义仍触发该质量标记。
   - 无法形成可靠矩形但 cell 文本完整保留时记录 `table_fallback_count` 和布局降级，不误报 `table_semantic_loss`；只有内容确实遗失才升级语义损失。
   - `paper_fetch.extraction.html.tables` 只保留 HTML 解析和兼容入口，网格占位、表头扁平化与内部状态的 canonical owner 是 `paper_fetch.extraction.table_grid`。
 
@@ -1226,9 +1226,9 @@ metadata
   - 它约束的是 appendix 资产的实际渲染位置和上下文，而不是正文文字是否能提到它们。
 
 <a id="rule-elsevier-table-placement"></a>
-### 兼容锚点：Elsevier 图表正文位置、去重和复杂表降级
+### 兼容锚点：Elsevier 图表正文位置、去重和复杂表规范化
 
-> 参见 [Elsevier 正文引用到的 figure / table 要就地插回](#rule-elsevier-inline-figure-table-placement)、[Elsevier 已消费图表不得在尾部重复追加](#rule-elsevier-consumed-figure-table-dedup) 和 [Elsevier 复杂 span 表必须保留语义展开和降级标记](#rule-elsevier-complex-table-span-degradation)。
+> 参见 [Elsevier 正文引用到的 figure / table 要就地插回](#rule-elsevier-inline-figure-table-placement)、[Elsevier 已消费图表不得在尾部重复追加](#rule-elsevier-consumed-figure-table-dedup) 和 [Elsevier 复杂 span 表必须区分成功规范化与异常降级](#rule-elsevier-complex-table-span-degradation)。
 
 兼容锚点保留用于 manifest 和外部引用。
 
@@ -1269,9 +1269,9 @@ metadata
   - 本规则只处理“已经消费过”的图表；未锚定或 appendix 语境的图表仍按对应规则输出。
 
 <a id="rule-elsevier-complex-table-span-degradation"></a>
-### Elsevier 复杂 span 表必须保留语义展开和降级标记
+### Elsevier 复杂 span 表必须区分成功规范化与异常降级
 
-- 这条规则约束的是：Elsevier CALS 的 `colspec` / `colname` / `namest` / `nameend` / `morerows` 必须进入共享 XML adapter 和网格规范化器。多层 `<thead>` 应按列合并成一个 Markdown header，普通跨度优先语义展开并标记 `table_layout_degraded`；冲突或不规则网格必须保留 cell 文本为可读列表，不能抛异常或误报语义内容丢失。
+- 这条规则约束的是：Elsevier CALS 的 `colspec` / `colname` / `namest` / `nameend` / `morerows` 必须进入共享 XML adapter 和网格规范化器。多层 `<thead>` 应按列合并成一个 Markdown header，合法跨度完成语义展开后归为 `normalized`，保留 `merged_span_expanded` 内部 reason，但不得产生 `table_layout_degraded` 或用户 conversion note；非法 span/列定义继续标记布局降级，冲突或不规则网格必须保留 cell 文本为可读列表，不能抛异常或误报语义内容丢失。
 - 如果违反，用户会看到：复杂表直接变成一张图 / 空摘要，或者没有说明地被压扁成错误 Markdown 表，无法被 AI 和用户继续读取。
 - 它对应的阶段是：`table-rendering`、`final-rendering`。
 - Owner：`paper_fetch.extraction.table_grid`、`paper_fetch.extraction.xml_tables`、`paper_fetch.providers._article_markdown_elsevier_document` 与 `paper_fetch.models.Quality`。
@@ -1279,18 +1279,18 @@ metadata
   - [`../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml)
   - [`../tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/original.xml)
   - [`../tests/fixtures/golden_criteria/_scenarios/elsevier_complex_table_span/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_complex_table_span/original.xml)
-  - real Elsevier XML 覆盖 conversion note 和 `table_layout_degraded` 质量标记；scenario XML 锁住 span 表的语义展开细节。
+  - real Elsevier XML 覆盖合法 span 不产生 conversion note 或 `table_layout_degraded`；scenario XML 锁住 span 表的语义展开细节。
 - 对应测试：
   - Owner（provider）：
-    - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_complex_table_spans_are_semantically_expanded`
-    - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_real_complex_table_records_layout_degradation_quality`
+    - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_complex_table_spans_are_normalized_without_quality_loss`
+    - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_real_complex_table_records_successful_normalization`
     - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_real_multilevel_header_is_flattened_without_body_header_row`
     - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_overlapping_cals_columns_use_readable_list_fallback`
 - 边界说明：
-  - scenario XML 锁住 span 展平细节，real XML 同时锁住多层表头、conversion note 和质量标记。
+  - scenario XML 锁住 span 展平细节，real XML 同时锁住多层表头、无表格 conversion note 和无误报质量标记。
   - 这条规则不是要求复杂表在 Markdown 里必须零损失复原。
-  - 它约束的是“优先给用户可读的表格文本和降级提示”，不是承诺所有单元格跨度都能无损还原。
-  - `table_layout_degraded` 表示 Markdown 版式无法表达真实合并单元格；只有行列语义内容真的丢失时，才应升级为 `table_semantic_loss` / `figure_table_loss`。
+  - 它约束的是“优先给用户可读的表格文本，并只对异常结构给出降级提示”，不是承诺所有单元格跨度都按源站视觉样式呈现。
+  - `table_layout_degraded` 表示源 span/列定义异常导致原布局无法可靠验证；视觉合并关系被成功展开不属于质量损失，只有行列语义内容真的丢失时，才应升级为 `table_semantic_loss` / `figure_table_loss`。
 
 <a id="rule-fulltext-reference-priority"></a>
 ### 全文 references 优先于 metadata/Crossref fallback
@@ -1793,11 +1793,19 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 兼容锚点保留用于 manifest、测试标记和外部引用。IEEE `asset_profile='body'` 仍只下载正文 figure/table/formula，`asset_profile='all'` 才下载 supplementary / multimedia 文件。
 
 <a id="rule-ieee-html-access-waterfall"></a>
-### 兼容锚点：IEEE HTML 可用性与 fallback 顺序
+### IEEE HTML 可用性与 fallback 顺序
 
-> 参见 [`providers.md` 的 IEEE provider 说明](providers.md#ieee)。
+- 这条规则约束的是：IEEE block-page 检测只能使用人可见的页面文本；`script/style/svg/noscript/template` 中的 `captcha`、challenge 或 access token 不能拒收已经就绪的真实 `#article`。页面可正常发起自身 REST 子请求，DOM-only 验证不读取 REST response body 时也不能在网络层阻断该请求。可见区域中的验证码、人工验证或访问阻断文案仍必须 fail closed。
+- 如果违反，用户会看到：约 6.1 万字符、74 个段落的完整 IEEE 正文因为内联脚本包含 `captcha` 而被误报为 challenge，或者测试通过阻断 REST 子请求制造出生产环境不会出现的失败。
+- 它对应的阶段是：`provider-html-or-xml-extraction`、`availability-quality`。
+- Owner：`paper_fetch.providers._ieee_block_page` 与 `paper_fetch.providers._ieee_browser_html`。
+- 对应测试：
+  - [`../tests/unit/test_ieee_provider_routes.py`](../tests/unit/test_ieee_provider_routes.py) 中的 `test_ieee_block_page_detection_ignores_nonvisible_html_tags`
+  - [`../tests/unit/test_ieee_provider_routes.py`](../tests/unit/test_ieee_provider_routes.py) 中的 `test_ieee_block_page_detection_rejects_visible_challenge_with_article`
+  - [`../tests/unit/test_ieee_provider_routes.py`](../tests/unit/test_ieee_provider_routes.py) 中的 `test_ieee_block_page_detection_is_cached_in_runtime_context`
+- provider 路由、REST/DOM readiness 和 PDF fallback 细节参见 [`providers.md` 的 IEEE provider 说明](providers.md#ieee)。
 
-兼容锚点保留用于外部引用。运行时 waterfall 属于 provider 路由与 fallback 编排文档，不作为 extraction rule 维护。
+该锚点继续兼容 manifest 与外部引用；本规则只约束检测语义，不改变既有 route 顺序。
 
 ## Copernicus
 
@@ -1840,9 +1848,9 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 | [`../tests/fixtures/golden_criteria/10.1016_S1575-1813(18)30261-4/bilingual.xml`](<../tests/fixtures/golden_criteria/10.1016_S1575-1813(18)30261-4/bilingual.xml>) | [Multilingual abstracts](#rule-keep-parallel-multilingual-abstracts) |
 | [`../tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/original.xml) | [Elsevier formula rendering](#rule-elsevier-formula-rendering), [Elsevier inline figure/table placement](#rule-elsevier-inline-figure-table-placement), [Elsevier references](#rule-elsevier-xml-references) |
 | [`../tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/original.xml) | [Elsevier supplementary materials](#rule-elsevier-supplementary-materials) |
-| [`../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml) | [Elsevier inline figure/table placement](#rule-elsevier-inline-figure-table-placement), [Elsevier complex span table](#rule-elsevier-complex-table-span-degradation) |
+| [`../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml) | [Elsevier inline figure/table placement](#rule-elsevier-inline-figure-table-placement), [Elsevier complex span normalization](#rule-elsevier-complex-table-span-degradation) |
 | [`../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/original.xml) | [Elsevier formula rendering](#rule-elsevier-formula-rendering), [Elsevier consumed table dedup](#rule-elsevier-consumed-figure-table-dedup) |
-| [`../tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/original.xml) | [Elsevier complex span table](#rule-elsevier-complex-table-span-degradation) |
+| [`../tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/original.xml) | [Elsevier complex span normalization](#rule-elsevier-complex-table-span-degradation) |
 | [`../tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/original.xml) | [Availability section contract](#rule-keep-data-availability-once) |
 | [`../tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/original.xml) | [Elsevier appendix context](#rule-elsevier-appendix-context) |
 | [`../tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/original.xml) | [Elsevier graphical abstract](#rule-elsevier-graphical-abstract) |
@@ -1900,7 +1908,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 | [`../tests/fixtures/golden_criteria/_scenarios/asset_download_diagnostics/article_payload.json`](../tests/fixtures/golden_criteria/_scenarios/asset_download_diagnostics/article_payload.json) | [Asset diagnostics](#rule-asset-download-diagnostic-fields) |
 | [`../tests/fixtures/golden_criteria/_scenarios/availability_body_metrics/code_availability.md`](../tests/fixtures/golden_criteria/_scenarios/availability_body_metrics/code_availability.md) | [Availability section contract](#rule-keep-data-availability-once) |
 | [`../tests/fixtures/golden_criteria/_scenarios/elsevier_author_groups_minimal/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_author_groups_minimal/original.xml) | [Provider metadata](#rule-provider-owned-authors) |
-| [`../tests/fixtures/golden_criteria/_scenarios/elsevier_complex_table_span/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_complex_table_span/original.xml) | [Elsevier complex span table](#rule-elsevier-complex-table-span-degradation) |
+| [`../tests/fixtures/golden_criteria/_scenarios/elsevier_complex_table_span/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_complex_table_span/original.xml) | [Elsevier complex span normalization](#rule-elsevier-complex-table-span-degradation) |
 | [`../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_inline_display/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_inline_display/original.xml) | [Elsevier formula rendering](#rule-elsevier-formula-rendering) |
 | [`../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_missing/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_missing/original.xml) | [Elsevier formula rendering](#rule-elsevier-formula-rendering) |
 | [`../tests/fixtures/golden_criteria/_scenarios/elsevier_supplementary_asset_only/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_supplementary_asset_only/original.xml) | [Elsevier supplementary materials](#rule-elsevier-supplementary-materials) |

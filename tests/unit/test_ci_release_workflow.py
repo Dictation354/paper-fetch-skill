@@ -65,8 +65,16 @@ def test_live_external_state_is_scheduled_low_frequency_and_serial() -> None:
     assert "schedule:" in workflow
     assert '"17 3 * * 2"' in workflow
     assert '"41 4 1,15 * *"' in workflow
-    assert "tests/live -q -n 0" in workflow
-    assert "--force-enable-socket" in workflow
+    assert "tests/live/test_live_publishers.py" in workflow
+    assert "tests/live/test_live_mcp.py" in workflow
+    assert "tests/live/test_live_ieee_protected.py" not in workflow
+    assert "-q -n 0" in workflow
+    assert "--force-enable-socket" not in workflow
+    assert "--junitxml=artifacts/live-publishers.xml" in workflow
+    assert "junit_family=legacy" in workflow
+    assert "artifacts/live-publishers/live-acceptance.json" not in workflow
+    assert "artifacts/live-publishers" in workflow
+    assert "install-formula-tools.sh" in workflow
     assert "tests/integration/test_golden_corpus.py -q" in workflow
     assert "python -m camoufox fetch" in workflow
     assert "scripts/run_provider_drift_report.py" in workflow

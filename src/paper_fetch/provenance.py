@@ -15,6 +15,9 @@ from email.parser import Parser
 from pathlib import Path
 from typing import Any
 
+from packaging.requirements import InvalidRequirement, Requirement
+from packaging.version import InvalidVersion, Version
+
 from .config import DEFAULT_USER_AGENT
 from .skill_integrity import (
     SkillManifestError,
@@ -35,6 +38,7 @@ class ProvenanceContext:
 
     module_file: Path
     executable: Path
+    sys_prefix: Path
     argv0: str
     home: Path
     env: Mapping[str, str]
@@ -164,6 +168,7 @@ def default_provenance_context() -> ProvenanceContext:
     return ProvenanceContext(
         module_file=module_file,
         executable=Path(sys.executable).resolve(),
+        sys_prefix=Path(sys.prefix).resolve(),
         argv0=sys.argv[0],
         home=Path.home().resolve(),
         env=dict(os.environ),
@@ -226,6 +231,154 @@ def _source_record(context: ProvenanceContext) -> dict[str, Any]:
         "version": version,
         "root": str(context.source_root),
         "pyproject_path": str(pyproject_path),
+    }
+
+
+def _project_requirement(
+    pyproject_path: Path,
+    dependency_name: str,
+) -> Requirement | None:
+    try:
+        payload = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))
+    except (OSError, tomllib.TOMLDecodeError):
+        return None
+    project = payload.get("project")
+    if not isinstance(project, Mapping):
+        return None
+    dependencies = project.get("dependencies")
+    if not isinstance(dependencies, list):
+        return None
+    normalized_dependency = _normalized_name(dependency_name)
+    for raw_requirement in dependencies:
+        if not isinstance(raw_requirement, str):
+            continue
+        try:
+            requirement = Requirement(raw_requirement)
+        except InvalidRequirement:
+            continue
+        if _normalized_name(requirement.name) == normalized_dependency:
+            return requirement
+    return None
+
+
+def _source_project_environment_record(
+    context: ProvenanceContext,
+) -> dict[str, Any]:
+    source_root = context.source_root
+    if source_root is None:
+        return {
+            "status": "not_applicable",
+            "reason_code": "source_checkout_not_detected",
+            "python_prefix": str(context.sys_prefix),
+            "project_venv": None,
+            "activation_command": None,
+            "mcp": {
+                "status": "not_applicable",
+                "reason_code": "source_checkout_not_detected",
+                "requirement": None,
+                "installed_version": None,
+            },
+            "issues": [],
+        }
+
+    project_venv = (source_root / ".venv").resolve()
+    active_prefix = context.sys_prefix.expanduser().resolve()
+    activation_command = f"source {project_venv / 'bin' / 'activate'}"
+    issues: list[dict[str, Any]] = []
+    venv_exists = project_venv.is_dir()
+    venv_active = not venv_exists or active_prefix == project_venv
+    if not venv_active:
+        issues.append(
+            {
+                "severity": "drift",
+                "reason_code": "source_checkout_project_venv_not_active",
+                "component": "source_project_environment",
+                "path": str(active_prefix),
+                "expected_prefix": str(project_venv),
+                "suggested_action": activation_command,
+            }
+        )
+
+    pyproject_path = source_root / "pyproject.toml"
+    requirement = _project_requirement(pyproject_path, "mcp")
+    if requirement is None:
+        mcp_record: dict[str, Any] = {
+            "status": "not_applicable",
+            "reason_code": "project_dependency_not_declared",
+            "requirement": None,
+            "installed_version": None,
+            "pyproject_path": str(pyproject_path),
+        }
+    else:
+        try:
+            installed_version = importlib.metadata.version(requirement.name)
+        except importlib.metadata.PackageNotFoundError:
+            installed_version = None
+            mcp_record = {
+                "status": "missing",
+                "reason_code": "project_dependency_missing",
+                "requirement": str(requirement),
+                "installed_version": None,
+                "pyproject_path": str(pyproject_path),
+            }
+            issues.append(
+                {
+                    "severity": "drift",
+                    "reason_code": "project_dependency_missing",
+                    "component": "project_dependency.mcp",
+                    "path": str(active_prefix),
+                    "requirement": str(requirement),
+                    "suggested_action": activation_command,
+                }
+            )
+        else:
+            try:
+                compatible = requirement.specifier.contains(
+                    Version(installed_version),
+                    prereleases=True,
+                )
+            except InvalidVersion:
+                compatible = False
+            mcp_record = {
+                "status": "ready" if compatible else "incompatible",
+                "reason_code": (
+                    "project_dependency_compatible"
+                    if compatible
+                    else "project_dependency_incompatible"
+                ),
+                "requirement": str(requirement),
+                "installed_version": installed_version,
+                "pyproject_path": str(pyproject_path),
+            }
+            if not compatible:
+                issues.append(
+                    {
+                        "severity": "drift",
+                        "reason_code": "project_dependency_incompatible",
+                        "component": "project_dependency.mcp",
+                        "path": str(active_prefix),
+                        "requirement": str(requirement),
+                        "actual": installed_version,
+                        "suggested_action": activation_command,
+                    }
+                )
+
+    if issues:
+        reason_code = str(issues[0]["reason_code"])
+        status = "degraded"
+    else:
+        reason_code = "source_project_environment_verified"
+        status = "ready"
+    return {
+        "status": status,
+        "reason_code": reason_code,
+        "python_prefix": str(active_prefix),
+        "project_venv": str(project_venv) if venv_exists else None,
+        "project_venv_exists": venv_exists,
+        "project_venv_active": venv_active,
+        "activation_command": activation_command,
+        "mcp": mcp_record,
+        "issues": issues,
     }
 
 
@@ -518,6 +671,7 @@ def install_provenance_payload(
         context=active_context,
     )
     source = _source_record(active_context)
+    source_project_environment = _source_project_environment_record(active_context)
     current_distribution = dict(active_context.current_distribution)
     active_cli = dict(active_context.active_cli)
     user_agent = _user_agent_record()
@@ -578,6 +732,7 @@ def install_provenance_payload(
         }
         for item in version_drift
     ]
+    issues.extend(source_project_environment["issues"])
     if resolved_root is not None and manifest_record["status"] == "missing":
         issues.append(
             {
@@ -672,10 +827,12 @@ def install_provenance_payload(
         "install_root_source": root_source,
         "invocation": {
             "python_executable": str(active_context.executable),
+            "python_prefix": str(active_context.sys_prefix),
             "argv0": active_context.argv0,
             "module_path": str(active_context.module_file),
         },
         "source": source,
+        "source_project_environment": source_project_environment,
         "current_distribution": current_distribution,
         "default_user_agent": user_agent,
         "active_cli": active_cli,

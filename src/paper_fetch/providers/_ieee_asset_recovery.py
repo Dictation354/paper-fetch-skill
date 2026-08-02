@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import threading
 import time
 from dataclasses import replace
 from pathlib import Path
@@ -11,7 +12,7 @@ from typing import Any
 from collections.abc import Callable, Mapping
 
 from ..extraction.html import decode_html
-from ..extraction.html.signals import detect_html_block, summarize_html
+from ..extraction.html.signals import detect_html_block, summarize_visible_html
 from ..extraction.html.assets.figures import figure_download_candidates
 from ..http.headers import header_value
 from ..models import AssetProfile
@@ -34,8 +35,61 @@ from .browser_workflow.fetchers import (
 )
 from .browser_workflow.shared import default_browser_workflow_deps
 
-IEEE_ASSET_ARTICLE_READY_TIMEOUT_SECONDS = 10.0
-IEEE_ASSET_ARTICLE_READY_POLL_MS = 500
+IEEE_ASSET_ARTICLE_READY_TIMEOUT_SECONDS = 15.0
+IEEE_ASSET_ARTICLE_READY_POLL_MS = 250
+_IEEE_ARTICLE_SEED_READINESS_SCRIPT = """
+articleNumber => {
+  const article = document.querySelector('#article');
+  const articleMarkup = article ? (article.outerHTML || article.textContent || '') : '';
+  let restDocumentSeen = false;
+  try {
+    restDocumentSeen = performance.getEntriesByType('resource')
+      .some(entry => entry.name.includes('/rest/document/' + articleNumber + '/'));
+  } catch (error) {
+    restDocumentSeen = false;
+  }
+  return {
+    articlePresent: Boolean(article),
+    articleMatches: Boolean(article && articleNumber && articleMarkup.includes(articleNumber)),
+    restDocumentSeen,
+  };
+}
+"""
+
+
+class _IeeePreviewWarmImageFetcher:
+    """Warm one IEEE preview before the first large-image browser recovery."""
+
+    def __init__(self, fetcher: _MemoizedImageDocumentFetcher) -> None:
+        self._fetcher = fetcher
+        self.browser_backend = fetcher.browser_backend
+        self.requires_caller_thread = fetcher.requires_caller_thread
+        self._warm_lock = threading.Lock()
+        self._preview_warm_attempted = False
+
+    def __call__(
+        self, image_url: str, asset: Mapping[str, Any]
+    ) -> dict[str, Any] | None:
+        normalized_url = normalize_text(image_url)
+        preview_url = normalize_text(
+            str(asset.get("preview_url") or asset.get("url") or "")
+        )
+        with self._warm_lock:
+            if (
+                not self._preview_warm_attempted
+                and preview_url
+                and normalized_url
+                and preview_url != normalized_url
+            ):
+                self._preview_warm_attempted = True
+                self._fetcher(preview_url, asset)
+            return self._fetcher(normalized_url or image_url, asset)
+
+    def failure_for(self, image_url: str) -> dict[str, Any] | None:
+        return self._fetcher.failure_for(image_url)
+
+    def close(self) -> None:
+        self._fetcher.close()
 
 
 def _ieee_article_seed_page_is_ready(page: Any, context: Any, seed_url: str) -> bool:
@@ -55,27 +109,24 @@ def _ieee_article_seed_page_is_ready(page: Any, context: Any, seed_url: str) -> 
             html = str(page.content() or "")
         except Exception:
             html = ""
-        if detect_html_block(title, summarize_html(html), None) is not None:
-            return False
+        readiness: Mapping[str, Any] = {}
         try:
-            has_article = page.locator("#article").count() > 0
-        except Exception:
-            has_article = False
-        rest_document_seen = False
-        try:
-            rest_document_seen = bool(
-                page.evaluate(
-                    """articleNumber => performance.getEntriesByType('resource')
-                      .some(entry => entry.name.includes('/rest/document/' + articleNumber + '/'))""",
-                    article_number,
-                )
+            evaluated = page.evaluate(
+                _IEEE_ARTICLE_SEED_READINESS_SCRIPT,
+                article_number,
             )
+            if isinstance(evaluated, Mapping):
+                readiness = evaluated
         except Exception:
-            rest_document_seen = False
-        if rest_document_seen or (
-            has_article and article_number and article_number in html
-        ):
-            return True
+            readiness = {}
+        if bool(readiness.get("articleMatches")):
+            detected = detect_html_block(
+                title,
+                summarize_visible_html(html),
+                None,
+            )
+            if detected is None:
+                return True
         try:
             page.wait_for_timeout(IEEE_ASSET_ARTICLE_READY_POLL_MS)
         except Exception:
@@ -249,7 +300,7 @@ def download_ieee_assets_with_browser(
     def image_fetcher_factory(**request: Any):
         if not request.get("attempt_body_assets"):
             return None
-        fetcher = _MemoizedImageDocumentFetcher(
+        memoized_fetcher = _MemoizedImageDocumentFetcher(
             deps._build_shared_browser_image_fetcher(
                 browser_context_seed_getter=request["browser_context_seed_getter"],
                 seed_urls_getter=request["seed_urls_getter"],
@@ -264,8 +315,8 @@ def download_ieee_assets_with_browser(
                 browser_config=request.get("browser_config"),
             )
         )
-        fetcher.browser_backend = browser_runtime_config.backend
-        return fetcher
+        memoized_fetcher.browser_backend = browser_runtime_config.backend
+        return _IeeePreviewWarmImageFetcher(memoized_fetcher)
 
     def file_fetcher_factory(**request: Any):
         if not request.get("attempt_supplementary_assets"):
@@ -295,9 +346,7 @@ def download_ieee_assets_with_browser(
             file_fetcher_factory=file_fetcher_factory,
             opener_requester={
                 "transport": transport,
-                "asset_download_concurrency": (
-                    1 if browser_runtime_config.backend == "camoufox" else concurrency
-                ),
+                "asset_download_concurrency": concurrency,
                 "serial_browser_assets": browser_runtime_config.backend == "camoufox",
             },
             deps=deps,

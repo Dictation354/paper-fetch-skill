@@ -3403,7 +3403,7 @@
       ]
     },
     {
-      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_complex_table_spans_are_semantically_expanded",
+      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_complex_table_spans_are_normalized_without_quality_loss",
       "anchors": [
         "rule-elsevier-complex-table-span-degradation"
       ],
@@ -3412,7 +3412,7 @@
       ]
     },
     {
-      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_real_complex_table_records_layout_degradation_quality",
+      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_real_complex_table_records_successful_normalization",
       "anchors": [
         "rule-elsevier-complex-table-span-degradation"
       ],

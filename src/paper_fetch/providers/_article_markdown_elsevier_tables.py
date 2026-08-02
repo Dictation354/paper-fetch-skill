@@ -19,6 +19,7 @@ from ._article_markdown_common import (
     normalize_table_cell_text,
     normalize_text,
     render_inline_text,
+    table_conversion_note,
     xml_local_name,
 )
 
@@ -68,24 +69,13 @@ def render_elsevier_table_result(table: ET.Element | None) -> ElsevierTableRende
         ),
         reasons=parsed.reasons,
     )
-    note: str | None = None
-    if normalized.status == TableConversionStatus.LAYOUT_DEGRADED:
-        note = (
-            "Merged table spans were semantically expanded into rectangular Markdown cells; "
-            "rowspan/colspan layout fidelity was reduced."
-        )
-    elif normalized.status == TableConversionStatus.FALLBACK:
-        note = (
-            "Irregular table structure could not be represented as a reliable Markdown grid; "
-            "cell text was retained as a readable list."
-        )
     return ElsevierTableRenderResult(
         headers=list(normalized.headers),
         rows=[list(row) for row in normalized.rows],
         prefix_rows=list(normalized.prefix_rows),
         status=normalized.status,
         reasons=normalized.reasons,
-        note=note,
+        note=table_conversion_note(normalized.status),
     )
 
 

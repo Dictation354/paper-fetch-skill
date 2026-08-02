@@ -349,6 +349,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                 "warnings",
                 "source_trail",
                 "trace",
+                "diagnostic_artifacts",
                 "token_estimate",
                 "token_estimate_breakdown",
                 "quality",

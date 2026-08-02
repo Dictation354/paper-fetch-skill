@@ -85,7 +85,7 @@ def server_instructions() -> str:
     return (
         "Resolve, inspect, cache, or fetch papers by DOI, landing URL, or title. Resolve "
         "ambiguous identities before fetching; use compact request-sensitive cache checks "
-        "before network work. Tool payloads have schema_version=1 and structured errors. "
+        "before network work. Tool payloads have schema_version=2 and structured errors. "
         "fetch_paper defaults to article+markdown, provider-default assets, metadata-only "
         "fallback enabled, full text, cache preference off, downloads on, and "
         "artifact_mode=markdown-assets. Fetch and batch calls may access remote services; "

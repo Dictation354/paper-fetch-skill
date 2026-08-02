@@ -22,7 +22,12 @@ from .auth import (
     browser_auth_provider_names,
 )
 from .artifacts import ArtifactMode, ArtifactStore
-from .browser_preflight import BrowserPreflightResult, run_browser_provider_preflight
+from .browser_preflight import (
+    BrowserPreflightResult,
+    BrowserPreflightRuntimeOptions,
+    browser_preflight_next_action,
+    run_browser_provider_preflight,
+)
 from .provider_catalog import browser_preflight_provider_names
 from .config import build_runtime_env, resolve_cli_download_dir
 from .diagnostics import (
@@ -56,7 +61,7 @@ from .publisher_identity import (
     extract_doi,
     extract_doi_from_url,
 )
-from .reason_codes import BROWSER_RUNTIME_FAILURE_CODES, ERROR, NO_ACCESS, RATE_LIMITED
+from .reason_codes import ERROR, NO_ACCESS, RATE_LIMITED
 from .runtime import (
     RuntimeContext,
     build_http_transport_for_context,
@@ -122,6 +127,31 @@ class CliFetchOutcome:
     completed_at: datetime
     result: SingleFetchResult | None = None
     error: Exception | None = None
+    diagnostic_artifacts: tuple[dict[str, Any], ...] = ()
+
+
+@dataclass(frozen=True)
+class CliManifestBuildContext:
+    """Shared immutable inputs for one CLI manifest record."""
+
+    args: argparse.Namespace
+    output_dir: Path
+    artifact_mode: ArtifactMode
+    run_id: UUID
+    tool_version: str
+    deps: ManifestBuilderDependencies
+
+
+@dataclass(frozen=True)
+class CliManifestAttempt:
+    """Identity and timing facts for one CLI manifest attempt."""
+
+    index: int
+    query: str
+    started_at: datetime
+    completed_at: datetime
+    attempt: int = 1
+    record_id: UUID | None = None
 
 
 class OutputDirectoryError(Exception):
@@ -744,6 +774,18 @@ def _manifest_output_artifacts(
                 legacy_field=LegacyArtifactField.SAVED_MARKDOWN_PATH,
             )
         )
+    for diagnostic in result.envelope.diagnostic_artifacts:
+        path = str(diagnostic.get("path") or "").strip()
+        if not path:
+            continue
+        artifacts.append(
+            ManifestOutputArtifactSpec(
+                path=path,
+                kind="diagnostic",
+                route=str(diagnostic.get("route") or "") or None,
+                failure_code=(str(diagnostic.get("failure_code") or "") or None),
+            )
+        )
     return tuple(artifacts)
 
 
@@ -764,26 +806,18 @@ def _aborted_error_payload(
 
 
 def _build_cli_manifest_record(
-    args: argparse.Namespace,
+    context: CliManifestBuildContext,
+    attempt: CliManifestAttempt,
     *,
-    index: int,
-    query: str,
-    output_dir: Path,
-    artifact_mode: ArtifactMode,
-    run_id: UUID,
-    tool_version: str,
-    started_at: datetime,
-    completed_at: datetime,
-    attempt: int = 1,
-    record_id: UUID | None = None,
     result: SingleFetchResult | None = None,
     error: Exception | None = None,
     error_payload: Mapping[str, Any] | None = None,
+    diagnostic_artifacts: Sequence[Mapping[str, Any]] = (),
     aborted: bool = False,
-    deps: ManifestBuilderDependencies,
 ) -> ManifestRecord:
     """Adapt CLI attempt facts to the sole PF-004 record builder."""
 
+    args = context.args
     if result is not None:
         envelope = result.envelope
         manifest_error = None
@@ -820,19 +854,28 @@ def _build_cli_manifest_record(
         candidate_count = (
             len(error.candidates) if isinstance(error, PaperFetchFailure) else 0
         )
-        artifacts = ()
+        artifacts = tuple(
+            ManifestOutputArtifactSpec(
+                path=str(item.get("path")),
+                kind="diagnostic",
+                route=str(item.get("route") or "") or None,
+                failure_code=str(item.get("failure_code") or "") or None,
+            )
+            for item in diagnostic_artifacts
+            if str(item.get("path") or "").strip()
+        )
 
     return build_manifest_record(
-        tool_version=tool_version,
-        run_id=run_id,
-        record_id=record_id,
-        index=index,
-        attempt=attempt,
-        query=query,
+        tool_version=context.tool_version,
+        run_id=context.run_id,
+        record_id=attempt.record_id,
+        index=attempt.index,
+        attempt=attempt.attempt,
+        query=attempt.query,
         request_parameters=_manifest_request_parameters(
             args,
-            output_dir=output_dir,
-            artifact_mode=artifact_mode,
+            output_dir=context.output_dir,
+            artifact_mode=context.artifact_mode,
         ),
         asset_profile=args.asset_profile,
         envelope=envelope,
@@ -840,13 +883,13 @@ def _build_cli_manifest_record(
         aborted=aborted,
         requested_outputs=_compute_modes(args),
         candidate_count=candidate_count,
-        expected_doi=_expected_doi_for_query(query),
+        expected_doi=_expected_doi_for_query(attempt.query),
         output_artifacts=artifacts,
         trace=trace,
         warnings=warnings,
-        started_at=started_at,
-        completed_at=completed_at,
-        deps=deps,
+        started_at=attempt.started_at,
+        completed_at=attempt.completed_at,
+        deps=context.deps,
     )
 
 
@@ -875,12 +918,18 @@ def _run_batch_item(
             started_at=started_at,
             completed_at=deps.clock(),
             error=exc,
+            diagnostic_artifacts=tuple(
+                dict(item) for item in context.diagnostic_artifacts
+            ),
         )
     else:
         return CliFetchOutcome(
             started_at=started_at,
             completed_at=deps.clock(),
             result=result,
+            diagnostic_artifacts=tuple(
+                dict(item) for item in context.diagnostic_artifacts
+            ),
         )
     finally:
         context.close()
@@ -922,25 +971,31 @@ def _record_from_batch_result(
 ) -> ManifestRecord:
     item = batch_result.item
     outcome = batch_result.value
+    build_context = CliManifestBuildContext(
+        args=args,
+        output_dir=output_dir,
+        artifact_mode=artifact_mode,
+        run_id=run_id,
+        tool_version=tool_version,
+        deps=deps,
+    )
     if outcome is not None:
         return _build_cli_manifest_record(
-            args,
-            index=item.index,
-            query=item.query,
-            output_dir=output_dir,
-            artifact_mode=artifact_mode,
-            run_id=run_id,
-            tool_version=tool_version,
-            started_at=outcome.started_at,
-            completed_at=outcome.completed_at,
-            attempt=item.attempt,
-            record_id=deterministic_manifest_record_id(
-                run_id, index=item.index, attempt=item.attempt
+            build_context,
+            CliManifestAttempt(
+                index=item.index,
+                query=item.query,
+                started_at=outcome.started_at,
+                completed_at=outcome.completed_at,
+                attempt=item.attempt,
+                record_id=deterministic_manifest_record_id(
+                    run_id, index=item.index, attempt=item.attempt
+                ),
             ),
             result=outcome.result,
             error=outcome.error,
+            diagnostic_artifacts=outcome.diagnostic_artifacts,
             aborted=batch_result.status is BatchItemStatus.CANCELLED,
-            deps=deps,
         )
 
     completed_at = deps.clock()
@@ -957,22 +1012,19 @@ def _record_from_batch_result(
         ),
     )
     return _build_cli_manifest_record(
-        args,
-        index=item.index,
-        query=item.query,
-        output_dir=output_dir,
-        artifact_mode=artifact_mode,
-        run_id=run_id,
-        tool_version=tool_version,
-        started_at=completed_at,
-        completed_at=completed_at,
-        attempt=item.attempt,
-        record_id=deterministic_manifest_record_id(
-            run_id, index=item.index, attempt=item.attempt
+        build_context,
+        CliManifestAttempt(
+            index=item.index,
+            query=item.query,
+            started_at=completed_at,
+            completed_at=completed_at,
+            attempt=item.attempt,
+            record_id=deterministic_manifest_record_id(
+                run_id, index=item.index, attempt=item.attempt
+            ),
         ),
         error_payload=error_payload,
         aborted=True,
-        deps=deps,
     )
 
 
@@ -1480,6 +1532,18 @@ def _add_browser_preflight_arguments(parser: argparse.ArgumentParser) -> None:
         "--browser-user-agent",
         help="Browser-only User-Agent override for this preflight run (default: runtime configuration).",
     )
+    parser.add_argument(
+        "--download-dir",
+        type=Path,
+        default=None,
+        help="Directory for privacy-sanitized failure diagnostics.",
+    )
+    parser.add_argument(
+        "--artifact-mode",
+        choices=("none", "all"),
+        default="none",
+        help="Use 'all' to persist sanitized page diagnostics (default: none).",
+    )
 
 
 def _build_browser_preflight_parent_parser() -> argparse.ArgumentParser:
@@ -1777,7 +1841,7 @@ def _write_auth_result(provider_key: str, provider_label: str, result) -> None:
 def _write_browser_preflight_results(results: list[BrowserPreflightResult]) -> None:
     sys.stdout.write("Browser preflight results:\n")
     for result in results:
-        status = "ok" if result.ok else "failed"
+        status = "ok" if result.ready else result.status
         sys.stdout.write(f"- {status}: {result.provider_label} ({result.provider})\n")
         if result.final_url:
             sys.stdout.write(f"  Final URL: {result.final_url}\n")
@@ -1799,12 +1863,11 @@ def _write_browser_preflight_results(results: list[BrowserPreflightResult]) -> N
             cookie_count = external.get("storage_state_cookie_count")
             if cookie_count is not None:
                 sys.stdout.write(f"  Injected storage cookies: {cookie_count}\n")
-        if not result.ok:
-            detail = result.message or result.reason or "Browser preflight failed."
-            if result.reason:
-                sys.stdout.write(f"  Code: {result.reason}\n")
+        if not result.ready:
+            detail = result.message or "Browser preflight failed."
+            sys.stdout.write(f"  Code: {result.reason_code}\n")
             browser_failure = _browser_preflight_failure_details(result)
-            stage = str(browser_failure.get("stage") or "").strip()
+            stage = result.stage or str(browser_failure.get("stage") or "").strip()
             if stage:
                 sys.stdout.write(f"  Stage: {stage}\n")
             exit_code = browser_failure.get("exit_code")
@@ -1837,28 +1900,25 @@ def _browser_preflight_failure_details(
 def _write_browser_preflight_failure_hints(
     results: list[BrowserPreflightResult],
 ) -> None:
-    failures = [result for result in results if not result.ok]
+    failures = [result for result in results if not result.ready]
     if not failures:
         return
-    sys.stderr.write(
-        "Browser preflight failed for these providers; run manual auth before retrying:\n"
-    )
+    sys.stderr.write("Browser preflight needs attention for these providers:\n")
     for result in failures:
-        detail = result.message or result.reason or "Browser preflight failed."
-        if result.reason in BROWSER_RUNTIME_FAILURE_CODES:
-            browser_failure = _browser_preflight_failure_details(result)
-            artifact = str(browser_failure.get("diagnostic_path") or "").strip()
-            artifact_hint = f" Diagnostic artifact: {artifact}." if artifact else ""
-            sys.stderr.write(
-                f"- {result.provider_label} ({result.provider}) "
-                f"[{result.reason}]: {detail}.{artifact_hint} Retry browser-preflight "
-                "after resolving the reported browser runtime state.\n"
-            )
-        else:
-            sys.stderr.write(
-                f"- {result.provider_label} ({result.provider}): {detail} "
-                f"Run: paper-fetch auth {result.provider}\n"
-            )
+        detail = result.message or "Browser preflight failed."
+        browser_failure = _browser_preflight_failure_details(result)
+        artifact = str(browser_failure.get("diagnostic_path") or "").strip()
+        if not artifact:
+            artifact = str(
+                (result.diagnostics or {}).get("diagnostic_path") or ""
+            ).strip()
+        artifact_hint = f" Diagnostic artifact: {artifact}." if artifact else ""
+        action = browser_preflight_next_action(result.provider, result.status)
+        sys.stderr.write(
+            f"- {result.provider_label} ({result.provider}) "
+            f"[{result.status}/{result.reason_code}]: {detail}.{artifact_hint} "
+            f"Next action: {action}.\n"
+        )
 
 
 def _run_auth_namespace(args: argparse.Namespace) -> int:
@@ -1890,10 +1950,14 @@ def _run_browser_preflight_namespace(args: argparse.Namespace) -> int:
         providers=args.provider,
         timeout_ms=args.timeout_ms,
         browser_user_agent=args.browser_user_agent,
+        runtime_options=BrowserPreflightRuntimeOptions(
+            download_dir=args.download_dir,
+            artifact_mode=args.artifact_mode,
+        ),
     )
     _write_browser_preflight_results(results)
     _write_browser_preflight_failure_hints(results)
-    return 1 if any(not result.ok for result in results) else 0
+    return 1 if any(not result.ready for result in results) else 0
 
 
 def run_auth_command(raw_args: list[str]) -> int:
@@ -1955,17 +2019,21 @@ def _write_single_failure_manifest(
     deps: ManifestBuilderDependencies,
 ) -> None:
     record = _build_cli_manifest_record(
-        args,
-        index=1,
-        query=args.query,
-        output_dir=output_dir,
-        artifact_mode=artifact_mode,
-        run_id=run_id,
-        tool_version=tool_version,
-        started_at=started_at,
-        completed_at=deps.clock(),
+        CliManifestBuildContext(
+            args=args,
+            output_dir=output_dir,
+            artifact_mode=artifact_mode,
+            run_id=run_id,
+            tool_version=tool_version,
+            deps=deps,
+        ),
+        CliManifestAttempt(
+            index=1,
+            query=args.query,
+            started_at=started_at,
+            completed_at=deps.clock(),
+        ),
         error=error,
-        deps=deps,
     )
     _write_single_cli_manifest(
         args.manifest,
@@ -2067,17 +2135,21 @@ def _run_fetch_namespace(args: argparse.Namespace) -> int:
             assert manifest_started_at is not None
             _validate_single_manifest_target(args.manifest, result)
             record = _build_cli_manifest_record(
-                args,
-                index=1,
-                query=args.query,
-                output_dir=output_dir,
-                artifact_mode=artifact_mode,
-                run_id=manifest_run_id,
-                tool_version=manifest_tool_version,
-                started_at=manifest_started_at,
-                completed_at=manifest_deps.clock(),
+                CliManifestBuildContext(
+                    args=args,
+                    output_dir=output_dir,
+                    artifact_mode=artifact_mode,
+                    run_id=manifest_run_id,
+                    tool_version=manifest_tool_version,
+                    deps=manifest_deps,
+                ),
+                CliManifestAttempt(
+                    index=1,
+                    query=args.query,
+                    started_at=manifest_started_at,
+                    completed_at=manifest_deps.clock(),
+                ),
                 result=result,
-                deps=manifest_deps,
             )
             _write_single_cli_manifest(
                 args.manifest,

@@ -26,6 +26,29 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 ### Limitations
 
 - Offline packages include the Camoufox and Playwright Python dependencies but not the Camoufox browser binary. Prepare it explicitly with `python -m camoufox fetch` before entering a restricted or offline environment, then run `paper-fetch browser-preflight`. A reproducible browser-backed fetch in a fully network-isolated native macOS environment remains an open audit item, so complete offline browser support is not claimed.
+### Changed
+
+- Upgraded MCP fetch/error and acceptance payloads to schema v2: `FetchEnvelope.trace` is now the sole complete trace owner, metadata/assets retain `article_type` and `preview_accepted`, and asset summaries distinguish accepted/fallback previews with stable issue codes. Legacy v1 fetch-envelope caches remain read-only migratable.
+- Made live publisher samples declare accepted source-and-trail outcomes, use lazy browser preflight with shared storage state, and run under marker-aware socket policy without a global force-enable override. Springer success coverage now uses an OA research article; the historical Nature news item remains a separate access-gate behavior sample.
+- Promoted the publisher catalog live suite from full-text smoke coverage to a hard `asset_profile=body` acceptance gate, with report/JUnit artifacts that distinguish recorded complete providers from skipped or otherwise unrecorded catalog entries; protected IEEE GIF recovery now lives in a separate authorized-runner opt-in suite.
+- Removed the unimplemented IOP XML/TDM placeholder route, so catalog/status/docs only expose executable IOP HTML, PDF, metadata, and supplementary capabilities.
+
+### Fixed
+
+- Made IEEE preflight, browser landing/full-text, and shared asset seeding wait up to 15 seconds for a matching article-number `#article`; persistent AWS WAF HTTP-202 pages now report `aws_waf_challenge` with compatibility diagnostics, while pages that become ready are no longer rejected from their initial response. Protected large-asset recovery still stays direct-first, primes its preview once, and preserves full-size recovery/fallback provenance.
+- Stabilized AIP and the shared browser-workflow cold HTML retry by carrying provider-scoped transient cookies from the fast attempt into the normal attempt without persisting unaccepted state; HTTP-200 head-only pages now report `empty_article_shell`, and diagnostics retain both attempts, response status, and DOM readiness while PDF remains a terminal fallback.
+- Fixed live browser-provider capability gating to read the nested `browser_runtime.available` result, isolate provider profiles/storage state, and reuse Camoufox's prepared executable and dependency cache across pytest isolation; explicit launches reuse adjacent version metadata, and startup progress is kept off MCP JSON-RPC stdout.
+- Preserved pre-page browser failures as privacy-safe diagnostic JSON, propagated request-scoped formula tool configuration into implicit MathML conversion, corrected body-only asset acceptance/provenance semantics, and recovered signed Silverchair originals without cross-thread Camoufox page access.
+- Made the live workflow install formula tools, run only the ordinary publisher/MCP suites serially, emit legacy-compatible JUnit properties plus structured acceptance artifacts, and leave protected IEEE coverage to an explicitly authorized runner.
+- Prevented IEEE browser DOM extraction from treating `captcha` or access tokens inside non-visible script/template markup as a block page; visible challenges remain rejected, and validation now leaves the page's own REST subrequests unblocked.
+- Added the documented `status=ok` and compact seven-facet acceptance summary to successful single-paper MCP fetch responses, using the same canonical evaluator and projection as batch fetches.
+- Reclassified successfully expanded HTML/JATS/CALS row and column spans as normal table normalization, retaining structural reason codes without emitting false layout-degradation warnings; malformed span or column metadata still degrades conservatively, and the extraction revision now invalidates stale cached quality results.
+- Fixed request deadline initialization, AIP/Science DOM readiness, and browser preflight classification so local fast-path caps do not exhaust later fallbacks and page/extraction failures retain privacy-safe diagnostic artifacts.
+- Made Springer/Nature HTML retrieval reuse the hardened cookie-aware requester with one fresh-session retry for `cookies_not_supported`, preserved Research Briefing article type, and stopped valid authorless briefings from receiving `empty_authors`.
+- Reconciled IEEE small/large variants by canonical logical identity, restored parallel direct asset downloads while keeping shared-page browser recovery serial, and separated asset download, fidelity, placeholder, and remote-only acceptance facts.
+- Removed trace triplication and the warning-count quality heuristic; repeated codes from real retry attempts remain ordered, while arbitrary operational warning text no longer degrades successful content.
+- Enforced zero external socket attempts in ordinary unit tests, closed the three batch resolver seams, diagnosed inactive source-checkout `.venv`/incompatible MCP versions, and retained diagnostic files in both successful and terminal-failure manifests.
+- Added independent browser/DOM/HTTP/retry/asset/render timing and provider-route-stage nearest-rank performance summaries with observed-only output for single samples and p50/p95 for repeated samples.
 
 ## 4.1.0 - 2026-07-29
 

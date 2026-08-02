@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from pathlib import Path
+from unittest import mock
 
 from paper_fetch import publisher_identity
+from paper_fetch.extraction.html.signals import HtmlExtractionFailure
 from paper_fetch.provider_catalog import (
     PROVIDER_CATALOG,
     SOURCE_PROVIDER_MAP,
@@ -11,7 +13,7 @@ from paper_fetch.provider_catalog import (
     provider_html_path_templates,
     provider_pdf_path_templates,
 )
-from paper_fetch.providers import _aip_html
+from paper_fetch.providers import _aip_html, browser_runtime
 from paper_fetch.providers._atypon_browser_workflow_profiles import (
     build_html_candidates,
     build_pdf_candidates,
@@ -21,6 +23,7 @@ from paper_fetch.providers._registry import provider_bundle
 from paper_fetch.providers.aip import AipClient
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.browser_workflow import BrowserWorkflowClient
+from tests.unit._browser_workflow_deps import install_browser_workflow_deps
 
 
 AIP_STRUCTURE_DOI = "10.1063/5.0129134"
@@ -30,6 +33,123 @@ AIP_STRUCTURE_LANDING = (
 )
 AIP_TABLE_FORMULA_DOI = "10.1063/5.0188905"
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_aip_cold_html_retry_reuses_transient_seed_before_committing_state(
+    tmp_path,
+) -> None:
+    client = AipClient(transport=None, env={})
+    state_path = tmp_path / "aip-storage-state.json"
+    runtime = browser_runtime.BrowserRuntimeConfig(
+        provider="aip",
+        doi=AIP_STRUCTURE_DOI,
+        artifact_dir=tmp_path / "artifacts",
+        headless=True,
+        user_agent=None,
+        backend="camoufox",
+        storage_state_path=state_path,
+    )
+    seed = {
+        "browser_cookies": [
+            {
+                "name": "__cf_bm",
+                "value": "transient-session",
+                "domain": ".aip.org",
+                "path": "/",
+            }
+        ],
+        "browser_final_url": AIP_STRUCTURE_LANDING,
+    }
+    first_stage = browser_runtime.BrowserStagedStorageState(
+        path=state_path,
+        provider="aip",
+        filter_url=AIP_STRUCTURE_LANDING,
+        payload={"cookies": list(seed["browser_cookies"]), "origins": []},
+    )
+    second_stage = browser_runtime.BrowserStagedStorageState(
+        path=state_path,
+        provider="aip",
+        filter_url=AIP_STRUCTURE_LANDING,
+        payload={"cookies": list(seed["browser_cookies"]), "origins": []},
+    )
+    mocked_browser = mock.Mock(
+        side_effect=[
+            browser_runtime.BrowserFetchedHtml(
+                source_url=AIP_STRUCTURE_LANDING,
+                final_url=AIP_STRUCTURE_LANDING,
+                html="<html><head><title>AIP article</title></head></html>",
+                response_status=200,
+                response_headers={"content-type": "text/html"},
+                title="AIP article",
+                summary="AIP article",
+                browser_context_seed=seed,
+                staged_storage_state=first_stage,
+            ),
+            browser_runtime.BrowserFetchedHtml(
+                source_url=AIP_STRUCTURE_LANDING,
+                final_url=AIP_STRUCTURE_LANDING,
+                html="<html><body><article>Full article</article></body></html>",
+                response_status=200,
+                response_headers={"content-type": "text/html"},
+                title="AIP article",
+                summary="Full article",
+                browser_context_seed=seed,
+                staged_storage_state=second_stage,
+            ),
+        ]
+    )
+    mocked_extractor = mock.Mock(
+        side_effect=[
+            HtmlExtractionFailure(
+                "article_container_not_found",
+                "Could not identify the main article container.",
+            ),
+            (
+                "# AIP article\n\n## Results\n\n" + ("Body text " * 120),
+                {
+                    "title": "AIP article",
+                    "availability_diagnostics": {"content_kind": "fulltext"},
+                },
+            ),
+        ]
+    )
+    install_browser_workflow_deps(
+        client,
+        load_runtime_config=mock.Mock(return_value=runtime),
+        ensure_runtime_ready=mock.Mock(),
+        fetch_html_with_browser=mocked_browser,
+        extract_atypon_browser_workflow_markdown=mocked_extractor,
+    )
+
+    with mock.patch(
+        "paper_fetch.providers.browser_runtime.paths.commit_staged_storage_state",
+        return_value={"saved": True, "reason": "saved"},
+    ) as commit_state:
+        raw_payload = client.fetch_raw_fulltext(
+            AIP_STRUCTURE_DOI,
+            {
+                "doi": AIP_STRUCTURE_DOI,
+                "title": "AIP article",
+                "landing_page_url": AIP_STRUCTURE_LANDING,
+            },
+        )
+
+    assert mocked_browser.call_count == 2
+    assert "browser_context_seed" not in mocked_browser.call_args_list[0].kwargs
+    retry_seed = mocked_browser.call_args_list[1].kwargs["browser_context_seed"]
+    assert retry_seed["browser_cookies"][0]["name"] == "__cf_bm"
+    assert retry_seed["browser_cookies"][0]["value"] == "transient-session"
+    commit_state.assert_called_once()
+    assert commit_state.call_args.args[0] is second_stage
+    assert not state_path.exists()
+    assert raw_payload.content is not None
+    assert raw_payload.content.route_kind == "html"
+    attempts = raw_payload.content.diagnostics["html_attempts"]
+    assert [attempt["result"] for attempt in attempts] == [
+        "extraction_failure",
+        "success",
+    ]
+    assert attempts[0]["failure_code"] == "empty_article_shell"
 
 
 def test_aip_provider_bundle_declares_routing_sources_and_browser_runtime() -> None:

@@ -18,12 +18,13 @@ FETCH_DESCRIPTION_MAX_CHARS = 1_200
 ALL_TOOL_DESCRIPTIONS_MAX_CHARS = 5_000
 HOST_NARRATIVE_MAX_CHARS = 24_000
 
-# PF-018 snapshot for the ten-tool native contract after adding structured batch_fetch
-# and compacting presentation-only output-schema metadata. The allowance is only for
-# small constraint drift, not new unbudgeted tools or restored schema annotations.
-NATIVE_TOOLS_LIST_BASELINE_BYTES = 69_459
+# PF-018 snapshot for the ten-tool native contract after adding structured batch_fetch,
+# compact single-fetch acceptance, and compacting presentation-only output-schema
+# metadata. The allowance is only for small constraint drift, not new unbudgeted tools
+# or restored schema annotations.
+NATIVE_TOOLS_LIST_BASELINE_BYTES = 69_944
 NATIVE_TOOLS_LIST_GROWTH_ALLOWANCE_BYTES = 1_024
-NATIVE_SCHEMA_BASELINE_BYTES = 65_961
+NATIVE_SCHEMA_BASELINE_BYTES = 66_918
 NATIVE_SCHEMA_GROWTH_ALLOWANCE_BYTES = 512
 
 

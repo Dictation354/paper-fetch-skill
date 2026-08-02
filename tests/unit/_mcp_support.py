@@ -17,6 +17,7 @@ from mcp.types.version import LATEST_HANDSHAKE_VERSION
 
 from paper_fetch.browser_preflight import (
     BrowserPreflightResult,
+    classify_browser_preflight_failure,
     run_browser_provider_preflight,
 )
 from paper_fetch.http import RequestCancelledError, RequestFailure

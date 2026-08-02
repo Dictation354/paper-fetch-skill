@@ -23,6 +23,8 @@ from paper_fetch.manifest_writer import (
 from paper_fetch.mcp import batch_fetch as batch_fetch_module
 from paper_fetch.mcp._deps import default_mcp_deps
 from paper_fetch.mcp.batch_fetch import batch_fetch_tool_async
+from paper_fetch.mcp.fetch_tool import build_fetch_tool_result
+from paper_fetch.mcp.schemas import FetchPaperRequest
 from paper_fetch.mcp.server import build_server
 from paper_fetch.models import QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION
 from paper_fetch.reason_codes import RATE_LIMITED
@@ -108,6 +110,18 @@ def test_batch_fetch_preserves_input_order_and_completion_metadata_with_bounded_
     assert sum(item["content_returned_chars"] for item in payload["results"]) == 11
     assert payload["content_returned_chars"] == 11
     assert all(item["content_truncated"] for item in payload["results"])
+    assert set(payload["results"][0]["acceptance"]) == {
+        "overall",
+        "identity",
+        "fetch",
+        "content",
+        "asset",
+        "output",
+        "provenance",
+        "has_fulltext",
+        "has_abstract",
+        "token_estimate",
+    }
     assert ctx.progress[0] == (0, 2, "Starting batch_fetch")
     assert ctx.progress[-1] == (2, 2, "batch_fetch complete")
     assert {update[0] for update in ctx.progress[1:-1]} == {1, 2}
@@ -116,6 +130,32 @@ def test_batch_fetch_preserves_input_order_and_completion_metadata_with_bounded_
     )
     assert output_model is not None
     output_model.model_validate(payload)
+
+
+def test_single_and_batch_fetch_share_compact_acceptance_projection() -> None:
+    request = FetchPaperRequest.model_validate(
+        {
+            "query": "10.1000/one",
+            "strategy": {"asset_profile": "none"},
+        }
+    )
+    envelope = _successful_fetch(request)
+    single = build_fetch_tool_result(envelope, request)
+    batch = asyncio.run(
+        batch_fetch_tool_async(
+            **_temporary_kwargs(
+                queries=[request.query],
+                concurrency=1,
+            )
+        )
+    )
+
+    assert single.structured_content is not None
+    assert batch.structured_content is not None
+    assert (
+        single.structured_content["acceptance"]
+        == batch.structured_content["results"][0]["acceptance"]
+    )
 
 
 def test_batch_fetch_uses_item_local_contexts_with_one_shared_transport() -> None:

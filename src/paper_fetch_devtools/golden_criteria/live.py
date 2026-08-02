@@ -36,6 +36,7 @@ from paper_fetch.reason_codes import (
 )
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.service import FetchStrategy, PaperFetchFailure, fetch_paper
+from paper_fetch.tracing import nearest_rank_percentile
 from paper_fetch.utils import normalize_text, sanitize_filename
 from paper_fetch.workflow.rendering import rewrite_markdown_asset_links
 
@@ -53,6 +54,9 @@ ISSUE_CATEGORIES = (
     "reference_loss",
     "figure_table_loss",
     "asset_download_failure",
+    "asset_fidelity_degraded",
+    "asset_placeholder_suspected",
+    "asset_remote_only",
     "math_loss",
     "metadata_loss",
     "route_source_mismatch",
@@ -88,6 +92,18 @@ SOLUTION_BY_CATEGORY = {
     "asset_download_failure": (
         "Improve body asset extraction and download resilience.",
         "Inspect figure/table candidates, full-size fallbacks, and download failure diagnostics for affected samples.",
+    ),
+    "asset_fidelity_degraded": (
+        "Improve archived asset fidelity.",
+        "Inspect fallback previews or conversion losses without treating successful local downloads as failures.",
+    ),
+    "asset_placeholder_suspected": (
+        "Replace suspected placeholder assets.",
+        "Inspect tiny, invalid, or duplicate archived payloads and recover the real publisher asset.",
+    ),
+    "asset_remote_only": (
+        "Complete requested asset archiving.",
+        "Inspect requested assets that retained only remote links despite archive being enabled.",
     ),
     "content_missing": (
         "Recover missing article body content.",
@@ -222,6 +238,20 @@ class SolutionRecommendation:
 
 
 @dataclass(frozen=True)
+class PerformanceStageSummary:
+    provider: str
+    route: str
+    stage: str
+    sample_count: int
+    observed_seconds: float | None = None
+    p50_seconds: float | None = None
+    p95_seconds: float | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
 class GoldenCriteriaLiveReport:
     generated_at: str
     output_dir: str
@@ -232,6 +262,7 @@ class GoldenCriteriaLiveReport:
     results: list[GoldenCriteriaLiveResult]
     summary_by_provider: list[ProviderReviewSummary]
     summary_by_issue: list[IssueReviewSummary]
+    performance_by_provider_route_stage: list[PerformanceStageSummary]
     solution_recommendations: list[SolutionRecommendation]
 
     def to_dict(self) -> dict[str, Any]:
@@ -247,6 +278,9 @@ class GoldenCriteriaLiveReport:
                 item.to_dict() for item in self.summary_by_provider
             ],
             "summary_by_issue": [item.to_dict() for item in self.summary_by_issue],
+            "performance_by_provider_route_stage": [
+                item.to_dict() for item in self.performance_by_provider_route_stage
+            ],
             "solution_recommendations": [
                 item.to_dict() for item in self.solution_recommendations
             ],
@@ -292,8 +326,8 @@ class GoldenCriteriaLiveReport:
                 "",
                 "## Sample Results",
                 "",
-                "| Sample | Provider | DOI | Status | Content | Source | Assets | Seconds | Resolve | Metadata | Fulltext | Asset | Formula | Render | Fetch | Materialize | Review | Issues |",
-                "| --- | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |",
+                "| Sample | Provider | DOI | Status | Content | Source | Assets | Seconds | Resolve | Metadata | Fulltext | Browser | DOM Ready | HTTP | Retry | Asset | Formula | Render | Fetch | Materialize | Review | Issues |",
+                "| --- | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |",
             ]
         )
         for result in self.results:
@@ -304,6 +338,12 @@ class GoldenCriteriaLiveReport:
             resolve_seconds = result.stage_timings.get("resolve_seconds", 0.0)
             metadata_seconds = result.stage_timings.get("metadata_seconds", 0.0)
             fulltext_seconds = result.stage_timings.get("fulltext_seconds", 0.0)
+            browser_seconds = result.stage_timings.get("browser_seconds", 0.0)
+            dom_readiness_seconds = result.stage_timings.get(
+                "dom_readiness_seconds", 0.0
+            )
+            http_seconds = result.stage_timings.get("http_seconds", 0.0)
+            retry_seconds = result.stage_timings.get("retry_seconds", 0.0)
             asset_seconds = result.stage_timings.get("asset_seconds", 0.0)
             formula_seconds = result.stage_timings.get("formula_seconds", 0.0)
             render_seconds = result.stage_timings.get("render_seconds", 0.0)
@@ -313,9 +353,38 @@ class GoldenCriteriaLiveReport:
                 f"| {sample_link} | `{result.provider}` | `{result.doi}` | `{result.status}` | "
                 f"`{result.content_kind or '-'}` | `{result.source or '-'}` | {result.asset_count} | "
                 f"{result.elapsed_seconds:.3f} | {resolve_seconds:.3f} | {metadata_seconds:.3f} | "
-                f"{fulltext_seconds:.3f} | {asset_seconds:.3f} | {formula_seconds:.3f} | "
+                f"{fulltext_seconds:.3f} | {browser_seconds:.3f} | "
+                f"{dom_readiness_seconds:.3f} | {http_seconds:.3f} | "
+                f"{retry_seconds:.3f} | {asset_seconds:.3f} | {formula_seconds:.3f} | "
                 f"{render_seconds:.3f} | {fetch_seconds:.3f} | {materialize_seconds:.3f} | "
                 f"`{result.review_status}` | {issues} |"
+            )
+
+        lines.extend(
+            [
+                "",
+                "## Provider Route Performance",
+                "",
+                "| Provider | Route | Stage | Samples | Observed | p50 | p95 |",
+                "| --- | --- | --- | ---: | ---: | ---: | ---: |",
+            ]
+        )
+        for summary in self.performance_by_provider_route_stage:
+            observed = (
+                f"{summary.observed_seconds:.3f}"
+                if summary.observed_seconds is not None
+                else "-"
+            )
+            p50 = (
+                f"{summary.p50_seconds:.3f}" if summary.p50_seconds is not None else "-"
+            )
+            p95 = (
+                f"{summary.p95_seconds:.3f}" if summary.p95_seconds is not None else "-"
+            )
+            lines.append(
+                f"| `{summary.provider}` | `{summary.route}` | "
+                f"`{summary.stage}` | {summary.sample_count} | "
+                f"{observed} | {p50} | {p95} |"
             )
 
         lines.extend(
@@ -608,41 +677,21 @@ def issue_categories_for_result(
         categories.append("live_fetch_blocked")
 
     if envelope is not None:
-        trail_blob = " ".join(envelope.source_trail).lower()
-        warning_blob = " ".join(envelope.warnings).lower()
-        preview_fallback_assets = [
-            asset
-            for asset in list(
-                (envelope.article.assets if envelope.article is not None else []) or []
+        asset_issue_codes = {
+            normalize_text(code).lower()
+            for code in envelope.quality.asset_summary.issue_codes
+            if normalize_text(code)
+        }
+        categories.extend(
+            code
+            for code in (
+                "asset_download_failure",
+                "asset_fidelity_degraded",
+                "asset_placeholder_suspected",
+                "asset_remote_only",
             )
-            if normalize_text(getattr(asset, "download_tier", None)).lower()
-            == "preview"
-        ]
-        preview_fallback_has_non_formula_asset = any(
-            normalize_text(getattr(asset, "kind", None)).lower() != "formula"
-            for asset in preview_fallback_assets
+            if code in asset_issue_codes
         )
-        article_asset_failures = list(
-            getattr(envelope.article.quality, "asset_failures", [])
-            if envelope.article is not None
-            else []
-        )
-        if (
-            "asset_failures" in trail_blob
-            or "related assets could not be downloaded" in warning_blob
-            or "partially downloaded" in warning_blob
-            or "assets were only partially downloaded" in warning_blob
-            or bool(article_asset_failures)
-            or (
-                "assets_preview_fallback" in trail_blob
-                and (
-                    not preview_fallback_assets
-                    or preview_fallback_has_non_formula_asset
-                )
-            )
-            or _markdown_has_unlocalized_downloaded_ieee_mediastore_asset(envelope)
-        ):
-            categories.append("asset_download_failure")
         if _markdown_references_block_mixes_numbered_and_bullet_items(
             envelope.markdown
         ):
@@ -1074,6 +1123,10 @@ def _stage_timings(
         "resolve_seconds",
         "metadata_seconds",
         "fulltext_seconds",
+        "browser_seconds",
+        "dom_readiness_seconds",
+        "http_seconds",
+        "retry_seconds",
         "asset_seconds",
         "formula_seconds",
         "render_seconds",
@@ -1611,6 +1664,51 @@ def build_issue_summaries(
     ]
 
 
+_PERFORMANCE_STAGE_KEYS = (
+    "browser_seconds",
+    "dom_readiness_seconds",
+    "http_seconds",
+    "retry_seconds",
+    "asset_seconds",
+    "render_seconds",
+    "total_seconds",
+)
+
+
+def build_performance_summaries(
+    results: Sequence[GoldenCriteriaLiveResult],
+) -> list[PerformanceStageSummary]:
+    grouped: dict[tuple[str, str, str], list[float]] = defaultdict(list)
+    for result in results:
+        route = normalize_text(result.source).lower() or "unavailable"
+        for stage in _PERFORMANCE_STAGE_KEYS:
+            try:
+                value = max(0.0, float(result.stage_timings.get(stage, 0.0)))
+            except (TypeError, ValueError):
+                value = 0.0
+            grouped[(result.provider, route, stage)].append(value)
+
+    summaries: list[PerformanceStageSummary] = []
+    for (provider, route, stage), values in sorted(grouped.items()):
+        sample_count = len(values)
+        summaries.append(
+            PerformanceStageSummary(
+                provider=provider,
+                route=route,
+                stage=stage,
+                sample_count=sample_count,
+                observed_seconds=(round(values[0], 3) if sample_count == 1 else None),
+                p50_seconds=(
+                    nearest_rank_percentile(values, 0.50) if sample_count >= 2 else None
+                ),
+                p95_seconds=(
+                    nearest_rank_percentile(values, 0.95) if sample_count >= 2 else None
+                ),
+            )
+        )
+    return summaries
+
+
 def build_solution_recommendations(
     results: Sequence[GoldenCriteriaLiveResult],
 ) -> list[SolutionRecommendation]:
@@ -1662,6 +1760,7 @@ def build_report(
         results=result_list,
         summary_by_provider=build_provider_summaries(result_list),
         summary_by_issue=build_issue_summaries(result_list),
+        performance_by_provider_route_stage=build_performance_summaries(result_list),
         solution_recommendations=build_solution_recommendations(result_list),
     )
 

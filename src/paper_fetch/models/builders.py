@@ -107,6 +107,17 @@ def _asset_from_entry(
     source_url = safe_text(entry.get("source_url")) or None
     source_path = safe_text(entry.get("source_path")) or None
     source_href = safe_text(entry.get("source_href")) or None
+    preview_accepted = bool(entry.get("preview_accepted"))
+    if (
+        normalize_text(entry.get("download_tier")).lower() == "preview"
+        and not preview_accepted
+    ):
+        from ..extraction.html.assets.dom import preview_dimensions_are_acceptable
+
+        preview_accepted = preview_dimensions_are_acceptable(
+            _optional_int(entry.get("width")) or 0,
+            _optional_int(entry.get("height")) or 0,
+        )
     return Asset(
         kind=kind,
         heading=safe_text(entry.get("heading") or heading_fallback) or heading_fallback,
@@ -126,6 +137,14 @@ def _asset_from_entry(
         downloaded_bytes=_optional_int(entry.get("downloaded_bytes")),
         width=_optional_int(entry.get("width")),
         height=_optional_int(entry.get("height")),
+        preview_accepted=preview_accepted,
+        browser_backend=safe_text(entry.get("browser_backend")) or None,
+        final_fetcher=safe_text(entry.get("final_fetcher")) or None,
+        recovery_attempts=[
+            dict(attempt)
+            for attempt in entry.get("recovery_attempts") or []
+            if isinstance(attempt, Mapping)
+        ],
         provenance=_asset_provenance(entry),
     )
 
@@ -155,6 +174,7 @@ def build_metadata(metadata: Mapping[str, Any]) -> Metadata:
             metadata.get("journal_title") or metadata.get("journal")
         )
         or None,
+        article_type=normalize_inline_html_text(metadata.get("article_type")) or None,
         published=normalize_inline_html_text(metadata.get("published")) or None,
         keywords=[
             normalize_inline_html_text(item)
@@ -201,7 +221,6 @@ def metadata_only_article(
             has_abstract=bool(article_metadata.abstract),
             warnings=list(warnings or []),
             source_trail=list(source_trail or source_trail_from_trace(effective_trace)),
-            trace=effective_trace,
             token_estimate_breakdown=token_estimate_breakdown,
         ),
     )
@@ -371,7 +390,6 @@ def article_from_structure(
             has_abstract=bool(article_metadata.abstract),
             warnings=list(warnings or []),
             source_trail=list(source_trail or source_trail_from_trace(effective_trace)),
-            trace=effective_trace,
             token_estimate_breakdown=token_estimate_breakdown,
         ),
     )
@@ -508,7 +526,6 @@ def article_from_markdown(
             has_abstract=bool(article_metadata.abstract),
             warnings=list(warnings or []),
             source_trail=list(source_trail or source_trail_from_trace(effective_trace)),
-            trace=effective_trace,
             token_estimate_breakdown=token_estimate_breakdown,
         ),
     )
