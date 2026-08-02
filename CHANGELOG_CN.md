@@ -62,6 +62,9 @@
 
 ### 修复
 
+- 将 provenance 检查使用的 `packaging` 声明为核心运行时依赖，并让 macOS
+  contract validator 通过锁定的项目环境运行，避免干净 core 安装以及原生/离线
+  CI runner 因依赖未声明或环境不可见而失败。
 - 修复并发或续跑 CLI batch 在结果缺少标题和 DOI 时争用
   `unknown_unknown_article.*` 的问题。主输出文件名现在回退到规范化 query 的
   16 位 SHA-256 摘要，在不向文件名暴露完整 query URL 的同时继续保持

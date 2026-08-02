@@ -25,7 +25,7 @@
 
 - 要求：合约记录上游仓库、`v4.1.0` 和完整 commit
   `fc3bd96e8d781667a2e86e90dc6e8e35a8a26fa7`。
-- 自动证据：`python scripts/validate_macos_adaptation.py`。
+- 自动证据：`uv run python scripts/validate_macos_adaptation.py`。
 - 平台：S / L / D。
 - 关闭条件：更新上游时，基线、contract version、change/audit ID 常量、测试与
   所有实现引用同步更新；旧 v1 合约不被复制回来。上游 `v4.1.0` 标签保持
@@ -189,7 +189,7 @@
 - 自动证据：
 
   ```bash
-  python scripts/validate_macos_adaptation.py
+  uv run python scripts/validate_macos_adaptation.py
   scripts/test-macos-contract.sh
   ```
 

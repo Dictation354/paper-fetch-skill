@@ -74,7 +74,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           full: "true"
       - name: Validate immutable source macOS adaptation contract
-        run: python scripts/validate_macos_adaptation.py
+        run: uv run python scripts/validate_macos_adaptation.py
       - name: Validate trusted POSIX tooling revision
         if: ${{ inputs.posix_tooling_ref != '' }}
         env:
@@ -94,7 +94,7 @@ jobs:
       - name: Validate trusted macOS adaptation tooling
         if: ${{ inputs.posix_tooling_ref != '' }}
         working-directory: .posix-release-tooling
-        run: python scripts/validate_macos_adaptation.py
+        run: uv run --project .. python scripts/validate_macos_adaptation.py
       - name: Overlay trusted POSIX release tooling
         if: ${{ inputs.posix_tooling_ref != '' }}
         run: |
@@ -186,7 +186,7 @@ jobs:
           python-version: "3.13"
           full: "true"
       - name: Validate immutable source macOS adaptation contract
-        run: python scripts/validate_macos_adaptation.py
+        run: uv run python scripts/validate_macos_adaptation.py
       - name: Validate trusted Windows tooling revision
         if: ${{ inputs.windows_tooling_ref != '' }}
         shell: bash

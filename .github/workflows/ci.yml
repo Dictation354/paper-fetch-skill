@@ -160,7 +160,7 @@ jobs:
           python-version: "3.14"
           full: "true"
       - name: Validate macOS adaptation contract
-        run: python scripts/validate_macos_adaptation.py
+        run: uv run python scripts/validate_macos_adaptation.py
       - name: Require native Apple Silicon runner
         run: test "$(uname -m)" = "arm64"
       - name: Prepare pinned official Camoufox runtime explicitly

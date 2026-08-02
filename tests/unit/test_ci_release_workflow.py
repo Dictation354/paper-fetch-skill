@@ -152,7 +152,8 @@ def test_offline_workflow_verifies_macos_packages_on_pinned_arm64_runner() -> No
     for tag in ("cp311", "cp312", "cp313", "cp314"):
         assert f"target: macos-arm64-{tag}" in workflow
     assert "macos-latest" not in workflow
-    assert "python scripts/validate_macos_adaptation.py" in workflow
+    assert "uv run python scripts/validate_macos_adaptation.py" in workflow
+    assert "uv run --project .. python scripts/validate_macos_adaptation.py" in workflow
     assert 'MACOSX_DEPLOYMENT_TARGET: "15.0"' in workflow
     assert "packages=(dist/*.tar.gz)" in workflow
     assert "packages=(dist/*.sh)" in workflow
@@ -174,7 +175,7 @@ def test_regular_ci_includes_native_macos_offline_gate() -> None:
     assert "macos-native:" in workflow
     assert "runs-on: macos-15" in workflow
     assert 'python-version: "3.14"' in workflow
-    assert "python scripts/validate_macos_adaptation.py" in workflow
+    assert "uv run python scripts/validate_macos_adaptation.py" in workflow
     assert 'test "$(uname -m)" = "arm64"' in workflow
     assert "uv run python -m camoufox fetch official/152.0.4-beta.28" in workflow
     assert 'PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST: "1"' in workflow

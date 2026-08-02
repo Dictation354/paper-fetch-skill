@@ -21,6 +21,7 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 ### Fixed
 
+- Declared `packaging` as a core runtime dependency for provenance checks, and ran macOS contract validation through the locked project environment so clean core installs and native/offline CI runners do not fail on an undeclared or invisible dependency.
 - Fixed concurrent or resumed CLI batches colliding on `unknown_unknown_article.*` when a metadata-poor result had no title or DOI. Output naming now falls back to a deterministic 16-character SHA-256 digest of the normalized query, preserving no-overwrite safety without exposing full query URLs in filenames.
 - Fixed prepared official Camoufox app bundles failing to start on native macOS. Managed runtime readiness remains a no-download check, but paper-fetch no longer passes `Contents/MacOS/camoufox` back as a custom executable and therefore no longer makes Camoufox look for `Contents/MacOS/properties.json`. Ephemeral fetch/preflight and persistent authentication contexts share this behavior, while explicit custom executable overrides remain supported.
 - Fixed MCP cache index, fetch-envelope, and resource misses when macOS exposes a temporary scope through `/var` or `/tmp` but canonicalizes saved paths through `/private/var` or `/private/tmp`; equivalent roots now share one safe scope while in-scope symlinks and out-of-scope files remain rejected.

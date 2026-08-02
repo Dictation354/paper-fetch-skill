@@ -44,6 +44,7 @@ class FetchCommonTests(unittest.TestCase):
         dependencies = list(pyproject["project"]["dependencies"])
 
         self.assertIn("pydantic>=2,<3", dependencies)
+        self.assertIn("packaging>=24,<27", dependencies)
         self.assertIn("urllib3>=2.2,<3", dependencies)
         self.assertTrue(all("==" not in dependency for dependency in dependencies))
 

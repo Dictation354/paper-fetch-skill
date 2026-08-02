@@ -291,7 +291,7 @@ contract gate；这些结果用于早期发现漂移，不会提升为原生 Mac
 5. **先**运行静态 validator：
 
    ```bash
-   python scripts/validate_macos_adaptation.py
+   uv run python scripts/validate_macos_adaptation.py
    ```
 
 6. 再运行当前宿主对应的 contract gate：
