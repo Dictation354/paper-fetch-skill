@@ -131,7 +131,7 @@ jobs:
       - name: Verify offline package
         if: ${{ runner.os == 'Linux' }}
         run: scripts/verify-offline-package.sh dist/*.sh
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: offline-${{ runner.os }}-${{ matrix.python-version }}
           path: dist/*
@@ -203,7 +203,7 @@ jobs:
             $env:PIP_FIND_LINKS = "$(Join-Path $snapshotRoot 'runtime-wheels') $(Join-Path $snapshotRoot 'support-wheels')"
           }
           scripts/build-offline-package-windows.ps1 -OutputDir dist -PythonBin python
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: offline-Windows-3.13
           path: dist/*
