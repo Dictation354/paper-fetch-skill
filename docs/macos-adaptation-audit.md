@@ -243,10 +243,11 @@
   `Contents/MacOS/camoufox` 强制作为 custom `executable_path`；只有显式
   `PAPER_FETCH_BROWSER_BINARY_PATH` 才透传 custom path。临时 fetch/preflight
   context 和持久 auth context 必须遵循同一规则。
-- 依赖一致性：browser/full extra 与 `uv.lock` 精确固定 Camoufox 0.5.4；原生 CI
-  准备的官方 runtime 和离线 artifact 因此由同一 package 版本解释。POSIX 构建器
-  还验证下载 wheel METADATA 与 installed distribution 都恰好为 0.5.4，并把版本
-  写入 `components.camoufox.python_package_version` manifest 字段。
+- 依赖一致性：browser/full extra 接受 `camoufox>=0.5.4,<0.6`，具体版本由
+  `uv.lock` 固定；原生 CI 与离线 artifact 因此使用同一 locked package。
+  POSIX 构建器从 lockfile 解析版本，验证下载 wheel METADATA 与 installed
+  distribution 完全一致，并把实际值写入
+  `components.camoufox.python_package_version` manifest 字段。
 - portable 自动证据：`tests/unit/test_camoufox_backend.py` 分别锁定 managed
   ephemeral、managed persistent、两种 manager 的 explicit override 和 missing-runtime
   no-download 行为。Windows / WSL 可以执行这些纯 mock 节点，但不能证明 app

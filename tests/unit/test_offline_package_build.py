@@ -796,7 +796,7 @@ exit 73
         self.assertIn("tooling_revision = sys.argv[10] or None", manifest_block)
         self.assertIn('{"tooling_revision": tooling_revision}', manifest_block)
 
-    def test_posix_build_enforces_exact_camoufox_runtime_version(self) -> None:
+    def test_posix_build_enforces_locked_camoufox_runtime_version(self) -> None:
         script = BUILD_OFFLINE_PACKAGE.read_text(encoding="utf-8")
         runtime_block = _shell_function(
             script,
@@ -804,7 +804,11 @@ exit 73
             "verify_macos_arm64_binary",
         )
 
-        self.assertIn('CAMOUFOX_PYTHON_PACKAGE_VERSION="0.5.4"', script)
+        self.assertIn("locked_camoufox_version()", script)
+        self.assertIn(
+            'CAMOUFOX_PYTHON_PACKAGE_VERSION="$(locked_camoufox_version)"', script
+        )
+        self.assertIn('"camoufox==$CAMOUFOX_PYTHON_PACKAGE_VERSION"', runtime_block)
         self.assertIn('[ "${#camoufox_wheels[@]}" -eq 1 ]', runtime_block)
         self.assertIn("from email.parser import BytesParser", runtime_block)
         self.assertIn("from zipfile import ZipFile", runtime_block)

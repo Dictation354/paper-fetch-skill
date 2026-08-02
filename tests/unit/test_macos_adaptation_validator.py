@@ -214,7 +214,8 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
     ) -> None:
         contract = validator.load_contract()
         contract["components"]["camoufox"]["browser_binary"] = "bundled"
-        contract["components"]["camoufox"]["python_package_version"] = "latest"
+        contract["components"]["camoufox"]["python_package_specifier"] = ">=0"
+        contract["components"]["camoufox"]["locked_version_source"] = "network"
         contract["components"]["camoufox"]["version_verification"] = "declaration"
         contract["components"]["camoufox"]["manifest_version_field"] = "missing"
         contract["components"]["camoufox"]["preflight_downloads_browser"] = True
@@ -234,7 +235,11 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             diagnostic,
         )
         self.assertIn(
-            "components.camoufox.python_package_version must be '0.5.4'",
+            "components.camoufox.python_package_specifier must be '>=0.5.4,<0.6'",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.locked_version_source must be 'uv.lock'",
             diagnostic,
         )
         self.assertIn(
@@ -279,6 +284,13 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             "components.forbidden must contain only flaresolverr",
             diagnostic,
         )
+
+    def test_camoufox_compatible_patch_versions_are_supported(self) -> None:
+        self.assertTrue(validator._camoufox_version_is_supported("0.5.4"))
+        self.assertTrue(validator._camoufox_version_is_supported("0.5.99"))
+        self.assertFalse(validator._camoufox_version_is_supported("0.5.3"))
+        self.assertFalse(validator._camoufox_version_is_supported("0.6.0"))
+        self.assertFalse(validator._camoufox_version_is_supported("latest"))
 
     def test_contract_keeps_portable_and_native_evidence_explicit(self) -> None:
         contract = validator.load_contract()

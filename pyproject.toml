@@ -54,7 +54,7 @@ Changelog = "https://github.com/Dictation354/paper-fetch-skill/blob/main/CHANGEL
 
 [project.optional-dependencies]
 browser = [
-  "camoufox==0.5.4",
+  "camoufox>=0.5.4,<0.6",
   "lxml>=6,<7",
   "playwright>=1.47,<1.61",
   "trafilatura>=2.0,<3",
@@ -64,7 +64,7 @@ pdf = [
   "pymupdf4llm>=1.27,<2",
 ]
 full = [
-  "camoufox==0.5.4",
+  "camoufox>=0.5.4,<0.6",
   "lxml>=6,<7",
   "playwright>=1.47,<1.61",
   "PyMuPDF>=1.27,<2",

@@ -8,6 +8,9 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
+from packaging.requirements import Requirement
+from packaging.version import InvalidVersion, Version
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = REPO_ROOT / "docs" / "macos-adaptation-contract.toml"
 
@@ -22,6 +25,7 @@ EXPECTED_PYTHON_VERSIONS = ["3.11", "3.12", "3.13", "3.14"]
 EXPECTED_PYTHON_TAGS = ["cp311", "cp312", "cp313", "cp314"]
 EXPECTED_BASELINE_REVISION = "fc3bd96e8d781667a2e86e90dc6e8e35a8a26fa7"
 EXPECTED_CONTRACT_VERSION = "4.1.0"
+EXPECTED_CAMOUFOX_SPECIFIER = ">=0.5.4,<0.6"
 EXPECTED_POSIX_TOOLING_PATHS = [
     "scripts/build-offline-package.sh",
     "install-offline.sh",
@@ -32,6 +36,15 @@ EXPECTED_WINDOWS_TOOLING_PATHS = ["scripts/build-offline-package-windows.ps1"]
 ALLOWED_RISKS = {"P0", "P1", "P2"}
 ALLOWED_STATUSES = {"implemented"}
 ALLOWED_PORTABLE_VALIDATION = {"static", "simulated", "static_and_simulated"}
+
+
+def _camoufox_version_is_supported(value: str) -> bool:
+    try:
+        version = Version(value)
+    except InvalidVersion:
+        return False
+    return version in Requirement(f"camoufox{EXPECTED_CAMOUFOX_SPECIFIER}").specifier
+
 
 REQUIRED_TOP_LEVEL = {
     "schema_version",
@@ -584,8 +597,8 @@ def _validate_native_packaging(
                 "unused npm launcher symlink pruning",
             ),
             (
-                'CAMOUFOX_PYTHON_PACKAGE_VERSION="0.5.4"',
-                "build Camoufox package version pin",
+                "locked_camoufox_version",
+                "build Camoufox lockfile version resolution",
             ),
             (
                 "Camoufox dependency wheel must be exactly",
@@ -934,7 +947,8 @@ def _validate_browser_boundary(
         components.get("camoufox"),
         required={
             "python_package",
-            "python_package_version",
+            "python_package_specifier",
+            "locked_version_source",
             "version_verification",
             "manifest_version_field",
             "browser_binary",
@@ -953,7 +967,8 @@ def _validate_browser_boundary(
     )
     expected_camoufox = {
         "python_package": "bundled",
-        "python_package_version": "0.5.4",
+        "python_package_specifier": EXPECTED_CAMOUFOX_SPECIFIER,
+        "locked_version_source": "uv.lock",
         "version_verification": "lock-wheel-installed-manifest",
         "manifest_version_field": "components.camoufox.python_package_version",
         "browser_binary": "not_bundled",
@@ -1042,9 +1057,19 @@ def _validate_browser_boundary(
     optional = pyproject.get("project", {}).get("optional-dependencies", {})
     for extra_name in ("browser", "full"):
         dependencies = optional.get(extra_name, [])
-        if "camoufox==0.5.4" not in dependencies:
+        camoufox_requirements = [
+            Requirement(dependency)
+            for dependency in dependencies
+            if Requirement(dependency).name.casefold() == "camoufox"
+        ]
+        if (
+            len(camoufox_requirements) != 1
+            or camoufox_requirements[0].specifier
+            != Requirement(f"camoufox{EXPECTED_CAMOUFOX_SPECIFIER}").specifier
+        ):
             errors.append(
-                f"pyproject optional extra {extra_name} must pin camoufox==0.5.4"
+                f"pyproject optional extra {extra_name} must require "
+                f"camoufox{EXPECTED_CAMOUFOX_SPECIFIER}"
             )
     try:
         uv_lock = tomllib.loads((repo_root / "uv.lock").read_text(encoding="utf-8"))
@@ -1056,9 +1081,19 @@ def _validate_browser_boundary(
             for package in uv_lock.get("package", [])
             if package.get("name") == "camoufox"
         ]
-        if len(locked_camoufox) != 1 or locked_camoufox[0].get("version") != "0.5.4":
+        locked_version = (
+            str(locked_camoufox[0].get("version") or "")
+            if len(locked_camoufox) == 1
+            else ""
+        )
+        if (
+            len(locked_camoufox) != 1
+            or not locked_version
+            or not _camoufox_version_is_supported(locked_version)
+        ):
             errors.append(
-                "uv.lock must resolve exactly one camoufox package at version 0.5.4"
+                "uv.lock must resolve exactly one Camoufox package satisfying "
+                f"{EXPECTED_CAMOUFOX_SPECIFIER}"
             )
         project_lock = next(
             (
@@ -1074,11 +1109,12 @@ def _validate_browser_boundary(
             if not any(
                 requirement.get("name") == "camoufox"
                 and requirement.get("marker") == expected_marker
-                and requirement.get("specifier") == "==0.5.4"
+                and requirement.get("specifier") == EXPECTED_CAMOUFOX_SPECIFIER
                 for requirement in locked_requirements
             ):
                 errors.append(
-                    f"uv.lock must preserve camoufox==0.5.4 for the {extra_name} extra"
+                    "uv.lock must preserve "
+                    f"camoufox{EXPECTED_CAMOUFOX_SPECIFIER} for the {extra_name} extra"
                 )
 
     active_paths = [

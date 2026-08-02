@@ -79,7 +79,7 @@ CI 自动发布规则：
 
 #### 锁定依赖与定期刷新
 
-`pyproject.toml` 的大多数依赖保留兼容范围；browser/full extra 为了与原生 Mac browser gate 对齐，显式固定 `camoufox==0.5.4`。`uv.lock` 固定普通开发和 CI 的完整解析结果。POSIX 离线构建还会验证唯一 Camoufox wheel 的 METADATA 与安装后的 distribution 版本，并在 `offline-manifest.json` 的 `components.camoufox.python_package_version` 记录 `0.5.4`。CI 使用 `uv sync --frozen`，不会在常规运行中重新选择版本。每周 `dependency-refresh.yml` 执行 `uv lock --upgrade`、full unit 和漏洞审计；发现兼容更新时产生 notice，但不自动提交或推送。离线 wheelhouse/hash manifest 继续负责跨平台离线资产，不替代开发锁文件。
+`pyproject.toml` 的大多数依赖保留兼容范围；browser/full extra 使用 `camoufox>=0.5.4,<0.6`，允许后续兼容版本提供新的浏览器能力。`uv.lock` 固定普通开发、CI 和离线构建实际使用的版本；POSIX 构建从 lockfile 解析该版本，验证唯一 Camoufox wheel 的 METADATA 与安装后的 distribution，并在 `offline-manifest.json` 的 `components.camoufox.python_package_version` 记录实际值。CI 使用 `uv sync --frozen`，不会在常规运行中重新选择版本。每周 `dependency-refresh.yml` 执行 `uv lock --upgrade`、full unit 和漏洞审计；发现兼容更新时产生 notice，但不自动提交或推送。离线 wheelhouse/hash manifest 继续负责跨平台离线资产，不替代开发锁文件。
 
 #### 滚动依赖预发布
 

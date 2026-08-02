@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 from unittest import mock
 
 from packaging.requirements import Requirement
+from packaging.version import Version
 
 from paper_fetch import utils
 from paper_fetch.providers import _article_markdown_common as markdown_common
@@ -63,7 +64,7 @@ class FetchCommonTests(unittest.TestCase):
 
         self.assertNotIn("arxiv", dependency_names)
 
-    def test_browser_extras_pin_supported_camoufox_api_version(self) -> None:
+    def test_browser_extras_allow_locked_compatible_camoufox_api_version(self) -> None:
         with (REPO_ROOT / "pyproject.toml").open("rb") as handle:
             pyproject = tomllib.load(handle)
         with (REPO_ROOT / "uv.lock").open("rb") as handle:
@@ -77,7 +78,7 @@ class FetchCommonTests(unittest.TestCase):
                 for dependency in optional_dependencies[extra_name]
                 if Requirement(dependency).name.casefold() == "camoufox"
             ]
-            self.assertEqual(camoufox_requirements, ["camoufox==0.5.4"])
+            self.assertEqual(camoufox_requirements, ["camoufox>=0.5.4,<0.6"])
 
         camoufox_packages = [
             package
@@ -85,7 +86,11 @@ class FetchCommonTests(unittest.TestCase):
             if package["name"].casefold() == "camoufox"
         ]
         self.assertEqual(len(camoufox_packages), 1)
-        self.assertEqual(camoufox_packages[0]["version"], "0.5.4")
+        locked_version = Version(camoufox_packages[0]["version"])
+        self.assertIn(
+            locked_version,
+            Requirement("camoufox>=0.5.4,<0.6").specifier,
+        )
 
         project_package = next(
             package
@@ -102,7 +107,10 @@ class FetchCommonTests(unittest.TestCase):
                 and requirement.get("marker") == marker
             ]
             self.assertEqual(len(camoufox_edges), 1)
-            self.assertEqual(camoufox_edges[0].get("specifier"), "==0.5.4")
+            self.assertEqual(
+                camoufox_edges[0].get("specifier"),
+                ">=0.5.4,<0.6",
+            )
 
     def test_article_markdown_common_reexports_shared_normalize_text(self) -> None:
         self.assertIs(markdown_common.normalize_text, utils.normalize_text)

@@ -51,9 +51,9 @@
   当前用户固定的 managed cache，且在调用 Camoufox 前验证 compatibility flag、
   active config 与 browser 目录 containment，避免把任意目录交给 package manager
   清理。
-- browser/full extra 与 lockfile 精确固定 `camoufox==0.5.4`，保证原生 Mac
-  launch gate 与离线产物使用同一 package API。POSIX 构建器还会核验下载 wheel
-  METADATA 与 installed distribution，并把版本写入 offline manifest。
+- browser/full extra 保持 `camoufox>=0.5.4,<0.6` 兼容范围，由 `uv.lock`
+  提供可复现的具体版本。POSIX 构建器从 lockfile 解析该版本，核验下载 wheel
+  METADATA 与 installed distribution，并把实际版本写入 offline manifest。
   POSIX/Windows tooling ref 都必须是
   完整 commit SHA，只复制精确 packaging-tool 路径且不复制 Python wheel source；
   manifest 会分别记录源码 `git_revision` 和可选 `tooling_revision`。

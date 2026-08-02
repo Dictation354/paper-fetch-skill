@@ -10,7 +10,7 @@ PACKAGE_NAME=""
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 INSTALLER_MANIFEST_FILE="$REPO_DIR/installer/manifest.json"
 MACOS_MINIMUM_OS_VERSION="15.0"
-CAMOUFOX_PYTHON_PACKAGE_VERSION="0.5.4"
+CAMOUFOX_PYTHON_PACKAGE_VERSION=""
 PAPER_FETCH_OFFLINE_TOOLING_REVISION="${PAPER_FETCH_OFFLINE_TOOLING_REVISION:-}"
 STAGING_OWNERSHIP_MARKER_NAME=".paper-fetch-offline-staging-owner"
 STAGING_OWNERSHIP_MARKER_MAGIC="paper-fetch-offline-staging-v1"
@@ -74,6 +74,31 @@ if not soabi.startswith(f"{expected_soabi}-"):
     raise SystemExit(1)
 
 print(f"cp{sys.version_info.major}{sys.version_info.minor}")
+PY
+}
+
+locked_camoufox_version() {
+  "$PYTHON_BIN" - "$REPO_DIR/uv.lock" <<'PY'
+from __future__ import annotations
+
+from pathlib import Path
+import sys
+import tomllib
+
+lock_path = Path(sys.argv[1])
+with lock_path.open("rb") as handle:
+    lock = tomllib.load(handle)
+matches = [
+    str(package.get("version") or "").strip()
+    for package in lock.get("package", [])
+    if str(package.get("name") or "").casefold() == "camoufox"
+]
+if len(matches) != 1 or not matches[0]:
+    raise SystemExit(
+        "uv.lock must contain exactly one versioned Camoufox package; "
+        f"found {len(matches)}"
+    )
+print(matches[0])
 PY
 }
 
@@ -320,7 +345,8 @@ build_project_runtime() {
   "$PYTHON_BIN" -m pip download \
     --dest "$wheelhouse" \
     --only-binary=:all: \
-    "${wheels[0]}[full]"
+    "${wheels[0]}[full]" \
+    "camoufox==$CAMOUFOX_PYTHON_PACKAGE_VERSION"
 
   shopt -s nullglob
   local camoufox_wheels=("$wheelhouse"/camoufox-*.whl)
@@ -1022,6 +1048,8 @@ main() {
     die "Offline output directory must not equal or be inside staging: $OUTPUT_DIR"
   fi
   version="$(project_version)"
+  CAMOUFOX_PYTHON_PACKAGE_VERSION="$(locked_camoufox_version)" \
+    || die "Could not resolve the locked Camoufox package version from uv.lock."
 
   copy_runtime_assets "$staging"
   build_project_runtime "$staging" "$package_name"

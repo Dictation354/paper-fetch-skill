@@ -15,8 +15,8 @@ Windows / WSL 开发时同步上游 `main` 的重放流程。它不是一次性�
   macOS 15.0
 - 原生构建 runner：固定 `macos-15`，不使用会随 GitHub 镜像迁移的
   `macos-latest`
-- browser/full extra 与 lockfile 都精确固定 `camoufox==0.5.4`，使原生 browser
-  launch gate 与离线产物使用同一 Python package 版本
+- browser/full extra 接受 `camoufox>=0.5.4,<0.6`，由 `uv.lock` 固定原生 browser
+  launch gate 与离线产物实际使用的 Python package 版本
 - `v4.1.0` 是不可移动的上游审计基线，不是本 fork 适配后的发布版本；发布这些
   适配必须先提升 fork 版本并创建新标签，不能移动或复用上游 `v4.1.0` 标签
 
@@ -197,7 +197,7 @@ macOS user-config 的 installer managed block，但保留用户自行写入的�
 
 ## MAC-V4-003：“离线包”的浏览器边界
 
-`runtime/site-packages` 内包含精确固定的 Camoufox 0.5.4 和 Playwright
+`runtime/site-packages` 内包含 `uv.lock` 选定的兼容 Camoufox 0.5.x 和 Playwright
 **Python 包**，但不
 包含 Camoufox 浏览器 binary。`paper-fetch` 的 fetch 路径不会自动下载浏览器。
 构建器要求 wheelhouse 中恰好有一个 Camoufox wheel，读取其 METADATA 验证版本，

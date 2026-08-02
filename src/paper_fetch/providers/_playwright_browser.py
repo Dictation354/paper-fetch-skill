@@ -660,28 +660,19 @@ def _browser_html_summary(publisher: str, html_text: str) -> str:
 
 def _browser_page_failure_details(
     *,
-    reason: str,
     trace: Mapping[str, Any],
     runtime_context: RuntimeContext | None,
-    publisher: str,
-    config: BrowserRuntimeConfig,
-    target_url: str,
-    final_url: str,
-    html_text: str,
-    status: int | None,
-    title: str,
-    summary: str,
-    stage: str,
+    request: PageDiagnosticRequest,
 ) -> dict[str, Any]:
     details: dict[str, Any] = {
         "trace": dict(trace),
-        "stage": stage,
-        "final_url": diagnostic_url_payload(final_url),
-        "response_status": status,
-        "title_summary": title[:500] or None,
-        "page_summary": summary[:1000] or None,
+        "stage": request.stage,
+        "final_url": diagnostic_url_payload(request.final_url or ""),
+        "response_status": request.response_status,
+        "title_summary": (request.title or "")[:500] or None,
+        "page_summary": (request.summary or "")[:1000] or None,
     }
-    if reason == "aws_waf_challenge":
+    if request.failure_code == "aws_waf_challenge":
         details.update(
             {
                 "challenge_provider": "aws_waf",
@@ -690,25 +681,7 @@ def _browser_page_failure_details(
         )
     if runtime_context is None:
         return details
-    diagnostic = capture_page_diagnostic(
-        runtime_context,
-        PageDiagnosticRequest(
-            provider=publisher,
-            route="browser_html",
-            attempt=max(1, len(list(trace.get("candidates") or []))),
-            failure_code=reason,
-            stage=stage,
-            html_text=html_text,
-            doi=config.doi,
-            target_url=target_url,
-            final_url=final_url,
-            backend=config.backend,
-            response_status=status,
-            title=title,
-            summary=summary,
-            details={"browser_runtime_trace": dict(trace)},
-        ),
-    )
+    diagnostic = capture_page_diagnostic(runtime_context, request)
     details["failure_diagnostic"] = diagnostic
     diagnostic_path = normalize_text(str(diagnostic.get("diagnostic_path") or ""))
     if diagnostic_path:
@@ -1213,18 +1186,24 @@ def fetch_html_with_playwright(
                     detected.message,
                     browser_context_seed=browser_context_seed,
                     details=_browser_page_failure_details(
-                        reason=detected.reason,
                         trace=trace,
                         runtime_context=runtime_context,
-                        publisher=publisher,
-                        config=config,
-                        target_url=normalized_url,
-                        final_url=final_url,
-                        html_text=html,
-                        status=status,
-                        title=title or "",
-                        summary=summary,
-                        stage="block_detection",
+                        request=PageDiagnosticRequest(
+                            provider=publisher,
+                            route="browser_html",
+                            attempt=max(1, len(list(trace.get("candidates") or []))),
+                            failure_code=detected.reason,
+                            stage="block_detection",
+                            html_text=html,
+                            doi=config.doi,
+                            target_url=normalized_url,
+                            final_url=final_url,
+                            backend=config.backend,
+                            response_status=status,
+                            title=title or "",
+                            summary=summary,
+                            details={"browser_runtime_trace": dict(trace)},
+                        ),
                     ),
                 )
                 continue
@@ -1247,18 +1226,24 @@ def fetch_html_with_playwright(
                     message,
                     browser_context_seed=browser_context_seed,
                     details=_browser_page_failure_details(
-                        reason=reason,
                         trace=trace,
                         runtime_context=runtime_context,
-                        publisher=publisher,
-                        config=config,
-                        target_url=normalized_url,
-                        final_url=final_url,
-                        html_text=html,
-                        status=status,
-                        title=title or "",
-                        summary=summary,
-                        stage="dom_readiness",
+                        request=PageDiagnosticRequest(
+                            provider=publisher,
+                            route="browser_html",
+                            attempt=max(1, len(list(trace.get("candidates") or []))),
+                            failure_code=reason,
+                            stage="dom_readiness",
+                            html_text=html,
+                            doi=config.doi,
+                            target_url=normalized_url,
+                            final_url=final_url,
+                            backend=config.backend,
+                            response_status=status,
+                            title=title or "",
+                            summary=summary,
+                            details={"browser_runtime_trace": dict(trace)},
+                        ),
                     ),
                 )
                 continue
