@@ -91,6 +91,8 @@
 
 ### 变更——运行时与 provider 验证
 
+- 删除 GitHub Actions 的 Live publisher/MCP、provider drift 与完整 Golden corpus
+  定时/手动工作流；这些 opt-in 检查只保留文档化的本地 pytest 和脚本入口。
 - publisher live 样本改为声明 source 与 trail 的联合合法 outcome，browser provider 使用复用 storage state 的 lazy preflight，live socket 由 marker 自动放行，不再依赖全局 force-enable。Springer 成功基准替换为 OA 研究论文，历史 Nature 新闻只保留为独立 access-gate 行为样本。
 - publisher catalog live 从全文 smoke 提升为 `asset_profile=body` 硬验收门；JSON/JUnit artifact 会区分“已记录 provider 全部 complete”和“存在 skip/未记录 provider”，IEEE 受保护 GIF 恢复拆为仅授权 runner 显式启用的独立套件。
 
@@ -105,7 +107,7 @@
 - 稳定 AIP 及共享 browser workflow 的冷启动 HTML 重试：fast 尝试产生的 provider-scoped 临时 cookies 会传给正常尝试，但未验收状态不会提前持久化；HTTP 200 的 head-only 页面现在报告 `empty_article_shell`，重试会优先下一个已有 provider URL 而不再重复同一空壳 landing。诊断保留两轮尝试、响应状态和 DOM readiness，PDF 继续作为终态兜底。
 - 修复 publisher live 测试误读浏览器静态能力的问题：改读嵌套的 `browser_runtime.available`，隔离各 provider 的 profile/storage state，并在 pytest 隔离期间复用 Camoufox 已准备的可执行文件与依赖 cache；显式启动复用相邻版本元数据，启动进度不再污染 MCP JSON-RPC stdout。
 - 将页面创建前的 browser 失败也保存为隐私安全诊断 JSON，把请求作用域的公式工具配置传入隐式 MathML 转换，修正 body-only 资产及 provenance 验收语义，并在不跨线程使用 Camoufox page 的前提下恢复 Silverchair 签名原图。
-- live workflow 会准备公式工具、仅串行执行普通 publisher/MCP 套件、输出 legacy-compatible JUnit 属性和结构化 acceptance artifact；IEEE 受保护覆盖留给明确授权的 runner。
+- 普通 publisher/MCP live 套件与 IEEE 受保护覆盖保留为彼此独立、仅限本地显式运行的入口；共享外部状态的测试继续串行，并保留 legacy-compatible JUnit 属性和结构化 acceptance artifact。
 - 修复 IEEE 浏览器 DOM 提取把非可见脚本/模板中的 `captcha` 或访问 token 误判为 block page 的问题；可见 challenge 仍会被拒绝，验证时保持页面自身 REST 子请求正常放行。
 - 为成功的 MCP 单篇抓取响应补齐文档约定的 `status=ok` 与七分面紧凑 acceptance，并与批量抓取复用同一套统一验收及投影逻辑。
 - 将成功展开的 HTML/JATS/CALS 行列跨度改判为正常表格规范化：保留结构化 reason，但不再误发版式降级 warning；非法 span/列定义仍保守降级，并提升 extraction revision 以淘汰带旧质量语义的缓存。

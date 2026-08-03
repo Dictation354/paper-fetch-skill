@@ -401,7 +401,7 @@ offline manifest schema 3 保留 `version`、`git_revision`、`built_at_utc`、`
 - wheel/sdist 构建与内容检查。
 - Ubuntu / Windows portable Mac contract gate，以及固定 `macos-15` arm64、CPython 3.14 的原生 cache-alias test + build + verifier gate；Windows / WSL 静态结果不能替代该 gate。
 
-`dependency-refresh.yml` 每周和手动运行 `uv lock --upgrade`，用于发现兼容范围内的新依赖问题，但不回写分支。`live.yml` 可手动触发，并按低频 schedule 运行 publisher drift/live 与完整 golden；依赖共享外部状态的 live 测试按设计使用 `-n 0` 串行运行，完整 golden corpus 继续复用项目并行配置。常规 CI 的原生 macOS Camoufox 准备和 `live.yml` 的 Camoufox 准备会把 workflow 自带的只读 `github.token` 作为上游 CLI 已支持的 `GITHUB_TOKEN` 传入，避免 GitHub Releases 匿名 API 限额阻断 pinned runtime discovery；token 不写入 cache、artifact 或命令参数。`offline.yml` 是可手动调用的 reusable workflow，独立构建 Linux、macOS、Windows full 离线包；macOS 四个 ABI 产物固定在 `macos-15` 构建并运行原生 tar verifier。`release.yml` 只在稳定版本标签或显式手动发布时调用离线构建，生成 Python distributions、CycloneDX SBOM、`SHA256SUMS` 与 GitHub build provenance，再发布不可变资产。所有第三方 actions 固定到完整 commit SHA。
+`dependency-refresh.yml` 每周和手动运行 `uv lock --upgrade`，用于发现兼容范围内的新依赖问题，但不回写分支。Live publisher/MCP、provider drift 与完整 golden corpus 不再配置 GitHub Actions workflow、schedule 或 dispatch，只保留下文记录的本地显式入口；依赖共享外部状态的 live 测试按设计使用 `-n 0` 串行运行，完整 golden corpus 继续复用项目并行配置。常规 CI 的原生 macOS Camoufox 准备会把 workflow 自带的只读 `github.token` 作为上游 CLI 已支持的 `GITHUB_TOKEN` 传入，避免 GitHub Releases 匿名 API 限额阻断 pinned runtime discovery；token 不写入 cache、artifact 或命令参数。`offline.yml` 是可手动调用的 reusable workflow，独立构建 Linux、macOS、Windows full 离线包；macOS 四个 ABI 产物固定在 `macos-15` 构建并运行原生 tar verifier。`release.yml` 只在稳定版本标签或显式手动发布时调用离线构建，生成 Python distributions、CycloneDX SBOM、`SHA256SUMS` 与 GitHub build provenance，再发布不可变资产。所有第三方 actions 固定到完整 commit SHA。
 
 在 Windows / WSL 修改 Mac 相关范围时，先运行
 `uv run python scripts/validate_macos_adaptation.py`，再运行
@@ -591,7 +591,7 @@ PYTHONPATH=src pytest
 
 - 本地完整门：`scripts/dev-preflight.sh`，包含完整并行 unit、devtools、integration、Ruff、mypy 和 extraction-rule 校验；发布候选还需单独执行 build/install 终验。
 - 普通 `push` / `pull_request` CI 门：完整并行 unit + branch coverage、integration、devtools、Ruff、完整生产包 mypy、复杂度/provider governance/版本/抽取规则/漏洞门禁，以及 Python 3.11/3.14 的 core/full wheel smoke。
-- 独立低频/opt-in 门：完整 golden corpus 每周定时或由对应 `workflow_dispatch` 输入运行；live/provider drift 每月两次串行定时或由显式 dispatch 运行；offline/release 仍只走相应 dispatch 或 `v*` tag。普通 push/PR 不运行真实 publisher、认证 browser 或重型 offline 流程。
+- 本地 opt-in 门：完整 golden corpus、live publisher/MCP 和 provider drift 只由开发者通过下文命令显式运行，不配置 GitHub Actions schedule 或 dispatch；offline/release 仍只走相应 dispatch 或 `v*` tag。普通 push/PR 不运行真实 publisher、认证 browser 或完整 golden corpus。
 
 所有常规 pytest 步骤继续复用 `pyproject.toml` 的 xdist 并行配置，不传 `-n 0`。关键 workflow 步骤和触发边界由 `tests/unit/test_ci_release_workflow.py` 锁定。
 
@@ -607,7 +607,7 @@ PYTHONPATH=src python3 -m pytest tests/unit -q --cov=paper_fetch --cov-branch --
 browser runtime 与 installer 的 branch coverage；`.coverage`、`coverage.xml` 与
 `htmlcov/` 都是本地产物，不应进入 git。
 
-完整 golden corpus regression 默认跳过，可在本地或 workflow dispatch 中显式打开；该测试已按 fixture 参数化，默认复用 `pyproject.toml` 的 pytest-xdist 并行配置：
+完整 golden corpus regression 默认跳过，只能在本地显式打开；该测试已按 fixture 参数化，默认复用 `pyproject.toml` 的 pytest-xdist 并行配置：
 
 ```bash
 PAPER_FETCH_RUN_FULL_GOLDEN=1 PYTHONPATH=src python3 -m pytest tests/integration/test_golden_corpus.py -q
@@ -625,7 +625,15 @@ PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_LIVE_ARTIFACT_DIR=artifacts/live-publishers \
   --junitxml=artifacts/live-publishers.xml
 ```
 
-GitHub Actions 的手动 live job 通过 `run_live` 输入显式启用普通 publisher/MCP live tests；IEEE 受保护专项不在该 job 中。只有在具备相应出版社访问授权和凭据的 runner/network 上才应运行。
+普通 publisher/MCP live tests 只保留上述本地入口，不由 GitHub Actions 定时或手动触发。只有在具备相应出版社访问授权和凭据的本机网络环境中才应运行；JUnit 和诊断目录也由本地操作者自行保存。
+
+Provider drift 同样只保留本地脚本入口。完整 browser-risk 样本集会串行访问真实出版社，运行前应准备 Camoufox runtime，并按需配置 publisher 凭据：
+
+```bash
+PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_BROWSER_BACKEND=camoufox \
+  PYTHONPATH=src python3 scripts/run_provider_drift_report.py \
+  --all-browser-risk --output artifacts/provider-drift-report.json
+```
 
 需要验证 AIP 冷启动 HTML 稳定性时，额外显式启用五个隔离 profile 的串行测试；每次都必须得到 `aip_html` 与完整 acceptance，不能以 `aip_pdf` 降级通过：
 
@@ -637,7 +645,7 @@ PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_RUN_AIP_COLD_STABILITY=1 \
   -q -n 0
 ```
 
-该测试依赖同一远端 publisher lane 和本机 Camoufox runtime，必须使用 `-n 0`；失败诊断写入显式 artifact 目录。定期/手动 GitHub live job 会启用此检查并上传诊断，不影响普通 push/PR CI。
+该测试依赖同一远端 publisher lane 和本机 Camoufox runtime，必须使用 `-n 0`；失败诊断写入显式本地 artifact 目录。它不由 GitHub Actions 启用，不影响普通 push/PR CI。
 
 IEEE 大型 GIF 资产专项与普通 publisher suite 分离；未确认 runner 具备合法 Xplore 访问上下文时不得启用。在获授权的隔离 runner 上显式运行：
 
@@ -649,7 +657,7 @@ PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_RUN_IEEE_BROWSER_LIVE=1 \
   -o junit_family=legacy --junitxml=artifacts/live-ieee-protected.xml
 ```
 
-该专项要求统一 `acceptance.overall=complete`、13 个正文资产全部为 `full_size`，目标大型 GIF 有有效 header、可解析且非零的尺寸，并由生成的 Markdown 使用本地路径引用。测试保持 direct-first：本轮 direct 成功时接受 `final_fetcher=direct_http`；只有 direct 失败并进入恢复时，才硬性核对 Camoufox backend 以及 `direct(403) -> browser` trace。每次 `run-*` 目录会保存 `asset-hashes.json`，其中包含目标 SHA-256、全部正文资产 size/hash、fetcher/recovery trace 和 acceptance。普通 `live.yml` 不包含该模块；授权 runner 应单独保存 JUnit 和整个 `artifacts/live-ieee-protected/`。
+该专项要求统一 `acceptance.overall=complete`、13 个正文资产全部为 `full_size`，目标大型 GIF 有有效 header、可解析且非零的尺寸，并由生成的 Markdown 使用本地路径引用。测试保持 direct-first：本轮 direct 成功时接受 `final_fetcher=direct_http`；只有 direct 失败并进入恢复时，才硬性核对 Camoufox backend 以及 `direct(403) -> browser` trace。每次 `run-*` 目录会保存 `asset-hashes.json`，其中包含目标 SHA-256、全部正文资产 size/hash、fetcher/recovery trace 和 acceptance。该模块同样只保留本地入口；授权操作者应单独保存 JUnit 和整个 `artifacts/live-ieee-protected/`。
 
 专项 preflight 若在 15 秒 readiness 窗口后仍停留于 AWS WAF HTTP 202 页面，会保留页面关闭前采集的脱敏诊断并以 `aws_waf_challenge` skip；这代表当前网络/会话仍未取得文章 DOM，不可解释为已成功访问。只有后续抓取和上述资产硬门全部通过，才可关闭 PF-LIVE-007。
 

@@ -233,9 +233,10 @@ selected-browser provider 在抽取前等待 provider 正文 DOM 达到阈值并
 empty shell，保守重试会先使用下一个既有 provider URL，不再重复相同空壳。
 MDPI 使用该正文稳定门，避免把延迟加载的 HTTP-200 head-only shell 误认为完成页面。
 这些是 Windows/WSL 可执行的 portable 行为证据，不替代原生 macOS app bundle 启动门。
-常规 CI 的 pinned 原生 runtime 与 live workflow 在调用 Camoufox CLI 时传入 GitHub
-workflow 自带的只读 `github.token`；Camoufox 复用其原生 `GITHUB_TOKEN` 支持访问
-Releases API，避免匿名配额阻断准备步骤。token 不进入命令参数、cache 或 artifact。
+常规 CI 的 pinned 原生 runtime 在调用 Camoufox CLI 时传入 GitHub workflow
+自带的只读 `github.token`；Camoufox 复用其原生 `GITHUB_TOKEN` 支持访问 Releases
+API，避免匿名配额阻断准备步骤。token 不进入命令参数、cache 或 artifact。
+Live 验证不再由 GitHub Actions 运行；本地操作者负责预置 runtime 及其访问凭据。
 
 ### MAC-V4-008：Camoufox 官方 Mac bundle 与 custom path 分界
 

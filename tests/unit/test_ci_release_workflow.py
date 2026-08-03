@@ -22,7 +22,6 @@ def test_workflows_are_split_by_operational_boundary() -> None:
     assert {path.name for path in WORKFLOWS.glob("*.yml")} == {
         "ci.yml",
         "dependency-refresh.yml",
-        "live.yml",
         "offline.yml",
         "release.yml",
         "rolling-release.yml",
@@ -59,27 +58,28 @@ def test_quality_gate_uses_whole_package_typing_complexity_and_locked_audit() ->
     assert "uv sync --frozen" in SETUP_ACTION.read_text(encoding="utf-8")
 
 
-def test_live_external_state_is_scheduled_low_frequency_and_serial() -> None:
-    workflow = _workflow_text("live.yml")
-    assert "workflow_dispatch" in workflow
-    assert "schedule:" in workflow
-    assert '"17 3 * * 2"' in workflow
-    assert '"41 4 1,15 * *"' in workflow
-    assert "tests/live/test_live_publishers.py" in workflow
-    assert "tests/live/test_live_mcp.py" in workflow
-    assert "tests/live/test_live_ieee_protected.py" not in workflow
-    assert "-q -n 0" in workflow
-    assert "--force-enable-socket" not in workflow
-    assert "--junitxml=artifacts/live-publishers.xml" in workflow
-    assert "junit_family=legacy" in workflow
-    assert "artifacts/live-publishers/live-acceptance.json" not in workflow
-    assert "artifacts/live-publishers" in workflow
-    assert "install-formula-tools.sh" in workflow
-    assert "tests/integration/test_golden_corpus.py -q" in workflow
-    assert "python -m camoufox fetch" in workflow
-    assert "GITHUB_TOKEN: ${{ github.token }}" in workflow
-    assert "scripts/run_provider_drift_report.py" in workflow
-    assert "provider-drift-report.json" in workflow
+def test_live_and_full_golden_checks_are_local_only() -> None:
+    workflow_text = "\n".join(
+        path.read_text(encoding="utf-8") for path in WORKFLOWS.glob("*.yml")
+    )
+    for local_only_entry in (
+        "tests/live/test_live_publishers.py",
+        "tests/live/test_live_mcp.py",
+        "tests/live/test_live_ieee_protected.py",
+        "PAPER_FETCH_RUN_LIVE",
+        "PAPER_FETCH_RUN_FULL_GOLDEN",
+        "scripts/run_provider_drift_report.py",
+    ):
+        assert local_only_entry not in workflow_text
+
+    for local_entry in (
+        REPO_ROOT / "tests" / "live" / "test_live_publishers.py",
+        REPO_ROOT / "tests" / "live" / "test_live_mcp.py",
+        REPO_ROOT / "tests" / "live" / "test_live_ieee_protected.py",
+        REPO_ROOT / "tests" / "integration" / "test_golden_corpus.py",
+        REPO_ROOT / "scripts" / "run_provider_drift_report.py",
+    ):
+        assert local_entry.is_file()
 
 
 def test_offline_builds_full_extra_for_supported_python_matrix() -> None:

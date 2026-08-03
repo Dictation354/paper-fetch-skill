@@ -235,11 +235,10 @@ title = "明确 Camoufox 离线边界并移除 FlareSolverr"
 area = "browser-runtime"
 status = "implemented"
 risk = "P1"
-summary = "browser/full extra 允许兼容的 Camoufox 0.5.x，并由 uv.lock 选择可复现的具体版本；构建器复核下载 wheel metadata 与 installed distribution，并在 manifest 记录该版本。离线包捆绑 Python 包但不捆绑浏览器 binary，安装器不得下载浏览器，用户须先显式执行 camoufox fetch，再用 browser-preflight 验证。CI/live runtime discovery 使用只读 workflow token 避免匿名 GitHub API 限额。selected-browser 页面等待稳定正文 DOM；候选循环和保守重试都不得用后续传输/导航失败或 deadline timeout 覆盖已经确认的稳定访问门槛，HTTP-200 empty shell 的重试优先下一个既有 provider URL，live MCP 只按精确 access-boundary marker 跳过成功 metadata fallback；活动运行时不得包含 FlareSolverr。"
+summary = "browser/full extra 允许兼容的 Camoufox 0.5.x，并由 uv.lock 选择可复现的具体版本；构建器复核下载 wheel metadata 与 installed distribution，并在 manifest 记录该版本。离线包捆绑 Python 包但不捆绑浏览器 binary，安装器不得下载浏览器，用户须先显式执行 camoufox fetch，再用 browser-preflight 验证。原生 macOS CI runtime discovery 使用只读 workflow token 避免匿名 GitHub API 限额，live 验证只保留本地显式入口。selected-browser 页面等待稳定正文 DOM；候选循环和保守重试都不得用后续传输/导航失败或 deadline timeout 覆盖已经确认的稳定访问门槛，HTTP-200 empty shell 的重试优先下一个既有 provider URL，live MCP 只按精确 access-boundary marker 跳过成功 metadata fallback；活动运行时不得包含 FlareSolverr。"
 rationale = "Python 包可导入不等于目标浏览器可用，安装时静默联网也会破坏离线包边界；同样，远端挑战或延迟正文必须与本地 browser context 启动失败分开诊断。"
 implementation_paths = [
   ".github/workflows/ci.yml",
-  ".github/workflows/live.yml",
   "pyproject.toml",
   "uv.lock",
   "scripts/build-offline-package.sh",
