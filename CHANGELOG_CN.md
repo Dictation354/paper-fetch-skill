@@ -6,7 +6,7 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
-## 4.2.0 - 2026-08-02
+## 5.0.0 - 2026-08-03
 
 ### 新增
 
@@ -30,7 +30,17 @@
   未列出的附加 payload 都会在用户写入前拒绝；`--purge` 也无条件拒绝 symlink
   形式的入口。
 
-### 变更
+### 破坏性变更
+
+- 所有 MCP 成功/失败与 acceptance payload 从 schema v1 升级到 schema v2，并删除
+  重复的 `quality.trace`；`FetchEnvelope.trace` 成为唯一完整 trace owner，
+  metadata/asset 保留 `article_type` 与 `preview_accepted`，资产摘要用稳定 issue code
+  区分 accepted/fallback preview。仍要求 schema v1 的消费者必须先完成升级再采用
+  5.0.0；旧 v1 FetchEnvelope cache 仅保留读取迁移。
+- 删除曾对外公开但未实现的 IOP XML/TDM 占位 route；catalog/status/docs 现在只公开
+  真实可执行的 IOP HTML、PDF、metadata 与 supplementary 能力。
+
+### 变更——macOS 与离线打包
 
 - macOS CPython 3.11–3.14 arm64 离线矩阵固定到 `macos-15`，manifest 声明最低
   macOS 15.0；四个 tarball 均运行原生安装 verifier，缺少 artifact 会令 job
@@ -60,7 +70,7 @@
   完整 commit SHA，只复制精确 packaging-tool 路径且不复制 Python wheel source；
   manifest 会分别记录源码 `git_revision` 和可选 `tooling_revision`。
 
-### 修复
+### 修复——macOS 与离线打包
 
 - 将 provenance 检查使用的 `packaging` 声明为核心运行时依赖，并让 macOS
   contract validator 通过锁定的项目环境运行，避免干净 core 安装以及原生/离线
@@ -79,21 +89,12 @@
   错误 miss 的问题；等价根路径现在共享同一安全 scope，目录内 symlink 和
   scope 外文件仍会拒绝。
 
-### 限制
+### 变更——运行时与 provider 验证
 
-- 离线 runtime 包含 Camoufox / Playwright Python 包，但不包含 Camoufox 浏览器
-  binary，普通 fetch 不会自动下载。进入受限网络或离线环境前需联网用离线
-  runtime 执行 `python -m camoufox fetch`，再运行
-  `paper-fetch browser-preflight` 验证；预置后真正断网的 Camoufox launch
-  仍是开放审计项，因此不宣称完整离线浏览器支持。
-### 变更
-
-- MCP fetch/error 与 acceptance payload 升级到 schema v2：`FetchEnvelope.trace` 成为唯一完整 trace owner，metadata/asset 保留 `article_type` 与 `preview_accepted`，资产摘要用稳定 issue code 区分 accepted/fallback preview；旧 v1 FetchEnvelope cache 仅保留读取迁移。
 - publisher live 样本改为声明 source 与 trail 的联合合法 outcome，browser provider 使用复用 storage state 的 lazy preflight，live socket 由 marker 自动放行，不再依赖全局 force-enable。Springer 成功基准替换为 OA 研究论文，历史 Nature 新闻只保留为独立 access-gate 行为样本。
 - publisher catalog live 从全文 smoke 提升为 `asset_profile=body` 硬验收门；JSON/JUnit artifact 会区分“已记录 provider 全部 complete”和“存在 skip/未记录 provider”，IEEE 受保护 GIF 恢复拆为仅授权 runner 显式启用的独立套件。
-- 删除未实现的 IOP XML/TDM 占位 route，catalog/status/docs 只公开真实可执行的 IOP HTML、PDF、metadata 与 supplementary 能力。
 
-### 修复
+### 修复——运行时与 provider
 
 - IEEE preflight、浏览器 landing/全文和共享资产 seed 现在最多等待 15 秒，且只接受文章号匹配的 `#article`；持续存在的 AWS WAF HTTP 202 页面精确报告 `aws_waf_challenge` 和兼容诊断，已在窗口内恢复的文章页不再因初始响应被误拒。受保护 large 资产仍保持 direct-first、一次 preview 预热和完整的 full-size 恢复/降级 provenance。
 - 稳定 AIP 及共享 browser workflow 的冷启动 HTML 重试：fast 尝试产生的 provider-scoped 临时 cookies 会传给正常尝试，但未验收状态不会提前持久化；HTTP 200 的 head-only 页面现在报告 `empty_article_shell`，诊断保留两轮尝试、响应状态和 DOM readiness，PDF 继续作为终态兜底。
@@ -109,6 +110,14 @@
 - 移除 trace 三层重复拼接和按 warning 数量降级的质量启发式；真实 retry 的同 code 仍按顺序保留，任意数量的操作通知不再自动降低内容质量。
 - 普通 unit 强制零外部 socket attempt，补齐三个 batch resolver fake seam；doctor 诊断 source checkout 未激活 `.venv` 与 MCP 版本不兼容，成功和终态失败 manifest 都保留诊断文件。
 - 新增独立 browser/DOM/HTTP/retry/asset/render 计时及 provider-route-stage nearest-rank 性能摘要：单样本只显示 observed，多样本显示 p50/p95。
+
+### 限制
+
+- 离线 runtime 包含 Camoufox / Playwright Python 包，但不包含 Camoufox 浏览器
+  binary，普通 fetch 不会自动下载。进入受限网络或离线环境前需联网用离线
+  runtime 执行 `python -m camoufox fetch`，再运行
+  `paper-fetch browser-preflight` 验证；预置后真正断网的 Camoufox launch
+  仍是开放审计项，因此不宣称完整离线浏览器支持。
 
 ## 4.1.0 - 2026-07-29
 

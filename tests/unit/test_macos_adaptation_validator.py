@@ -59,7 +59,7 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
 
     def test_adapted_release_version_must_advance_past_baseline(self) -> None:
         contract = validator.load_contract()
-        for project_version, should_pass in (("4.2.0", True), ("4.1.0", False)):
+        for project_version, should_pass in (("5.0.0", True), ("4.1.0", False)):
             with self.subTest(project_version=project_version):
                 with tempfile.TemporaryDirectory() as tmpdir:
                     repo_root = Path(tmpdir)
