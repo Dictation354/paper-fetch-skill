@@ -224,8 +224,8 @@
   browser binary，再运行 `paper-fetch browser-preflight` 验证启动和 provider
   state。
 - 补充 portable 证据：selected-browser 正文 DOM 稳定等待、MDPI delayed-body
-  readiness，以及“已确认的候选/快速 attempt 访问门槛不被下一候选或保守重试的
-  deadline timeout 覆盖”均由纯 Python 单测锁定；live MCP 还只接受精确
+  readiness，以及“已确认的候选/快速 attempt 访问门槛不被后续候选的传输/导航
+  失败或下一候选、保守重试的 deadline timeout 覆盖”均由纯 Python 单测锁定；live MCP 还只接受精确
   access-boundary marker，而不接受一般 limited 结果；HTTP-200 empty shell 的重试
   会切换到下一个既有 provider URL。这些证据能区分远端 access state 与 runtime
   failure，但不构成原生 macOS 断网启动证明。

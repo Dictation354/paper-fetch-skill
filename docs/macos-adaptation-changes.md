@@ -225,9 +225,9 @@ wheel、installed runtime 与 manifest 任一漂移都会 fail closed。
 
 同一浏览器边界还要求把“本地 runtime 可启动”和“远端页面可取得正文”分开：
 selected-browser provider 在抽取前等待 provider 正文 DOM 达到阈值并连续两次稳定；
-任一候选已确认 challenge/paywall/access boundary、而下一候选或保守重试只因共享
-deadline 耗尽而失败时，保留首个稳定 reason code，并在 diagnostics 中附加对应
-timeout。live MCP 对成功 metadata fallback 只接受精确的
+任一候选已确认 challenge/paywall/access boundary、而后续候选发生传输/导航失败，
+或下一候选、保守重试只因共享 deadline 耗尽而失败时，保留首个稳定 reason code，
+并在 diagnostics 中附加后续失败。live MCP 对成功 metadata fallback 只接受精确的
 `route:provider_candidate_*_access_boundary_stop` 作为同类边界，不把一般 limited
 结果降格为 skip。AIP 等 provider 的 fast landing 若已经返回 HTTP-200 head-only
 empty shell，保守重试会先使用下一个既有 provider URL，不再重复相同空壳。

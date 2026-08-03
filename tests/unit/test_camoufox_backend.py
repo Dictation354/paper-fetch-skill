@@ -835,6 +835,67 @@ def test_camoufox_candidate_deadline_preserves_observed_access_boundary(
     assert len(failure.details["trace"]["candidates"]) == 1
 
 
+def test_camoufox_candidate_transport_failure_preserves_observed_access_boundary(
+    monkeypatch, tmp_path
+) -> None:
+    context = _Context()
+    navigation_count = 0
+
+    def goto(url: str, **_kwargs):
+        nonlocal navigation_count
+        navigation_count += 1
+        context.page.url = url
+        if navigation_count == 2:
+            raise TimeoutError("Page.goto: Timeout 84000ms exceeded.")
+        return _Response()
+
+    context.page.goto = goto
+    context.page.content = lambda: (
+        "<html><head><title>Just a moment...</title></head>"
+        "<body>Checking your browser before accessing the site.</body></html>"
+    )
+    context.page.title = lambda: "Just a moment..."
+    config = BrowserRuntimeConfig(
+        provider="wiley",
+        doi="10.1002/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+
+    with pytest.raises(browser_runtime.BrowserRuntimeFailure) as raised:
+        _playwright_browser.fetch_html_with_playwright(
+            [
+                "https://onlinelibrary.wiley.com/doi/full/10.1002/example",
+                "https://onlinelibrary.wiley.com/doi/10.1002/example",
+            ],
+            publisher="wiley",
+            config=config,
+            wait_seconds=0,
+            readiness=BrowserHtmlReadiness(wait_for_article_body=False),
+        )
+
+    failure = raised.value
+    assert failure.kind == "cloudflare_challenge"
+    assert failure.details["subsequent_candidate_failures"] == [
+        {
+            "failure_code": "camoufox_request_failed",
+            "message": "Page.goto: Timeout 84000ms exceeded.",
+        }
+    ]
+    assert len(failure.details["trace"]["candidates"]) == 2
+    assert failure.details["trace"]["candidates"][1]["error"] == (
+        "Page.goto: Timeout 84000ms exceeded."
+    )
+
+
 @pytest.mark.parametrize(
     ("status", "title", "html", "final_url", "expected_reason"),
     [

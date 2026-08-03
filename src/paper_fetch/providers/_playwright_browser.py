@@ -759,6 +759,37 @@ def _candidate_deadline_failure(
     return last_failure
 
 
+def _candidate_failure_outcome(
+    observed_failure: PlaywrightBrowserFailure | None,
+    candidate_failure: PlaywrightBrowserFailure,
+    *,
+    trace: Mapping[str, Any],
+) -> PlaywrightBrowserFailure:
+    """Keep an observed access boundary ahead of later transport failures."""
+
+    if (
+        observed_failure is None
+        or normalize_text(observed_failure.kind).lower()
+        not in _STABLE_BROWSER_ACCESS_FAILURE_KINDS
+        or normalize_text(candidate_failure.kind).lower()
+        in _STABLE_BROWSER_ACCESS_FAILURE_KINDS
+    ):
+        return candidate_failure
+
+    details = dict(observed_failure.details or {})
+    details["trace"] = dict(trace)
+    subsequent_failures = list(details.get("subsequent_candidate_failures") or [])
+    subsequent_failures.append(
+        {
+            "failure_code": candidate_failure.kind,
+            "message": candidate_failure.message,
+        }
+    )
+    details["subsequent_candidate_failures"] = subsequent_failures
+    observed_failure.details = details
+    return observed_failure
+
+
 def _capture_page_screenshot(
     page: Any,
     *,
@@ -1078,10 +1109,14 @@ def fetch_html_with_playwright(
                         reason, message = rejection
                         candidate_trace["result"] = "rejected"
                         candidate_trace["block_reason"] = reason
-                        last_failure = PlaywrightBrowserFailure(
-                            reason,
-                            message,
-                            details={"trace": trace},
+                        last_failure = _candidate_failure_outcome(
+                            last_failure,
+                            PlaywrightBrowserFailure(
+                                reason,
+                                message,
+                                details={"trace": trace},
+                            ),
+                            trace=trace,
                         )
                         continue
                     if browser_context_seed.get(
@@ -1187,14 +1222,19 @@ def fetch_html_with_playwright(
                     normalize_text(str(exc)) or exc.__class__.__name__
                 )
                 if isinstance(exc, PlaywrightBrowserFailure):
-                    last_failure = exc
+                    candidate_failure = exc
                 else:
-                    last_failure = PlaywrightBrowserFailure(
+                    candidate_failure = PlaywrightBrowserFailure(
                         f"{backend_name}_request_failed",
                         normalize_text(str(exc))
                         or f"{backend_name} page request failed.",
                         details={"trace": trace},
                     )
+                last_failure = _candidate_failure_outcome(
+                    last_failure,
+                    candidate_failure,
+                    trace=trace,
+                )
                 continue
 
             if looks_like_abstract_redirect(normalized_url, final_url):
@@ -1202,11 +1242,15 @@ def fetch_html_with_playwright(
                     time.monotonic() - candidate_started, 3
                 )
                 candidate_trace["block_reason"] = REDIRECTED_TO_ABSTRACT
-                last_failure = PlaywrightBrowserFailure(
-                    REDIRECTED_TO_ABSTRACT,
-                    "Publisher redirected the full-text URL to an abstract page.",
-                    browser_context_seed=browser_context_seed,
-                    details={"trace": trace},
+                last_failure = _candidate_failure_outcome(
+                    last_failure,
+                    PlaywrightBrowserFailure(
+                        REDIRECTED_TO_ABSTRACT,
+                        "Publisher redirected the full-text URL to an abstract page.",
+                        browser_context_seed=browser_context_seed,
+                        details={"trace": trace},
+                    ),
+                    trace=trace,
                 )
                 continue
 
@@ -1226,30 +1270,36 @@ def fetch_html_with_playwright(
                     time.monotonic() - candidate_started, 3
                 )
                 candidate_trace["block_reason"] = detected.reason
-                last_failure = PlaywrightBrowserFailure(
-                    detected.reason,
-                    detected.message,
-                    browser_context_seed=browser_context_seed,
-                    details=_browser_page_failure_details(
-                        trace=trace,
-                        runtime_context=runtime_context,
-                        request=PageDiagnosticRequest(
-                            provider=publisher,
-                            route="browser_html",
-                            attempt=max(1, len(list(trace.get("candidates") or []))),
-                            failure_code=detected.reason,
-                            stage="block_detection",
-                            html_text=html,
-                            doi=config.doi,
-                            target_url=normalized_url,
-                            final_url=final_url,
-                            backend=config.backend,
-                            response_status=status,
-                            title=title or "",
-                            summary=summary,
-                            details={"browser_runtime_trace": dict(trace)},
+                last_failure = _candidate_failure_outcome(
+                    last_failure,
+                    PlaywrightBrowserFailure(
+                        detected.reason,
+                        detected.message,
+                        browser_context_seed=browser_context_seed,
+                        details=_browser_page_failure_details(
+                            trace=trace,
+                            runtime_context=runtime_context,
+                            request=PageDiagnosticRequest(
+                                provider=publisher,
+                                route="browser_html",
+                                attempt=max(
+                                    1, len(list(trace.get("candidates") or []))
+                                ),
+                                failure_code=detected.reason,
+                                stage="block_detection",
+                                html_text=html,
+                                doi=config.doi,
+                                target_url=normalized_url,
+                                final_url=final_url,
+                                backend=config.backend,
+                                response_status=status,
+                                title=title or "",
+                                summary=summary,
+                                details={"browser_runtime_trace": dict(trace)},
+                            ),
                         ),
                     ),
+                    trace=trace,
                 )
                 continue
             if (
@@ -1266,30 +1316,36 @@ def fetch_html_with_playwright(
                     time.monotonic() - candidate_started, 3
                 )
                 candidate_trace["block_reason"] = reason
-                last_failure = PlaywrightBrowserFailure(
-                    reason,
-                    message,
-                    browser_context_seed=browser_context_seed,
-                    details=_browser_page_failure_details(
-                        trace=trace,
-                        runtime_context=runtime_context,
-                        request=PageDiagnosticRequest(
-                            provider=publisher,
-                            route="browser_html",
-                            attempt=max(1, len(list(trace.get("candidates") or []))),
-                            failure_code=reason,
-                            stage="dom_readiness",
-                            html_text=html,
-                            doi=config.doi,
-                            target_url=normalized_url,
-                            final_url=final_url,
-                            backend=config.backend,
-                            response_status=status,
-                            title=title or "",
-                            summary=summary,
-                            details={"browser_runtime_trace": dict(trace)},
+                last_failure = _candidate_failure_outcome(
+                    last_failure,
+                    PlaywrightBrowserFailure(
+                        reason,
+                        message,
+                        browser_context_seed=browser_context_seed,
+                        details=_browser_page_failure_details(
+                            trace=trace,
+                            runtime_context=runtime_context,
+                            request=PageDiagnosticRequest(
+                                provider=publisher,
+                                route="browser_html",
+                                attempt=max(
+                                    1, len(list(trace.get("candidates") or []))
+                                ),
+                                failure_code=reason,
+                                stage="dom_readiness",
+                                html_text=html,
+                                doi=config.doi,
+                                target_url=normalized_url,
+                                final_url=final_url,
+                                backend=config.backend,
+                                response_status=status,
+                                title=title or "",
+                                summary=summary,
+                                details={"browser_runtime_trace": dict(trace)},
+                            ),
                         ),
                     ),
+                    trace=trace,
                 )
                 continue
             if not normalize_text(html) and image_payload is None:
@@ -1297,11 +1353,15 @@ def fetch_html_with_playwright(
                     time.monotonic() - candidate_started, 3
                 )
                 candidate_trace["block_reason"] = "empty_html_response"
-                last_failure = PlaywrightBrowserFailure(
-                    "empty_html_response",
-                    f"{backend_name} returned empty publisher HTML.",
-                    browser_context_seed=browser_context_seed,
-                    details={"trace": trace},
+                last_failure = _candidate_failure_outcome(
+                    last_failure,
+                    PlaywrightBrowserFailure(
+                        "empty_html_response",
+                        f"{backend_name} returned empty publisher HTML.",
+                        browser_context_seed=browser_context_seed,
+                        details={"trace": trace},
+                    ),
+                    trace=trace,
                 )
                 continue
 

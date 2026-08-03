@@ -96,8 +96,8 @@
 
 ### 修复——运行时与 provider
 
-- 当浏览器下一候选 URL 或保守重试耗尽共享 deadline 时，保留此前已明确识别的
-  challenge/paywall/access boundary，并让 provider 自有 PDF waterfall 继续输出
+- 当浏览器后续候选发生传输/导航失败，或下一候选 URL、保守重试耗尽共享 deadline
+  时，保留此前已明确识别的 challenge/paywall/access boundary，并让 provider 自有 PDF waterfall 继续输出
   `no_access`。live 验收只接受显式 `status=no_access` 或 metadata fallback 精确的
   `route:provider_candidate_*_access_boundary_stop` 作为合法访问边界；解析失败、空壳和
   正文不足仍是失败。
