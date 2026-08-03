@@ -17,7 +17,14 @@ from ...extraction.html.signals import HtmlExtractionFailure
 from ...metadata.types import ProviderMetadata
 from ...models import AssetProfile
 from ...publisher_identity import normalize_doi
-from ...quality.reason_codes import FULLTEXT
+from ...quality.reason_codes import (
+    AWS_WAF_CHALLENGE,
+    CLOUDFLARE_CHALLENGE,
+    FULLTEXT,
+    PUBLISHER_ACCESS_DENIED,
+    PUBLISHER_PAYWALL,
+    REDIRECTED_TO_ABSTRACT,
+)
 from ...runtime import RuntimeContext
 from ...tracing import download_marker, fulltext_marker, trace_event, trace_from_markers
 from ...utils import empty_asset_results, normalize_text, provider_display_name
@@ -31,7 +38,13 @@ from .shared import (
 from ..browser_runtime import merge_browser_context_seeds
 from .._pdf_fallback import PdfFallbackFailure
 from .._waterfall import ProviderWaterfallStep, run_provider_waterfall
-from ...reason_codes import ABSTRACT_ONLY, NO_RESULT, NOT_SUPPORTED, PDF_FALLBACK
+from ...reason_codes import (
+    ABSTRACT_ONLY,
+    NO_ACCESS,
+    NO_RESULT,
+    NOT_SUPPORTED,
+    PDF_FALLBACK,
+)
 from ..base import (
     PreparedFetchResultPayload,
     ProviderArtifacts,
@@ -56,6 +69,17 @@ from .asset_download import (
 from .profile import ProviderBrowserProfile
 
 
+_BROWSER_WORKFLOW_ACCESS_FAILURE_REASONS = frozenset(
+    {
+        AWS_WAF_CHALLENGE,
+        CLOUDFLARE_CHALLENGE,
+        PUBLISHER_ACCESS_DENIED,
+        PUBLISHER_PAYWALL,
+        REDIRECTED_TO_ABSTRACT,
+    }
+)
+
+
 class BrowserWorkflowClient(ProviderClient):
     name = "browser_workflow"
     article_source_name: str | None = None
@@ -76,6 +100,13 @@ class BrowserWorkflowClient(ProviderClient):
 
     def probe_status(self):
         return self.deps.probe_runtime_status(self.env, provider=self.name)
+
+    def _html_failure_code(self, reason: str | None) -> str:
+        return (
+            NO_ACCESS
+            if reason in _BROWSER_WORKFLOW_ACCESS_FAILURE_REASONS
+            else NO_RESULT
+        )
 
     def fetch_metadata(self, query: Mapping[str, str | None]) -> ProviderMetadata:
         raise ProviderFailure(
@@ -245,7 +276,7 @@ class BrowserWorkflowClient(ProviderClient):
         ):
             reason = bootstrap.html_failure_message or f"{self.name} HTML route failed."
             raise ProviderFailure(
-                NO_RESULT,
+                self._html_failure_code(bootstrap.html_failure_reason),
                 (
                     f"{self.name} HTML route was not usable ({bootstrap.html_failure_reason or 'html_failed'}); "
                     f"PDF fallback is disabled. {reason}"
@@ -298,7 +329,7 @@ class BrowserWorkflowClient(ProviderClient):
                     bootstrap.html_failure_message or f"{self.name} HTML route failed."
                 )
                 raise ProviderFailure(
-                    NO_RESULT,
+                    self._html_failure_code(bootstrap.html_failure_reason),
                     (
                         f"{self.name} full text could not be retrieved via HTML or PDF fallback. "
                         f"HTML failure: {reason} PDF failure: {exc.message}"

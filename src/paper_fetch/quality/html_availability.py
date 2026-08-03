@@ -282,6 +282,7 @@ def _detect_html_hard_negative_signals_impl(
     final_url: str | None = None,
     include_paywall_text: bool = True,
     provider_metadata: Mapping[str, Any] | None = None,
+    html_text: str = "",
 ) -> list[str]:
     redirected_to_abstract = bool(
         requested_url and looks_like_abstract_redirect(requested_url, final_url)
@@ -295,6 +296,7 @@ def _detect_html_hard_negative_signals_impl(
         explicit_no_access=bool(
             provider_metadata and provider_metadata.get("explicit_no_access")
         ),
+        html_text=html_text,
     )
 
 
@@ -1329,6 +1331,7 @@ def assess_html_fulltext_availability(
         final_url=final_url,
         include_paywall_text=False,
         provider_metadata=metadata_map,
+        html_text=html_text or "",
     )
     structure = StructuredBodyAnalysis()
     resolved_container_tag = container_tag

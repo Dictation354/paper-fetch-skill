@@ -161,7 +161,7 @@ resolve DOI / landing URL
 - MDPI `#html-keywords` 会写入 extraction payload 的 `keywords` 并合并进 `metadata.keywords`，不会作为独立 Markdown section，也不会混入 Abstract。
 - PDF fallback 的正文 Markdown 仍由共享 PDF 转换生成；在 `body/all` 且允许 artifact 落盘时，会保存 PDF 中可导出的正文图片到 `<doi>_assets/`。Supplementary 下载仅对 HTML 路径启用。
 - `asset_profile=body` 发现正文 figure / formula / table 图片；`asset_profile=all` 额外包含 MDPI article `/s1` 等 supplementary link。MDPI HTML 资产下载复用 browser workflow 的 shared browser image/file fetcher、seed refresh 与 retry 机制，以覆盖 direct HTTP 图片 403/CDN HTML 响应；下载后正文图片链接会改写到 `body_assets/...`，并把已匹配的 MDPI body image 资产标记为 `render_state="inline"`，避免文末 `Figures` / `Tables` 重复追加。
-- MDPI 已纳入 golden criteria live review；HTML 主路径必须保留 Markdown 块边界和结构化正文，只有 HTML 不可用时才进入 `mdpi_pdf` 降级。
+- MDPI 已纳入 golden criteria live review；HTML 主路径会等待 article container 达到正文阈值并连续两次轮询稳定，避免托管环境把延迟加载的 HTTP-200 head-only shell 当作完成页面。主路径必须保留 Markdown 块边界和结构化正文，只有 HTML 不可用时才进入 `mdpi_pdf` 降级。
 - Golden corpus 覆盖 8 个真实 selected-browser HTML DOI fixture，以及 1 个真实 browser PDF fallback fixture；`abstract_only` / `access_gate` / `empty_shell` 在 manifest 中记录为无稳定样本，因为当前 MDPI 路线按开放获取文章接入。
 
 ### IEEE
@@ -315,6 +315,7 @@ resolve
   - 优先使用 merged metadata 中的 `landing_page_url`，缺失时回退 DOI 解析。
   - 对外 provider/source 保持 `springer`、`springer_html`、`springer_pdf` 不变；内部先用 `springer_site_family_profile()` 将 route 分类为 `nature`、`springerlink` 或 `bmc`，并把 family 写入 diagnostics，避免三类站点逻辑继续以隐式条件混合。
   - HTML 成功时公开 `source="springer_html"`；PDF fallback 成功时公开 `source="springer_pdf"`。
+  - Nature/Springer 的 `Client Challenge` 与 `_fs-ch-` 壳页按 access boundary fail closed，不会生成 provisional abstract/metadata article；若 direct PDF 也不可用，最终保留 `no_access`。
   - Springer HTML cleanup / payload 由 `paper_fetch.providers._springer_html` compatibility facade 暴露；canonical owner 拆到 `_springer_dom`、`_springer_markdown`、`_springer_assets`、`_springer_authors` 和 `_springer_references`。
 - `wiley`
   - 使用 provider 自管 HTML + 官方 API PDF + publisher PDF/ePDF waterfall。
@@ -1112,6 +1113,7 @@ IEEE direct landing/REST HTML/PDF/资产与 selected-browser recovery 路线当�
 #### Browser HTML readiness
 
 - `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `royalsocietypublishing` / `acs` / `iop` / `aip` / `mdpi` 的 browser HTML fetch 会先等待 provider 正文 DOM 命中并连续两次轮询稳定，再执行 pre-extraction challenge / paywall 判定。
+- 快速 HTML attempt 已取得 challenge/paywall/access-boundary 证据，而保守重试随后耗尽共享 deadline 时，最终保留首个稳定 reason code，并把重试 timeout 与两轮 attempt 写入 diagnostics；不会用后续超时覆盖可执行的 `auth`/entitlement 结论。
 - browser HTML fast path 失败后的正常重试复用首轮内存 `BrowserContextSeed` 中与目标 provider 匹配的 cookies，不覆盖 Camoufox 指纹/User-Agent，也不提前提交未通过正文验收的 storage-state；诊断保留两轮状态、HTTP status、DOM readiness 和脱敏页面形态。
 - ACS 当前 readiness selector 是 `.article-body` 与 `.widget-ArticleFulltext`；旧 Atypon wrapper 不再承担 ACS canonical replay 的就绪判定。
 - 如果稳定正文 DOM 已出现，即使页面 shell 仍残留 Cloudflare / challenge 文案，也会继续进入 Markdown 抽取和 availability 判定；只有等待超时仍无可抽取正文 DOM 时，才把 challenge / paywall 作为 HTML route fallback 条件。

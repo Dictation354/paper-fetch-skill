@@ -1,6 +1,8 @@
 # ruff: noqa: F403,F405
 from __future__ import annotations
 
+from paper_fetch.providers.base import ProviderFailure
+
 from ._atypon_browser_workflow_provider_support import *
 
 
@@ -699,6 +701,44 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
         self.assertIn(
             "fulltext:wiley_pdf_fallback_ok", _payload_source_trail(raw_payload)
         )
+
+    def test_wiley_access_gate_remains_no_access_when_pdf_fallback_fails(
+        self,
+    ) -> None:
+        client = wiley_provider.WileyClient(transport=None, env={})
+        doi = "10.1111/gcb.70541"
+        landing_url = f"https://onlinelibrary.wiley.com/doi/full/{doi}"
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = self._runtime_config(tmpdir, "wiley", doi)
+            install_browser_workflow_deps(
+                client,
+                load_runtime_config=mock.Mock(return_value=runtime),
+                ensure_runtime_ready=mock.Mock(),
+                fetch_html_with_browser=mock.Mock(
+                    side_effect=browser_runtime.BrowserRuntimeFailure(
+                        "cloudflare_challenge",
+                        "Encountered a challenge page.",
+                    )
+                ),
+                fetch_seeded_browser_pdf_payload=mock.Mock(
+                    side_effect=browser_workflow.PdfFallbackFailure(
+                        "pdf_download_failed",
+                        "Wiley PDF fallback failed.",
+                    )
+                ),
+            )
+            with self.assertRaises(ProviderFailure) as raised:
+                client.fetch_raw_fulltext(
+                    doi,
+                    {
+                        "doi": doi,
+                        "title": "Wiley HTML First Example",
+                        "landing_page_url": landing_url,
+                    },
+                )
+
+        self.assertEqual(raised.exception.code, "no_access")
 
     def test_pnas_provider_falls_back_to_pdf_with_browser_seed(self) -> None:
         client = pnas_provider.PnasClient(transport=None, env={})

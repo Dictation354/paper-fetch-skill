@@ -615,7 +615,7 @@ PAPER_FETCH_RUN_FULL_GOLDEN=1 PYTHONPATH=src python3 -m pytest tests/integration
 
 未设置 `PAPER_FETCH_RUN_LIVE=1` 时，`tests/live/test_live_publishers.py` 和 `tests/live/test_live_mcp.py` 应稳定 skip。额外验证 live 时，`arxiv` 不需要 browser runtime；包括 `ams` 在内的 browser-backed provider 先按静态报告中的 `browser_runtime.available` 检查本地能力，再启动 Camoufox 做真实页面预检。pytest 隔离 XDG data/runtime、通用 profile 和所有 provider storage-state；Camoufox 的 browser bundle、版本元数据、字体和默认 addon 则复用隔离前由官方包管理器确认的 dependency cache，避免 live/MCP 子进程重复下载 runtime。每家 provider 的状态仍写入临时 `<provider>-camoufox/storage-state.json`，不会进入该共享 dependency cache。
 
-publisher catalog 不是宽松的全文 smoke：每个已执行样本都请求 `asset_profile=body` 并硬性要求 `acceptance.overall=complete`，同时写出 `live-acceptance.json`。JSON 会区分 catalog 总数、已记录 provider、未记录 provider、已记录结果是否全 complete，以及全 catalog 是否全部执行并 complete；因此 challenge skip 不会被伪装为全量完成。非 challenge/auth/cancelled 的 preflight 失败必须保留可读取的隐私安全诊断 artifact，否则测试本身失败。live 测试依赖共享外部状态，必须串行运行；JUnit 使用与 `record_property` 兼容的 legacy family：
+publisher catalog 不是宽松的全文 smoke：每个已执行样本都请求 `asset_profile=body` 并硬性要求 `acceptance.overall=complete`，同时写出 `live-acceptance.json`。JSON 会区分 catalog 总数、已记录 provider、未记录 provider、已记录结果是否全 complete，以及全 catalog 是否全部执行并 complete；因此 challenge/no-access skip 不会被伪装为全量完成。只有机器可读的 preflight `challenge` / `auth_required` 或 fetch/MCP `status=no_access` 才按合法访问边界 skip；解析失败、空壳、正文不足和其它未知错误仍是 hard failure。AIP 五次 fresh-profile 冷启动在进入重复试验前复用同一 provider preflight，托管 runner 已被站点挑战时不会制造五个重复失败。非 challenge/auth/cancelled 的 preflight 失败必须保留可读取的隐私安全诊断 artifact，否则测试本身失败。live 测试依赖共享外部状态，必须串行运行；JUnit 使用与 `record_property` 兼容的 legacy family：
 
 ```bash
 PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_LIVE_ARTIFACT_DIR=artifacts/live-publishers \

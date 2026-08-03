@@ -86,12 +86,20 @@ from ._waterfall import (
 from ..reason_codes import (
     ABSTRACT_ONLY,
     ERROR,
+    NO_ACCESS,
     NO_RESULT,
     NOT_SUPPORTED,
     OK,
     PDF_FALLBACK,
 )
-from ..quality.reason_codes import FULLTEXT
+from ..quality.reason_codes import (
+    AWS_WAF_CHALLENGE,
+    CLOUDFLARE_CHALLENGE,
+    FULLTEXT,
+    PUBLISHER_ACCESS_DENIED,
+    PUBLISHER_PAYWALL,
+    REDIRECTED_TO_ABSTRACT,
+)
 from ..quality.html_availability import (
     HtmlQualityAssessor,
     availability_failure_message,
@@ -198,6 +206,15 @@ register_provider_bundle(
 
 MARKDOWN_TEXT_KEY = "markdown_text"
 SPRINGER_FETCH_RESULT_WARNINGS_KEY = "springer_fetch_result_warnings"
+SPRINGER_ACCESS_BOUNDARY_REASON_CODES = frozenset(
+    {
+        AWS_WAF_CHALLENGE,
+        CLOUDFLARE_CHALLENGE,
+        PUBLISHER_ACCESS_DENIED,
+        PUBLISHER_PAYWALL,
+        REDIRECTED_TO_ABSTRACT,
+    }
+)
 # Springer table pages include normal and Extended Data labels. The regex stays
 # provider-owned because it uses named captures consumed by table-page fallback.
 SPRINGER_TABLE_LABEL_PATTERN = re.compile(
@@ -255,6 +272,10 @@ class SpringerSiteFamilyProfile:
     doi_prefixes: tuple[str, ...]
     html_source: str = "springer_html"
     pdf_source: str = "springer_pdf"
+
+
+def _springer_html_failure_code(reason: str | None) -> str:
+    return NO_ACCESS if reason in SPRINGER_ACCESS_BOUNDARY_REASON_CODES else NO_RESULT
 
 
 SPRINGER_SITE_FAMILY_PROFILES = (
@@ -1321,7 +1342,7 @@ class SpringerClient(ProviderClient):
                     extracted_assets=extracted_assets,
                 )
             raise ProviderFailure(
-                NO_RESULT,
+                _springer_html_failure_code(attempt.diagnostics.reason),
                 availability_failure_message(attempt.diagnostics),
                 warnings=attempt.warnings,
                 diagnostics=self._html_failure_diagnostics(
@@ -1494,19 +1515,21 @@ class SpringerClient(ProviderClient):
                     ),
                 )
 
-            provisional_payload = _springer_html_payload_from_attempt(
-                attempt,
-                trace_markers=[fulltext_marker("springer", "fail", route="html")],
-                reason="Springer HTML route only exposed abstract-level content after markdown extraction.",
-            )
-            attempt_context["provisional_payload"] = provisional_payload
-            attempt_context["provisional_article"] = self.to_article_model(
-                metadata,
-                provisional_payload,
-                context=context,
-            )
+            failure_code = _springer_html_failure_code(attempt.diagnostics.reason)
+            if failure_code != NO_ACCESS:
+                provisional_payload = _springer_html_payload_from_attempt(
+                    attempt,
+                    trace_markers=[fulltext_marker("springer", "fail", route="html")],
+                    reason="Springer HTML route only exposed abstract-level content after markdown extraction.",
+                )
+                attempt_context["provisional_payload"] = provisional_payload
+                attempt_context["provisional_article"] = self.to_article_model(
+                    metadata,
+                    provisional_payload,
+                    context=context,
+                )
             raise ProviderFailure(
-                NO_RESULT,
+                failure_code,
                 availability_failure_message(attempt.diagnostics),
                 warnings=attempt.warnings,
                 diagnostics=self._html_failure_diagnostics(

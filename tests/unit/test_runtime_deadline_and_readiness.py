@@ -13,7 +13,7 @@ def test_request_deadline_is_initialized_once() -> None:
         context.close()
 
 
-def test_aip_and_science_publish_current_body_readiness_selectors() -> None:
+def test_aip_science_and_mdpi_publish_current_body_readiness_selectors() -> None:
     assert readiness.atypon_body_ready_selectors("aip") == (
         ".article-body .widget-ArticleFulltext",
         ".widget-ArticleFulltext",
@@ -23,6 +23,11 @@ def test_aip_and_science_publish_current_body_readiness_selectors() -> None:
         "[data-extent='bodymatter']",
         "[property='articleBody']",
         "#bodymatter",
+    )
+    assert readiness.atypon_body_ready_selectors("mdpi") == (
+        ".html-article-content",
+        "#article-contents",
+        ".prose-article",
     )
 
 

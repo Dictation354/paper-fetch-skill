@@ -100,10 +100,7 @@ MDPI_BROWSER_PROFILE = browser_workflow.make_browser_profile(
     "mdpi",
     article_source_name="mdpi_html",
     fallback_author_extractor=_mdpi_html.extract_authors,
-    html_readiness=BrowserHtmlReadiness(
-        wait_for_article_body=False,
-        selector=".html-article-content, #article-contents, .prose-article",
-    ),
+    html_readiness=BrowserHtmlReadiness(wait_for_article_body=True),
 )
 
 

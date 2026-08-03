@@ -12,8 +12,10 @@ import pytest
 from paper_fetch.http import HttpTransport
 from paper_fetch.provider_catalog import provider_has_browser_route
 from paper_fetch.publisher_identity import normalize_doi
+from paper_fetch.reason_codes import NO_ACCESS
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.service import FetchStrategy, fetch_paper
+from paper_fetch.workflow.types import PaperFetchFailure
 from paper_fetch.workflow.acceptance import (
     AssetAcceptanceStatus,
     ContentAcceptanceStatus,
@@ -38,6 +40,24 @@ RUN_AIP_COLD_STABILITY = os.environ.get("PAPER_FETCH_RUN_AIP_COLD_STABILITY") ==
 ELSEVIER_SAMPLE = provider_benchmark_sample("elsevier")
 AIP_SAMPLE = provider_benchmark_sample("aip")
 AIP_COLD_START_ATTEMPTS = 5
+
+
+class _PytestSkipper:
+    @staticmethod
+    def skipTest(message: str) -> None:
+        pytest.skip(message)
+
+    @staticmethod
+    def fail(message: str) -> None:
+        pytest.fail(message)
+
+
+def _skip_legal_access_boundary(provider: str, exc: PaperFetchFailure) -> None:
+    if exc.status == NO_ACCESS:
+        pytest.skip(
+            f"{provider} live route reached a legal access boundary; "
+            f"configure entitlement/authentication before retrying ({exc.status})."
+        )
 
 
 def fetch_envelope(
@@ -174,16 +194,6 @@ def test_catalog_provider_sample_live_body_acceptance(
             + ", ".join(missing)
         )
     if provider_has_browser_route(sample.provider):
-
-        class _PytestSkipper:
-            @staticmethod
-            def skipTest(message: str) -> None:
-                pytest.skip(message)
-
-            @staticmethod
-            def fail(message: str) -> None:
-                pytest.fail(message)
-
         preflight = preflight_selected_browser_or_skip(
             _PytestSkipper(),
             provider=sample.provider,
@@ -204,15 +214,19 @@ def test_catalog_provider_sample_live_body_acceptance(
         )
         record_property("preflight_diagnostic_path", diagnostic_path)
 
-    envelope = fetch_envelope(
-        sample.doi,
-        transport=HttpTransport(),
-        env=catalog_live_env,
-        download_dir=catalog_live_artifact_root / "providers" / sample.provider,
-        artifact_mode="all",
-        preferred_provider=sample.provider,
-        asset_profile="body",
-    )
+    try:
+        envelope = fetch_envelope(
+            sample.doi,
+            transport=HttpTransport(),
+            env=catalog_live_env,
+            download_dir=catalog_live_artifact_root / "providers" / sample.provider,
+            artifact_mode="all",
+            preferred_provider=sample.provider,
+            asset_profile="body",
+        )
+    except PaperFetchFailure as exc:
+        _skip_legal_access_boundary(sample.provider, exc)
+        raise
     assert envelope.article is not None
     article = envelope.article
     acceptance = evaluate_fetch_acceptance(
@@ -273,11 +287,23 @@ def test_catalog_provider_sample_live_body_acceptance(
     assert acceptance.overall == OverallAcceptanceStatus.COMPLETE, acceptance.to_json()
 
 
-def test_aip_cold_start_stability_uses_html_for_five_fresh_profiles() -> None:
+def test_aip_cold_start_stability_uses_html_for_five_fresh_profiles(
+    catalog_live_env,
+    catalog_live_preflight_cache,
+    catalog_live_artifact_root,
+) -> None:
     if not RUN_AIP_COLD_STABILITY:
         pytest.skip(
             "Set PAPER_FETCH_RUN_AIP_COLD_STABILITY=1 to run repeated AIP cold starts."
         )
+
+    preflight_selected_browser_or_skip(
+        _PytestSkipper(),
+        provider="aip",
+        env=catalog_live_env,
+        cache=catalog_live_preflight_cache,
+        artifact_root=catalog_live_artifact_root / "preflight",
+    )
 
     artifact_tempdir: tempfile.TemporaryDirectory | None = None
     artifact_root_value = os.environ.get("PAPER_FETCH_LIVE_ARTIFACT_DIR")

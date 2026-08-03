@@ -223,6 +223,13 @@ wheel、installed runtime 与 manifest 任一漂移都会 fail closed。
 不依赖 browser 的 provider、静态 `doctor`、CLI/MCP runtime 和已打包公式工具
 仍可按各自数据源与凭据边界独立使用。
 
+同一浏览器边界还要求把“本地 runtime 可启动”和“远端页面可取得正文”分开：
+selected-browser provider 在抽取前等待 provider 正文 DOM 达到阈值并连续两次稳定；
+快速 attempt 已确认 challenge/paywall/access boundary、而保守重试只因共享 deadline
+耗尽而失败时，保留首个稳定 reason code，并在 diagnostics 中附加重试 timeout。
+MDPI 使用该正文稳定门，避免把延迟加载的 HTTP-200 head-only shell 误认为完成页面。
+这些是 Windows/WSL 可执行的 portable 行为证据，不替代原生 macOS app bundle 启动门。
+
 ### MAC-V4-008：Camoufox 官方 Mac bundle 与 custom path 分界
 
 原生 Mac 实测发现，Camoufox 0.5.4 下载的官方 app bundle 把浏览器 executable

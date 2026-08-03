@@ -457,6 +457,69 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             [event.marker() for event in payload.trace if event.marker()],
         )
 
+    def test_browser_workflow_preserves_fast_access_gate_when_retry_times_out(
+        self,
+    ) -> None:
+        doi = "10.1002/ece3.9361"
+        landing_url = f"https://onlinelibrary.wiley.com/doi/full/{doi}"
+        runtime = browser_runtime.BrowserRuntimeConfig(
+            provider="wiley",
+            doi=doi,
+            artifact_dir=Path("/tmp/artifacts"),
+            headless=True,
+            user_agent="paper-fetch-test/1",
+            backend="camoufox",
+        )
+        fast_failure = browser_runtime.BrowserRuntimeFailure(
+            "cloudflare_challenge",
+            "Encountered a challenge page.",
+            browser_context_seed={"browser_final_url": landing_url},
+            details={"diagnostic_path": "/tmp/fast-challenge.json"},
+        )
+        retry_failure = browser_runtime.BrowserRuntimeFailure(
+            "browser_connect_timeout",
+            "Browser retry exhausted the shared request deadline.",
+            browser_context_seed={"browser_user_agent": "retry-agent"},
+        )
+        mocked_fetch = mock.Mock(side_effect=[fast_failure, retry_failure])
+        client = WileyClient(transport=None, env={})
+        context = RuntimeContext(env={})
+        try:
+            with self.assertRaises(browser_runtime.BrowserRuntimeFailure) as raised:
+                browser_workflow._fetch_browser_html_payload_with_fast_path(
+                    client,
+                    [landing_url],
+                    runtime=runtime,
+                    metadata={
+                        "doi": doi,
+                        "title": "Example Wiley Article",
+                        "landing_page_url": landing_url,
+                    },
+                    context=context,
+                    html_fetcher=mocked_fetch,
+                )
+        finally:
+            context.close()
+
+        self.assertIs(raised.exception, fast_failure)
+        self.assertEqual(raised.exception.kind, "cloudflare_challenge")
+        self.assertEqual(
+            raised.exception.details["diagnostic_path"],
+            "/tmp/fast-challenge.json",
+        )
+        self.assertEqual(
+            raised.exception.details["retry_failure"]["failure_code"],
+            "browser_connect_timeout",
+        )
+        self.assertEqual(
+            [item["attempt"] for item in raised.exception.details["html_attempts"]],
+            [1, 2],
+        )
+        self.assertEqual(
+            raised.exception.browser_context_seed["browser_user_agent"],
+            "retry-agent",
+        )
+
     def test_browser_workflow_fast_path_falls_back_after_insufficient_body(
         self,
     ) -> None:

@@ -59,6 +59,11 @@ ATYPON_BODY_READY_SELECTORS: Mapping[str, tuple[str, ...]] = {
         ".widget-ArticleFulltext",
         ".article-body",
     ),
+    "mdpi": (
+        ".html-article-content",
+        "#article-contents",
+        ".prose-article",
+    ),
 }
 
 _BODY_READY_POLL_INTERVAL_MS = 750

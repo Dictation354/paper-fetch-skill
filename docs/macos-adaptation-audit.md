@@ -223,6 +223,10 @@
   检查 import；联网时可先用该 runtime 执行 `python -m camoufox fetch` 下载
   browser binary，再运行 `paper-fetch browser-preflight` 验证启动和 provider
   state。
+- 补充 portable 证据：selected-browser 正文 DOM 稳定等待、MDPI delayed-body
+  readiness，以及“快速 attempt 的访问门槛不被保守重试 timeout 覆盖”均由纯
+  Python 单测锁定；这些证据能区分远端 access state 与 runtime failure，但不构成
+  原生 macOS 断网启动证明。
 - 缺失证据：在网络完全断开的原生 macOS 15 arm64 环境中，从已预置 cache
   启动 Camoufox，并对 browser-backed provider 完成受控 launch/fetch 的可重复
   测试。

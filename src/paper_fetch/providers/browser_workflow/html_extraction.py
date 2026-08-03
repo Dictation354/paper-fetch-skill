@@ -75,6 +75,21 @@ _FAST_BROWSER_HTML_RETRY_KINDS = {
     STRUCTURED_ARTICLE_NOT_FULLTEXT,
     STRUCTURED_MISSING_BODY_SECTIONS,
 }
+_FAST_BROWSER_ACCESS_FAILURE_KINDS = {
+    AWS_WAF_CHALLENGE,
+    CLOUDFLARE_CHALLENGE,
+    PUBLISHER_ACCESS_DENIED,
+    PUBLISHER_PAYWALL,
+    REDIRECTED_TO_ABSTRACT,
+    ABSTRACT_ONLY,
+}
+_FAST_BROWSER_RETRY_TIMEOUT_KINDS = {
+    "timeout",
+    "pool_timeout",
+    "browser_connect_timeout",
+    "browser_navigation_timeout",
+    "browser_rest_wait_timeout",
+}
 
 
 @dataclass(frozen=True)
@@ -486,6 +501,50 @@ def _should_retry_fast_browser_failure(exc: Exception) -> bool:
     return False
 
 
+def _browser_failure_kind(exc: Exception) -> str:
+    return normalize_text(
+        str(getattr(exc, "kind", None) or getattr(exc, "reason", None) or "")
+    ).lower()
+
+
+def _preserve_fast_access_failure_after_retry_timeout(
+    fast_failure: BrowserRuntimeFailure | HtmlExtractionFailure,
+    retry_failure: BrowserRuntimeFailure | HtmlExtractionFailure,
+) -> bool:
+    """Keep a stable access-boundary result when its retry exhausts the budget."""
+
+    if _browser_failure_kind(fast_failure) not in _FAST_BROWSER_ACCESS_FAILURE_KINDS:
+        return False
+    if _browser_failure_kind(retry_failure) not in _FAST_BROWSER_RETRY_TIMEOUT_KINDS:
+        return False
+
+    fast_details = dict(getattr(fast_failure, "details", None) or {})
+    retry_details = dict(getattr(retry_failure, "details", None) or {})
+    retry_attempts = retry_details.get("html_attempts")
+    if isinstance(retry_attempts, list):
+        fast_details["html_attempts"] = [
+            dict(item) for item in retry_attempts if isinstance(item, Mapping)
+        ]
+    fast_details["retry_failure"] = {
+        "failure_code": _browser_failure_kind(retry_failure),
+        "message": normalize_text(
+            str(getattr(retry_failure, "message", None) or retry_failure)
+        ),
+    }
+    fast_failure.details = fast_details
+
+    if isinstance(fast_failure, BrowserRuntimeFailure):
+        fast_failure.browser_context_seed = {
+            key: value
+            for key, value in merge_browser_context_seeds(
+                fast_failure.browser_context_seed,
+                getattr(retry_failure, "browser_context_seed", None),
+            ).items()
+            if value is not None
+        }
+    return True
+
+
 def _fetch_browser_html_payload_with_fast_path(
     client: BrowserWorkflowClient,
     html_candidates: list[str],
@@ -498,6 +557,7 @@ def _fetch_browser_html_payload_with_fast_path(
 ) -> tuple[BrowserFetchedHtml, RawFulltextPayload]:
     retry_seed: dict[str, Any] = {}
     prior_attempts: list[Mapping[str, Any]] = []
+    fast_failure: BrowserRuntimeFailure | HtmlExtractionFailure | None = None
     try:
         return _fetch_browser_html_payload(
             client,
@@ -518,6 +578,7 @@ def _fetch_browser_html_payload_with_fast_path(
     except (BrowserRuntimeFailure, HtmlExtractionFailure) as exc:
         if not _should_retry_fast_browser_failure(exc):
             raise
+        fast_failure = exc
         if isinstance(exc, BrowserRuntimeFailure):
             retry_seed = dict(exc.browser_context_seed)
             failure_details = dict(exc.details or {})
@@ -551,15 +612,26 @@ def _fetch_browser_html_payload_with_fast_path(
             getattr(exc, "message", None) or normalize_text(str(exc)),
         )
 
-    return _fetch_browser_html_payload(
-        client,
-        html_candidates,
-        runtime=runtime,
-        metadata=metadata,
-        context=context,
-        warnings=warnings,
-        html_fetcher=html_fetcher,
-        policy=BrowserHtmlFetchPolicy(attempt=2),
-        browser_context_seed=retry_seed,
-        prior_attempts=prior_attempts,
-    )
+    try:
+        return _fetch_browser_html_payload(
+            client,
+            html_candidates,
+            runtime=runtime,
+            metadata=metadata,
+            context=context,
+            warnings=warnings,
+            html_fetcher=html_fetcher,
+            policy=BrowserHtmlFetchPolicy(attempt=2),
+            browser_context_seed=retry_seed,
+            prior_attempts=prior_attempts,
+        )
+    except (BrowserRuntimeFailure, HtmlExtractionFailure) as retry_failure:
+        if (
+            fast_failure is not None
+            and _preserve_fast_access_failure_after_retry_timeout(
+                fast_failure,
+                retry_failure,
+            )
+        ):
+            raise fast_failure from retry_failure
+        raise

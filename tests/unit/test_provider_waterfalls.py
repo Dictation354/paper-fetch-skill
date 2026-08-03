@@ -20,6 +20,7 @@ from paper_fetch.providers.base import (
     ProviderFailure,
     RawFulltextPayload,
 )
+from paper_fetch.reason_codes import NO_ACCESS
 from paper_fetch.runtime import RuntimeContext
 from tests.golden_criteria import golden_criteria_scenario_asset
 from tests.provider_benchmark_samples import (
@@ -1026,6 +1027,50 @@ class PublisherWaterfallTests(unittest.TestCase):
                 for warning in result.article.quality.warnings
             )
         )
+
+    def test_springer_client_challenge_is_no_access_not_provisional_article(
+        self,
+    ) -> None:
+        doi = SPRINGER_SAMPLE.doi
+        landing_url = SPRINGER_SAMPLE.landing_url
+        metadata = {
+            "doi": doi,
+            "title": SPRINGER_SAMPLE.title,
+            "landing_page_url": landing_url,
+            "fulltext_links": [
+                {"url": f"{landing_url}.pdf", "content_type": "application/pdf"}
+            ],
+        }
+        response = {
+            "status_code": 200,
+            "headers": {"content-type": "text/html; charset=utf-8"},
+            "body": (
+                b"<html><head><title>Client Challenge</title></head>"
+                b"<body><div id='_fs-ch-123'>Loading failed. Retry later.</div>"
+                b"</body></html>"
+            ),
+            "url": landing_url,
+        }
+        client = springer_provider.SpringerClient(transport=mock.Mock(), env={})
+
+        with (
+            mock.patch.object(
+                client, "_fetch_html_response", return_value=(response, landing_url)
+            ),
+            mock.patch.object(
+                springer_provider,
+                "fetch_pdf_over_http",
+                side_effect=springer_provider.PdfFetchFailure(
+                    "pdf_download_failed", "Springer PDF fallback failed."
+                ),
+            ),
+            self.assertRaises(ProviderFailure) as raised,
+        ):
+            client.fetch_result(doi, metadata, None)
+
+        self.assertEqual(raised.exception.code, NO_ACCESS)
+        availability = raised.exception.diagnostics.details["availability_diagnostics"]
+        self.assertEqual(availability["reason"], "cloudflare_challenge")
 
     def test_springer_fetch_result_returns_metadata_only_when_no_abstract_and_pdf_fallback_fails(
         self,

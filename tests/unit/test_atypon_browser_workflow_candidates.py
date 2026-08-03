@@ -212,24 +212,17 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
         )
 
     def test_pnas_and_mdpi_use_headless_fulltext_readiness_selectors(self) -> None:
-        cases = (
-            (
-                PnasClient(None, {}),
-                '[data-extent="bodymatter"]',
-            ),
-            (
-                MdpiClient(None, {}),
-                ".html-article-content, #article-contents, .prose-article",
-            ),
-        )
+        pnas_readiness = PnasClient(None, {}).require_profile().html_readiness
+        self.assertIsNotNone(pnas_readiness)
+        assert pnas_readiness is not None
+        self.assertFalse(pnas_readiness.wait_for_article_body)
+        self.assertEqual(pnas_readiness.selector, '[data-extent="bodymatter"]')
 
-        for client, expected_selector in cases:
-            with self.subTest(provider=client.name):
-                readiness = client.require_profile().html_readiness
-                self.assertIsNotNone(readiness)
-                assert readiness is not None
-                self.assertFalse(readiness.wait_for_article_body)
-                self.assertEqual(readiness.selector, expected_selector)
+        mdpi_readiness = MdpiClient(None, {}).require_profile().html_readiness
+        self.assertIsNotNone(mdpi_readiness)
+        assert mdpi_readiness is not None
+        self.assertTrue(mdpi_readiness.wait_for_article_body)
+        self.assertIsNone(mdpi_readiness.selector)
         self.assertEqual(
             build_pdf_candidates("wiley", WILEY_SAMPLE.doi, None)[:4],
             [

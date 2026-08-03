@@ -43,6 +43,8 @@ CHALLENGE_PATTERNS = (
     "aws waf",
     "awswaf",
 )
+CLIENT_CHALLENGE_TITLE = "client challenge"
+GENERIC_CHALLENGE_HTML_PATTERNS = ("_fs-ch-",)
 AWS_WAF_HTML_PATTERNS = (
     "token.awswaf.com",
     "awswaf.com",
@@ -234,6 +236,7 @@ def detect_html_access_signals(
     if redirected_to_abstract:
         signals.append(REDIRECTED_TO_ABSTRACT)
 
+    normalized_title = normalize_text(title).lower()
     combined = normalize_text(" ".join([title, text])).lower()
     challenge_provider = detect_challenge_provider(
         html_text=html_text,
@@ -241,7 +244,13 @@ def detect_html_access_signals(
     )
     if challenge_provider == "aws_waf":
         signals.append(AWS_WAF_CHALLENGE)
-    elif any(pattern in combined for pattern in CHALLENGE_PATTERNS):
+    elif (
+        normalized_title == CLIENT_CHALLENGE_TITLE
+        or any(pattern in combined for pattern in CHALLENGE_PATTERNS)
+        or any(
+            pattern in html_text.lower() for pattern in GENERIC_CHALLENGE_HTML_PATTERNS
+        )
+    ):
         signals.append(CLOUDFLARE_CHALLENGE)
     if response_status == 404 or any(
         pattern in combined for pattern in NOT_FOUND_PATTERNS

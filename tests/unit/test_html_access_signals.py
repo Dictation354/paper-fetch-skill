@@ -82,6 +82,46 @@ class HtmlAccessSignalsTests(unittest.TestCase):
             "aws_waf",
         )
 
+    def test_detect_html_block_classifies_nature_client_challenge_shell(self) -> None:
+        html = (
+            "<html><head><title>Client Challenge</title></head>"
+            "<body><div id='_fs-ch-123'>Loading...</div></body></html>"
+        )
+
+        failure = detect_html_block(
+            "Client Challenge",
+            "Loading...",
+            200,
+            html_text=html,
+        )
+
+        self.assertIsNotNone(failure)
+        assert failure is not None
+        self.assertEqual(failure.reason, "cloudflare_challenge")
+
+    def test_detect_html_block_uses_nature_challenge_runtime_marker(self) -> None:
+        failure = detect_html_block(
+            "",
+            "Loading failed. Retry later.",
+            200,
+            html_text="<html><body><div id='_fs-ch-abc'></div></body></html>",
+        )
+
+        self.assertIsNotNone(failure)
+        assert failure is not None
+        self.assertEqual(failure.reason, "cloudflare_challenge")
+
+    def test_detect_html_block_does_not_match_client_challenge_in_article_body(
+        self,
+    ) -> None:
+        self.assertIsNone(
+            detect_html_block(
+                "Therapeutic methods",
+                "The client challenge was discussed in the intervention results.",
+                200,
+            )
+        )
+
     def test_visible_html_summary_drops_hidden_challenge_fallbacks(self) -> None:
         html = (
             "<html><body><article id='article'>Full IEEE text</article>"

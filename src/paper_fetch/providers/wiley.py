@@ -525,7 +525,7 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
             return ProviderFailure(
                 NOT_CONFIGURED
                 if bootstrap.runtime is None and not self.tdm_client_token
-                else NO_RESULT,
+                else self._html_failure_code(bootstrap.html_failure_reason),
                 f"{self.name} full text could not be retrieved. "
                 + " ".join(failure_parts),
                 missing_env=missing_env,
