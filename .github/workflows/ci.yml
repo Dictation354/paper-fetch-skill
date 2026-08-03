@@ -164,6 +164,8 @@ jobs:
       - name: Require native Apple Silicon runner
         run: test "$(uname -m)" = "arm64"
       - name: Prepare pinned official Camoufox runtime explicitly
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: uv run python -m camoufox fetch official/152.0.4-beta.28
       - name: Verify official Camoufox macOS bundle contexts
         env:

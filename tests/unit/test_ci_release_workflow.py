@@ -77,6 +77,7 @@ def test_live_external_state_is_scheduled_low_frequency_and_serial() -> None:
     assert "install-formula-tools.sh" in workflow
     assert "tests/integration/test_golden_corpus.py -q" in workflow
     assert "python -m camoufox fetch" in workflow
+    assert "GITHUB_TOKEN: ${{ github.token }}" in workflow
     assert "scripts/run_provider_drift_report.py" in workflow
     assert "provider-drift-report.json" in workflow
 
@@ -178,6 +179,7 @@ def test_regular_ci_includes_native_macos_offline_gate() -> None:
     assert "uv run python scripts/validate_macos_adaptation.py" in workflow
     assert 'test "$(uname -m)" = "arm64"' in workflow
     assert "uv run python -m camoufox fetch official/152.0.4-beta.28" in workflow
+    assert "GITHUB_TOKEN: ${{ github.token }}" in workflow
     assert 'PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST: "1"' in workflow
     assert "tests/integration/test_camoufox_native_macos.py -q -n 0" in workflow
     assert "test_cache_scope_accepts_equivalent_filesystem_alias_for_root" in workflow

@@ -227,6 +227,9 @@
   readiness，以及“快速 attempt 的访问门槛不被保守重试 timeout 覆盖”均由纯
   Python 单测锁定；这些证据能区分远端 access state 与 runtime failure，但不构成
   原生 macOS 断网启动证明。
+- Hosted 准备边界：常规原生 CI 与 live workflow 通过 Camoufox 已支持的
+  `GITHUB_TOKEN` 环境变量传入只读 workflow token，避免匿名 Releases API
+  rate limit；凭据不写入命令、cache、diagnostics 或 artifact。
 - 缺失证据：在网络完全断开的原生 macOS 15 arm64 环境中，从已预置 cache
   启动 Camoufox，并对 browser-backed provider 完成受控 launch/fetch 的可重复
   测试。

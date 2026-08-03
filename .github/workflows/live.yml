@@ -37,6 +37,8 @@ jobs:
           python-version: "3.11"
           full: "true"
       - name: Prepare selected Camoufox runtime explicitly
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: uv run python -m camoufox fetch
       - name: Prepare formula conversion backend explicitly
         run: PAPER_FETCH_INSTALL_PYTHON_BIN=.venv/bin/python ./install-formula-tools.sh
