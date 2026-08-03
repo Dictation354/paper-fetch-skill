@@ -156,6 +156,23 @@ def test_catalog_acceptance_report_does_not_hide_unrecorded_provider() -> None:
     }
 
 
+def test_live_mcp_no_access_detection_requires_machine_readable_boundary() -> None:
+    assert _runtime_env.is_machine_readable_no_access({"status": "no_access"})
+    assert _runtime_env.is_machine_readable_no_access(
+        {
+            "status": "ok",
+            "source_trail": ["route:provider_candidate_springer_access_boundary_stop"],
+        }
+    )
+    assert not _runtime_env.is_machine_readable_no_access(
+        {
+            "status": "ok",
+            "acceptance": {"content": "metadata_only"},
+            "source_trail": ["fulltext:springer_fail_html"],
+        }
+    )
+
+
 def test_isolated_live_env_reuses_explicit_formula_tools(tmp_path: Path) -> None:
     tools_dir = tmp_path / "formula-tools"
     tools_dir.mkdir()

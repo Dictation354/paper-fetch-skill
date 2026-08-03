@@ -545,6 +545,27 @@ def _preserve_fast_access_failure_after_retry_timeout(
     return True
 
 
+def _retry_candidates_after_fast_failure(
+    html_candidates: list[str],
+    fast_failure: BrowserRuntimeFailure | HtmlExtractionFailure | None,
+) -> list[str]:
+    candidates = list(html_candidates)
+    if (
+        not isinstance(fast_failure, HtmlExtractionFailure)
+        or _browser_failure_kind(fast_failure) != EMPTY_ARTICLE_SHELL
+        or len(candidates) < 2
+    ):
+        return candidates
+    html_result = getattr(fast_failure, "html_result", None)
+    failed_source = normalize_text(str(getattr(html_result, "source_url", "") or ""))
+    if not failed_source:
+        return candidates
+    for index, candidate in enumerate(candidates):
+        if normalize_text(candidate) == failed_source:
+            return [*candidates[:index], *candidates[index + 1 :], candidate]
+    return candidates
+
+
 def _fetch_browser_html_payload_with_fast_path(
     client: BrowserWorkflowClient,
     html_candidates: list[str],
@@ -612,10 +633,14 @@ def _fetch_browser_html_payload_with_fast_path(
             getattr(exc, "message", None) or normalize_text(str(exc)),
         )
 
+    retry_candidates = _retry_candidates_after_fast_failure(
+        html_candidates,
+        fast_failure,
+    )
     try:
         return _fetch_browser_html_payload(
             client,
-            html_candidates,
+            retry_candidates,
             runtime=runtime,
             metadata=metadata,
             context=context,

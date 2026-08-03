@@ -4,7 +4,7 @@ import importlib.util
 import os
 import tempfile
 from pathlib import Path
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from paper_fetch.browser_preflight import (
     BrowserPreflightResult,
@@ -22,6 +22,7 @@ from paper_fetch.config import (
     configured_browser_backend,
 )
 from paper_fetch.formula.paths import FORMULA_TOOLS_DIR_ENV_VAR
+from paper_fetch.reason_codes import NO_ACCESS
 from tests._environment import (
     PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR,
     PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR,
@@ -80,6 +81,24 @@ def require_selected_browser_or_skip(testcase, env: Mapping[str, str]) -> None:
     backend = configured_browser_backend(env)
     if importlib.util.find_spec(backend) is None:
         testcase.skipTest(f"Selected browser package {backend!r} is not installed.")
+
+
+def is_machine_readable_no_access(payload: Mapping[str, object]) -> bool:
+    if any(
+        payload.get(key) == NO_ACCESS for key in ("status", "code", "error_category")
+    ):
+        return True
+    source_trail = payload.get("source_trail")
+    if not isinstance(source_trail, Sequence) or isinstance(
+        source_trail, (str, bytes, bytearray)
+    ):
+        return False
+    return any(
+        isinstance(marker, str)
+        and marker.startswith("route:provider_candidate_")
+        and marker.endswith("_access_boundary_stop")
+        for marker in source_trail
+    )
 
 
 def preflight_selected_browser_or_skip(

@@ -26,7 +26,14 @@ from ..http import RequestCancelledError, diagnostic_url_payload
 from ..page_diagnostics import PageDiagnosticRequest, capture_page_diagnostic
 from ..quality.html_availability import choose_parser, extract_page_title
 from ..quality.html_signals import looks_like_abstract_redirect
-from ..quality.reason_codes import REDIRECTED_TO_ABSTRACT
+from ..quality.reason_codes import (
+    ABSTRACT_ONLY,
+    AWS_WAF_CHALLENGE,
+    CLOUDFLARE_CHALLENGE,
+    PUBLISHER_ACCESS_DENIED,
+    PUBLISHER_PAYWALL,
+    REDIRECTED_TO_ABSTRACT,
+)
 from ..reason_codes import (
     BROWSER_CONTEXT_CREATE_FAILED,
     BROWSER_PAGE_CREATE_FAILED,
@@ -85,6 +92,18 @@ _IMAGE_RESPONSE_BLOCKED_BY_HTML_WRAPPER = "image_response_blocked_by_html_wrappe
 _IMAGE_PAYLOAD_RESPONSE_ATTR = "_paper_fetch_top_level_response"
 _IMAGE_PAYLOAD_TIMEOUT_ATTR = "_paper_fetch_image_payload_timeout_ms"
 _IMAGE_PAYLOAD_FAILURE_ATTR = "_paper_fetch_image_payload_failure"
+_STABLE_BROWSER_ACCESS_FAILURE_KINDS = frozenset(
+    {
+        ABSTRACT_ONLY,
+        AWS_WAF_CHALLENGE,
+        CLOUDFLARE_CHALLENGE,
+        PUBLISHER_ACCESS_DENIED,
+        PUBLISHER_PAYWALL,
+        REDIRECTED_TO_ABSTRACT,
+        "iop_captcha_challenge",
+        "iop_radware_challenge",
+    }
+)
 _SELECTOR_TEXT_READINESS_SCRIPT = """
 ({ selector, expectedText }) => {
   let node = null;
@@ -713,6 +732,33 @@ def _lightweight_seed_rejection(
     return None
 
 
+def _candidate_deadline_failure(
+    last_failure: PlaywrightBrowserFailure | None,
+    *,
+    trace: Mapping[str, Any],
+) -> PlaywrightBrowserFailure:
+    timeout_failure = PlaywrightBrowserFailure(
+        "browser_connect_timeout",
+        "Browser HTML request deadline was exhausted before another candidate.",
+        details={"trace": dict(trace)},
+    )
+    if (
+        last_failure is None
+        or normalize_text(last_failure.kind).lower()
+        not in _STABLE_BROWSER_ACCESS_FAILURE_KINDS
+    ):
+        return timeout_failure
+
+    details = dict(last_failure.details or {})
+    details["trace"] = dict(trace)
+    details["candidate_deadline_failure"] = {
+        "failure_code": timeout_failure.kind,
+        "message": timeout_failure.message,
+    }
+    last_failure.details = details
+    return last_failure
+
+
 def _capture_page_screenshot(
     page: Any,
     *,
@@ -942,10 +988,9 @@ def fetch_html_with_playwright(
             candidate_timeout_ms = remaining_timeout_ms()
             if candidate_timeout_ms <= 0:
                 trace["deadline_exhausted"] = True
-                last_failure = PlaywrightBrowserFailure(
-                    "browser_connect_timeout",
-                    "Browser HTML request deadline was exhausted before another candidate.",
-                    details={"trace": trace},
+                last_failure = _candidate_deadline_failure(
+                    last_failure,
+                    trace=trace,
                 )
                 break
             normalized_url = normalize_text(url)

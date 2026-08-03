@@ -235,7 +235,7 @@ title = "明确 Camoufox 离线边界并移除 FlareSolverr"
 area = "browser-runtime"
 status = "implemented"
 risk = "P1"
-summary = "browser/full extra 允许兼容的 Camoufox 0.5.x，并由 uv.lock 选择可复现的具体版本；构建器复核下载 wheel metadata 与 installed distribution，并在 manifest 记录该版本。离线包捆绑 Python 包但不捆绑浏览器 binary，安装器不得下载浏览器，用户须先显式执行 camoufox fetch，再用 browser-preflight 验证。CI/live runtime discovery 使用只读 workflow token 避免匿名 GitHub API 限额。selected-browser 页面等待稳定正文 DOM；快速 attempt 的稳定访问门槛不会被保守重试超时覆盖；活动运行时不得包含 FlareSolverr。"
+summary = "browser/full extra 允许兼容的 Camoufox 0.5.x，并由 uv.lock 选择可复现的具体版本；构建器复核下载 wheel metadata 与 installed distribution，并在 manifest 记录该版本。离线包捆绑 Python 包但不捆绑浏览器 binary，安装器不得下载浏览器，用户须先显式执行 camoufox fetch，再用 browser-preflight 验证。CI/live runtime discovery 使用只读 workflow token 避免匿名 GitHub API 限额。selected-browser 页面等待稳定正文 DOM；候选循环和保守重试都不得用 deadline timeout 覆盖已经确认的稳定访问门槛，HTTP-200 empty shell 的重试优先下一个既有 provider URL，live MCP 只按精确 access-boundary marker 跳过成功 metadata fallback；活动运行时不得包含 FlareSolverr。"
 rationale = "Python 包可导入不等于目标浏览器可用，安装时静默联网也会破坏离线包边界；同样，远端挑战或延迟正文必须与本地 browser context 启动失败分开诊断。"
 implementation_paths = [
   ".github/workflows/ci.yml",
@@ -246,6 +246,7 @@ implementation_paths = [
   "install-offline.sh",
   "src/paper_fetch/browser_preflight.py",
   "src/paper_fetch/extraction/html/signals.py",
+  "src/paper_fetch/providers/_playwright_browser.py",
   "src/paper_fetch/providers/browser_workflow/html_extraction.py",
   "src/paper_fetch/providers/browser_workflow/fetchers/readiness.py",
   "src/paper_fetch/providers/mdpi.py",
@@ -259,7 +260,10 @@ test_nodes = [
   "tests/unit/test_offline_install.py::OfflineInstallTests::test_installers_do_not_call_playwright_browser_install",
   "tests/unit/test_browser_preflight.py::test_static_browser_capabilities_never_claims_live_health",
   "tests/unit/test_html_access_signals.py::HtmlAccessSignalsTests::test_detect_html_block_classifies_nature_client_challenge_shell",
+  "tests/unit/test_camoufox_backend.py::test_camoufox_candidate_deadline_preserves_observed_access_boundary",
+  "tests/unit/test_aip_provider.py::test_aip_cold_html_retry_reuses_transient_seed_before_committing_state",
   "tests/unit/test_provider_request_options.py::ProviderRequestOptionsTests::test_browser_workflow_preserves_fast_access_gate_when_retry_times_out",
+  "tests/unit/test_live_runtime_env.py::test_live_mcp_no_access_detection_requires_machine_readable_boundary",
   "tests/unit/test_runtime_deadline_and_readiness.py::test_aip_science_and_mdpi_publish_current_body_readiness_selectors",
   "tests/unit/test_atypon_browser_workflow_candidates.py::AtyponBrowserWorkflowCandidateTests::test_pnas_and_mdpi_use_headless_fulltext_readiness_selectors",
 ]

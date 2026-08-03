@@ -225,8 +225,12 @@ wheel、installed runtime 与 manifest 任一漂移都会 fail closed。
 
 同一浏览器边界还要求把“本地 runtime 可启动”和“远端页面可取得正文”分开：
 selected-browser provider 在抽取前等待 provider 正文 DOM 达到阈值并连续两次稳定；
-快速 attempt 已确认 challenge/paywall/access boundary、而保守重试只因共享 deadline
-耗尽而失败时，保留首个稳定 reason code，并在 diagnostics 中附加重试 timeout。
+任一候选已确认 challenge/paywall/access boundary、而下一候选或保守重试只因共享
+deadline 耗尽而失败时，保留首个稳定 reason code，并在 diagnostics 中附加对应
+timeout。live MCP 对成功 metadata fallback 只接受精确的
+`route:provider_candidate_*_access_boundary_stop` 作为同类边界，不把一般 limited
+结果降格为 skip。AIP 等 provider 的 fast landing 若已经返回 HTTP-200 head-only
+empty shell，保守重试会先使用下一个既有 provider URL，不再重复相同空壳。
 MDPI 使用该正文稳定门，避免把延迟加载的 HTTP-200 head-only shell 误认为完成页面。
 这些是 Windows/WSL 可执行的 portable 行为证据，不替代原生 macOS app bundle 启动门。
 常规 CI 的 pinned 原生 runtime 与 live workflow 在调用 Camoufox CLI 时传入 GitHub

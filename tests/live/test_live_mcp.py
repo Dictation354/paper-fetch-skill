@@ -11,9 +11,9 @@ from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
 from paper_fetch.publisher_identity import normalize_doi
-from paper_fetch.reason_codes import NO_ACCESS
 from tests.live._runtime_env import (
     build_isolated_live_env,
+    is_machine_readable_no_access,
     preflight_selected_browser_or_skip,
 )
 from tests.provider_benchmark_samples import (
@@ -132,7 +132,7 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
         )
 
         structured_content = getattr(result, "structured_content", None) or {}
-        if result.is_error and structured_content.get("status") == NO_ACCESS:
+        if is_machine_readable_no_access(structured_content):
             self.skipTest(
                 f"{sample.provider} live MCP route reached a legal access boundary; "
                 "configure entitlement/authentication before retrying."

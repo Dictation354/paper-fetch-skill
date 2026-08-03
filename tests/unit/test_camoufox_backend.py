@@ -774,6 +774,67 @@ def test_camoufox_html_navigation_uses_commit_and_keeps_images(
     image_route.abort.assert_not_called()
 
 
+def test_camoufox_candidate_deadline_preserves_observed_access_boundary(
+    monkeypatch, tmp_path
+) -> None:
+    context = _Context()
+    deadline_expired = False
+
+    def challenge_content() -> str:
+        nonlocal deadline_expired
+        deadline_expired = True
+        return (
+            "<html><head><title>Just a moment...</title></head>"
+            "<body>Checking your browser before accessing the site.</body></html>"
+        )
+
+    context.page.content = challenge_content
+    context.page.title = lambda: "Just a moment..."
+    config = BrowserRuntimeConfig(
+        provider="wiley",
+        doi="10.1002/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+    monkeypatch.setattr(
+        _playwright_browser.time,
+        "monotonic",
+        lambda: 1.0 if deadline_expired else 0.0,
+    )
+
+    with pytest.raises(browser_runtime.BrowserRuntimeFailure) as raised:
+        _playwright_browser.fetch_html_with_playwright(
+            [
+                "https://onlinelibrary.wiley.com/doi/full/10.1002/example",
+                "https://onlinelibrary.wiley.com/doi/10.1002/example",
+            ],
+            publisher="wiley",
+            config=config,
+            wait_seconds=0,
+            max_timeout_ms=500,
+            readiness=BrowserHtmlReadiness(wait_for_article_body=False),
+        )
+
+    failure = raised.value
+    assert failure.kind == "cloudflare_challenge"
+    assert failure.details["candidate_deadline_failure"] == {
+        "failure_code": "browser_connect_timeout",
+        "message": (
+            "Browser HTML request deadline was exhausted before another candidate."
+        ),
+    }
+    assert failure.details["trace"]["deadline_exhausted"] is True
+    assert len(failure.details["trace"]["candidates"]) == 1
+
+
 @pytest.mark.parametrize(
     ("status", "title", "html", "final_url", "expected_reason"),
     [

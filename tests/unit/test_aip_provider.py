@@ -136,6 +136,11 @@ def test_aip_cold_html_retry_reuses_transient_seed_before_committing_state(
 
     assert mocked_browser.call_count == 2
     assert "browser_context_seed" not in mocked_browser.call_args_list[0].kwargs
+    assert mocked_browser.call_args_list[0].args[0][0] == AIP_STRUCTURE_LANDING
+    assert mocked_browser.call_args_list[1].args[0][0] == (
+        f"https://pubs.aip.org/doi/full/{AIP_STRUCTURE_DOI}"
+    )
+    assert mocked_browser.call_args_list[1].args[0][-1] == AIP_STRUCTURE_LANDING
     retry_seed = mocked_browser.call_args_list[1].kwargs["browser_context_seed"]
     assert retry_seed["browser_cookies"][0]["name"] == "__cf_bm"
     assert retry_seed["browser_cookies"][0]["value"] == "transient-session"

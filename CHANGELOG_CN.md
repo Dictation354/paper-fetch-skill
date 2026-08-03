@@ -96,8 +96,13 @@
 
 ### 修复——运行时与 provider
 
+- 当浏览器下一候选 URL 或保守重试耗尽共享 deadline 时，保留此前已明确识别的
+  challenge/paywall/access boundary，并让 provider 自有 PDF waterfall 继续输出
+  `no_access`。live 验收只接受显式 `status=no_access` 或 metadata fallback 精确的
+  `route:provider_candidate_*_access_boundary_stop` 作为合法访问边界；解析失败、空壳和
+  正文不足仍是失败。
 - IEEE preflight、浏览器 landing/全文和共享资产 seed 现在最多等待 15 秒，且只接受文章号匹配的 `#article`；持续存在的 AWS WAF HTTP 202 页面精确报告 `aws_waf_challenge` 和兼容诊断，已在窗口内恢复的文章页不再因初始响应被误拒。受保护 large 资产仍保持 direct-first、一次 preview 预热和完整的 full-size 恢复/降级 provenance。
-- 稳定 AIP 及共享 browser workflow 的冷启动 HTML 重试：fast 尝试产生的 provider-scoped 临时 cookies 会传给正常尝试，但未验收状态不会提前持久化；HTTP 200 的 head-only 页面现在报告 `empty_article_shell`，诊断保留两轮尝试、响应状态和 DOM readiness，PDF 继续作为终态兜底。
+- 稳定 AIP 及共享 browser workflow 的冷启动 HTML 重试：fast 尝试产生的 provider-scoped 临时 cookies 会传给正常尝试，但未验收状态不会提前持久化；HTTP 200 的 head-only 页面现在报告 `empty_article_shell`，重试会优先下一个已有 provider URL 而不再重复同一空壳 landing。诊断保留两轮尝试、响应状态和 DOM readiness，PDF 继续作为终态兜底。
 - 修复 publisher live 测试误读浏览器静态能力的问题：改读嵌套的 `browser_runtime.available`，隔离各 provider 的 profile/storage state，并在 pytest 隔离期间复用 Camoufox 已准备的可执行文件与依赖 cache；显式启动复用相邻版本元数据，启动进度不再污染 MCP JSON-RPC stdout。
 - 将页面创建前的 browser 失败也保存为隐私安全诊断 JSON，把请求作用域的公式工具配置传入隐式 MathML 转换，修正 body-only 资产及 provenance 验收语义，并在不跨线程使用 Camoufox page 的前提下恢复 Silverchair 签名原图。
 - live workflow 会准备公式工具、仅串行执行普通 publisher/MCP 套件、输出 legacy-compatible JUnit 属性和结构化 acceptance artifact；IEEE 受保护覆盖留给明确授权的 runner。
