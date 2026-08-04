@@ -27,7 +27,7 @@ fixtures:
   purpose: table
   doi: 10.1098/rspb.2020.0097
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1098_rspb.2020.0097/extracted.md
-  baseline_markdown_sha256: 434e444c24e835a1ba5e27a3af8ac2949bd9a4f81ae451550d45bd998d4badcf
+  baseline_markdown_sha256: 594c153e8e1d147519dfba8165a4899f9d8e402ce0426126599f59d8c290d02e
   markdown_quality_path: tests/fixtures/golden_criteria/10.1098_rspb.2020.0097/markdown-quality.json
   markdown_quality_sha256: c7291fdcedfb51d576a772b6cf01f5f4df8cf0de7e02bf44629b43e8e87aaf3a
   review_notes: Final batch Markdown quality review confirmed by codex-agent; persistent

@@ -718,7 +718,9 @@ def test_markdown_contract_table_fixture() -> None:
         in markdown
     )
     assert markdown.count("| not specified | PC1 | PC2 |") == 1
-    assert markdown.count("| parameter | estimate | s.e. | z-value | Pr(>|z|) |") == 1
+    assert (
+        markdown.count(r"| parameter | estimate | s.e. | z-value | Pr(>\|z\|) |") == 1
+    )
     assert re.search(r"(?m)^\| FIII \| .+ \|$", markdown)
     assert re.search(r"(?m)^\| PC2: FIII \| .+ \|$", markdown)
     assert not re.search(r"(?m)^(?:FIII|PC2: FIII) \|", markdown)

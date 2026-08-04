@@ -91,7 +91,7 @@ We found a significant positive effect of body size on reproductive outcomes (es
 
 Table 2: Full model outputs from generalized linear negative binomial model of number of offspring as a function of body size (PC1), propensity to display dominance behaviours (PC2) and inbreeding coefficient (F III) (N = 104). Model formula was number of offspring ∼ body size (PC1) + propensity to display (PC2) + inbreeding (F III) + propensity to display (PC2): inbreeding (F III) + offset(log(reproductive time)). All interactions between the terms were initially included, but only the interaction between propensity to display and inbreeding remained after model simplification. Note that the estimates are in logit space. The model explained 24.6% of deviance in the number of offspring per adult male.
 
-| parameter | estimate | s.e. | z-value | Pr(>|z|) |
+| parameter | estimate | s.e. | z-value | Pr(>\|z\|) |
 |---|---|---|---|---|
 | intercept | −3.779 | 0.746 | −5.068 | <0.001 |
 | PC1 | 0.713 | 0.290 | 2.454 | 0.014 |

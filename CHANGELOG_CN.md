@@ -6,6 +6,19 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.0.1 - 2026-08-04
+
+### 变更——依赖兼容
+
+- 将锁定的 `trafilatura` 升级到 2.2.0，并同步 Royal Society Publishing
+  表格 golden contract；统计表头中的字面量管道符现在保留为合法的 GFM
+  `\|` 转义，避免被误解析为额外列。
+- 刷新当前兼容范围内的锁定依赖：`apify-fingerprint-datapoints` 0.14.0、
+  `cachetools` 7.1.7、`cffi` 2.1.1、`coverage` 7.15.3、
+  `cryptography` 50.0.0、`filelock` 3.32.2、`isbnlib2` 3.11.21、
+  `pip` 26.2、`ruff` 0.16.1 和 `uvicorn` 0.52.1；其中
+  `cryptography` 更新修复 `CVE-2026-69247`，锁定全依赖图的漏洞审计恢复通过。
+
 ## 5.0.0 - 2026-08-03
 
 ### 新增

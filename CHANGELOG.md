@@ -6,6 +6,21 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.0.1 - 2026-08-04
+
+### Changed — dependency compatibility
+
+- Upgraded the locked `trafilatura` release to 2.2.0 and synchronized the Royal
+  Society Publishing table golden contract. Literal pipes in statistical table
+  headers now remain valid GFM `\|` escapes instead of being parsed as extra
+  columns.
+- Refreshed the locked compatible dependency graph to
+  `apify-fingerprint-datapoints` 0.14.0, `cachetools` 7.1.7, `cffi` 2.1.1,
+  `coverage` 7.15.3, `cryptography` 50.0.0, `filelock` 3.32.2, `isbnlib2`
+  3.11.21, `pip` 26.2, `ruff` 0.16.1, and `uvicorn` 0.52.1. The
+  `cryptography` update fixes `CVE-2026-69247` and restores a clean audit of
+  the fully locked dependency graph.
+
 ## 5.0.0 - 2026-08-03
 
 ### Added
