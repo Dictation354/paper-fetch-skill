@@ -259,6 +259,66 @@ fixtures:
       evidence_summary: Selected 10.1016/j.ecolind.2024.112140 because fixtures.doi_samples.supplementary
         already records provider-local evidence for stable supplementary Markdown
         assertions.
+extra_fixtures:
+  - purpose: table
+    doi: 10.1016/j.apgeog.2012.04.006
+    evidence_url: https://linkinghub.elsevier.com/retrieve/pii/S014362281200032X
+    evidence_reason: Official Article Retrieval XML contains two CALS tgroups with
+      different column definitions under Table 1; replay locks their independent
+      6-row and 21-row source structures and ordered Markdown grids.
+    observed_signals:
+      - xml_article
+      - body_table
+      - cals_multi_tgroup
+    confidence: high
+    markdown_contract:
+      doi: 10.1016/j.apgeog.2012.04.006
+      must_include:
+        - Eigenvalues, variance explained, and rotated component matrix
+        - Females age 65 and up
+      must_not_include:
+        - '[Table content unavailable]'
+      must_match:
+        - (?m)^\| Component \| Eigenvalue \|
+        - (?m)^\|\s+\| Component / 1 \|
+  - purpose: formula
+    doi: 10.1016/j.uclim.2019.100528
+    evidence_url: https://linkinghub.elsevier.com/retrieve/pii/S2212095518300610
+    evidence_reason: Official Article Retrieval XML contains two formula locators
+      backed by fx1 and fx2 object resources; replay locks both official image
+      fallbacks and excludes false formula-missing placeholders.
+    observed_signals:
+      - xml_article
+      - formula_locator
+      - official_formula_object
+    confidence: high
+    markdown_contract:
+      doi: 10.1016/j.uclim.2019.100528
+      must_include:
+        - '![Formula]'
+        - fx1_lrg.jpg
+        - fx2_lrg.jpg
+      must_not_include:
+        - '[Formula unavailable]'
+  - purpose: table
+    doi: 10.1016/j.envres.2018.12.059
+    evidence_url: https://linkinghub.elsevier.com/retrieve/pii/S0013935118306947
+    evidence_reason: Official Article Retrieval XML contains WBGT, T, and AT CALS
+      tgroups under Table 2; replay locks three ordered 21-row source structures
+      without table fallback or layout degradation.
+    observed_signals:
+      - xml_article
+      - body_table
+      - cals_multi_tgroup
+    confidence: high
+    markdown_contract:
+      doi: 10.1016/j.envres.2018.12.059
+      must_include:
+        - (a) WBGT
+        - (b) T
+        - (c) AT
+      must_not_include:
+        - '[Table content unavailable]'
 extraction_hints:
   datalayer_signal_set: null
   text_marker_signal_set: null
@@ -278,4 +338,6 @@ docs:
     text-only | elsevier_xml / elsevier_pdf
   changelog_summary: Track Elsevier implemented provider manifest for XML and PDF
     fallback onboarding sync.
-  extraction_rules_summary: null
+  extraction_rules_summary: Elsevier formula locators resolve official object images
+    as fidelity fallbacks, and each CALS tgroup is parsed with its own column model
+    before ordered grouped rendering.

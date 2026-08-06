@@ -6,6 +6,17 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.1.1 - 2026-08-06
+
+### 修复——Elsevier XML 保真度
+
+- 修复仅通过 `link` locator 暴露的 Elsevier 公式：在公式原位置解析并输出最高保真
+  官方 object 图片；已下载的本地资源优先，无资产模式保留官方远程 URL，图片
+  fallback 不做 OCR，并继续明确记录降级质量状态。
+- Elsevier 与共享 JATS 路径现在按各自列模型独立解析每个 CALS `tgroup`。同一表题
+  下的多个源分组按顺序渲染，保留分组前缀与全部行；只有真正退成可读列表的分组
+  才记录降级。
+
 ## 5.1.0 - 2026-08-06
 
 ### 修复——批量请求 deadline

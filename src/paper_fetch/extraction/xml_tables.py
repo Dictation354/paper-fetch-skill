@@ -112,6 +112,24 @@ def _row_nodes(root: ET.Element) -> Iterator[tuple[ET.Element, bool]]:
     yield from walk(root, in_header=False, is_root=True)
 
 
+def _tgroup_nodes(root: ET.Element) -> Iterator[ET.Element]:
+    """Yield top-level CALS groups owned by ``root`` in source order."""
+
+    def walk(node: ET.Element, *, is_root: bool) -> Iterator[ET.Element]:
+        if not isinstance(node.tag, str):
+            return
+        name = _local_name(node.tag)
+        if not is_root and name == "table":
+            return
+        if name == "tgroup":
+            yield node
+            return
+        for child in list(node):
+            yield from walk(child, is_root=False)
+
+    yield from walk(root, is_root=True)
+
+
 def _positive_attribute(
     node: ET.Element,
     attribute: str,
@@ -131,13 +149,11 @@ def _positive_attribute(
     return value, ()
 
 
-def parse_xml_table(
+def _parse_xml_table_root(
     table_root: ET.Element,
     *,
     render_cell_text: RenderXmlCellText,
 ) -> ParsedXmlTable:
-    """Parse HTML-like JATS or CALS XML rows into shared table records."""
-
     declared_width, columns, table_reasons = _column_specification(table_root)
     collected_reasons = list(table_reasons)
     rows: list[TableRow] = []
@@ -209,4 +225,42 @@ def parse_xml_table(
         rows=tuple(rows),
         declared_width=declared_width,
         reasons=_unique_reasons(collected_reasons),
+    )
+
+
+def parse_xml_table_groups(
+    table_root: ET.Element,
+    *,
+    render_cell_text: RenderXmlCellText,
+) -> tuple[ParsedXmlTable, ...]:
+    """Parse each CALS ``tgroup`` with its own column specification.
+
+    HTML-like and JATS tables without a ``tgroup`` remain one logical group.
+    Nested tables are excluded from their containing table's group discovery.
+    """
+
+    tgroups = tuple(_tgroup_nodes(table_root))
+    if not tgroups:
+        return (
+            _parse_xml_table_root(
+                table_root,
+                render_cell_text=render_cell_text,
+            ),
+        )
+    return tuple(
+        _parse_xml_table_root(tgroup, render_cell_text=render_cell_text)
+        for tgroup in tgroups
+    )
+
+
+def parse_xml_table(
+    table_root: ET.Element,
+    *,
+    render_cell_text: RenderXmlCellText,
+) -> ParsedXmlTable:
+    """Parse XML rows using the legacy single-table compatibility contract."""
+
+    return _parse_xml_table_root(
+        table_root,
+        render_cell_text=render_cell_text,
     )

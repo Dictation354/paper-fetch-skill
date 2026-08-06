@@ -3288,6 +3288,72 @@
       "assets": {
         "raw.html": "tests/fixtures/block/10.1146_annurev.pp.19.060168.001235/raw.html"
       }
+    },
+    "10.1016_j.apgeog.2012.04.006": {
+      "doi": "10.1016/j.apgeog.2012.04.006",
+      "publisher": "elsevier",
+      "title": "Developing an applied extreme heat vulnerability index utilizing socioeconomic and environmental data",
+      "source_url": "https://api.elsevier.com/content/article/doi/10.1016%2Fj.apgeog.2012.04.006?view=FULL&httpAccept=text%2Fxml",
+      "landing_url": "https://linkinghub.elsevier.com/retrieve/pii/S014362281200032X",
+      "fetched_at": "2026-08-06T07:18:50Z",
+      "purpose": "table",
+      "expected_outcome": "fulltext",
+      "fixture_family": "golden",
+      "content_type": "text/xml;charset=UTF-8",
+      "route_kind": "official",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "original.xml": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/original.xml",
+        "expected.json": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/expected.json",
+        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/extracted.md",
+        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/markdown-quality-prompt.md",
+        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/markdown-quality.json"
+      }
+    },
+    "10.1016_j.uclim.2019.100528": {
+      "doi": "10.1016/j.uclim.2019.100528",
+      "publisher": "elsevier",
+      "title": "A methodological assessment of extreme heat mortality modeling and heat vulnerability mapping in Dallas, Texas",
+      "source_url": "https://api.elsevier.com/content/article/doi/10.1016%2Fj.uclim.2019.100528?view=FULL&httpAccept=text%2Fxml",
+      "landing_url": "https://linkinghub.elsevier.com/retrieve/pii/S2212095518300610",
+      "fetched_at": "2026-08-06T07:18:51Z",
+      "purpose": "formula",
+      "expected_outcome": "fulltext",
+      "fixture_family": "golden",
+      "content_type": "text/xml;charset=UTF-8",
+      "route_kind": "official",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "original.xml": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/original.xml",
+        "expected.json": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/expected.json",
+        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/extracted.md",
+        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/markdown-quality-prompt.md",
+        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/markdown-quality.json"
+      }
+    },
+    "10.1016_j.envres.2018.12.059": {
+      "doi": "10.1016/j.envres.2018.12.059",
+      "publisher": "elsevier",
+      "title": "New approach to identifying proper thresholds for a heat warning system using health risk increments",
+      "source_url": "https://api.elsevier.com/content/article/doi/10.1016%2Fj.envres.2018.12.059?view=FULL&httpAccept=text%2Fxml",
+      "landing_url": "https://linkinghub.elsevier.com/retrieve/pii/S0013935118306947",
+      "fetched_at": "2026-08-06T07:18:52Z",
+      "purpose": "table",
+      "expected_outcome": "fulltext",
+      "fixture_family": "golden",
+      "content_type": "text/xml;charset=UTF-8",
+      "route_kind": "official",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "original.xml": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/original.xml",
+        "expected.json": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/expected.json",
+        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/extracted.md",
+        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/markdown-quality-prompt.md",
+        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/markdown-quality.json"
+      }
     }
   },
   "tests": [
@@ -3343,6 +3409,33 @@
       ],
       "samples": [
         "scenario_elsevier_formula_missing"
+      ]
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_regression_32_preserves_independent_table_groups",
+      "anchors": [
+        "rule-xml-table-groups"
+      ],
+      "samples": [
+        "10.1016_j.apgeog.2012.04.006"
+      ]
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_regression_97_renders_wbgt_t_at_groups_in_order",
+      "anchors": [
+        "rule-xml-table-groups"
+      ],
+      "samples": [
+        "10.1016_j.envres.2018.12.059"
+      ]
+    },
+    {
+      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_regression_42_uses_two_official_formula_images",
+      "anchors": [
+        "rule-elsevier-formula-rendering"
+      ],
+      "samples": [
+        "10.1016_j.uclim.2019.100528"
       ]
     },
     {

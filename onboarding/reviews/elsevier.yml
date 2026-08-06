@@ -1,7 +1,7 @@
 schema_version: 2
 provider: elsevier
-reviewed_at: '2026-05-20T00:00:00Z'
-reviewed_by: operator
+reviewed_at: '2026-08-06T00:00:00Z'
+reviewed_by: codex-agent
 fixtures:
 - fixture: tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648
   purpose: structure
@@ -50,6 +50,61 @@ fixtures:
   review_notes: Semantic review completed against committed fixture evidence.
   markdown_quality_path: tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/markdown-quality.json
   markdown_quality_sha256: b9ffe80d22e50a999446f114e9d717dce41ab32259fcfc2a7fb2d240f861487b
+- fixture: tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006
+  purpose: table
+  doi: 10.1016/j.apgeog.2012.04.006
+  sample_representative: true
+  markdown_semantic_reviewed: true
+  issues: []
+  assertions:
+  - must include Eigenvalues, variance explained, and rotated component matrix
+  - must include Females age 65 and up
+  - must not include [Table content unavailable]
+  - must match (?m)^\| Component \| Eigenvalue \|
+  - must match (?m)^\|\s+\| Component / 1 \|
+  fixes: []
+  baseline_markdown_path: tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/extracted.md
+  baseline_markdown_sha256: f56826ad30d35bac9829693d8451a901eeb763b9354c8359eb62a4a1f870584e
+  review_notes: Table 1 preserves two ordered grids with 6 and 21 source rows;
+    neither group records table fallback or layout degradation.
+  markdown_quality_path: tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/markdown-quality.json
+  markdown_quality_sha256: 78578e8b03530a1722678524fb262e7c5524f51454525f8e4db06867612881f2
+- fixture: tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528
+  purpose: formula
+  doi: 10.1016/j.uclim.2019.100528
+  sample_representative: true
+  markdown_semantic_reviewed: true
+  issues: []
+  assertions:
+  - must include ![Formula]
+  - must include fx1_lrg.jpg
+  - must include fx2_lrg.jpg
+  - must not include [Formula unavailable]
+  fixes: []
+  baseline_markdown_path: tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/extracted.md
+  baseline_markdown_sha256: 236c7999efc3312bd71addd6aef7d8b7d05e8c6bd3d7e3918b7bb491e243f908
+  review_notes: Both locator formulas render their official fx1/fx2 images;
+    formula_missing_count is 0, formula_fallback_count is 2, and quality remains degraded.
+  markdown_quality_path: tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/markdown-quality.json
+  markdown_quality_sha256: af7bab9bbd81aa355765e97856812a659bf5ff5678cf1f0730e370130a007fdd
+- fixture: tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059
+  purpose: table
+  doi: 10.1016/j.envres.2018.12.059
+  sample_representative: true
+  markdown_semantic_reviewed: true
+  issues: []
+  assertions:
+  - must include (a) WBGT
+  - must include (b) T
+  - must include (c) AT
+  - must not include [Table content unavailable]
+  fixes: []
+  baseline_markdown_path: tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/extracted.md
+  baseline_markdown_sha256: cc6f51ef497c9e1eb4d38fd2cbe1e6c1ca115a0d53cd19dc909185c205cbabd4
+  review_notes: Table 2 preserves WBGT, T, and AT in source order with 21 source
+    rows per group; no group records table fallback or layout degradation.
+  markdown_quality_path: tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/markdown-quality.json
+  markdown_quality_sha256: 570ec56c9035cdc041b25ef50d1c4b6168196c3b0adbd8dee32caa9ef520d585
 - fixture: tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369
   purpose: figure
   doi: 10.1016/j.rse.2026.115369

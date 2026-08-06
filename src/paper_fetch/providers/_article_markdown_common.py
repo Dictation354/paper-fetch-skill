@@ -59,6 +59,7 @@ __all__ = [
     "render_structured_table_block",
     "render_table_block",
     "table_conversion_note",
+    "table_entry_semantic_count",
     "xml_local_name",
 ]
 
@@ -254,6 +255,22 @@ def table_conversion_note(status: TableConversionStatus) -> str | None:
     if status == TableConversionStatus.SEMANTIC_LOSS:
         return "Some table content could not be preserved during Markdown conversion."
     return None
+
+
+def table_entry_semantic_count(
+    entry: Mapping[str, Any],
+    field: str,
+    *,
+    fallback: bool = False,
+) -> int:
+    """Read a non-negative internal table quality count with legacy fallback."""
+
+    value = entry.get(field)
+    if isinstance(value, bool):
+        return int(value)
+    if isinstance(value, int):
+        return max(value, 0)
+    return int(fallback)
 
 
 def normalize_lines(lines: list[str]) -> str:

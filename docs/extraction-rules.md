@@ -610,6 +610,28 @@ metadata
   - 无法形成可靠矩形但 cell 文本完整保留时记录 `table_fallback_count` 和布局降级，不误报 `table_semantic_loss`；只有内容确实遗失才升级语义损失。
   - `paper_fetch.extraction.html.tables` 只保留 HTML 解析和兼容入口，网格占位、表头扁平化与内部状态的 canonical owner 是 `paper_fetch.extraction.table_grid`。
 
+<a id="rule-xml-table-groups"></a>
+### CALS 多个 `tgroup` 必须按各自列定义独立渲染
+
+- 这条规则约束的是：同一个 XML 表题下出现多个 CALS `tgroup` 时，每组必须使用自己的 `cols` / `colspec`、表头、正文行和源内前缀独立解析，并按源顺序渲染为多个 Markdown 网格或可读列表；没有 `tgroup` 的 HTML-like JATS 表继续作为单组处理。表格编号、caption 和脚注只输出一次，`(a) WBGT` 这类源内分组前缀放在对应网格之前；源中没有分组标题时只分隔网格，不能虚构标题，也不能把不同列宽强行拼成一张表。
+- 如果违反，用户会看到：后一个 `tgroup` 被前一个的列宽截断、21 行数据只剩一部分、WBGT/T/AT 顺序错乱，或者一张表被合并成 header / separator 列数不一致的坏 GFM 表。
+- 它对应的阶段是：`provider-html-or-xml-extraction`、`table-rendering`、`markdown-normalization`。
+- Owner：`paper_fetch.extraction.xml_tables`、`paper_fetch.extraction.markdown_render.tables`、`paper_fetch.providers._article_markdown_elsevier` 与 `paper_fetch.providers._article_markdown_jats_blocks`。
+- 代表性 HTML / XML：
+  - [`../tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/original.xml)
+  - [`../tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/original.xml)
+  - 前一个样本锁住同一表题下两个不同列宽的 `tgroup`，源行数分别为 6 与 21；后一个样本锁住按 WBGT、T、AT 顺序输出三个 `tgroup`，每组各 21 个源行。
+- 对应测试：
+  - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_regression_32_preserves_independent_table_groups`
+  - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_regression_97_renders_wbgt_t_at_groups_in_order`
+  - [`../tests/unit/test_table_grid.py`](../tests/unit/test_table_grid.py) 中的 `test_cals_tgroups_are_parsed_with_independent_column_definitions` 与 `test_table_without_tgroup_remains_one_compatible_group`
+  - [`../tests/unit/test_markdown_render_ir.py`](../tests/unit/test_markdown_render_ir.py) 中的 `test_table_block_renders_ordered_groups_with_shared_metadata_once`
+  - [`../tests/unit/test_jats_body_availability.py`](../tests/unit/test_jats_body_availability.py) 中的 `test_jats_cals_tgroups_render_as_independent_ordered_grids`
+- 边界说明：
+  - 每个分组独立聚合质量状态；`exact` / `normalized` 成功组不计降级，只有真实失败并退成列表的组才各计一次 `table_fallback_count` / `table_layout_degraded_count`。
+  - 某个分组失败不能拖累其它可安全展开的分组；失败组仍须保留全部可读 cell 文本。
+  - 本规则只扩展内部 XML 表格 IR 和渲染，不改变 Article、CLI 或 MCP 的公共数据结构。
+
 <a id="rule-html-list-marker-rendering"></a>
 ### HTML 列表必须只保留一层 Markdown marker
 
@@ -1153,6 +1175,7 @@ metadata
   - [Provider 自有作者与摘要信号必须进入最终文章元数据](#rule-provider-owned-authors)
   - [并行多语言摘要要并存，单语非英文正文不能被误删](#rule-keep-parallel-multilingual-abstracts)
   - [正文、标题和表格里的行内语义格式不能被打平或拆裂](#rule-preserve-inline-semantics-in-body-and-tables)
+  - [CALS 多个 `tgroup` 必须按各自列定义独立渲染](#rule-xml-table-groups)
   - [Availability section contract 必须保留、归类、排除正文度量并适配 hints](#rule-keep-data-availability-once)
   - [正文已内联 figure 时避免重复追加尾部 Figures 附录](#rule-no-trailing-figures-appendix)
   - [已下载的正文图片和公式图片要改写成正文附近的本地链接](#rule-rewrite-inline-figure-links)
@@ -1163,26 +1186,30 @@ metadata
   - [浏览器工作流图片下载必须使用 shared browser 主链路](#rule-browser-primary-image-download-path) 不适用于 Elsevier 官方 XML/API。
 
 <a id="rule-elsevier-formula-rendering"></a>
-### 正文内联公式与 display formula 分开渲染，失败时给可见占位和 conversion notes
+### 正文公式优先保留数学表达，locator 图片作为保真 fallback
 
-- 这条规则约束的是：Elsevier XML 段落里的行内数学要留在正文行内，display formula 要单独渲染成公式块；如果某个公式最终无法转换，也必须给用户一个可见占位，并在 conversion notes 里留下明确痕迹。
-- 如果违反，用户会看到：段落里的单字母变量被误渲染成一串独立公式块，或者某个公式直接静默消失。
+- 这条规则约束的是：Elsevier XML 段落里的行内数学要留在正文行内，display formula 要单独渲染成公式块。若 `<formula>` 只通过 `<link locator="fx*">`（或 `xlink:href` 的末段）指向 `<objects>` 中的官方公式图片，渲染器必须按 object `ref` 选择最高优先级资源并在公式原位置输出图片；已下载时优先使用本地相对路径，`asset_profile=none` 时保留官方远程 URL。只有数学表达和官方图片都不存在时，才输出明确的 unavailable 占位并记录 `formula_missing`。
+- 如果违反，用户会看到：段落里的单字母变量被误渲染成一串独立公式块，或者官方 XML 明明提供 fx 公式图却显示 `[Formula unavailable]`，甚至某个公式直接静默消失。
 - 它对应的阶段是：`provider-html-or-xml-extraction`、`formula-rendering`、`final-rendering`。
 - Owner：`paper_fetch.providers._article_markdown_math` 与 `paper_fetch.providers._article_markdown_elsevier`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/original.xml)
   - [`../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/original.xml)
+  - [`../tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/original.xml)
   - [`../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_inline_display/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_inline_display/original.xml)
   - [`../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_missing/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_missing/original.xml)
-  - real Elsevier XML 覆盖 display formula 渲染为公式块；两个 scenario 分别锁住 inline/display 混排和 conversion failure 占位分支。
+  - real Elsevier XML 覆盖 display formula 渲染为公式块；`uclim` 样本锁住两个 locator 公式分别映射到官方 fx1/fx2 图片；两个 scenario 分别锁住 inline/display 混排和 conversion failure 占位分支。
 - 对应测试：
   - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_real_display_formula_renders_as_formula_block`
   - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_inline_math_symbols_stay_inline`
   - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_formula_placeholder_is_visible_when_conversion_fails`
+  - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_formula_locator_uses_highest_priority_official_objects`、`test_elsevier_formula_locator_without_object_keeps_missing_placeholder`、`test_elsevier_formula_locator_prefers_downloaded_local_asset` 与 `test_elsevier_formula_classification_leaves_ordinary_appendix_fx_unchanged`
+  - [`../tests/unit/test_elsevier_markdown.py`](../tests/unit/test_elsevier_markdown.py) 中的 `test_elsevier_regression_42_uses_two_official_formula_images`
 - 边界说明：
   - 这条规则不是保证所有 Elsevier MathML 都能被完美转成 LaTeX。
+  - locator 图片属于诚实的保真 fallback，不做 OCR、不伪造 LaTeX：每张图片计一次 `formula_fallback_count`，不计 `formula_missing_count`，文章总体质量仍为 `degraded`。
+  - 公式上下文中的 `fx*` 按正文 `image` 处理；普通附录 Figure 使用的 `fx*` 仍保持 `appendix_image`，不能因公式兼容逻辑改变其位置或分类。
   - 它约束的是“行内和 display 数学不能混渲，失败时不能静默丢失”；公共 LaTeX 宏兼容处理见 [LaTeX normalization 必须产出 KaTeX 可渲染表达](#rule-formula-latex-normalization)。
-  - real XML 目前锁定 display formula 主干；inline math 与 conversion failure 由 scenario XML 锁定，后续如出现稳定 DOI replay，应优先补到本规则。
 
 <a id="rule-elsevier-supplementary-materials"></a>
 ### Supplementary data 不进正文，统一收进 `## Supplementary Materials`
@@ -1847,13 +1874,16 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 | [`../tests/fixtures/golden_criteria/10.1007_s13158-025-00473-x/bilingual.html`](../tests/fixtures/golden_criteria/10.1007_s13158-025-00473-x/bilingual.html) | [Multilingual abstracts](#rule-keep-parallel-multilingual-abstracts), [Springer chrome](#rule-springer-article-root-chrome-pruning) |
 | [`../tests/fixtures/golden_criteria/10.1016_S1575-1813(18)30261-4/bilingual.xml`](<../tests/fixtures/golden_criteria/10.1016_S1575-1813(18)30261-4/bilingual.xml>) | [Multilingual abstracts](#rule-keep-parallel-multilingual-abstracts) |
 | [`../tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/original.xml) | [Elsevier formula rendering](#rule-elsevier-formula-rendering), [Elsevier inline figure/table placement](#rule-elsevier-inline-figure-table-placement), [Elsevier references](#rule-elsevier-xml-references) |
+| [`../tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/original.xml) | [XML table groups](#rule-xml-table-groups) |
 | [`../tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/original.xml) | [Elsevier supplementary materials](#rule-elsevier-supplementary-materials) |
+| [`../tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/original.xml) | [XML table groups](#rule-xml-table-groups) |
 | [`../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml) | [Elsevier inline figure/table placement](#rule-elsevier-inline-figure-table-placement), [Elsevier complex span normalization](#rule-elsevier-complex-table-span-degradation) |
 | [`../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/original.xml) | [Elsevier formula rendering](#rule-elsevier-formula-rendering), [Elsevier consumed table dedup](#rule-elsevier-consumed-figure-table-dedup) |
 | [`../tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/original.xml) | [Elsevier complex span normalization](#rule-elsevier-complex-table-span-degradation) |
 | [`../tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/original.xml) | [Availability section contract](#rule-keep-data-availability-once) |
 | [`../tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/original.xml) | [Elsevier appendix context](#rule-elsevier-appendix-context) |
 | [`../tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/original.xml) | [Elsevier graphical abstract](#rule-elsevier-graphical-abstract) |
+| [`../tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/original.xml) | [Elsevier formula rendering](#rule-elsevier-formula-rendering) |
 | [`../tests/fixtures/golden_criteria/10.1029_2004gb002273/original.html`](../tests/fixtures/golden_criteria/10.1029_2004gb002273/original.html) | [No trailing figures](#rule-no-trailing-figures-appendix), [Publisher UI noise](#rule-filter-publisher-ui-noise) |
 | [`../tests/fixtures/golden_criteria/10.1038_nature12915/original.html`](../tests/fixtures/golden_criteria/10.1038_nature12915/original.html) | [Formula image fallback](#rule-preserve-formula-image-fallbacks), [Springer caption precedence](#rule-springer-caption-precedence), [Springer methods summary](#rule-springer-methods-summary) |
 | [`../tests/fixtures/golden_criteria/10.1038_nature13376/original.html`](../tests/fixtures/golden_criteria/10.1038_nature13376/original.html) | [No trailing figures](#rule-no-trailing-figures-appendix), [Formula image fallback](#rule-preserve-formula-image-fallbacks), [Springer caption precedence](#rule-springer-caption-precedence), [Springer inline table](#rule-springer-inline-table) |

@@ -24,7 +24,7 @@ from ._article_markdown_elsevier_tables import (
     add_elsevier_table_once,
     extract_elsevier_table_footnotes,
     paragraph_mentions_table,
-    render_elsevier_table_result,
+    render_elsevier_table_results,
     resolve_elsevier_table_key,
     resolve_elsevier_table_locator,
     should_render_elsevier_table_entry,
@@ -35,6 +35,11 @@ from ._elsevier_xml_rules import (
     get_elsevier_element_rule,
     infer_elsevier_asset_group_key,
     should_ignore_elsevier_section_title,
+)
+from ._elsevier_objects import (
+    build_elsevier_object_index,
+    elsevier_formula_locators,
+    resolve_elsevier_formula_locator,
 )
 
 ELSEVIER_BLOCK_LOCAL_NAMES = {"display", "figure", "table", "e-component", "formula"}
@@ -223,6 +228,18 @@ def extract_elsevier_display_table_refs(element: ET.Element) -> list[str]:
     return refs
 
 
+def _render_elsevier_formula_result(
+    element: ET.Element,
+    formula_image_lookup: Mapping[str, str] | None,
+) -> FormulaRenderResult:
+    locator = resolve_elsevier_formula_locator(element)
+    image_url = (formula_image_lookup or {}).get(locator, "") if locator else ""
+    return render_display_formula_result(
+        element,
+        fallback_image_url=image_url,
+    )
+
+
 def render_elsevier_display_block(
     element: ET.Element,
     *,
@@ -230,6 +247,7 @@ def render_elsevier_display_block(
     used_figure_keys: set[str],
     table_lookup: Mapping[str, Mapping[str, Any]],
     used_table_keys: set[str],
+    formula_image_lookup: Mapping[str, str] | None = None,
     formula_renders: list[FormulaRenderResult] | None = None,
     inside_appendix: bool = False,
 ) -> list[str]:
@@ -259,7 +277,7 @@ def render_elsevier_display_block(
     if display_kind == "supplementary":
         return []
     if display_kind == "formula":
-        result = render_display_formula_result(element)
+        result = _render_elsevier_formula_result(element, formula_image_lookup)
         if formula_renders is not None and result.lines:
             formula_renders.append(result)
         return result.lines
@@ -275,6 +293,7 @@ def render_elsevier_blocks(
     used_figure_keys: set[str] | None = None,
     table_lookup: Mapping[str, Mapping[str, Any]] | None = None,
     used_table_keys: set[str] | None = None,
+    formula_image_lookup: Mapping[str, str] | None = None,
     formula_renders: list[FormulaRenderResult] | None = None,
     inside_appendix: bool = False,
 ) -> list[str]:
@@ -305,6 +324,7 @@ def render_elsevier_blocks(
                 used_figure_keys=used_keys,
                 table_lookup=table_entries,
                 used_table_keys=used_table_entries,
+                formula_image_lookup=formula_image_lookup,
                 formula_renders=formula_renders,
                 inside_appendix=inside_appendix,
             )
@@ -328,6 +348,7 @@ def render_elsevier_blocks(
                     used_figure_keys=used_keys,
                     table_lookup=table_entries,
                     used_table_keys=used_table_entries,
+                    formula_image_lookup=formula_image_lookup,
                     formula_renders=formula_renders,
                     inside_appendix=inside_appendix
                     or local_name in {"appendices", "appendix"},
@@ -398,6 +419,7 @@ def render_elsevier_blocks(
                             used_figure_keys=used_keys,
                             table_lookup=table_entries,
                             used_table_keys=used_table_entries,
+                            formula_image_lookup=formula_image_lookup,
                             formula_renders=formula_renders,
                             inside_appendix=inside_appendix,
                         )
@@ -418,7 +440,9 @@ def render_elsevier_blocks(
                         inside_appendix=inside_appendix,
                     )
                 elif nested_rule.handler == "formula":
-                    result = render_display_formula_result(nested)
+                    result = _render_elsevier_formula_result(
+                        nested, formula_image_lookup
+                    )
                     if formula_renders is not None and result.lines:
                         formula_renders.append(result)
                     lines.extend(result.lines)
@@ -432,6 +456,7 @@ def render_elsevier_blocks(
                     used_figure_keys=used_keys,
                     table_lookup=table_entries,
                     used_table_keys=used_table_entries,
+                    formula_image_lookup=formula_image_lookup,
                     formula_renders=formula_renders,
                     inside_appendix=inside_appendix,
                 )
@@ -458,7 +483,7 @@ def render_elsevier_blocks(
             continue
 
         if rule.handler == "formula":
-            result = render_display_formula_result(child)
+            result = _render_elsevier_formula_result(child, formula_image_lookup)
             if formula_renders is not None and result.lines:
                 formula_renders.append(result)
             lines.extend(result.lines)
@@ -484,6 +509,30 @@ def build_elsevier_asset_lookup(
         if group_key:
             lookup[group_key] = asset
     return lookup
+
+
+def elsevier_formula_asset_lookup(
+    root: ET.Element,
+    assets: list[dict[str, Any]],
+    markdown_path: Path,
+) -> dict[str, str]:
+    """Resolve formula locators to local assets or official remote objects."""
+
+    asset_lookup = build_elsevier_asset_lookup(
+        assets,
+        asset_types=set(ELSEVIER_IMAGE_ASSET_TYPES),
+    )
+    object_lookup = build_elsevier_object_index(root)
+    resolved: dict[str, str] = {}
+    for locator in elsevier_formula_locators(root):
+        asset = asset_lookup.get(locator)
+        link = resolve_elsevier_asset_link(markdown_path, asset)
+        if not link:
+            official_object = object_lookup.get(locator)
+            link = normalize_text(str((official_object or {}).get("source_url") or ""))
+        if link:
+            resolved[locator] = link
+    return resolved
 
 
 def elsevier_table_registry(
@@ -524,8 +573,8 @@ def elsevier_table_registry(
         label = child_text(table, "label") or fallback_table_heading(table_id)
         caption = render_inline_text(first_child(table, "caption"))
         footnotes = extract_elsevier_table_footnotes(table)
-        table_result = render_elsevier_table_result(table)
-        rows = table_result.rows
+        table_results = render_elsevier_table_results(table)
+        rendered_groups = [result for result in table_results if result.rows]
         asset = table_assets.get(locator) or table_assets.get(table_id)
         link = resolve_elsevier_asset_link(markdown_path, asset)
         if link and link in used_links:
@@ -533,25 +582,55 @@ def elsevier_table_registry(
         if link:
             used_links.add(link)
 
-        if rows:
+        if rendered_groups:
+            primary_group = rendered_groups[0]
+            fallback_count = sum(
+                1
+                for result in rendered_groups
+                if result.render_kind == "structured_list"
+            )
+            layout_degraded_count = sum(1 for result in rendered_groups if result.lossy)
+            conversion_notes = list(
+                dict.fromkeys(
+                    result.note
+                    for result in rendered_groups
+                    if result.lossy and result.note
+                )
+            )
             entry: dict[str, Any] = {
                 "key": table_key or f"table:{len(entries) + 1}",
                 "kind": "structured",
-                "table_render_kind": table_result.render_kind,
+                "table_render_kind": (
+                    "grouped" if len(rendered_groups) > 1 else primary_group.render_kind
+                ),
                 "heading": label,
                 "caption": caption,
-                "headers": table_result.headers,
-                "rows": rows,
+                "headers": primary_group.headers,
+                "rows": primary_group.rows,
                 "footnotes": footnotes,
                 "link": link,
+                "_table_fallback_count": fallback_count,
+                "_table_layout_degraded_count": layout_degraded_count,
             }
-            if table_result.prefix_rows:
-                entry["_table_prefix_rows"] = table_result.prefix_rows
-            if table_result.lossy:
-                entry["lossy_message"] = table_result.note
-                entry["conversion_notes"] = (
-                    [table_result.note] if table_result.note else []
-                )
+            if len(rendered_groups) > 1:
+                entry["_table_groups"] = [
+                    {
+                        "table_render_kind": result.render_kind,
+                        "headers": result.headers,
+                        "rows": result.rows,
+                        **(
+                            {"_table_prefix_rows": result.prefix_rows}
+                            if result.prefix_rows
+                            else {}
+                        ),
+                    }
+                    for result in rendered_groups
+                ]
+            elif primary_group.prefix_rows:
+                entry["_table_prefix_rows"] = primary_group.prefix_rows
+            if conversion_notes:
+                entry["lossy_message"] = conversion_notes[0]
+                entry["conversion_notes"] = conversion_notes
         elif link:
             entry = {
                 "key": table_key or link,
@@ -564,6 +643,8 @@ def elsevier_table_registry(
                 "conversion_notes": [
                     "Table content could not be fully converted to Markdown; the original table image is retained below."
                 ],
+                "_table_fallback_count": 1,
+                "_table_layout_degraded_count": 0,
             }
         else:
             entry = {
@@ -577,6 +658,8 @@ def elsevier_table_registry(
                 "conversion_notes": [
                     "Table content could not be fully converted to Markdown; no original table image was available."
                 ],
+                "_table_fallback_count": 1,
+                "_table_layout_degraded_count": 0,
             }
 
         entry["section"] = (
@@ -602,6 +685,7 @@ def elsevier_figure_registry(
         assets,
         asset_types=set(ELSEVIER_IMAGE_ASSET_TYPES) - {"graphical_abstract"},
     )
+    formula_locator_keys = elsevier_formula_locators(root)
 
     lookup: dict[str, dict[str, Any]] = {}
     entries: list[dict[str, Any]] = []
@@ -683,6 +767,11 @@ def elsevier_figure_registry(
         if asset.get("asset_type") not in {"image", "appendix_image"} or not asset.get(
             "path"
         ):
+            continue
+        asset_group_key = normalize_text(
+            infer_elsevier_asset_group_key(str(asset.get("source_ref") or ""))
+        )
+        if asset_group_key in formula_locator_keys:
             continue
         relative_path = path_relative_to(markdown_path.parent, str(asset["path"]))
         if relative_path in used_asset_links:

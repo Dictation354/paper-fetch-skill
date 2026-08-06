@@ -6,6 +6,19 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.1.1 - 2026-08-06
+
+### Fixed — Elsevier XML fidelity
+
+- Restored Elsevier formulas that expose only a `link` locator by resolving the
+  highest-fidelity official object image at the formula position. Downloaded
+  local assets remain preferred, remote official URLs support no-asset mode,
+  and image fallbacks retain explicit degraded-quality accounting without OCR.
+- Parsed each CALS `tgroup` with its own column model across the Elsevier and
+  shared JATS paths. Multiple source groups now render in order under one
+  caption, preserve source prefixes and rows, and report degradation only for
+  groups that actually require a readable-list fallback.
+
 ## 5.1.0 - 2026-08-06
 
 ### Fixed — batch request deadlines

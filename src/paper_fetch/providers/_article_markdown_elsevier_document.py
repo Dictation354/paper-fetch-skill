@@ -24,10 +24,12 @@ from ._article_markdown_common import (
     path_relative_to,
     render_figure_block,
     render_table_block,
+    table_entry_semantic_count,
     xml_local_name,
 )
 from ._article_markdown_elsevier import (
     elsevier_figure_registry,
+    elsevier_formula_asset_lookup,
     elsevier_supplement_entries,
     elsevier_table_registry,
     render_elsevier_blocks,
@@ -299,9 +301,12 @@ def _build_elsevier_article_structure(
     formula_renders: list[FormulaRenderResult] = []
     abstract_node = first_descendant(root, "abstract")
     body_node = first_descendant(root, "body")
+    markdown_path = xml_path.with_suffix(".md")
+    formula_image_lookup = elsevier_formula_asset_lookup(root, assets, markdown_path)
     abstract_lines = render_elsevier_blocks(
         abstract_node,
         heading_level=3,
+        formula_image_lookup=formula_image_lookup,
         formula_renders=formula_renders,
     )
     if not abstract_lines:
@@ -313,11 +318,9 @@ def _build_elsevier_article_structure(
         )
         if fallback_abstract:
             abstract_lines = [fallback_abstract, ""]
-    table_lookup, table_entries = elsevier_table_registry(
-        root, assets, xml_path.with_suffix(".md")
-    )
+    table_lookup, table_entries = elsevier_table_registry(root, assets, markdown_path)
     figure_lookup, figure_entries = elsevier_figure_registry(
-        root, assets, xml_path.with_suffix(".md")
+        root, assets, markdown_path
     )
     body_lines = render_elsevier_blocks(
         body_node,
@@ -327,6 +330,7 @@ def _build_elsevier_article_structure(
         used_figure_keys=used_figure_keys,
         table_lookup=table_lookup,
         used_table_keys=used_table_keys,
+        formula_image_lookup=formula_image_lookup,
         formula_renders=formula_renders,
     )
     head_availability_lines: list[str] = []
@@ -344,6 +348,7 @@ def _build_elsevier_article_structure(
             used_figure_keys=used_figure_keys,
             table_lookup=table_lookup,
             used_table_keys=used_table_keys,
+            formula_image_lookup=formula_image_lookup,
             formula_renders=formula_renders,
         )
         normalized_availability_title = normalize_text(availability_title)
@@ -358,16 +363,24 @@ def _build_elsevier_article_structure(
 
     semantic_losses = SemanticLosses(
         table_fallback_count=sum(
-            1
+            table_entry_semantic_count(
+                entry,
+                "_table_fallback_count",
+                fallback=(
+                    normalize_text(str(entry.get("kind") or "")) == "fallback"
+                    or normalize_text(str(entry.get("table_render_kind") or ""))
+                    == "structured_list"
+                ),
+            )
             for entry in table_entries
-            if normalize_text(str(entry.get("kind") or "")) == "fallback"
-            or normalize_text(str(entry.get("table_render_kind") or ""))
-            == "structured_list"
         ),
         table_layout_degraded_count=sum(
-            1
+            table_entry_semantic_count(
+                entry,
+                "_table_layout_degraded_count",
+                fallback=bool(normalize_text(str(entry.get("lossy_message") or ""))),
+            )
             for entry in table_entries
-            if normalize_text(str(entry.get("lossy_message") or ""))
         ),
         formula_fallback_count=sum(
             1

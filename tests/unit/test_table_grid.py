@@ -12,7 +12,7 @@ from paper_fetch.extraction.table_grid import (
     TableRow,
     normalize_table,
 )
-from paper_fetch.extraction.xml_tables import parse_xml_table
+from paper_fetch.extraction.xml_tables import parse_xml_table, parse_xml_table_groups
 from paper_fetch.utils import normalize_text
 
 
@@ -214,3 +214,76 @@ def test_table_dimension_limit_uses_readable_fallback() -> None:
     assert len(normalized.headers) == 257
     assert len(normalized.rows[0]) == 257
     assert TableConversionReason.DIMENSION_LIMIT in normalized.reasons
+
+
+def test_cals_tgroups_are_parsed_with_independent_column_definitions() -> None:
+    root = ET.fromstring(
+        """
+<table>
+  <tgroup cols="2">
+    <colspec colname="a1"/><colspec colname="a2"/>
+    <thead>
+      <row><entry namest="a1" nameend="a2">(a) WBGT</entry></row>
+      <row><entry colname="a1">Day</entry><entry colname="a2">Risk</entry></row>
+    </thead>
+    <tbody><row><entry colname="a1">1</entry><entry colname="a2">Low</entry></row></tbody>
+  </tgroup>
+  <tgroup cols="3">
+    <colspec colname="b1"/><colspec colname="b2"/><colspec colname="b3"/>
+    <thead>
+      <row><entry namest="b1" nameend="b3">(b) T</entry></row>
+      <row>
+        <entry colname="b1">Day</entry><entry colname="b2">Min</entry><entry colname="b3">Max</entry>
+      </row>
+    </thead>
+    <tbody>
+      <row><entry colname="b1">2</entry><entry colname="b2">10</entry><entry colname="b3">20</entry></row>
+    </tbody>
+  </tgroup>
+</table>
+"""
+    )
+
+    parsed_groups = parse_xml_table_groups(root, render_cell_text=_xml_cell_text)
+    normalized_groups = [
+        normalize_table(
+            parsed.rows,
+            declared_width=parsed.declared_width,
+            header_row_indices=tuple(
+                index for index, row in enumerate(parsed.rows) if row.role == "header"
+            ),
+            reasons=parsed.reasons,
+        )
+        for parsed in parsed_groups
+    ]
+
+    assert [parsed.declared_width for parsed in parsed_groups] == [2, 3]
+    assert [group.prefix_rows for group in normalized_groups] == [
+        ("(a) WBGT",),
+        ("(b) T",),
+    ]
+    assert [group.headers for group in normalized_groups] == [
+        ("Day", "Risk"),
+        ("Day", "Min", "Max"),
+    ]
+    assert [group.rows for group in normalized_groups] == [
+        (("1", "Low"),),
+        (("2", "10", "20"),),
+    ]
+    assert all(not group.layout_degraded for group in normalized_groups)
+
+
+def test_table_without_tgroup_remains_one_compatible_group() -> None:
+    root = ET.fromstring(
+        """
+<table>
+  <thead><tr><th>Name</th><th>Value</th></tr></thead>
+  <tbody><tr><td>A</td><td>1</td></tr></tbody>
+</table>
+"""
+    )
+
+    legacy = parse_xml_table(root, render_cell_text=_xml_cell_text)
+    groups = parse_xml_table_groups(root, render_cell_text=_xml_cell_text)
+
+    assert groups == (legacy,)

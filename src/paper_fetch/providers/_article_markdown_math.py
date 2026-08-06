@@ -485,7 +485,10 @@ def formula_graphic_url(element: ET.Element | None, *, source_url: str = "") -> 
 
 
 def render_display_formula_result(
-    element: ET.Element | None, *, source_url: str = ""
+    element: ET.Element | None,
+    *,
+    source_url: str = "",
+    fallback_image_url: str = "",
 ) -> FormulaRenderResult:
     if element is None:
         return FormulaRenderResult(lines=[])
@@ -517,13 +520,15 @@ def render_display_formula_result(
             note = "Formula used the publisher tex-math fallback."
     image_url = ""
     if not expression:
-        image_url = formula_graphic_url(element, source_url=source_url)
+        image_url = formula_graphic_url(
+            element, source_url=source_url
+        ) or normalize_compact_text(fallback_image_url)
         if image_url:
             fallback_kind = "fallback"
             method = "graphic"
             status = "fallback"
             note = "Formula used the publisher formula image fallback."
-    if not expression:
+    if not expression and not image_url:
         expression = normalize_compact_text(
             render_literal_inline_text(element, skip_local_names={"label"})
         )
@@ -533,7 +538,7 @@ def render_display_formula_result(
             status = "fallback"
             note = "Formula used normalized literal text fallback."
 
-    if not expression:
+    if not expression and not image_url:
         placeholder_label = normalize_compact_text(label)
         expression = (
             f"[Formula unavailable: {placeholder_label}]"

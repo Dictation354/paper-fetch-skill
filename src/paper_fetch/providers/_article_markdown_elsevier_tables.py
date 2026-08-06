@@ -13,7 +13,7 @@ from ..extraction.table_grid import (
     TableConversionStatus,
     normalize_table,
 )
-from ..extraction.xml_tables import parse_xml_table
+from ..extraction.xml_tables import ParsedXmlTable, parse_xml_table_groups
 from ._article_markdown_common import (
     add_table_once,
     normalize_table_cell_text,
@@ -51,16 +51,9 @@ class ElsevierTableRenderResult:
         return "structured"
 
 
-def render_elsevier_table_result(table: ET.Element | None) -> ElsevierTableRenderResult:
-    if table is None:
-        return ElsevierTableRenderResult(headers=[], rows=[], prefix_rows=[])
-
-    parsed = parse_xml_table(
-        table,
-        render_cell_text=lambda cell: normalize_table_cell_text(
-            render_inline_text(cell)
-        ),
-    )
+def _render_parsed_elsevier_table(
+    parsed: ParsedXmlTable,
+) -> ElsevierTableRenderResult:
     normalized = normalize_table(
         parsed.rows,
         declared_width=parsed.declared_width,
@@ -77,6 +70,30 @@ def render_elsevier_table_result(table: ET.Element | None) -> ElsevierTableRende
         reasons=normalized.reasons,
         note=table_conversion_note(normalized.status),
     )
+
+
+def render_elsevier_table_results(
+    table: ET.Element | None,
+) -> list[ElsevierTableRenderResult]:
+    if table is None:
+        return []
+
+    parsed_groups = parse_xml_table_groups(
+        table,
+        render_cell_text=lambda cell: normalize_table_cell_text(
+            render_inline_text(cell)
+        ),
+    )
+    return [_render_parsed_elsevier_table(parsed) for parsed in parsed_groups]
+
+
+def render_elsevier_table_result(table: ET.Element | None) -> ElsevierTableRenderResult:
+    """Return the first logical group for legacy internal callers."""
+
+    results = render_elsevier_table_results(table)
+    if results:
+        return results[0]
+    return ElsevierTableRenderResult(headers=[], rows=[], prefix_rows=[])
 
 
 def resolve_elsevier_table_locator(table: ET.Element | None) -> str:

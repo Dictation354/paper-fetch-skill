@@ -148,20 +148,13 @@ def render_structured_table_block(entry: Mapping[str, Any]) -> list[str]:
     )
 
 
-def render_structured_list_table_block(entry: Mapping[str, Any]) -> list[str]:
-    """Render an irregular table without implying a reliable GFM grid."""
-
-    table = table_from_entry(entry)
-    lines = [table.label, ""]
-    if table.caption:
-        lines.extend([table.caption, ""])
-    for prefix in _entry_prefix_rows(entry):
-        lines.extend([prefix, ""])
-
-    headers = _cell_texts(table.headers)
-    rows = _row_texts(table.rows)
+def _render_structured_list_rows(
+    headers: list[str],
+    rows: list[list[str]],
+) -> list[str]:
     if headers and rows and _same_row(headers, rows[0]):
         rows = rows[1:]
+    lines: list[str] = []
     rendered_row = False
     for row in rows:
         parts: list[str] = []
@@ -180,6 +173,22 @@ def render_structured_list_table_block(entry: Mapping[str, Any]) -> list[str]:
             lines.append("- " + "; ".join(nonempty_headers))
     if rendered_row or headers:
         lines.append("")
+    return lines
+
+
+def render_structured_list_table_block(entry: Mapping[str, Any]) -> list[str]:
+    """Render an irregular table without implying a reliable GFM grid."""
+
+    table = table_from_entry(entry)
+    lines = [table.label, ""]
+    if table.caption:
+        lines.extend([table.caption, ""])
+    for prefix in _entry_prefix_rows(entry):
+        lines.extend([prefix, ""])
+
+    headers = _cell_texts(table.headers)
+    rows = _row_texts(table.rows)
+    lines.extend(_render_structured_list_rows(headers, rows))
     if table.fallback_message:
         lines.extend([table.fallback_message, ""])
     if table.image_fallback_url:
@@ -193,9 +202,62 @@ def render_structured_list_table_block(entry: Mapping[str, Any]) -> list[str]:
     return lines
 
 
+def render_grouped_table_block(entry: Mapping[str, Any]) -> list[str]:
+    """Render ordered logical table groups under one label and caption."""
+
+    table = table_from_entry(entry)
+    lines = [table.label, ""]
+    if table.caption:
+        lines.extend([table.caption, ""])
+
+    has_list_group = False
+    raw_groups = entry.get("_table_groups") or []
+    for raw_group in raw_groups:
+        if not isinstance(raw_group, Mapping):
+            continue
+        for prefix in _entry_prefix_rows(raw_group):
+            lines.extend([prefix, ""])
+        headers = _cell_texts(raw_group.get("headers"))
+        rows = _row_texts(raw_group.get("rows"))
+        render_kind = normalize_text(
+            str(raw_group.get("table_render_kind") or "structured")
+        ).lower()
+        if render_kind == "structured_list":
+            has_list_group = True
+            lines.extend(_render_structured_list_rows(headers, rows))
+        else:
+            group_table = MarkdownTable(
+                label="",
+                caption="",
+                headers=headers,
+                rows=rows,
+            )
+            matrix = _table_matrix(group_table)
+            if matrix:
+                lines.extend(render_aligned_markdown_table(matrix))
+                lines.append("")
+        fallback_message = normalize_text(str(raw_group.get("fallback_message") or ""))
+        if fallback_message:
+            lines.extend([fallback_message, ""])
+
+    if table.fallback_message:
+        lines.extend([table.fallback_message, ""])
+    if table.image_fallback_url and has_list_group:
+        lines.extend(
+            [render_markdown_image("table", table.label, table.image_fallback_url), ""]
+        )
+    for footnote in table.footnotes:
+        text = normalize_text(footnote)
+        if text:
+            lines.extend([text, ""])
+    return lines
+
+
 def render_table_block(entry: Mapping[str, Any]) -> list[str]:
     if not entry:
         return []
+    if entry.get("_table_groups"):
+        return render_grouped_table_block(entry)
     render_kind = normalize_text(
         str(entry.get("table_render_kind") or entry.get("kind") or "")
     ).lower()

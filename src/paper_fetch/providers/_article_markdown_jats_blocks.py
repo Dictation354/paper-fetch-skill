@@ -12,7 +12,7 @@ from ..extraction.table_grid import (
     TableConversionStatus,
     normalize_table,
 )
-from ..extraction.xml_tables import parse_xml_table
+from ..extraction.xml_tables import ParsedXmlTable, parse_xml_table_groups
 from ..extraction.markdown_render import MarkdownList, render_list
 from ._article_markdown_common import (
     XLINK_HREF,
@@ -188,13 +188,9 @@ def _table_node(table_wrap: ET.Element) -> ET.Element | None:
     return first_descendant(table_wrap, "table")
 
 
-def _render_structured_table(table: ET.Element) -> _JatsTableRenderResult:
-    parsed = parse_xml_table(
-        table,
-        render_cell_text=lambda cell: normalize_table_cell_text(
-            render_inline_text(cell)
-        ),
-    )
+def _render_parsed_structured_table(
+    parsed: ParsedXmlTable,
+) -> _JatsTableRenderResult:
     normalized = normalize_table(
         parsed.rows,
         declared_width=parsed.declared_width,
@@ -211,6 +207,27 @@ def _render_structured_table(table: ET.Element) -> _JatsTableRenderResult:
         reasons=normalized.reasons,
         layout_degraded=normalized.layout_degraded,
     )
+
+
+def _render_structured_table_groups(
+    table: ET.Element,
+) -> list[_JatsTableRenderResult]:
+    parsed_groups = parse_xml_table_groups(
+        table,
+        render_cell_text=lambda cell: normalize_table_cell_text(
+            render_inline_text(cell)
+        ),
+    )
+    return [_render_parsed_structured_table(parsed) for parsed in parsed_groups]
+
+
+def _render_structured_table(table: ET.Element) -> _JatsTableRenderResult:
+    """Return the first logical table group for legacy internal callers."""
+
+    results = _render_structured_table_groups(table)
+    if results:
+        return results[0]
+    return _JatsTableRenderResult(headers=[], rows=[], prefix_rows=[])
 
 
 def _table_footnotes(table_wrap: ET.Element) -> list[str]:
@@ -237,46 +254,71 @@ def _table_entry(
     key = _element_id(table_wrap) or _element_id(table) or label
     graphic_alternatives = _graphic_alternatives(table_wrap, source_url)
     if table is not None:
-        render_result = _render_structured_table(table)
-        headers = render_result.headers
-        rows = render_result.rows
-        lossy = render_result.layout_degraded
+        render_results = _render_structured_table_groups(table)
+        rendered_groups = [result for result in render_results if result.rows]
+        lossy = any(result.layout_degraded for result in rendered_groups)
     else:
-        render_result = None
-        headers = []
-        rows = []
+        render_results = []
+        rendered_groups = []
         lossy = False
-    if rows:
+    if rendered_groups:
+        primary_group = rendered_groups[0]
+        fallback_count = sum(
+            1 for result in rendered_groups if result.render_kind == "structured_list"
+        )
+        layout_degraded_count = sum(
+            1 for result in rendered_groups if result.layout_degraded
+        )
+        conversion_notes = list(
+            dict.fromkeys(
+                note
+                for result in rendered_groups
+                if result.layout_degraded
+                for note in [table_conversion_note(result.status)]
+                if note
+            )
+        )
         entry: dict[str, Any] = {
             "kind": "table",
             "table_render_kind": (
-                render_result.render_kind if render_result is not None else "structured"
+                "grouped" if len(rendered_groups) > 1 else primary_group.render_kind
             ),
             "key": key,
             "anchor_key": key,
             "heading": label,
             "caption": caption,
-            "headers": headers,
-            "rows": rows,
+            "headers": primary_group.headers,
+            "rows": primary_group.rows,
             "footnotes": _table_footnotes(table_wrap),
             "section": "body",
             "render_state": "inline",
+            "_table_fallback_count": fallback_count,
+            "_table_layout_degraded_count": layout_degraded_count,
         }
-        if render_result is not None and render_result.prefix_rows:
-            entry["_table_prefix_rows"] = render_result.prefix_rows
+        if len(rendered_groups) > 1:
+            entry["_table_groups"] = [
+                {
+                    "table_render_kind": result.render_kind,
+                    "headers": result.headers,
+                    "rows": result.rows,
+                    **(
+                        {"_table_prefix_rows": result.prefix_rows}
+                        if result.prefix_rows
+                        else {}
+                    ),
+                }
+                for result in rendered_groups
+            ]
+        elif primary_group.prefix_rows:
+            entry["_table_prefix_rows"] = primary_group.prefix_rows
         if graphic_alternatives:
             entry["link"] = graphic_alternatives[0]["url"]
             entry["original_url"] = graphic_alternatives[0]["url"]
             entry["alternatives"] = graphic_alternatives
         if lossy:
-            message = (
-                table_conversion_note(render_result.status)
-                if render_result is not None
-                else None
-            )
-            if message:
-                entry["lossy_message"] = message
-                entry["conversion_notes"] = [message]
+            if conversion_notes:
+                entry["lossy_message"] = conversion_notes[0]
+                entry["conversion_notes"] = conversion_notes
         return entry, lossy
     if caption or graphic_alternatives:
         fallback_message = (
@@ -296,6 +338,8 @@ def _table_entry(
             "render_state": "inline",
             "fallback_message": fallback_message,
             "conversion_notes": [fallback_message],
+            "_table_fallback_count": 1,
+            "_table_layout_degraded_count": 0,
             **(
                 {
                     "link": graphic_alternatives[0]["url"],

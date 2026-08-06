@@ -58,9 +58,12 @@ from ._asset_retry import (
     merge_asset_retry_results,
 )
 from ._elsevier_xml_rules import (
-    ELSEVIER_IMAGE_ASSET_TYPES,
     classify_elsevier_asset_kind,
     infer_elsevier_asset_group_key,
+)
+from ._elsevier_objects import (
+    elsevier_asset_priority,
+    extract_elsevier_object_references,
 )
 from ._pdf_common import (
     PdfFetchFailure,
@@ -219,22 +222,6 @@ def extract_elsevier_keywords(root: Mapping[str, Any]) -> list[str]:
     return keywords
 
 
-def elsevier_asset_priority(
-    asset_kind: str, asset_type: str, category: str | None = None
-) -> int:
-    normalized_type = asset_type.strip().upper()
-    normalized_category = (category or "").strip().lower()
-    if asset_kind not in ELSEVIER_IMAGE_ASSET_TYPES:
-        return 0
-    if normalized_type == "IMAGE-HIGH-RES":
-        return 0
-    if normalized_type == "IMAGE-DOWNSAMPLED":
-        return 1
-    if normalized_type == "IMAGE-THUMBNAIL" or normalized_category == "thumbnail":
-        return 3
-    return 2
-
-
 def build_elsevier_object_url(attachment_eid: str) -> str:
     encoded_eid = urllib.parse.quote(attachment_eid.strip(), safe="")
     return f"https://api.elsevier.com/content/object/eid/{encoded_eid}?httpAccept=%2A%2F%2A"
@@ -376,37 +363,17 @@ def extract_elsevier_asset_references(
         if existing is None or priority < existing[0]:
             references_by_key[key] = (priority, reference)
 
-    for element in root.iter():
-        if not isinstance(element.tag, str):
-            continue
-        if xml_local_name(element.tag) != "object":
-            continue
-
-        source_url = (element.text or "").strip()
-        if not source_url:
-            continue
-
-        object_type = (element.get("type") or "").strip()
-        category = (element.get("category") or "").strip()
-        object_mimetype = (element.get("mimetype") or "").strip()
-        ref = (element.get("ref") or source_url).strip()
-
-        asset_kind = classify_elsevier_asset_kind(ref, object_type, category)
-
-        reference = {
-            "asset_type": asset_kind,
-            "source_kind": "object",
-            "source_ref": ref,
-            "source_url": source_url,
-            "content_type": object_mimetype or None,
-            "filename_hint": Path(urllib.parse.urlparse(source_url).path).name or ref,
-            "object_type": object_type or None,
-            "category": category or None,
-        }
+    for reference in extract_elsevier_object_references(root):
+        asset_kind = str(reference.get("asset_type") or "")
+        ref = str(reference.get("source_ref") or "")
         register(
             reference,
             key=(asset_kind, infer_elsevier_asset_group_key(ref)),
-            priority=elsevier_asset_priority(asset_kind, object_type, category),
+            priority=elsevier_asset_priority(
+                asset_kind,
+                str(reference.get("object_type") or ""),
+                str(reference.get("category") or ""),
+            ),
         )
 
     for element in root.iter():

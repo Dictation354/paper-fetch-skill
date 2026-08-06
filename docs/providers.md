@@ -309,7 +309,8 @@ resolve
   - 直接输入 LinkingHub 或 ScienceDirect 的 `/pii/{PII}` URL 时，resolve 阶段会提取 PII 并跳过 publisher landing 抓取；metadata 阶段改用 Elsevier Abstract PII API 补 DOI，再进入官方全文主路径。
   - PII XML/API fallback 只在 DOI XML/API 出现 transient / rate-limit 类失败，且 merged metadata 中能从 LinkingHub 或 ScienceDirect URL 提取 PII 时启用；它仍使用 Elsevier 官方 Article API，不走通用 HTML 抓取。
   - XML/API 成功时公开 `source="elsevier_xml"`。
-  - CALS 表格通过共享 XML/grid normalizer 解析 `colspec`、多层 `<thead>`、`colname`、`namest/nameend` 和 `morerows`；可展开跨度生成组合列名并记录布局降级，冲突/不规则网格保留为可读列表且不计语义丢失。
+  - CALS 表格通过共享 XML/grid normalizer 解析 `colspec`、多层 `<thead>`、`colname`、`namest/nameend` 和 `morerows`；同一表题下的多个 `tgroup` 使用各自列定义独立解析并按源顺序输出多个网格。可安全展开的跨度只记录正常规范化，不触发布局降级；仅冲突/不规则的分组退成可读列表，并按真实失败分组分别聚合 fallback/layout 质量信号。
+  - `<formula><link locator="fx*">` 会映射到 `<objects>` 中同 ref 的最高优先级官方公式图片；已下载资源优先使用本地相对路径，`asset_profile=none` 保留官方远程 URL。该路径是无 OCR 的保真 fallback，记录 `formula_fallback` 并保持总体 `degraded`，只有 locator 无匹配且无数学表达时才记录 `formula_missing`。
   - 官方 PDF fallback 成功时公开 `source="elsevier_pdf"`。
 - `springer`
   - 固定顺序是 `direct HTML -> direct HTTP PDF -> abstract-only / metadata-only`。
@@ -683,7 +684,7 @@ CLI、Python API、MCP 当前默认值如下：
 - Copernicus XML 成功路径会从 JATS/XML 抽取正文图、表、公式和明确 supplementary links。
 - Springer HTML 成功路径只从 cleaned body/content scope 抽取正文图片。
 - Springer/Nature HTML route 每个 attempt 创建独立的安全 cookie-aware opener，重定向链内保存并回放 cookie；若 final URL 首次出现 `cookies_not_supported`，丢弃 session 并用全新 opener 完整重试一次，第二次仍失败才进入既有 PDF waterfall。session 不跨 fetch/provider 共享，Cookie/Set-Cookie/Authorization 不进入 diagnostics。
-- Elsevier XML 的 `body` 只下载 `image` / `table_asset`。
+- Elsevier XML 的 `body` 只下载 `image` / `table_asset`；公式上下文引用的 `fx*` 官方对象按正文 `image` 下载，普通附录 Figure 的 `fx*` 仍保持 `appendix_image` 分类。
 - Elsevier XML 的 `all` 额外下载 `supplementary` references。
 - Elsevier supplementary 统一映射到 `kind="supplementary"`、`section="supplementary"` 和 `download_tier="supplementary_file"`。
 - Elsevier 正文资产遇到 timeout、TLS、DNS、connection reset/closed 等网络失败时，只对失败项串行重试一轮。

@@ -101,3 +101,49 @@ def test_jats_explicit_editorial_uses_short_body_policy() -> None:
     assert availability.short_article_policy is True
     assert availability.min_body_chars == 120
     assert availability.reason == "structured_short_article_body"
+
+
+def test_jats_cals_tgroups_render_as_independent_ordered_grids() -> None:
+    extraction = parse_jats_xml(
+        _jats(
+            body="""
+<body><sec><title>Results</title>
+  <table-wrap id="t1">
+    <label>Table 1</label>
+    <caption><p>Grouped measurements.</p></caption>
+    <table>
+      <tgroup cols="2">
+        <colspec colname="a1"/><colspec colname="a2"/>
+        <thead>
+          <row><entry namest="a1" nameend="a2">(a) WBGT</entry></row>
+          <row><entry colname="a1">Day</entry><entry colname="a2">Risk</entry></row>
+        </thead>
+        <tbody><row><entry colname="a1">1</entry><entry colname="a2">Low</entry></row></tbody>
+      </tgroup>
+      <tgroup cols="3">
+        <colspec colname="b1"/><colspec colname="b2"/><colspec colname="b3"/>
+        <thead>
+          <row><entry namest="b1" nameend="b3">(b) T</entry></row>
+          <row><entry colname="b1">Day</entry><entry colname="b2">Min</entry><entry colname="b3">Max</entry></row>
+        </thead>
+        <tbody><row><entry colname="b1">2</entry><entry colname="b2">10</entry><entry colname="b3">20</entry></row></tbody>
+      </tgroup>
+    </table>
+    <table-wrap-foot><p>Source note.</p></table-wrap-foot>
+  </table-wrap>
+</sec></body>
+"""
+        )
+    )
+
+    assert extraction is not None
+    markdown = extraction.markdown_text
+    assert markdown.count("Table 1") == 1
+    assert markdown.count("Grouped measurements.") == 1
+    assert markdown.count("Source note.") == 1
+    assert markdown.index("(a) WBGT") < markdown.index("| Day")
+    assert markdown.index("(b) T") < markdown.rindex("| Day")
+    assert "| 1" in markdown
+    assert "| 2" in markdown
+    assert extraction.semantic_losses.table_fallback_count == 0
+    assert extraction.semantic_losses.table_layout_degraded_count == 0

@@ -28,6 +28,7 @@ from ._article_markdown_common import (
     render_figure_block,
     render_inline_text,
     render_table_block,
+    table_entry_semantic_count,
     xml_local_name,
 )
 from ._article_markdown_jats_blocks import (
@@ -741,15 +742,21 @@ def parse_jats_xml(
     )
     semantic_losses = SemanticLosses(
         table_fallback_count=sum(
-            1
+            table_entry_semantic_count(
+                entry,
+                "_table_fallback_count",
+                fallback=normalize_text(str(entry.get("table_render_kind") or ""))
+                in {"fallback", "structured_list"},
+            )
             for entry in table_entries
-            if normalize_text(str(entry.get("table_render_kind") or ""))
-            in {"fallback", "structured_list"}
         ),
         table_layout_degraded_count=sum(
-            1
+            table_entry_semantic_count(
+                entry,
+                "_table_layout_degraded_count",
+                fallback=bool(normalize_text(str(entry.get("lossy_message") or ""))),
+            )
             for entry in table_entries
-            if normalize_text(str(entry.get("lossy_message") or ""))
         ),
         formula_fallback_count=sum(
             1
