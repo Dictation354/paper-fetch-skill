@@ -206,6 +206,8 @@
 
 - golden criteria live review 的 `stage_timings` 包含 `fetch_seconds`、`materialize_seconds`、`total_seconds`、`resolve_seconds`、`metadata_seconds`、`fulltext_seconds`、`asset_seconds`、`formula_seconds`、`render_seconds`。
 - 每个 sample 的 `http_cache_stats` 表示该 sample 执行前后差值；最终汇总日志仍可查看 `HttpTransport.cache_stats_snapshot()` 的累计快照。
+- `scripts/run_parallel_live_benchmark.py` 复用 golden live acceptance/timings，对同一组直连与 browser 样本运行 `1/2/4` 并发对照；输出 wall time、吞吐、加速比、结果漂移和结构化失败点。该 runner 默认每档一轮、禁用 HTTP 缓存但复用 browser storage-state，只能解释为本次 live 对照。
+- `scripts/run_parallel_live_benchmark.py --same-provider-probe wiley` 是额外的显式 opt-in 能力探测：固定选择 `10.1111/gcb.16414`、`10.1111/gcb.16998`、`10.1111/gcb.15322`，按并发 `1/2` 各跑两轮，并仅在该 devtools 运行中把 Wiley lane 上限临时提升到 `2`。报告以 worker 时间区间和每轮 provider 峰值确认真实重叠；加速比仅供观察，不是成功条件。该结论只适用于本机、本次访问状态，不修改 CLI/MCP 或 provider catalog 的生产默认限流。
 - live runner supported provider 从 runtime `official_provider_names()` 派生，当前包含 `elsevier`、`springer`、`wiley`、`science`、`pnas`、`ieee`、`arxiv`、`copernicus`、`ams`、`mdpi`、`royalsocietypublishing`、`annualreviews`、`plos`、`oxfordacademic`、`acs`、`iop`、`aip`、`frontiers`；provider 路径和资产语义见 [`providers.md`](providers.md)。
 
 ## 一句话阅读建议

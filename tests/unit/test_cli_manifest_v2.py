@@ -7,12 +7,14 @@ import hashlib
 import io
 import json
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 from uuid import UUID
 
 import pytest
 
 from paper_fetch import cli
+from paper_fetch import runtime as runtime_module
 from paper_fetch.manifest import (
     ManifestBuilderDependencies,
     ManifestRecordStatus,
@@ -604,6 +606,68 @@ def test_batch_generic_exception_is_failed_and_does_not_drop_later_input(
     assert records[0].record_status == ManifestRecordStatus.FAILED
     assert records[0].error is not None
     assert records[0].error.reason == "worker exploded"
+
+
+def test_batch_resolution_and_queue_time_do_not_consume_fetch_deadline(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    results_path = tmp_path / "results.jsonl"
+    args = _args(batch_results=str(results_path))
+    clock = [300.0]
+    observed: list[dict[str, object]] = []
+
+    def resolve(query: str, *, context):
+        context.request_started_at = 100.0
+        return SimpleNamespace(
+            query=query,
+            provider_hint="test-provider",
+            landing_url=None,
+            doi="10.1000/resolved",
+        )
+
+    def run_single(_args, *, query, context, **_kwargs):
+        observed.append(
+            {
+                "query": query,
+                "request_started_at": context.request_started_at,
+                "deadline": context.initialize_deadline(120.0),
+                "remaining": context.remaining_seconds(),
+                "session_cache": dict(context.session_cache),
+            }
+        )
+        clock[0] += 200.0
+        return cli.SingleFetchResult(_envelope())
+
+    monkeypatch.setattr(runtime_module.time, "monotonic", lambda: clock[0])
+    with (
+        mock.patch.object(cli, "resolve_paper", side_effect=resolve),
+        mock.patch.object(cli, "run_single_fetch", side_effect=run_single),
+        mock.patch.object(
+            cli, "build_http_transport_for_context", return_value=object()
+        ),
+    ):
+        exit_code = cli.run_batch_fetch(
+            args,
+            queries=["First generic paper title", "Second generic paper title"],
+            output_dir=tmp_path,
+            runtime_env={},
+            artifact_mode="none",
+            manifest_deps=_fixed_deps(
+                record_ids=(
+                    RECORD_ID,
+                    UUID("20000000-0000-4000-8000-000000000003"),
+                )
+            ),
+            run_id=RUN_ID,
+            tool_version="3.1.0",
+        )
+
+    assert exit_code == 0
+    assert [item["request_started_at"] for item in observed] == [300.0, 500.0]
+    assert [item["deadline"] for item in observed] == [420.0, 620.0]
+    assert [item["remaining"] for item in observed] == [120.0, 120.0]
+    assert all(item["session_cache"] for item in observed)
 
 
 def test_metadata_only_batch_status_ok_remains_zero_exit(tmp_path: Path) -> None:

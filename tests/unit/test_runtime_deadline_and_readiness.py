@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from paper_fetch.providers.browser_workflow.fetchers import readiness
+from paper_fetch import runtime as runtime_module
 from paper_fetch.runtime import RuntimeContext
 
 
@@ -9,6 +10,36 @@ def test_request_deadline_is_initialized_once() -> None:
     try:
         assert context.initialize_deadline(120.0) == 220.0
         assert context.initialize_deadline(15.0) == 220.0
+    finally:
+        context.close()
+
+
+def test_reset_request_deadline_preserves_item_state_and_shared_transport(
+    monkeypatch,
+) -> None:
+    shared_transport = object()
+    context = RuntimeContext(
+        env={},
+        transport=shared_transport,
+        request_started_at=100.0,
+        deadline_monotonic=220.0,
+    )
+    context.set_session_cache(("resolved_query", "title"), {"doi": "10.1000/test"})
+    context.stage_timings["resolve_seconds"] = 3.0
+    monkeypatch.setattr(runtime_module.time, "monotonic", lambda: 300.0)
+
+    try:
+        context.reset_request_deadline()
+
+        assert context.request_started_at == 300.0
+        assert context.deadline_monotonic is None
+        assert context.initialize_deadline(120.0) == 420.0
+        assert context.remaining_seconds() == 120.0
+        assert context.transport is shared_transport
+        assert context.get_session_cache(("resolved_query", "title")) == {
+            "doi": "10.1000/test"
+        }
+        assert context.stage_timings["resolve_seconds"] == 3.0
     finally:
         context.close()
 

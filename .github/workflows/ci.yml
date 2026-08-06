@@ -48,6 +48,12 @@ jobs:
             --cov=paper_fetch --cov-branch \
             --cov-report=term-missing --cov-report=xml
           uv run python scripts/report_coverage_focus.py
+      - name: Batch request deadline regressions
+        run: |
+          PYTHONPATH=src uv run pytest -q \
+            tests/unit/test_runtime_deadline_and_readiness.py::test_reset_request_deadline_preserves_item_state_and_shared_transport \
+            tests/unit/test_cli_manifest_v2.py::test_batch_resolution_and_queue_time_do_not_consume_fetch_deadline \
+            tests/unit/test_mcp_batch_fetch.py::test_batch_fetch_resolution_and_queue_time_do_not_consume_fetch_deadline
       - name: IEEE AWS WAF, readiness, and asset recovery regressions
         run: |
           PYTHONPATH=src uv run pytest -q \

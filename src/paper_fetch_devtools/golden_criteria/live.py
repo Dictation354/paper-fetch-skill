@@ -10,6 +10,7 @@ import logging
 from pathlib import Path
 import re
 import shutil
+import threading
 import time
 import urllib.parse
 from typing import Any
@@ -21,7 +22,10 @@ from paper_fetch.config import build_runtime_env, resolve_repo_root
 from paper_fetch.http import HttpTransport
 from paper_fetch.logging_utils import emit_structured_log
 from paper_fetch.models import Asset, FetchEnvelope, RenderOptions
-from paper_fetch.provider_catalog import official_provider_names
+from paper_fetch.provider_catalog import (
+    official_provider_names,
+    provider_has_browser_route,
+)
 from paper_fetch.providers.registry import build_clients
 from paper_fetch.quality.issues import is_authorless_briefing_like
 from paper_fetch.quality.reason_codes import FULLTEXT, INSUFFICIENT_BODY
@@ -38,6 +42,12 @@ from paper_fetch.runtime import RuntimeContext
 from paper_fetch.service import FetchStrategy, PaperFetchFailure, fetch_paper
 from paper_fetch.tracing import nearest_rank_percentile
 from paper_fetch.utils import normalize_text, sanitize_filename
+from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
+from paper_fetch.workflow.batch_routing import provider_lane_limit
+from paper_fetch.workflow.batch_runner import (
+    BatchFailure,
+    run_batch,
+)
 from paper_fetch.workflow.rendering import rewrite_markdown_asset_links
 
 logger = logging.getLogger("paper_fetch_devtools.golden_criteria.live")
@@ -194,6 +204,12 @@ class GoldenCriteriaLiveResult:
     expected_outcome: bool = False
     out_of_scope_reason: str | None = None
     asset_diagnostics: list[dict[str, Any]] = field(default_factory=list)
+    acceptance: dict[str, Any] = field(default_factory=dict)
+    trace: list[dict[str, Any]] = field(default_factory=list)
+    failure_diagnostics: dict[str, Any] = field(default_factory=dict)
+    diagnostic_artifacts: list[dict[str, Any]] = field(default_factory=list)
+    worker_started_at: float | None = None
+    worker_finished_at: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -264,6 +280,10 @@ class GoldenCriteriaLiveReport:
     summary_by_issue: list[IssueReviewSummary]
     performance_by_provider_route_stage: list[PerformanceStageSummary]
     solution_recommendations: list[SolutionRecommendation]
+    concurrency: int = 1
+    completion_order: list[str] = field(default_factory=list)
+    lane_limits: dict[str, int] = field(default_factory=dict)
+    provider_peak_in_flight: dict[str, int] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -284,10 +304,14 @@ class GoldenCriteriaLiveReport:
             "solution_recommendations": [
                 item.to_dict() for item in self.solution_recommendations
             ],
+            "concurrency": self.concurrency,
+            "completion_order": list(self.completion_order),
+            "lane_limits": dict(self.lane_limits),
+            "provider_peak_in_flight": dict(self.provider_peak_in_flight),
         }
 
     def to_json(self) -> str:
-        return json.dumps(self.to_dict(), ensure_ascii=False, indent=2)
+        return json.dumps(self.to_dict(), ensure_ascii=False, indent=2, default=str)
 
     def write_json(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -304,6 +328,10 @@ class GoldenCriteriaLiveReport:
             f"- Total golden samples: `{self.total_samples}`",
             f"- Supported live samples: `{self.supported_samples}`",
             f"- Skipped unsupported samples: `{self.skipped_samples}`",
+            f"- Concurrency: `{self.concurrency}`",
+            f"- Lane limits: `{json.dumps(self.lane_limits, sort_keys=True)}`",
+            "- Provider peak in-flight: "
+            f"`{json.dumps(self.provider_peak_in_flight, sort_keys=True)}`",
             "",
             "## Provider Summary",
             "",
@@ -369,21 +397,25 @@ class GoldenCriteriaLiveReport:
                 "| --- | --- | --- | ---: | ---: | ---: | ---: |",
             ]
         )
-        for summary in self.performance_by_provider_route_stage:
+        for performance_summary in self.performance_by_provider_route_stage:
             observed = (
-                f"{summary.observed_seconds:.3f}"
-                if summary.observed_seconds is not None
+                f"{performance_summary.observed_seconds:.3f}"
+                if performance_summary.observed_seconds is not None
                 else "-"
             )
             p50 = (
-                f"{summary.p50_seconds:.3f}" if summary.p50_seconds is not None else "-"
+                f"{performance_summary.p50_seconds:.3f}"
+                if performance_summary.p50_seconds is not None
+                else "-"
             )
             p95 = (
-                f"{summary.p95_seconds:.3f}" if summary.p95_seconds is not None else "-"
+                f"{performance_summary.p95_seconds:.3f}"
+                if performance_summary.p95_seconds is not None
+                else "-"
             )
             lines.append(
-                f"| `{summary.provider}` | `{summary.route}` | "
-                f"`{summary.stage}` | {summary.sample_count} | "
+                f"| `{performance_summary.provider}` | `{performance_summary.route}` | "
+                f"`{performance_summary.stage}` | {performance_summary.sample_count} | "
                 f"{observed} | {p50} | {p95} |"
             )
 
@@ -397,12 +429,12 @@ class GoldenCriteriaLiveReport:
             ]
         )
         if self.summary_by_issue:
-            for summary in self.summary_by_issue:
+            for issue_summary in self.summary_by_issue:
                 sample_ids = (
-                    ", ".join(f"`{item}`" for item in summary.sample_ids) or "-"
+                    ", ".join(f"`{item}`" for item in issue_summary.sample_ids) or "-"
                 )
                 lines.append(
-                    f"| `{summary.issue_category}` | {summary.count} | {sample_ids} |"
+                    f"| `{issue_summary.issue_category}` | {issue_summary.count} | {sample_ids} |"
                 )
         else:
             lines.append("| `none` | 0 | - |")
@@ -1164,6 +1196,48 @@ def _cache_stats_delta(
     return delta
 
 
+def _trace_payload(trace: Sequence[Any] | None) -> list[dict[str, Any]]:
+    payload: list[dict[str, Any]] = []
+    for event in trace or []:
+        if isinstance(event, Mapping):
+            payload.append(dict(event))
+        elif hasattr(event, "__dataclass_fields__"):
+            payload.append(asdict(event))
+    return payload
+
+
+def _failure_diagnostics_payload(error: Exception) -> dict[str, Any]:
+    payload = {
+        "provider": getattr(error, "provider", None),
+        "route": getattr(error, "route", None),
+        "stage": getattr(error, "stage", None),
+        "http_status": getattr(error, "http_status", None),
+        "error_category": getattr(error, "error_category", None),
+        "retryable": getattr(error, "retryable", None),
+        "retry_after_seconds": getattr(error, "retry_after_seconds", None),
+        "details": dict(getattr(error, "details", None) or {}),
+    }
+    return {key: value for key, value in payload.items() if value not in (None, {}, [])}
+
+
+def _acceptance_payload(
+    sample: GoldenCriteriaLiveSample,
+    *,
+    envelope: FetchEnvelope | None = None,
+    failure_code: str | None = None,
+) -> dict[str, Any]:
+    return evaluate_fetch_acceptance(
+        envelope,
+        asset_profile="body",
+        requested_outputs=("article", "markdown"),
+        failure_code=failure_code,
+        expected_doi=sample.doi,
+        doi=envelope.doi if envelope is not None else sample.doi,
+        title=sample.title,
+        source=envelope.source if envelope is not None else None,
+    ).to_dict()
+
+
 def _emit_sample_result_log(result: GoldenCriteriaLiveResult) -> None:
     emit_structured_log(
         logger,
@@ -1360,6 +1434,12 @@ def result_with_review_summary(
         expected_outcome=result.expected_outcome,
         out_of_scope_reason=result.out_of_scope_reason,
         asset_diagnostics=list(result.asset_diagnostics),
+        acceptance=dict(result.acceptance),
+        trace=[dict(item) for item in result.trace],
+        failure_diagnostics=dict(result.failure_diagnostics),
+        diagnostic_artifacts=[dict(item) for item in result.diagnostic_artifacts],
+        worker_started_at=result.worker_started_at,
+        worker_finished_at=result.worker_finished_at,
     )
 
 
@@ -1391,6 +1471,9 @@ def skipped_result(
         stage_timings=_stage_timings(),
         error_code=UNSUPPORTED_PROVIDER_STATUS,
         error_message=f"Unsupported provider: {sample.provider}",
+        acceptance=_acceptance_payload(
+            sample, failure_code=UNSUPPORTED_PROVIDER_STATUS
+        ),
     )
 
 
@@ -1426,6 +1509,12 @@ def precheck_blocked_result(
         stage_timings=_stage_timings(),
         error_code=status,
         error_message=message,
+        acceptance=_acceptance_payload(sample, failure_code=status),
+        failure_diagnostics={
+            "provider": sample.provider,
+            "stage": "provider_status",
+            "error_category": status,
+        },
     )
 
 
@@ -1455,13 +1544,14 @@ def fetch_sample_result(
     transport: HttpTransport,
     clients: Mapping[str, Any],
     provider_manifest: Mapping[str, Any] | None = None,
+    runtime_context: RuntimeContext | None = None,
 ) -> GoldenCriteriaLiveResult:
     _emit_sample_start_log(sample)
     started_at = time.monotonic()
     cache_stats_before = _transport_cache_stats(transport)
     fetch_seconds = 0.0
     materialize_seconds = 0.0
-    runtime_context = RuntimeContext(
+    runtime_context = runtime_context or RuntimeContext(
         env=env,
         transport=transport,
         clients=clients,
@@ -1535,6 +1625,9 @@ def fetch_sample_result(
             error_code=error_code,
             error_message=error_message,
             asset_diagnostics=asset_diagnostics,
+            acceptance=_acceptance_payload(sample, envelope=envelope),
+            trace=_trace_payload(envelope.trace),
+            diagnostic_artifacts=[dict(item) for item in envelope.diagnostic_artifacts],
         )
         _emit_sample_result_log(result)
         return result
@@ -1575,6 +1668,12 @@ def fetch_sample_result(
             http_cache_stats=http_cache_stats,
             error_code=exc.status,
             error_message=exc.reason,
+            acceptance=_acceptance_payload(sample, failure_code=exc.status),
+            trace=_trace_payload(exc.trace or runtime_context.fetch_trace),
+            failure_diagnostics=_failure_diagnostics_payload(exc),
+            diagnostic_artifacts=[
+                dict(item) for item in runtime_context.diagnostic_artifacts
+            ],
         )
         _emit_sample_result_log(result)
         return result
@@ -1610,6 +1709,16 @@ def fetch_sample_result(
             http_cache_stats=http_cache_stats,
             error_code=exc.__class__.__name__,
             error_message=str(exc),
+            acceptance=_acceptance_payload(sample, failure_code=ERROR),
+            trace=_trace_payload(runtime_context.fetch_trace),
+            failure_diagnostics={
+                "provider": sample.provider,
+                "stage": "live_fetch",
+                "error_category": exc.__class__.__name__,
+            },
+            diagnostic_artifacts=[
+                dict(item) for item in runtime_context.diagnostic_artifacts
+            ],
         )
         _emit_sample_result_log(result)
         return result
@@ -1744,6 +1853,10 @@ def build_report(
     output_dir: Path,
     provider_status: dict[str, Any],
     results: Sequence[GoldenCriteriaLiveResult],
+    concurrency: int = 1,
+    completion_order: Sequence[str] = (),
+    lane_limits: Mapping[str, int] | None = None,
+    provider_peak_in_flight: Mapping[str, int] | None = None,
 ) -> GoldenCriteriaLiveReport:
     result_list = list(results)
     return GoldenCriteriaLiveReport(
@@ -1762,7 +1875,37 @@ def build_report(
         summary_by_issue=build_issue_summaries(result_list),
         performance_by_provider_route_stage=build_performance_summaries(result_list),
         solution_recommendations=build_solution_recommendations(result_list),
+        concurrency=concurrency,
+        completion_order=list(completion_order),
+        lane_limits=dict(lane_limits or {}),
+        provider_peak_in_flight=dict(provider_peak_in_flight or {}),
     )
+
+
+def _validated_lane_limit_overrides(
+    lane_limit_overrides: Mapping[str, int] | None,
+) -> dict[str, int]:
+    """Validate development-only provider lane overrides.
+
+    Browser-backed overrides are deliberately capped at two. Production CLI/MCP
+    callers never pass this parameter and continue to use provider catalog limits.
+    """
+
+    normalized: dict[str, int] = {}
+    for provider, value in (lane_limit_overrides or {}).items():
+        provider_key = normalize_text(provider).lower()
+        if not provider_key or provider_key not in SUPPORTED_PROVIDERS:
+            raise ValueError(f"unknown lane limit override provider: {provider!r}")
+        if provider_key in normalized:
+            raise ValueError(
+                "lane_limit_overrides must not contain duplicate providers"
+            )
+        if isinstance(value, bool) or not isinstance(value, int) or not 1 <= value <= 8:
+            raise ValueError("lane_limit_overrides values must be integers from 1 to 8")
+        if provider_has_browser_route(provider_key) and value > 2:
+            raise ValueError("browser-provider lane_limit_overrides must not exceed 2")
+        normalized[provider_key] = value
+    return normalized
 
 
 def run_golden_criteria_live_review(
@@ -1776,7 +1919,13 @@ def run_golden_criteria_live_review(
     fetch_paper_fn: FetchPaperFn = fetch_paper,
     provider_status_fn: ProviderStatusFn = provider_status_payload,
     now: datetime | None = None,
+    concurrency: int = 1,
+    lane_limit_overrides: Mapping[str, int] | None = None,
+    clock: Callable[[], float] = time.monotonic,
 ) -> GoldenCriteriaLiveReport:
+    if isinstance(concurrency, bool) or not 1 <= concurrency <= 8:
+        raise ValueError("concurrency must be an integer from 1 to 8")
+    resolved_lane_overrides = _validated_lane_limit_overrides(lane_limit_overrides)
     manifest = load_manifest(manifest_path)
     all_samples = iter_golden_criteria_samples(manifest)
     selected_samples = select_samples(
@@ -1790,6 +1939,7 @@ def run_golden_criteria_live_review(
     ensure_live_opt_in(runtime_env)
     active_transport = transport or HttpTransport()
     clients = build_clients(active_transport, runtime_env)
+    batch_context = RuntimeContext(env=runtime_env, transport=active_transport)
     render = RenderOptions(
         include_refs="all", asset_profile="body", max_tokens="full_text"
     )
@@ -1799,11 +1949,11 @@ def run_golden_criteria_live_review(
         for entry in (status_payload.get("providers") or [])
         if isinstance(entry, Mapping) and normalize_text(entry.get("provider"))
     }
-    ai_provider_manifests = {
-        provider: manifest
-        for provider in {sample.provider for sample in selected_samples}
-        if (manifest := load_provider_manifest(provider)) is not None
-    }
+    ai_provider_manifests: dict[str, dict[str, Any]] = {}
+    for provider in {sample.provider for sample in selected_samples}:
+        provider_manifest = load_provider_manifest(provider)
+        if provider_manifest is not None:
+            ai_provider_manifests[provider] = provider_manifest
 
     (output_root / "manifest-snapshot.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
@@ -1827,7 +1977,9 @@ def run_golden_criteria_live_review(
             _emit_sample_result_log(reviewed_result)
             results_by_sample_id[sample.sample_id] = reviewed_result
 
-    for sample in schedule_supported_samples(selected_samples):
+    def execute_supported_sample(
+        sample: GoldenCriteriaLiveSample,
+    ) -> GoldenCriteriaLiveResult:
         sample_dir = sample_output_dir(output_root, sample)
         sample_dir.mkdir(parents=True, exist_ok=True)
         provider_status_entry = provider_status_by_provider.get(sample.provider, {})
@@ -1842,8 +1994,11 @@ def run_golden_criteria_live_review(
             review = ensure_review_file(result, sample_dir)
             reviewed_result = result_with_review_summary(result, review)
             _emit_sample_result_log(reviewed_result)
-            results_by_sample_id[sample.sample_id] = reviewed_result
-            continue
+            return reviewed_result
+        item_context = batch_context.new_request_context(
+            download_dir=sample_dir,
+            asset_profile="body",
+        )
         result = fetch_sample_result(
             sample,
             sample_dir=sample_dir,
@@ -1853,12 +2008,133 @@ def run_golden_criteria_live_review(
             transport=active_transport,
             clients=clients,
             provider_manifest=ai_provider_manifests.get(sample.provider),
+            runtime_context=item_context,
         )
         result = apply_expected_outcome(sample, result)
         review = ensure_review_file(result, sample_dir)
-        results_by_sample_id[sample.sample_id] = result_with_review_summary(
-            result, review
+        return result_with_review_summary(result, review)
+
+    activity_lock = threading.Lock()
+    provider_in_flight: Counter[str] = Counter()
+    provider_peak_in_flight: Counter[str] = Counter()
+    worker_timings: dict[str, tuple[float, float]] = {}
+
+    def run_supported_sample(
+        sample: GoldenCriteriaLiveSample,
+    ) -> GoldenCriteriaLiveResult:
+        worker_started_at = clock()
+        with activity_lock:
+            provider_in_flight[sample.provider] += 1
+            provider_peak_in_flight[sample.provider] = max(
+                provider_peak_in_flight[sample.provider],
+                provider_in_flight[sample.provider],
+            )
+        try:
+            result = execute_supported_sample(sample)
+        finally:
+            worker_finished_at = clock()
+            with activity_lock:
+                provider_in_flight[sample.provider] -= 1
+                worker_timings[sample.sample_id] = (
+                    worker_started_at,
+                    worker_finished_at,
+                )
+        return replace(
+            result,
+            worker_started_at=worker_started_at,
+            worker_finished_at=worker_finished_at,
         )
+
+    def classify_live_result(result: GoldenCriteriaLiveResult) -> BatchFailure | None:
+        if result.status == RATE_LIMITED:
+            retry_after = result.failure_diagnostics.get("retry_after_seconds")
+            return BatchFailure(
+                reason_code=result.error_code or RATE_LIMITED,
+                message=result.error_message or "Provider rate limit is active.",
+                retry_after_seconds=(
+                    float(retry_after)
+                    if isinstance(retry_after, (int, float))
+                    and not isinstance(retry_after, bool)
+                    else None
+                ),
+                rate_limited=True,
+                details=dict(result.failure_diagnostics),
+            )
+        if result.status in {ERROR, "blocked_live_fetch"}:
+            return BatchFailure(
+                reason_code=result.error_code or result.status,
+                message=result.error_message or "Live fetch failed.",
+                details=dict(result.failure_diagnostics),
+            )
+        return None
+
+    scheduled_samples = schedule_supported_samples(selected_samples)
+    effective_lane_limits = {
+        provider: min(
+            concurrency,
+            resolved_lane_overrides.get(
+                provider,
+                provider_lane_limit(provider, global_limit=concurrency),
+            ),
+        )
+        for provider in dict.fromkeys(sample.provider for sample in scheduled_samples)
+    }
+    try:
+        batch_result = run_batch(
+            scheduled_samples,
+            run_supported_sample,
+            max_workers=concurrency,
+            lane_key=lambda sample: sample.provider,
+            lane_limits=effective_lane_limits,
+            result_classifier=classify_live_result,
+        )
+    finally:
+        batch_context.close()
+    for item_result in batch_result.results:
+        if item_result.value is None:
+            error = item_result.error or RuntimeError("live benchmark worker failed")
+            sample = item_result.item
+            sample_dir = sample_output_dir(output_root, sample)
+            result = GoldenCriteriaLiveResult(
+                sample_id=sample.sample_id,
+                provider=sample.provider,
+                doi=sample.doi,
+                title=sample.title,
+                status=ERROR,
+                content_kind=None,
+                source=None,
+                has_fulltext=False,
+                warnings=[],
+                source_trail=[],
+                asset_count=0,
+                sample_output_dir=str(sample_dir),
+                review_status="blocked",
+                issue_categories=issue_categories_for_result(
+                    status="blocked_live_fetch"
+                ),
+                elapsed_seconds=0.0,
+                stage_timings=_stage_timings(),
+                error_code=error.__class__.__name__,
+                error_message=str(error),
+                acceptance=_acceptance_payload(sample, failure_code=ERROR),
+                failure_diagnostics=_failure_diagnostics_payload(error),
+                worker_started_at=(
+                    worker_timings.get(sample.sample_id, (None, None))[0]
+                ),
+                worker_finished_at=(
+                    worker_timings.get(sample.sample_id, (None, None))[1]
+                ),
+            )
+            review = ensure_review_file(result, sample_dir)
+            results_by_sample_id[sample.sample_id] = result_with_review_summary(
+                result, review
+            )
+            continue
+        results_by_sample_id[item_result.item.sample_id] = item_result.value
+
+    completion_order = [
+        event.result.item.sample_id for event in batch_result.completion_events
+    ]
 
     ordered_results = [
         results_by_sample_id[sample.sample_id]
@@ -1870,6 +2146,10 @@ def run_golden_criteria_live_review(
         output_dir=output_root,
         provider_status=status_payload,
         results=ordered_results,
+        concurrency=concurrency,
+        completion_order=completion_order,
+        lane_limits=effective_lane_limits,
+        provider_peak_in_flight=dict(provider_peak_in_flight),
     )
     report.write_json(output_root / "report.json")
     report.write_markdown(output_root / "report.md")

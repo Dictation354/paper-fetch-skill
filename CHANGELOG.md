@@ -6,6 +6,16 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.1.0 - 2026-08-06
+
+### Fixed — batch request deadlines
+
+- Fixed CLI and MCP batches consuming each paper's request deadline during
+  upfront identity resolution and provider-lane queueing. Each fetch worker now
+  starts with a fresh request budget while retaining its item-local resolution
+  cache and shared transport, preventing browser routes from incorrectly
+  falling back to metadata-only solely because the batch waited before fetch.
+
 ## 5.0.1 - 2026-08-04
 
 ### Changed — dependency compatibility

@@ -232,6 +232,10 @@ selected-browser provider 在抽取前等待 provider 正文 DOM 达到阈值并
 结果降格为 skip。AIP 等 provider 的 fast landing 若已经返回 HTTP-200 head-only
 empty shell，保守重试会先使用下一个既有 provider URL，不再重复相同空壳。
 MDPI 使用该正文稳定门，避免把延迟加载的 HTTP-200 head-only shell 误认为完成页面。
+CLI 和 MCP 批量入口会在预解析阶段复用 item-local context 缓存规范身份，但只有
+fetch worker 取得执行槽时才重新开始该条目的 request deadline；全批解析和 provider
+lane 排队不会再把 browser route 的预算提前耗尽。该重置不改变单篇内部 HTML、
+browser、PDF 与 fallback 共享 deadline 的语义。
 这些是 Windows/WSL 可执行的 portable 行为证据，不替代原生 macOS app bundle 启动门。
 常规 CI 的 pinned 原生 runtime 在调用 Camoufox CLI 时传入 GitHub workflow
 自带的只读 `github.token`；Camoufox 复用其原生 `GITHUB_TOKEN` 支持访问 Releases

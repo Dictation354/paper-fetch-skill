@@ -787,6 +787,7 @@ async def _execute_batch_fetch(
                 fetch_request = request.to_fetch_request(item.query)
                 item_context = item_contexts[item.index]
                 try:
+                    item_context.reset_request_deadline()
                     envelope = deps.fetch_paper_envelope(
                         fetch_request,
                         env=runtime_env,

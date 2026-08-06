@@ -905,6 +905,7 @@ def _run_batch_item(
 ) -> CliFetchOutcome:
     started_at = deps.clock()
     try:
+        context.reset_request_deadline()
         result = run_single_fetch(
             args,
             query=item.query,

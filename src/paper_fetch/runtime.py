@@ -390,6 +390,18 @@ class RuntimeContext:
             self.deadline_monotonic = self.request_started_at + timeout_value
         return self.deadline_monotonic
 
+    def reset_request_deadline(self) -> None:
+        """Start a fresh request budget while preserving item-local cached state.
+
+        Batch schedulers may create a context early so resolution can prime its
+        session cache.  Resolution and lane-queue time are not part of the later
+        fetch attempt, so the worker resets only the request clock immediately
+        before fetching.
+        """
+
+        self.request_started_at = time.monotonic()
+        self.deadline_monotonic = None
+
     def remaining_seconds(self, maximum: float | None = None) -> float:
         """Return remaining request budget, optionally capped for one operation."""
 

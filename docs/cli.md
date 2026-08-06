@@ -165,7 +165,7 @@ paper-fetch fetch --query-file ./queries.txt \
   --max-tokens full_text
 ```
 
-`--batch-concurrency` 默认是 `1`，允许范围是 `1..8`。CLI 使用共享增量 runner，只维持有限的 in-flight 项。某个可静态识别的 provider lane 被限速后，不再向该 lane 提交新任务；无法从 URL/DOI 可靠判断 provider 的标题查询进入通用 lane。已提交任务正常终态化，未调度项也各写一条 `record_status=aborted`、`status=aborted` 的记录。一次正常完成的批量运行保证输入数、record 数和唯一 `index` 数相等。第一次 Ctrl-C 只发出协作式取消并等待在途 worker 收敛；超过宽限期 runner 才关闭共享 browser manager，第二次 Ctrl-C 可立即升级强制关闭。
+`--batch-concurrency` 默认是 `1`，允许范围是 `1..8`。CLI 使用共享增量 runner，只维持有限的 in-flight 项。某个可静态识别的 provider lane 被限速后，不再向该 lane 提交新任务；无法从 URL/DOI 可靠判断 provider 的标题查询进入通用 lane。批量解析和 provider lane 排队不计入单篇论文的 request deadline；该预算在 fetch worker 真正取得执行槽时开始，而单篇内部的 HTML、browser、PDF 与 fallback 仍共享同一 deadline。已提交任务正常终态化，未调度项也各写一条 `record_status=aborted`、`status=aborted` 的记录。一次正常完成的批量运行保证输入数、record 数和唯一 `index` 数相等。第一次 Ctrl-C 只发出协作式取消并等待在途 worker 收敛；超过宽限期 runner 才关闭共享 browser manager，第二次 Ctrl-C 可立即升级强制关闭。
 
 单个条目的普通 provider 错误不会停止其它 lane；失败条目会写入 JSONL 的 `error` 字段。全部调用成功且没有 aborted 时退出码为 `0`；工具失败或 aborted 为非零，并继续按 `no_access`、`rate_limited`、`ambiguous` 优先映射到 `3`、`4`、`2`，其它失败/aborted 为 `1`。`acceptance.overall=degraded` 本身不会把退出码升级为非零。
 
@@ -185,7 +185,7 @@ paper-fetch fetch --query-file ./queries.txt \
   --max-tokens full_text
 ```
 
-上面的命令最多同时抓取 `4` 篇。每篇抓取会独立创建运行时上下文，避免跨任务共享 provider 解析状态；同一个 batch 会共享 HTTP transport，并按 browser 配置共享且保留 managed browser manager，因此连接池、同 host 限流、请求缓存和 provider Chrome lifecycle 可以跨条目复用，而 context/page 仍逐条隔离。JSONL 汇总仍由主线程在每个终态到达时立即写入并 flush，避免并发写文件。并行模式下 `batch-results.jsonl` 按任务完成顺序追加，不保证与输入文件顺序一致；`index` 始终是输入文件过滤空行和注释后的稳定 1-based 序号，消费者必须按 `index` 关联或重排输入，不能把行号当成输入顺序。
+上面的命令最多同时抓取 `4` 篇。每篇抓取会独立创建运行时上下文，避免跨任务共享 provider 解析状态；同一个 batch 会共享 HTTP transport，并按 browser 配置共享且保留 managed browser manager，因此连接池、同 host 限流、请求缓存和 provider Chrome lifecycle 可以跨条目复用，而 context/page 仍逐条隔离。item context 在预解析阶段保留已解析身份，fetch worker 开始时只重置请求时钟，不丢弃该缓存。JSONL 汇总仍由主线程在每个终态到达时立即写入并 flush，避免并发写文件。并行模式下 `batch-results.jsonl` 按任务完成顺序追加，不保证与输入文件顺序一致；`index` 始终是输入文件过滤空行和注释后的稳定 1-based 序号，消费者必须按 `index` 关联或重排输入，不能把行号当成输入顺序。
 
 ### Run 目录、状态与 attempts
 
@@ -270,7 +270,7 @@ CLI 先在 run lock 内执行只读审计。只有 query、工具版本和关键
 ```json
 {
   "schema_version": 2,
-  "tool_version": "5.0.1",
+  "tool_version": "5.1.0",
   "run_id": "10000000-0000-4000-8000-000000000001",
   "record_id": "20000000-0000-4000-8000-000000000002",
   "index": 2,

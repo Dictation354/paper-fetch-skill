@@ -6,6 +6,15 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.1.0 - 2026-08-06
+
+### 修复——批量请求 deadline
+
+- 修复 CLI 与 MCP 批量任务在预先解析身份和等待 provider lane 时提前消耗单篇论文
+  request deadline 的问题。每个 fetch worker 现在会获得完整的新请求预算，同时保留
+  item-local 解析缓存和共享 transport，避免 browser route 仅因抓取前的批量等待而
+  错误降级为 metadata-only。
+
 ## 5.0.1 - 2026-08-04
 
 ### 变更——依赖兼容

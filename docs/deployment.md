@@ -627,6 +627,26 @@ PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_LIVE_ARTIFACT_DIR=artifacts/live-publishers \
 
 普通 publisher/MCP live tests 只保留上述本地入口，不由 GitHub Actions 定时或手动触发。只有在具备相应出版社访问授权和凭据的本机网络环境中才应运行；JUnit 和诊断目录也由本地操作者自行保存。
 
+多篇并行对照同样只保留本地 opt-in 入口，不进入 GitHub Actions。默认命令如下：
+
+```bash
+PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_BROWSER_BACKEND=camoufox \
+  PYTHONPATH=src python3 scripts/run_parallel_live_benchmark.py \
+  --concurrencies 1 2 4 --repetitions 1
+```
+
+默认样本混合四条直连和四条 browser 路径；也可用 `--providers` 或 `--sample-ids` 缩小范围。runner 在计时前逐个检查 browser provider，challenge/auth/runtime failure 会阻止对应 provider 的论文调度但不会阻止其它 provider 或后续并发档位。每档创建独立无缓存 HTTP transport，同时复用已确认的 browser storage-state；产物默认位于 `live-downloads/parallel-live-benchmark/<timestamp>/`，显式 `--output-dir` 必须不存在或为空，避免混入旧轮次。单轮结果只用于本次对照，不作为统计显著性结论。任一非预期 acceptance、catalog route 不匹配、preflight 未就绪或跨并发结果漂移都会保留完整报告并返回非零退出码。
+
+Wiley 同-provider 探测使用固定矩阵，不能同时传入 `--providers`、`--sample-ids`、`--concurrencies` 或 `--repetitions`：
+
+```bash
+PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_BROWSER_BACKEND=camoufox \
+  PYTHONPATH=src python3 scripts/run_parallel_live_benchmark.py \
+  --same-provider-probe wiley
+```
+
+该命令抓取 3 篇 golden 样本，在并发 `1`、`2` 下各执行 2 轮，共 12 篇次。专项 runner 仅在当前进程内请求 Wiley lane `2`；并发 `1` 的实际 lane 仍为 `1`，CLI/MCP 和 provider catalog 的生产默认值仍为 `1`。`same_provider_probe` 报告包含逐篇 worker 起止时间、请求/实际 lane、逐轮峰值、重叠状态、route/acceptance 稳定性、blocker 和最终判定。没有明显加速不影响能力结论；只有真实峰值重叠及稳定完整结果才通过。preflight、访问授权、challenge、限流、browser runtime 或线程所有权问题判定为 `blocked`，应先修复环境后重跑，不能据此外推 Wiley 不具备并行能力。真实探测只允许本地显式运行，不加入 GitHub Actions。
+
 Provider drift 同样只保留本地脚本入口。完整 browser-risk 样本集会串行访问真实出版社，运行前应准备 Camoufox runtime，并按需配置 publisher 凭据：
 
 ```bash

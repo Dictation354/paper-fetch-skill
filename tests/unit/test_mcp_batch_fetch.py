@@ -28,6 +28,7 @@ from paper_fetch.mcp.schemas import FetchPaperRequest
 from paper_fetch.mcp.server import build_server
 from paper_fetch.models import QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION
 from paper_fetch.reason_codes import RATE_LIMITED
+from paper_fetch import runtime as runtime_module
 from paper_fetch.tracing import trace_event
 from tests.paths import REPO_ROOT, SKILL_DIR
 
@@ -221,6 +222,60 @@ def test_batch_fetch_resolves_generic_queries_before_assigning_lanes() -> None:
     assert set(calls) == {"title-provider-a-now", "title-provider-b"}
     assert result.structured_content["results"][2]["record_status"] == "aborted"
     assert result.structured_content["lane_cooldowns"][0]["lane"] == "provider-a"
+
+
+def test_batch_fetch_resolution_and_queue_time_do_not_consume_fetch_deadline(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clock = [300.0]
+    observed: list[dict[str, object]] = []
+
+    def resolve(query, *, context, **_kwargs):
+        context.request_started_at = 100.0
+        return SimpleNamespace(
+            query=query,
+            provider_hint="test-provider",
+            landing_url=None,
+            doi="10.1000/resolved",
+        )
+
+    def fetch(request, *, context=None, **_kwargs):
+        assert context is not None
+        observed.append(
+            {
+                "query": request.query,
+                "request_started_at": context.request_started_at,
+                "deadline": context.initialize_deadline(120.0),
+                "remaining": context.remaining_seconds(),
+                "session_cache": dict(context.session_cache),
+            }
+        )
+        clock[0] += 200.0
+        return _successful_fetch(request)
+
+    monkeypatch.setattr(runtime_module.time, "monotonic", lambda: clock[0])
+    deps = replace(
+        _deps(fetch),
+        service_resolve_paper=resolve,
+    )
+    result = asyncio.run(
+        batch_fetch_tool_async(
+            **_temporary_kwargs(
+                queries=[
+                    "First generic paper title",
+                    "Second generic paper title",
+                ],
+                concurrency=1,
+                deps=deps,
+            )
+        )
+    )
+
+    assert result.is_error is False
+    assert [item["request_started_at"] for item in observed] == [300.0, 500.0]
+    assert [item["deadline"] for item in observed] == [420.0, 620.0]
+    assert [item["remaining"] for item in observed] == [120.0, 120.0]
+    assert all(item["session_cache"] for item in observed)
 
 
 def test_batch_fetch_cools_lane_after_recovered_rate_limit() -> None:
