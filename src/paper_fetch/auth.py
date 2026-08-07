@@ -110,6 +110,10 @@ AUTH_TARGETS: Mapping[str, AuthTarget] = {
         doi="10.1063/5.0129134",
         url="https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
     ),
+    "tandf": AuthTarget(
+        doi="10.1080/15481603.2026.2667034",
+        url="https://www.tandfonline.com/doi/full/10.1080/15481603.2026.2667034",
+    ),
 }
 
 _LEGACY_AUTH_STORAGE_STATE_ENV_VARS = {

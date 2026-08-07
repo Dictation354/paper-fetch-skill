@@ -68,7 +68,7 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
     def test_atypon_profile_scope_is_catalog_aligned(self) -> None:
         self.assertEqual(
             ATYPON_BROWSER_WORKFLOW_PROVIDER_NAMES,
-            ("science", "pnas", "wiley", "ams", "acs", "iop", "aip"),
+            ("science", "pnas", "wiley", "ams", "acs", "iop", "aip", "tandf"),
         )
         self.assertTrue(
             set(ATYPON_BROWSER_WORKFLOW_PROVIDER_NAMES) <= set(PROVIDER_CATALOG)

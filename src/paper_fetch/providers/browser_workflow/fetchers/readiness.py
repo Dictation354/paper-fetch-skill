@@ -59,6 +59,13 @@ ATYPON_BODY_READY_SELECTORS: Mapping[str, tuple[str, ...]] = {
         ".widget-ArticleFulltext",
         ".article-body",
     ),
+    "tandf": (
+        "#itemFullTextId",
+        "#html_fulltext",
+        ".hlFld-Fulltext",
+        ".articleSection",
+        ".article-body",
+    ),
     "mdpi": (
         ".html-article-content",
         "#article-contents",

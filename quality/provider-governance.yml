@@ -3,6 +3,10 @@ schema_version: 1
 # Every available full-text route family must have a golden replay or an
 # explicit, expiring review waiver. Remove a waiver as soon as its replay lands.
 route_family_waivers:
+  - key: tandf:pdf
+    reviewed_at: 2026-08-06
+    expires_at: 2026-10-31
+    reason: T&F PDF fallback is exercised against the checked-in publisher PDF by provider-local tests, while the one-sample-per-DOI golden manifest records the canonical HTML route rather than a standalone PDF sample.
   - key: aip:pdf
     reviewed_at: 2026-07-28
     expires_at: 2026-10-31
@@ -40,6 +44,10 @@ route_family_waivers:
 # an abstract-only or empty-body replay. These expiring waivers make existing
 # evidence debt explicit instead of silently treating parser unit tests as replay.
 negative_fixture_waivers:
+  - key: tandf:access_block
+    reviewed_at: 2026-08-06
+    expires_at: 2026-10-31
+    reason: T&F abstract, purchase, and Cloudflare rejection boundaries are provider-locally tested, but discovery did not yield a stable authentic block replay distinct from a valid institutionally accessible article.
   - key: acs:access_block
     reviewed_at: 2026-07-28
     expires_at: 2026-10-31

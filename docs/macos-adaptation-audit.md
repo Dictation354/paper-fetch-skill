@@ -231,6 +231,11 @@
   access-boundary marker，而不接受一般 limited 结果；HTTP-200 empty shell 的重试
   会切换到下一个既有 provider URL。这些证据能区分远端 access state 与 runtime
   failure，但不构成原生 macOS 断网启动证明。
+- T&F page-preparation 证据：portable 回归验证 provider hook 在最终 HTML capture
+  前执行，并且只把文章 DOM 暴露的同源官方 CSV table action 或已加载的
+  同页 table payload 有界水合为语义 table；`macos-15` 常规 CI 在原生
+  Camoufox bundle context gate 后重跑该 hook 与两种 T&F 水合节点。它证明平台
+  调用契约一致，不等于真实站点 live access，也不关闭断网 browser-backed fetch 缺口。
 - Hosted 准备边界：常规原生 CI 通过 Camoufox 已支持的 `GITHUB_TOKEN` 环境变量
   传入只读 workflow token，避免匿名 Releases API rate limit；凭据不写入命令、
   cache、diagnostics 或 artifact。Live 验证只保留本地入口，由操作者预置 runtime

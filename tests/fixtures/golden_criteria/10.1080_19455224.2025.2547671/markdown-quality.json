@@ -1,0 +1,15 @@
+{
+  "blocking_issue_count": 0,
+  "doi": "10.1080/19455224.2025.2547671",
+  "issues": [],
+  "markdown_path": "tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/extracted.md",
+  "prompt_path": "tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/markdown-quality-prompt.md",
+  "provider": "tandf",
+  "review_method": "agent_prompt",
+  "reviewed_at": "2026-08-06T12:09:13Z",
+  "reviewed_by": "codex",
+  "sample_id": "10.1080_19455224.2025.2547671",
+  "schema_version": 2,
+  "source_markdown_sha256": "b8170506a19ca8c13f2015edae2ddc28d5ebe5b22f77f0b34aadb1322444550c",
+  "status": "pass"
+}

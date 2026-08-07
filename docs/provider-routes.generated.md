@@ -63,5 +63,8 @@
 | `frontiers` | 0 | `metadata` | `metadata` / `metadata` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `metadata_identity` / `body` |
 | `frontiers` | 1 | `xml` | `xml` / `frontiers_xml` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `structured_xml_body` / `body` |
 | `frontiers` | 2 | `direct_pdf` | `pdf` / `frontiers_pdf` | `available` / `direct` | 120s; c=2; qps=provider; wait=5.0s | `validated_pdf` / `body` |
+| `tandf` | 0 | `metadata` | `metadata` / `metadata` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `metadata_identity` / `body` |
+| `tandf` | 1 | `browser_html` | `html` / `tandf_html` | `available` / `browser-required` | 120s; c=1; qps=provider; wait=5.0s | `provider_html_body` / `body` |
+| `tandf` | 2 | `browser_pdf` | `pdf` / `tandf_pdf` | `available` / `browser-required` | 120s; c=1; qps=provider; wait=5.0s | `validated_pdf` / `body` |
 
 机器可读快照见 [`../quality/provider-catalog.json`](../quality/provider-catalog.json)。

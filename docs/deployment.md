@@ -10,7 +10,7 @@
 这份文档不解决：
 
 - provider 差异、路由规则和限速语义
-- Wiley / Science / PNAS / AMS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI 的浏览器运行时细节
+- Wiley / Science / PNAS / AMS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI / Taylor & Francis Online 的浏览器运行时细节
 - 架构实现细节
 
 provider 运行时细节见 [`providers.md`](providers.md)，架构说明见 [`architecture/overview.md`](architecture/overview.md)。安装 skill 内部的自包含环境/离线 wrapper 说明见 [`environment.md`](../skills/paper-fetch-skill/references/environment.md)，正常 CLI 主路径见 [`cli-workflow.md`](../skills/paper-fetch-skill/references/cli-workflow.md)；这些 reference 不依赖安装包外的仓库 `docs/`。Mac 适配差异、维护流程和跨平台证据边界另见 [`macos-adaptation-changes.md`](macos-adaptation-changes.md) 与 [`macos-adaptation-audit.md`](macos-adaptation-audit.md)。
@@ -425,7 +425,7 @@ scripts/clean-local-artifacts.sh --days 7
 
 `ieee` 不需要 IEEE API key；它走 `direct landing -> selected-browser landing recovery -> direct REST HTML -> selected-browser HTML -> direct HTTP PDF -> selected-browser PDF`。preflight、browser landing、正式 HTML 和资产 seed 都允许页面在最长 15 秒内从初始 HTTP 202/shell 转成文章页，且只有包含当前文章号的 `#article` 才算 ready；单独观察到 REST resource 或其它文章 DOM 不会提前放行。正文 figure/table/formula、multimedia discovery 和 supplementary file 同样 direct-first，只在 `401/403`、HTML challenge 或网络失败时使用所选浏览器；`404/410/429` 不启动浏览器。资产 browser recovery 会让图片和附件 fetcher 串行复用同一篇已就绪论文页的 context/page、最新 cookies 和论文页 Referer，并保持共享 page 不跳转到资产 URL。首次 large 图片恢复会先在同页加载一次对应 preview，再立即请求 large；后续资产复用该预热页，large 最终失败时才把缓存 preview 作为 fallback。公开资产可通过 `browser_backend`、`final_fetcher` 和 `recovery_attempts` 审计 direct/browser/preview 恢复过程。持续存在的 AWS WAF 页报告 `reason_code=aws_waf_challenge`、`status=challenge` 和 provider/legacy 兼容诊断；该链路不自动登录、不处理验证码，也不绕过访问权限。
 
-`wiley`、`science`、`pnas`、`ams`、`annualreviews`、`royalsocietypublishing`、`acs`、`iop`、`aip`、`mdpi` 进入 provider-owned Camoufox browser workflow。完整配置与 headed 预检见 [`browser-backends.md`](browser-backends.md)。是否能拿到全文仍取决于 publisher 访问权限、paywall/challenge 与远端站点行为。
+`wiley`、`science`、`pnas`、`ams`、`annualreviews`、`royalsocietypublishing`、`acs`、`iop`、`aip`、`mdpi`、`tandf` 进入 provider-owned Camoufox browser workflow。完整配置与 headed 预检见 [`browser-backends.md`](browser-backends.md)。是否能拿到全文仍取决于 publisher 访问权限、paywall/challenge 与远端站点行为。
 
 自动过盾失败时，可打开对应 provider 的 headed browser 手动登录/验证：
 
@@ -434,7 +434,7 @@ paper-fetch auth <provider>
 paper-fetch auth wiley --url "https://onlinelibrary.wiley.com/doi/full/10.1111/example"
 ```
 
-`provider` 来自 browser runtime catalog，例如 `wiley` / `science` / `pnas` / `ams` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip`。未传 `--url` 时打开内置样例文章；传入 `--url` 时打开具体失败文章页。命令强制 headed 模式，打印所选后端的 profile 和 storage-state 路径，终端按 Enter 后保存过滤后的本地 storage-state 并退出，不写 `.env`。AMS 无状态抓取仍会启动浏览器；只有静默 AWS WAF 验证失败时，才需要 `paper-fetch auth ams` 保存人工验证状态。
+`provider` 来自 browser runtime catalog，例如 `wiley` / `science` / `pnas` / `ams` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip` / `tandf`。未传 `--url` 时打开内置样例文章；传入 `--url` 时打开具体失败文章页。命令强制 headed 模式，打印所选后端的 profile 和 storage-state 路径，终端按 Enter 后保存过滤后的本地 storage-state 并退出，不写 `.env`。AMS 无状态抓取仍会启动浏览器；只有静默 AWS WAF 验证失败时，才需要 `paper-fetch auth ams` 保存人工验证状态。
 
 这些浏览器 HTML route 会在 challenge/paywall 判定前先等待正文 DOM 稳定；如果正文已经可抽取，页面残留的 Cloudflare/challenge 文案不会提前中断 HTML route，最终全文/摘要/降级结论仍由 Markdown 抽取后的 availability 判定负责。
 
@@ -458,13 +458,13 @@ custom executable 布局的自行维护 runtime。
 
 补充：
 
-- `wiley` / `science` / `pnas` / `ams` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip` 需要本地 Camoufox runtime，并参与 `paper-fetch auth` / `browser-preflight`
+- `wiley` / `science` / `pnas` / `ams` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip` / `tandf` 需要本地 Camoufox runtime，并参与 `paper-fetch auth` / `browser-preflight`
 - `paper-fetch auth <provider>` 是自动过盾失败后的人工 headed fallback；storage-state 只保存本机辅助状态，不绕过权限，也不作为正常抓取的必要条件
 - `elsevier` 只需要 `ELSEVIER_API_KEY`
 - `ieee` 不需要额外 env；普通 fetch 在无授权或 REST/browser/PDF route 返回非全文时会降级到 provider abstract-only / metadata-only；golden criteria live review 面向具备合法 IEEE Xplore 授权上下文的机器，IEEE 样本预期为 fulltext，降级会作为 blocked live fetch 暴露；配置了 `download_dir` 且 artifact mode 为 `all` 时 PDF fallback 的最后一个非 PDF HTML 会保存在 `ieee_pdf_fallback/pdf.failure.html`
 - `arxiv` 不需要额外 env；路径细节见 [`providers.md` 的 arXiv 小节](providers.md#arxiv)。
 - 如果只想启用 `wiley` 的官方 TDM API PDF lane，可以只配置 `WILEY_TDM_CLIENT_TOKEN`；这不会启用 HTML 资产下载或 seeded-browser PDF/ePDF fallback
-- `wiley` / `science` / `pnas` / `ams` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip` 的 browser workflow 顺序见 [`providers.md`](providers.md#wiley-science-pnas-browser-workflow)。
+- `wiley` / `science` / `pnas` / `ams` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip` / `tandf` 的 browser workflow 顺序见 [`providers.md`](providers.md#wiley-science-pnas-browser-workflow)。
 
 ## 5. 部署到 Codex
 

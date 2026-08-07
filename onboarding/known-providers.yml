@@ -75,3 +75,7 @@ providers:
     display_source: frontiers_xml
     status: implemented
     manifest_path: onboarding/manifests/frontiers.yml
+  - name: tandf
+    display_source: tandf_html
+    status: implemented
+    manifest_path: onboarding/manifests/tandf.yml

@@ -73,6 +73,7 @@ class PublisherProfile:
     extract_asset_html_scopes: Callable[..., tuple[str, str]] | None = None
     scoped_asset_extractor: Callable[..., list[dict[str, Any]]] | None = None
     is_front_matter_teaser_figure: Callable[..., bool] | None = None
+    prepare_browser_page: Callable[..., Mapping[str, Any] | None] | None = None
 
 
 ATYPON_BROWSER_WORKFLOW_PROVIDER_NAMES = (
@@ -83,6 +84,7 @@ ATYPON_BROWSER_WORKFLOW_PROVIDER_NAMES = (
     "acs",
     "iop",
     "aip",
+    "tandf",
 )
 
 
@@ -190,6 +192,7 @@ def publisher_profile(publisher: str | None) -> PublisherProfile:
         is_front_matter_teaser_figure=getattr(
             module, "is_front_matter_teaser_figure", None
         ),
+        prepare_browser_page=getattr(module, "prepare_browser_page", None),
     )
 
 

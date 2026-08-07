@@ -23,6 +23,7 @@ _EXPORTS: dict[str, tuple[str, str]] = {
     "PlosClient": (".plos", "PlosClient"),
     "ScienceClient": (".science", "ScienceClient"),
     "SpringerClient": (".springer", "SpringerClient"),
+    "TandfClient": (".tandf", "TandfClient"),
     "WileyClient": (".wiley", "WileyClient"),
     "build_elsevier_object_url": (".elsevier", "build_elsevier_object_url"),
     "download_elsevier_related_assets": (
@@ -58,6 +59,7 @@ _BUILTIN_PROVIDER_ENTRY_MODULES = (
     ".royalsocietypublishing",
     ".science",
     ".springer",
+    ".tandf",
     ".wiley",
 )
 _BUILTIN_PROVIDER_ENTRY_NAMES = {

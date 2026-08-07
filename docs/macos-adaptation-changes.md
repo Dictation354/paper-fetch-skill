@@ -236,6 +236,15 @@ CLI 和 MCP 批量入口会在预解析阶段复用 item-local context 缓存规
 fetch worker 取得执行槽时才重新开始该条目的 request deadline；全批解析和 provider
 lane 排队不会再把 browser route 的预算提前耗尽。该重置不改变单篇内部 HTML、
 browser、PDF 与 fallback 共享 deadline 的语义。
+Taylor & Francis 的动态 table 复用同一正文稳定门：浏览器运行时在最终
+`page.content()` 前调用 provider page-preparation hook。该 hook 只能读取当前文章
+DOM 中明确给出的同源 `/action/downloadTable` CSV action，或页面已加载且不产生
+新请求的 `tandf.tfviewerdata.tables` 同页 payload；CSV 路线继承现有 browser
+context，两种路线均受超时、table 数、row/column 和 payload 字符上限约束；成功后注入语义
+table，失败只记录脱敏 trace，不改变访问状态，也不跨站或绕过登录、challenge、
+CAPTCHA、付费墙。portable 单测同时锁定 hook 的调用时序与 T&F CSV 水合；常规
+`macos-15` CI 在已准备的 Camoufox 原生 bundle 验证后重跑 hook、CSV 和同页 payload
+三个 contract node。
 这些是 Windows/WSL 可执行的 portable 行为证据，不替代原生 macOS app bundle 启动门。
 常规 CI 的 pinned 原生 runtime 在调用 Camoufox CLI 时传入 GitHub workflow
 自带的只读 `github.token`；Camoufox 复用其原生 `GITHUB_TOKEN` 支持访问 Releases

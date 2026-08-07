@@ -17,6 +17,7 @@ from paper_fetch.providers import elsevier as elsevier_provider
 from paper_fetch.providers import pnas as pnas_provider
 from paper_fetch.providers import science as science_provider
 from paper_fetch.providers import springer as springer_provider
+from paper_fetch.providers import tandf as tandf_provider
 from paper_fetch.providers import wiley as wiley_provider
 from paper_fetch.providers.atypon_browser_workflow import (
     extract_atypon_browser_workflow_markdown,
@@ -262,12 +263,15 @@ class RegressionSampleTests(unittest.TestCase):
                 "first_body_heading": "",
             },
             "tandf": {
-                "builder": lambda: self._build_shared_bilingual_fixture_article(
-                    fixture_name="golden_criteria/10.1080_19455224.2025.2547671/bilingual.html",
-                    landing_url="https://www.tandfonline.com/doi/full/10.1080/19455224.2025.2547671",
-                ),
-                "abstract_headings": ["Abstract", "Resumen"],
-                "first_body_heading": "",
+                "builder": self._build_tandf_bilingual_fixture_article,
+                "abstract_headings": [
+                    "Abstract",
+                    "Resumen",
+                    "الملخص",
+                    "Resumo",
+                    "摘要",
+                ],
+                "first_body_heading": "Introduction",
             },
         }
 
@@ -316,6 +320,41 @@ class RegressionSampleTests(unittest.TestCase):
         return wiley_provider.WileyClient(HttpTransport(), {}).to_article_model(
             metadata, raw_payload
         )
+
+    def _build_tandf_bilingual_fixture_article(self):
+        fixture_name = "golden_criteria/10.1080_19455224.2025.2547671/original.html"
+        doi = "10.1080/19455224.2025.2547671"
+        landing_url = f"https://www.tandfonline.com/doi/full/{doi}"
+        metadata = {
+            "doi": doi,
+            "title": "The affective turn and the management of conservation",
+            "landing_page_url": landing_url,
+        }
+        html = read_fixture_text(fixture_name)
+        client = tandf_provider.TandfClient(HttpTransport(), {})
+        markdown, info = client.extract_markdown(
+            html,
+            landing_url,
+            metadata=metadata,
+        )
+        raw_payload = RawFulltextPayload(
+            provider="tandf",
+            source_url=landing_url,
+            content_type="text/html",
+            body=html.encode("utf-8"),
+            content=ProviderContent(
+                route_kind="html",
+                source_url=landing_url,
+                content_type="text/html",
+                body=html.encode("utf-8"),
+                markdown_text=markdown,
+                merged_metadata=dict(metadata),
+                diagnostics={"extraction": info},
+            ),
+            trace=trace_from_markers(["fulltext:tandf_html_ok"]),
+            merged_metadata=metadata,
+        )
+        return client.to_article_model(metadata, raw_payload)
 
     def _build_springer_bilingual_fixture_article(self):
         return build_shared_html_fixture_article(

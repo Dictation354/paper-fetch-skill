@@ -42,6 +42,8 @@ SourceKind = Literal[
     "iop_pdf",
     "aip_html",
     "aip_pdf",
+    "tandf_html",
+    "tandf_pdf",
     "crossref_meta",
 ]
 

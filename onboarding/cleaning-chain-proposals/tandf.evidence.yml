@@ -1,0 +1,3936 @@
+schema_version: 1
+provider: tandf
+manifest: onboarding/manifests/tandf.yml
+artifact: onboarding/cleaning-chain-proposals/tandf.yml
+evidence_artifact: onboarding/cleaning-chain-proposals/tandf.evidence.yml
+fixtures_digest:
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  raw_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  sha256: 94d3d5902be4edc8071d9bf9755a77fb86a04bef5251cc36c4ca78d6b9855a10
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  raw_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  sha256: 2ed800df40eaf89b7344b1472ff132ea76b1db3e1d211e2a0cc9d0f4e756ea49
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  raw_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  sha256: 6c484caa7a8bbdebdb1230396c340c1215fe66edb1f4634ee42072b21e398801
+- purpose: figure
+  doi: 10.1080/15481603.2026.2667034
+  raw_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  sha256: 94d3d5902be4edc8071d9bf9755a77fb86a04bef5251cc36c4ca78d6b9855a10
+- purpose: supplementary
+  doi: 10.1080/15481603.2026.2667034
+  raw_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  sha256: 94d3d5902be4edc8071d9bf9755a77fb86a04bef5251cc36c4ca78d6b9855a10
+- purpose: references
+  doi: 10.1080/15481603.2026.2667034
+  raw_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  sha256: 94d3d5902be4edc8071d9bf9755a77fb86a04bef5251cc36c4ca78d6b9855a10
+- purpose: pdf_fallback
+  doi: 10.1080/15481603.2026.2667034
+  raw_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  sha256: 94d3d5902be4edc8071d9bf9755a77fb86a04bef5251cc36c4ca78d6b9855a10
+- purpose: structure
+  doi: 10.1080/19455224.2025.2547671
+  raw_path: tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/original.html
+  sha256: f54d913afe1e60a8f2a8fa4ff2bb1b820379648849e56fe66dd68b55d662c961
+raw_fixture_inventory:
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  sample_id: 10.1080_15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034
+  raw_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  content_type: text/html;charset=UTF-8
+  fixture_family: golden
+  extra_fixture: false
+  status: ok
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  sample_id: 10.1080_10942912.2019.1597882
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882
+  raw_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  content_type: text/html;charset=UTF-8
+  fixture_family: golden
+  extra_fixture: false
+  status: ok
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  sample_id: 10.1080_08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110
+  raw_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  content_type: text/html;charset=UTF-8
+  fixture_family: golden
+  extra_fixture: false
+  status: ok
+- purpose: figure
+  doi: 10.1080/15481603.2026.2667034
+  sample_id: 10.1080_15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034
+  raw_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  content_type: text/html;charset=UTF-8
+  fixture_family: golden
+  extra_fixture: false
+  status: ok
+- purpose: supplementary
+  doi: 10.1080/15481603.2026.2667034
+  sample_id: 10.1080_15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034
+  raw_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  content_type: text/html;charset=UTF-8
+  fixture_family: golden
+  extra_fixture: false
+  status: ok
+- purpose: references
+  doi: 10.1080/15481603.2026.2667034
+  sample_id: 10.1080_15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034
+  raw_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  content_type: text/html;charset=UTF-8
+  fixture_family: golden
+  extra_fixture: false
+  status: ok
+- purpose: pdf_fallback
+  doi: 10.1080/15481603.2026.2667034
+  sample_id: 10.1080_15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034
+  raw_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  content_type: text/html;charset=UTF-8
+  fixture_family: golden
+  extra_fixture: false
+  status: ok
+- purpose: structure
+  doi: 10.1080/19455224.2025.2547671
+  sample_id: 10.1080_19455224.2025.2547671
+  fixture_path: tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671
+  raw_path: tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/original.html
+  content_type: text/html;charset=UTF-8
+  fixture_family: golden
+  extra_fixture: true
+  status: ok
+skipped_cleaning_inventory: []
+raw_baselines:
+  structure:10.1080/15481603.2026.2667034:
+    purpose: structure
+    doi: 10.1080/15481603.2026.2667034
+    raw_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    raw_text_chars: 143696
+    raw_line_count: 1911
+    markdown_source: tests.golden_corpus:provider_adapter_production_chain
+    markdown_chars: 116260
+    markdown_heading_count: 32
+  table:10.1080/10942912.2019.1597882:
+    purpose: table
+    doi: 10.1080/10942912.2019.1597882
+    raw_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    raw_text_chars: 50908
+    raw_line_count: 1448
+    markdown_source: tests.golden_corpus:provider_adapter_production_chain
+    markdown_chars: 39274
+    markdown_heading_count: 11
+  formula:10.1080/08839514.2024.2375110:
+    purpose: formula
+    doi: 10.1080/08839514.2024.2375110
+    raw_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+    raw_text_chars: 79595
+    raw_line_count: 7364
+    markdown_source: tests.golden_corpus:provider_adapter_production_chain
+    markdown_chars: 87272
+    markdown_heading_count: 18
+  figure:10.1080/15481603.2026.2667034:
+    purpose: figure
+    doi: 10.1080/15481603.2026.2667034
+    raw_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    raw_text_chars: 143696
+    raw_line_count: 1911
+    markdown_source: tests.golden_corpus:provider_adapter_production_chain
+    markdown_chars: 116260
+    markdown_heading_count: 32
+  supplementary:10.1080/15481603.2026.2667034:
+    purpose: supplementary
+    doi: 10.1080/15481603.2026.2667034
+    raw_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    raw_text_chars: 143696
+    raw_line_count: 1911
+    markdown_source: tests.golden_corpus:provider_adapter_production_chain
+    markdown_chars: 116260
+    markdown_heading_count: 32
+  references:10.1080/15481603.2026.2667034:
+    purpose: references
+    doi: 10.1080/15481603.2026.2667034
+    raw_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    raw_text_chars: 143696
+    raw_line_count: 1911
+    markdown_source: tests.golden_corpus:provider_adapter_production_chain
+    markdown_chars: 116260
+    markdown_heading_count: 32
+  pdf_fallback:10.1080/15481603.2026.2667034:
+    purpose: pdf_fallback
+    doi: 10.1080/15481603.2026.2667034
+    raw_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    raw_text_chars: 143696
+    raw_line_count: 1911
+    markdown_source: tests.golden_corpus:provider_adapter_production_chain
+    markdown_chars: 116260
+    markdown_heading_count: 32
+  structure:10.1080/19455224.2025.2547671:
+    purpose: structure
+    doi: 10.1080/19455224.2025.2547671
+    raw_path: tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/original.html
+    raw_text_chars: 69411
+    raw_line_count: 904
+    markdown_source: tests.golden_corpus:provider_adapter_production_chain
+    markdown_chars: 62025
+    markdown_heading_count: 15
+repeated_boilerplate_candidates:
+- token: Citation
+  occurrences: 762
+  fixture_count: 4
+  purposes:
+  - figure
+  - formula
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  - table
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2183
+    text: Citation
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2186
+    text: Citation
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2189
+    text: Citation
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2192
+    text: Citation
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2195
+    text: Citation
+  appears_in_markdown_baseline: false
+- token: Citation & abstract
+  occurrences: 8
+  fixture_count: 4
+  purposes:
+  - figure
+  - formula
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  - table
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 4185
+    text: Citation & abstract
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    purpose: table
+    line: 3673
+    text: Citation & abstract
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+    purpose: formula
+    line: 9614
+    text: Citation & abstract
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 4185
+    text: Citation & abstract
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 4185
+    text: Citation & abstract
+  appears_in_markdown_baseline: false
+- token: Citation & references
+  occurrences: 8
+  fixture_count: 4
+  purposes:
+  - figure
+  - formula
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  - table
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 4188
+    text: Citation & references
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    purpose: table
+    line: 3676
+    text: Citation & references
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+    purpose: formula
+    line: 9617
+    text: Citation & references
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 4188
+    text: Citation & references
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 4188
+    text: Citation & references
+  appears_in_markdown_baseline: false
+- token: Citation copied to clipboard
+  occurrences: 8
+  fixture_count: 4
+  purposes:
+  - figure
+  - formula
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  - table
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 4132
+    text: Citation copied to clipboard
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    purpose: table
+    line: 3620
+    text: Citation copied to clipboard
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+    purpose: formula
+    line: 9561
+    text: Citation copied to clipboard
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 4132
+    text: Citation copied to clipboard
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 4132
+    text: Citation copied to clipboard
+  appears_in_markdown_baseline: false
+- token: Citations
+  occurrences: 8
+  fixture_count: 4
+  purposes:
+  - figure
+  - formula
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  - table
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2082
+    text: Citations
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    purpose: table
+    line: 2002
+    text: Citations
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+    purpose: formula
+    line: 2004
+    text: Citations
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 2082
+    text: Citations
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 2082
+    text: Citations
+  appears_in_markdown_baseline: false
+- token: Copy citation to clipboard
+  occurrences: 8
+  fixture_count: 4
+  purposes:
+  - figure
+  - formula
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  - table
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 4138
+    text: Copy citation to clipboard
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    purpose: table
+    line: 3626
+    text: Copy citation to clipboard
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+    purpose: formula
+    line: 9567
+    text: Copy citation to clipboard
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 4138
+    text: Copy citation to clipboard
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 4138
+    text: Copy citation to clipboard
+  appears_in_markdown_baseline: false
+- token: CrossRef citations to date
+  occurrences: 8
+  fixture_count: 4
+  purposes:
+  - figure
+  - formula
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  - table
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 1693
+    text: CrossRef citations to date
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    purpose: table
+    line: 1693
+    text: CrossRef citations to date
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+    purpose: formula
+    line: 1677
+    text: CrossRef citations to date
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 1693
+    text: CrossRef citations to date
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 1693
+    text: CrossRef citations to date
+  appears_in_markdown_baseline: false
+- token: Download PDF
+  occurrences: 8
+  fixture_count: 4
+  purposes:
+  - figure
+  - formula
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  - table
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 3708
+    text: Download PDF
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    purpose: table
+    line: 3249
+    text: Download PDF
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+    purpose: formula
+    line: 9167
+    text: Download PDF
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 3708
+    text: Download PDF
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 3708
+    text: Download PDF
+  appears_in_markdown_baseline: false
+- token: Download a citation file in RIS format that can be imported by citation management
+    software including
+  occurrences: 8
+  fixture_count: 4
+  purposes:
+  - figure
+  - formula
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  - table
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 4156
+    text: Download a citation file in RIS format that can be imported by citation
+      management software including
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    purpose: table
+    line: 3644
+    text: Download a citation file in RIS format that can be imported by citation
+      management software including
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+    purpose: formula
+    line: 9585
+    text: Download a citation file in RIS format that can be imported by citation
+      management software including
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 4156
+    text: Download a citation file in RIS format that can be imported by citation
+      management software including
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 4156
+    text: Download a citation file in RIS format that can be imported by citation
+      management software including
+  appears_in_markdown_baseline: false
+- token: Download citation
+  occurrences: 8
+  fixture_count: 4
+  purposes:
+  - figure
+  - formula
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  - table
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 4153
+    text: Download citation
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    purpose: table
+    line: 3641
+    text: Download citation
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+    purpose: formula
+    line: 9582
+    text: Download citation
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 4153
+    text: Download citation
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 4153
+    text: Download citation
+  appears_in_markdown_baseline: false
+- token: Download citations
+  occurrences: 8
+  fixture_count: 4
+  purposes:
+  - figure
+  - formula
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  - table
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 4200
+    text: Download citations
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    purpose: table
+    line: 3688
+    text: Download citations
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+    purpose: formula
+    line: 9629
+    text: Download citations
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 4200
+    text: Download citations
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 4200
+    text: Download citations
+  appears_in_markdown_baseline: false
+- token: Metrics
+  occurrences: 8
+  fixture_count: 4
+  purposes:
+  - figure
+  - formula
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  - table
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2093
+    text: Metrics
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    purpose: table
+    line: 2013
+    text: Metrics
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+    purpose: formula
+    line: 2015
+    text: Metrics
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 2093
+    text: Metrics
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 2093
+    text: Metrics
+  appears_in_markdown_baseline: true
+- token: Related research
+  occurrences: 16
+  fixture_count: 4
+  purposes:
+  - figure
+  - formula
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  - table
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 1965
+    text: Related research
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 3853
+    text: Related research
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    purpose: table
+    line: 1900
+    text: Related research
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    purpose: table
+    line: 3408
+    text: Related research
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+    purpose: formula
+    line: 1891
+    text: Related research
+  appears_in_markdown_baseline: false
+- token: Share
+  occurrences: 8
+  fixture_count: 4
+  purposes:
+  - figure
+  - formula
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  - table
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 3765
+    text: Share
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    purpose: table
+    line: 3306
+    text: Share
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+    purpose: formula
+    line: 9224
+    text: Share
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 3765
+    text: Share
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 3765
+    text: Share
+  appears_in_markdown_baseline: true
+- token: Your download is now in progress and you may close this window
+  occurrences: 8
+  fixture_count: 4
+  purposes:
+  - figure
+  - formula
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  - table
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 4230
+    text: Your download is now in progress and you may close this window
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    purpose: table
+    line: 3718
+    text: Your download is now in progress and you may close this window
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+    purpose: formula
+    line: 9659
+    text: Your download is now in progress and you may close this window
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 4230
+    text: Your download is now in progress and you may close this window
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 4230
+    text: Your download is now in progress and you may close this window
+  appears_in_markdown_baseline: false
+- token: lists all citing articles based on Crossref citations.
+  occurrences: 8
+  fixture_count: 4
+  purposes:
+  - figure
+  - formula
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  - table
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 3867
+    text: lists all citing articles based on Crossref citations.
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    purpose: table
+    line: 3422
+    text: lists all citing articles based on Crossref citations.
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+    purpose: formula
+    line: 9296
+    text: lists all citing articles based on Crossref citations.
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 3867
+    text: lists all citing articles based on Crossref citations.
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 3867
+    text: lists all citing articles based on Crossref citations.
+  appears_in_markdown_baseline: false
+- token: Download CSV
+  occurrences: 16
+  fixture_count: 3
+  purposes:
+  - figure
+  - formula
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  - table
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2371
+    text: Download CSV
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2514
+    text: Download CSV
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    purpose: table
+    line: 2248
+    text: Download CSV
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    purpose: table
+    line: 2290
+    text: Download CSV
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+    purpose: table
+    line: 2341
+    text: Download CSV
+  appears_in_markdown_baseline: false
+- token: Google Scholar
+  occurrences: 634
+  fixture_count: 3
+  purposes:
+  - figure
+  - formula
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  - table
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2874
+    text: Google Scholar
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2884
+    text: Google Scholar
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2891
+    text: Google Scholar
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2901
+    text: Google Scholar
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2908
+    text: Google Scholar
+  appears_in_markdown_baseline: false
+- token: . https://doi.org/10.6084/m9.figshare.30879479.v2.
+  occurrences: 5
+  fixture_count: 1
+  purposes:
+  - figure
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 3377
+    text: . https://doi.org/10.6084/m9.figshare.30879479.v2.
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 3377
+    text: . https://doi.org/10.6084/m9.figshare.30879479.v2.
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 3377
+    text: . https://doi.org/10.6084/m9.figshare.30879479.v2.
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: references
+    line: 3377
+    text: . https://doi.org/10.6084/m9.figshare.30879479.v2.
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: pdf_fallback
+    line: 3377
+    text: . https://doi.org/10.6084/m9.figshare.30879479.v2.
+  appears_in_markdown_baseline: true
+- token: 3.2 Temperatures and heat-related mortality numbers and rates
+  occurrences: 5
+  fixture_count: 1
+  purposes:
+  - figure
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2458
+    text: 3.2 Temperatures and heat-related mortality numbers and rates
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 2458
+    text: 3.2 Temperatures and heat-related mortality numbers and rates
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 2458
+    text: 3.2 Temperatures and heat-related mortality numbers and rates
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: references
+    line: 2458
+    text: 3.2 Temperatures and heat-related mortality numbers and rates
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: pdf_fallback
+    line: 2458
+    text: 3.2 Temperatures and heat-related mortality numbers and rates
+  appears_in_markdown_baseline: true
+- token: 3.3 The impact of cumulative heat effect on heat-related mortality
+  occurrences: 5
+  fixture_count: 1
+  purposes:
+  - figure
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2475
+    text: 3.3 The impact of cumulative heat effect on heat-related mortality
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 2475
+    text: 3.3 The impact of cumulative heat effect on heat-related mortality
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 2475
+    text: 3.3 The impact of cumulative heat effect on heat-related mortality
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: references
+    line: 2475
+    text: 3.3 The impact of cumulative heat effect on heat-related mortality
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: pdf_fallback
+    line: 2475
+    text: 3.3 The impact of cumulative heat effect on heat-related mortality
+  appears_in_markdown_baseline: true
+- token: Cumulative heat effects impact heat-related mortality for an average of four
+    weeks.
+  occurrences: 5
+  fixture_count: 1
+  purposes:
+  - figure
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2170
+    text: Cumulative heat effects impact heat-related mortality for an average of
+      four weeks.
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 2170
+    text: Cumulative heat effects impact heat-related mortality for an average of
+      four weeks.
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 2170
+    text: Cumulative heat effects impact heat-related mortality for an average of
+      four weeks.
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: references
+    line: 2170
+    text: Cumulative heat effects impact heat-related mortality for an average of
+      four weeks.
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: pdf_fallback
+    line: 2170
+    text: Cumulative heat effects impact heat-related mortality for an average of
+      four weeks.
+  appears_in_markdown_baseline: false
+- token: Download MS Word (16.4 MB)
+  occurrences: 5
+  fixture_count: 1
+  purposes:
+  - figure
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2850
+    text: Download MS Word (16.4 MB)
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 2850
+    text: Download MS Word (16.4 MB)
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 2850
+    text: Download MS Word (16.4 MB)
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: references
+    line: 2850
+    text: Download MS Word (16.4 MB)
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: pdf_fallback
+    line: 2850
+    text: Download MS Word (16.4 MB)
+  appears_in_markdown_baseline: false
+- token: 'Full article: Quantifying cumulative heat effects on heat-related mortality
+    using MODIS land surface temperature data'
+  occurrences: 5
+  fixture_count: 1
+  purposes:
+  - figure
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 3
+    text: 'Full article: Quantifying cumulative heat effects on heat-related mortality
+      using MODIS land surface temperature data'
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 3
+    text: 'Full article: Quantifying cumulative heat effects on heat-related mortality
+      using MODIS land surface temperature data'
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 3
+    text: 'Full article: Quantifying cumulative heat effects on heat-related mortality
+      using MODIS land surface temperature data'
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: references
+    line: 3
+    text: 'Full article: Quantifying cumulative heat effects on heat-related mortality
+      using MODIS land surface temperature data'
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: pdf_fallback
+    line: 3
+    text: 'Full article: Quantifying cumulative heat effects on heat-related mortality
+      using MODIS land surface temperature data'
+  appears_in_markdown_baseline: false
+- token: "Gao, Y., L. Lin, P. Yin, H. Kan, R. Chen, and M. Zhou. 2024. \u201CHeat\
+    \ Exposure and Dementia-Related Mortality in China.\u201D"
+  occurrences: 5
+  fixture_count: 1
+  purposes:
+  - figure
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 3056
+    text: "Gao, Y., L. Lin, P. Yin, H. Kan, R. Chen, and M. Zhou. 2024. \u201CHeat\
+      \ Exposure and Dementia-Related Mortality in China.\u201D"
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 3056
+    text: "Gao, Y., L. Lin, P. Yin, H. Kan, R. Chen, and M. Zhou. 2024. \u201CHeat\
+      \ Exposure and Dementia-Related Mortality in China.\u201D"
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 3056
+    text: "Gao, Y., L. Lin, P. Yin, H. Kan, R. Chen, and M. Zhou. 2024. \u201CHeat\
+      \ Exposure and Dementia-Related Mortality in China.\u201D"
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: references
+    line: 3056
+    text: "Gao, Y., L. Lin, P. Yin, H. Kan, R. Chen, and M. Zhou. 2024. \u201CHeat\
+      \ Exposure and Dementia-Related Mortality in China.\u201D"
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: pdf_fallback
+    line: 3056
+    text: "Gao, Y., L. Lin, P. Yin, H. Kan, R. Chen, and M. Zhou. 2024. \u201CHeat\
+      \ Exposure and Dementia-Related Mortality in China.\u201D"
+  appears_in_markdown_baseline: true
+- token: Heat-related mortality
+  occurrences: 5
+  fixture_count: 1
+  purposes:
+  - figure
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2176
+    text: Heat-related mortality
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 2176
+    text: Heat-related mortality
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 2176
+    text: Heat-related mortality
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: references
+    line: 2176
+    text: Heat-related mortality
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: pdf_fallback
+    line: 2176
+    text: Heat-related mortality
+  appears_in_markdown_baseline: true
+- token: Previous week's temperatures contribute up to 70% to current heat-related
+    mortality.
+  occurrences: 5
+  fixture_count: 1
+  purposes:
+  - figure
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 2172
+    text: Previous week's temperatures contribute up to 70% to current heat-related
+      mortality.
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 2172
+    text: Previous week's temperatures contribute up to 70% to current heat-related
+      mortality.
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 2172
+    text: Previous week's temperatures contribute up to 70% to current heat-related
+      mortality.
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: references
+    line: 2172
+    text: Previous week's temperatures contribute up to 70% to current heat-related
+      mortality.
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: pdf_fallback
+    line: 2172
+    text: Previous week's temperatures contribute up to 70% to current heat-related
+      mortality.
+  appears_in_markdown_baseline: false
+- token: Quantifying cumulative heat effects on heat-related mortality using MODIS
+    land surface temperature data
+  occurrences: 5
+  fixture_count: 1
+  purposes:
+  - figure
+  - pdf_fallback
+  - references
+  - structure
+  - supplementary
+  provenance:
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: structure
+    line: 1757
+    text: Quantifying cumulative heat effects on heat-related mortality using MODIS
+      land surface temperature data
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: figure
+    line: 1757
+    text: Quantifying cumulative heat effects on heat-related mortality using MODIS
+      land surface temperature data
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: supplementary
+    line: 1757
+    text: Quantifying cumulative heat effects on heat-related mortality using MODIS
+      land surface temperature data
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: references
+    line: 1757
+    text: Quantifying cumulative heat effects on heat-related mortality using MODIS
+      land surface temperature data
+  - fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+    purpose: pdf_fallback
+    line: 1757
+    text: Quantifying cumulative heat effects on heat-related mortality using MODIS
+      land surface temperature data
+  appears_in_markdown_baseline: true
+selector_candidates:
+- selector: div.modal-overlay.fade-and-pop.modal-open
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#pb-page-content > div > div#a4d4fdd3-c594-4d68-9f06-b69b8b37ed56.widget.pageHeader
+    > div.wrapped > div.widget-body.body > div.modal-overlay.fade-and-pop
+  sample_text: ''
+- selector: div.col-md-1-1.top-nav-resp
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#00d6f1bb-2b57-4858-a0da-0ad54a8ec65b.widget.responsive-layout > div.wrapped
+    > div.widget-body.body > div.container-fluid > div.row.row-md > div.col-md-1-1.top-nav-resp
+  sample_text: 'Journals Close Journals Menu Browse all
+
+    journals Browse
+
+    all journals A-Z Open
+
+    access journals Open
+
+    Select (hybrid) journals Browse all books Explore Taylor &
+
+    Fr'
+- selector: div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.widget-body.body > div.container-fluid > div.row.row-md > div.col-md-1-1.top-nav-resp
+    > div.contents > div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html
+  sample_text: 'Journals Close Journals Menu Browse all
+
+    journals Browse
+
+    all journals A-Z Open
+
+    access journals Open
+
+    Select (hybrid) journals Browse all books Explore Taylor &
+
+    Fr'
+- selector: ul.top-navigation
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.col-md-1-1.top-nav-resp > div.contents > div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html
+    > div.wrapped > div.widget-body.body > ul.top-navigation
+  sample_text: 'Journals Close Journals Menu Browse all
+
+    journals Browse
+
+    all journals A-Z Open
+
+    access journals Open
+
+    Select (hybrid) journals Browse all books Explore Taylor &
+
+    Fr'
+- selector: li.top-navigation-list
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.contents > div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html
+    > div.wrapped > div.widget-body.body > ul.top-navigation > li.top-navigation-list
+  sample_text: 'Journals Close Journals Menu Browse all
+
+    journals Browse
+
+    all journals A-Z Open
+
+    access journals Open
+
+    Select (hybrid) journals Browse all books Explore Taylor &
+
+    Fr'
+- selector: button.journals--item__dropdown.topnav-journals-button.topnav-browse-button
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html > div.wrapped
+    > div.widget-body.body > ul.top-navigation > li.top-navigation-list > button.journals--item__dropdown.topnav-journals-button
+  sample_text: Journals
+- selector: div.navigation--item__dropdown-content.journals__desktopNavItem.hidden
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html > div.wrapped
+    > div.widget-body.body > ul.top-navigation > li.top-navigation-list > div.navigation--item__dropdown-content.journals__desktopNavItem
+  sample_text: 'Close Journals Menu Browse all
+
+    journals Browse
+
+    all journals A-Z Open
+
+    access journals Open
+
+    Select (hybrid) journals Browse all books Explore Taylor &
+
+    Francis eBo'
+- selector: div.journals__nav-container
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.wrapped > div.widget-body.body > ul.top-navigation > li.top-navigation-list
+    > div.navigation--item__dropdown-content.journals__desktopNavItem > div.journals__nav-container
+  sample_text: 'Close Journals Menu Browse all
+
+    journals Browse
+
+    all journals A-Z Open
+
+    access journals Open
+
+    Select (hybrid) journals Browse all books Explore Taylor &
+
+    Francis eBo'
+- selector: p.journals__nav-title
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.navigation--item__dropdown-content.journals__desktopNavItem > div.journals__nav-container
+    > div.journals__browse-column.journals__left > div.journals__column-left > div.journals__browse-journals
+    > p.journals__nav-title
+  sample_text: 'Browse all
+
+    journals'
+- selector: a.topnav-journals-az-link
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.journals__browse-column.journals__left > div.journals__column-left
+    > div.journals__browse-journals > ul > li > a.topnav-journals-az-link
+  sample_text: 'Browse
+
+    all journals A-Z'
+- selector: a.topnav-oa-journals-link
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.journals__browse-column.journals__left > div.journals__column-left
+    > div.journals__browse-journals > ul > li > a.topnav-oa-journals-link
+  sample_text: 'Open
+
+    access journals'
+- selector: a.topnav-hybrid-journals-link
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.journals__browse-column.journals__left > div.journals__column-left
+    > div.journals__browse-journals > ul > li > a.topnav-hybrid-journals-link
+  sample_text: 'Open
+
+    Select (hybrid) journals'
+- selector: a.topnav-ebooks-link
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.journals__browse-column.journals__left > div.journals__column-left
+    > div.journals__browse-books > ul > li > a.topnav-ebooks-link
+  sample_text: 'Explore Taylor &
+
+    Francis eBooks'
+- selector: a.social-sciences.topnav-subject-link
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.journals__browse-column.journals__right > div.journals__browse-subject
+    > div.journals__browse-subject__column__col > ul.journals__browse-subject__column
+    > li > a.social-sciences.topnav-subject-link
+  sample_text: 'Area
+
+    Studies'
+- selector: a.medicine-health.topnav-subject-link
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.journals__browse-column.journals__right > div.journals__browse-subject
+    > div.journals__browse-subject__column__col > ul.journals__browse-subject__column
+    > li > a.medicine-health.topnav-subject-link
+  sample_text: 'Behavioral
+
+    Sciences'
+- selector: a.environmental-science.topnav-subject-link
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.journals__browse-column.journals__right > div.journals__browse-subject
+    > div.journals__browse-subject__column__col > ul.journals__browse-subject__column
+    > li > a.environmental-science.topnav-subject-link
+  sample_text: 'Built
+
+    Environment'
+- selector: a.phy-science.topnav-subject-link
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.journals__browse-column.journals__right > div.journals__browse-subject
+    > div.journals__browse-subject__column__col > ul.journals__browse-subject__column
+    > li > a.phy-science.topnav-subject-link
+  sample_text: 'Computer
+
+    Science'
+- selector: li.search--item.top-navigation-list
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.contents > div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html
+    > div.wrapped > div.widget-body.body > ul.top-navigation > li.search--item.top-navigation-list
+  sample_text: Search Close Search Menu
+- selector: button.search--item__dropdown.topnav-search-button
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html > div.wrapped
+    > div.widget-body.body > ul.top-navigation > li.search--item.top-navigation-list
+    > button.search--item__dropdown.topnav-search-button
+  sample_text: Search
+- selector: div.quickSearchFormContainer.search-home.navigation--item__dropdown-content
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html > div.wrapped
+    > div.widget-body.body > ul.top-navigation > li.search--item.top-navigation-list
+    > div.quickSearchFormContainer.search-home
+  sample_text: Close Search Menu
+- selector: li.publish--item.top-navigation-list
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.contents > div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html
+    > div.wrapped > div.widget-body.body > ul.top-navigation > li.publish--item.top-navigation-list
+  sample_text: Publish Why publish with us? Find a journal Search calls for papers
+    Journal Suggester Step-by-step guide Open access publishing We're here to help
+    Find guidance
+- selector: button.publish--item__dropdown.topnav-publish-button
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html > div.wrapped
+    > div.widget-body.body > ul.top-navigation > li.publish--item.top-navigation-list
+    > button.publish--item__dropdown.topnav-publish-button
+  sample_text: Publish
+- selector: div.navigation--item__dropdown-content.hidden
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html > div.wrapped
+    > div.widget-body.body > ul.top-navigation > li.publish--item.top-navigation-list
+    > div.navigation--item__dropdown-content.hidden
+  sample_text: Why publish with us? Find a journal Search calls for papers Journal
+    Suggester Step-by-step guide Open access publishing We're here to help Find guidance
+    on Auth
+- selector: a.topnav-why-pub-link
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: ul.top-navigation > li.publish--item.top-navigation-list > div.navigation--item__dropdown-content.hidden
+    > ul > li > a.topnav-why-pub-link
+  sample_text: Why publish with us?
+- selector: a.topnav-find-jnr-link
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: ul.top-navigation > li.publish--item.top-navigation-list > div.navigation--item__dropdown-content.hidden
+    > ul > li > a.topnav-find-jnr-link
+  sample_text: Find a journal
+- selector: a.topnav-cfp-link
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: ul.top-navigation > li.publish--item.top-navigation-list > div.navigation--item__dropdown-content.hidden
+    > ul > li > a.topnav-cfp-link
+  sample_text: Search calls for papers
+- selector: a.topnav-jnr-sug-link
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: ul.top-navigation > li.publish--item.top-navigation-list > div.navigation--item__dropdown-content.hidden
+    > ul > li > a.topnav-jnr-sug-link
+  sample_text: Journal Suggester
+- selector: a.topnav-step-by-step-link
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: ul.top-navigation > li.publish--item.top-navigation-list > div.navigation--item__dropdown-content.hidden
+    > ul > li > a.topnav-step-by-step-link
+  sample_text: Step-by-step guide
+- selector: a.topnav-oa-pub-link
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: ul.top-navigation > li.publish--item.top-navigation-list > div.navigation--item__dropdown-content.hidden
+    > ul > li > a.topnav-oa-pub-link
+  sample_text: Open access publishing
+- selector: a.topnav-auth-serv-link
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: ul.top-navigation > li.publish--item.top-navigation-list > div.navigation--item__dropdown-content.hidden
+    > div.authorServices-help > p > a.topnav-auth-serv-link
+  sample_text: Author Services
+- selector: div#78ed73f4-350d-4935-9c1b-bf71130be6dd.widget.literatumNavigationLoginBar
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.widget-body.body > div.container-fluid > div.row.row-md > div.col-md-1-1.top-nav-resp
+    > div.contents > div#78ed73f4-350d-4935-9c1b-bf71130be6dd.widget.literatumNavigationLoginBar
+  sample_text: Login | Register Log in or Register Login Register
+- selector: div.navigation--item__dropdown-content-mobile.hidden
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.contents > div#ae54c4d3-b3ec-48fa-a62b-314bcb75e211.widget.general-html
+    > div.wrapped > div.widget-body.body > div.header_burger-menu > div.navigation--item__dropdown-content-mobile.hidden
+  sample_text: Search Close search Journals Browse by subject Social Sciences & Humanities
+    Area Studies Arts Communication Studies Economics, Finance, Business & Industry
+    Educ
+- selector: div.quickSearchFormContainer.search-home.navigation--item__dropdown-content-mobile
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.widget-body.body > div.header_burger-menu > div.navigation--item__dropdown-content-mobile.hidden
+    > ul.top-navigation > li.top-navigation-list > div.quickSearchFormContainer.search-home
+  sample_text: Close search
+- selector: li.journals--item.top-navigation-list
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.wrapped > div.widget-body.body > div.header_burger-menu > div.navigation--item__dropdown-content-mobile.hidden
+    > ul.top-navigation > li.journals--item.top-navigation-list
+  sample_text: Journals Browse by subject Social Sciences & Humanities Area Studies
+    Arts Communication Studies Economics, Finance, Business & Industry Education Geography
+    Huma
+- selector: a.topnav-subject-link
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: ul > li.has-child > div.navigation--item__dropdown-content.hidden > ul
+    > li > a.topnav-subject-link
+  sample_text: Area Studies
+- selector: nav#bc-nav
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.col-md-1-1 > div.contents > div#b1c121c1-cbbd-4241-8774-7120f3a783e8.widget.literatumBreadcrumbs
+    > div.wrapped > div.widget-body.body > nav#bc-nav
+  sample_text: Home All Journals Geography GIScience & Remote Sensing List of Issues
+    Volume 63, Issue 1 Quantifying cumulative heat effects on h ....
+- selector: div.col-md-7-12.serNav_container
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#1728e801-36cd-4288-9f53-392bad29506a.widget.responsive-layout > div.wrapped
+    > div.widget-body.body > div.container > div.row.row-md > div.col-md-7-12.serNav_container
+  sample_text: GIScience & Remote Sensing Volume 63, 2026 - Issue 1 Submit an article
+    Journal homepage
+- selector: div#7730bfe1-9fca-4cf4-a6d6-2a0148105437.widget.literatumSeriesNavigation
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.widget-body.body > div.container > div.row.row-md > div.col-md-7-12.serNav_container
+    > div.contents > div#7730bfe1-9fca-4cf4-a6d6-2a0148105437.widget.literatumSeriesNavigation
+  sample_text: GIScience & Remote Sensing Volume 63, 2026 - Issue 1 Submit an article
+    Journal homepage
+- selector: div.issueSerialNavigation.journal
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.col-md-7-12.serNav_container > div.contents > div#7730bfe1-9fca-4cf4-a6d6-2a0148105437.widget.literatumSeriesNavigation
+    > div.wrapped > div.widget-body.body > div.issueSerialNavigation.journal
+  sample_text: GIScience & Remote Sensing Volume 63, 2026 - Issue 1 Submit an article
+    Journal homepage
+- selector: a.nav-toc-list
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.widget-body.body > div.issueSerialNavigation.journal > div.info >
+    div.title-container > span.issue-heading > a.nav-toc-list
+  sample_text: Issue 1
+- selector: div.seriesNavDropZone
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#7730bfe1-9fca-4cf4-a6d6-2a0148105437.widget.literatumSeriesNavigation
+    > div.wrapped > div.widget-body.body > div.issueSerialNavigation.journal > div.info
+    > div.seriesNavDropZone
+  sample_text: Submit an article Journal homepage
+- selector: div#5afd8b6d-7e09-43ff-8ad6-afa3764e543c.widget.literatumArticleMetricsWidget
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.widget-body.body > div.container > div.row.row-md > div.col-md-1-6
+    > div.contents > div#5afd8b6d-7e09-43ff-8ad6-afa3764e543c.widget.literatumArticleMetricsWidget
+  sample_text: 643 Views 1 CrossRef citations to date 0 Altmetric
+- selector: div.articleMetricsContainer
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.col-md-1-6 > div.contents > div#5afd8b6d-7e09-43ff-8ad6-afa3764e543c.widget.literatumArticleMetricsWidget
+    > div.wrapped > div.widget-body.body > div.articleMetricsContainer
+  sample_text: 643 Views 1 CrossRef citations to date 0 Altmetric
+- selector: span.metrics-score
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.articleMetricsContainer > div.content.compactView > div.section.score
+    > div.altmetric-score.true > div.value > span.metrics-score
+  sample_text: '0'
+- selector: li.downloadCitations
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#ed673666-7b5d-470e-bd33-c5c679d996cb.widget.literatumArticleToolsWidget
+    > div.wrapped > div.widget-body.body > div.articleTools > ul.linkList > li.downloadCitations
+  sample_text: Cite this article
+- selector: a.download-citations
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.wrapped > div.widget-body.body > div.articleTools > ul.linkList >
+    li.downloadCitations > a.download-citations
+  sample_text: Cite this article
+- selector: div#ef4e6eb2-2f20-4456-9910-f2a3aa59dc28.widget.sectionsNavigation
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.widget-body.body > div.container > div.row.row-md > div.col-md-1-6
+    > div.contents > div#ef4e6eb2-2f20-4456-9910-f2a3aa59dc28.widget.sectionsNavigation
+  sample_text: In this article Article contents Related research Abstract Article
+    highlights 1. Introduction 2 Materials and methods 3 Result 4 Discussion 5 Conclusion
+    Supplem
+- selector: div.sections-nav
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.col-md-1-6 > div.contents > div#ef4e6eb2-2f20-4456-9910-f2a3aa59dc28.widget.sectionsNavigation
+    > div.wrapped > div.widget-body.body > div.sections-nav
+  sample_text: In this article Article contents Related research Abstract Article
+    highlights 1. Introduction 2 Materials and methods 3 Result 4 Discussion 5 Conclusion
+    Supplem
+- selector: div.section-nav-btn
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.contents > div#ef4e6eb2-2f20-4456-9910-f2a3aa59dc28.widget.sectionsNavigation
+    > div.wrapped > div.widget-body.body > div.sections-nav > div.section-nav-btn
+  sample_text: In this article Article contents Related research
+- selector: button#art-nav.title-btn
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#ef4e6eb2-2f20-4456-9910-f2a3aa59dc28.widget.sectionsNavigation > div.wrapped
+    > div.widget-body.body > div.sections-nav > div.section-nav-btn > button#art-nav.title-btn
+  sample_text: Article contents
+- selector: div#7c0a11d9-3ccc-4759-820f-e3fd42d5587c.widget.responsiveLiteratumPublicationContentWidget
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.widget-body.body > div.container-fluid > div.row.row-md > div.col-md-1-1
+    > div.contents > div#7c0a11d9-3ccc-4759-820f-e3fd42d5587c.widget.responsiveLiteratumPublicationContentWidget
+  sample_text: Full Article Figures & data References Supplemental Citations Metrics
+    Licensing Reprints & Permissions View PDF (open in a new window) PDF (open in
+    a new window
+- selector: ul.tab-nav.container
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.widget-body.body > div.publication-tabs.ja > div.tabs.tabs-widget
+    > div > div.scroll-content > ul.tab-nav.container
+  sample_text: Full Article Figures & data References Supplemental Citations Metrics
+    Licensing Reprints & Permissions View PDF (open in a new window) PDF (open in
+    a new window
+- selector: span#full-article.nav-data
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div > div.scroll-content > ul.tab-nav.container > li.active > a#showFullText.show-full
+    > span#full-article.nav-data
+  sample_text: Full Article
+- selector: span#figs-data.nav-data
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div > div.scroll-content > ul.tab-nav.container > li > a#showFigure.show-figure
+    > span#figs-data.nav-data
+  sample_text: Figures & data
+- selector: span#refs.nav-data
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div > div.scroll-content > ul.tab-nav.container > li > a#showEnhancedAbstract.show-references
+    > span#refs.nav-data
+  sample_text: References
+- selector: span#suppl.nav-data
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div > div.scroll-content > ul.tab-nav.container > li > a#showSuppl.show-supplement
+    > span#suppl.nav-data
+  sample_text: Supplemental
+- selector: span#cit.nav-data
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div > div.scroll-content > ul.tab-nav.container > li.citedbyTab > a#showCitedBy
+    > span#cit.nav-data
+  sample_text: Citations
+- selector: li.metrics-tab
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.publication-tabs.ja > div.tabs.tabs-widget > div > div.scroll-content
+    > ul.tab-nav.container > li.metrics-tab
+  sample_text: Metrics
+- selector: a#metricsLabel.show-metrics
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.tabs.tabs-widget > div > div.scroll-content > ul.tab-nav.container
+    > li.metrics-tab > a#metricsLabel.show-metrics
+  sample_text: Metrics
+- selector: span#met.nav-data
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div > div.scroll-content > ul.tab-nav.container > li.metrics-tab > a#metricsLabel.show-metrics
+    > span#met.nav-data
+  sample_text: Metrics
+- selector: span#copy-right.nav-data
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div > div.scroll-content > ul.tab-nav.container > li.licencing-tab > a#showCopyRight.show-copyright
+    > span#copy-right.nav-data
+  sample_text: Licensing
+- selector: span#reprints-perm.nav-data
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div > div.scroll-content > ul.tab-nav.container > li.permissions-tab >
+    a#permissionsLabel.show-permissions > span#reprints-perm.nav-data
+  sample_text: Reprints & Permissions
+- selector: div#t0001-table-wrapper.tableDownloadOption
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: article.article > div.hlFld-Fulltext > div#s0002.NLM_sec.NLM_sec_level_1
+    > div#s0002-s2003.NLM_sec.NLM_sec_level_2 > div.tableView > div#t0001-table-wrapper.tableDownloadOption
+  sample_text: Download CSV Display Table
+- selector: a.downloadButton.btn.btn-sm
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.hlFld-Fulltext > div#s0002.NLM_sec.NLM_sec_level_1 > div#s0002-s2003.NLM_sec.NLM_sec_level_2
+    > div.tableView > div#t0001-table-wrapper.tableDownloadOption > a.downloadButton.btn
+  sample_text: Download CSV
+- selector: div#t0002-table-wrapper.tableDownloadOption
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.hlFld-Fulltext > div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2003.NLM_sec.NLM_sec_level_2
+    > div#s0003-s2003-s3001.NLM_sec.NLM_sec_level_3 > div.tableView > div#t0002-table-wrapper.tableDownloadOption
+  sample_text: Download CSV Display Table
+- selector: div#fig_article_10.1080/15481603.2026.2667034.figshare_widget.share_widget
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.tab-content > div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext
+    > div#supplemental-material-section.supplemental-material-container > div#fig_article_10.1080/15481603.2026.2667034.figshare_widget.share_widget
+  sample_text: ''
+- selector: span.citation_source-journal.italicized
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#references-Section1 > div > ul.references.numeric-ordered-list > li#cit0001
+    > span > span.citation_source-journal.italicized
+  sample_text: Minerals
+- selector: span.citation_source-book.italicized
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#references-Section1 > div > ul.references.numeric-ordered-list > li#cit0008
+    > span > span.citation_source-book.italicized
+  sample_text: Statistical Methods for Environmental Mixtures. Society, Environment
+    and Statistics
+- selector: div.downloadPDFLink
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.tab-content > div.access__limit > div#1d3f2ec9-ad2a-4f34-80d8-cd349014c562.widget.gql-alternative-widget
+    > div.wrapped > div.widget-body.body > div.downloadPDFLink
+  sample_text: Download PDF
+- selector: div#f69de2a5-7203-4c28-9838-fd50c4cd9662.widget.general-bookmark-share
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.widget-body.body > div.container > div.row.row-md > div.col-md-1-4
+    > div.contents > div#f69de2a5-7203-4c28-9838-fd50c4cd9662.widget.general-bookmark-share
+  sample_text: Share Back to Top
+- selector: div.a2a_kit.a2a_default_style.a2a_target
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#f69de2a5-7203-4c28-9838-fd50c4cd9662.widget.general-bookmark-share
+    > div#Bookmark.wrapped > div.widget-body.body > ul.a2a_list > li.a2a_list_items
+    > div.a2a_kit.a2a_default_style
+  sample_text: Share
+- selector: div.share-button-container
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#Bookmark.wrapped > div.widget-body.body > ul.a2a_list > li.a2a_list_items
+    > div.a2a_kit.a2a_default_style > div.share-button-container
+  sample_text: Share
+- selector: a.share-button.a2a_dd
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.widget-body.body > ul.a2a_list > li.a2a_list_items > div.a2a_kit.a2a_default_style
+    > div.share-button-container > a.share-button.a2a_dd
+  sample_text: Share
+- selector: i.fas.fa-share-alt.share-icon
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: ul.a2a_list > li.a2a_list_items > div.a2a_kit.a2a_default_style > div.share-button-container
+    > a.share-button.a2a_dd > i.fas.fa-share-alt
+  sample_text: ''
+- selector: span.share-text
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: ul.a2a_list > li.a2a_list_items > div.a2a_kit.a2a_default_style > div.share-button-container
+    > a.share-button.a2a_dd > span.share-text
+  sample_text: Share
+- selector: ul.tab-nav
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.contents > div#2b85d6ca-6520-4a3d-8e4a-aa9f2ee3f33d.widget.layout-tabs
+    > div.wrapped > div.widget-body.body > div.tabs.tabs-widget > ul.tab-nav
+  sample_text: People also read Recommended articles Cited by 1
+- selector: div#download-citations-article-modal
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.page-body.pagefulltext > div > div#588dab7b-f601-4721-a09f-3b9b40c39e93.widget.general-html
+    > div.wrapped > div.widget-body.body > div#download-citations-article-modal
+  sample_text: 'To cite this article: Reference style: APA Chicago Harvard Citation
+    copied to clipboard Copy citation to clipboard Reference styles above use APA
+    (6th edition),'
+- selector: div.citation-copied
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#download-citations-article-modal > form#dc_form > div.modal-content-body
+    > div.csl-wrapper.copy__text-wrapper > div.copy-section > div.citation-copied
+  sample_text: Citation copied to clipboard
+- selector: button#copyToClipBoard.btn.btn-copy-citation
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#download-citations-article-modal > form#dc_form > div.modal-content-body
+    > div.csl-wrapper.copy__text-wrapper > div.copy-section > button#copyToClipBoard.btn.btn-copy-citation
+  sample_text: Copy citation to clipboard
+- selector: h3.download-citation
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.wrapped > div.widget-body.body > div#download-citations-article-modal
+    > form#dc_form > div.modal-content-body > h3.download-citation
+  sample_text: Download citation
+content_anchors:
+- anchor_type: abstract
+  text: Abstract
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 1966
+- anchor_type: abstract
+  text: Abstract
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2152
+- anchor_type: abstract
+  text: abstract
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 4185
+- anchor_type: references
+  text: References
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 1976
+- anchor_type: references
+  text: References
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2060
+- anchor_type: references
+  text: reference
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2335
+- anchor_type: references
+  text: reference
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2338
+- anchor_type: references
+  text: reference
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2788
+- anchor_type: references
+  text: References
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2867
+- anchor_type: references
+  text: Reference
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 4105
+- anchor_type: references
+  text: Reference
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 4146
+- anchor_type: figure
+  text: Figure 1
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2318
+- anchor_type: figure
+  text: Figure 1
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2326
+- anchor_type: figure
+  text: Figure 1
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2337
+- anchor_type: figure
+  text: Figure 2
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2427
+- anchor_type: figure
+  text: Figure 2
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2429
+- anchor_type: figure
+  text: Figure 3
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2438
+- anchor_type: figure
+  text: Figure 3
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2449
+- anchor_type: figure
+  text: Figure 3
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2456
+- anchor_type: table
+  text: Table 1
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2367
+- anchor_type: table
+  text: Table 1
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2369
+- anchor_type: table
+  text: 'Table
+
+    1'
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2372
+- anchor_type: table
+  text: Table 2
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2498
+- anchor_type: table
+  text: Table 2
+  purpose: structure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2510
+- anchor_type: abstract
+  text: ABSTRACT
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 1901
+- anchor_type: abstract
+  text: ABSTRACT
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 2072
+- anchor_type: abstract
+  text: abstract
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 3673
+- anchor_type: references
+  text: References
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 1906
+- anchor_type: references
+  text: References
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 1990
+- anchor_type: references
+  text: References
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 2616
+- anchor_type: references
+  text: Reference
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 3593
+- anchor_type: references
+  text: Reference
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 3634
+- anchor_type: references
+  text: Reference
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 3645
+- anchor_type: references
+  text: references
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 3676
+- anchor_type: figure
+  text: Figure 1
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 2393
+- anchor_type: figure
+  text: Figure 1
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 2453
+- anchor_type: figure
+  text: Figure 2
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 2488
+- anchor_type: figure
+  text: Figure 2
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 2502
+- anchor_type: table
+  text: Table 1
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 2223
+- anchor_type: table
+  text: Table 1
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 2246
+- anchor_type: table
+  text: Table 1
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 2250
+- anchor_type: table
+  text: Table 2
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 2286
+- anchor_type: table
+  text: Table 2
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 2288
+- anchor_type: table
+  text: Table 2
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 2292
+- anchor_type: table
+  text: Table 3
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 2330
+- anchor_type: table
+  text: Table 3
+  purpose: table
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  line: 2339
+- anchor_type: abstract
+  text: ABSTRACT
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 1892
+- anchor_type: abstract
+  text: ABSTRACT
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 2077
+- anchor_type: abstract
+  text: abstract
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 2138
+- anchor_type: abstract
+  text: abstract
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 8704
+- anchor_type: abstract
+  text: abstract
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 8874
+- anchor_type: abstract
+  text: abstract
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 9106
+- anchor_type: abstract
+  text: abstract
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 9614
+- anchor_type: references
+  text: References
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 1898
+- anchor_type: references
+  text: References
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 1982
+- anchor_type: references
+  text: reference
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 3446
+- anchor_type: references
+  text: reference
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 7795
+- anchor_type: references
+  text: references
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 8538
+- anchor_type: references
+  text: References
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 8546
+- anchor_type: references
+  text: references
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 8792
+- anchor_type: references
+  text: Reference
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 9534
+- anchor_type: figure
+  text: Figure 1
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 3030
+- anchor_type: figure
+  text: Figure 1
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 3033
+- anchor_type: figure
+  text: Figure 2
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 7765
+- anchor_type: figure
+  text: Figure 3
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 7770
+- anchor_type: figure
+  text: Figure 4
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 7800
+- anchor_type: figure
+  text: Figure 4
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 7803
+- anchor_type: figure
+  text: Figure 5
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 8517
+- anchor_type: figure
+  text: Figure 5
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 8520
+- anchor_type: table
+  text: Table 1
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 7760
+- anchor_type: table
+  text: Table 1
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 7773
+- anchor_type: table
+  text: Table 1
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 7780
+- anchor_type: table
+  text: Table 2
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 8537
+- anchor_type: table
+  text: Table 3
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 8539
+- anchor_type: table
+  text: Table 2
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 8541
+- anchor_type: table
+  text: Table 2
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 8545
+- anchor_type: table
+  text: Table 3
+  purpose: formula
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  line: 8594
+- anchor_type: abstract
+  text: Abstract
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 1966
+- anchor_type: abstract
+  text: Abstract
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2152
+- anchor_type: abstract
+  text: abstract
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 4185
+- anchor_type: references
+  text: References
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 1976
+- anchor_type: references
+  text: References
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2060
+- anchor_type: references
+  text: reference
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2335
+- anchor_type: references
+  text: reference
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2338
+- anchor_type: references
+  text: reference
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2788
+- anchor_type: references
+  text: References
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2867
+- anchor_type: references
+  text: Reference
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 4105
+- anchor_type: references
+  text: Reference
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 4146
+- anchor_type: figure
+  text: Figure 1
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2318
+- anchor_type: figure
+  text: Figure 1
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2326
+- anchor_type: figure
+  text: Figure 1
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2337
+- anchor_type: figure
+  text: Figure 2
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2427
+- anchor_type: figure
+  text: Figure 2
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2429
+- anchor_type: figure
+  text: Figure 3
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2438
+- anchor_type: figure
+  text: Figure 3
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2449
+- anchor_type: figure
+  text: Figure 3
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2456
+- anchor_type: table
+  text: Table 1
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2367
+- anchor_type: table
+  text: Table 1
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2369
+- anchor_type: table
+  text: 'Table
+
+    1'
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2372
+- anchor_type: table
+  text: Table 2
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2498
+- anchor_type: table
+  text: Table 2
+  purpose: figure
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2510
+- anchor_type: abstract
+  text: Abstract
+  purpose: supplementary
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 1966
+- anchor_type: abstract
+  text: Abstract
+  purpose: supplementary
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2152
+- anchor_type: abstract
+  text: abstract
+  purpose: supplementary
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 4185
+- anchor_type: references
+  text: References
+  purpose: supplementary
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 1976
+- anchor_type: references
+  text: References
+  purpose: supplementary
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2060
+- anchor_type: references
+  text: reference
+  purpose: supplementary
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2335
+- anchor_type: references
+  text: reference
+  purpose: supplementary
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2338
+- anchor_type: references
+  text: reference
+  purpose: supplementary
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2788
+- anchor_type: references
+  text: References
+  purpose: supplementary
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2867
+- anchor_type: references
+  text: Reference
+  purpose: supplementary
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 4105
+- anchor_type: references
+  text: Reference
+  purpose: supplementary
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 4146
+- anchor_type: figure
+  text: Figure 1
+  purpose: supplementary
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2318
+- anchor_type: figure
+  text: Figure 1
+  purpose: supplementary
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2326
+- anchor_type: figure
+  text: Figure 1
+  purpose: supplementary
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2337
+- anchor_type: figure
+  text: Figure 2
+  purpose: supplementary
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2427
+- anchor_type: figure
+  text: Figure 2
+  purpose: supplementary
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2429
+- anchor_type: figure
+  text: Figure 3
+  purpose: supplementary
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2438
+- anchor_type: figure
+  text: Figure 3
+  purpose: supplementary
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2449
+- anchor_type: figure
+  text: Figure 3
+  purpose: supplementary
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  line: 2456
+proposed_markdown_contract_delta:
+  structure:
+    doi: 10.1080/15481603.2026.2667034
+    missing_must_include: []
+    dead_must_not_include:
+      sentinel: []
+      cross_route_guard:
+      - token: Article Metrics
+        reason: site chrome guard may belong to another route or page shell
+      truly_vacuous: []
+    suggested_must_include_from_fixtures:
+    - Abstract
+    - Figure 1
+    - Figure 2
+    - Figure 3
+    - reference
+    - References
+    - 'Table
+
+      1'
+    - Table 1
+    - Table 2
+  table:
+    doi: 10.1080/10942912.2019.1597882
+    missing_must_include: []
+    dead_must_not_include:
+      sentinel: []
+      cross_route_guard: []
+      truly_vacuous: []
+    suggested_must_include_from_fixtures:
+    - ABSTRACT
+    - Figure 1
+    - Figure 2
+    - Reference
+    - References
+    - Table 2
+    - Table 3
+  formula:
+    doi: 10.1080/08839514.2024.2375110
+    missing_must_include: []
+    dead_must_not_include:
+      sentinel:
+      - token: '[Formula unavailable]'
+        reason: defensive sentinel may be absent from clean fixtures
+      cross_route_guard: []
+      truly_vacuous:
+      - token: MathJax Logo
+        reason: token is absent from all participating raw fixtures and has no exemption
+    suggested_must_include_from_fixtures:
+    - ABSTRACT
+    - Figure 1
+    - Figure 2
+    - Figure 3
+    - Figure 4
+    - Figure 5
+    - reference
+    - References
+    - Table 1
+    - Table 2
+  figure:
+    doi: 10.1080/15481603.2026.2667034
+    missing_must_include: []
+    dead_must_not_include:
+      sentinel: []
+      cross_route_guard:
+      - token: Article Metrics
+        reason: site chrome guard may belong to another route or page shell
+      truly_vacuous:
+      - token: Open figure viewer
+        reason: token is absent from all participating raw fixtures and has no exemption
+      - token: View large
+        reason: token is absent from all participating raw fixtures and has no exemption
+    suggested_must_include_from_fixtures:
+    - Abstract
+    - Figure 2
+    - Figure 3
+    - reference
+    - References
+    - 'Table
+
+      1'
+    - Table 1
+    - Table 2
+  supplementary:
+    doi: 10.1080/15481603.2026.2667034
+    missing_must_include: []
+    dead_must_not_include:
+      sentinel: []
+      cross_route_guard:
+      - token: Article Metrics
+        reason: site chrome guard may belong to another route or page shell
+      truly_vacuous: []
+    suggested_must_include_from_fixtures:
+    - Abstract
+    - Figure 1
+    - Figure 2
+    - Figure 3
+    - reference
+    - References
+  references:
+    doi: 10.1080/15481603.2026.2667034
+    missing_must_include: []
+    dead_must_not_include:
+      sentinel: []
+      cross_route_guard:
+      - token: Article Metrics
+        reason: site chrome guard may belong to another route or page shell
+      truly_vacuous: []
+    suggested_must_include_from_fixtures: []
+  pdf_fallback:
+    doi: 10.1080/15481603.2026.2667034
+    missing_must_include: []
+    dead_must_not_include:
+      sentinel:
+      - token: Access Denied
+        reason: defensive sentinel may be absent from clean fixtures
+      cross_route_guard: []
+      truly_vacuous:
+      - token: Just a moment
+        reason: token is absent from all participating raw fixtures and has no exemption
+    suggested_must_include_from_fixtures: []
+overcleaning_probes:
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.contents > div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html
+    > div.wrapped > div.widget-body.body > ul.top-navigation > li.top-navigation-list
+  sample_text: 'Journals Close Journals Menu Browse all
+
+    journals Browse
+
+    all journals A-Z Open
+
+    access journals Open
+
+    Select (hybrid) journals Browse all books Explore Taylor &
+
+    Francis eBooks Publish Find
+
+    a journal Search
+
+    calls for papers '
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.contents > div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html
+    > div.wrapped > div.widget-body.body > ul.top-navigation > li.publish--item.top-navigation-list
+  sample_text: Publish Why publish with us? Find a journal Search calls for papers
+    Journal Suggester Step-by-step guide Open access publishing We're here to help
+    Find guidance on Author Services
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.wrapped > div.widget-body.body > div.header_burger-menu > div.navigation--item__dropdown-content-mobile.hidden
+    > ul.top-navigation > li.journals--item.top-navigation-list
+  sample_text: Journals Browse by subject Social Sciences & Humanities Area Studies
+    Arts Communication Studies Economics, Finance, Business & Industry Education Geography
+    Humanities Language & Literature Law Museum and Heritage Studies
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.navigation--item__dropdown-content-mobile.hidden > ul.top-navigation
+    > li.journals--item.top-navigation-list > div.navigation--item__dropdown-content.hidden
+    > ul > li.has-child
+  sample_text: Browse by subject Social Sciences & Humanities Area Studies Arts Communication
+    Studies Economics, Finance, Business & Industry Education Geography Humanities
+    Language & Literature Law Museum and Heritage Studies Politics
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.navigation--item__dropdown-content.hidden > ul > li.has-child > div.navigation--item__dropdown-content.hidden
+    > ul > li.has-child
+  sample_text: Social Sciences & Humanities Area Studies Arts Communication Studies
+    Economics, Finance, Business & Industry Education Geography Humanities Language
+    & Literature Law Museum and Heritage Studies Politics & International R
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.navigation--item__dropdown-content.hidden > ul > li.has-child > div.navigation--item__dropdown-content.hidden
+    > ul > li.has-child
+  sample_text: 'Physical Sciences & Engineering Computer
+
+    Science Engineering
+
+    & Technology Food
+
+    Science & Technology Information
+
+    Science Mathematics
+
+    & Statistics Physical
+
+    Sciences'
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.navigation--item__dropdown-content.hidden > ul > li.has-child > div.navigation--item__dropdown-content.hidden
+    > ul > li.has-child
+  sample_text: 'Earth & Environmental Sciences Built
+
+    Environment Earth
+
+    Sciences Environment
+
+    & Agriculture Environment
+
+    and Sustainability Global
+
+    Development Urban
+
+    Studies'
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.wrapped > div.widget-body.body > div.header_burger-menu > div.navigation--item__dropdown-content-mobile.hidden
+    > ul.top-navigation > li.publish--item.top-navigation-list
+  sample_text: Publish Why publish with us? Find a journal Search calls for papers
+    Journal Suggester Step-by-step guide Open access publishing Find guidance on Author
+    Services
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.hlFld-Fulltext > div#s0002.NLM_sec.NLM_sec_level_1 > div#s0002-s2001.NLM_sec.NLM_sec_level_2
+    > div.figureView > div.short-legend > p.captionText
+  sample_text: Figure 1. Study region and data. (a) Spatial distribution of 122 major
+    regions/cities in Europe, with GIS data for administrative boundaries obtained
+    from Eurostat. (b) National climates and seasons, based on satellite-d
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0002.NLM_sec.NLM_sec_level_1 > div#s0002-s2002.NLM_sec.NLM_sec_level_2 >
+    p
+  sample_text: "This study utilizes the MOD11A1 dataset ( https://ladsweb.modaps.eosdis.nasa.gov/)\
+    \ from NASA's Terra satellite (1\u2009km spatial resolution, 2000\u20132023 time\
+    \ series). Daily observations of daytime land surface temperature (D_L"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0002.NLM_sec.NLM_sec_level_1 > div#s0002-s2005.NLM_sec.NLM_sec_level_2 >
+    p
+  sample_text: 'Four statistical indicators were used for model evaluation: the coefficient
+    of determination (R 2 ), root mean square error (RMSE), relative root mean square
+    error (rRMSE), and mean error (ME). Together, the comparative '
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2001.NLM_sec.NLM_sec_level_2
+    > div#s0003-s2001-s3001.NLM_sec.NLM_sec_level_3 > div.figureView > div.short-legend
+    > p.captionText
+  sample_text: "Figure 3. Temperature-related risk of death during 2000\u20132023.\
+    \ (a, b) Cumulative relative risk of death (unitless) in Europe for the overall\
+    \ population, women, and men during daytime (a) and nighttime (b), together with\
+    \ t"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2003.NLM_sec.NLM_sec_level_2
+    > div#s0003-s2003-s3001.NLM_sec.NLM_sec_level_3 > div.figureView > div.short-legend
+    > p.captionText
+  sample_text: 'Figure 5. (a) Model-estimated mortality under different PAT; (b) Importance
+    percentage of various temperature characteristics; (c) Model performance (R 2
+    ) in estimating mortality across 25 typical cities with different '
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#s0003-s2003-s3001.NLM_sec.NLM_sec_level_3 > div.tableView > div.tableCaption
+    > div.short-legend > h3 > p.captionText
+  sample_text: "Table 2. Performance of the models\u2014R 2 , RMSE (deaths per million),\
+    \ rRMSE (%), and ME (deaths per million)\u2014on the test (hold out) set obtained\
+    \ with bootstrapping using RF (PAT\u2009=\u200970%) (Bold in the table indicates\
+    \ that the"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2003.NLM_sec.NLM_sec_level_2
+    > div#s0003-s2003-s3002.NLM_sec.NLM_sec_level_3 > div.figureView > div.short-legend
+    > p.captionText
+  sample_text: Figure 6. Performance of the trained RF models (the cumulative temperature
+    variable was not considered). Spatial distribution of R 2 (a) and rRMSE (b) of
+    the model in different cities using both D_LST and N_LST as input.
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: article.article > div.hlFld-Fulltext > div#s0003.NLM_sec.NLM_sec_level_1
+    > div#s0003-s2003.NLM_sec.NLM_sec_level_2 > div#s0003-s2003-s3002.NLM_sec.NLM_sec_level_3
+    > p
+  sample_text: "When cumulative temperature variables are included ( Figure 7a ),\
+    \ model performance improves markedly across most regions. In the full model,\
+    \ R 2 increases to approximately 0.65\u20130.68, while the minimum rRMSE decreases\
+    \ to"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2003.NLM_sec.NLM_sec_level_2
+    > div#s0003-s2003-s3002.NLM_sec.NLM_sec_level_3 > div.figureView > div.short-legend
+    > p.captionText
+  sample_text: 'Figure 7. Performance of the trained RF models considering temperature
+    accumulation effects. Spatial distribution of R 2 (a) and rRMSE (b) for models
+    estimating mortality rates for the total population (both sexes). (c) '
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2004.NLM_sec.NLM_sec_level_2 >
+    p
+  sample_text: At the city scale, the duration of cumulative heat effects varies across
+    regions ( Figure 8a ). Cumulative heat effects are longer in Northern and Southern
+    Europe, with heat exposure lasting four to five weeks in the nor
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.hlFld-Fulltext > div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2004.NLM_sec.NLM_sec_level_2
+    > div.figureView > div.short-legend > p.captionText
+  sample_text: Figure 8. (a) Spatial Distribution of cumulative heat exposure weeks
+    in European cities; (b) estimated mortality rate (deaths per million) by replacing
+    2019 temperature data with 2022 temperature data. Weekly high-temper
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.hlFld-Fulltext > div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2004.NLM_sec.NLM_sec_level_2
+    > div.figureView > div.short-legend > p.captionText
+  sample_text: Figure 9. Performance of the trained RF models considering temperature
+    accumulation effects at 90 independent validation cities (using MOD11A1 temperature
+    data). Spatial distribution of R 2 for models estimating mortalit
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0004.NLM_sec.NLM_sec_level_1 > div#s0004-s2001.NLM_sec.NLM_sec_level_2 >
+    p.last
+  sample_text: Most existing studies use city-specific models (Anderson and Bell Citation
+    2009 ; Chestnut et al. Citation 1998 ; Kephart et al. Citation 2022 ; Wang et
+    al. Citation 2024 ), which, while reflecting local characteristics,
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: structure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div#references-Section1
+    > div > ul.references.numeric-ordered-list > li#cit0084
+  sample_text: 'UN. 2018. World Urbanization Prospects: The 2018 Revision . United
+    Nations, New York: Department of International Economic and Social Affairs. (Open
+    in a new window) Google Scholar'
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  dom_path: div.contents > div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html
+    > div.wrapped > div.widget-body.body > ul.top-navigation > li.top-navigation-list
+  sample_text: 'Journals Close Journals Menu Browse all
+
+    journals Browse
+
+    all journals A-Z Open
+
+    access journals Open
+
+    Select (hybrid) journals Browse all books Explore Taylor &
+
+    Francis eBooks Publish Find
+
+    a journal Search
+
+    calls for papers '
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  dom_path: div.contents > div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html
+    > div.wrapped > div.widget-body.body > ul.top-navigation > li.publish--item.top-navigation-list
+  sample_text: Publish Why publish with us? Find a journal Search calls for papers
+    Journal Suggester Step-by-step guide Open access publishing We're here to help
+    Find guidance on Author Services
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  dom_path: div.wrapped > div.widget-body.body > div.header_burger-menu > div.navigation--item__dropdown-content-mobile.hidden
+    > ul.top-navigation > li.journals--item.top-navigation-list
+  sample_text: Journals Browse by subject Social Sciences & Humanities Area Studies
+    Arts Communication Studies Economics, Finance, Business & Industry Education Geography
+    Humanities Language & Literature Law Museum and Heritage Studies
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  dom_path: div.navigation--item__dropdown-content-mobile.hidden > ul.top-navigation
+    > li.journals--item.top-navigation-list > div.navigation--item__dropdown-content.hidden
+    > ul > li.has-child
+  sample_text: Browse by subject Social Sciences & Humanities Area Studies Arts Communication
+    Studies Economics, Finance, Business & Industry Education Geography Humanities
+    Language & Literature Law Museum and Heritage Studies Politics
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  dom_path: div.navigation--item__dropdown-content.hidden > ul > li.has-child > div.navigation--item__dropdown-content.hidden
+    > ul > li.has-child
+  sample_text: Social Sciences & Humanities Area Studies Arts Communication Studies
+    Economics, Finance, Business & Industry Education Geography Humanities Language
+    & Literature Law Museum and Heritage Studies Politics & International R
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  dom_path: div.navigation--item__dropdown-content.hidden > ul > li.has-child > div.navigation--item__dropdown-content.hidden
+    > ul > li.has-child
+  sample_text: 'Physical Sciences & Engineering Computer
+
+    Science Engineering
+
+    & Technology Food
+
+    Science & Technology Information
+
+    Science Mathematics
+
+    & Statistics Physical
+
+    Sciences'
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  dom_path: div.navigation--item__dropdown-content.hidden > ul > li.has-child > div.navigation--item__dropdown-content.hidden
+    > ul > li.has-child
+  sample_text: 'Earth & Environmental Sciences Built
+
+    Environment Earth
+
+    Sciences Environment
+
+    & Agriculture Environment
+
+    and Sustainability Global
+
+    Development Urban
+
+    Studies'
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  dom_path: div.wrapped > div.widget-body.body > div.header_burger-menu > div.navigation--item__dropdown-content-mobile.hidden
+    > ul.top-navigation > li.publish--item.top-navigation-list
+  sample_text: Publish Why publish with us? Find a journal Search calls for papers
+    Journal Suggester Step-by-step guide Open access publishing Find guidance on Author
+    Services
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  dom_path: div.tab-content > div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext
+    > div#abstractId1.hlFld-Abstract > p.last
+  sample_text: Isoeugenol (2-methoxy-4-(prop-1-en-1-yl)phenol), a component of from
+    clove ( Eugenia caryophylata ) oil, is a starting material for both the biotechnological
+    and synthetic production of vanillin and vanillic acid. In thi
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  dom_path: div.tab-content > div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext
+    > div#s0001.NLM_sec.NLM_sec_level_1 > p
+  sample_text: Clove ( Eugenia caryophylata ) is widely used in traditional medicine
+    for treatment of many diseases such as digestive systems, toothaches, bacterial,
+    and fungal infections. [1] Clove ( Eugenia caryophylata ) oil is very
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0002.NLM_sec.NLM_sec_level_1 > div#s0002-s2001.NLM_sec.NLM_sec_level_2 >
+    p.last
+  sample_text: "p -Nitrophenyl \u03B1-D-glycopyranoside ( p -NPG), achethylycholinesteras\
+    \ from electric eel ( Electrophorus electricus ), \u03B1-amylase from porcine\
+    \ pancreas, \u03B1-glycosidase from Saccharomyces cerevisiae , isoeugenol (CAS\
+    \ Number: "
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0002.NLM_sec.NLM_sec_level_1 > div#s0002-s2002.NLM_sec.NLM_sec_level_2 >
+    p.last
+  sample_text: "For this enzyme, p -NPG was used as the substrate. The samples were\
+    \ prepared by dissolving ethanol (1 mg/mL). Firstly, 100 \u03BCL of NaH 2 PO 4\
+    \ with pH 7.4 and 10 \u03BCL of enzyme solution were mixed ( Table 1 ). And then,\
+    \ 50\u201310"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0002.NLM_sec.NLM_sec_level_1 > div#s0002-s2004.NLM_sec.NLM_sec_level_2 >
+    p.last
+  sample_text: "The inhibitory effect of isoeugenol on AChE activity was performed\
+    \ according to Ellman\u2019s procedure [ Citation 30 ] as described in the previous\
+    \ study. [ Citation 31 ] Acetylthiocholine iodide (AChI) was used as a substra"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  dom_path: article.article > div.hlFld-Fulltext > div#s0003.NLM_sec.NLM_sec_level_1
+    > div.figureView > div.short-legend > p.captionText
+  sample_text: "Figure 2. Determination of Lineweaver\u2013Burk graphs for isoeugenol\
+    \ inhibitor of \u03B1-glycosidase (a) and achethylcholinesterase (AChE) (b) enzymes\
+    \ for determination of Ki values"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  dom_path: div.tab-content > div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext
+    > div#s0003.NLM_sec.NLM_sec_level_1 > p
+  sample_text: "Enzymes as macromolecule had a large spectrum of biological catalysis\
+    \ and chemical reactions. [ Citation 46 \u2013 Citation 52 ] By providing ACh\
+    \ hydrolysis, a neurotransmitter is carried out after the delivery of this substa"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div#references-Section1
+    > div > ul.references.numeric-ordered-list > li#cit0002
+  sample_text: "Lee, K. G.; Shibamoto, T. Antioxidant Property of Aroma Extract Isolated\
+    \ from Clove Buds [ Syzygium aromaticum (L.) Merr. Et Perry]. Food. Chem . 2002,\
+    \ 74, 443\u2013448. DOI: 10.1016/S0308-8146(01)00161-3. (Open in a new wind"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div#references-Section1
+    > div > ul.references.numeric-ordered-list > li#cit0059
+  sample_text: "Taslimi, P.; Gul\xE7In, \u0130. Antioxidant and Anticholinergic Properties\
+    \ of Olivetol. J. Food Biochem . 2018, 42(3), e12516. DOI: 10.1111/jfbc.2018.42.issue-3.\
+    \ (Open in a new window) Web of Science \xAE (Open in a new window) Goo"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: table
+  doi: 10.1080/10942912.2019.1597882
+  fixture_path: tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div#references-Section1
+    > div > ul.references.numeric-ordered-list > li#cit0060
+  sample_text: "Gulcin, I.; Taslimi, P. Sulfonamide Inhibitors: A Patent Review 2013-Present.\
+    \ Exp. Opin. Ther. Pat . 2018, 28(7), 541\u2013549. DOI: 10.1080/13543776.2018.1487400.\
+    \ (Open in a new window) PubMed (Open in a new window) Web of S"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div.contents > div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html
+    > div.wrapped > div.widget-body.body > ul.top-navigation > li.top-navigation-list
+  sample_text: 'Journals Close Journals Menu Browse all
+
+    journals Browse
+
+    all journals A-Z Open
+
+    access journals Open
+
+    Select (hybrid) journals Browse all books Explore Taylor &
+
+    Francis eBooks Publish Find
+
+    a journal Search
+
+    calls for papers '
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div.contents > div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html
+    > div.wrapped > div.widget-body.body > ul.top-navigation > li.publish--item.top-navigation-list
+  sample_text: Publish Why publish with us? Find a journal Search calls for papers
+    Journal Suggester Step-by-step guide Open access publishing We're here to help
+    Find guidance on Author Services
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div.wrapped > div.widget-body.body > div.header_burger-menu > div.navigation--item__dropdown-content-mobile.hidden
+    > ul.top-navigation > li.journals--item.top-navigation-list
+  sample_text: Journals Browse by subject Social Sciences & Humanities Area Studies
+    Arts Communication Studies Economics, Finance, Business & Industry Education Geography
+    Humanities Language & Literature Law Museum and Heritage Studies
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div.navigation--item__dropdown-content-mobile.hidden > ul.top-navigation
+    > li.journals--item.top-navigation-list > div.navigation--item__dropdown-content.hidden
+    > ul > li.has-child
+  sample_text: Browse by subject Social Sciences & Humanities Area Studies Arts Communication
+    Studies Economics, Finance, Business & Industry Education Geography Humanities
+    Language & Literature Law Museum and Heritage Studies Politics
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div.navigation--item__dropdown-content.hidden > ul > li.has-child > div.navigation--item__dropdown-content.hidden
+    > ul > li.has-child
+  sample_text: Social Sciences & Humanities Area Studies Arts Communication Studies
+    Economics, Finance, Business & Industry Education Geography Humanities Language
+    & Literature Law Museum and Heritage Studies Politics & International R
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div.navigation--item__dropdown-content.hidden > ul > li.has-child > div.navigation--item__dropdown-content.hidden
+    > ul > li.has-child
+  sample_text: 'Physical Sciences & Engineering Computer
+
+    Science Engineering
+
+    & Technology Food
+
+    Science & Technology Information
+
+    Science Mathematics
+
+    & Statistics Physical
+
+    Sciences'
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div.navigation--item__dropdown-content.hidden > ul > li.has-child > div.navigation--item__dropdown-content.hidden
+    > ul > li.has-child
+  sample_text: 'Earth & Environmental Sciences Built
+
+    Environment Earth
+
+    Sciences Environment
+
+    & Agriculture Environment
+
+    and Sustainability Global
+
+    Development Urban
+
+    Studies'
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div.wrapped > div.widget-body.body > div.header_burger-menu > div.navigation--item__dropdown-content-mobile.hidden
+    > ul.top-navigation > li.publish--item.top-navigation-list
+  sample_text: Publish Why publish with us? Find a journal Search calls for papers
+    Journal Suggester Step-by-step guide Open access publishing Find guidance on Author
+    Services
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div.tab-content > div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext
+    > div#s0001.NLM_sec.NLM_sec_level_1 > p
+  sample_text: In order to cope with uncertainties associated with information, Zedah
+    ( Citation 1965 ) introduced a fuzzy set (FS) which extended the classical set.
+    The classical set theory was the foundational framework for understan
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div.tab-content > div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext
+    > div#s0002.NLM_sec.NLM_sec_level_1 > p
+  sample_text: "Here, the functions denoted as Q \u02DC P \u02DC ( \u210F \u02DC )\
+    \ , Q \u02DC N \u02DC e ( \u210F \u02DC ) , and Q \u02DC N \u02DC ( \u210F \u02DC\
+    \ ) , quantify the degrees of positivity, neutrality, and negativity associated\
+    \ with an element \u210F \u02DC such that Q \u02DC P \u02DC , Q \u02DC N \u02DC\
+    \ e , Q \u02DC"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div.tab-content > div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext
+    > div#s0002.NLM_sec.NLM_sec_level_1 > p
+  sample_text: "Here, functions, denoted as Q \u02DC P \u02DC ( \u210F \u02DC ) ,\
+    \ Q \u02DC N \u02DC e ( \u210F \u02DC ) , and Q \u02DC N \u02DC ( \u210F \u02DC\
+    \ ) , quantify the degrees of positivity, neutrality, and negativity associated\
+    \ with an element \u210F \u02DC such that Q \u02DC P \u02DC , Q \u02DC N \u02DC\
+    \ e , Q \u02DC N "
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div.tab-content > div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext
+    > div#s0002.NLM_sec.NLM_sec_level_1 > p.last
+  sample_text: "(Molodtsov Citation 1999 ) The soft set over the set G \u02DC is defined\
+    \ as the pair ( Q \u02DC , \u210B \u02DC ) , where Q \u02DC : \u210B \u02DC \u2192\
+    \ \u2119 ( G \u02DC ) and \u210B \u02DC be a subset of a set of attributes D \u02DC\
+    \ ."
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div.tab-content > div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext
+    > div#s0002.NLM_sec.NLM_sec_level_1 > p.last
+  sample_text: "(Maji, Biswas, and Roy Citation 2001 ) Consider the set G \u02DC and\
+    \ the subset \u210B \u02DC of the set of parameters D \u02DC . Then the neutrosophic\
+    \ soft set over G \u02DC is defined as an order pair ( Q \u02DC , \u210B \u02DC\
+    \ ) such that Q \u02DC : \u210B \u02DC \u2192 NS ( G"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div.tab-content > div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext
+    > div#s0002.NLM_sec.NLM_sec_level_1 > p.last
+  sample_text: "(Smarandache et al. Citation 2017 ) In the context where \u210B \u02DC\
+    \ represents a subset of attributes within a set D \u02DC and for three functions\
+    \ Q \u02DC u \u02C7 ( \u210F \u02DC ) , Q \u02DC d \u02C7 ( \u210F \u02DC ) ,\
+    \ and Q \u02DC l \u02C7 ( \u210F \u02DC ) that represent the degrees o"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div.tab-content > div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext
+    > div#s0002.NLM_sec.NLM_sec_level_1 > p
+  sample_text: "where Q \u02DC u \u02C7 , Q \u02DC d \u02C7 , Q \u02DC l \u02C7 :\
+    \ \u210B \u02DC \u2192 cNSS ( G \u02DC ) are complex fuzzy approximate mappings\
+    \ such that Q \u02DC u \u02C7 ( \u210F \u02DC ) = \u2112 \u02DC u \u02C7 ( \u210F\
+    \ \u02DC ) expj \u03A8 \u02DC u \u02C7 ( \u210F \u02DC ) , Q \u02DC d \u02C7 (\
+    \ \u210F \u02DC ) = \u2112 \u02DC d \u02C7 ( \u210F \u02DC ) expj \u03A8 \u02DC\
+    \ d \u02C7 ( \u210F \u02DC ) and "
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div.tab-content > div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext
+    > div#s0002.NLM_sec.NLM_sec_level_1 > p.last
+  sample_text: "Q \u02DC R \u02DC ( \u210F \u02DC ) = [ 1 \u2212 \u2112 \u02DC u \u02C7\
+    \ ( \u210F \u02DC ) \u2212 \u2112 \u02DC d \u02C7 ( \u210F \u02DC ) \u2212 \u2112\
+    \ \u02DC l \u02C7 ( \u210F \u02DC ) ] ex p j [ 2 \u03C0 \u2212 \u03A8 \u02DC u\
+    \ \u02C7 ( \u210F \u02DC ) \u2212 \u03A8 \u02DC d \u02C7 ( \u210F \u02DC ) \u2212\
+    \ \u03A8 \u02DC l \u02C7 ( \u210F \u02DC ) ] within C [ 0 , 1 ] ."
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2001.NLM_sec.NLM_sec_level_2 >
+    p
+  sample_text: "In the context where \u210B represents a subset of attributes within\
+    \ a set E \u02DC and for three functions \u201C Q \u02DC u \u02C7 ( \u210F \u02DC\
+    \ ) , Q \u02DC l \u02C7 ( \u210F \u02DC ) , and Q \u02DC l \u02C7 ( \u210F \u02DC\
+    \ ) \u201D that represent the degrees of truth, indeterminacy, and falsit"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2001.NLM_sec.NLM_sec_level_2 >
+    p.last
+  sample_text: "where, we have complex fuzzy approximate mappings denoted as Q \u02DC\
+    \ u \u02C7 , Q \u02DC d \u02C7 , Q \u02DC l \u02C7 : \u210B \u02DC \u2192 csvNSS\
+    \ ( G \u02DC ) . These mappings are characterized by the equations Q \u02DC u\
+    \ \u02C7 ( \u210F \u02DC ) = \u2112 \u02DC u \u02C7 ( \u210F \u02DC ) expj \u03A8\
+    \ \u02DC u \u02C7 ( \u210F \u02DC ) ,"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2001.NLM_sec.NLM_sec_level_2 >
+    p
+  sample_text: "Q \u02DC R \u02DC ( \u210F \u02DC ) = [ 1 \u2212 \u2112 \u02DC u \u02C7\
+    \ ( \u210F \u02DC ) \u2212 \u2112 \u02DC d \u02C7 ( \u210F \u02DC ) \u2212 \u2112\
+    \ \u02DC l \u02C7 ( \u210F \u02DC ) ] ex p j [ 2 \u03C0 \u2212 \u03A8 \u02DC u\
+    \ \u02C7 ( \u210F \u02DC ) \u2212 \u03A8 \u02DC d \u02C7 ( \u210F \u02DC ) \u2212\
+    \ \u03A8 \u02DC l \u02C7 ( \u210F \u02DC ) ] . This expression is defined within\
+    \ the complex number space C [ 0 , 1 ] "
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2001.NLM_sec.NLM_sec_level_2 >
+    p
+  sample_text: "E \u02DC = { \u210F \u02DC 1 , \u210F \u02DC 2 , \u210F \u02DC 3 ,\
+    \ \u210F \u02DC 4 , \u210F \u02DC 5 , \u210F \u02DC 6 } be a collection of attributes\
+    \ with \u210B \u02DC = { \u210F \u02DC 1 , \u210F \u02DC 2 , \u210F \u02DC 5 ,\
+    \ \u210F \u02DC 6 } \u2286 E \u02DC then approximate elements of CSSNSS N \u02DC\
+    \ 1 are computed as"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2001.NLM_sec.NLM_sec_level_2 >
+    p
+  sample_text: "\u0398 \u02DC ( \u210F \u02DC 1 ) = n \u02DC 1 , 0.51 ex p i 2 \u03C0\
+    \ ( 0.22 ) , 0.65 ex p i 2 \u03C0 ( 0.31 ) , 0.92 ex p i 2 \u03C0 ( 0.15 ) , n\
+    \ \u02DC 2 , 0.93 ex p i 2 \u03C0 ( 0.18 ) , 0.45 ex p i 2 \u03C0 ( 0.21 ) , 0.59\
+    \ ex p i 2 \u03C0 ( 0.22 ) , n \u02DC 3 , 0.99 ex p i 2 \u03C0 ( "
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2001.NLM_sec.NLM_sec_level_2 >
+    p
+  sample_text: "N \u02DC 1 = ( \u210F \u02DC 1 , \u0398 \u02DC 1 ( \u210F \u02DC 1\
+    \ ) ) , ( \u210F \u02DC 2 , \u0398 \u02DC 1 ( \u210F \u02DC 2 ) ) , ( \u210F \u02DC\
+    \ 5 , \u0398 \u02DC 1 ( \u210F \u02DC 5 ) ) , ( \u210F \u02DC 6 , \u0398 \u02DC\
+    \ 1 ( \u210F \u02DC 6 ) ) . It can be represented in matrix notation as"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: article.article > div.hlFld-Fulltext > div#s0003.NLM_sec.NLM_sec_level_1
+    > div#s0003-s2001.NLM_sec.NLM_sec_level_2 > ol.NLM_list.NLM_list-list_type-order
+    > li
+  sample_text: "N \u02DC 1 is considered a CSVNS-subset of N \u02DC 2 , represented\
+    \ as N \u02DC 1 \u2286 N \u02DC 2 , if, for every x \u02DC \u2208 G \u02DC , the\
+    \ set \u0398 \u02DC 1 ( v \u02DC ) is a subset of \u0398 \u02DC 2 ( v \u02DC )\
+    \ . In other words, the following conditions hold:"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div.hlFld-Fulltext > div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2001.NLM_sec.NLM_sec_level_2
+    > ol.NLM_list.NLM_list-list_type-order > li > p.first.last
+  sample_text: "N \u02DC 1 is considered a CSVNS-subset of N \u02DC 2 , represented\
+    \ as N \u02DC 1 \u2286 N \u02DC 2 , if, for every x \u02DC \u2208 G \u02DC , the\
+    \ set \u0398 \u02DC 1 ( v \u02DC ) is a subset of \u0398 \u02DC 2 ( v \u02DC )\
+    \ . In other words, the following conditions hold:"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: article.article > div.hlFld-Fulltext > div#s0003.NLM_sec.NLM_sec_level_1
+    > div#s0003-s2001.NLM_sec.NLM_sec_level_2 > div#s0003-s2001-s3001.NLM_sec.NLM_sec_level_3
+    > p.last
+  sample_text: "The complement of N \u02DC 1 , represented as N \u02DC 1 c , is a\
+    \ csvNSS defined as N \u02DC 1 c = { ( x \u02DC , \u0398 \u02DC 1 c ( x \u02DC\
+    \ ) ) : x \u02DC \u2208 G \u02DC } . Here, \u0398 \u02DC 1 c ( x \u02DC ) stands\
+    \ for the complement of \u0398 \u02DC 1 , which is a single-valued complex "
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: article.article > div.hlFld-Fulltext > div#s0003.NLM_sec.NLM_sec_level_1
+    > div#s0003-s2001.NLM_sec.NLM_sec_level_2 > div#s0003-s2001-s3001.NLM_sec.NLM_sec_level_3
+    > p
+  sample_text: "The csvNSS N \u02DC 1 = ( \u210F \u02DC 1 , \u0398 \u02DC 1 ( \u210F\
+    \ \u02DC 1 ) ) , ( \u210F \u02DC 2 , \u0398 \u02DC 1 ( \u210F \u02DC 2 ) ) , (\
+    \ \u210F \u02DC 5 , \u0398 \u02DC 1 ( \u210F \u02DC 5 ) ) , ( \u210F \u02DC 6\
+    \ , \u0398 \u02DC 1 ( \u210F \u02DC 6 ) ) is given as"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: article.article > div.hlFld-Fulltext > div#s0003.NLM_sec.NLM_sec_level_1
+    > div#s0003-s2001.NLM_sec.NLM_sec_level_2 > div#s0003-s2001-s3001.NLM_sec.NLM_sec_level_3
+    > p
+  sample_text: "The csvNSS N \u02DC 2 = ( \u210F \u02DC 1 , \u0398 \u02DC 2 ( \u210F\
+    \ \u02DC 1 ) ) , ( \u210F \u02DC 3 , \u0398 \u02DC 2 ( \u210F \u02DC 3 ) ) , (\
+    \ \u210F \u02DC 4 , \u0398 \u02DC 2 ( \u210F \u02DC 4 ) ) , ( \u210F \u02DC 6\
+    \ , \u0398 \u02DC 2 ( \u210F \u02DC 6 ) ) , is given as"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2002.NLM_sec.NLM_sec_level_2 >
+    p
+  sample_text: "\u2022 \u2112 \u02DC amp represents the number of instances where\
+    \ the amplitude term of Q \u02DC u \u02DC ( b i ) ( e \u02DC j ) is greater than\
+    \ or equal to Q \u02DC u \u02DC ( b k ) ( e \u02DC j ) ."
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2002.NLM_sec.NLM_sec_level_2 >
+    p
+  sample_text: "\u2022 \u03A8 \u02DC amp indicates the number of instances where the\
+    \ amplitude term of Q \u02DC d \u02DC ( b i ) ( e \u02DC j ) is greater than or\
+    \ equal to Q \u02DC d \u02DC ( b k ) ( e \u02DC j ) ."
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2002.NLM_sec.NLM_sec_level_2 >
+    p
+  sample_text: "\u2022 \u03B3 amp signifies the number of instances where the amplitude\
+    \ term of Q \u02DC l \u02DC ( b i ) ( e \u02DC j ) is greater than or equal to\
+    \ Q \u02DC l \u02DC ( b k ) ( e \u02DC j ) . Furthermore:"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2002.NLM_sec.NLM_sec_level_2 >
+    p
+  sample_text: "\u2022 \u2112 \u02DC phase represents the number of instances where\
+    \ the phase term of Q \u02DC u \u02DC ( b i ) ( e \u02DC j ) is greater than or\
+    \ equal to Q \u02DC u \u02DC ( b k ) ( e \u02DC j ) ."
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2002.NLM_sec.NLM_sec_level_2 >
+    p
+  sample_text: "\u2022 \u03A8 \u02DC phase indicates the number of instances where\
+    \ the phase term of Q \u02DC d \u02DC ( b i ) ( e \u02DC j ) is greater than or\
+    \ equal to Q \u02DC d \u02DC ( b k ) ( e \u02DC j ) ."
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2002.NLM_sec.NLM_sec_level_2 >
+    p
+  sample_text: "\u2022 \u03B3 phase signifies the number of instances where the phase\
+    \ term of Q \u02DC l \u02DC ( b i ) ( e \u02DC j ) is greater than or equal to\
+    \ Q \u02DC l \u02DC ( b k ) ( e \u02DC j ) ."
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: div#mainTabPanel.tab.tab-pane > article.article > div.hlFld-Fulltext >
+    div#s0003.NLM_sec.NLM_sec_level_1 > div#s0003-s2002.NLM_sec.NLM_sec_level_2 >
+    p
+  sample_text: Remark 3.11 . In this illustration, the phase terms serve as a representation
+    of the time required for changes in economic indicators to exert their influence
+    on the overall performance of the economy. The magnitude of t
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: article.article > div.hlFld-Fulltext > div#s0003.NLM_sec.NLM_sec_level_1
+    > div#s0003-s2002.NLM_sec.NLM_sec_level_2 > div#s0003-s2002-s3001.NLM_sec.NLM_sec_level_3
+    > p
+  sample_text: "A D 2 N \u02DC 2 = 0.88 0.37 0.82 0.21 1.1 0.37 1.43 0.15 0.77 0.09\
+    \ 1.04 0.27 0.99 0.33 1.02 0.08 1.02 0.16 1 0.28 1.22 0.32 0.96 0.40 1.07 0.30\
+    \ 1.15 0.31 1.05 0.19 0.43 0.52 . B D 2 N \u02DC 2 = 0.3256 0.1722 0.407 0.2145\
+    \ 0.0693 "
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: formula
+  doi: 10.1080/08839514.2024.2375110
+  fixture_path: tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html
+  dom_path: article.article > div.hlFld-Fulltext > div#s0003.NLM_sec.NLM_sec_level_1
+    > div#s0003-s2002.NLM_sec.NLM_sec_level_2 > div#s0003-s2002-s3001.NLM_sec.NLM_sec_level_3
+    > p
+  sample_text: "A D 3 N \u02DC 3 = 0.48 0.08 0.69 0.08 1.17 0.03 0.98 0.22 0.58 0.20\
+    \ 0.79 0.18 0.73 0.16 1.18 0.18 1.1 0.07 1.15 0.47 0.83 0.08 1.26 0.35 1.41 0.34\
+    \ 1.01 0.43 1.1 0.18 1.15 0.21 . B D 3 N \u02DC 3 = 0.0384 0.0552 0.0351 0.2156\
+    \ 0.11"
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: figure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.contents > div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html
+    > div.wrapped > div.widget-body.body > ul.top-navigation > li.top-navigation-list
+  sample_text: 'Journals Close Journals Menu Browse all
+
+    journals Browse
+
+    all journals A-Z Open
+
+    access journals Open
+
+    Select (hybrid) journals Browse all books Explore Taylor &
+
+    Francis eBooks Publish Find
+
+    a journal Search
+
+    calls for papers '
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: figure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.contents > div#95bb198f-2314-4e18-995d-c13968636386.widget.general-html
+    > div.wrapped > div.widget-body.body > ul.top-navigation > li.publish--item.top-navigation-list
+  sample_text: Publish Why publish with us? Find a journal Search calls for papers
+    Journal Suggester Step-by-step guide Open access publishing We're here to help
+    Find guidance on Author Services
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: figure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.wrapped > div.widget-body.body > div.header_burger-menu > div.navigation--item__dropdown-content-mobile.hidden
+    > ul.top-navigation > li.journals--item.top-navigation-list
+  sample_text: Journals Browse by subject Social Sciences & Humanities Area Studies
+    Arts Communication Studies Economics, Finance, Business & Industry Education Geography
+    Humanities Language & Literature Law Museum and Heritage Studies
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+- purpose: figure
+  doi: 10.1080/15481603.2026.2667034
+  fixture_path: tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html
+  dom_path: div.navigation--item__dropdown-content-mobile.hidden > ul.top-navigation
+    > li.journals--item.top-navigation-list > div.navigation--item__dropdown-content.hidden
+    > ul > li.has-child
+  sample_text: Browse by subject Social Sciences & Humanities Area Studies Arts Communication
+    Studies Economics, Finance, Business & Industry Education Geography Humanities
+    Language & Literature Law Museum and Heritage Studies Politics
+  risk: raw long paragraph/caption/reference text is absent from rendered baseline
+token_conflict_report:
+- token: Citation
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: table:10.1080/10942912.2019.1597882
+    purpose: table
+  - fixture: formula:10.1080/08839514.2024.2375110
+    purpose: formula
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  - fixture: structure:10.1080/19455224.2025.2547671
+    purpose: structure
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: Citation & abstract
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: table:10.1080/10942912.2019.1597882
+    purpose: table
+  - fixture: formula:10.1080/08839514.2024.2375110
+    purpose: formula
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  - fixture: structure:10.1080/19455224.2025.2547671
+    purpose: structure
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: Citation & references
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: table:10.1080/10942912.2019.1597882
+    purpose: table
+  - fixture: formula:10.1080/08839514.2024.2375110
+    purpose: formula
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  - fixture: structure:10.1080/19455224.2025.2547671
+    purpose: structure
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: Citation copied to clipboard
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: table:10.1080/10942912.2019.1597882
+    purpose: table
+  - fixture: formula:10.1080/08839514.2024.2375110
+    purpose: formula
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  - fixture: structure:10.1080/19455224.2025.2547671
+    purpose: structure
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: Citations
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: table:10.1080/10942912.2019.1597882
+    purpose: table
+  - fixture: formula:10.1080/08839514.2024.2375110
+    purpose: formula
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  - fixture: structure:10.1080/19455224.2025.2547671
+    purpose: structure
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: Copy citation to clipboard
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: table:10.1080/10942912.2019.1597882
+    purpose: table
+  - fixture: formula:10.1080/08839514.2024.2375110
+    purpose: formula
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  - fixture: structure:10.1080/19455224.2025.2547671
+    purpose: structure
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: CrossRef citations to date
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: table:10.1080/10942912.2019.1597882
+    purpose: table
+  - fixture: formula:10.1080/08839514.2024.2375110
+    purpose: formula
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  - fixture: structure:10.1080/19455224.2025.2547671
+    purpose: structure
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: Download PDF
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: table:10.1080/10942912.2019.1597882
+    purpose: table
+  - fixture: formula:10.1080/08839514.2024.2375110
+    purpose: formula
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  - fixture: structure:10.1080/19455224.2025.2547671
+    purpose: structure
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: Download a citation file in RIS format that can be imported by citation management
+    software including
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: table:10.1080/10942912.2019.1597882
+    purpose: table
+  - fixture: formula:10.1080/08839514.2024.2375110
+    purpose: formula
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  - fixture: structure:10.1080/19455224.2025.2547671
+    purpose: structure
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: Download citation
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: table:10.1080/10942912.2019.1597882
+    purpose: table
+  - fixture: formula:10.1080/08839514.2024.2375110
+    purpose: formula
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  - fixture: structure:10.1080/19455224.2025.2547671
+    purpose: structure
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: Download citations
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: table:10.1080/10942912.2019.1597882
+    purpose: table
+  - fixture: formula:10.1080/08839514.2024.2375110
+    purpose: formula
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  - fixture: structure:10.1080/19455224.2025.2547671
+    purpose: structure
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: Metrics
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: table:10.1080/10942912.2019.1597882
+    purpose: table
+  - fixture: formula:10.1080/08839514.2024.2375110
+    purpose: formula
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  - fixture: structure:10.1080/19455224.2025.2547671
+    purpose: structure
+  markdown_baseline_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  - fixture: structure:10.1080/19455224.2025.2547671
+    purpose: structure
+  possible_body_conflict: true
+- token: Related research
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: table:10.1080/10942912.2019.1597882
+    purpose: table
+  - fixture: formula:10.1080/08839514.2024.2375110
+    purpose: formula
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  - fixture: structure:10.1080/19455224.2025.2547671
+    purpose: structure
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: Share
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: table:10.1080/10942912.2019.1597882
+    purpose: table
+  - fixture: formula:10.1080/08839514.2024.2375110
+    purpose: formula
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  - fixture: structure:10.1080/19455224.2025.2547671
+    purpose: structure
+  markdown_baseline_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: formula:10.1080/08839514.2024.2375110
+    purpose: formula
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  - fixture: structure:10.1080/19455224.2025.2547671
+    purpose: structure
+  possible_body_conflict: true
+- token: Your download is now in progress and you may close this window
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: table:10.1080/10942912.2019.1597882
+    purpose: table
+  - fixture: formula:10.1080/08839514.2024.2375110
+    purpose: formula
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  - fixture: structure:10.1080/19455224.2025.2547671
+    purpose: structure
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: lists all citing articles based on Crossref citations.
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: table:10.1080/10942912.2019.1597882
+    purpose: table
+  - fixture: formula:10.1080/08839514.2024.2375110
+    purpose: formula
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  - fixture: structure:10.1080/19455224.2025.2547671
+    purpose: structure
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: Download CSV
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: table:10.1080/10942912.2019.1597882
+    purpose: table
+  - fixture: formula:10.1080/08839514.2024.2375110
+    purpose: formula
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: Google Scholar
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: table:10.1080/10942912.2019.1597882
+    purpose: table
+  - fixture: formula:10.1080/08839514.2024.2375110
+    purpose: formula
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: . https://doi.org/10.6084/m9.figshare.30879479.v2.
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  markdown_baseline_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  possible_body_conflict: true
+- token: 3.2 Temperatures and heat-related mortality numbers and rates
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  markdown_baseline_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  possible_body_conflict: true
+- token: 3.3 The impact of cumulative heat effect on heat-related mortality
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  markdown_baseline_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  possible_body_conflict: true
+- token: Cumulative heat effects impact heat-related mortality for an average of four
+    weeks.
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: Download MS Word (16.4 MB)
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: 'Full article: Quantifying cumulative heat effects on heat-related mortality
+    using MODIS land surface temperature data'
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: "Gao, Y., L. Lin, P. Yin, H. Kan, R. Chen, and M. Zhou. 2024. \u201CHeat\
+    \ Exposure and Dementia-Related Mortality in China.\u201D"
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  markdown_baseline_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  possible_body_conflict: true
+- token: Heat-related mortality
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  markdown_baseline_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  possible_body_conflict: true
+- token: Previous week's temperatures contribute up to 70% to current heat-related
+    mortality.
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  markdown_baseline_hits: []
+  possible_body_conflict: false
+- token: Quantifying cumulative heat effects on heat-related mortality using MODIS
+    land surface temperature data
+  raw_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  markdown_baseline_hits:
+  - fixture: structure:10.1080/15481603.2026.2667034
+    purpose: structure
+  - fixture: figure:10.1080/15481603.2026.2667034
+    purpose: figure
+  - fixture: supplementary:10.1080/15481603.2026.2667034
+    purpose: supplementary
+  - fixture: references:10.1080/15481603.2026.2667034
+    purpose: references
+  - fixture: pdf_fallback:10.1080/15481603.2026.2667034
+    purpose: pdf_fallback
+  possible_body_conflict: true
+notes:
+- Proposal only; do not modify provider implementation automatically.
+- Every candidate is derived from committed local fixture text or DOM evidence.
+- markdown_semantic_reviewed remains operator-controlled.

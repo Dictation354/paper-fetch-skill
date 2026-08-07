@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paper-fetch-skill"
-version = "5.1.1"
+version = "5.2.0"
 description = "AI-friendly paper fetch tooling"
 readme = "README.md"
 requires-python = ">=3.11"

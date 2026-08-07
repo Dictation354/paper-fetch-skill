@@ -88,7 +88,7 @@
   - 修改后运行 `python3 scripts/validate_extraction_rules.py` 校验 anchor、Owner、fixture、测试名、manifest 引用和未挂规则 fixture 清单。
 - [`deployment.md`](deployment.md)
   - 讲安装、配置入口、MCP 注册、更新和最小验证。
-  - 讲 Wiley / Science / PNAS / AMS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI 的 repo-local 浏览器工作流、本地 `scripts/dev-preflight.sh` 门禁和 CI 测试耗时信号。
+  - 讲 Wiley / Science / PNAS / AMS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI / Taylor & Francis Online 的 repo-local 浏览器工作流、本地 `scripts/dev-preflight.sh` 门禁和 CI 测试耗时信号。
 - [`macos-adaptation-changes.md`](macos-adaptation-changes.md)
   - 记录基于上游 v4.1.0 的 Mac 差异、用户可见边界、不可变标签与受信任 tooling overlay 策略，以及以后从 Windows / WSL 在最新 `upstream/main` 上重放独立适配提交的流程。
 - [`macos-adaptation-audit.md`](macos-adaptation-audit.md)
@@ -159,10 +159,10 @@
 ### `download_tier`
 
 - `article.assets[*]` 上的资产下载层级诊断。
-- 常见值包括 `full_size`、`preview`。非 browser-workflow 的 HTTP-first 路径可能保留 `playwright_canvas_fallback` 诊断；`wiley` / `science` / `pnas` / `ams` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 的 browser-backed HTML 资产主链路只输出 `full_size` 或 `preview`。
+- 常见值包括 `full_size`、`preview`。非 browser-workflow 的 HTTP-first 路径可能保留 `playwright_canvas_fallback` 诊断；`wiley` / `science` / `pnas` / `ams` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` / `tandf` 的 browser-backed HTML 资产主链路只输出 `full_size` 或 `preview`。
 - `preview` 不是天然错误；当宽高满足阈值且 `source_trail` 有 preview accepted 轨迹时，是可接受降级。
 - preview 降级仍必须导出自包含 Markdown；如果正文图片链接能映射到已下载本地资产，最终 `.md` 不应残留远端图片 URL。
-- `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` 的 challenge 恢复链路会先复用预热正文页中目标 `<img>` 的 canvas 导出；目标图存在但尚未加载时，会先在同一正文页执行带凭据的 `fetch()` 拉取原图字节，再退回图片 URL 直连候选；只接受能识别为图片的 selected-browser image payload，包括浏览器导出的 PNG 和原始 SVG；图片文档 screenshot 和 challenge HTML 不能作为正文图片资产。
+- `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` / `tandf` 的 challenge 恢复链路会先复用预热正文页中目标 `<img>` 的 canvas 导出；目标图存在但尚未加载时，会先在同一正文页执行带凭据的 `fetch()` 拉取原图字节，再退回图片 URL 直连候选；只接受能识别为图片的 selected-browser image payload，包括浏览器导出的 PNG 和原始 SVG；图片文档 screenshot 和 challenge HTML 不能作为正文图片资产。
 - live review 中，只有公式图片发生 preview fallback 时不自动归为 `asset_download_failure`；figure/table preview fallback 仍需要 accepted 轨迹或其它证据才能降噪。资产下载 warning、`asset_failures` 轨迹或 `quality.asset_failures` 会归为 `asset_download_failure`。
 
 ### `semantic_losses`
@@ -208,7 +208,7 @@
 - 每个 sample 的 `http_cache_stats` 表示该 sample 执行前后差值；最终汇总日志仍可查看 `HttpTransport.cache_stats_snapshot()` 的累计快照。
 - `scripts/run_parallel_live_benchmark.py` 复用 golden live acceptance/timings，对同一组直连与 browser 样本运行 `1/2/4` 并发对照；输出 wall time、吞吐、加速比、结果漂移和结构化失败点。该 runner 默认每档一轮、禁用 HTTP 缓存但复用 browser storage-state，只能解释为本次 live 对照。
 - `scripts/run_parallel_live_benchmark.py --same-provider-probe wiley` 是额外的显式 opt-in 能力探测：固定选择 `10.1111/gcb.16414`、`10.1111/gcb.16998`、`10.1111/gcb.15322`，按并发 `1/2` 各跑两轮，并仅在该 devtools 运行中把 Wiley lane 上限临时提升到 `2`。报告以 worker 时间区间和每轮 provider 峰值确认真实重叠；加速比仅供观察，不是成功条件。该结论只适用于本机、本次访问状态，不修改 CLI/MCP 或 provider catalog 的生产默认限流。
-- live runner supported provider 从 runtime `official_provider_names()` 派生，当前包含 `elsevier`、`springer`、`wiley`、`science`、`pnas`、`ieee`、`arxiv`、`copernicus`、`ams`、`mdpi`、`royalsocietypublishing`、`annualreviews`、`plos`、`oxfordacademic`、`acs`、`iop`、`aip`、`frontiers`；provider 路径和资产语义见 [`providers.md`](providers.md)。
+- live runner supported provider 从 runtime `official_provider_names()` 派生，当前包含 `elsevier`、`springer`、`wiley`、`science`、`pnas`、`ieee`、`arxiv`、`copernicus`、`ams`、`mdpi`、`royalsocietypublishing`、`annualreviews`、`plos`、`oxfordacademic`、`acs`、`iop`、`aip`、`tandf`、`frontiers`；provider 路径和资产语义见 [`providers.md`](providers.md)。
 
 ## 一句话阅读建议
 

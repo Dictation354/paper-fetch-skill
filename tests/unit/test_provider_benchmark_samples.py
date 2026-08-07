@@ -52,6 +52,23 @@ def test_single_public_source_can_have_multiple_accepted_route_trails() -> None:
     )
 
 
+def test_tandf_live_html_and_pdf_outcomes_are_paired_with_their_sources() -> None:
+    sample = PROVIDER_BENCHMARK_SAMPLES["tandf"]
+
+    assert sample.accepts_live_result(
+        source="tandf_html",
+        source_trail=["fulltext:tandf_html_ok"],
+    )
+    assert sample.accepts_live_result(
+        source="tandf_pdf",
+        source_trail=["fulltext:tandf_pdf_fallback_ok"],
+    )
+    assert not sample.accepts_live_result(
+        source="tandf_html",
+        source_trail=["fulltext:tandf_pdf_fallback_ok"],
+    )
+
+
 def test_ambiguous_live_source_trail_configuration_is_rejected() -> None:
     sample = ProviderBenchmarkSample(
         provider="example",

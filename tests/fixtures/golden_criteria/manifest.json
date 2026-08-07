@@ -488,15 +488,21 @@
       "doi": "10.1080/19455224.2025.2547671",
       "publisher": "tandf",
       "source_url": "https://www.tandfonline.com/doi/full/10.1080/19455224.2025.2547671",
+      "fetched_at": "2026-08-06T08:43:57Z",
+      "purpose": "structure",
+      "expected_outcome": "fulltext",
+      "fixture_family": "golden",
+      "content_type": "text/html;charset=UTF-8",
+      "route_kind": "html",
       "origin_kind": "real_replay",
       "usage_kind": "content",
       "assets": {
-        "bilingual.html": "tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/bilingual.html"
-      },
-      "fixture_family": "golden",
-      "expected_live_status": "skipped_unsupported_provider",
-      "expected_review_status": "skipped",
-      "out_of_scope_reason": "Provider support for TandF is intentionally out of scope for this live review run."
+        "original.html": "tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/original.html",
+        "expected.json": "tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/expected.json",
+        "extracted.md": "tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/extracted.md",
+        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/markdown-quality-prompt.md",
+        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/markdown-quality.json"
+      }
     },
     "10.1109_ACCESS.2024.3352924": {
       "doi": "10.1109/ACCESS.2024.3352924",
@@ -3354,6 +3360,76 @@
         "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/markdown-quality-prompt.md",
         "markdown-quality.json": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/markdown-quality.json"
       }
+    },
+    "10.1080_15481603.2026.2667034": {
+      "doi": "10.1080/15481603.2026.2667034",
+      "publisher": "tandf",
+      "source_url": "https://www.tandfonline.com/doi/full/10.1080/15481603.2026.2667034",
+      "fetched_at": "2026-08-06T08:43:45Z",
+      "purpose": "supplementary",
+      "expected_outcome": "fulltext",
+      "fixture_family": "golden",
+      "content_type": "text/html;charset=UTF-8",
+      "route_kind": "html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "original.html": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html",
+        "original.pdf": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.pdf",
+        "expected.json": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/expected.json",
+        "extracted.md": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/extracted.md",
+        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/markdown-quality-prompt.md",
+        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/markdown-quality.json",
+        "body_assets/tgrs_a_2667034_f0001_c.jpg": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/body_assets/tgrs_a_2667034_f0001_c.jpg",
+        "body_assets/tgrs_a_2667034_f0002_c.jpg": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/body_assets/tgrs_a_2667034_f0002_c.jpg",
+        "body_assets/tgrs_a_2667034_f0003_c.jpg": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/body_assets/tgrs_a_2667034_f0003_c.jpg",
+        "body_assets/tgrs_a_2667034_f0004_c.jpg": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/body_assets/tgrs_a_2667034_f0004_c.jpg",
+        "body_assets/tgrs_a_2667034_f0005_c.jpg": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/body_assets/tgrs_a_2667034_f0005_c.jpg",
+        "body_assets/tgrs_a_2667034_f0006_c.jpg": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/body_assets/tgrs_a_2667034_f0006_c.jpg",
+        "body_assets/tgrs_a_2667034_f0007_c.jpg": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/body_assets/tgrs_a_2667034_f0007_c.jpg",
+        "body_assets/tgrs_a_2667034_f0008_c.jpg": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/body_assets/tgrs_a_2667034_f0008_c.jpg",
+        "body_assets/tgrs_a_2667034_f0009_c.jpg": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/body_assets/tgrs_a_2667034_f0009_c.jpg"
+      }
+    },
+    "10.1080_10942912.2019.1597882": {
+      "doi": "10.1080/10942912.2019.1597882",
+      "publisher": "tandf",
+      "source_url": "https://www.tandfonline.com/doi/full/10.1080/10942912.2019.1597882",
+      "fetched_at": "2026-08-06T09:09:36Z",
+      "purpose": "table",
+      "expected_outcome": "fulltext",
+      "fixture_family": "golden",
+      "content_type": "text/html;charset=UTF-8",
+      "route_kind": "html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "original.html": "tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html",
+        "expected.json": "tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/expected.json",
+        "extracted.md": "tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/extracted.md",
+        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/markdown-quality-prompt.md",
+        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/markdown-quality.json"
+      }
+    },
+    "10.1080_08839514.2024.2375110": {
+      "doi": "10.1080/08839514.2024.2375110",
+      "publisher": "tandf",
+      "source_url": "https://www.tandfonline.com/doi/full/10.1080/08839514.2024.2375110",
+      "fetched_at": "2026-08-06T09:41:09Z",
+      "purpose": "formula",
+      "expected_outcome": "fulltext",
+      "fixture_family": "golden",
+      "content_type": "text/html;charset=UTF-8",
+      "route_kind": "html",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "assets": {
+        "original.html": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html",
+        "expected.json": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/expected.json",
+        "extracted.md": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/extracted.md",
+        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/markdown-quality-prompt.md",
+        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/markdown-quality.json"
+      }
     }
   },
   "tests": [
@@ -4162,7 +4238,7 @@
       ]
     },
     {
-      "test": "tests/unit/test_regression_samples.py::test_tandf_bilingual_fixture_preserves_parallel_abstract_sections",
+      "test": "tests/unit/test_tandf_provider.py::test_tandf_multilingual_fixture_is_authentic_and_keeps_parallel_abstracts",
       "anchors": [
         "rule-keep-parallel-multilingual-abstracts"
       ],

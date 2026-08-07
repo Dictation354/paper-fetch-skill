@@ -6,6 +6,17 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.2.0 - 2026-08-07
+
+### 新增——Taylor & Francis Online
+
+- 新增 Taylor & Francis Online（`tandf`）支持：通过 browser-rendered article HTML 获取正文，有界加载同源 CSV 和同页已加载的 table payload，并支持 browser-seeded PDF fallback、provider 管理的 abstract-only 降级、图片、MathML 公式、补充材料与参考文献。
+
+### 修复——Taylor & Francis 浏览器初始化
+
+- 为 `paper-fetch auth tandf` 与 `paper-fetch browser-preflight --provider tandf` 增加已验证的开放文章目标；未传 `--url` 时，默认调用不再于目标解析阶段失败。
+- 将文章范围内的 Taylor & Francis CMS 正文图 rendition 标记为可接受 preview；对超出共享宽高阈值、但内容有效的宽图不再误报资产保真度降级。
+
 ## 5.1.1 - 2026-08-06
 
 ### 修复——Elsevier XML 保真度

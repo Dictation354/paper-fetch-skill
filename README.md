@@ -225,7 +225,7 @@ paper-fetch auth wiley
 和在线准备入口，尚未关闭“预置后真正断网启动 Camoufox”的审计项，因此 macOS
 tarball 不能被描述为完整离线浏览器包。
 
-当前 browser-backed auth/preflight provider 包括 `wiley`、`science`、`pnas`、`ams`、`mdpi`、`royalsocietypublishing`、`annualreviews`、`acs`、`iop`、`aip`。AMS 默认直接启动 Camoufox 尝试站点的静默 JavaScript 验证；已有 provider storage-state 时会自动复用，静默验证失败时可运行 `paper-fetch auth ams` 完成人工验证并保存状态。完整 provider、运行时和环境变量说明见 [`docs/providers.md`](docs/providers.md) 与 [`docs/browser-runtime.md`](docs/browser-runtime.md)。
+当前 browser-backed auth/preflight provider 包括 `wiley`、`science`、`pnas`、`ams`、`mdpi`、`royalsocietypublishing`、`annualreviews`、`acs`、`iop`、`aip`、`tandf`。AMS 默认直接启动 Camoufox 尝试站点的静默 JavaScript 验证；已有 provider storage-state 时会自动复用，静默验证失败时可运行 `paper-fetch auth ams` 完成人工验证并保存状态。T&F 只复用操作者已有的合法浏览器访问状态，不自动登录或绕过 challenge、付费墙。完整 provider、运行时和环境变量说明见 [`docs/providers.md`](docs/providers.md) 与 [`docs/browser-runtime.md`](docs/browser-runtime.md)。
 
 ## 文档
 

@@ -22,6 +22,7 @@ from paper_fetch.publisher_identity import normalize_doi
 from paper_fetch.providers import (
     _acs_html,
     _aip_html,
+    _tandf_html,
     _pnas_html,
     _science_html,
     _ams_html,
@@ -41,6 +42,7 @@ from paper_fetch.providers import (
     arxiv as arxiv_provider,
     acs as acs_provider,
     aip as aip_provider,
+    tandf as tandf_provider,
     pnas as pnas_provider,
     science as science_provider,
     ams as ams_provider,
@@ -264,6 +266,7 @@ def _build_browser_workflow_article(fixture: GoldenCorpusFixture):
     client_map = {
         "acs": acs_provider.AcsClient,
         "aip": aip_provider.AipClient,
+        "tandf": tandf_provider.TandfClient,
         "ams": ams_provider.AmsClient,
         "annualreviews": annualreviews_provider.AnnualreviewsClient,
         "iop": iop_provider.IopClient,
@@ -1120,6 +1123,10 @@ def _lightweight_atypon_browser_workflow_summary(
             _aip_html.extract_authors,
             lambda _html_text: (),
         ),
+        "tandf": (
+            _tandf_html.extract_authors,
+            lambda _html_text: (),
+        ),
         "science": (
             _science_html.extract_authors,
             _science_html.blocking_fallback_signals,
@@ -1383,6 +1390,33 @@ def _register_golden_corpus_adapters() -> None:
                 ),
             },
             representative_doi="10.1146/annurev-control-030123-013355",
+            representative_count_fields=(
+                "sections",
+                "abstract_sections",
+                "body_sections",
+            ),
+        )
+    )
+    register_golden_corpus_adapter(
+        GoldenCorpusAdapter(
+            provider="tandf",
+            build_article=_build_browser_workflow_article,
+            lightweight_summary=_lightweight_atypon_browser_workflow_summary,
+            primary_contract=ProviderGoldenContract(
+                route_kind="html",
+                content_prefix="text/html",
+                source="tandf_html",
+                primary_marker="fulltext:tandf_html_ok",
+            ),
+            fallback_contracts={
+                "pdf_fallback": ProviderGoldenContract(
+                    route_kind="pdf_fallback",
+                    content_prefix="application/pdf",
+                    source="tandf_pdf",
+                    primary_marker="fulltext:tandf_pdf_fallback_ok",
+                ),
+            },
+            representative_doi="10.1080/15481603.2026.2667034",
             representative_count_fields=(
                 "sections",
                 "abstract_sections",

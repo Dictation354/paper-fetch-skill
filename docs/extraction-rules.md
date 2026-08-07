@@ -1,6 +1,6 @@
 # 提取与渲染规则
 
-修订日期：2026-06-27
+修订日期：2026-08-07
 
 这份文档解决：
 
@@ -142,6 +142,7 @@ metadata
 | `acs` docs sync | ACS 当前 Silverchair replay 以 `.article-body` 为正文根，覆盖 body section/table、`.fig.fig-section`、MathML formula、`.ref-list .ref` 和 `.widget-ArticleDataSupplements`；稳定 `/article-supplement/` 链接与 Figshare viewer 分离，PDF fixture 捕获复用 selected-browser runtime。 | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/acs.yml` |
 | `iop` docs sync | IOP browser HTML must target articleBody/body sections and remove IOPScience download, metrics, citation, navigation, and challenge-page chrome. Supplementary discovery is two-stage and bounded to a same-DOI /data index followed by supplementarydata SM-numbered attachments; figure controls, QR images, mismatched DOI pages, and empty/challenge indexes cannot be accepted as supplementary files. | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/iop.yml` |
 | `aip` docs sync | AIP 接入复用 Atypon browser workflow，provider-owned 清理移除 AIP article navigation、citation/download、metrics chrome，并保留正文 figures、Markdown tables、LaTeX equations、SUPPLEMENTARY MATERIAL 与 references。 | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/aip.yml` |
+| `tandf` docs sync | Taylor & Francis reuses the shared Atypon browser workflow; provider-owned cleanup removes article tools, metrics, related-content, modal controls, and citation chrome while preserving article-scoped figures, bounded CSV or same-page-payload tables, MathML formulas, supplements, and references. | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/tandf.yml` |
 
 ## Generic
 
@@ -777,7 +778,7 @@ metadata
   - [`../tests/unit/test_regression_samples.py`](../tests/unit/test_regression_samples.py) 中的 `test_springer_bilingual_fixture_preserves_parallel_abstract_sections`
   - [`../tests/unit/test_regression_samples.py`](../tests/unit/test_regression_samples.py) 中的 `test_elsevier_bilingual_fixture_preserves_parallel_abstract_sections`
   - [`../tests/unit/test_regression_samples.py`](../tests/unit/test_regression_samples.py) 中的 `test_sage_bilingual_fixture_preserves_parallel_abstract_sections`
-  - [`../tests/unit/test_regression_samples.py`](../tests/unit/test_regression_samples.py) 中的 `test_tandf_bilingual_fixture_preserves_parallel_abstract_sections`
+  - [`../tests/unit/test_tandf_provider.py`](../tests/unit/test_tandf_provider.py) 中的 `test_tandf_multilingual_fixture_is_authentic_and_keeps_parallel_abstracts`
   - [`../tests/unit/test_models_render.py`](../tests/unit/test_models_render.py) 中的 `test_article_from_markdown_preserves_explicit_multilingual_abstract_sections`
 - 边界说明：
   - 这条规则只约束结构上已经能识别为并行语言变体的块，不承诺自动识别所有翻译关系。
@@ -1985,7 +1986,8 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 | golden / PLOS PDF fallback | `10.1371_journal.pbio.0040298` | PLOS printable PDF fallback 的 route 和 expected payload 回归池；waterfall 归 providers.md，不定义 provider-specific Markdown cleanup 规则。 |
 | golden / Royal Society Publishing | `10.1098_rsif.2019.0334`, `10.1098_rsos.201188`, `10.1098_rsos.201200`, `10.1098_rspb.2020.0097` | Royal Society Publishing browser HTML onboarding breadth corpus；waterfall 与 no-XML 语义归 providers.md。 |
 | golden / Royal Society Publishing PDF fallback | `10.1098_rsta.2020.0108` | Royal Society Publishing seeded-browser PDF fallback 的 shared PDF conversion route 回归池；waterfall 归 providers.md，不定义 provider-specific Markdown cleanup 规则。 |
-| golden / other publishers | `10.1080_19455224.2025.2547671`, `10.1345_aph.1M379` | 非核心 provider 的 multilingual / content regression 样本。 |
+| golden / Taylor & Francis Online | `10.1080_08839514.2024.2375110`, `10.1080_10942912.2019.1597882`, `10.1080_15481603.2026.2667034`, `10.1080_19455224.2025.2547671` | T&F onboarding 的 formula、动态 Markdown table、结构/figure/supplementary/references/PDF fallback 与多语言摘要真实 replay；provider-owned 规则见上方 docs sync、manifest 和 provider-local tests。 |
+| golden / other publishers | `10.1345_aph.1M379` | 其它 publisher 的 multilingual / content regression 样本。 |
 <!-- extraction-rules-unlinked-fixtures:end -->
 
 ## 使用建议

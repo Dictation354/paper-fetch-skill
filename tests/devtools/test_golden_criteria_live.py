@@ -199,12 +199,12 @@ def _mini_manifest(tmpdir: Path) -> Path:
                 "fixture_family": "golden",
                 "assets": {"original.html": "fixtures/mdpi.html"},
             },
-            "tandf_skip": {
-                "doi": "10.1080/skip",
-                "publisher": "tandf",
-                "source_url": "https://example.test/tandf",
+            "sage_skip": {
+                "doi": "10.1177/skip",
+                "publisher": "sage",
+                "source_url": "https://example.test/sage",
                 "fixture_family": "golden",
-                "assets": {"bilingual.html": "fixtures/tandf.html"},
+                "assets": {"bilingual.html": "fixtures/sage.html"},
                 "expected_live_status": "skipped_unsupported_provider",
                 "expected_review_status": "skipped",
                 "out_of_scope_reason": "Unsupported provider is intentional.",
@@ -345,7 +345,7 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
             self.assertEqual(statuses["science_rate_limited"], "rate_limited")
             self.assertEqual(statuses["pnas_error"], "error")
             self.assertEqual(statuses["mdpi_fulltext"], "fulltext")
-            self.assertEqual(statuses["tandf_skip"], "skipped_unsupported_provider")
+            self.assertEqual(statuses["sage_skip"], "skipped_unsupported_provider")
 
             output_root = Path(report.output_dir)
             self.assertTrue((output_root / "report.json").exists())
@@ -388,12 +388,12 @@ class GoldenCriteriaLiveTests(unittest.TestCase):
                 result.sample_id: result.review_status for result in report.results
             }
             self.assertEqual(reviews["elsevier_blocked_404"], "skipped")
-            self.assertEqual(reviews["tandf_skip"], "skipped")
+            self.assertEqual(reviews["sage_skip"], "skipped")
             issues = {
                 result.sample_id: result.issue_categories for result in report.results
             }
             self.assertEqual(issues["elsevier_blocked_404"], [])
-            self.assertEqual(issues["tandf_skip"], [])
+            self.assertEqual(issues["sage_skip"], [])
 
             report_markdown = (output_root / "report.md").read_text(encoding="utf-8")
             self.assertIn("## Coverage Overview", report_markdown)

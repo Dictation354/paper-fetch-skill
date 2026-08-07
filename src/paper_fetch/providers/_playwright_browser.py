@@ -43,6 +43,7 @@ from ..runtime_browser import (
     browser_page_user_agent,
 )
 from ..utils import normalize_text
+from ._atypon_browser_workflow_profiles import publisher_profile
 from .browser_runtime.context import open_browser_context
 from .browser_runtime.seed import (
     browser_context_seed_from_mapping,
@@ -671,6 +672,32 @@ def _wait_for_browser_html_readiness(
     return body_readiness
 
 
+def _prepare_provider_browser_page(
+    page: Any,
+    *,
+    publisher: str,
+    timeout_ms: int,
+    candidate_trace: dict[str, Any],
+) -> None:
+    prepare_browser_page = publisher_profile(publisher).prepare_browser_page
+    if prepare_browser_page is None:
+        return
+    preparation_started = time.monotonic()
+    try:
+        preparation = prepare_browser_page(page, timeout_ms=timeout_ms)
+        if isinstance(preparation, Mapping):
+            candidate_trace["provider_page_preparation"] = dict(preparation)
+    except Exception as exc:
+        candidate_trace["provider_page_preparation"] = {
+            "attempted": True,
+            "error_type": type(exc).__name__,
+        }
+    candidate_trace["provider_page_preparation_seconds"] = round(
+        time.monotonic() - preparation_started,
+        3,
+    )
+
+
 def _browser_html_summary(publisher: str, html_text: str) -> str:
     if normalize_text(publisher).lower() == "ieee":
         return summarize_visible_html(html_text)
@@ -1151,6 +1178,12 @@ def fetch_html_with_playwright(
                     request_started=request_started,
                     return_image_payload=return_image_payload,
                     runtime_context=runtime_context,
+                    candidate_trace=candidate_trace,
+                )
+                _prepare_provider_browser_page(
+                    page,
+                    publisher=publisher,
+                    timeout_ms=remaining_timeout_ms(),
                     candidate_trace=candidate_trace,
                 )
                 final_url = (

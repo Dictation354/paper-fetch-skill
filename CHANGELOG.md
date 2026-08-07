@@ -6,6 +6,17 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.2.0 - 2026-08-07
+
+### Added — Taylor & Francis Online
+
+- Added Taylor & Francis Online (`tandf`) support with browser-rendered article HTML, bounded same-origin CSV and already-loaded same-page table-payload hydration, browser-seeded PDF fallback, provider-managed abstract-only degradation, figures, MathML formulas, supplementary material, and references.
+
+### Fixed — Taylor & Francis browser setup
+
+- Added a verified open-article target for `paper-fetch auth tandf` and `paper-fetch browser-preflight --provider tandf`, so their default invocation no longer fails during target resolution when `--url` is omitted.
+- Classified article-scoped Taylor & Francis CMS figure renditions as accepted previews, including valid wide figures that fall outside the shared dimension threshold, so body-asset acceptance does not report a false fidelity loss.
+
 ## 5.1.1 - 2026-08-06
 
 ### Fixed — Elsevier XML fidelity

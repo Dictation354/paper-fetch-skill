@@ -29,6 +29,8 @@ GENERIC_SUPPLEMENTARY_FILE_SUFFIXES = (
     ".csv",
     ".xlsx",
     ".xls",
+    ".docx",
+    ".doc",
     ".zip",
     ".txt",
     ".json",

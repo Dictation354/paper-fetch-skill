@@ -7,6 +7,7 @@ import pytest
 
 from paper_fetch import auth
 from paper_fetch.config import XDG_DATA_HOME_ENV_VAR
+from paper_fetch.provider_catalog import browser_preflight_provider_names
 from paper_fetch.providers.base import ProviderFailure
 
 
@@ -219,6 +220,14 @@ def test_browser_auth_provider_names_uses_runtime_catalog() -> None:
     assert "wiley" in names
     assert "ams" in names
     assert "arxiv" not in names
+
+
+def test_browser_entrypoint_providers_have_builtin_targets() -> None:
+    declared_providers = set(auth.browser_auth_provider_names()) | set(
+        browser_preflight_provider_names()
+    )
+
+    assert declared_providers <= auth.AUTH_TARGETS.keys()
 
 
 def test_provider_label_uses_catalog_display_name() -> None:

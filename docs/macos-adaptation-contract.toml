@@ -235,7 +235,7 @@ title = "明确 Camoufox 离线边界并移除 FlareSolverr"
 area = "browser-runtime"
 status = "implemented"
 risk = "P1"
-summary = "browser/full extra 允许兼容的 Camoufox 0.5.x，并由 uv.lock 选择可复现的具体版本；构建器复核下载 wheel metadata 与 installed distribution，并在 manifest 记录该版本。离线包捆绑 Python 包但不捆绑浏览器 binary，安装器不得下载浏览器，用户须先显式执行 camoufox fetch，再用 browser-preflight 验证。原生 macOS CI runtime discovery 使用只读 workflow token 避免匿名 GitHub API 限额，live 验证只保留本地显式入口。selected-browser 页面等待稳定正文 DOM；候选循环和保守重试都不得用后续传输/导航失败或 deadline timeout 覆盖已经确认的稳定访问门槛；CLI/MCP 批量解析和 lane 排队不得提前消耗 item fetch deadline；HTTP-200 empty shell 的重试优先下一个既有 provider URL，live MCP 只按精确 access-boundary marker 跳过成功 metadata fallback；活动运行时不得包含 FlareSolverr。"
+summary = "browser/full extra 允许兼容的 Camoufox 0.5.x，并由 uv.lock 选择可复现的具体版本；构建器复核下载 wheel metadata 与 installed distribution，并在 manifest 记录该版本。离线包捆绑 Python 包但不捆绑浏览器 binary，安装器不得下载浏览器，用户须先显式执行 camoufox fetch，再用 browser-preflight 验证。原生 macOS CI runtime discovery 使用只读 workflow token 避免匿名 GitHub API 限额，live 验证只保留本地显式入口。selected-browser 页面等待稳定正文 DOM，并允许 provider 在捕获 HTML 前执行有界、同源、失败不阻断的页面准备；Taylor & Francis 仅用该钩子读取文章页明确暴露的官方 CSV table action 或已加载且不产生新请求的同页 table payload，其文章范围内的官方 CMS figure rendition 按 accepted preview 保留。内置 auth/preflight 目标由 catalog 能力与共享测试保持一致，Taylor & Francis 使用已验证的开放文章，避免默认命令在 target_resolution 提前失败。候选循环和保守重试都不得用后续传输/导航失败或 deadline timeout 覆盖已经确认的稳定访问门槛；CLI/MCP 批量解析和 lane 排队不得提前消耗 item fetch deadline；HTTP-200 empty shell 的重试优先下一个既有 provider URL，live MCP 只按精确 access-boundary marker 跳过成功 metadata fallback；活动运行时不得包含 FlareSolverr。"
 rationale = "Python 包可导入不等于目标浏览器可用，安装时静默联网也会破坏离线包边界；同样，远端挑战、延迟正文或批量调度等待必须与本地 browser context 启动和实际抓取预算分开诊断。"
 implementation_paths = [
   ".github/workflows/ci.yml",
@@ -243,14 +243,18 @@ implementation_paths = [
   "uv.lock",
   "scripts/build-offline-package.sh",
   "install-offline.sh",
+  "src/paper_fetch/auth.py",
   "src/paper_fetch/browser_preflight.py",
   "src/paper_fetch/cli.py",
   "src/paper_fetch/extraction/html/signals.py",
   "src/paper_fetch/mcp/batch_fetch.py",
+  "src/paper_fetch/providers/_atypon_browser_workflow_profiles.py",
   "src/paper_fetch/providers/_playwright_browser.py",
+  "src/paper_fetch/providers/_tandf_html.py",
   "src/paper_fetch/providers/browser_workflow/html_extraction.py",
   "src/paper_fetch/providers/browser_workflow/fetchers/readiness.py",
   "src/paper_fetch/providers/mdpi.py",
+  "src/paper_fetch/providers/tandf.py",
   "src/paper_fetch/quality/html_availability.py",
   "src/paper_fetch/runtime.py",
 ]
@@ -272,6 +276,12 @@ test_nodes = [
   "tests/unit/test_cli_manifest_v2.py::test_batch_resolution_and_queue_time_do_not_consume_fetch_deadline",
   "tests/unit/test_mcp_batch_fetch.py::test_batch_fetch_resolution_and_queue_time_do_not_consume_fetch_deadline",
   "tests/unit/test_atypon_browser_workflow_candidates.py::AtyponBrowserWorkflowCandidateTests::test_pnas_and_mdpi_use_headless_fulltext_readiness_selectors",
+  "tests/unit/test_auth.py::test_browser_entrypoint_providers_have_builtin_targets",
+  "tests/unit/test_camoufox_backend.py::test_camoufox_provider_page_preparation_runs_before_html_capture",
+  "tests/unit/test_tandf_provider.py::test_tandf_builtin_auth_and_preflight_target_use_verified_open_article",
+  "tests/unit/test_tandf_provider.py::test_tandf_article_assets_keep_body_figures_and_scope_supplement",
+  "tests/unit/test_tandf_provider.py::test_tandf_browser_page_preparation_hydrates_official_csv_table",
+  "tests/unit/test_tandf_provider.py::test_tandf_browser_page_preparation_uses_bounded_embedded_table_fallback",
 ]
 audit_cases = ["MAC-AUD-012"]
 portable_validation = "static_and_simulated"

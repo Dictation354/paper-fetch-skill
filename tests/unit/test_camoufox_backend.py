@@ -774,6 +774,59 @@ def test_camoufox_html_navigation_uses_commit_and_keeps_images(
     image_route.abort.assert_not_called()
 
 
+def test_camoufox_provider_page_preparation_runs_before_html_capture(
+    monkeypatch, tmp_path
+) -> None:
+    context = _Context()
+    page_state = {"html": "<html><body><main>Before preparation</main></body></html>"}
+    context.page.content = lambda: page_state["html"]
+
+    def prepare_browser_page(page, *, timeout_ms):
+        assert page is context.page
+        assert timeout_ms > 0
+        page_state["html"] = (
+            "<html><body><main>After preparation</main>"
+            '<table data-paper-fetch-hydrated-table="true"></table>'
+            "</body></html>"
+        )
+        return {"attempted": True, "tables_hydrated": 1}
+
+    config = BrowserRuntimeConfig(
+        provider="example",
+        doi="10.1234/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "publisher_profile",
+        lambda _publisher: SimpleNamespace(prepare_browser_page=prepare_browser_page),
+    )
+
+    result = _playwright_browser.fetch_html_with_playwright(
+        ["https://example.test/article"],
+        publisher="example",
+        config=config,
+        wait_seconds=0,
+    )
+
+    assert "After preparation" in result.html
+    candidate = result.diagnostics["browser_runtime_trace"]["candidates"][0]
+    assert candidate["provider_page_preparation"] == {
+        "attempted": True,
+        "tables_hydrated": 1,
+    }
+    assert candidate["provider_page_preparation_seconds"] >= 0
+
+
 def test_camoufox_candidate_deadline_preserves_observed_access_boundary(
     monkeypatch, tmp_path
 ) -> None:

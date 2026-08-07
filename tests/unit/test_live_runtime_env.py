@@ -125,9 +125,9 @@ def test_catalog_acceptance_report_does_not_hide_unrecorded_provider() -> None:
 
     assert report["schema_version"] == 2
     assert report["summary"] == {
-        "catalog_provider_count": 18,
+        "catalog_provider_count": 19,
         "recorded_provider_count": 1,
-        "unrecorded_provider_count": 17,
+        "unrecorded_provider_count": 18,
         "unrecorded_providers": [
             provider
             for provider in (
@@ -148,6 +148,7 @@ def test_catalog_acceptance_report_does_not_hide_unrecorded_provider() -> None:
                 "iop",
                 "aip",
                 "frontiers",
+                "tandf",
             )
         ],
         "overall": {"complete": 1},

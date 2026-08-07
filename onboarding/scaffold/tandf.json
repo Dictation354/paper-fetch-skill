@@ -1,0 +1,25 @@
+{
+  "docs_files": [
+    "docs/providers.md",
+    "docs/extraction-rules.md",
+    "CHANGELOG.md"
+  ],
+  "generated_files": [
+    "tests/fixtures/golden_criteria/manifest.json"
+  ],
+  "provider": "tandf",
+  "reused_existing_files": [
+    "onboarding/capture-commands/tandf.txt",
+    "src/paper_fetch/providers/_tandf_html.py",
+    "src/paper_fetch/providers/tandf.py",
+    "tests/unit/test_tandf_provider.py"
+  ],
+  "reused_fixture_samples": [
+    "10.1080_08839514.2024.2375110",
+    "10.1080_10942912.2019.1597882",
+    "10.1080_15481603.2026.2667034",
+    "10.1080_19455224.2025.2547671"
+  ],
+  "status": "OK",
+  "summary_path": "onboarding/scaffold/tandf.json"
+}

@@ -1,0 +1,435 @@
+schema_version: 1
+name: tandf
+display_source: tandf_html
+generation:
+  generated_by: ai_discovery
+  generated_at: '2026-08-06T09:00:00Z'
+  source_queries:
+    - Taylor & Francis Online tandfonline.com 10.1080 routing and Crossref publisher
+      review
+    - Taylor & Francis Online 10.1080 article HTML PDF and access-gate route probes
+    - Taylor & Francis Online 10.1080 table DOI candidates
+    - site:tandfonline.com/doi/full 10.1080 "Table 1" Download CSV
+    - Taylor & Francis Online body table article fixture discovery
+    - Taylor & Francis Online 10.1080 formula MathML MathJax DOI candidates
+    - site:tandfonline.com/doi/full 10.1080 "Formulae display" MathML
+    - Taylor & Francis Online equation article fixture discovery
+    - Taylor & Francis Online 10.1080 supplementary DOI candidates
+    - site:tandfonline.com/doi/full 10.1080 Supplemental supplementary material
+    - Taylor & Francis Online article supplement fixture discovery
+  confidence: medium
+routing:
+  primary: domain
+  doi_prefixes:
+    - 10.1080/
+  domains:
+    - tandfonline.com
+    - www.tandfonline.com
+  domain_suffixes:
+    - tandfonline.com
+  publisher_aliases:
+    - Taylor & Francis
+    - Taylor & Francis Group
+    - Informa UK Limited
+  crossref_publisher: Informa UK Limited
+main_path:
+  - article_html
+  - pdf_fallback
+  - abstract_only
+  - metadata_only
+route_sources:
+  article_html: tandf_html
+  pdf_fallback: tandf_pdf
+success_criteria:
+  article_html: {}
+  pdf_fallback: {}
+  abstract_only: {}
+  metadata_only: {}
+route_contract:
+  article_html:
+    success_requires:
+      - Browser-rendered Taylor & Francis Online page exposes DOI or title metadata
+      - A provider article container contains abstract plus body sections
+      - Body content appears before references, metrics, related-content, or recommendation
+        chrome
+    reject_if_any:
+      - Cloudflare or CAPTCHA challenge page
+      - sign-in or purchase access gate without article body
+      - site navigation only
+      - empty article shell
+    min_body_chars: 1200
+    min_body_sections: 1
+    notes: Direct HTTP probes returned Cloudflare challenge wrappers in the current
+      environment, so the approved primary route uses the existing Camoufox browser
+      runtime and never treats a challenge response as article HTML.
+  pdf_fallback:
+    success_requires:
+      - Browser-seeded navigation uses a Taylor & Francis /doi/pdf/ or /doi/epdf/
+        route
+      - PDF response has application/pdf content type or PDF magic bytes
+      - Shared PDF extraction produces body text
+    reject_if_any:
+      - HTML wrapper
+      - Cloudflare or CAPTCHA challenge page
+      - sign-in or purchase access gate
+      - error page
+    require_pdf_magic: true
+    reject_html_wrapper: true
+    notes: PDF is a text-first fallback; HTML remains preferred for body figures,
+      tables, MathML formulas, references, and supplementary links.
+  abstract_only:
+    success_requires:
+      - Provider page or metadata exposes a non-empty abstract
+      - Source trail marks abstract-only degradation after HTML and PDF rejection
+    reject_if_any:
+      - fabricated body text
+      - challenge page
+      - full-text body misclassified as abstract-only
+  metadata_only:
+    success_requires:
+      - metadata contains DOI or title
+      - source trail marks metadata-only fallback
+    reject_if_any:
+      - fabricated body text
+      - provider-specific fulltext source without fulltext
+markdown_contract:
+  structure:
+    doi: 10.1080/15481603.2026.2667034
+    must_include:
+      - '## Abstract'
+      - '## 1. Introduction'
+    must_not_include:
+      - Download Citation
+      - Article Metrics
+  table:
+    doi: 10.1080/10942912.2019.1597882
+    must_include:
+      - Table 1
+    must_not_include:
+      - Google Scholar
+      - Display Table
+    must_match:
+      - (?m)^\|.+\|$
+  formula:
+    doi: 10.1080/08839514.2024.2375110
+    must_include:
+      - '## Introduction'
+    must_not_include:
+      - '[Formula unavailable]'
+      - MathJax Logo
+    must_match:
+      - (?s)\$\$.+?\$\$|\\\(.+?\\\)
+  figure:
+    doi: 10.1080/15481603.2026.2667034
+    must_include:
+      - Figure 1
+    must_not_include:
+      - Open figure viewer
+      - View large
+      - Article Metrics
+    must_match:
+      - '!\[Figure'
+  supplementary:
+    doi: 10.1080/15481603.2026.2667034
+    must_include:
+      - Supplemental
+    must_not_include:
+      - Download Citation
+      - Article Metrics
+  references:
+    doi: 10.1080/15481603.2026.2667034
+    must_include:
+      - '## References'
+    must_not_include:
+      - Google Scholar
+      - Article Metrics
+  pdf_fallback:
+    doi: 10.1080/15481603.2026.2667034
+    must_include:
+      - Quantifying cumulative heat effects
+    must_not_include:
+      - Just a moment
+      - Access Denied
+asset_profile:
+  none: []
+  body:
+    - figures
+    - body_tables
+    - formula_images
+  all:
+    - figures
+    - body_tables
+    - formula_images
+    - supplementary
+asset_contract:
+  figures:
+    inline: body
+    download: required
+    purposes:
+      - figure
+    exception_reason: null
+supplementary_scope:
+  selector: a[href*="/doi/suppl/"], a[href*="supplement"], a[href*="supplemental"]
+  url_pattern: /doi/suppl/|supplement|supplemental
+abstract_only_strategy: provider_managed
+probe:
+  env_requirements: []
+  requires_playwright: false
+  requires_browser_runtime: true
+  ping_url: https://www.tandfonline.com/
+fixtures:
+  doi_samples:
+    structure:
+      doi: 10.1080/15481603.2026.2667034
+      evidence_url: https://www.tandfonline.com/doi/full/10.1080/15481603.2026.2667034
+      evidence_reason: Open-access GIScience & Remote Sensing article exposes title,
+        abstract, body sections, figures and data, supplemental material, references,
+        and publisher PDF/EPUB actions.
+      observed_signals:
+        - browser_html
+        - open_access
+        - body_sections
+        - references
+      confidence: high
+    table:
+      doi: 10.1080/10942912.2019.1597882
+      evidence_url: https://www.tandfonline.com/doi/full/10.1080/10942912.2019.1597882
+      evidence_reason: Taylor & Francis article body exposes Table 1 with a table
+        viewer/download action and stable body table content.
+      observed_signals:
+        - browser_html
+        - body_tables
+        - table_1
+      confidence: high
+    formula:
+      doi: 10.1080/08839514.2024.2375110
+      evidence_url: https://www.tandfonline.com/doi/full/10.1080/08839514.2024.2375110
+      evidence_reason: Open-access Applied Artificial Intelligence article declares
+        MathML formulas displayed with MathJax and contains equation-dense body content.
+      observed_signals:
+        - browser_html
+        - mathml
+        - mathjax
+        - equations
+      confidence: high
+    figure:
+      doi: 10.1080/15481603.2026.2667034
+      evidence_url: https://www.tandfonline.com/doi/full/10.1080/15481603.2026.2667034
+      evidence_reason: The open article exposes a Figures & data route plus body figures
+        suitable for inline and local-download acceptance.
+      observed_signals:
+        - browser_html
+        - body_figures
+        - image_assets
+      confidence: high
+    supplementary:
+      doi: 10.1080/15481603.2026.2667034
+      evidence_url: https://www.tandfonline.com/doi/full/10.1080/15481603.2026.2667034
+      evidence_reason: The open article exposes an article-scoped Supplemental route
+        and downloadable supplementary content.
+      observed_signals:
+        - browser_html
+        - supplemental
+        - supplementary_download
+      confidence: high
+    references:
+      doi: 10.1080/15481603.2026.2667034
+      evidence_url: https://www.tandfonline.com/doi/full/10.1080/15481603.2026.2667034
+      evidence_reason: The open article exposes a rendered References section and
+        citation-linked reference entries.
+      observed_signals:
+        - browser_html
+        - references
+        - citation_links
+      confidence: high
+    pdf_fallback:
+      doi: 10.1080/15481603.2026.2667034
+      evidence_url: https://www.tandfonline.com/doi/pdf/10.1080/15481603.2026.2667034
+      evidence_reason: The open article exposes a publisher PDF action; the route
+        requires browser-seeded download and strict PDF payload validation.
+      observed_signals:
+        - browser_pdf
+        - pdf_link
+        - open_access
+      confidence: high
+    abstract_only:
+      doi: null
+      evidence_url: https://www.tandfonline.com/
+      evidence_reason: Targeted candidates, including 10.1080/00045608.2012.700616,
+        exposed complete body sections in the approved institutional browser context;
+        no authentic abstract-only replay remained after full-text validation.
+      observed_signals: []
+      confidence: high
+    access_gate:
+      doi: null
+      evidence_url: https://www.tandfonline.com/
+      evidence_reason: Targeted candidates, including 10.1080/24694452.2018.1535887,
+        retained needAccess UI metadata but exposed complete article bodies in the
+        approved institutional browser context, so they are not valid access gates.
+      observed_signals: []
+      confidence: high
+    empty_shell:
+      doi: null
+      evidence_url: https://www.tandfonline.com/
+      evidence_reason: Three targeted discovery searches did not identify a stable
+        DOI-specific empty shell distinct from a challenge, access gate, or valid
+        article; empty-shell rejection remains covered by provider-local tests.
+      observed_signals: []
+      confidence: medium
+  discovery_proof:
+    table:
+      queries:
+        - Taylor & Francis Online 10.1080 table DOI candidates
+        - site:tandfonline.com/doi/full 10.1080 "Table 1" Download CSV
+        - Taylor & Francis Online body table article fixture discovery
+      candidates:
+        - 10.1080/10942912.2019.1597882
+        - 10.1080/19331681.2016.1230921
+        - 10.1080/14992027.2019.1683626
+      selected_doi: 10.1080/10942912.2019.1597882
+      rejections:
+        10.1080/19331681.2016.1230921: Candidate has a stable Table 1, but the selected
+          food-science article has denser tabular content for renderer regression.
+        10.1080/14992027.2019.1683626: Candidate has a demographic table, but it is
+          less representative of numeric scientific tables than the selected DOI.
+      exhausted: false
+      evidence_summary: Selected 10.1080/10942912.2019.1597882 because its article
+        HTML exposes Table 1 and stable table-viewer content on tandfonline.com.
+    formula:
+      queries:
+        - Taylor & Francis Online 10.1080 formula MathML MathJax DOI candidates
+        - site:tandfonline.com/doi/full 10.1080 "Formulae display" MathML
+        - Taylor & Francis Online equation article fixture discovery
+      candidates:
+        - 10.1080/08839514.2024.2375110
+        - 10.1080/10511970.2024.2352866
+        - 10.1080/21663831.2026.2630988
+      selected_doi: 10.1080/08839514.2024.2375110
+      rejections:
+        10.1080/10511970.2024.2352866: Candidate exposes MathML but is not open access
+          and is less stable for replay capture.
+        10.1080/21663831.2026.2630988: Candidate exposes formula and supplemental
+          signals but is larger and newer than the focused selected fixture.
+      exhausted: false
+      evidence_summary: Selected 10.1080/08839514.2024.2375110 because its open article
+        explicitly exposes MathML rendered with MathJax and equation-heavy body content.
+    supplementary:
+      queries:
+        - Taylor & Francis Online 10.1080 supplementary DOI candidates
+        - site:tandfonline.com/doi/full 10.1080 Supplemental supplementary material
+        - Taylor & Francis Online article supplement fixture discovery
+      candidates:
+        - 10.1080/15481603.2026.2667034
+        - 10.1080/08839514.2024.2375110
+        - 10.1080/14992027.2025.2603479
+      selected_doi: 10.1080/15481603.2026.2667034
+      rejections:
+        10.1080/08839514.2024.2375110: Candidate has supplemental material, but it
+          is already selected for formula-specific coverage.
+        10.1080/14992027.2025.2603479: Candidate exposes supplement links but is less
+          aligned with the historical climate/health demand than the selected DOI.
+      exhausted: false
+      evidence_summary: Selected 10.1080/15481603.2026.2667034 because its open page
+        exposes a Supplemental route and shares structure, figure, and reference coverage.
+    abstract_only:
+      queries:
+        - Taylor & Francis Online 10.1080 abstract-only entitlement candidate
+        - site:tandfonline.com/doi/abs 10.1080 abstract access options
+        - Taylor & Francis abstract-only browser replay candidate
+      candidates:
+        - 10.1080/00045608.2012.700616
+        - 10.1080/24694452.2018.1535887
+      selected_doi: null
+      rejections:
+        10.1080/00045608.2012.700616: Approved browser replay exposes multiple complete
+          body sections and references, so the page is full text rather than abstract-only.
+        10.1080/24694452.2018.1535887: Approved browser replay also exposes a complete
+          body and is retained only as rejected discovery evidence.
+      exhausted: true
+      evidence_summary: No stable authentic abstract-only replay was available under
+        the approved institutional access context; the degradation remains covered
+        by metadata fallback and provider-local boundary tests.
+    access_gate:
+      queries:
+        - Taylor & Francis Online 10.1080 access gate needAccess candidate
+        - site:tandfonline.com/doi/abs 10.1080 purchase access options
+        - Taylor & Francis browser access-gate replay candidate
+      candidates:
+        - 10.1080/24694452.2018.1535887
+        - 10.1080/00045608.2012.700616
+      selected_doi: null
+      rejections:
+        10.1080/24694452.2018.1535887: needAccess UI metadata remains in the page,
+          but the approved browser session exposes the complete body and references.
+        10.1080/00045608.2012.700616: The approved browser replay exposes full text
+          and cannot serve as a genuine access-gate fixture.
+      exhausted: true
+      evidence_summary: No stable access gate distinct from a challenge or entitled
+        full-text page was found without changing the approved access context.
+extra_fixtures:
+  - purpose: structure
+    doi: 10.1080/19455224.2025.2547671
+    evidence_url: https://www.tandfonline.com/doi/full/10.1080/19455224.2025.2547671
+    evidence_reason: Authentic open-access museum-conservation article contains full
+      body structure and multilingual abstracts, replacing the previous identity-mismatched
+      synthetic/minimal fixture for the same DOI.
+    observed_signals:
+      - browser_html
+      - body_sections
+      - multilingual_abstracts
+      - references
+    confidence: high
+    markdown_contract:
+      doi: 10.1080/19455224.2025.2547671
+      must_include:
+        - The affective turn and the management of conservation within the museum
+        - '## Abstract'
+      must_not_include:
+        - Learning analytics summaries across two languages
+        - Download Citation
+extraction_hints:
+  datalayer_signal_set: null
+  text_marker_signal_set: null
+  front_matter:
+    exact_texts:
+      - full access
+      - open access
+      - free access
+      - research article
+      - perspective
+      - review
+      - editorial
+      - commentary
+      - taylor & francis online
+      - open access
+      - research article
+      - review article
+      - full article
+      - figures & data
+    contains_tokens:
+      - authors info
+      - affiliations
+      - view further author information
+      - authors info & affiliations
+    publication_keywords:
+      - taylor & francis
+      - tandfonline
+      - routledge
+      - informa uk limited
+  asset_retry: null
+  metadata_merge: []
+owner_reuse_exceptions: []
+docs:
+  providers_md_capability_row: '| `tandf` | Crossref merge + `tandfonline.com`/`10.1080/`
+    routing | `Camoufox Taylor & Francis article HTML -> browser-seeded PDF -> provider-managed
+    abstract_only -> metadata fallback` | HTML supports `none` / `body` / `all`; PDF
+    fallback is text-first | 中 | HTML success publishes `tandf_html`, PDF fallback
+    publishes `tandf_pdf`; no XML/TDM route |'
+  changelog_summary: Add Taylor & Francis Online (`tandf`) provider with browser article
+    HTML, bounded same-origin CSV and already-loaded same-page table hydration, seeded-browser
+    PDF fallback, abstract-only degradation, assets, MathML formulas, supplementary
+    material, and references.
+  extraction_rules_summary: Taylor & Francis reuses the shared Atypon browser workflow;
+    provider-owned cleanup removes article tools, metrics, related-content, modal
+    controls, and citation chrome while preserving article-scoped figures, bounded
+    CSV or same-page-payload tables, MathML formulas, supplements, and references.

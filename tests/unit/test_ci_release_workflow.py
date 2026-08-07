@@ -182,6 +182,15 @@ def test_regular_ci_includes_native_macos_offline_gate() -> None:
     assert "GITHUB_TOKEN: ${{ github.token }}" in workflow
     assert 'PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST: "1"' in workflow
     assert "tests/integration/test_camoufox_native_macos.py -q -n 0" in workflow
+    assert "Verify provider page preparation on native macOS" in workflow
+    assert (
+        "test_camoufox_provider_page_preparation_runs_before_html_capture" in workflow
+    )
+    assert "test_tandf_browser_page_preparation_hydrates_official_csv_table" in workflow
+    assert (
+        "test_tandf_browser_page_preparation_uses_bounded_embedded_table_fallback"
+        in workflow
+    )
     assert "test_cache_scope_accepts_equivalent_filesystem_alias_for_root" in workflow
     assert "haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553" in workflow
     assert 'MACOSX_DEPLOYMENT_TARGET: "15.0"' in workflow

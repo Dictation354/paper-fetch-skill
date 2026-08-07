@@ -325,6 +325,24 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         ),
         fixture_kind="html",
     ),
+    "tandf": ProviderBenchmarkSample(
+        provider="tandf",
+        doi="10.1080/15481603.2026.2667034",
+        year=2026,
+        title="Quantifying cumulative heat effects on heat-related mortality using MODIS land surface temperature data",
+        landing_url="https://www.tandfonline.com/doi/full/10.1080/15481603.2026.2667034",
+        accepted_sources=("tandf_html", "tandf_pdf"),
+        accepted_live_source_trail_groups=(
+            ("fulltext:tandf_html_ok",),
+            ("fulltext:tandf_pdf_fallback_ok",),
+        ),
+        recommended_env=("CROSSREF_MAILTO",),
+        fixture_name=golden_criteria_fixture(
+            "10.1080/15481603.2026.2667034",
+            "original.html",
+        ),
+        fixture_kind="html",
+    ),
 }
 
 SPRINGER_NEWS_ACCESS_GATE_SAMPLE = ProviderBenchmarkSample(

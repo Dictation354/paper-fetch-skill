@@ -10,6 +10,9 @@
 *.yaml text eol=lf
 *.md text eol=lf
 
+# Golden corpus PDFs are immutable binary replay inputs.
+*.pdf binary
+
 # Native Windows launchers use Windows line endings.
 *.bat text eol=crlf
 *.cmd text eol=crlf
