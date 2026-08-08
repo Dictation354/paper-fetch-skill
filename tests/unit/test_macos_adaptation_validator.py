@@ -325,6 +325,81 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         self.assertFalse(validator._camoufox_version_is_supported("0.6.0"))
         self.assertFalse(validator._camoufox_version_is_supported("latest"))
 
+    def test_formula_toolchain_contract_drift_is_rejected(self) -> None:
+        contract = validator.load_contract()
+        formula_tools = contract["components"]["formula_tools"]
+        formula_tools["setup_action"] = "example/setup"
+        formula_tools["setup_action_version"] = "v9.9.9"
+        formula_tools["setup_action_sha"] = "not-a-full-sha"
+        formula_tools["ghc_version"] = "9.12.0"
+        formula_tools["cabal_version"] = "3.14.0.0"
+        formula_tools["ci_workflow_uses"] = 2
+        formula_tools["offline_workflow_uses"] = 1
+
+        diagnostic = "\n".join(validator.validate_contract(contract))
+
+        for field in (
+            "setup_action",
+            "setup_action_version",
+            "setup_action_sha",
+            "ghc_version",
+            "cabal_version",
+            "ci_workflow_uses",
+            "offline_workflow_uses",
+        ):
+            self.assertIn(f"components.formula_tools.{field} must be", diagnostic)
+        self.assertIn("must be a full 40-character git hash", diagnostic)
+
+    def test_formula_toolchain_workflow_pin_and_usage_drift_is_rejected(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            workflows = repo_root / ".github" / "workflows"
+            workflows.mkdir(parents=True)
+            (workflows / "ci.yml").write_text(
+                "      - name: Set up pinned Haskell toolchain\n"
+                "        uses: example/setup@"
+                f"{validator.EXPECTED_FORMULA_SETUP_SHA} "
+                f"# {validator.EXPECTED_FORMULA_SETUP_VERSION}\n"
+                "        with:\n"
+                f'          ghc-version: "{validator.EXPECTED_FORMULA_GHC_VERSION}"\n'
+                "          cabal-version: "
+                f'"{validator.EXPECTED_FORMULA_CABAL_VERSION}"\n',
+                encoding="utf-8",
+            )
+            (workflows / "offline.yml").write_text(
+                "      - name: Set up pinned Haskell toolchain\n"
+                "        uses: haskell-actions/setup@"
+                f"{'0' * 40} # v9.9.9\n"
+                "        with:\n"
+                '          ghc-version: "9.12.0"\n'
+                '          cabal-version: "3.14.0.0"\n',
+                encoding="utf-8",
+            )
+            errors: list[str] = []
+
+            validator._validate_formula_toolchain_workflows(
+                repo_root=repo_root,
+                errors=errors,
+            )
+
+        diagnostic = "\n".join(errors)
+        self.assertIn(
+            ".github/workflows/ci.yml must use haskell-actions/setup exactly "
+            "1 times; got 0",
+            diagnostic,
+        )
+        self.assertIn(
+            ".github/workflows/offline.yml must use haskell-actions/setup exactly "
+            "2 times; got 1",
+            diagnostic,
+        )
+        self.assertIn("haskell-actions/setup SHA must be", diagnostic)
+        self.assertIn("haskell-actions/setup version comment must be", diagnostic)
+        self.assertIn("haskell-actions/setup ghc-version must be", diagnostic)
+        self.assertIn("haskell-actions/setup cabal-version must be", diagnostic)
+
     def test_contract_keeps_portable_and_native_evidence_explicit(self) -> None:
         contract = validator.load_contract()
 

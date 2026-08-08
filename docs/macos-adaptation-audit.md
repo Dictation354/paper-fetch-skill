@@ -85,14 +85,18 @@
 
 - 要求：texmath 是实体文件；非系统 dylib 收进 `formula-tools/lib`；install
   name 使用 `@rpath` / `@loader_path`；texmath 和随包 dylib 均有可验证的
-  ad-hoc 签名。
-- 自动证据：构建 smoke、`otool -L`、`codesign --verify --strict` 和公式转换
-  smoke。
+  ad-hoc 签名。构建 setup 固定为 `haskell-actions/setup` v2.12.0 的完整 SHA，
+  GHC 9.10.3 与 Cabal 3.12.1.0；`ci.yml` 精确使用一次，`offline.yml` 精确使用
+  两次同一 pin。
+- 自动证据：机器合约 validator 拒绝 action、版本注释、SHA、GHC/Cabal 或使用
+  次数漂移；原生构建继续执行 smoke、`otool -L`、
+  `codesign --verify --strict` 和公式转换 smoke。
 - 平台：只有 D 可作为关闭证据。
 - 关闭条件：从解压 bundle 复制到随机绝对 install root 后，仍通过版本和复杂
   MathML 转换。
 - 限制：ad-hoc 签名不是 Developer ID 签名，也不等于 notarization 或
-  Gatekeeper 发行者信任。
+  Gatekeeper 发行者信任。v2.12.0 随附的 GHCup 0.2.6.2 只更新构建工具链，
+  不改变 texmath 0.13.2、公式入口或发布产物接口。
 
 ### MAC-AUD-006
 
