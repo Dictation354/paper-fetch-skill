@@ -6,6 +6,13 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.2.1 - 2026-08-08
+
+### 变更——构建与发布完整性
+
+- 将固定的 `haskell-actions/setup` 构建 action 从 v2.11.0 更新到 v2.12.0，并同步 macOS 机器合约、validator、测试和文档。action 随附的 GHCup 0.2.6.2 更新仍保留 GHC 9.10.3、Cabal 3.12.1.0、texmath 0.13.2 和既有产物接口。
+- 新增独立的 `uv lock --check` quality gate；项目版本、依赖声明或 lock metadata 陈旧时，会在其余静态检查前直接令 CI 失败。
+
 ## 5.2.0 - 2026-08-07
 
 ### 新增——Taylor & Francis Online

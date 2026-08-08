@@ -6,6 +6,13 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.2.1 - 2026-08-08
+
+### Changed — build and release integrity
+
+- Updated the pinned `haskell-actions/setup` build action from v2.11.0 to v2.12.0 and synchronized the macOS machine contract, validator, tests, and documentation. The action's GHCup 0.2.6.2 update retains GHC 9.10.3, Cabal 3.12.1.0, texmath 0.13.2, and the existing artifact interfaces.
+- Added an independent `uv lock --check` quality gate so stale project-version, dependency-declaration, or lock metadata changes fail CI before the remaining static checks.
+
 ## 5.2.0 - 2026-08-07
 
 ### Added — Taylor & Francis Online

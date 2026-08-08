@@ -22,6 +22,8 @@ jobs:
       - uses: ./.github/actions/setup-python-deps
         with:
           python-version: "3.11"
+      - name: Check lockfile freshness
+        run: uv lock --check
       - name: Static quality gates
         run: |
           uv run ruff format --check .

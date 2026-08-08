@@ -50,6 +50,10 @@ def test_ci_protects_minimum_and_maximum_python_core_and_full_installs() -> None
 
 def test_quality_gate_uses_whole_package_typing_complexity_and_locked_audit() -> None:
     workflow = _workflow_text("ci.yml")
+    quality_steps = _workflow("ci.yml")["jobs"]["quality"]["steps"]
+    assert [
+        step for step in quality_steps if step.get("name") == "Check lockfile freshness"
+    ] == [{"name": "Check lockfile freshness", "run": "uv lock --check"}]
     assert "mypy src/paper_fetch" in workflow
     assert "scripts/check_complexity_budget.py" in workflow
     assert "scripts/check_provider_governance.py" in workflow
