@@ -56,6 +56,13 @@ binary_format = "Mach-O"
 signature = "adhoc"
 relocate_non_system_dylibs = true
 entrypoint = "formula-tools/bin/texmath"
+setup_action = "haskell-actions/setup"
+setup_action_version = "v2.12.0"
+setup_action_sha = "6037f33647c3f17758a2356c80fc4a53d7e0685d"
+ghc_version = "9.10.3"
+cabal_version = "3.12.1.0"
+ci_workflow_uses = 1
+offline_workflow_uses = 2
 
 [components.camoufox]
 python_package = "bundled"

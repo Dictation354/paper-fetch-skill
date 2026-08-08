@@ -15,6 +15,9 @@ Windows / WSL 开发时同步上游 `main` 的重放流程。它不是一次性�
   macOS 15.0
 - 原生构建 runner：固定 `macos-15`，不使用会随 GitHub 镜像迁移的
   `macos-latest`
+- 公式构建工具链固定为 `haskell-actions/setup` v2.12.0（完整 commit SHA）、
+  GHC 9.10.3 与 Cabal 3.12.1.0；普通 CI 使用一次，offline workflow 的 Linux / macOS
+  job 共使用两次
 - browser/full extra 接受 `camoufox>=0.5.4,<0.6`，由 `uv.lock` 固定原生 browser
   launch gate 与离线产物实际使用的 Python package 版本
 - `v4.1.0` 是不可移动的上游审计基线，不是本 fork 适配后的发布版本；发布这些
@@ -96,6 +99,12 @@ marker 不进入 checksum 或发行包。输出目录不能位于 staging 内；
 这使“包名看起来正确”和“目标机确实兼容”成为两个独立检查。
 
 ### MAC-V4-002：可迁移且可验证的 texmath
+
+公式构建 setup action 已从 v2.11.0 更新到 v2.12.0。该 action 更新随附的
+GHCup 0.2.6.2，但仍固定 GHC 9.10.3、Cabal 3.12.1.0 和 texmath 0.13.2；它只更新
+CI / release 的构建工具链，不改变随包 texmath 版本、公式转换入口、安装布局、
+Mach-O 处理或产物接口。机器合约同时锁定 action 名称、版本注释、完整 SHA、
+工具版本和 workflow 使用次数，contract version 因此继续保持 4.1.0。
 
 构建阶段不再假定 runner 上编译出的 texmath 可以原样移动。构建脚本会：
 

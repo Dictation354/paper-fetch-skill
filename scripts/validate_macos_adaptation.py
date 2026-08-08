@@ -26,6 +26,15 @@ EXPECTED_PYTHON_TAGS = ["cp311", "cp312", "cp313", "cp314"]
 EXPECTED_BASELINE_REVISION = "fc3bd96e8d781667a2e86e90dc6e8e35a8a26fa7"
 EXPECTED_CONTRACT_VERSION = "4.1.0"
 EXPECTED_CAMOUFOX_SPECIFIER = ">=0.5.4,<0.6"
+EXPECTED_FORMULA_SETUP_ACTION = "haskell-actions/setup"
+EXPECTED_FORMULA_SETUP_VERSION = "v2.12.0"
+EXPECTED_FORMULA_SETUP_SHA = "6037f33647c3f17758a2356c80fc4a53d7e0685d"
+EXPECTED_FORMULA_GHC_VERSION = "9.10.3"
+EXPECTED_FORMULA_CABAL_VERSION = "3.12.1.0"
+EXPECTED_FORMULA_WORKFLOW_USES = {
+    ".github/workflows/ci.yml": 1,
+    ".github/workflows/offline.yml": 2,
+}
 EXPECTED_POSIX_TOOLING_PATHS = [
     "scripts/build-offline-package.sh",
     "install-offline.sh",
@@ -1012,6 +1021,13 @@ def _validate_browser_boundary(
             "signature",
             "relocate_non_system_dylibs",
             "entrypoint",
+            "setup_action",
+            "setup_action_version",
+            "setup_action_sha",
+            "ghc_version",
+            "cabal_version",
+            "ci_workflow_uses",
+            "offline_workflow_uses",
         },
         field="components.formula_tools",
         errors=errors,
@@ -1023,10 +1039,26 @@ def _validate_browser_boundary(
         "signature": "adhoc",
         "relocate_non_system_dylibs": True,
         "entrypoint": "formula-tools/bin/texmath",
+        "setup_action": EXPECTED_FORMULA_SETUP_ACTION,
+        "setup_action_version": EXPECTED_FORMULA_SETUP_VERSION,
+        "setup_action_sha": EXPECTED_FORMULA_SETUP_SHA,
+        "ghc_version": EXPECTED_FORMULA_GHC_VERSION,
+        "cabal_version": EXPECTED_FORMULA_CABAL_VERSION,
+        "ci_workflow_uses": EXPECTED_FORMULA_WORKFLOW_USES[".github/workflows/ci.yml"],
+        "offline_workflow_uses": EXPECTED_FORMULA_WORKFLOW_USES[
+            ".github/workflows/offline.yml"
+        ],
     }
     for key, expected in expected_formula.items():
         if formula_tools.get(key) != expected:
             errors.append(f"components.formula_tools.{key} must be {expected!r}")
+    setup_sha = formula_tools.get("setup_action_sha")
+    if not isinstance(setup_sha, str) or FULL_REVISION_RE.fullmatch(setup_sha) is None:
+        errors.append(
+            "components.formula_tools.setup_action_sha must be a full "
+            "40-character git hash"
+        )
+    _validate_formula_toolchain_workflows(repo_root=repo_root, errors=errors)
 
     build_script = _read_repo_file(
         "scripts/build-offline-package.sh",
@@ -1151,6 +1183,80 @@ def _validate_browser_boundary(
                 "active runtime/build surface still references removed FlareSolverr: "
                 f"{path.relative_to(repo_root).as_posix()}"
             )
+
+
+def _validate_formula_toolchain_workflows(
+    *,
+    repo_root: Path,
+    errors: list[str],
+) -> None:
+    setup_pattern = re.compile(
+        r"^(?P<indent>\s*)uses:\s*"
+        r"(?P<action>[^@\s]+)@(?P<sha>[^\s#]+)"
+        r"(?:\s+#\s*(?P<version>\S+))?\s*$"
+    )
+    version_patterns = {
+        "ghc-version": (
+            re.compile(r'^ghc-version:\s*["\']?([^"\'\s]+)["\']?\s*$'),
+            EXPECTED_FORMULA_GHC_VERSION,
+        ),
+        "cabal-version": (
+            re.compile(r'^cabal-version:\s*["\']?([^"\'\s]+)["\']?\s*$'),
+            EXPECTED_FORMULA_CABAL_VERSION,
+        ),
+    }
+
+    for relative_path, expected_count in EXPECTED_FORMULA_WORKFLOW_USES.items():
+        workflow = _read_repo_file(
+            relative_path,
+            repo_root=repo_root,
+            errors=errors,
+        )
+        lines = workflow.splitlines()
+        setup_steps: list[tuple[int, re.Match[str]]] = []
+        for index, line in enumerate(lines):
+            match = setup_pattern.fullmatch(line)
+            if match and match.group("action") == EXPECTED_FORMULA_SETUP_ACTION:
+                setup_steps.append((index, match))
+
+        if len(setup_steps) != expected_count:
+            errors.append(
+                f"{relative_path} must use {EXPECTED_FORMULA_SETUP_ACTION} exactly "
+                f"{expected_count} times; got {len(setup_steps)}"
+            )
+
+        for line_index, match in setup_steps:
+            if match.group("sha") != EXPECTED_FORMULA_SETUP_SHA:
+                errors.append(
+                    f"{relative_path} {EXPECTED_FORMULA_SETUP_ACTION} SHA must be "
+                    f"{EXPECTED_FORMULA_SETUP_SHA!r}"
+                )
+            if match.group("version") != EXPECTED_FORMULA_SETUP_VERSION:
+                errors.append(
+                    f"{relative_path} {EXPECTED_FORMULA_SETUP_ACTION} version comment "
+                    f"must be {EXPECTED_FORMULA_SETUP_VERSION!r}"
+                )
+
+            step_indent = len(match.group("indent"))
+            step_lines: list[str] = []
+            for following in lines[line_index + 1 :]:
+                stripped = following.strip()
+                following_indent = len(following) - len(following.lstrip())
+                if stripped.startswith("- ") and following_indent < step_indent:
+                    break
+                step_lines.append(stripped)
+
+            for field, (pattern, expected_version) in version_patterns.items():
+                actual_versions = [
+                    field_match.group(1)
+                    for step_line in step_lines
+                    if (field_match := pattern.fullmatch(step_line))
+                ]
+                if actual_versions != [expected_version]:
+                    errors.append(
+                        f"{relative_path} {EXPECTED_FORMULA_SETUP_ACTION} {field} "
+                        f"must be {expected_version!r}; got {actual_versions!r}"
+                    )
 
 
 def _validate_portable_and_release_tooling(
