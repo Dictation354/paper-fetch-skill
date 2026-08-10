@@ -6,6 +6,13 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.3.1 - 2026-08-10
+
+### 修复——Wiley 浏览器访问判断
+
+- 修复 Wiley 全文页和 Open Access 页面仅因当前页头把 `Institutional login` 提前到前 1,000 个可见字符内，就被误判为 `publisher_paywall` 的问题。现有 provider 正文 readiness 确认实质文章内容后，导航中的普通付费墙和 not-found 文本会交给正文感知的 availability assessor；challenge 页面、HTTP 401/402/403、HTTP 404、显式拒绝访问和摘要重定向仍会 fail closed。
+- 对没有实质正文 readiness 的页面继续保留 `Institutional login` 通用 access-gate 信号，并新增端到端 Wiley browser-preflight、共享信号、Linux CI、原生 `macos-15` 与 macOS adaptation contract 回归。
+
 ## 5.3.0 - 2026-08-10
 
 ### 新增——浏览器复用与可观测性

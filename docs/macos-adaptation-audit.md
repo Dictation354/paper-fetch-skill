@@ -228,7 +228,8 @@
   browser binary，再运行 `paper-fetch browser-preflight` 验证启动和 provider
   state。
 - 补充 portable 证据：selected-browser 正文 DOM 稳定等待、MDPI delayed-body
-  readiness，以及“已确认的候选/快速 attempt 访问门槛不被后续候选的传输/导航
+  readiness、Wiley 稳定正文就绪后将页头登录导航交给正文感知验收且保留强阻断，
+  以及“已确认的候选/快速 attempt 访问门槛不被后续候选的传输/导航
   失败或下一候选、保守重试的 deadline timeout 覆盖”均由纯 Python 单测锁定；
   PNAS 单次导航/8 秒稳定正文预算、provider 精确 image/font/media 阻断、一次性
   preflight HTML cache 的 DOI/URL/runtime 指纹隔离、AIP 禁用跨 context 复用，以及

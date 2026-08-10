@@ -1447,10 +1447,17 @@ def fetch_html_with_playwright(
                 readiness.require_selector
                 and candidate_trace.get("selector_readiness_ready")
             )
+            # Stable provider body readiness outweighs navigation-only access
+            # labels; challenge and explicit HTTP failures still fail closed.
+            substantive_body_ready = bool(
+                readiness.wait_for_article_body
+                and candidate_trace.get("dom_readiness_ready")
+            )
             detected = detect_html_block(
                 title or "",
                 summary,
                 status,
+                substantive_body_ready=substantive_body_ready,
                 html_text="" if required_selector_ready else html,
                 response_headers={} if required_selector_ready else headers,
             )

@@ -73,6 +73,8 @@ jobs:
             tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_silverchair_figure_page_resolution_stays_on_camoufox_owner_thread \
             tests/unit/test_camoufox_backend.py::test_provider_resource_policy_blocks_only_configured_heavy_types \
             tests/unit/test_camoufox_backend.py::test_pnas_body_readiness_uses_bounded_budget_and_keeps_final_html \
+            tests/unit/test_camoufox_backend.py::test_wiley_body_readiness_defers_login_navigation_paywall_text \
+            tests/unit/test_browser_preflight.py::test_wiley_preflight_accepts_leading_login_navigation_after_body_readiness \
             tests/unit/test_camoufox_backend.py::test_figure_page_fetches_reuse_one_runtime_context_and_page \
             tests/unit/test_acs_provider.py::test_acs_asset_extraction_promotes_largest_srcset_rendition \
             tests/unit/test_annualreviews_provider.py::test_annualreviews_asset_extraction_promotes_largest_srcset_rendition \
@@ -211,6 +213,8 @@ jobs:
             tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_silverchair_figure_page_resolution_stays_on_camoufox_owner_thread \
             tests/unit/test_camoufox_backend.py::test_provider_resource_policy_blocks_only_configured_heavy_types \
             tests/unit/test_camoufox_backend.py::test_pnas_body_readiness_uses_bounded_budget_and_keeps_final_html \
+            tests/unit/test_camoufox_backend.py::test_wiley_body_readiness_defers_login_navigation_paywall_text \
+            tests/unit/test_browser_preflight.py::test_wiley_preflight_accepts_leading_login_navigation_after_body_readiness \
             tests/unit/test_camoufox_backend.py::test_figure_page_fetches_reuse_one_runtime_context_and_page \
             tests/unit/test_acs_provider.py::test_acs_asset_extraction_promotes_largest_srcset_rendition \
             tests/unit/test_annualreviews_provider.py::test_annualreviews_asset_extraction_promotes_largest_srcset_rendition \

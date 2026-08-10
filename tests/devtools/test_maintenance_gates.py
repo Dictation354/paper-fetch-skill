@@ -91,7 +91,7 @@ def test_complexity_budget_update_is_monotonic(tmp_path: Path) -> None:
 
 def test_release_version_artifacts_are_synchronized() -> None:
     facts = project_version_facts()
-    assert facts.version == "5.3.0"
+    assert facts.version == "5.3.1"
     assert synchronized_version_issues(facts) == []
 
 

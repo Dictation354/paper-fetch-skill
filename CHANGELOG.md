@@ -6,6 +6,13 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.3.1 - 2026-08-10
+
+### Fixed — Wiley browser access detection
+
+- Fixed Wiley full-text and Open Access pages being classified as `publisher_paywall` solely because the current header places `Institutional login` within the first 1,000 visible characters. Once the existing provider body-readiness check confirms substantive article content, navigation-only paywall and not-found text is deferred to the body-aware availability assessor; challenge pages, HTTP 401/402/403, HTTP 404, explicit access denial, and abstract redirects still fail closed.
+- Kept `Institutional login` as a generic access-gate signal for pages without substantive body readiness, and added end-to-end Wiley browser-preflight, shared signal, Linux CI, native `macos-15`, and macOS adaptation-contract regressions.
+
 ## 5.3.0 - 2026-08-10
 
 ### Added — browser reuse and observability

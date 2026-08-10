@@ -217,6 +217,8 @@ def test_regular_ci_includes_non_science_browser_performance_regressions() -> No
         "test_silverchair_figure_page_resolution_stays_on_camoufox_owner_thread",
         "test_provider_resource_policy_blocks_only_configured_heavy_types",
         "test_pnas_body_readiness_uses_bounded_budget_and_keeps_final_html",
+        "test_wiley_body_readiness_defers_login_navigation_paywall_text",
+        "test_wiley_preflight_accepts_leading_login_navigation_after_body_readiness",
         "test_figure_page_fetches_reuse_one_runtime_context_and_page",
         "test_acs_asset_extraction_promotes_largest_srcset_rendition",
         "test_annualreviews_asset_extraction_promotes_largest_srcset_rendition",

@@ -327,6 +327,7 @@ resolve
   - 固定顺序是 `selected-browser HTML -> browser-seeded publisher PDF/ePDF -> Wiley TDM API PDF -> abstract-only / metadata-only`。
   - 不做额外 fast HTML preflight，避免低成功率路径增加固定开销。
   - selected-browser HTML 正文首轮使用快速路径并阻断 media 资源；challenge、访问拦截、摘要页或正文抽取不足时回退到保守等待参数。
+  - 当前 Wiley 页头中的 `Institutional login` 仍是通用 access-gate 信号；只有 `.article-section__content` 等正文 DOM 已达到稳定实质正文阈值时，selected-browser 才把这类导航文本交给后续正文感知验收，而不在前 1,000 字符摘要阶段提前判为 paywall。challenge、HTTP 401/402/403、HTTP 404 和摘要重定向仍在早期 fail closed；正文未达到阈值时不享受该否决，现有付费墙文本以及下游 Wiley datalayer 的 `item_access=no`、`format_viewed=abstract` 等信号仍可拒绝。
   - Atypon/Wiley figure label 只从显式 label、figure DOM id、图片 URL basename 或 caption 起始 `Figure N` 推断；caption 正文里的 `Figure N` 交叉引用不能覆盖当前图号。
   - `WILEY_TDM_CLIENT_TOKEN` 是官方 TDM API PDF lane；缺失时仍可继续尝试 browser PDF/ePDF，配置后会在 browser PDF/ePDF fallback 失败或 browser runtime 不可用时继续尝试 TDM PDF。TDM URL template 声明在 `ProviderSpec.api_url_templates`，provider 只负责填充 DOI。
   - Atypon 默认 PDF/ePDF 路径模板只在 `provider_catalog.ATYPON_DEFAULT_PDF_PATH_TEMPLATES` 维护；Wiley 在此基础上追加 `pdfdirect` / `wol1` 专属模板。

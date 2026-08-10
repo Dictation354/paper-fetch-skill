@@ -234,6 +234,9 @@ wheel、installed runtime 与 manifest 任一漂移都会 fail closed。
 
 同一浏览器边界还要求把“本地 runtime 可启动”和“远端页面可取得正文”分开：
 selected-browser provider 在抽取前等待 provider 正文 DOM 达到阈值并连续两次稳定；
+稳定实质正文已经就绪时，页头 `Institutional login` 等普通导航文本不再由前 1,000
+字符摘要提前判为 paywall，而交给正文感知的 provider availability 验收；challenge、
+HTTP 401/402/403、HTTP 404 和摘要重定向仍在浏览器边界直接阻断。
 任一候选已确认 challenge/paywall/access boundary、而后续候选发生传输/导航失败，
 或下一候选、保守重试只因共享 deadline 耗尽而失败时，保留首个稳定 reason code，
 并在 diagnostics 中附加后续失败。live MCP 对成功 metadata fallback 只接受精确的

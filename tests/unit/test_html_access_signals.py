@@ -144,6 +144,65 @@ class HtmlAccessSignalsTests(unittest.TestCase):
         self.assertEqual(failure.reason, "publisher_paywall")
         self.assertEqual(failure.message, html_failure_message("publisher_paywall"))
 
+    def test_detect_html_block_defers_navigation_text_after_substantive_body_ready(
+        self,
+    ) -> None:
+        summary = "Login / Register Individual login Institutional login Open Access"
+
+        self.assertIsNone(
+            detect_html_block(
+                "Example article",
+                summary,
+                200,
+                substantive_body_ready=True,
+            )
+        )
+        failure = detect_html_block("Example article", summary, 200)
+        self.assertIsNotNone(failure)
+        assert failure is not None
+        self.assertEqual(failure.reason, "publisher_paywall")
+        self.assertIsNone(
+            detect_html_block(
+                "Example article",
+                "Page not found in a cited navigation label",
+                200,
+                substantive_body_ready=True,
+            )
+        )
+
+    def test_substantive_body_ready_keeps_strong_early_blocks(self) -> None:
+        cases = (
+            (
+                "challenge",
+                {
+                    "title": "Just a moment",
+                    "text": "Checking your browser",
+                    "response_status": 200,
+                },
+                "cloudflare_challenge",
+            ),
+            (
+                "forbidden",
+                {"title": "Article", "text": "Body", "response_status": 403},
+                "publisher_access_denied",
+            ),
+            (
+                "not_found",
+                {"title": "Article", "text": "Body", "response_status": 404},
+                "publisher_not_found",
+            ),
+        )
+
+        for name, kwargs, expected_reason in cases:
+            with self.subTest(name=name):
+                failure = detect_html_block(
+                    **kwargs,
+                    substantive_body_ready=True,
+                )
+                self.assertIsNotNone(failure)
+                assert failure is not None
+                self.assertEqual(failure.reason, expected_reason)
+
     def test_access_gate_patterns_are_ordered_and_include_atypon_browser_workflow_phrases(
         self,
     ) -> None:

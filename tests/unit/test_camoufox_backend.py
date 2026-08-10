@@ -774,6 +774,61 @@ def test_camoufox_html_navigation_uses_commit_and_keeps_images(
     image_route.abort.assert_not_called()
 
 
+def test_wiley_body_readiness_defers_login_navigation_paywall_text(
+    monkeypatch, tmp_path
+) -> None:
+    context = _Context()
+    context.page.content = mock.Mock(
+        return_value=(
+            "<html><head><title>Open access article</title></head><body>"
+            "<nav>Login / Register Individual login Institutional login Open Access</nav>"
+            "<section class='article-section__content en main'>"
+            "<h2>Results</h2><p>"
+            + ("Substantive Wiley article body text. " * 120)
+            + "</p><p>Additional discussion paragraph.</p></section></body></html>"
+        )
+    )
+    config = BrowserRuntimeConfig(
+        provider="wiley",
+        doi="10.1111/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "wait_for_atypon_body_dom_ready",
+        lambda *_args, **_kwargs: SimpleNamespace(
+            attempted=True,
+            ready=True,
+            selector="section.article-section__content",
+            text_length=4200,
+            paragraph_count=2,
+            heading_count=1,
+        ),
+    )
+
+    result = _playwright_browser.fetch_html_with_playwright(
+        ["https://onlinelibrary.wiley.com/doi/full/10.1111/example"],
+        publisher="wiley",
+        config=config,
+        wait_seconds=2,
+    )
+
+    assert result.response_status == 200
+    assert "Institutional login" in result.summary
+    candidate = result.diagnostics["browser_runtime_trace"]["candidates"][0]
+    assert candidate["dom_readiness_ready"] is True
+    assert candidate["result"] == "success"
+
+
 def test_provider_resource_policy_blocks_only_configured_heavy_types(
     monkeypatch, tmp_path
 ) -> None:

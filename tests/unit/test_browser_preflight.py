@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 import pytest
 
 from paper_fetch import browser_preflight
+from paper_fetch.providers import _playwright_browser
 from paper_fetch.config import (
     BROWSER_TIMEOUT_MS_ENV_VAR,
     BROWSER_USER_AGENT_ENV_VAR,
@@ -211,6 +213,124 @@ def test_browser_preflight_adds_provider_storage_path_for_camoufox(
     assert isinstance(runtime_env, dict)
     assert runtime_env[BROWSER_TIMEOUT_MS_ENV_VAR] == "45000"
     assert BROWSER_USER_AGENT_ENV_VAR not in runtime_env
+
+
+def test_wiley_preflight_accepts_leading_login_navigation_after_body_readiness(
+    tmp_path: Path,
+) -> None:
+    body = "".join(
+        "<p>Paragraph "
+        f"{index}. "
+        + ("Substantive scientific article content with methods and results. " * 10)
+        + "</p>"
+        for index in range(12)
+    )
+    html = (
+        "<html><head><title>Open access article</title>"
+        "<meta name='citation_title' content='Open access article'>"
+        "<meta name='citation_doi' content='10.1111/gcb.15322'>"
+        '<script>window.adobeDataLayer = [{"content": {"item": '
+        '{"access": "yes", "format-viewed": "full"}}, '
+        '"page": {"tertiary-section": "full"}}];</script></head>'
+        "<body><nav>Login / Register Individual login Institutional login "
+        "Open Access</nav><article><section class='article-section__content en main'>"
+        f"<h2>Introduction</h2>{body}</section></article></body></html>"
+    )
+
+    class Response:
+        status = 200
+        headers = {"content-type": "text/html"}
+
+        def all_headers(self):
+            return dict(self.headers)
+
+    class Page:
+        def __init__(self) -> None:
+            self.url = "about:blank"
+            self.route_handler = None
+
+        def goto(self, url, **_kwargs):
+            self.url = url
+            return Response()
+
+        def route(self, _pattern, handler):
+            self.route_handler = handler
+
+        def content(self):
+            return html
+
+        def title(self):
+            return "Open access article"
+
+        def evaluate(self, _script):
+            return "Mozilla/5.0 Firefox/152.0"
+
+        def close(self):
+            return None
+
+    class Context:
+        def __init__(self) -> None:
+            self.page = Page()
+
+        def new_page(self):
+            return self.page
+
+        def cookies(self, _urls=None):
+            return []
+
+        def close(self):
+            return None
+
+    runtime = replace(
+        _runtime_config(tmp_path, provider="wiley", doi="10.1111/gcb.15322"),
+        persist_storage_state=False,
+    )
+    context = Context()
+
+    def fetch_html_with_playwright(*args, warm_wait_seconds=None, **kwargs):
+        del warm_wait_seconds
+        return _playwright_browser.fetch_html_with_playwright(*args, **kwargs)
+
+    with (
+        mock.patch.object(
+            browser_preflight,
+            "load_runtime_config",
+            return_value=runtime,
+        ),
+        mock.patch.object(browser_preflight, "ensure_runtime_ready"),
+        mock.patch.object(
+            browser_preflight,
+            "fetch_html_with_browser",
+            side_effect=fetch_html_with_playwright,
+        ),
+        mock.patch.object(
+            _playwright_browser,
+            "open_browser_context",
+            return_value=(None, context),
+        ),
+        mock.patch.object(
+            _playwright_browser,
+            "wait_for_atypon_body_dom_ready",
+            return_value=SimpleNamespace(
+                attempted=True,
+                ready=True,
+                selector="section.article-section__content",
+                text_length=7600,
+                paragraph_count=12,
+                heading_count=1,
+            ),
+        ),
+    ):
+        result = browser_preflight.preflight_browser_provider(
+            "wiley",
+            env={},
+            save_storage_state=False,
+        )
+
+    assert result.status == "ready", (result.message, result.diagnostics)
+    assert result.reason_code == "browser_preflight_ready"
+    trace = result.diagnostics["browser_runtime_trace"]
+    assert trace["candidates"][0]["dom_readiness_ready"] is True
 
 
 def test_browser_preflight_uses_custom_target_and_disables_storage_write(
