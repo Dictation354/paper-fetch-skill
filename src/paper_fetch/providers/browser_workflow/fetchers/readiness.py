@@ -46,6 +46,12 @@ ATYPON_BODY_READY_SELECTORS: Mapping[str, tuple[str, ...]] = {
         ".article-body",
         ".widget-ArticleFulltext",
     ),
+    "royalsocietypublishing": (
+        ".widget-ArticleFulltext .article-body",
+        ".widget-ArticleFulltext",
+        ".article-body",
+        ".article-content",
+    ),
     "iop": (
         "[itemprop='articleBody']",
         "[property='articleBody']",

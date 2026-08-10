@@ -8,6 +8,7 @@ from typing import Any
 
 _EXPORTS: dict[str, tuple[str, str]] = {
     "BrowserWorkflowBootstrapResult": (".profile", "BrowserWorkflowBootstrapResult"),
+    "BrowserWorkflowPolicy": (".profile", "BrowserWorkflowPolicy"),
     "BrowserWorkflowClient": (".client", "BrowserWorkflowClient"),
     "PdfFallbackFailure": ("paper_fetch.providers._pdf_fallback", "PdfFallbackFailure"),
     "ProviderBrowserProfile": (".profile", "ProviderBrowserProfile"),

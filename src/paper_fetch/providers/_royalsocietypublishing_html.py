@@ -14,7 +14,10 @@ from bs4 import BeautifulSoup, Tag
 
 from ..extraction.html._metadata import merge_html_metadata, parse_html_metadata
 from ..extraction.html.assets import extract_scoped_html_assets
-from ..extraction.html.assets.silverchair import silverchair_download_image_url
+from ..extraction.html.assets.silverchair import (
+    promote_silverchair_srcset_originals,
+    silverchair_download_image_url,
+)
 from ..extraction.html.figure_links import inject_inline_figure_links
 from ..extraction.html.parsing import choose_parser
 from ..extraction.html.renderer import (
@@ -837,16 +840,18 @@ def extract_markdown(
         rendered.markdown_text,
         _back_matter_section_markdown(render_html, source_url),
     )
+    raw_asset_html = promote_silverchair_srcset_originals(raw_article_body_html)
+    cleaned_asset_html = promote_silverchair_srcset_originals(cleaned_html)
     extracted_assets = _normalize_extracted_assets(
         [
             *_royal_society_figure_assets(
-                raw_article_body_html,
+                raw_asset_html,
                 source_url,
                 include_caption=False,
             ),
-            *_royal_society_figure_assets(cleaned_html, source_url),
+            *_royal_society_figure_assets(cleaned_asset_html, source_url),
             *extract_scoped_html_assets(
-                cleaned_html,
+                cleaned_asset_html,
                 source_url,
                 asset_profile=asset_profile,
                 supplementary_html_text=cleaned_html,

@@ -152,6 +152,7 @@ _TANDF_MAX_TABLE_ROWS = 1_000
 _TANDF_MAX_TABLE_COLUMNS = 100
 _TANDF_MAX_TABLE_CSV_CHARS = 2_000_000
 _TANDF_TABLE_FETCH_MS = 2_000
+_TANDF_TABLE_FETCH_CONCURRENCY = 4
 _TANDF_ADJACENT_SENTENCE_RE = re.compile(
     r"(?P<prefix>(?:^|(?<=[.!?])\s+))"
     r"(?P<sentence>[^.!?\n]{40,}[.!?])\s+(?P=sentence)(?=\s|$)"
@@ -195,35 +196,77 @@ _TANDF_READ_EMBEDDED_TABLES_SCRIPT = r"""
   };
 }
 """
-_TANDF_FETCH_TABLE_CSV_SCRIPT = """
-async ({ href, tableId, timeoutMs }) => {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(href, {
-      credentials: "same-origin",
-      headers: { Accept: "text/csv" },
-      signal: controller.signal,
-    });
-    const controls = document.getElementById(`${tableId}-table-wrapper`);
-    const target = controls ? controls.closest(".tableView") : null;
-    const caption = target ? target.querySelector(".captionText") : null;
-    return {
-      ok: response.ok,
-      status: response.status,
-      contentType: response.headers.get("content-type") || "",
-      text: await response.text(),
-      caption: caption ? caption.textContent || "" : "",
-    };
-  } catch (error) {
-    return {
-      ok: false,
-      status: 0,
-      error: error && error.name ? error.name : "fetch_failed",
-    };
-  } finally {
-    clearTimeout(timer);
-  }
+_TANDF_FETCH_TABLE_CSV_BATCH_SCRIPT = """
+async ({ entries, perTableTimeoutMs, totalTimeoutMs, concurrency }) => {
+  const startedAt = performance.now();
+  const deadline = startedAt + Math.max(1, totalTimeoutMs);
+  const results = new Array(entries.length);
+  let cursor = 0;
+
+  const fetchOne = async (entry, index) => {
+    let targetUrl;
+    try {
+      targetUrl = new URL(entry.href, window.location.href);
+    } catch (error) {
+      return { index, tableId: entry.tableId, ok: false, error: "invalid_url" };
+    }
+    if (targetUrl.origin !== window.location.origin) {
+      return { index, tableId: entry.tableId, ok: false, error: "cross_origin" };
+    }
+    const remainingMs = Math.floor(deadline - performance.now());
+    if (remainingMs <= 0) {
+      return { index, tableId: entry.tableId, ok: false, error: "total_timeout" };
+    }
+    const timeoutMs = Math.max(1, Math.min(perTableTimeoutMs, remainingMs));
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(targetUrl.href, {
+        credentials: "same-origin",
+        headers: { Accept: "text/csv" },
+        signal: controller.signal,
+      });
+      const controls = document.getElementById(`${entry.tableId}-table-wrapper`);
+      const target = controls ? controls.closest(".tableView") : null;
+      const caption = target ? target.querySelector(".captionText") : null;
+      return {
+        index,
+        tableId: entry.tableId,
+        ok: response.ok,
+        status: response.status,
+        contentType: response.headers.get("content-type") || "",
+        text: await response.text(),
+        caption: caption ? caption.textContent || "" : "",
+      };
+    } catch (error) {
+      return {
+        index,
+        tableId: entry.tableId,
+        ok: false,
+        status: 0,
+        error: error && error.name ? error.name : "fetch_failed",
+      };
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+
+  const worker = async () => {
+    while (true) {
+      const index = cursor++;
+      if (index >= entries.length) {
+        return;
+      }
+      results[index] = await fetchOne(entries[index], index);
+    }
+  };
+  const workerCount = Math.min(Math.max(1, concurrency), entries.length || 1);
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+  return {
+    results,
+    timedOut: performance.now() >= deadline,
+    concurrency: workerCount,
+  };
 }
 """
 _TANDF_INJECT_TABLE_SCRIPT = """
@@ -794,38 +837,21 @@ def refine_selected_container(node: Tag, **_kwargs: Any) -> Tag:
     return selected
 
 
-def prepare_browser_page(
-    page: Any,
-    *,
-    timeout_ms: int | None = None,
-) -> dict[str, Any]:
-    """Hydrate bounded T&F CSV or already-loaded same-page table payloads."""
+def _tandf_table_deadline(timeout_ms: int | None) -> float | None:
+    if timeout_ms is None:
+        return None
+    return time.monotonic() + max(0, int(timeout_ms)) / 1000
 
-    result: dict[str, Any] = {
-        "attempted": True,
-        "table_controls": 0,
-        "tables_hydrated": 0,
-        "csv_tables_hydrated": 0,
-        "embedded_tables": 0,
-        "embedded_tables_hydrated": 0,
-        "table_failures": 0,
-        "truncated": False,
-    }
-    locator = getattr(page, "locator", None)
-    if not callable(locator):
-        result["attempted"] = False
-        return result
 
-    links = locator(_TANDF_TABLE_DOWNLOAD_SELECTOR)
-    count = max(0, int(links.count()))
-    result["table_controls"] = count
-    result["truncated"] = count > _TANDF_MAX_DYNAMIC_TABLES
-    deadline = time.monotonic() + max(0, int(timeout_ms or 0)) / 1000
-    hydrated_table_ids: set[str] = set()
-
+def _collect_tandf_csv_table_entries(
+    links: Any,
+    count: int,
+    deadline: float | None,
+    result: dict[str, Any],
+) -> list[dict[str, str]]:
+    entries: list[dict[str, str]] = []
     for index in range(min(count, _TANDF_MAX_DYNAMIC_TABLES)):
-        remaining_ms = int((deadline - time.monotonic()) * 1000)
-        if timeout_ms is not None and remaining_ms <= 0:
+        if deadline is not None and time.monotonic() >= deadline:
             result["timed_out"] = True
             break
         link = links.nth(index)
@@ -844,39 +870,98 @@ def prepare_browser_page(
         if "/action/downloadTable" not in href:
             result["table_failures"] += 1
             continue
-        per_table_timeout = min(
-            _TANDF_TABLE_FETCH_MS,
-            max(1, remaining_ms) if timeout_ms is not None else _TANDF_TABLE_FETCH_MS,
+        entries.append({"href": href, "tableId": table_id})
+    return entries
+
+
+def _tandf_csv_batch_budget_ms(
+    deadline: float | None,
+    entry_count: int,
+) -> int:
+    if deadline is not None:
+        return int((deadline - time.monotonic()) * 1000)
+    worker_rounds = (
+        entry_count + _TANDF_TABLE_FETCH_CONCURRENCY - 1
+    ) // _TANDF_TABLE_FETCH_CONCURRENCY
+    return worker_rounds * _TANDF_TABLE_FETCH_MS
+
+
+def _fetch_tandf_csv_table_batch(
+    page: Any,
+    entries: list[dict[str, str]],
+    deadline: float | None,
+    result: dict[str, Any],
+) -> list[Any]:
+    if not entries:
+        return []
+    remaining_ms = _tandf_csv_batch_budget_ms(deadline, len(entries))
+    if remaining_ms <= 0:
+        result["timed_out"] = True
+        return []
+    try:
+        batch = page.evaluate(
+            _TANDF_FETCH_TABLE_CSV_BATCH_SCRIPT,
+            {
+                "entries": entries,
+                "perTableTimeoutMs": _TANDF_TABLE_FETCH_MS,
+                "totalTimeoutMs": remaining_ms,
+                "concurrency": _TANDF_TABLE_FETCH_CONCURRENCY,
+            },
         )
+    except Exception:
+        return []
+    if isinstance(batch, list):
+        return batch
+    if not isinstance(batch, Mapping):
+        return []
+    if batch.get("timedOut"):
+        result["timed_out"] = True
+    result["table_fetch_concurrency"] = max(0, int(batch.get("concurrency") or 0))
+    raw_results = batch.get("results")
+    return raw_results if isinstance(raw_results, list) else []
+
+
+def _tandf_csv_rows(response: Mapping[str, Any]) -> list[list[str]]:
+    if not response.get("ok"):
+        raise ValueError("T&F table CSV request was not successful")
+    content_type = normalize_text(str(response.get("contentType") or ""))
+    csv_text = str(response.get("text") or "")
+    if "csv" not in content_type.lower() or not csv_text.strip():
+        raise ValueError("T&F table endpoint did not return CSV")
+    if len(csv_text) > _TANDF_MAX_TABLE_CSV_CHARS:
+        raise ValueError("T&F table CSV exceeded the bounded payload size")
+    rows = [
+        [
+            _clean_tandf_accessible_control_text(cell)
+            for cell in row[:_TANDF_MAX_TABLE_COLUMNS]
+        ]
+        for row in list(csv.reader(io.StringIO(csv_text)))[:_TANDF_MAX_TABLE_ROWS]
+    ]
+    rows = [row for row in rows if any(row)]
+    if not rows:
+        raise ValueError("T&F table CSV did not contain rows")
+    return rows
+
+
+def _hydrate_tandf_csv_table_batch(
+    page: Any,
+    entries: list[dict[str, str]],
+    batch_results: list[Any],
+    deadline: float | None,
+    result: dict[str, Any],
+) -> set[str]:
+    hydrated_table_ids: set[str] = set()
+    for index, entry in enumerate(entries):
+        if deadline is not None and time.monotonic() >= deadline:
+            result["timed_out"] = True
+            result["table_failures"] += len(entries) - index
+            break
+        response = batch_results[index] if index < len(batch_results) else None
+        table_id = entry["tableId"]
         try:
-            response = page.evaluate(
-                _TANDF_FETCH_TABLE_CSV_SCRIPT,
-                {
-                    "href": href,
-                    "tableId": table_id,
-                    "timeoutMs": per_table_timeout,
-                },
-            )
-            if not isinstance(response, Mapping) or not response.get("ok"):
+            if not isinstance(response, Mapping):
                 raise ValueError("T&F table CSV request was not successful")
-            content_type = normalize_text(str(response.get("contentType") or ""))
-            csv_text = str(response.get("text") or "")
-            if "csv" not in content_type.lower() or not csv_text.strip():
-                raise ValueError("T&F table endpoint did not return CSV")
-            if len(csv_text) > _TANDF_MAX_TABLE_CSV_CHARS:
-                raise ValueError("T&F table CSV exceeded the bounded payload size")
-            rows = [
-                [
-                    _clean_tandf_accessible_control_text(cell)
-                    for cell in row[:_TANDF_MAX_TABLE_COLUMNS]
-                ]
-                for row in list(csv.reader(io.StringIO(csv_text)))[
-                    :_TANDF_MAX_TABLE_ROWS
-                ]
-            ]
-            rows = [row for row in rows if any(row)]
-            if not rows:
-                raise ValueError("T&F table CSV did not contain rows")
+            rows = _tandf_csv_rows(response)
             hydrated = bool(
                 page.evaluate(
                     _TANDF_INJECT_TABLE_SCRIPT,
@@ -892,17 +977,38 @@ def prepare_browser_page(
         except Exception:
             result["table_failures"] += 1
             continue
-        if hydrated:
-            result["tables_hydrated"] += 1
-            result["csv_tables_hydrated"] += 1
-            hydrated_table_ids.add(table_id)
-        else:
+        if not hydrated:
             result["table_failures"] += 1
+            continue
+        result["tables_hydrated"] += 1
+        result["csv_tables_hydrated"] += 1
+        hydrated_table_ids.add(table_id)
+    return hydrated_table_ids
 
-    remaining_ms = int((deadline - time.monotonic()) * 1000)
-    if timeout_ms is not None and remaining_ms <= 0:
+
+def _tandf_embedded_rows(value: Any) -> list[list[str]]:
+    if not isinstance(value, list):
+        return []
+    rows = [
+        [
+            _clean_tandf_accessible_control_text(cell)
+            for cell in row[:_TANDF_MAX_TABLE_COLUMNS]
+        ]
+        for row in value[:_TANDF_MAX_TABLE_ROWS]
+        if isinstance(row, list)
+    ]
+    return [row for row in rows if any(row)]
+
+
+def _hydrate_tandf_embedded_tables_from_page(
+    page: Any,
+    hydrated_table_ids: set[str],
+    deadline: float | None,
+    result: dict[str, Any],
+) -> None:
+    if deadline is not None and time.monotonic() >= deadline:
         result["timed_out"] = True
-        return result
+        return
     try:
         embedded = page.evaluate(
             _TANDF_READ_EMBEDDED_TABLES_SCRIPT,
@@ -915,14 +1021,14 @@ def prepare_browser_page(
         )
     except Exception:
         result["embedded_table_error"] = True
-        return result
+        return
     if not isinstance(embedded, Mapping):
-        return result
+        return
     result["embedded_tables"] = max(0, int(embedded.get("total") or 0))
     result["truncated"] = bool(result["truncated"] or embedded.get("truncated"))
     entries = embedded.get("tables")
     if not isinstance(entries, list):
-        return result
+        return
     for entry in entries[:_TANDF_MAX_DYNAMIC_TABLES]:
         if not isinstance(entry, Mapping):
             result["table_failures"] += 1
@@ -930,22 +1036,8 @@ def prepare_browser_page(
         table_id = normalize_text(str(entry.get("tableId") or ""))
         if table_id in hydrated_table_ids:
             continue
-        rows_value = entry.get("rows")
-        if not re.fullmatch(r"[A-Za-z0-9_-]+", table_id) or not isinstance(
-            rows_value, list
-        ):
-            result["table_failures"] += 1
-            continue
-        rows = [
-            [
-                _clean_tandf_accessible_control_text(cell)
-                for cell in row[:_TANDF_MAX_TABLE_COLUMNS]
-            ]
-            for row in rows_value[:_TANDF_MAX_TABLE_ROWS]
-            if isinstance(row, list)
-        ]
-        rows = [row for row in rows if any(row)]
-        if not rows:
+        rows = _tandf_embedded_rows(entry.get("rows"))
+        if not re.fullmatch(r"[A-Za-z0-9_-]+", table_id) or not rows:
             result["table_failures"] += 1
             continue
         try:
@@ -969,6 +1061,49 @@ def prepare_browser_page(
             hydrated_table_ids.add(table_id)
         else:
             result["table_failures"] += 1
+
+
+def prepare_browser_page(
+    page: Any,
+    *,
+    timeout_ms: int | None = None,
+) -> dict[str, Any]:
+    """Hydrate bounded T&F CSV or already-loaded same-page table payloads."""
+
+    result: dict[str, Any] = {
+        "attempted": True,
+        "table_controls": 0,
+        "tables_hydrated": 0,
+        "csv_tables_hydrated": 0,
+        "embedded_tables": 0,
+        "embedded_tables_hydrated": 0,
+        "table_failures": 0,
+        "truncated": False,
+    }
+    locator = getattr(page, "locator", None)
+    if not callable(locator):
+        result["attempted"] = False
+        return result
+    links = locator(_TANDF_TABLE_DOWNLOAD_SELECTOR)
+    count = max(0, int(links.count()))
+    result["table_controls"] = count
+    result["truncated"] = count > _TANDF_MAX_DYNAMIC_TABLES
+    deadline = _tandf_table_deadline(timeout_ms)
+    entries = _collect_tandf_csv_table_entries(links, count, deadline, result)
+    batch_results = _fetch_tandf_csv_table_batch(page, entries, deadline, result)
+    hydrated_table_ids = _hydrate_tandf_csv_table_batch(
+        page,
+        entries,
+        batch_results,
+        deadline,
+        result,
+    )
+    _hydrate_tandf_embedded_tables_from_page(
+        page,
+        hydrated_table_ids,
+        deadline,
+        result,
+    )
     return result
 
 

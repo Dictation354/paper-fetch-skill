@@ -8,6 +8,7 @@ import unittest
 from unittest import mock
 
 from paper_fetch.artifacts import ArtifactStore
+from paper_fetch.extraction.html.signals import HtmlExtractionFailure
 from paper_fetch.http import RequestFailure
 from paper_fetch.models import article_from_markdown
 from paper_fetch.models.markdown import iter_markdown_images
@@ -258,6 +259,80 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertNotIn(MDPI_XML_URL, attempted_html)
         self.assertEqual(_payload_route(raw_payload), "html")
         self.assertEqual(article.source, "mdpi_html")
+
+    def test_mdpi_empty_intermediate_candidate_retries_next_html_before_pdf(
+        self,
+    ) -> None:
+        client = MdpiClient(transport=None, env={})
+        resolver_url = f"https://doi.org/{MDPI_STRUCTURE_DOI}"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            runtime = self._runtime_config(tmpdir, "mdpi", MDPI_STRUCTURE_DOI)
+            mocked_html = mock.Mock(
+                side_effect=[
+                    browser_runtime.BrowserFetchedHtml(
+                        source_url=MDPI_LANDING_URL,
+                        final_url=MDPI_LANDING_URL,
+                        html="<html><head><title>Loading</title></head></html>",
+                        response_status=200,
+                        response_headers={"content-type": "text/html"},
+                        title="Loading",
+                        summary="Loading",
+                        browser_context_seed={},
+                    ),
+                    browser_runtime.BrowserFetchedHtml(
+                        source_url=resolver_url,
+                        final_url=MDPI_LANDING_URL,
+                        html=(
+                            "<html><body><article><h2>Results</h2>"
+                            + ("<p>Complete MDPI body text.</p>" * 100)
+                            + "</article></body></html>"
+                        ),
+                        response_status=200,
+                        response_headers={"content-type": "text/html"},
+                        title=MDPI_TITLE,
+                        summary="Complete",
+                        browser_context_seed={},
+                    ),
+                ]
+            )
+            mocked_extractor = mock.Mock(
+                side_effect=[
+                    HtmlExtractionFailure(
+                        "article_container_not_found",
+                        "The delayed MDPI body is not ready.",
+                    ),
+                    (
+                        f"# {MDPI_TITLE}\n\n## Results\n\n" + ("Body text " * 120),
+                        {"title": MDPI_TITLE},
+                    ),
+                ]
+            )
+            mocked_pdf = mock.Mock()
+            install_browser_workflow_deps(
+                client,
+                load_runtime_config=mock.Mock(return_value=runtime),
+                ensure_runtime_ready=mock.Mock(),
+                fetch_html_with_browser=mocked_html,
+                extract_atypon_browser_workflow_markdown=mocked_extractor,
+                fetch_pdf_with_browser=mocked_pdf,
+            )
+
+            raw_payload = client.fetch_raw_fulltext(
+                MDPI_STRUCTURE_DOI,
+                self._metadata(),
+            )
+
+        self.assertEqual(mocked_html.call_count, 2)
+        self.assertEqual(
+            mocked_html.call_args_list[0].args[0],
+            [MDPI_LANDING_URL, resolver_url],
+        )
+        self.assertEqual(
+            mocked_html.call_args_list[1].args[0],
+            [resolver_url, MDPI_LANDING_URL],
+        )
+        mocked_pdf.assert_not_called()
+        self.assertEqual(_payload_route(raw_payload), "html")
 
     def test_mdpi_pdf_fallback_uses_article_pdf_candidate(self) -> None:
         client = MdpiClient(transport=None, env={})

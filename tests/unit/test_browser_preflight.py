@@ -387,8 +387,9 @@ def test_browser_preflight_uses_provider_html_candidates_for_aip(
         return _runtime_config(tmp_path, provider=provider, doi=doi)
 
     def fetch_html_with_browser(candidate_urls, *, publisher, config, **kwargs):
-        del publisher, config, kwargs
+        del publisher, kwargs
         captured["candidate_urls"] = list(candidate_urls)
+        captured["persist_storage_state"] = config.persist_storage_state
         return BrowserFetchedHtml(
             source_url=candidate_urls[1],
             final_url=(
@@ -431,6 +432,7 @@ def test_browser_preflight_uses_provider_html_candidates_for_aip(
 
     assert result.ready is True
     assert result.provider == "aip"
+    assert result.storage_state_path is None
     assert captured["candidate_urls"] == [
         (
             "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/"
@@ -439,6 +441,7 @@ def test_browser_preflight_uses_provider_html_candidates_for_aip(
         "https://pubs.aip.org/doi/full/10.1063/5.0129134",
         "https://pubs.aip.org/doi/10.1063/5.0129134",
     ]
+    assert captured["persist_storage_state"] is False
 
 
 def test_browser_preflight_uses_provider_html_candidates_for_royal_society(

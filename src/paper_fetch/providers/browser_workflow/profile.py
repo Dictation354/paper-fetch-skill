@@ -35,6 +35,34 @@ class BrowserWorkflowBootstrapResult:
 
 
 @dataclass(frozen=True)
+class BrowserWorkflowPolicy:
+    """Group provider-specific browser behavior outside the catalog contract."""
+
+    fast_html_attempt: bool = True
+    html_readiness_budget_seconds: float | None = None
+    blocked_resource_types: frozenset[str] | tuple[str, ...] = frozenset()
+    preflight_html_reuse: bool = False
+    persistent_storage_state: bool = True
+    doi_route_hint: bool = False
+    retry_incomplete_html_candidates: bool = False
+    direct_figure_page_fallback: bool = False
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "blocked_resource_types",
+            frozenset(
+                str(item).strip().lower()
+                for item in self.blocked_resource_types
+                if str(item).strip()
+            ),
+        )
+
+
+DEFAULT_BROWSER_WORKFLOW_POLICY = BrowserWorkflowPolicy()
+
+
+@dataclass(frozen=True)
 class ProviderBrowserProfile:
     name: str
     article_source_name: str | None
@@ -48,6 +76,12 @@ class ProviderBrowserProfile:
     fallback_author_extractor: Callable[[str], list[str]] | None
     shared_browser_image_fetcher: bool
     html_readiness: BrowserHtmlReadiness | None = None
+    policy: BrowserWorkflowPolicy = DEFAULT_BROWSER_WORKFLOW_POLICY
+
+    def __getattr__(self, name: str) -> Any:
+        if name in BrowserWorkflowPolicy.__dataclass_fields__:
+            return getattr(self.policy, name)
+        raise AttributeError(name)
 
 
 def make_browser_profile(
@@ -58,6 +92,7 @@ def make_browser_profile(
     html_readiness: BrowserHtmlReadiness | None = None,
     markdown_publisher: str | None = None,
     shared_browser_image_fetcher: bool = True,
+    policy: BrowserWorkflowPolicy = DEFAULT_BROWSER_WORKFLOW_POLICY,
 ) -> ProviderBrowserProfile:
     """Build catalog-owned routing fields plus provider-specific extraction hooks."""
 
@@ -74,6 +109,7 @@ def make_browser_profile(
         fallback_author_extractor=fallback_author_extractor,
         shared_browser_image_fetcher=shared_browser_image_fetcher,
         html_readiness=html_readiness,
+        policy=policy,
     )
 
 
@@ -83,12 +119,14 @@ def make_atypon_browser_profile(
     fallback_author_extractor: Callable[[str], list[str]],
     article_source_name: str | None = None,
     html_readiness: BrowserHtmlReadiness | None = None,
+    policy: BrowserWorkflowPolicy = DEFAULT_BROWSER_WORKFLOW_POLICY,
 ) -> ProviderBrowserProfile:
     return make_browser_profile(
         name,
         article_source_name=article_source_name,
         fallback_author_extractor=fallback_author_extractor,
         html_readiness=html_readiness,
+        policy=policy,
     )
 
 

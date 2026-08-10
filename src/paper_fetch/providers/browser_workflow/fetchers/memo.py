@@ -5,11 +5,12 @@ from __future__ import annotations
 import logging
 import threading
 from concurrent.futures import Future
-from typing import Any
 from collections.abc import Callable, Mapping
+from typing import Any
 
 from ....logging_utils import emit_structured_log
 from ....utils import normalize_text
+from ..reuse_cache import normalize_browser_cache_url
 from .diagnostics import _copy_failure_diagnostic
 from .image import _copy_image_payload
 
@@ -34,7 +35,8 @@ class _MemoizedImageDocumentFetcher:
     def __call__(
         self, image_url: str, asset: Mapping[str, Any]
     ) -> dict[str, Any] | None:
-        normalized_url = normalize_text(image_url)
+        raw_url = normalize_text(image_url)
+        normalized_url = normalize_browser_cache_url(raw_url) or raw_url
         if not normalized_url:
             return self._fetcher(image_url, asset)
         with self._lock:
@@ -113,7 +115,8 @@ class _MemoizedImageDocumentFetcher:
         )
 
     def failure_for(self, image_url: str) -> dict[str, Any] | None:
-        normalized_url = normalize_text(image_url)
+        raw_url = normalize_text(image_url)
+        normalized_url = normalize_browser_cache_url(raw_url) or raw_url
         with self._lock:
             cached_failure = self._failure_by_url.get(normalized_url)
             if cached_failure is not None:
@@ -139,11 +142,13 @@ class _MemoizedFigurePageFetcher:
     def __init__(self, fetcher: Callable[[str], tuple[str, str] | None]) -> None:
         self._fetcher = fetcher
         self._lock = threading.Lock()
+        self._fetch_lock = threading.Lock()
         self._values_by_url: dict[str, tuple[str, str] | None] = {}
         self._inflight_by_url: dict[str, Future[tuple[str, str] | None]] = {}
 
     def __call__(self, figure_page_url: str) -> tuple[str, str] | None:
-        normalized_url = normalize_text(figure_page_url)
+        raw_url = normalize_text(figure_page_url)
+        normalized_url = normalize_browser_cache_url(raw_url) or raw_url
         if not normalized_url:
             return None
         with self._lock:
@@ -174,7 +179,10 @@ class _MemoizedFigurePageFetcher:
             return future.result()
 
         try:
-            value = self._fetcher(normalized_url)
+            # A figure-page fetcher can own one Playwright/Camoufox page. Keep
+            # different URLs serialized as well as coalescing identical URLs.
+            with self._fetch_lock:
+                value = self._fetcher(normalized_url)
         except Exception as exc:
             with self._lock:
                 future = self._inflight_by_url.pop(normalized_url)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 import threading
 from typing import Any
@@ -19,20 +20,27 @@ from ...models import AssetProfile
 from ...http import RequestCancelledError
 from ...utils import dedupe_normalized, empty_asset_results, normalize_text
 from ..browser_runtime import (
+    BrowserHtmlFetchOptions,
     BrowserHtmlReadiness,
     BrowserRuntimeFailure,
     BrowserWarmResult,
     merge_browser_context_seeds,
 )
-from .assets import _download_asset_match_tokens, _merge_download_attempt_results
+from .assets import (
+    _discover_browser_workflow_figure_originals,
+    _download_asset_match_tokens,
+    _merge_download_attempt_results,
+)
 from .shared import BrowserWorkflowDeps
 
 _FIGURE_PAGE_BROWSER_WAIT_SECONDS = 2
-_SILVERCHAIR_FIGURE_PAGE_BROWSER_WAIT_SECONDS = 5
+_SILVERCHAIR_FIGURE_PAGE_BROWSER_WAIT_SECONDS = 2
 _SILVERCHAIR_FIGURE_PAGE_READY_SELECTOR = (
     "img.content-image[src], img.content-image[data-src]"
 )
-_SILVERCHAIR_FIGURE_PAGE_PROVIDERS = frozenset({"acs", "royalsocietypublishing"})
+_SILVERCHAIR_FIGURE_PAGE_PROVIDERS = frozenset(
+    {"acs", "annualreviews", "royalsocietypublishing"}
+)
 
 
 @dataclass(frozen=True)
@@ -84,12 +92,23 @@ def plan_browser_asset_download(
     body_assets, supplementary_assets = deps.split_body_and_supplementary_assets(
         article_assets
     )
+    client = profile.get("client") if isinstance(profile, Mapping) else None
+    provider_profile = getattr(client, "profile", None)
+    candidate_builder = (
+        partial(
+            deps._browser_workflow_image_download_candidates,
+            direct_original_first=True,
+        )
+        if bool(getattr(provider_profile, "direct_figure_page_fallback", False))
+        else None
+    )
     return BrowserAssetDownloadPlan(
         article_id=normalize_text(str(article_id or "")),
         output_dir=Path(output_dir),
         asset_profile=asset_profile,
         body_assets=[dict(asset) for asset in body_assets],
         supplementary_assets=[dict(asset) for asset in supplementary_assets],
+        candidate_builder=candidate_builder,
     )
 
 
@@ -498,6 +517,56 @@ def _article_assets_from_plan_profile(
     )
 
 
+def _build_attempt_figure_page_fetcher(
+    recovery: BrowserAssetRecoveryContext,
+    deps: BrowserWorkflowDeps,
+    attempt_seed: dict[str, Any],
+    attempt_seed_lock: threading.Lock,
+    figure_page_fetcher_factory: Any,
+) -> Callable[[str], tuple[str, str] | None]:
+    def fetch(figure_page_url: str) -> tuple[str, str] | None:
+        if recovery.runtime is None:
+            return None
+        provider = normalize_text(recovery.provider).lower()
+        wait_for_selector = (
+            _SILVERCHAIR_FIGURE_PAGE_READY_SELECTOR
+            if provider in _SILVERCHAIR_FIGURE_PAGE_PROVIDERS
+            else None
+        )
+        try:
+            html_result = deps.fetch_html_with_browser(
+                [figure_page_url],
+                publisher=recovery.provider,
+                config=recovery.runtime,
+                readiness=BrowserHtmlReadiness(
+                    wait_for_article_body=False,
+                    selector=wait_for_selector,
+                ),
+                wait_seconds=(
+                    _SILVERCHAIR_FIGURE_PAGE_BROWSER_WAIT_SECONDS
+                    if wait_for_selector
+                    else _FIGURE_PAGE_BROWSER_WAIT_SECONDS
+                ),
+                runtime_context=recovery.runtime_context,
+                options=BrowserHtmlFetchOptions(
+                    reuse_runtime_page=bool(wait_for_selector)
+                ),
+            )
+        except BrowserRuntimeFailure:
+            return None
+        with attempt_seed_lock:
+            attempt_seed.update(
+                merge_browser_context_seeds(
+                    attempt_seed, html_result.browser_context_seed
+                )
+            )
+        return html_result.html, html_result.final_url
+
+    if callable(figure_page_fetcher_factory):
+        return figure_page_fetcher_factory(fetch)
+    return fetch
+
+
 def _run_browser_asset_download_attempt(
     plan: BrowserAssetDownloadPlan,
     recovery: BrowserAssetRecoveryContext,
@@ -522,46 +591,12 @@ def _run_browser_asset_download_attempt(
         with attempt_seed_lock:
             return merge_browser_context_seeds(attempt_seed)
 
-    def raw_figure_page_fetcher(figure_page_url: str) -> tuple[str, str] | None:
-        if recovery.runtime is None:
-            return None
-        provider = normalize_text(recovery.provider).lower()
-        wait_for_selector = (
-            _SILVERCHAIR_FIGURE_PAGE_READY_SELECTOR
-            if provider in _SILVERCHAIR_FIGURE_PAGE_PROVIDERS
-            else None
-        )
-        try:
-            html_result = deps.fetch_html_with_browser(
-                [figure_page_url],
-                publisher=recovery.provider,
-                config=recovery.runtime,
-                readiness=BrowserHtmlReadiness(
-                    wait_for_article_body=False,
-                    selector=wait_for_selector,
-                ),
-                wait_seconds=(
-                    _SILVERCHAIR_FIGURE_PAGE_BROWSER_WAIT_SECONDS
-                    if wait_for_selector
-                    else _FIGURE_PAGE_BROWSER_WAIT_SECONDS
-                ),
-                runtime_context=recovery.runtime_context,
-            )
-        except BrowserRuntimeFailure:
-            return None
-        with attempt_seed_lock:
-            attempt_seed.update(
-                merge_browser_context_seeds(
-                    attempt_seed, html_result.browser_context_seed
-                )
-            )
-        return html_result.html, html_result.final_url
-
-    figure_page_fetcher_factory = attempt_settings.get("figure_page_fetcher_factory")
-    figure_page_fetcher = (
-        figure_page_fetcher_factory(raw_figure_page_fetcher)
-        if callable(figure_page_fetcher_factory)
-        else raw_figure_page_fetcher
+    figure_page_fetcher = _build_attempt_figure_page_fetcher(
+        recovery,
+        deps,
+        attempt_seed,
+        attempt_seed_lock,
+        attempt_settings.get("figure_page_fetcher_factory"),
     )
 
     def seed_urls_getter() -> list[str]:
@@ -604,17 +639,25 @@ def _run_browser_asset_download_attempt(
         and normalize_text(recovery.provider).lower()
         in _SILVERCHAIR_FIGURE_PAGE_PROVIDERS
     )
-    body_asset_download_concurrency = (
-        1
-        if figure_page_browser_requires_caller_thread
-        else attempt_settings.get("asset_download_concurrency")
-    )
+    body_asset_download_concurrency = attempt_settings.get("asset_download_concurrency")
     try:
 
         def download_body_assets() -> Mapping[str, Any]:
             _raise_if_cancelled(recovery.runtime_context)
             if not attempt_body_assets:
                 return empty_asset_results()
+            body_assets = attempt_body_assets
+            if (
+                figure_page_browser_requires_caller_thread
+                and plan.candidate_builder is not None
+            ):
+                # Camoufox page operations stay on the owning thread. Once the
+                # missing originals are known, the HTTP downloads can retain
+                # the configured provider concurrency.
+                body_assets = _discover_browser_workflow_figure_originals(
+                    attempt_body_assets,
+                    figure_page_fetcher=figure_page_fetcher,
+                )
             seed_snapshot = attempt_seed_snapshot()
             base_candidate_builder = (
                 plan.candidate_builder
@@ -635,7 +678,7 @@ def _run_browser_asset_download_attempt(
                 return deps.download_assets(
                     FIGURE_KIND,
                     attempt_settings.get("transport"),
-                    assets=attempt_body_assets,
+                    assets=body_assets,
                     candidate_builder=base_candidate_builder,
                     image_document_fetcher=image_document_fetcher,
                     asset_download_concurrency=body_asset_download_concurrency,
@@ -649,7 +692,7 @@ def _run_browser_asset_download_attempt(
             direct_result = deps.download_assets(
                 FIGURE_KIND,
                 attempt_settings.get("transport"),
-                assets=attempt_body_assets,
+                assets=body_assets,
                 candidate_builder=full_candidate_builder,
                 image_document_fetcher=None,
                 asset_download_concurrency=body_asset_download_concurrency,
@@ -662,7 +705,7 @@ def _run_browser_asset_download_attempt(
                 if _asset_failure_allows_browser_recovery(failure)
             ]
             browser_assets = deps._assets_matching_download_failures(
-                attempt_body_assets,
+                body_assets,
                 eligible_failures,
                 retry_scope="body",
             )
@@ -694,7 +737,7 @@ def _run_browser_asset_download_attempt(
             preview_assets = [
                 asset
                 for asset in _assets_matching_any_failure(
-                    attempt_body_assets,
+                    body_assets,
                     [
                         dict(failure)
                         for failure in list(merged_result.get("asset_failures") or [])
@@ -810,6 +853,7 @@ def _run_browser_asset_download_attempt(
             attempt_settings.get("serial_browser_assets")
             or _requires_caller_thread(image_document_fetcher)
             or _requires_caller_thread(file_document_fetcher)
+            or figure_page_browser_requires_caller_thread
         )
         if (
             attempt_body_assets

@@ -26,6 +26,10 @@ import contextlib
 
 logger = logging.getLogger("paper_fetch.providers.browser_workflow")
 _RUNTIME_SHARED_PAGE_SESSION_KEY = ("browser_workflow", "shared_page_session")
+_RUNTIME_FIGURE_PAGE_SESSION_KEY = (
+    "browser_workflow",
+    "shared_figure_page_session",
+)
 
 
 class _SharedBrowserPageSession:
@@ -44,6 +48,7 @@ class _SharedBrowserPageSession:
         self.page: Any | None = None
         self.ready_seed_urls: set[str] = set()
         self.cookies_seeded = False
+        self.navigation_count = 0
         self._closed = False
 
     def bind(
@@ -66,6 +71,10 @@ class _SharedBrowserPageSession:
     def seed_is_ready(self, seed_url: str) -> bool:
         return normalize_text(seed_url) in self.ready_seed_urls
 
+    def mark_navigation(self) -> int:
+        self.navigation_count += 1
+        return self.navigation_count
+
     def close(self) -> None:
         if self._closed:
             return
@@ -79,6 +88,7 @@ class _SharedBrowserPageSession:
         self.manager = None
         self.ready_seed_urls.clear()
         self.cookies_seeded = False
+        self.navigation_count = 0
 
 
 def _runtime_shared_page_session(
@@ -91,6 +101,30 @@ def _runtime_shared_page_session(
         copy_value=False,
     )
     return value if isinstance(value, _SharedBrowserPageSession) else None
+
+
+def _runtime_figure_page_session(
+    runtime_context: RuntimeContext | None,
+    *,
+    create: bool = False,
+) -> _SharedBrowserPageSession | None:
+    if runtime_context is None:
+        return None
+    value = runtime_context.get_session_cache(
+        _RUNTIME_FIGURE_PAGE_SESSION_KEY,
+        copy_value=False,
+    )
+    if isinstance(value, _SharedBrowserPageSession):
+        return value
+    if not create:
+        return None
+    session = _SharedBrowserPageSession(preserve_seed_page=True)
+    runtime_context.set_session_cache(
+        _RUNTIME_FIGURE_PAGE_SESSION_KEY,
+        session,
+        copy_value=False,
+    )
+    return session
 
 
 def _replace_runtime_shared_page_session(

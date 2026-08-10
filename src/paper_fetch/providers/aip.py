@@ -165,6 +165,10 @@ AIP_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     "aip",
     article_source_name="aip_html",
     fallback_author_extractor=_aip_html.extract_authors,
+    policy=browser_workflow.BrowserWorkflowPolicy(
+        preflight_html_reuse=False,
+        persistent_storage_state=False,
+    ),
 )
 
 

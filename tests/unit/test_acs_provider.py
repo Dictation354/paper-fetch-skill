@@ -37,6 +37,24 @@ ACS_SAMPLE_LANDING = f"https://pubs.acs.org/doi/{ACS_SAMPLE_DOI}"
 ACS_FORMULA_DOI = "10.1021/acsomega.3c06992"
 
 
+def test_acs_asset_extraction_promotes_largest_srcset_rendition() -> None:
+    preview_url = "https://acs.example/figure-preview.png"
+    original_url = "https://acs.example/figure-original.png"
+    assets = _acs_html.scoped_asset_extractor(
+        f"""
+        <figure id="fig1">
+          <img src="{preview_url}" srcset="{preview_url} 320w, {original_url} 1600w">
+          <figcaption>Figure 1. Example.</figcaption>
+        </figure>
+        """,
+        ACS_SAMPLE_LANDING,
+        asset_profile="body",
+    )
+
+    figure = next(asset for asset in assets if asset["kind"] == "figure")
+    assert figure["full_size_url"] == original_url
+
+
 def test_acs_provider_bundle_declares_routing_and_browser_workflow() -> None:
     bundle = provider_bundle("acs")
     catalog = PROVIDER_CATALOG["acs"]

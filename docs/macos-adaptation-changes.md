@@ -241,6 +241,14 @@ selected-browser provider 在抽取前等待 provider 正文 DOM 达到阈值并
 结果降格为 skip。AIP 等 provider 的 fast landing 若已经返回 HTTP-200 head-only
 empty shell，保守重试会先使用下一个既有 provider URL，不再重复相同空壳。
 MDPI 使用该正文稳定门，避免把延迟加载的 HTTP-200 head-only shell 误认为完成页面。
+PNAS 则关闭零等待 fast attempt，以 canonical/full/resolver 顺序做一次浏览器 HTML
+attempt，并把正文长度、段落数和连续两次稳定指纹限制在 8 秒总预算内；预算结束仍
+检查最终 HTML。PNAS、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、T&F
+仅阻断 image/font/media，继续放行 stylesheet、JavaScript 和 XHR/fetch。已验收且
+提交 storage-state 的 preflight HTML 可在同一进程按 provider/DOI/URL/runtime
+指纹短期一次性复用；AIP 维持进程指纹边界，不发布跨 `RuntimeContext` 的 HTML、
+cookie 或 preflight storage-state。Royal/Annual/ACS 未解析的 figure page 使用
+同一 runtime 的专用 context/page 串行复用，避免逐图重建 Camoufox context。
 CLI 和 MCP 批量入口会在预解析阶段复用 item-local context 缓存规范身份，但只有
 fetch worker 取得执行槽时才重新开始该条目的 request deadline；全批解析和 provider
 lane 排队不会再把 browser route 的预算提前耗尽。该重置不改变单篇内部 HTML、
@@ -248,12 +256,13 @@ browser、PDF 与 fallback 共享 deadline 的语义。
 Taylor & Francis 的动态 table 复用同一正文稳定门：浏览器运行时在最终
 `page.content()` 前调用 provider page-preparation hook。该 hook 只能读取当前文章
 DOM 中明确给出的同源 `/action/downloadTable` CSV action，或页面已加载且不产生
-新请求的 `tandf.tfviewerdata.tables` 同页 payload；CSV 路线继承现有 browser
-context，两种路线均受超时、table 数、row/column 和 payload 字符上限约束；成功后注入语义
-table，失败只记录脱敏 trace，不改变访问状态，也不跨站或绕过登录、challenge、
-CAPTCHA、付费墙。portable 单测同时锁定 hook 的调用时序与 T&F CSV 水合；常规
-`macos-15` CI 在已准备的 Camoufox 原生 bundle 验证后重跑 hook、CSV 和同页 payload
-三个 contract node。
+新请求的 `tandf.tfviewerdata.tables` 同页 payload；CSV 路线在一次页面脚本中最多
+处理 24 表、固定并发 4、每表 2 秒并服从总 deadline，结果按输入顺序注入，失败表
+继续使用 embedded payload。两种路线均受 row/column 和 payload 字符上限约束；
+失败只记录脱敏 trace，不改变访问状态，也不跨站或绕过登录、challenge、CAPTCHA、
+付费墙。portable 单测同时锁定 hook 的调用时序、并发/顺序/fallback 与 T&F CSV
+水合；常规 `macos-15` CI 在已准备的 Camoufox 原生 bundle 验证后重跑这些 contract
+node，并覆盖 preflight reuse、精确资源阻断和 runtime figure-page 复用。
 这些是 Windows/WSL 可执行的 portable 行为证据，不替代原生 macOS app bundle 启动门。
 常规 CI 的 pinned 原生 runtime 在调用 Camoufox CLI 时传入 GitHub workflow
 自带的只读 `github.token`；Camoufox 复用其原生 `GITHUB_TOKEN` 支持访问 Releases

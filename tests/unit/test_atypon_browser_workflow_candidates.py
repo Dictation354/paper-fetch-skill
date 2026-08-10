@@ -198,8 +198,8 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
         self.assertEqual(
             build_html_candidates("pnas", PNAS_SAMPLE.doi)[:2],
             [
-                f"https://www.pnas.org/doi/full/{PNAS_SAMPLE.doi}",
                 f"https://www.pnas.org/doi/{PNAS_SAMPLE.doi}",
+                f"https://www.pnas.org/doi/full/{PNAS_SAMPLE.doi}",
             ],
         )
         self.assertEqual(
@@ -215,8 +215,13 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
         pnas_readiness = PnasClient(None, {}).require_profile().html_readiness
         self.assertIsNotNone(pnas_readiness)
         assert pnas_readiness is not None
-        self.assertFalse(pnas_readiness.wait_for_article_body)
-        self.assertEqual(pnas_readiness.selector, '[data-extent="bodymatter"]')
+        self.assertTrue(pnas_readiness.wait_for_article_body)
+        self.assertIsNone(pnas_readiness.selector)
+        self.assertFalse(PnasClient(None, {}).require_profile().fast_html_attempt)
+        self.assertEqual(
+            PnasClient(None, {}).require_profile().html_readiness_budget_seconds,
+            8.0,
+        )
 
         mdpi_readiness = MdpiClient(None, {}).require_profile().html_readiness
         self.assertIsNotNone(mdpi_readiness)
@@ -294,9 +299,15 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
                     ),
                 }
                 self.assertEqual(client.profile.name, provider)
+                expected_html_candidates = build_html_candidates(provider, doi)
+                if provider == "pnas":
+                    expected_html_candidates = [
+                        f"https://www.pnas.org/doi/{doi}",
+                        f"https://www.pnas.org/doi/full/{doi}",
+                        f"https://doi.org/{doi}",
+                    ]
                 self.assertEqual(
-                    client.html_candidates(doi, metadata),
-                    build_html_candidates(provider, doi),
+                    client.html_candidates(doi, metadata), expected_html_candidates
                 )
                 self.assertEqual(
                     client.pdf_candidates(doi, metadata),
@@ -585,8 +596,8 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
         self.assertEqual(
             candidates[:2],
             [
-                f"https://www.pnas.org/doi/full/{PNAS_SAMPLE.doi}",
                 f"https://www.pnas.org/doi/{PNAS_SAMPLE.doi}",
+                f"https://www.pnas.org/doi/full/{PNAS_SAMPLE.doi}",
             ],
         )
 

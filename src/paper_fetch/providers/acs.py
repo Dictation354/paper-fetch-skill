@@ -114,6 +114,11 @@ register_provider_bundle(
 ACS_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     "acs",
     fallback_author_extractor=_acs_html.extract_authors,
+    policy=browser_workflow.BrowserWorkflowPolicy(
+        blocked_resource_types=("image", "font", "media"),
+        preflight_html_reuse=True,
+        direct_figure_page_fallback=True,
+    ),
 )
 
 

@@ -6,9 +6,30 @@ from pathlib import PurePosixPath
 from typing import Any
 from urllib.parse import unquote, urljoin, urlparse
 
-from bs4 import Tag
+from bs4 import BeautifulSoup, Tag
 
 from ....utils import normalize_text
+from ..parsing import choose_parser
+from .dom import _first_url_from_srcset
+
+
+def promote_silverchair_srcset_originals(html_text: str) -> str:
+    """Expose the largest Silverchair srcset rendition to neutral extraction."""
+
+    if "srcset" not in html_text.lower():
+        return html_text
+    soup = BeautifulSoup(html_text, choose_parser())
+    changed = False
+    for tag in soup.find_all(["img", "source"]):
+        if not isinstance(tag, Tag) or tag.get("data-hi-res-src"):
+            continue
+        for attr in ("data-srcset", "srcset"):
+            candidate = _first_url_from_srcset(normalize_text(str(tag.get(attr) or "")))
+            if candidate:
+                tag["data-hi-res-src"] = candidate
+                changed = True
+                break
+    return str(soup) if changed else html_text
 
 
 def silverchair_image_basename(value: str | None) -> str:
@@ -87,4 +108,8 @@ def silverchair_download_image_url(
     return ""
 
 
-__all__ = ["silverchair_download_image_url", "silverchair_image_basename"]
+__all__ = [
+    "promote_silverchair_srcset_originals",
+    "silverchair_download_image_url",
+    "silverchair_image_basename",
+]

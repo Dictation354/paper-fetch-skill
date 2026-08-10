@@ -29,6 +29,11 @@ from ..models import AssetProfile
 from ..publisher_identity import normalize_doi
 from ..utils import empty_asset_results, normalize_text, strip_html_tags
 from ..runtime import RuntimeContext
+from ._ieee_asset_memo import (
+    cache_ieee_multimedia_assets,
+    cached_ieee_multimedia_assets,
+    ieee_asset_key as _supplementary_asset_key,
+)
 from ._ieee_metadata import IeeeLandingAttempt, _landing_metadata_has_multimedia_scope
 from ._ieee_url import (
     IEEE_BASE_URL,
@@ -185,11 +190,19 @@ def fetch_ieee_multimedia_assets(
     multimedia_url: str,
     headers: Mapping[str, str],
     timeout: float = DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+    runtime_context: RuntimeContext | None = None,
 ) -> list[dict[str, str]]:
     if not landing_attempt.article_number or not _landing_metadata_has_multimedia_scope(
         landing_attempt.landing_metadata
     ):
         return []
+    cached = cached_ieee_multimedia_assets(
+        runtime_context,
+        article_number=landing_attempt.article_number,
+        multimedia_url=multimedia_url,
+    )
+    if cached is not None:
+        return cached
     try:
         response = transport.request(
             "GET",
@@ -211,7 +224,14 @@ def fetch_ieee_multimedia_assets(
     response_url = _absolute_ieee_url(
         str(response.get("url") or multimedia_url), multimedia_url
     )
-    return _supplementary_assets_from_ieee_multimedia_payload(payload, response_url)
+    assets = _supplementary_assets_from_ieee_multimedia_payload(payload, response_url)
+    cache_ieee_multimedia_assets(
+        runtime_context,
+        article_number=landing_attempt.article_number,
+        multimedia_url=multimedia_url,
+        assets=assets,
+    )
+    return assets
 
 
 def _ieee_supplementary_token_match(text: str) -> bool:
@@ -360,22 +380,6 @@ def _ieee_supplementary_asset_from_anchor(
         "url": _absolute_ieee_asset_url(href, source_url),
         "section": "supplementary",
     }
-
-
-def _supplementary_asset_key(asset: Mapping[str, Any]) -> str:
-    for field in (
-        "full_size_url",
-        "url",
-        "download_url",
-        "source_url",
-        "preview_url",
-        "original_url",
-        "figure_page_url",
-    ):
-        value = normalize_text(str(asset.get(field) or ""))
-        if value:
-            return value
-    return ""
 
 
 def _extract_ieee_supplementary_assets(

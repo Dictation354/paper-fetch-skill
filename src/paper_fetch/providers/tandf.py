@@ -108,6 +108,10 @@ TANDF_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     "tandf",
     article_source_name="tandf_html",
     fallback_author_extractor=_tandf_html.extract_authors,
+    policy=browser_workflow.BrowserWorkflowPolicy(
+        blocked_resource_types=("image", "font", "media"),
+        preflight_html_reuse=True,
+    ),
 )
 
 

@@ -35,10 +35,11 @@ from ...page_diagnostics import (
     capture_page_diagnostic,
     is_empty_article_shell,
 )
-from ...tracing import fulltext_marker, trace_from_markers
+from ...tracing import fulltext_marker, trace_event, trace_from_markers
 from ...utils import normalize_text
 from ..browser_runtime import (
     BrowserFetchedHtml,
+    BrowserHtmlFetchOptions,
     BrowserRuntimeConfig,
     BrowserRuntimeFailure,
     merge_browser_context_seeds,
@@ -55,6 +56,11 @@ from ..atypon_browser_workflow import (
     rewrite_inline_figure_links,
 )
 from ..base import ProviderContent, RawFulltextPayload
+from .reuse_cache import (
+    DEFAULT_BROWSER_DOI_ROUTE_HINT_CACHE,
+    DEFAULT_BROWSER_PREFLIGHT_REUSE_CACHE,
+    browser_preflight_producer,
+)
 
 logger = logging.getLogger("paper_fetch.providers.browser_workflow")
 
@@ -90,6 +96,13 @@ _FAST_BROWSER_RETRY_TIMEOUT_KINDS = {
     "browser_navigation_timeout",
     "browser_rest_wait_timeout",
 }
+_INCOMPLETE_HTML_CANDIDATE_REORDER_KINDS = {
+    EMPTY_ARTICLE_SHELL,
+    INSUFFICIENT_BODY,
+    STRUCTURED_ARTICLE_NOT_FULLTEXT,
+    STRUCTURED_MISSING_BODY_SECTIONS,
+    "article_container_not_found",
+}
 
 
 @dataclass(frozen=True)
@@ -99,6 +112,92 @@ class BrowserHtmlFetchPolicy:
     warm_wait_seconds: int = DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS
     max_timeout_ms: int | None = None
     attempt: int = 1
+
+
+def _annotate_browser_html_payload(
+    html_result: BrowserFetchedHtml,
+    payload: RawFulltextPayload,
+    *,
+    preflight_reuse: Mapping[str, Any] | None = None,
+    candidate_reorder: Mapping[str, Any] | None = None,
+    route_hint_write: Mapping[str, Any] | None = None,
+) -> tuple[BrowserFetchedHtml, RawFulltextPayload]:
+    """Keep internal browser diagnostics and source-trail events in sync."""
+
+    result_diagnostics = dict(html_result.diagnostics or {})
+    content = payload.content
+    content_diagnostics = dict(content.diagnostics or {}) if content is not None else {}
+    if preflight_reuse is not None:
+        value = dict(preflight_reuse)
+        result_diagnostics["preflight_reuse"] = value
+        content_diagnostics["preflight_reuse"] = value
+        state = normalize_text(str(value.get("state") or "miss")).lower() or "miss"
+        payload.trace.append(
+            trace_event(
+                "browser",
+                "preflight_reuse",
+                state,
+                provider=payload.provider,
+                route="html",
+            )
+        )
+    if candidate_reorder is not None:
+        value = dict(candidate_reorder)
+        result_diagnostics["candidate_reorder"] = value
+        content_diagnostics["candidate_reorder"] = value
+        state = normalize_text(str(value.get("state") or "miss")).lower() or "miss"
+        payload.trace.append(
+            trace_event(
+                "browser",
+                "candidate_reorder",
+                state,
+                provider=payload.provider,
+                route="html",
+            )
+        )
+    if route_hint_write is not None:
+        value = dict(route_hint_write)
+        result_diagnostics["doi_route_hint_write"] = value
+        content_diagnostics["doi_route_hint_write"] = value
+    if content is not None:
+        payload.content = replace(content, diagnostics=content_diagnostics)
+    return replace(html_result, diagnostics=result_diagnostics), payload
+
+
+def _payload_from_reused_browser_html(
+    client: BrowserWorkflowClient,
+    html_result: BrowserFetchedHtml,
+    *,
+    runtime: BrowserRuntimeConfig,
+    metadata: ProviderMetadata,
+    context: RuntimeContext,
+    warnings: list[str] | None,
+    preflight_reuse: Mapping[str, Any],
+    candidate_reorder: Mapping[str, Any] | None,
+) -> tuple[BrowserFetchedHtml, RawFulltextPayload]:
+    """Re-extract accepted cached HTML with the formal request metadata."""
+
+    markdown_text, extraction = _cached_browser_workflow_markdown(
+        client,
+        html_result.html,
+        html_result.final_url,
+        metadata=metadata,
+        context=context,
+    )
+    payload = _browser_workflow_html_payload(
+        client,
+        html_result,
+        markdown_text=markdown_text,
+        extraction=extraction,
+        fetcher=normalize_text(runtime.backend).lower() or "selected_browser",
+        warnings=warnings,
+    )
+    return _annotate_browser_html_payload(
+        html_result,
+        payload,
+        preflight_reuse=preflight_reuse,
+        candidate_reorder=candidate_reorder,
+    )
 
 
 def _commit_accepted_storage_state(
@@ -117,6 +216,23 @@ def _commit_accepted_storage_state(
         else {}
     )
     if stage is not None:
+        if not runtime.persist_storage_state:
+            runtime_trace["storage_state_save"] = {
+                "attempted": False,
+                "staged": False,
+                "saved": False,
+                "path": None,
+                "reason": "provider_runtime_fingerprint_boundary",
+            }
+            diagnostics["browser_runtime_trace"] = runtime_trace
+            return (
+                replace(
+                    html_result,
+                    diagnostics=diagnostics,
+                    staged_storage_state=None,
+                ),
+                [],
+            )
         from ..browser_runtime.paths import commit_staged_storage_state
 
         save_result = commit_staged_storage_state(
@@ -365,6 +481,7 @@ def _fetch_browser_html_payload(
             },
         ) from exc
     operation_started_at = time.monotonic()
+    profile = client.require_profile()
     fetch_kwargs: dict[str, Any] = {
         "publisher": client.name,
         "config": runtime,
@@ -373,8 +490,11 @@ def _fetch_browser_html_payload(
         "max_timeout_ms": operation_timeout_ms,
         "disable_media": policy.disable_media,
         "runtime_context": context,
+        "options": BrowserHtmlFetchOptions(
+            blocked_resource_types=profile.blocked_resource_types or None,
+            readiness_budget_seconds=profile.html_readiness_budget_seconds,
+        ),
     }
-    profile = client.require_profile()
     if profile.html_readiness is not None:
         fetch_kwargs["readiness"] = profile.html_readiness
     if browser_context_seed and browser_context_seed.get("browser_cookies"):
@@ -483,7 +603,7 @@ def _fetch_browser_html_payload(
     fetcher_name = runtime_backend
     if isinstance(fetcher_attr, str) and normalize_text(fetcher_attr).endswith("_fast"):
         fetcher_name = f"{runtime_backend}_fast"
-    return html_result, _browser_workflow_html_payload(
+    payload = _browser_workflow_html_payload(
         client,
         html_result,
         markdown_text=markdown_text,
@@ -491,6 +611,50 @@ def _fetch_browser_html_payload(
         fetcher=fetcher_name,
         warnings=[*list(warnings or []), *storage_warnings],
     )
+    profile = client.require_profile()
+    normalized_doi = normalize_text(str(metadata.get("doi") or runtime.doi or ""))
+    producer = browser_preflight_producer(context)
+    preflight_diagnostic: dict[str, Any] | None = None
+    if producer is not None:
+        if profile.preflight_html_reuse:
+            stored = DEFAULT_BROWSER_PREFLIGHT_REUSE_CACHE.store(
+                provider=client.name,
+                doi=normalized_doi,
+                target_url=html_result.source_url,
+                runtime=runtime,
+                result=html_result,
+            )
+            preflight_diagnostic = {
+                "state": "miss",
+                "reason": "preflight_producer",
+                "stored": stored,
+                "one_shot": True,
+            }
+        else:
+            preflight_diagnostic = {
+                "state": "disabled",
+                "reason": "provider_runtime_fingerprint_boundary",
+                "stored": False,
+            }
+    route_hint_write: dict[str, Any] | None = None
+    if profile.doi_route_hint:
+        stored_hint = DEFAULT_BROWSER_DOI_ROUTE_HINT_CACHE.store(
+            provider=client.name,
+            doi=normalized_doi,
+            url=html_result.final_url,
+        )
+        route_hint_write = {
+            "stored": stored_hint,
+            "source": "accepted_final_url",
+        }
+    if preflight_diagnostic is not None or route_hint_write is not None:
+        html_result, payload = _annotate_browser_html_payload(
+            html_result,
+            payload,
+            preflight_reuse=preflight_diagnostic,
+            route_hint_write=route_hint_write,
+        )
+    return html_result, payload
 
 
 def _should_retry_fast_browser_failure(exc: Exception) -> bool:
@@ -546,13 +710,22 @@ def _preserve_fast_access_failure_after_retry_timeout(
 
 
 def _retry_candidates_after_fast_failure(
+    client: BrowserWorkflowClient,
     html_candidates: list[str],
     fast_failure: BrowserRuntimeFailure | HtmlExtractionFailure | None,
 ) -> list[str]:
     candidates = list(html_candidates)
+    failure_kind = _browser_failure_kind(fast_failure) if fast_failure else ""
+    retry_incomplete = client.require_profile().retry_incomplete_html_candidates
     if (
         not isinstance(fast_failure, HtmlExtractionFailure)
-        or _browser_failure_kind(fast_failure) != EMPTY_ARTICLE_SHELL
+        or (
+            failure_kind != EMPTY_ARTICLE_SHELL
+            and (
+                not retry_incomplete
+                or failure_kind not in _INCOMPLETE_HTML_CANDIDATE_REORDER_KINDS
+            )
+        )
         or len(candidates) < 2
     ):
         return candidates
@@ -576,6 +749,18 @@ def _fetch_browser_html_payload_with_fast_path(
     warnings: list[str] | None = None,
     html_fetcher: Callable[..., BrowserFetchedHtml] = fetch_html_with_browser,
 ) -> tuple[BrowserFetchedHtml, RawFulltextPayload]:
+    profile = client.require_profile()
+    if not profile.fast_html_attempt:
+        return _fetch_browser_html_payload(
+            client,
+            html_candidates,
+            runtime=runtime,
+            metadata=metadata,
+            context=context,
+            warnings=warnings,
+            html_fetcher=html_fetcher,
+            policy=BrowserHtmlFetchPolicy(attempt=1),
+        )
     retry_seed: dict[str, Any] = {}
     prior_attempts: list[Mapping[str, Any]] = []
     fast_failure: BrowserRuntimeFailure | HtmlExtractionFailure | None = None
@@ -634,6 +819,7 @@ def _fetch_browser_html_payload_with_fast_path(
         )
 
     retry_candidates = _retry_candidates_after_fast_failure(
+        client,
         html_candidates,
         fast_failure,
     )

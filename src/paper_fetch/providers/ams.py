@@ -119,6 +119,11 @@ register_provider_bundle(
 AMS_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     "ams",
     fallback_author_extractor=_ams_html.extract_authors,
+    policy=browser_workflow.BrowserWorkflowPolicy(
+        blocked_resource_types=("image", "font", "media"),
+        preflight_html_reuse=True,
+        doi_route_hint=True,
+    ),
 )
 AMS_SICI_DOI_PATTERN = re.compile(
     r"^10\.1175/[0-9]{4}-[0-9]{4}\(\d{4}\)\d{3}<[^>]+>2\.0\.co;2$",

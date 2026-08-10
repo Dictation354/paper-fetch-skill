@@ -26,6 +26,7 @@ from paper_fetch.providers import _iop_html
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.iop import IopClient
 from paper_fetch.quality.html_availability import HtmlQualityAssessor
+from paper_fetch.runtime import RuntimeContext
 from paper_fetch.tracing import trace_from_markers
 from tests.unit._browser_workflow_deps import browser_workflow_deps
 
@@ -782,6 +783,61 @@ def test_iop_unresolved_declared_data_index_records_asset_failure(
         }
     ]
     assert index_fetcher.closed is True
+
+
+def test_iop_index_cache_dedupes_signed_indexes_and_attachment_signatures() -> None:
+    index_base = f"{IOP_CURRENT_SUPPLEMENTARY_LANDING}/data"
+    first_index = f"{index_base}?X-Amz-Signature=first-secret"
+    second_index = f"{index_base}?X-Amz-Signature=second-secret"
+    duplicate_attachment = IOP_TEST_SIGNED_SUPPLEMENTARY_URL.replace(
+        "Signature=test", "Signature=refreshed"
+    )
+    index_html = _iop_supplementary_data_html().replace(
+        "        </div>\n        <footer>",
+        (
+            f'          <a id="SM0001" href="{duplicate_attachment}">'
+            "Duplicate signed attachment</a>\n"
+            "        </div>\n        <footer>"
+        ),
+    )
+    index_fetcher = _FakeIopSupplementaryIndexFetcher(
+        {
+            "status_code": 200,
+            "headers": {"content-type": "text/html; charset=utf-8"},
+            "body": index_html.encode("utf-8"),
+            "url": first_index,
+        }
+    )
+    deps = _iop_supplementary_test_deps(index_fetcher)
+    client = IopClient(None, {}, deps=deps)
+    raw_payload = _iop_html_raw_payload(_iop_supplementary_article_html())
+    context = RuntimeContext(env={})
+    try:
+        first_assets, first_failures = client._resolve_supplementary_data_assets(
+            IOP_CURRENT_SUPPLEMENTARY_DOI,
+            raw_payload,
+            [first_index, second_index],
+            context=context,
+        )
+        second_assets, second_failures = client._resolve_supplementary_data_assets(
+            IOP_CURRENT_SUPPLEMENTARY_DOI,
+            raw_payload,
+            [second_index],
+            context=context,
+        )
+        cache_keys = list(context.session_cache)
+    finally:
+        context.close()
+
+    assert first_failures == []
+    assert second_failures == []
+    assert [asset["source_ref"] for asset in first_assets] == ["SM0001", "SM0002"]
+    assert second_assets == first_assets
+    assert len(index_fetcher.calls) == 1
+    assert deps._build_shared_browser_file_fetcher.call_count == 1
+    assert "first-secret" not in repr(cache_keys)
+    assert "second-secret" not in repr(cache_keys)
+    assert "%2A%2A%2A" in repr(cache_keys)
 
 
 def test_iop_real_replay_covers_table_and_formula_purposes() -> None:

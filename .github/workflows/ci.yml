@@ -65,6 +65,22 @@ jobs:
             tests/unit/test_ieee_provider_routes.py \
             tests/unit/test_ieee_provider_asset_downloads.py \
             -k "aws_waf or matching_article or mismatched_article or ieee_block_page or preview_warm"
+      - name: Non-Science browser performance regressions
+        run: |
+          PYTHONPATH=src uv run pytest -q \
+            tests/unit/test_browser_preflight_reuse_cache.py \
+            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_direct_first_figure_policy_skips_viewer_when_download_url_exists \
+            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_silverchair_figure_page_resolution_stays_on_camoufox_owner_thread \
+            tests/unit/test_camoufox_backend.py::test_provider_resource_policy_blocks_only_configured_heavy_types \
+            tests/unit/test_camoufox_backend.py::test_pnas_body_readiness_uses_bounded_budget_and_keeps_final_html \
+            tests/unit/test_camoufox_backend.py::test_figure_page_fetches_reuse_one_runtime_context_and_page \
+            tests/unit/test_acs_provider.py::test_acs_asset_extraction_promotes_largest_srcset_rendition \
+            tests/unit/test_annualreviews_provider.py::test_annualreviews_asset_extraction_promotes_largest_srcset_rendition \
+            tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_empty_intermediate_candidate_retries_next_html_before_pdf \
+            tests/unit/test_iop_provider.py::test_iop_index_cache_dedupes_signed_indexes_and_attachment_signatures \
+            tests/unit/test_tandf_provider.py::test_tandf_batch_results_keep_input_order_and_failed_table_fallback \
+            tests/unit/test_tandf_provider.py::test_tandf_table_preparation_obeys_exhausted_total_deadline \
+            tests/unit/test_ieee_provider_asset_extraction.py::IeeeProviderAssetExtractionTests::test_ieee_multimedia_discovery_memoizes_redacted_url_per_runtime
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: coverage-xml
@@ -187,6 +203,22 @@ jobs:
             tests/unit/test_camoufox_backend.py::test_camoufox_provider_page_preparation_runs_before_html_capture \
             tests/unit/test_tandf_provider.py::test_tandf_browser_page_preparation_hydrates_official_csv_table \
             tests/unit/test_tandf_provider.py::test_tandf_browser_page_preparation_uses_bounded_embedded_table_fallback
+      - name: Verify non-Science browser performance boundaries on native macOS
+        run: |
+          PYTHONPATH=src uv run pytest -q \
+            tests/unit/test_browser_preflight_reuse_cache.py \
+            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_direct_first_figure_policy_skips_viewer_when_download_url_exists \
+            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_silverchair_figure_page_resolution_stays_on_camoufox_owner_thread \
+            tests/unit/test_camoufox_backend.py::test_provider_resource_policy_blocks_only_configured_heavy_types \
+            tests/unit/test_camoufox_backend.py::test_pnas_body_readiness_uses_bounded_budget_and_keeps_final_html \
+            tests/unit/test_camoufox_backend.py::test_figure_page_fetches_reuse_one_runtime_context_and_page \
+            tests/unit/test_acs_provider.py::test_acs_asset_extraction_promotes_largest_srcset_rendition \
+            tests/unit/test_annualreviews_provider.py::test_annualreviews_asset_extraction_promotes_largest_srcset_rendition \
+            tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_empty_intermediate_candidate_retries_next_html_before_pdf \
+            tests/unit/test_iop_provider.py::test_iop_index_cache_dedupes_signed_indexes_and_attachment_signatures \
+            tests/unit/test_tandf_provider.py::test_tandf_batch_results_keep_input_order_and_failed_table_fallback \
+            tests/unit/test_tandf_provider.py::test_tandf_table_preparation_obeys_exhausted_total_deadline \
+            tests/unit/test_ieee_provider_asset_extraction.py::IeeeProviderAssetExtractionTests::test_ieee_multimedia_discovery_memoizes_redacted_url_per_runtime
       - name: Verify native macOS filesystem alias semantics
         run: |
           PYTHONPATH=src uv run pytest \

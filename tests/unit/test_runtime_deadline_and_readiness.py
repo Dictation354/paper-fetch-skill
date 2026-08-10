@@ -60,6 +60,12 @@ def test_aip_science_and_mdpi_publish_current_body_readiness_selectors() -> None
         "#article-contents",
         ".prose-article",
     )
+    assert readiness.atypon_body_ready_selectors("royalsocietypublishing") == (
+        ".widget-ArticleFulltext .article-body",
+        ".widget-ArticleFulltext",
+        ".article-body",
+        ".article-content",
+    )
 
 
 def test_body_readiness_budget_includes_dom_evaluation_time(monkeypatch) -> None:

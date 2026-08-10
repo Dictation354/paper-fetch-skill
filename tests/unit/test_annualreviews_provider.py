@@ -352,6 +352,32 @@ def test_extracts_authors_references_and_body_figure_assets() -> None:
     assert "![Figure" in markdown
 
 
+def test_annualreviews_asset_extraction_promotes_largest_srcset_rendition() -> None:
+    preview_url = "https://www.annualreviews.org/figure-preview.png"
+    original_url = "https://www.annualreviews.org/figure-original.png"
+    html = f"""
+    <html><body><div id="itemFullTextId">
+      <div class="articleSection">
+        <div class="sectionDivider"><div class="tl-main-part title">Results</div></div>
+        <p>{"Annual Reviews body text. " * 100}</p>
+        <figure id="fig1">
+          <img src="{preview_url}" srcset="{preview_url} 320w, {original_url} 1600w">
+          <figcaption>Figure 1. Example.</figcaption>
+        </figure>
+      </div>
+    </div></body></html>
+    """
+
+    assets = _annualreviews_html.extract_scoped_html_assets(
+        html,
+        HTML_SOURCE_URL,
+        asset_profile="body",
+    )
+
+    figure = next(asset for asset in assets if asset["kind"] == "figure")
+    assert figure["full_size_url"] == original_url
+
+
 def test_article_model_uses_extracted_html_title_instead_of_doi_placeholder() -> None:
     html = golden_criteria_asset(HTML_DOI, "original.html").read_text(
         encoding="utf-8",

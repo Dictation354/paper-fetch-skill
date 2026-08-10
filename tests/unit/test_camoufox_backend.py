@@ -774,6 +774,194 @@ def test_camoufox_html_navigation_uses_commit_and_keeps_images(
     image_route.abort.assert_not_called()
 
 
+def test_provider_resource_policy_blocks_only_configured_heavy_types(
+    monkeypatch, tmp_path
+) -> None:
+    context = _Context()
+    config = BrowserRuntimeConfig(
+        provider="pnas",
+        doi="10.1073/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "wait_for_atypon_body_dom_ready",
+        lambda *_args, **_kwargs: SimpleNamespace(attempted=True, ready=True),
+    )
+
+    result = _playwright_browser.fetch_html_with_playwright(
+        ["https://example.test/article"],
+        publisher="pnas",
+        config=config,
+        wait_seconds=0,
+        options=browser_runtime.BrowserHtmlFetchOptions(
+            blocked_resource_types=frozenset({"image", "font", "media"})
+        ),
+    )
+
+    routes = {}
+    for resource_type in ("image", "font", "media", "stylesheet", "script", "xhr"):
+        route = mock.Mock()
+        route.request.resource_type = resource_type
+        context.page.route_handler(route)
+        routes[resource_type] = route
+    for resource_type in ("image", "font", "media"):
+        routes[resource_type].abort.assert_called_once()
+        routes[resource_type].continue_.assert_not_called()
+    for resource_type in ("stylesheet", "script", "xhr"):
+        routes[resource_type].continue_.assert_called_once()
+        routes[resource_type].abort.assert_not_called()
+
+    trace = result.diagnostics["browser_runtime_trace"]
+    assert trace["blocked_resource_types"] == ["font", "image", "media"]
+    assert trace["blocked_request_count"] == 3
+    assert trace["blocked_request_types"] == ["font", "image", "media"]
+    assert trace["navigation_count"] == 1
+
+
+def test_pnas_body_readiness_uses_bounded_budget_and_keeps_final_html(
+    monkeypatch, tmp_path
+) -> None:
+    context = _Context()
+    config = BrowserRuntimeConfig(
+        provider="pnas",
+        doi="10.1073/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    captured_timeout: list[float] = []
+
+    def body_readiness(_page, _publisher, *, timeout_seconds):
+        captured_timeout.append(timeout_seconds)
+        return SimpleNamespace(attempted=True, ready=False)
+
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "wait_for_atypon_body_dom_ready",
+        body_readiness,
+    )
+
+    result = _playwright_browser.fetch_html_with_playwright(
+        ["https://www.pnas.org/doi/10.1073/example"],
+        publisher="pnas",
+        config=config,
+        wait_seconds=8,
+        readiness=BrowserHtmlReadiness(wait_for_article_body=True),
+        options=browser_runtime.BrowserHtmlFetchOptions(readiness_budget_seconds=8.0),
+    )
+
+    assert len(captured_timeout) == 1
+    assert 0 < captured_timeout[0] <= 8.0
+    assert "Full text" in result.html
+    candidate = result.diagnostics["browser_runtime_trace"]["candidates"][0]
+    assert candidate["dom_readiness_result"] == "timeout"
+
+
+def test_unconfigured_science_fast_policy_keeps_legacy_media_only_blocking(
+    monkeypatch, tmp_path
+) -> None:
+    context = _Context()
+    config = BrowserRuntimeConfig(
+        provider="science",
+        doi="10.1126/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+
+    _playwright_browser.fetch_html_with_playwright(
+        ["https://example.test/article"],
+        publisher="science",
+        config=config,
+        wait_seconds=0,
+        disable_media=True,
+    )
+
+    routes = {}
+    for resource_type in ("image", "font", "media", "stylesheet", "script", "xhr"):
+        route = mock.Mock()
+        route.request.resource_type = resource_type
+        context.page.route_handler(route)
+        routes[resource_type] = route
+    routes["media"].abort.assert_called_once()
+    for resource_type in ("image", "font", "stylesheet", "script", "xhr"):
+        routes[resource_type].continue_.assert_called_once()
+        routes[resource_type].abort.assert_not_called()
+
+
+def test_figure_page_fetches_reuse_one_runtime_context_and_page(
+    monkeypatch, tmp_path
+) -> None:
+    browser_context = _Context()
+    open_context = mock.Mock(return_value=(None, browser_context))
+    monkeypatch.setattr(_playwright_browser, "open_browser_context", open_context)
+    config = BrowserRuntimeConfig(
+        provider="royalsocietypublishing",
+        doi="10.1098/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    runtime_context = RuntimeContext(env={})
+    readiness = browser_runtime.BrowserHtmlReadiness(wait_for_article_body=False)
+    try:
+        first = _playwright_browser.fetch_html_with_playwright(
+            ["https://example.test/figure/1"],
+            publisher="royalsocietypublishing",
+            config=config,
+            readiness=readiness,
+            wait_seconds=0,
+            runtime_context=runtime_context,
+            options=browser_runtime.BrowserHtmlFetchOptions(reuse_runtime_page=True),
+        )
+        second = _playwright_browser.fetch_html_with_playwright(
+            ["https://example.test/figure/2"],
+            publisher="royalsocietypublishing",
+            config=config,
+            readiness=readiness,
+            wait_seconds=0,
+            runtime_context=runtime_context,
+            options=browser_runtime.BrowserHtmlFetchOptions(reuse_runtime_page=True),
+        )
+    finally:
+        runtime_context.close()
+
+    open_context.assert_called_once()
+    assert browser_context.events.count("new_page") == 1
+    first_trace = first.diagnostics["browser_runtime_trace"]
+    second_trace = second.diagnostics["browser_runtime_trace"]
+    assert first_trace["runtime_page_reused"] is False
+    assert second_trace["runtime_page_reused"] is True
+    assert first_trace["runtime_page_navigation_count"] == 1
+    assert second_trace["runtime_page_navigation_count"] == 2
+
+
 def test_camoufox_provider_page_preparation_runs_before_html_capture(
     monkeypatch, tmp_path
 ) -> None:

@@ -6,6 +6,25 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.3.0 - 2026-08-10
+
+### 新增——浏览器复用与可观测性
+
+- 为 PNAS、AMS、MDPI、Royal Society Publishing、Annual Reviews、ACS、IOP 和 Taylor & Francis 新增有界、一次性的进程内已验收 preflight HTML 复用。缓存同时绑定 provider、规范 DOI、候选 URL 与 browser runtime 指纹；正式 fetch 仍会重新执行 metadata、Markdown/资产抽取和 acceptance，challenge、空壳、PDF fallback、失败页面及未提交 storage-state 均不会复用。PNAS 与 AMS 还会短期保留当前 DOI 最近验收通过的 provider route 提示。
+- 新增浏览器导航次数、被阻断资源类型与请求数、readiness 预算/结果、preflight 复用和候选重排 diagnostics。Catalog live 测试同步保留阶段耗时证据，并为 PNAS preflight 加正式 fetch 设置观察性的总耗时目标，不把性能波动误当成访问边界失败。
+
+### 变更——浏览器与资产性能
+
+- 将浏览器加载策略改为 provider 级配置：上述八个 opt-in provider 只阻断 image、font 与 media 请求，继续放行 document、stylesheet、JavaScript 和 API 流量。PNAS 改为按 canonical 候选顺序执行一次完整导航，并使用 8 秒正文 readiness 预算；MDPI 会在 PDF fallback 前继续尝试不完整的中间 HTML 候选，Royal Society Publishing 则直接识别当前 Silverchair 正文容器，不再固定等待。
+- ACS、Annual Reviews 与 Royal Society Publishing 优先使用 download/media link、`srcset` 和原图属性暴露的高分辨率图片 URL。仍缺少原图时，在 runtime 所有的单个 Camoufox figure page 上串行发现，单页等待 2 秒并按 URL memoize；随后 direct asset download 继续使用常规并发。
+- Taylor & Francis 同源 CSV 表格改为 4 个有界 worker 批量 hydration，共享总 deadline、保持输入顺序，并为每张失败表保留 embedded-data fallback，不再逐表串行请求。
+- 在常规 Linux 与原生 `macos-15` CI 中增加同一组非 Science 浏览器性能和资产回归 gate，并同步 macOS 适配合约、审计与维护文档。
+
+### 修复——运行时隔离与补充资产
+
+- 将 AIP Camoufox cookie 与 storage-state 限定在所属 `RuntimeContext`：cold HTML retry 仍可在单次 fetch 内复用 transient seed，但不再跨 runtime 指纹边界发布 preflight HTML、cookie 或 storage-state。
+- IEEE multimedia discovery 与 IOP supplementary index 解析现在按 request context 使用规范化、脱敏 URL memoize。签名参数轮换不再触发重复发现/下载，也不会进入 cache key；IOP 还会确定性复用成功的索引解析结果和稳定的抽取失败。
+
 ## 5.2.1 - 2026-08-08
 
 ### 变更——构建与发布完整性

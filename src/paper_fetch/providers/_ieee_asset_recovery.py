@@ -200,6 +200,7 @@ def download_ieee_assets_with_browser(
                 "Origin": IEEE_BASE_URL,
                 "X-Requested-With": "XMLHttpRequest",
             },
+            runtime_context=runtime_context,
         )
         if not discovered_assets:
             discovery_fetcher = deps._build_shared_browser_file_fetcher(
@@ -255,6 +256,12 @@ def download_ieee_assets_with_browser(
                     }
                 )
         if discovered_assets:
+            supplementary.cache_ieee_multimedia_assets(
+                runtime_context,
+                article_number=article_number,
+                multimedia_url=multimedia_url,
+                assets=discovered_assets,
+            )
             existing_keys = {
                 supplementary._supplementary_asset_key(existing)
                 for existing in supplementary_assets

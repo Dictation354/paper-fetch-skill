@@ -15,6 +15,7 @@ from ..extraction.html._metadata import merge_html_metadata, parse_html_metadata
 from ..extraction.html.assets import (
     extract_scoped_html_assets as extract_provider_neutral_scoped_assets,
 )
+from ..extraction.html.assets.silverchair import promote_silverchair_srcset_originals
 from ..extraction.html.figure_links import inject_inline_figure_links
 from ..extraction.html.parsing import choose_parser
 from ..extraction.html.renderer import clean_rendered_markdown, render_html_markdown
@@ -770,6 +771,7 @@ def extract_scoped_html_assets(
     asset_profile: AssetProfile,
 ) -> list[dict[str, str]]:
     body_html, supplementary_html = extract_asset_html_scopes(html_text, source_url)
+    body_html = promote_silverchair_srcset_originals(body_html)
     assets = extract_provider_neutral_scoped_assets(
         body_html,
         source_url,

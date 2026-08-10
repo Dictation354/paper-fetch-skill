@@ -23,12 +23,45 @@ provider 只读取显式 `BrowserRuntimeConfig`，不探测 backend、不持有�
 ## 生命周期与线程边界
 
 - 一个 `RuntimeContext` 在当前 owning thread 内复用 Camoufox process。
-- 每次 HTML、PDF 或资产操作创建并关闭独立 context/page。
+- 正文 HTML/PDF 操作继续使用独立 context/page；同一 `RuntimeContext` 内尚未解析的
+  figure page discovery 使用一个专用 context/page 串行复用，并随 runtime 统一关闭。
 - Playwright sync 对象不跨线程共享。
 - batch 结束、取消升级或 runtime context 关闭时统一释放 manager。
 - provider storage-state 目录隔离，默认以 `<provider>-camoufox` 命名。
 - 显式 executable 启动会读取相邻 Camoufox `version.json`，让隔离子进程复用已准备的官方 runtime，而不是从隔离 cache 误判为未安装。
 - Camoufox 启动进度写入 stderr；MCP stdio 的 stdout 始终只承载 JSON-RPC。
+
+## HTML 策略、短期复用与资源阻断
+
+browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默认 profile 仍保留
+既有 fast attempt、readiness 和资源加载行为；只有明确 opt-in 的 provider 才覆盖：
+
+- PNAS 只执行一次完整 HTML attempt，候选依次为 canonical `/doi/{doi}`、
+  `/doi/full/{doi}` 和 DOI resolver。它不再等待失效的 bodymatter selector，而是在
+  固定 8 秒总预算内检查正文长度、段落数和连续两次稳定指纹；预算耗尽后仍对最后
+  一份 HTML 做 block detection 与正文抽取。
+- PNAS、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP 与 Taylor & Francis
+  的正文导航只阻断 `image`、`font`、`media`；document、stylesheet、JavaScript、
+  XHR/fetch 保持放行。Wiley、IEEE、AIP 与 Science 的既有策略不变。
+- 上述八个 opt-in provider 的 `BrowserPreflightReuseCache` 使用已有
+  `cachetools.TTLCache`，默认最多 16 项、TTL 60 秒、线程安全且一次性消费。key
+  包含 provider、规范 DOI、候选 URL 和非敏感的
+  browser runtime 指纹；只有正文已抽取且 storage-state 已成功提交的 HTML 才能写入。
+  challenge、空壳、PDF fallback、失败 HTML、未提交状态和落盘产物都不缓存。
+- 这些 provider 在 MCP server 内连续执行的 preflight 与正式 fetch、以及同进程
+  catalog live 测试可
+  共享这份 HTML；命中后仍使用正式 metadata 重新执行 Markdown/资产抽取。独立 CLI
+  进程之间仅继续复用 storage-state，不承诺 HTML 复用。
+- Wiley、IEEE 与 Science 不接入这份 HTML cache；AIP 的 cookie/HTML 与 Camoufox
+  进程指纹绑定，禁止跨 `RuntimeContext` preflight
+  HTML 或 cookie 复用，也不把 preflight storage-state 发布给后续独立 context。
+- PNAS 与 AMS 另有 60 秒的精确 DOI 路由提示，只把同 DOI、合法 provider host 上
+  已验收的最终 URL 置顶；challenge、abstract redirect 和失败候选不会写入。
+
+正文 diagnostics 会记录实际阻断类型/数量、导航次数、readiness 预算与结果，以及
+`preflight_reuse`、`candidate_reorder` 和 DOI hint 写入状态；source trail 以
+`browser:preflight_reuse_hit|miss|disabled` 与
+`browser:candidate_reorder_hit|miss` 暴露同一事实，不新增公开请求或响应字段。
 
 ## 配置
 

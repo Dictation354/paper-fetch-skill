@@ -6,6 +6,25 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.3.0 - 2026-08-10
+
+### Added — browser reuse and observability
+
+- Added bounded, one-shot in-process reuse of accepted preflight HTML for PNAS, AMS, MDPI, Royal Society Publishing, Annual Reviews, ACS, IOP, and Taylor & Francis. Cache entries are bound to the provider, normalized DOI, candidate URL, and browser runtime fingerprint; formal fetches still re-run metadata, Markdown/asset extraction, and acceptance, while challenges, empty shells, PDF fallbacks, failed pages, and uncommitted storage state are never reused. PNAS and AMS also retain short-lived, DOI-scoped hints for the last accepted provider route.
+- Added browser diagnostics for navigation counts, blocked resource types and requests, readiness budgets/results, preflight reuse, and candidate reordering. Catalog live tests now retain matching timing evidence and an observational PNAS preflight-plus-fetch target without turning performance variance into an access-boundary failure.
+
+### Changed — browser and asset performance
+
+- Made browser loading policy provider-specific: the eight opted-in providers block only image, font, and media requests while preserving document, stylesheet, JavaScript, and API traffic. PNAS now uses one complete navigation with canonical candidate ordering and an eight-second body-readiness budget; MDPI retries incomplete intermediate HTML candidates before PDF fallback, and Royal Society Publishing recognizes its current Silverchair article containers without a fixed wait.
+- Preferred direct high-resolution figure URLs from download/media links, `srcset`, and original-image attributes for ACS, Annual Reviews, and Royal Society Publishing. Missing originals are discovered serially through one runtime-owned Camoufox figure page with a two-second wait and URL memoization, after which direct asset downloads retain their normal concurrency.
+- Batched same-origin Taylor & Francis CSV table hydration with four bounded workers, a shared total deadline, stable input ordering, and per-table embedded-data fallback instead of issuing each table request sequentially.
+- Extended regular Linux and native `macos-15` CI with the same non-Science browser performance and asset-regression gate, and synchronized the macOS adaptation contract, audit, and maintenance documentation.
+
+### Fixed — runtime isolation and supplementary assets
+
+- Kept AIP Camoufox cookies and storage state within the owning `RuntimeContext`; cold HTML retries can reuse their transient seed inside one fetch, but preflight HTML, cookies, and storage state are no longer published across runtime-fingerprint boundaries.
+- Memoized IEEE multimedia discovery and IOP supplementary-index resolution within each request context using canonical, redacted URLs. Rotated signing parameters no longer trigger duplicate discovery/download work or leak into cache keys, and IOP deterministically reuses both successful index parsing and stable extraction failures.
+
 ## 5.2.1 - 2026-08-08
 
 ### Changed — build and release integrity

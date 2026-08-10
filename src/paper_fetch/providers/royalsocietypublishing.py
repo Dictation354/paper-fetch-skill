@@ -78,6 +78,11 @@ ROYAL_SOCIETY_BROWSER_PROFILE = browser_workflow.make_browser_profile(
     "royalsocietypublishing",
     article_source_name="royalsocietypublishing_html",
     fallback_author_extractor=royal_html.extract_authors,
+    policy=browser_workflow.BrowserWorkflowPolicy(
+        blocked_resource_types=("image", "font", "media"),
+        preflight_html_reuse=True,
+        direct_figure_page_fallback=True,
+    ),
 )
 
 

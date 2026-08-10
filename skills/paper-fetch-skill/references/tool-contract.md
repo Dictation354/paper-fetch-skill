@@ -26,6 +26,7 @@
 
 - 固定顺序是 `provider_status` / CLI `doctor` 静态检查 → MCP `browser_preflight` / CLI `paper-fetch browser-preflight` live HTML 预检 → 仅在结果或实际 fetch 明确要求时由用户执行 `paper-fetch auth <provider>`。静态 `ready` 不是远端页面健康或访问授权证明。
 - MCP 与 CLI 直接共用 `run_browser_provider_preflight()` 和 provider HTML bootstrap。未传 `provider` 时，两者都按 browser runtime catalog 顺序检查全部 provider，并使用各自内置样例；不会默认执行该 live 工具。
+- MCP 同一服务进程中，PNAS、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、T&F 的成功 preflight 可把已验收 HTML 一次性交给紧随其后的正式 fetch；命中只减少重复导航，正式 metadata、Markdown/资产抽取和 acceptance 都会重新执行。该内部状态通过既有 `source_trail`/diagnostics 标记观察，不新增或改变公开工具 schema；CLI 跨进程以及 Wiley、IEEE、Science、AIP 不承诺这种复用。
 - `test_url` 和 `storage_state_path` 只允许与一个显式 `provider` 一起使用。`test_url` 必须是无内嵌凭据的 HTTP(S) URL；`timeout_ms` 范围为 `1..600000`。`save_storage_state=false` 只关闭本轮保存，仍可读取已有 storage-state；默认 `true` 可能创建或原子更新 provider storage-state 文件。
 - 工具 annotations 为 open-world、非只读、非 destructive、非 idempotent：它会使用 Camoufox runtime 打开出版社页面，也可能写 storage-state。它不调用 PDF fallback，且 `auth_attempted=false`；challenge、验证码、付费或登录边界不会被自动绕过。
 - 每个 provider 独立返回 `ready`、`challenge`、`auth_required`、`network_timeout`、`extraction_error`、`runtime_error` 或 `cancelled`，并给出唯一 `status/reason_code/stage/message/next_action` 契约。前一个 provider 的 challenge/runtime failure 不会删除其它已完成结果；取消会保留取消前的结果，并停止调度后续 provider。

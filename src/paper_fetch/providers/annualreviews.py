@@ -84,6 +84,11 @@ ANNUALREVIEWS_BROWSER_PROFILE = browser_workflow.make_browser_profile(
     "annualreviews",
     article_source_name="annualreviews_html",
     fallback_author_extractor=_annualreviews_html.extract_authors,
+    policy=browser_workflow.BrowserWorkflowPolicy(
+        blocked_resource_types=("image", "font", "media"),
+        preflight_html_reuse=True,
+        direct_figure_page_fallback=True,
+    ),
 )
 
 

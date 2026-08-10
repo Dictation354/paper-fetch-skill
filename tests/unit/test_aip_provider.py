@@ -35,7 +35,7 @@ AIP_TABLE_FORMULA_DOI = "10.1063/5.0188905"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_aip_cold_html_retry_reuses_transient_seed_before_committing_state(
+def test_aip_cold_html_retry_reuses_transient_seed_without_persisting_state(
     tmp_path,
 ) -> None:
     client = AipClient(transport=None, env={})
@@ -144,8 +144,7 @@ def test_aip_cold_html_retry_reuses_transient_seed_before_committing_state(
     retry_seed = mocked_browser.call_args_list[1].kwargs["browser_context_seed"]
     assert retry_seed["browser_cookies"][0]["name"] == "__cf_bm"
     assert retry_seed["browser_cookies"][0]["value"] == "transient-session"
-    commit_state.assert_called_once()
-    assert commit_state.call_args.args[0] is second_stage
+    commit_state.assert_not_called()
     assert not state_path.exists()
     assert raw_payload.content is not None
     assert raw_payload.content.route_kind == "html"
@@ -155,6 +154,15 @@ def test_aip_cold_html_retry_reuses_transient_seed_before_committing_state(
         "success",
     ]
     assert attempts[0]["failure_code"] == "empty_article_shell"
+    assert raw_payload.content.diagnostics["browser_runtime_trace"][
+        "storage_state_save"
+    ] == {
+        "attempted": False,
+        "staged": False,
+        "saved": False,
+        "path": None,
+        "reason": "provider_runtime_fingerprint_boundary",
+    }
 
 
 def test_aip_provider_bundle_declares_routing_sources_and_browser_runtime() -> None:

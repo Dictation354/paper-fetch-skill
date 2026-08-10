@@ -454,7 +454,8 @@ def test_royal_figure_asset_uses_viewer_only_when_direct_original_is_missing() -
     readiness = figure_page_fetch.call_args.kwargs["readiness"]
     assert readiness.wait_for_article_body is False
     assert readiness.selector == "img.content-image[src], img.content-image[data-src]"
-    assert figure_page_fetch.call_args.kwargs["wait_seconds"] == 5
+    assert figure_page_fetch.call_args.kwargs["wait_seconds"] == 2
+    assert figure_page_fetch.call_args.kwargs["options"].reuse_runtime_page is True
     shared_fetcher.assert_called_once()
     assert shared_fetcher.call_args.args[0] == full_size_url
     assert result["asset_failures"] == []

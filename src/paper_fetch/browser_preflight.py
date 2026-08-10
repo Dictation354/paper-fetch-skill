@@ -40,6 +40,7 @@ from .providers.browser_workflow.shared import (
     BrowserWorkflowDeps,
     default_browser_workflow_deps,
 )
+from .providers.browser_workflow.reuse_cache import mark_browser_preflight_producer
 from .providers.registry import build_clients
 from .reason_codes import (
     BROWSER_CONTEXT_CREATE_FAILED,
@@ -806,6 +807,11 @@ def preflight_browser_provider(
             ),
         )
 
+    # AIP's Camoufox cookies are bound to the generated runtime fingerprint.
+    # A distinct preflight RuntimeContext must not publish those cookies for a
+    # later context to consume.
+    effective_save_storage_state = bool(save_storage_state and provider_key != "aip")
+
     storage_path: dict[str, Path | None] = {"value": None}
     context: RuntimeContext | None = None
     try:
@@ -815,7 +821,7 @@ def preflight_browser_provider(
                 target,
                 env=env,
                 storage_state_path=storage_state_path,
-                save_storage_state=save_storage_state,
+                save_storage_state=effective_save_storage_state,
                 cancel_check=cancel_check,
                 download_dir=download_dir,
                 artifact_mode=artifact_mode,
@@ -825,13 +831,18 @@ def preflight_browser_provider(
             env,
             storage_path=storage_path,
             explicit_storage_state_path=storage_state_path,
-            save_storage_state=save_storage_state,
+            save_storage_state=effective_save_storage_state,
         )
         context = RuntimeContext(
             env=dict(env),
             cancel_check=cancel_check,
             download_dir=download_dir,
             artifact_mode=artifact_mode,
+        )
+        mark_browser_preflight_producer(
+            context,
+            target_url=target.url,
+            save_storage_state=effective_save_storage_state,
         )
         bootstrap = deps.bootstrap_browser_workflow(
             client,
@@ -840,6 +851,8 @@ def preflight_browser_provider(
             context=context,
             deps=deps,
         )
+        if bootstrap.runtime is not None:
+            storage_path["value"] = _storage_state_path(bootstrap.runtime)
         raw_payload = bootstrap.html_payload
         if raw_payload is None:
             failure_diagnostics = dict(bootstrap.html_failure_diagnostics or {})
@@ -873,7 +886,7 @@ def preflight_browser_provider(
             )
         save_result = _preflight_storage_state_save(raw_payload)
         if (
-            save_storage_state
+            effective_save_storage_state
             and save_result is not None
             and not save_result.get("saved")
         ):

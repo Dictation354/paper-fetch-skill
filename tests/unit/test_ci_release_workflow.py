@@ -204,6 +204,31 @@ def test_regular_ci_includes_native_macos_offline_gate() -> None:
     assert 'PAPER_FETCH_OFFLINE_SKIP_FETCH_SMOKE: "1"' in workflow
 
 
+def test_regular_ci_includes_non_science_browser_performance_regressions() -> None:
+    workflow = _workflow_text("ci.yml")
+
+    assert "Non-Science browser performance regressions" in workflow
+    assert (
+        "Verify non-Science browser performance boundaries on native macOS" in workflow
+    )
+    for node in (
+        "tests/unit/test_browser_preflight_reuse_cache.py",
+        "test_direct_first_figure_policy_skips_viewer_when_download_url_exists",
+        "test_silverchair_figure_page_resolution_stays_on_camoufox_owner_thread",
+        "test_provider_resource_policy_blocks_only_configured_heavy_types",
+        "test_pnas_body_readiness_uses_bounded_budget_and_keeps_final_html",
+        "test_figure_page_fetches_reuse_one_runtime_context_and_page",
+        "test_acs_asset_extraction_promotes_largest_srcset_rendition",
+        "test_annualreviews_asset_extraction_promotes_largest_srcset_rendition",
+        "test_mdpi_empty_intermediate_candidate_retries_next_html_before_pdf",
+        "test_iop_index_cache_dedupes_signed_indexes_and_attachment_signatures",
+        "test_tandf_batch_results_keep_input_order_and_failed_table_fallback",
+        "test_tandf_table_preparation_obeys_exhausted_total_deadline",
+        "test_ieee_multimedia_discovery_memoizes_redacted_url_per_runtime",
+    ):
+        assert workflow.count(node) >= 2
+
+
 def test_release_emits_sbom_checksums_and_build_provenance() -> None:
     workflow = _workflow_text("release.yml")
     assert "Existing immutable v* tag to release" in workflow

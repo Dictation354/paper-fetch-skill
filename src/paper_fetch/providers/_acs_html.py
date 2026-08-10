@@ -244,10 +244,21 @@ def finalize_extraction(
     return markdown_text, finalized
 
 
-def scoped_asset_extractor(*args: Any, **kwargs: Any) -> list[dict[str, str]]:
+def scoped_asset_extractor(
+    body_html_text: str,
+    source_url: str,
+    **kwargs: Any,
+) -> list[dict[str, str]]:
+    from ..extraction.html.assets.silverchair import (
+        promote_silverchair_srcset_originals,
+    )
     from .atypon_browser_workflow.asset_scopes import extract_scoped_html_assets
 
-    return extract_scoped_html_assets(*args, **kwargs)
+    return extract_scoped_html_assets(
+        promote_silverchair_srcset_originals(body_html_text),
+        source_url,
+        **kwargs,
+    )
 
 
 __all__ = [

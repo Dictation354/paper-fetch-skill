@@ -9,9 +9,26 @@ from paper_fetch.providers import browser_workflow
 from paper_fetch.providers.browser_workflow.fetchers import context as fetcher_context
 from paper_fetch.providers.browser_workflow.fetchers import file as file_fetchers
 from paper_fetch.providers.browser_workflow.fetchers import image as image_fetchers
+from paper_fetch.providers.browser_workflow.fetchers.memo import (
+    _MemoizedFigurePageFetcher,
+)
 from paper_fetch.runtime import RuntimeContext
 
 TEST_CDP_ENDPOINT = "ws://127.0.0.1:9222/devtools/browser/test"
+
+
+def test_figure_page_memo_uses_canonical_http_url_and_caches_failures() -> None:
+    underlying = mock.Mock(return_value=None)
+    fetcher = _MemoizedFigurePageFetcher(underlying)
+
+    assert (
+        fetcher("HTTPS://Example.Test:443/view-large/figure/1?mode=full#viewer") is None
+    )
+    assert fetcher("https://example.test/view-large/figure/1?mode=full") is None
+
+    underlying.assert_called_once_with(
+        "https://example.test/view-large/figure/1?mode=full"
+    )
 
 
 class _FakePage:

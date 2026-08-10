@@ -212,6 +212,7 @@ def _browser_workflow_image_download_candidates(
     asset: Mapping[str, Any],
     user_agent: str,
     figure_page_fetcher: Callable[[str], tuple[str, str] | None] | None = None,
+    direct_original_first: bool = False,
 ) -> list[str]:
     del user_agent
     download_url = normalize_text(str(asset.get("download_url") or ""))
@@ -225,17 +226,13 @@ def _browser_workflow_image_download_candidates(
     if direct_full_size_url:
         candidates.append(direct_full_size_url)
 
-    figure_page_url = normalize_text(str(asset.get("figure_page_url") or ""))
-    if figure_page_url and not direct_full_size_url and figure_page_fetcher is not None:
-        try:
-            page_result = figure_page_fetcher(figure_page_url)
-        except Exception:
-            page_result = None
-        if page_result is not None:
-            page_html, page_url = page_result
-            full_size_url = extract_full_size_figure_image_url(page_html, page_url)
-            if full_size_url:
-                candidates.append(full_size_url)
+    discovered_full_size_url = _discover_browser_workflow_figure_original_url(
+        asset,
+        figure_page_fetcher=figure_page_fetcher,
+        direct_original_first=direct_original_first,
+    )
+    if discovered_full_size_url:
+        candidates.append(discovered_full_size_url)
 
     if primary_url and looks_like_full_size_asset_url(primary_url):
         candidates.append(primary_url)
@@ -243,6 +240,63 @@ def _browser_workflow_image_download_candidates(
         candidates.append(preview_url)
 
     return dedupe_normalized(candidates)
+
+
+def _discover_browser_workflow_figure_original_url(
+    asset: Mapping[str, Any],
+    *,
+    figure_page_fetcher: Callable[[str], tuple[str, str] | None] | None,
+    direct_original_first: bool,
+) -> str:
+    """Discover one missing original while preserving direct-first semantics."""
+
+    figure_page_url = normalize_text(str(asset.get("figure_page_url") or ""))
+    if not figure_page_url or figure_page_fetcher is None:
+        return ""
+    download_url = normalize_text(str(asset.get("download_url") or ""))
+    direct_full_size_url = normalize_text(str(asset.get("full_size_url") or ""))
+    primary_url = normalize_text(str(asset.get("url") or ""))
+    direct_original_available = bool(
+        download_url
+        or direct_full_size_url
+        or (primary_url and looks_like_full_size_asset_url(primary_url))
+    )
+    figure_page_needed = (
+        not direct_original_available
+        if direct_original_first
+        else not direct_full_size_url
+    )
+    if not figure_page_needed:
+        return ""
+    try:
+        page_result = figure_page_fetcher(figure_page_url)
+    except Exception:
+        page_result = None
+    if page_result is None:
+        return ""
+    page_html, page_url = page_result
+    return normalize_text(extract_full_size_figure_image_url(page_html, page_url))
+
+
+def _discover_browser_workflow_figure_originals(
+    assets: list[dict[str, Any]],
+    *,
+    figure_page_fetcher: Callable[[str], tuple[str, str] | None] | None,
+) -> list[dict[str, Any]]:
+    """Resolve missing figure originals serially before parallel direct downloads."""
+
+    resolved_assets: list[dict[str, Any]] = []
+    for raw_asset in assets:
+        asset = dict(raw_asset)
+        discovered_url = _discover_browser_workflow_figure_original_url(
+            asset,
+            figure_page_fetcher=figure_page_fetcher,
+            direct_original_first=True,
+        )
+        if discovered_url:
+            asset["full_size_url"] = discovered_url
+        resolved_assets.append(asset)
+    return resolved_assets
 
 
 def _merge_download_attempt_results(

@@ -10,6 +10,7 @@ from .context import (
     _normalized_response_headers,
     _replace_runtime_shared_page_session,
     _restore_runtime_shared_page_session,
+    _runtime_figure_page_session,
 )
 from .diagnostics import (
     BROWSER_CONTEXT_ERROR,
@@ -59,6 +60,7 @@ __all__ = [
     "_normalized_response_headers",
     "_replace_runtime_shared_page_session",
     "_restore_runtime_shared_page_session",
+    "_runtime_figure_page_session",
     "atypon_body_ready_selectors",
     "fetch_image_document_with_browser",
     "wait_for_atypon_body_dom_ready",

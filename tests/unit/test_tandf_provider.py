@@ -239,11 +239,17 @@ def test_tandf_browser_page_preparation_hydrates_official_csv_table() -> None:
     page.locator.return_value = links
     page.evaluate.side_effect = [
         {
-            "ok": True,
-            "status": 200,
-            "contentType": "text/csv;charset=UTF-8",
-            "text": '"Material","Value"\n"Buffer","200"',
-            "caption": "Table 1. Example (Citation 2011)",
+            "results": [
+                {
+                    "ok": True,
+                    "status": 200,
+                    "contentType": "text/csv;charset=UTF-8",
+                    "text": '"Material","Value"\n"Buffer","200"',
+                    "caption": "Table 1. Example (Citation 2011)",
+                }
+            ],
+            "timedOut": False,
+            "concurrency": 1,
         },
         True,
         {"total": 1, "truncated": False, "tables": []},
@@ -260,7 +266,21 @@ def test_tandf_browser_page_preparation_hydrates_official_csv_table() -> None:
         "embedded_tables_hydrated": 0,
         "table_failures": 0,
         "truncated": False,
+        "table_fetch_concurrency": 1,
     }
+    batch_args = page.evaluate.call_args_list[0].args[1]
+    assert batch_args["entries"] == [
+        {
+            "href": "/action/downloadTable?id=t0001&doi=10.1080%2Fsample&downloadType=CSV",
+            "tableId": "t0001",
+        }
+    ]
+    assert batch_args["perTableTimeoutMs"] == 2_000
+    assert batch_args["concurrency"] == 4
+    assert 0 < batch_args["totalTimeoutMs"] <= 5_000
+    batch_script = page.evaluate.call_args_list[0].args[0]
+    assert "Promise.all" in batch_script
+    assert "targetUrl.origin !== window.location.origin" in batch_script
     assert page.evaluate.call_args_list[1].args[1] == {
         "tableId": "t0001",
         "caption": "Table 1. Example (2011)",
@@ -298,6 +318,82 @@ def test_tandf_browser_page_preparation_uses_bounded_embedded_table_fallback() -
         "caption": "Algorithm",
         "rows": [["Step"], ["Build the model"]],
     }
+
+
+def test_tandf_batch_results_keep_input_order_and_failed_table_fallback() -> None:
+    def link(table_id: str):
+        value = mock.Mock()
+        value.get_attribute.side_effect = lambda name: (
+            f"/action/downloadTable?id={table_id}&downloadType=CSV"
+            if name == "href"
+            else None
+        )
+        value.evaluate.return_value = f"{table_id}-table-wrapper"
+        return value
+
+    links = mock.Mock()
+    links.count.return_value = 2
+    links.nth.side_effect = [link("t0001"), link("t0002")]
+    page = mock.Mock()
+    page.locator.return_value = links
+    page.evaluate.side_effect = [
+        {
+            "results": [
+                {
+                    "ok": True,
+                    "status": 200,
+                    "contentType": "text/csv",
+                    "text": "A,B\n1,2",
+                    "caption": "First",
+                },
+                {"ok": False, "status": 504, "error": "AbortError"},
+            ],
+            "timedOut": False,
+            "concurrency": 2,
+        },
+        True,
+        {
+            "total": 1,
+            "truncated": False,
+            "tables": [
+                {
+                    "tableId": "t0002",
+                    "caption": "Second fallback",
+                    "rows": [["C", "D"], ["3", "4"]],
+                }
+            ],
+        },
+        True,
+    ]
+
+    result = _tandf_html.prepare_browser_page(page, timeout_ms=5_000)
+
+    assert result["table_fetch_concurrency"] == 2
+    assert result["csv_tables_hydrated"] == 1
+    assert result["embedded_tables_hydrated"] == 1
+    assert result["tables_hydrated"] == 2
+    assert result["table_failures"] == 1
+    injected = [
+        call.args[1]
+        for call in (page.evaluate.call_args_list[1], page.evaluate.call_args_list[3])
+    ]
+    assert [entry["tableId"] for entry in injected] == ["t0001", "t0002"]
+    assert injected[0]["rows"] == [["A", "B"], ["1", "2"]]
+    assert injected[1]["rows"] == [["C", "D"], ["3", "4"]]
+
+
+def test_tandf_table_preparation_obeys_exhausted_total_deadline() -> None:
+    links = mock.Mock()
+    links.count.return_value = 24
+    page = mock.Mock()
+    page.locator.return_value = links
+
+    result = _tandf_html.prepare_browser_page(page, timeout_ms=0)
+
+    assert result["table_controls"] == 24
+    assert result["timed_out"] is True
+    links.nth.assert_not_called()
+    page.evaluate.assert_not_called()
 
 
 def test_tandf_article_assets_keep_body_figures_and_scope_supplement() -> None:

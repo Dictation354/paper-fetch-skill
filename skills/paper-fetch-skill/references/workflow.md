@@ -69,6 +69,7 @@
 
 - 仅当 provider 凭证、浏览器运行时、人工登录或合法访问上下文可能影响目标时调用 `provider_status()`，并按 [`environment.md`](environment.md) 处理。
 - 对 runtime `ProviderSpec.requires_browser_runtime=True` 的 provider，在首次联网抓取前先用 `provider_status(provider=...)` 确认静态 runtime；需要真实链路证明时再运行 MCP `browser_preflight(provider=...)` 或 CLI `paper-fetch browser-preflight --provider ...`。live preflight 可能联网并写 storage-state，不能当作只读检查。
+- 同一 MCP server 进程中，PNAS、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、T&F 已验收并成功提交 storage-state 的 preflight HTML 可能被紧随其后的正式 fetch 一次性复用，fetch 仍会用正式 metadata 重跑正文与资产抽取。该优化不改变调用顺序，也不是额外成功证据；独立 CLI 进程以及 Wiley、IEEE、Science 不共享该 HTML，AIP 因 Camoufox 指纹边界明确禁用跨 `RuntimeContext` 复用。
 - 预检的 `challenge` / `auth_required` 才转入显式人工 `auth`；`runtime_error` 先修本地运行时，`ready` 才继续 fetch。预检不执行 PDF fallback 或自动 auth，也不得尝试绕过 challenge。
 - 需要人工登录/授权时使用 `manual_auth` 暂停；遇到付费、许可或合法访问边界时使用 `lawful_access_boundary` 暂停。不得绕过登录、验证码、付费墙或访问控制。
 

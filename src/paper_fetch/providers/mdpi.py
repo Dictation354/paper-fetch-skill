@@ -101,6 +101,11 @@ MDPI_BROWSER_PROFILE = browser_workflow.make_browser_profile(
     article_source_name="mdpi_html",
     fallback_author_extractor=_mdpi_html.extract_authors,
     html_readiness=BrowserHtmlReadiness(wait_for_article_body=True),
+    policy=browser_workflow.BrowserWorkflowPolicy(
+        blocked_resource_types=("image", "font", "media"),
+        preflight_html_reuse=True,
+        retry_incomplete_html_candidates=True,
+    ),
 )
 
 

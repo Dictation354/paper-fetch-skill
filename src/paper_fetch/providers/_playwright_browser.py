@@ -62,6 +62,7 @@ from .browser_runtime.types import (
 from .browser_workflow.fetchers.context import (
     _browser_response_headers,
     _browser_response_status,
+    _runtime_figure_page_session,
 )
 from .browser_workflow.fetchers.readiness import (
     BodyDomReadinessResult,
@@ -547,6 +548,7 @@ def _wait_for_browser_html_readiness(
     return_image_payload: bool,
     runtime_context: RuntimeContext | None,
     candidate_trace: dict[str, Any],
+    readiness_timeout_seconds: float | None = None,
 ) -> BodyDomReadinessResult | None:
     if return_image_payload:
         return None
@@ -563,13 +565,15 @@ def _wait_for_browser_html_readiness(
             (float(timeout_ms) / 1000.0) - (time.monotonic() - request_started),
         )
         readiness_started = time.monotonic()
+        body_timeout_seconds = (
+            min(readiness_timeout_seconds, remaining_timeout_seconds)
+            if readiness_timeout_seconds is not None
+            else min(max(float(wait_seconds), 20.0), remaining_timeout_seconds)
+        )
         body_readiness = wait_for_atypon_body_dom_ready(
             page,
             publisher,
-            timeout_seconds=min(
-                max(float(wait_seconds), 20.0),
-                remaining_timeout_seconds,
-            ),
+            timeout_seconds=max(0.0, body_timeout_seconds),
         )
         candidate_trace["dom_readiness_seconds"] = round(
             time.monotonic() - readiness_started, 3
@@ -588,6 +592,11 @@ def _wait_for_browser_html_readiness(
         candidate_trace["dom_readiness_heading_count"] = getattr(
             body_readiness, "heading_count", 0
         )
+        candidate_trace["dom_readiness_result"] = (
+            "ready"
+            if body_readiness.ready
+            else ("timeout" if body_readiness.attempted else "unsupported")
+        )
     elif normalized_selector and wait_seconds > 0:
         _raise_if_cancelled(runtime_context)
         selector_wait_attempted = True
@@ -598,8 +607,13 @@ def _wait_for_browser_html_readiness(
                 * 1000
             ),
         )
+        selector_budget_ms = (
+            max(1, int(readiness_timeout_seconds * 1000))
+            if readiness_timeout_seconds is not None
+            else max(1, int(wait_seconds) * 1000)
+        )
         selector_timeout_ms = min(
-            max(1, int(wait_seconds) * 1000),
+            selector_budget_ms,
             remaining_timeout_ms,
         )
         selector_started = time.monotonic()
@@ -633,6 +647,9 @@ def _wait_for_browser_html_readiness(
             time.monotonic() - selector_started,
             3,
         )
+        candidate_trace["dom_readiness_result"] = (
+            "ready" if candidate_trace.get("selector_readiness_ready") else "timeout"
+        )
 
     if (
         (body_readiness is None or not body_readiness.attempted)
@@ -647,11 +664,18 @@ def _wait_for_browser_html_readiness(
                 * 1000
             ),
         )
-        if remaining_wait_ms > 0:
-            page.wait_for_timeout(
-                min(max(0, int(wait_seconds)) * 1000, remaining_wait_ms)
+        fixed_wait_ms = (
+            min(
+                remaining_wait_ms,
+                max(0, int(readiness_timeout_seconds * 1000)),
             )
+            if readiness_timeout_seconds is not None
+            else min(max(0, int(wait_seconds)) * 1000, remaining_wait_ms)
+        )
+        if fixed_wait_ms > 0:
+            page.wait_for_timeout(fixed_wait_ms)
         _raise_if_cancelled(runtime_context)
+        candidate_trace["dom_readiness_result"] = "fixed_wait"
     if wait_seconds > 0:
         readiness_elapsed = max(
             0.0,
@@ -876,6 +900,160 @@ def _seed_browser_html_context(
     seed_trace["reason"] = "cookies_applied"
 
 
+def _active_browser_resource_types(
+    *,
+    backend_name: str,
+    disable_media: bool,
+    options: BrowserHtmlFetchOptions,
+) -> set[str]:
+    if options.return_image_payload:
+        return set()
+    configured = {
+        normalize_text(str(item)).lower()
+        for item in (options.blocked_resource_types or ())
+        if normalize_text(str(item))
+    }
+    if not disable_media:
+        return configured
+    if options.blocked_resource_types is None and backend_name != "camoufox":
+        # Preserve the established Playwright fast-attempt policy for profiles
+        # (including Science) that did not opt into provider-specific blocking.
+        configured.update(BROWSER_HTML_BLOCKED_RESOURCE_TYPES)
+    else:
+        # Camoufox's existing default only blocks media; explicit provider
+        # policies remain exact on either backend.
+        configured.add("media")
+    return configured
+
+
+def _open_browser_html_context(
+    config: PlaywrightRuntimeConfig,
+    *,
+    runtime_context: RuntimeContext | None,
+    shared_page_session: Any | None,
+    browser_context_seed: Mapping[str, Any] | None,
+    candidate_url: str | None,
+    trace: dict[str, Any],
+) -> tuple[Any, Any, Any | None]:
+    manager = None
+    browser_context = None
+    page = None
+    reused = False
+    connect_started = time.monotonic()
+    try:
+        if (
+            shared_page_session is not None
+            and shared_page_session.context is not None
+            and shared_page_session.page is not None
+        ):
+            reused = True
+            manager = shared_page_session.manager
+            browser_context = shared_page_session.context
+            page = shared_page_session.page
+        else:
+            manager, browser_context = open_browser_context(
+                config,
+                runtime_context=runtime_context,
+            )
+        trace["runtime_page_reused"] = reused
+        trace["browser_connect_seconds"] = round(time.monotonic() - connect_started, 3)
+        external_diagnostics = getattr(
+            browser_context, "_paper_fetch_external_cdp_diagnostics", None
+        )
+        if isinstance(external_diagnostics, Mapping):
+            trace["external_cdp_context"] = dict(external_diagnostics)
+        elif config.cdp_endpoint:
+            trace["external_cdp_context"] = {
+                "external_cdp": True,
+                "borrowed_existing_context": None,
+                "ignored_context_options": [],
+                "storage_state_cookie_count": None,
+            }
+        if reused:
+            trace["browser_context_seed"] = {
+                "provided": browser_context_seed is not None,
+                "applied": False,
+                "reason": "reused_runtime_page_context",
+            }
+        else:
+            _seed_browser_html_context(
+                browser_context,
+                browser_context_seed=browser_context_seed,
+                candidate_url=candidate_url,
+                trace=trace,
+            )
+        return manager, browser_context, page
+    except PlaywrightBrowserFailure:
+        if not reused:
+            _safe_close(browser_context)
+            _safe_close(manager)
+        raise
+    except ManagedBrowserError as exc:
+        trace["browser_connect_seconds"] = round(time.monotonic() - connect_started, 3)
+        trace["browser_failure"] = dict(exc.details)
+        if not reused:
+            _safe_close(browser_context)
+            _safe_close(manager)
+        raise PlaywrightBrowserFailure(
+            exc.code,
+            exc.message,
+            details={"trace": trace, "browser_failure": dict(exc.details)},
+        ) from exc
+    except Exception as exc:
+        trace["browser_connect_seconds"] = round(time.monotonic() - connect_started, 3)
+        message = normalize_text(str(exc)) or "Browser context creation failed."
+        if not reused:
+            _safe_close(browser_context)
+            _safe_close(manager)
+        raise PlaywrightBrowserFailure(
+            BROWSER_CONTEXT_CREATE_FAILED,
+            message,
+            details={
+                "trace": trace,
+                "browser_failure": {
+                    "stage": "browser_context_create",
+                    "code": BROWSER_CONTEXT_CREATE_FAILED,
+                    "message": message,
+                },
+            },
+        ) from exc
+
+
+def _ensure_browser_html_page(
+    browser_context: Any,
+    page: Any | None,
+    *,
+    manager: Any,
+    shared_page_session: Any | None,
+    trace: dict[str, Any],
+) -> Any:
+    if page is not None:
+        return page
+    try:
+        page = browser_context.new_page()
+        if shared_page_session is not None:
+            shared_page_session.bind(
+                manager=manager,
+                context=browser_context,
+                page=page,
+            )
+        return page
+    except Exception as exc:
+        message = normalize_text(str(exc)) or "Browser page creation failed."
+        raise PlaywrightBrowserFailure(
+            BROWSER_PAGE_CREATE_FAILED,
+            message,
+            details={
+                "trace": trace,
+                "browser_failure": {
+                    "stage": "browser_page_create",
+                    "code": BROWSER_PAGE_CREATE_FAILED,
+                    "message": message,
+                },
+            },
+        ) from exc
+
+
 def fetch_html_with_playwright(
     candidate_urls: list[str],
     *,
@@ -896,13 +1074,18 @@ def fetch_html_with_playwright(
         raise PlaywrightBrowserFailure(
             "empty_html_attempts", "No publisher HTML candidates were attempted."
         )
-    if return_image_payload:
-        disable_media = False
+    backend_name = normalize_text(config.backend).lower()
+    active_blocked_resource_types = _active_browser_resource_types(
+        backend_name=backend_name,
+        disable_media=disable_media,
+        options=options,
+    )
+    readiness_budget_seconds = options.readiness_budget_seconds
+    reuse_runtime_page = options.reuse_runtime_page
 
     last_failure: PlaywrightBrowserFailure | None = None
     latest_browser_context_seed: Mapping[str, Any] | None = None
     timeout_ms = config.timeout_ms if max_timeout_ms is None else max(1, max_timeout_ms)
-    backend_name = normalize_text(config.backend).lower()
     if backend_name != "camoufox":
         raise PlaywrightBrowserFailure(
             "browser_backend_invalid",
@@ -915,7 +1098,11 @@ def fetch_html_with_playwright(
         "backend": backend_name,
         "candidate_count": len(candidate_urls),
         "candidates": [],
-        "media_blocking": bool(disable_media),
+        "navigation_count": 0,
+        "media_blocking": "media" in active_blocked_resource_types,
+        "blocked_resource_types": sorted(active_blocked_resource_types),
+        "blocked_request_count": 0,
+        "blocked_request_types": [],
         "return_image_payload": bool(return_image_payload),
         "return_screenshot": bool(return_screenshot),
         "lightweight_seed_only": bool(lightweight_seed_only),
@@ -925,6 +1112,8 @@ def fetch_html_with_playwright(
         "external_cdp": bool(config.cdp_endpoint),
         "storage_state_path": str(_storage_state_path(config) or ""),
         "storage_state_write_enabled": config.persist_storage_state,
+        "readiness_budget_seconds": readiness_budget_seconds,
+        "runtime_page_reuse_enabled": bool(reuse_runtime_page),
     }
     overall_started = time.monotonic()
     local_deadline = overall_started + (timeout_ms / 1000.0)
@@ -934,6 +1123,8 @@ def fetch_html_with_playwright(
             runtime_context.deadline_monotonic,
         )
     trace["timeout_budget_ms"] = timeout_ms
+    readiness_deadline: float | None = None
+    observed_blocked_resource_types: set[str] = set()
 
     def remaining_timeout_ms() -> int:
         remaining = max(0.0, local_deadline - time.monotonic())
@@ -944,92 +1135,41 @@ def fetch_html_with_playwright(
     manager = None
     browser_context = None
     page = None
+    shared_page_session = _runtime_figure_page_session(
+        runtime_context,
+        create=bool(reuse_runtime_page),
+    )
     try:
         _raise_if_cancelled(runtime_context)
-        try:
-            connect_started = time.monotonic()
-            manager, browser_context = open_browser_context(
-                config,
-                runtime_context=runtime_context,
-            )
-            connect_seconds = round(time.monotonic() - connect_started, 3)
-            trace["browser_connect_seconds"] = connect_seconds
-            external_diagnostics = getattr(
-                browser_context, "_paper_fetch_external_cdp_diagnostics", None
-            )
-            if isinstance(external_diagnostics, Mapping):
-                trace["external_cdp_context"] = dict(external_diagnostics)
-            elif config.cdp_endpoint:
-                trace["external_cdp_context"] = {
-                    "external_cdp": True,
-                    "borrowed_existing_context": None,
-                    "ignored_context_options": [],
-                    "storage_state_cookie_count": None,
-                }
-            _seed_browser_html_context(
-                browser_context,
-                browser_context_seed=browser_context_seed,
-                candidate_url=candidate_urls[0] if candidate_urls else None,
-                trace=trace,
-            )
-        except PlaywrightBrowserFailure:
-            raise
-        except ManagedBrowserError as exc:
-            trace["browser_connect_seconds"] = round(
-                time.monotonic() - connect_started, 3
-            )
-            trace["browser_failure"] = dict(exc.details)
-            raise PlaywrightBrowserFailure(
-                exc.code,
-                exc.message,
-                details={"trace": trace, "browser_failure": dict(exc.details)},
-            ) from exc
-        except Exception as exc:
-            trace["browser_connect_seconds"] = round(
-                time.monotonic() - connect_started, 3
-            )
-            message = normalize_text(str(exc)) or "Browser context creation failed."
-            raise PlaywrightBrowserFailure(
-                BROWSER_CONTEXT_CREATE_FAILED,
-                message,
-                details={
-                    "trace": trace,
-                    "browser_failure": {
-                        "stage": "browser_context_create",
-                        "code": BROWSER_CONTEXT_CREATE_FAILED,
-                        "message": message,
-                    },
-                },
-            ) from exc
-
-        try:
-            page = browser_context.new_page()
-        except Exception as exc:
-            message = normalize_text(str(exc)) or "Browser page creation failed."
-            raise PlaywrightBrowserFailure(
-                BROWSER_PAGE_CREATE_FAILED,
-                message,
-                details={
-                    "trace": trace,
-                    "browser_failure": {
-                        "stage": "browser_page_create",
-                        "code": BROWSER_PAGE_CREATE_FAILED,
-                        "message": message,
-                    },
-                },
-            ) from exc
+        manager, browser_context, page = _open_browser_html_context(
+            config,
+            runtime_context=runtime_context,
+            shared_page_session=shared_page_session,
+            browser_context_seed=browser_context_seed,
+            candidate_url=candidate_urls[0] if candidate_urls else None,
+            trace=trace,
+        )
+        page = _ensure_browser_html_page(
+            browser_context,
+            page,
+            manager=manager,
+            shared_page_session=shared_page_session,
+            trace=trace,
+        )
 
         def route_handler(route: Any) -> None:
             try:
                 resource_type = normalize_text(
                     str(route.request.resource_type or "")
                 ).lower()
-                blocked_types = (
-                    {"media"}
-                    if backend_name == "camoufox"
-                    else BROWSER_HTML_BLOCKED_RESOURCE_TYPES
-                )
-                if disable_media and resource_type in blocked_types:
+                if resource_type in active_blocked_resource_types:
+                    trace["blocked_request_count"] = (
+                        int(trace.get("blocked_request_count") or 0) + 1
+                    )
+                    observed_blocked_resource_types.add(resource_type)
+                    trace["blocked_request_types"] = sorted(
+                        observed_blocked_resource_types
+                    )
                     route.abort()
                     return
                 route.continue_()
@@ -1037,7 +1177,7 @@ def fetch_html_with_playwright(
                 with contextlib.suppress(Exception):
                     route.continue_()
 
-        if disable_media:
+        if active_blocked_resource_types:
             with contextlib.suppress(Exception):
                 page.route("**/*", route_handler)
 
@@ -1070,6 +1210,11 @@ def fetch_html_with_playwright(
                     candidate_trace.get("url"),
                 )
                 request_started = time.monotonic()
+                trace["navigation_count"] = int(trace.get("navigation_count") or 0) + 1
+                if shared_page_session is not None:
+                    trace["runtime_page_navigation_count"] = (
+                        shared_page_session.mark_navigation()
+                    )
                 response = _navigate_browser_page(
                     page,
                     url=normalized_url,
@@ -1169,6 +1314,12 @@ def fetch_html_with_playwright(
                         browser_context_seed=browser_context_seed,
                         diagnostics={"browser_runtime_trace": trace},
                     )
+                if readiness_budget_seconds is not None and readiness_deadline is None:
+                    # Readiness owns its own budget: browser startup and the first
+                    # document navigation remain governed by the request deadline.
+                    readiness_deadline = time.monotonic() + max(
+                        0.0, float(readiness_budget_seconds)
+                    )
                 _wait_for_browser_html_readiness(
                     page,
                     publisher=publisher,
@@ -1179,6 +1330,11 @@ def fetch_html_with_playwright(
                     return_image_payload=return_image_payload,
                     runtime_context=runtime_context,
                     candidate_trace=candidate_trace,
+                    readiness_timeout_seconds=(
+                        max(0.0, readiness_deadline - time.monotonic())
+                        if readiness_deadline is not None
+                        else None
+                    ),
                 )
                 _prepare_provider_browser_page(
                     page,
@@ -1464,9 +1620,13 @@ def fetch_html_with_playwright(
                     "browser_seconds",
                     elapsed=time.monotonic() - overall_started,
                 )
-        _safe_close(page)
-        _safe_close(browser_context)
-        _safe_close(manager)
+        if (
+            shared_page_session is None
+            or shared_page_session.context is not browser_context
+        ):
+            _safe_close(page)
+            _safe_close(browser_context)
+            _safe_close(manager)
 
     if last_failure is None and latest_browser_context_seed is not None:
         last_failure = PlaywrightBrowserFailure(

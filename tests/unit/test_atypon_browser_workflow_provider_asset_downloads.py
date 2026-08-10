@@ -266,7 +266,8 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
             readiness.selector,
             "img.content-image[src], img.content-image[data-src]",
         )
-        self.assertEqual(mocked_fetch.call_args.kwargs["wait_seconds"], 5)
+        self.assertEqual(mocked_fetch.call_args.kwargs["wait_seconds"], 2)
+        self.assertTrue(mocked_fetch.call_args.kwargs["options"].reuse_runtime_page)
         mocked_builder.assert_called_once()
         mocked_opener.assert_not_called()
         mocked_request.assert_not_called()

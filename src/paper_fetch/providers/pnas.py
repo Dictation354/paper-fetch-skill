@@ -16,6 +16,7 @@ from ..extraction.html.provider_rules import (
     ProviderHtmlRules,
 )
 from ..provider_catalog import ProviderSpec
+from ..publisher_identity import normalize_doi
 from ..quality.html_signals import PNAS_SIGNAL_SET
 from . import _pnas_html, browser_workflow
 from ._registry import ProviderBundle, register_provider_bundle
@@ -40,7 +41,7 @@ register_provider_bundle(
             client_factory_path="paper_fetch.providers.pnas:PnasClient",
             status_order=5,
             base_domains=("www.pnas.org", "pnas.org"),
-            html_path_templates=("/doi/full/{doi}", "/doi/{doi}"),
+            html_path_templates=("/doi/{doi}", "/doi/full/{doi}"),
             pdf_path_templates=(
                 "/doi/epdf/{doi}",
                 "/doi/pdf/{doi}?download=true",
@@ -80,9 +81,13 @@ register_provider_bundle(
 PNAS_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     "pnas",
     fallback_author_extractor=_pnas_html.extract_authors,
-    html_readiness=BrowserHtmlReadiness(
-        wait_for_article_body=False,
-        selector='[data-extent="bodymatter"]',
+    html_readiness=BrowserHtmlReadiness(wait_for_article_body=True),
+    policy=browser_workflow.BrowserWorkflowPolicy(
+        fast_html_attempt=False,
+        html_readiness_budget_seconds=8.0,
+        blocked_resource_types=("image", "font", "media"),
+        preflight_html_reuse=True,
+        doi_route_hint=True,
     ),
 )
 
@@ -90,3 +95,14 @@ PNAS_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
 class PnasClient(browser_workflow.BrowserWorkflowClient):
     name = PNAS_BROWSER_PROFILE.name
     profile = PNAS_BROWSER_PROFILE
+
+    def html_candidates(self, doi: str, metadata) -> list[str]:
+        del metadata
+        normalized_doi = normalize_doi(doi)
+        if not normalized_doi:
+            return []
+        return [
+            f"https://www.pnas.org/doi/{normalized_doi}",
+            f"https://www.pnas.org/doi/full/{normalized_doi}",
+            f"https://doi.org/{normalized_doi}",
+        ]

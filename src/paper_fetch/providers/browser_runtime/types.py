@@ -52,6 +52,9 @@ class BrowserHtmlFetchOptions:
     return_image_payload: bool = False
     return_screenshot: bool = False
     lightweight_seed_only: bool = False
+    blocked_resource_types: frozenset[str] | tuple[str, ...] | None = None
+    readiness_budget_seconds: float | None = None
+    reuse_runtime_page: bool = False
 
 
 @dataclass(frozen=True)

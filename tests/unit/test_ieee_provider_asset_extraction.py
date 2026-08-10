@@ -227,6 +227,72 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
         self.assertEqual(request["headers"]["Referer"], document_url)
         self.assertEqual(request["headers"]["X-Requested-With"], "XMLHttpRequest")
 
+    def test_ieee_multimedia_discovery_memoizes_redacted_url_per_runtime(
+        self,
+    ) -> None:
+        article_number = "10388355"
+        document_url = f"https://ieeexplore.ieee.org/document/{article_number}/"
+        first_url = (
+            f"https://ieeexplore.ieee.org/rest/document/{article_number}/multimedia"
+            "?token=first-secret"
+        )
+        rotated_url = (
+            f"https://ieeexplore.ieee.org/rest/document/{article_number}/multimedia"
+            "?token=rotated-secret"
+        )
+        payload = json.dumps(
+            {
+                "multimedia": [
+                    {
+                        "filePath": "/documents/supplement.zip",
+                        "fileName": "supplement.zip",
+                        "title": "Supplementary archive",
+                    }
+                ]
+            }
+        ).encode("utf-8")
+        transport = RecordingTransport(
+            {
+                ("GET", first_url): {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/json"},
+                    "body": payload,
+                    "url": first_url,
+                }
+            }
+        )
+        attempt = _ieee_metadata.IeeeLandingAttempt(
+            normalized_doi="10.1109/ACCESS.2024.3352924",
+            landing_url=document_url,
+            response_url=document_url,
+            html_text="",
+            merged_metadata={"article_number": article_number},
+            article_number=article_number,
+            landing_metadata={"hasMultimedia": True},
+        )
+
+        with RuntimeContext(env={}, transport=transport) as runtime_context:
+            first = _ieee_supplementary.fetch_ieee_multimedia_assets(
+                transport,
+                attempt,
+                multimedia_url=first_url,
+                headers={"Referer": document_url},
+                runtime_context=runtime_context,
+            )
+            second = _ieee_supplementary.fetch_ieee_multimedia_assets(
+                transport,
+                attempt,
+                multimedia_url=rotated_url,
+                headers={"Referer": document_url},
+                runtime_context=runtime_context,
+            )
+            cache_dump = repr(runtime_context.session_cache)
+
+        self.assertEqual(first, second)
+        self.assertEqual(len(transport.calls), 1)
+        self.assertNotIn("first-secret", cache_dump)
+        self.assertNotIn("rotated-secret", cache_dump)
+
     def test_ieee_html_payload_merges_multimedia_supplementary_assets_from_landing_scope(
         self,
     ) -> None:

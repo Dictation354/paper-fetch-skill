@@ -33,6 +33,8 @@
 
 静态 `paper-fetch doctor --provider <name> --detail full --json` / MCP `provider_status` 不启动浏览器、不下载 Camoufox runtime，也不访问出版社页面。需要 live 证明时再运行 CLI `paper-fetch browser-preflight --provider <name>` 或 MCP `browser_preflight(provider=...)`；它们可能更新过滤后的 storage-state，但不会运行 PDF fallback 或自动认证。MCP preflight is open-world：它会访问远端页面、非只读且可能写 storage-state。
 
+PNAS、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、T&F 的成功 preflight HTML 只在当前进程内短期、一次性复用（默认 16 项、60 秒），并同时约束 provider、规范 DOI、目标 URL 与 browser runtime 指纹。MCP server 内紧随其后的 fetch 可命中；CLI 跨进程仅复用 storage-state。Wiley、IEEE、Science 不接入该 HTML cache；AIP 不发布跨 `RuntimeContext` 的 preflight HTML/cookie/storage-state，challenge、空壳、PDF fallback 和失败结果也不进入该缓存。
+
 ## 图片与资产工具
 
 - `PAPER_FETCH_IMAGE_TOOLS_DIR`：Ghostscript/libvips 工具目录覆盖；默认还会检查 repo-local 和 platformdirs 用户工具目录。
