@@ -6,6 +6,13 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.3.2 - 2026-08-17
+
+### Changed — formula and release integrity
+
+- Updated KaTeX from 0.18.1 to 0.18.4 in both development and bundled formula manifests and lockfiles, incorporating settings-object prototype-pollution hardening and parser fixes. The machine contract and unit tests now reject declaration or lock drift between the two copies.
+- Updated the pinned `actions/attest-build-provenance` action from v4.1.1 to v4.2.2 while retaining the existing subject-path interface. The exact action name, version, full SHA, use count, and input are synchronized across the macOS contract, validator, tests, audit, and deployment documentation.
+
 ## 5.3.1 - 2026-08-10
 
 ### Fixed — Wiley browser access detection

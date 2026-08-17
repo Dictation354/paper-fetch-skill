@@ -237,7 +237,14 @@ def test_release_emits_sbom_checksums_and_build_provenance() -> None:
     assert "ref: ${{ needs.verify-tag.outputs.tag }}" in workflow
     assert "paper-fetch-sbom.cdx.json" in workflow
     assert "SHA256SUMS" in workflow
-    assert "actions/attest-build-provenance@" in workflow
+    assert (
+        workflow.count(
+            "actions/attest-build-provenance@"
+            "4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2"
+        )
+        == 1
+    )
+    assert "subject-path: release-assets/**/*" in workflow
     assert "attestations: write" in workflow
     assert "id-token: write" in workflow
     assert (

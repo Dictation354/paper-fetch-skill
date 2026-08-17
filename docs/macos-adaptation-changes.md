@@ -18,6 +18,10 @@ Windows / WSL 开发时同步上游 `main` 的重放流程。它不是一次性�
 - 公式构建工具链固定为 `haskell-actions/setup` v2.12.0（完整 commit SHA）、
   GHC 9.10.3 与 Cabal 3.12.1.0；普通 CI 使用一次，offline workflow 的 Linux / macOS
   job 共使用两次
+- 公式 Node 工具在根目录与随包资源的两套 manifest / lock 中共同固定 KaTeX
+  0.18.4 和 `mathml-to-latex` 1.8.0；机器合约和 unit test 同时拒绝版本漂移
+- 稳定发布的 build provenance 固定使用 `actions/attest-build-provenance` v4.2.2
+  完整 SHA、一次调用和 `release-assets/**/*` subject path
 - browser/full extra 接受 `camoufox>=0.5.4,<0.6`，由 `uv.lock` 固定原生 browser
   launch gate 与离线产物实际使用的 Python package 版本
 - `v4.1.0` 是不可移动的上游审计基线，不是本 fork 适配后的发布版本；发布这些
@@ -106,6 +110,11 @@ CI / release 的构建工具链，不改变随包 texmath 版本、公式转换�
 Mach-O 处理或产物接口。机器合约同时锁定 action 名称、版本注释、完整 SHA、
 工具版本和 workflow 使用次数，contract version 因此继续保持 4.1.0。
 
+公式 Node 依赖也进入同一机器合约：根目录和
+`src/paper_fetch/resources/formula` 的 manifest / lock 必须共同固定 KaTeX 0.18.4
+与 `mathml-to-latex` 1.8.0。KaTeX 更新纳入设置对象原型污染防护和后续解析修复；
+validator 与 unit test 会拒绝只更新开发依赖或只更新随包资源的单边漂移。
+
 构建阶段不再假定 runner 上编译出的 texmath 可以原样移动。构建脚本会：
 
 - 把 `formula-tools/bin/texmath` 实体化，避免保留构建机符号链接；
@@ -147,6 +156,12 @@ artifact 上传设置 `if-no-files-found: error`，避免构建成功但没有�
 `/tmp` ↔ `/private/tmp` cache scope alias pytest node；该 alias 证据来自原生
 CI，而不是 tarball verifier。
 `offline.yml` 和 release gate 则覆盖 CPython 3.11–3.14 四个 ABI。
+
+release workflow 的 build provenance 生成步骤固定到
+`actions/attest-build-provenance` v4.2.2 的完整 commit SHA，并保持一次调用和
+`release-assets/**/*` subject path。机器合约、validator、unit test 与部署说明
+共同校验 action 名称、版本注释、SHA、调用次数和输入接口，避免发布证据链在依赖
+更新时静默漂移。
 
 ### MAC-V4-005：quarantine、safe purge 和 symlink 安全
 

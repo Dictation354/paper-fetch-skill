@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import json
 import subprocess
 import sys
 import tempfile
@@ -335,6 +336,10 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         formula_tools["cabal_version"] = "3.14.0.0"
         formula_tools["ci_workflow_uses"] = 2
         formula_tools["offline_workflow_uses"] = 1
+        formula_tools["node_package_manifests"] = ["package.json"]
+        formula_tools["node_package_locks"] = ["package-lock.json"]
+        formula_tools["katex_version"] = "0.18.1"
+        formula_tools["mathml_to_latex_version"] = "1.7.0"
 
         diagnostic = "\n".join(validator.validate_contract(contract))
 
@@ -346,6 +351,10 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             "cabal_version",
             "ci_workflow_uses",
             "offline_workflow_uses",
+            "node_package_manifests",
+            "node_package_locks",
+            "katex_version",
+            "mathml_to_latex_version",
         ):
             self.assertIn(f"components.formula_tools.{field} must be", diagnostic)
         self.assertIn("must be a full 40-character git hash", diagnostic)
@@ -399,6 +408,129 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         self.assertIn("haskell-actions/setup version comment must be", diagnostic)
         self.assertIn("haskell-actions/setup ghc-version must be", diagnostic)
         self.assertIn("haskell-actions/setup cabal-version must be", diagnostic)
+
+    def test_formula_node_package_drift_is_rejected(self) -> None:
+        expected = validator.EXPECTED_FORMULA_NODE_DEPENDENCIES
+        package = {"dependencies": expected}
+        lock = {
+            "packages": {
+                "": {"dependencies": expected},
+                **{
+                    f"node_modules/{name}": {"version": version}
+                    for name, version in expected.items()
+                },
+            }
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            for relative_path in validator.EXPECTED_FORMULA_PACKAGE_MANIFESTS:
+                path = repo_root / relative_path
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(json.dumps(package), encoding="utf-8")
+            for relative_path in validator.EXPECTED_FORMULA_PACKAGE_LOCKS:
+                path = repo_root / relative_path
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(json.dumps(lock), encoding="utf-8")
+
+            bundled_package = (
+                repo_root / validator.EXPECTED_FORMULA_PACKAGE_MANIFESTS[1]
+            )
+            bundled_package.write_text(
+                json.dumps(
+                    {
+                        "dependencies": {
+                            **expected,
+                            "katex": "0.18.1",
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            bundled_lock = repo_root / validator.EXPECTED_FORMULA_PACKAGE_LOCKS[1]
+            stale_lock = json.loads(json.dumps(lock))
+            stale_lock["packages"]["node_modules/katex"]["version"] = "0.18.1"
+            bundled_lock.write_text(json.dumps(stale_lock), encoding="utf-8")
+            errors: list[str] = []
+
+            validator._validate_formula_node_packages(
+                repo_root=repo_root,
+                errors=errors,
+            )
+
+        diagnostic = "\n".join(errors)
+        self.assertIn(
+            "src/paper_fetch/resources/formula/package.json dependencies must be",
+            diagnostic,
+        )
+        self.assertIn(
+            "src/paper_fetch/resources/formula/package-lock.json must lock katex",
+            diagnostic,
+        )
+
+    def test_release_attestation_contract_and_workflow_drift_are_rejected(
+        self,
+    ) -> None:
+        contract = validator.load_contract()
+        native_gate = contract["native_gate"]
+        native_gate["release_attestation_action"] = "example/attest"
+        native_gate["release_attestation_version"] = "v9.9.9"
+        native_gate["release_attestation_sha"] = "not-a-full-sha"
+        native_gate["release_attestation_uses"] = 2
+        native_gate["release_attestation_subject_path"] = "dist/*"
+
+        diagnostic = "\n".join(validator.validate_contract(contract))
+
+        for field in (
+            "release_attestation_action",
+            "release_attestation_version",
+            "release_attestation_sha",
+            "release_attestation_uses",
+            "release_attestation_subject_path",
+        ):
+            self.assertIn(f"native_gate.{field} must be", diagnostic)
+        self.assertIn(
+            "native_gate.release_attestation_sha must be a full 40-character git hash",
+            diagnostic,
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            workflow = repo_root / ".github" / "workflows" / "release.yml"
+            workflow.parent.mkdir(parents=True)
+            workflow.write_text(
+                "jobs:\n"
+                "  publish:\n"
+                "    steps:\n"
+                "      - uses: actions/attest-build-provenance@"
+                f"{'0' * 40} # v9.9.9\n"
+                "        with:\n"
+                "          subject-path: dist/*\n"
+                "      - uses: actions/attest-build-provenance@"
+                f"{validator.EXPECTED_RELEASE_ATTESTATION_SHA} "
+                f"# {validator.EXPECTED_RELEASE_ATTESTATION_VERSION}\n"
+                "        with:\n"
+                "          subject-path: release-assets/**/*\n",
+                encoding="utf-8",
+            )
+            errors: list[str] = []
+
+            validator._validate_release_attestation_workflow(
+                repo_root=repo_root,
+                errors=errors,
+            )
+
+        diagnostic = "\n".join(errors)
+        self.assertIn(
+            "must use actions/attest-build-provenance exactly 1 times", diagnostic
+        )
+        self.assertIn("actions/attest-build-provenance SHA must be", diagnostic)
+        self.assertIn(
+            "actions/attest-build-provenance version comment must be",
+            diagnostic,
+        )
+        self.assertIn(
+            "must declare exactly one 'subject-path: release-assets/**/*'", diagnostic
+        )
 
     def test_contract_keeps_portable_and_native_evidence_explicit(self) -> None:
         contract = validator.load_contract()

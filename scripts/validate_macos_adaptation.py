@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import json
 import re
 import sys
 import tomllib
@@ -18,6 +19,11 @@ CHANGE_ID_RE = re.compile(r"^MAC-V4-\d{3}$")
 AUDIT_ID_RE = re.compile(r"\bMAC-AUD-\d{3}\b")
 VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
 FULL_REVISION_RE = re.compile(r"^[0-9a-f]{40}$")
+PINNED_ACTION_USE_RE = re.compile(
+    r"^(?P<indent>\s*)(?:-\s+)?uses:\s*"
+    r"(?P<action>[^@\s]+)@(?P<sha>[^\s#]+)"
+    r"(?:\s+#\s*(?P<version>\S+))?\s*$"
+)
 
 EXPECTED_CHANGE_IDS = {f"MAC-V4-{index:03d}" for index in range(1, 9)}
 EXPECTED_AUDIT_IDS = {f"MAC-AUD-{index:03d}" for index in range(1, 14)}
@@ -35,6 +41,23 @@ EXPECTED_FORMULA_WORKFLOW_USES = {
     ".github/workflows/ci.yml": 1,
     ".github/workflows/offline.yml": 2,
 }
+EXPECTED_FORMULA_NODE_DEPENDENCIES = {
+    "katex": "0.18.4",
+    "mathml-to-latex": "1.8.0",
+}
+EXPECTED_FORMULA_PACKAGE_MANIFESTS = [
+    "package.json",
+    "src/paper_fetch/resources/formula/package.json",
+]
+EXPECTED_FORMULA_PACKAGE_LOCKS = [
+    "package-lock.json",
+    "src/paper_fetch/resources/formula/package-lock.json",
+]
+EXPECTED_RELEASE_ATTESTATION_ACTION = "actions/attest-build-provenance"
+EXPECTED_RELEASE_ATTESTATION_VERSION = "v4.2.2"
+EXPECTED_RELEASE_ATTESTATION_SHA = "4d101475d8b20a2381f78447822ac1eab6504dd8"
+EXPECTED_RELEASE_ATTESTATION_USES = 1
+EXPECTED_RELEASE_ATTESTATION_SUBJECT_PATH = "release-assets/**/*"
 EXPECTED_POSIX_TOOLING_PATHS = [
     "scripts/build-offline-package.sh",
     "install-offline.sh",
@@ -162,6 +185,7 @@ REQUIRED_CHANGE_FIELDS = {
 WINDOWS_STATIC_TEST_FILES = {
     "tests/unit/test_camoufox_backend.py",
     "tests/unit/test_ci_release_workflow.py",
+    "tests/unit/test_formula_package_sync.py",
     "tests/unit/test_macos_adaptation_validator.py",
     "tests/unit/test_offline_package_build.py",
 }
@@ -1028,6 +1052,10 @@ def _validate_browser_boundary(
             "cabal_version",
             "ci_workflow_uses",
             "offline_workflow_uses",
+            "node_package_manifests",
+            "node_package_locks",
+            "katex_version",
+            "mathml_to_latex_version",
         },
         field="components.formula_tools",
         errors=errors,
@@ -1048,6 +1076,12 @@ def _validate_browser_boundary(
         "offline_workflow_uses": EXPECTED_FORMULA_WORKFLOW_USES[
             ".github/workflows/offline.yml"
         ],
+        "node_package_manifests": EXPECTED_FORMULA_PACKAGE_MANIFESTS,
+        "node_package_locks": EXPECTED_FORMULA_PACKAGE_LOCKS,
+        "katex_version": EXPECTED_FORMULA_NODE_DEPENDENCIES["katex"],
+        "mathml_to_latex_version": EXPECTED_FORMULA_NODE_DEPENDENCIES[
+            "mathml-to-latex"
+        ],
     }
     for key, expected in expected_formula.items():
         if formula_tools.get(key) != expected:
@@ -1059,6 +1093,7 @@ def _validate_browser_boundary(
             "40-character git hash"
         )
     _validate_formula_toolchain_workflows(repo_root=repo_root, errors=errors)
+    _validate_formula_node_packages(repo_root=repo_root, errors=errors)
 
     build_script = _read_repo_file(
         "scripts/build-offline-package.sh",
@@ -1190,11 +1225,6 @@ def _validate_formula_toolchain_workflows(
     repo_root: Path,
     errors: list[str],
 ) -> None:
-    setup_pattern = re.compile(
-        r"^(?P<indent>\s*)uses:\s*"
-        r"(?P<action>[^@\s]+)@(?P<sha>[^\s#]+)"
-        r"(?:\s+#\s*(?P<version>\S+))?\s*$"
-    )
     version_patterns = {
         "ghc-version": (
             re.compile(r'^ghc-version:\s*["\']?([^"\'\s]+)["\']?\s*$'),
@@ -1215,7 +1245,7 @@ def _validate_formula_toolchain_workflows(
         lines = workflow.splitlines()
         setup_steps: list[tuple[int, re.Match[str]]] = []
         for index, line in enumerate(lines):
-            match = setup_pattern.fullmatch(line)
+            match = PINNED_ACTION_USE_RE.fullmatch(line)
             if match and match.group("action") == EXPECTED_FORMULA_SETUP_ACTION:
                 setup_steps.append((index, match))
 
@@ -1242,7 +1272,7 @@ def _validate_formula_toolchain_workflows(
             for following in lines[line_index + 1 :]:
                 stripped = following.strip()
                 following_indent = len(following) - len(following.lstrip())
-                if stripped.startswith("- ") and following_indent < step_indent:
+                if stripped.startswith("- ") and following_indent <= step_indent:
                     break
                 step_lines.append(stripped)
 
@@ -1257,6 +1287,64 @@ def _validate_formula_toolchain_workflows(
                         f"{relative_path} {EXPECTED_FORMULA_SETUP_ACTION} {field} "
                         f"must be {expected_version!r}; got {actual_versions!r}"
                     )
+
+
+def _validate_formula_node_packages(
+    *,
+    repo_root: Path,
+    errors: list[str],
+) -> None:
+    for relative_path in EXPECTED_FORMULA_PACKAGE_MANIFESTS:
+        payload = _read_repo_file(
+            relative_path,
+            repo_root=repo_root,
+            errors=errors,
+        )
+        try:
+            package = json.loads(payload)
+        except (TypeError, json.JSONDecodeError) as exc:
+            errors.append(
+                f"cannot load formula package manifest {relative_path}: {exc}"
+            )
+            continue
+        dependencies = package.get("dependencies")
+        if dependencies != EXPECTED_FORMULA_NODE_DEPENDENCIES:
+            errors.append(
+                f"{relative_path} dependencies must be "
+                f"{EXPECTED_FORMULA_NODE_DEPENDENCIES!r}; got {dependencies!r}"
+            )
+
+    for relative_path in EXPECTED_FORMULA_PACKAGE_LOCKS:
+        payload = _read_repo_file(
+            relative_path,
+            repo_root=repo_root,
+            errors=errors,
+        )
+        try:
+            lock = json.loads(payload)
+        except (TypeError, json.JSONDecodeError) as exc:
+            errors.append(f"cannot load formula package lock {relative_path}: {exc}")
+            continue
+        packages = lock.get("packages")
+        if not isinstance(packages, dict):
+            errors.append(f"{relative_path} packages must be an object")
+            continue
+        root_dependencies = packages.get("", {}).get("dependencies")
+        if root_dependencies != EXPECTED_FORMULA_NODE_DEPENDENCIES:
+            errors.append(
+                f"{relative_path} root dependencies must be "
+                f"{EXPECTED_FORMULA_NODE_DEPENDENCIES!r}; got {root_dependencies!r}"
+            )
+        for (
+            package_name,
+            expected_version,
+        ) in EXPECTED_FORMULA_NODE_DEPENDENCIES.items():
+            locked = packages.get(f"node_modules/{package_name}", {}).get("version")
+            if locked != expected_version:
+                errors.append(
+                    f"{relative_path} must lock {package_name} to "
+                    f"{expected_version!r}; got {locked!r}"
+                )
 
 
 def _validate_portable_and_release_tooling(
@@ -1467,6 +1555,11 @@ def _validate_native_gates(
             "release_matrix_workflow",
             "release_workflow",
             "release_requires_offline",
+            "release_attestation_action",
+            "release_attestation_version",
+            "release_attestation_sha",
+            "release_attestation_uses",
+            "release_attestation_subject_path",
             "network_smoke_required",
             "native_tools",
             "cache_alias_test_node",
@@ -1482,6 +1575,11 @@ def _validate_native_gates(
         "release_matrix_workflow": ".github/workflows/offline.yml",
         "release_workflow": ".github/workflows/release.yml",
         "release_requires_offline": True,
+        "release_attestation_action": EXPECTED_RELEASE_ATTESTATION_ACTION,
+        "release_attestation_version": EXPECTED_RELEASE_ATTESTATION_VERSION,
+        "release_attestation_sha": EXPECTED_RELEASE_ATTESTATION_SHA,
+        "release_attestation_uses": EXPECTED_RELEASE_ATTESTATION_USES,
+        "release_attestation_subject_path": (EXPECTED_RELEASE_ATTESTATION_SUBJECT_PATH),
         "network_smoke_required": False,
         "native_tools": [
             "sw_vers",
@@ -1501,6 +1599,14 @@ def _validate_native_gates(
     for key, value in expected.items():
         if native_gate.get(key) != value:
             errors.append(f"native_gate.{key} must be {value!r}")
+    attestation_sha = native_gate.get("release_attestation_sha")
+    if (
+        not isinstance(attestation_sha, str)
+        or FULL_REVISION_RE.fullmatch(attestation_sha) is None
+    ):
+        errors.append(
+            "native_gate.release_attestation_sha must be a full 40-character git hash"
+        )
 
     ci_workflow = _read_repo_file(
         ".github/workflows/ci.yml",
@@ -1605,6 +1711,59 @@ def _validate_native_gates(
         ),
         errors=errors,
     )
+    _validate_release_attestation_workflow(repo_root=repo_root, errors=errors)
+
+
+def _validate_release_attestation_workflow(
+    *,
+    repo_root: Path,
+    errors: list[str],
+) -> None:
+    relative_path = ".github/workflows/release.yml"
+    workflow = _read_repo_file(
+        relative_path,
+        repo_root=repo_root,
+        errors=errors,
+    )
+    lines = workflow.splitlines()
+    attestation_steps: list[tuple[int, re.Match[str]]] = []
+    for index, line in enumerate(lines):
+        match = PINNED_ACTION_USE_RE.fullmatch(line)
+        if match and match.group("action") == EXPECTED_RELEASE_ATTESTATION_ACTION:
+            attestation_steps.append((index, match))
+
+    if len(attestation_steps) != EXPECTED_RELEASE_ATTESTATION_USES:
+        errors.append(
+            f"{relative_path} must use {EXPECTED_RELEASE_ATTESTATION_ACTION} exactly "
+            f"{EXPECTED_RELEASE_ATTESTATION_USES} times; got {len(attestation_steps)}"
+        )
+
+    for line_index, match in attestation_steps:
+        if match.group("sha") != EXPECTED_RELEASE_ATTESTATION_SHA:
+            errors.append(
+                f"{relative_path} {EXPECTED_RELEASE_ATTESTATION_ACTION} SHA must be "
+                f"{EXPECTED_RELEASE_ATTESTATION_SHA!r}"
+            )
+        if match.group("version") != EXPECTED_RELEASE_ATTESTATION_VERSION:
+            errors.append(
+                f"{relative_path} {EXPECTED_RELEASE_ATTESTATION_ACTION} version "
+                f"comment must be {EXPECTED_RELEASE_ATTESTATION_VERSION!r}"
+            )
+
+        step_indent = len(match.group("indent"))
+        step_lines: list[str] = []
+        for following in lines[line_index + 1 :]:
+            stripped = following.strip()
+            following_indent = len(following) - len(following.lstrip())
+            if stripped.startswith("- ") and following_indent <= step_indent:
+                break
+            step_lines.append(stripped)
+        expected_subject = f"subject-path: {EXPECTED_RELEASE_ATTESTATION_SUBJECT_PATH}"
+        if step_lines.count(expected_subject) != 1:
+            errors.append(
+                f"{relative_path} {EXPECTED_RELEASE_ATTESTATION_ACTION} must declare "
+                f"exactly one {expected_subject!r}"
+            )
 
 
 def _validate_posix_line_endings(

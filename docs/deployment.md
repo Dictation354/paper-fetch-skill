@@ -72,7 +72,7 @@ CI 自动发布规则：
 
 - 普通 `push` / `pull_request` 运行完整 unit、branch coverage、integration、devtools、完整包 mypy、Ruff、复杂度预算、锁定依赖漏洞审计，以及 Python 3.11/3.14 的 core/full wheel smoke。
 - `offline.yml` 是可复用且可手动运行的 full 离线构建 workflow；Linux 使用 CPython 3.11–3.14，macOS 在固定 `macos-15` arm64 runner 使用 CPython 3.11–3.14，Windows 使用 CPython 3.13。
-- 推送与 `pyproject.toml` 版本一致的 `v*` tag 时，`release.yml` 调用离线 workflow，生成 wheel/sdist、CycloneDX SBOM、`SHA256SUMS` 和 GitHub build-provenance attestation，再创建稳定 Release。稳定版只截取 `CHANGELOG_CN.md` 中与项目版本匹配的章节作为中文 Release Notes，不使用 GitHub 自动生成说明。
+- 推送与 `pyproject.toml` 版本一致的 `v*` tag 时，`release.yml` 调用离线 workflow，生成 wheel/sdist、CycloneDX SBOM、`SHA256SUMS` 和 GitHub build-provenance attestation，再创建稳定 Release。attestation 固定使用 `actions/attest-build-provenance` v4.2.2 的完整 SHA；该兼容 wrapper 内部使用 `actions/attest` v4.2.1，现有 `subject-path` 接口保持不变。稳定版只截取 `CHANGELOG_CN.md` 中与项目版本匹配的章节作为中文 Release Notes，不使用 GitHub 自动生成说明。
 - `rolling-release.yml` 每日解析最新稳定版的九目标 full 依赖矩阵；源码或运行时 wheel 集合变化时，复用 `offline.yml` 的冻结 wheelhouse 构建并覆盖 `dependency-latest` prerelease。
 - `offline.yml` 会在固定 `macos-15` 上使用 CPython 3.11、3.12、3.13、3.14 矩阵构建 arm64 macOS tarball；四个包都先运行原生 verifier，再上传逐 Python 版本 artifact，缺少产物会直接令 job 失败。
 - 所有第三方 GitHub Actions 固定到完整 commit SHA；发布 job 才单独提升 `contents`、`id-token` 与 `attestations` 权限。
@@ -213,7 +213,7 @@ source ~/.local/share/paper-fetch-skill/activate-offline.sh
 - Linux 构建阶段用临时 wheelhouse 把项目和依赖安装进 `runtime/site-packages`，然后只把安装后的 runtime、`bin/` 启动器、公式工具和 skill 放进自解压 `.sh` payload；目标机安装阶段不运行 pip，不包含源码树、`dist/` 或 `wheelhouse/`
 - Playwright 和 Camoufox Python 依赖随 Linux / macOS `runtime/site-packages` 和 Windows embedded runtime 分发；Camoufox 浏览器 binary 不随包分发，paper fetch 也不会自动下载。进入受限网络或离线环境前，必须联网用离线 runtime 运行 `python -m camoufox fetch` 下载 binary，再运行 `paper-fetch browser-preflight` 做启动/provider 验证；preflight 会访问网络，但不会代替前一个下载命令。当前验证尚未覆盖预置后真正断网的 Camoufox launch，因此不能宣称完整离线浏览器支持
 - Linux `.sh` payload 不包含仓库源码快照和 `tests/` 目录；离线安装目标是运行已打包工具，不在目标机执行项目测试
-- Linux、macOS、Windows 离线包都携带原生 texmath 0.13.2，分别位于 `formula-tools/bin/texmath` 和 `formula-tools/bin/texmath.exe`，并将它作为首选公式后端；锁定的 `mathml-to-latex` Node 模块和随 Playwright 分发的 Node 作为二级回退。目标机不编译 texmath，也不运行 `npm install`。CI / release 公式构建固定使用 `haskell-actions/setup` v2.12.0 的完整 SHA、GHC 9.10.3 和 Cabal 3.12.1.0；v2.12.0 随附的 GHCup 0.2.6.2 只更新构建工具链，不改变 texmath 0.13.2、公式入口、安装布局或产物接口。macOS 构建会把非系统 Mach-O dylib 复制到 `formula-tools/lib`，用 `@rpath` / `@loader_path` 重写引用，并对 texmath 与随包 dylib 做 ad-hoc codesign
+- Linux、macOS、Windows 离线包都携带原生 texmath 0.13.2，分别位于 `formula-tools/bin/texmath` 和 `formula-tools/bin/texmath.exe`，并将它作为首选公式后端；锁定的 `mathml-to-latex` 1.8.0、KaTeX 0.18.4 和随 Playwright 分发的 Node 作为二级回退及 LaTeX 验证工具。根目录与随 Python 包分发的两套 Node manifest/lock 必须完全一致，机器合约和 unit test 会同时拒绝声明或锁定版本漂移。目标机不编译 texmath，也不运行 `npm install`。CI / release 公式构建固定使用 `haskell-actions/setup` v2.12.0 的完整 SHA、GHC 9.10.3 和 Cabal 3.12.1.0；v2.12.0 随附的 GHCup 0.2.6.2 只更新构建工具链，不改变 texmath 0.13.2、公式入口、安装布局或产物接口。macOS 构建会把非系统 Mach-O dylib 复制到 `formula-tools/lib`，用 `@rpath` / `@loader_path` 重写引用，并对 texmath 与随包 dylib 做 ad-hoc codesign
 - Linux / macOS 会配置安装目录内 `image-tools` 作为图片转换工具查找目录；离线构建不会把构建机 PATH 上的 Ghostscript/libvips 符号链接固化进包内。运行时找到 Ghostscript 时可转 EPS，找到 libvips 时可转 TIFF；缺少对应工具时只影响 AMS `Download Figure` 源图转换，网页 JPG/PNG 候选仍可回退
 - Linux / macOS 默认写固定安装目录内的 `offline.env`、生成可在 bash/zsh 中 `source` 的 `activate-offline.sh`、复制三份 host skill，并把离线 CLI PATH、工具路径、`PAPER_FETCH_ENV_FILE`、`PYTHONUTF8`、`PYTHONIOENCODING` 等写入当前 shell 启动文件；`offline.env` 的 managed block 写入 `PAPER_FETCH_BROWSER_HEADLESS=true`，不覆盖 Camoufox 生成的 Firefox UA/指纹。只有显式传 `--user-config` 才会把受标记管理的运行时块合并到用户配置；Linux 目标是 `~/.config/paper-fetch/.env`，macOS 目标是 `~/Library/Application Support/paper-fetch/.env`
 - Linux / macOS `--install-dir <path>` 只接受不存在、空目录，或同时带 schema 3 ownership manifest 与 `runtime/python-bin` marker 的既有安装目录；拒绝 HOME/祖先、非空未拥有目录及指向它的 symlink。合法升级会清理 `src/`、`tests/`、`wheelhouse/`、`dist/`、`.github/` 等残留，保留安装目录内 `offline.env`，并保留用户配置中非 managed 内容
@@ -341,7 +341,7 @@ paper-fetch-install-formula-tools
 - `./install-formula-tools.sh` 会把工具装到当前仓库的 `./.formula-tools/`
 - 如果只想安装公式工具但跳过 Node fallback，可给仓库脚本加 `--no-node`
 - 运行时可用 `PAPER_FETCH_FORMULA_TOOLS_DIR` 覆盖公式工具查找目录；默认会考虑 repo-local `.formula-tools` 和用户数据目录下的 `formula-tools`
-- 根目录 `package.json` / `package-lock.json` 与 `src/paper_fetch/resources/formula/package.json` / `package-lock.json` 必须保持公式 Node 依赖版本一致；`tests/unit/test_formula_package_sync.py` 会阻止 KaTeX / MathML 工具版本漂移。
+- 根目录 `package.json` / `package-lock.json` 与 `src/paper_fetch/resources/formula/package.json` / `package-lock.json` 必须保持公式 Node 依赖版本一致；当前机器合约固定 KaTeX 0.18.4 与 `mathml-to-latex` 1.8.0，`scripts/validate_macos_adaptation.py` 和 `tests/unit/test_formula_package_sync.py` 会阻止声明或 lockfile 漂移。
 
 ### 可选图片转换后端
 

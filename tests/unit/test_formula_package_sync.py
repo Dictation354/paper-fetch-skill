@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 
+from scripts import validate_macos_adaptation as macos_contract
 from tests.paths import REPO_ROOT, SRC_DIR
 
 
@@ -26,10 +27,23 @@ def _locked_package_version(path, package_name: str) -> str:
 def test_formula_node_package_dependencies_stay_in_sync() -> None:
     root_dependencies = _load_json(ROOT_PACKAGE)["dependencies"]
     formula_dependencies = _load_json(FORMULA_PACKAGE)["dependencies"]
+    contract = macos_contract.load_contract()["components"]["formula_tools"]
 
     assert formula_dependencies == root_dependencies
     assert _locked_dependencies(FORMULA_LOCK) == root_dependencies
     assert _locked_dependencies(ROOT_LOCK) == root_dependencies
+    assert root_dependencies == macos_contract.EXPECTED_FORMULA_NODE_DEPENDENCIES
+    assert {
+        "katex": contract["katex_version"],
+        "mathml-to-latex": contract["mathml_to_latex_version"],
+    } == root_dependencies
+    assert contract["node_package_manifests"] == [
+        path.relative_to(REPO_ROOT).as_posix()
+        for path in (ROOT_PACKAGE, FORMULA_PACKAGE)
+    ]
+    assert contract["node_package_locks"] == [
+        path.relative_to(REPO_ROOT).as_posix() for path in (ROOT_LOCK, FORMULA_LOCK)
+    ]
 
 
 def test_formula_lockfiles_pin_same_formula_dependency_versions() -> None:

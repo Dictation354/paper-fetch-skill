@@ -6,6 +6,13 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.3.2 - 2026-08-17
+
+### 变更——公式与发布完整性
+
+- 将开发环境与随包公式资源的 KaTeX manifest 和 lockfile 从 0.18.1 同步更新到 0.18.4，纳入设置对象原型污染防护和解析修复。机器合约与 unit test 现在会拒绝两份依赖声明或锁文件之间的漂移。
+- 将固定的 `actions/attest-build-provenance` action 从 v4.1.1 更新到 v4.2.2，并保留既有 subject-path 接口。macOS 合约、validator、测试、审计和部署文档现已同步精确的 action 名称、版本、完整 SHA、使用次数及输入。
+
 ## 5.3.1 - 2026-08-10
 
 ### 修复——Wiley 浏览器访问判断

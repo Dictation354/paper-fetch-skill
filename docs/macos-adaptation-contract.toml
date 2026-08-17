@@ -63,6 +63,16 @@ ghc_version = "9.10.3"
 cabal_version = "3.12.1.0"
 ci_workflow_uses = 1
 offline_workflow_uses = 2
+node_package_manifests = [
+  "package.json",
+  "src/paper_fetch/resources/formula/package.json",
+]
+node_package_locks = [
+  "package-lock.json",
+  "src/paper_fetch/resources/formula/package-lock.json",
+]
+katex_version = "0.18.4"
+mathml_to_latex_version = "1.8.0"
 
 [components.camoufox]
 python_package = "bundled"
@@ -110,6 +120,11 @@ ci_python_version = "3.14"
 release_matrix_workflow = ".github/workflows/offline.yml"
 release_workflow = ".github/workflows/release.yml"
 release_requires_offline = true
+release_attestation_action = "actions/attest-build-provenance"
+release_attestation_version = "v4.2.2"
+release_attestation_sha = "4d101475d8b20a2381f78447822ac1eab6504dd8"
+release_attestation_uses = 1
+release_attestation_subject_path = "release-assets/**/*"
 network_smoke_required = false
 native_tools = ["sw_vers", "file", "lipo", "otool", "install_name_tool", "codesign", "xattr"]
 cache_alias_test_node = "tests/unit/test_cache_index_semantics.py::CacheIndexSemanticsTests::test_cache_scope_accepts_equivalent_filesystem_alias_for_root"
@@ -154,10 +169,15 @@ included_test_nodes = [
   "tests/unit/test_ci_release_workflow.py::test_offline_windows_tooling_ref_is_immutable_and_provenanced",
   "tests/unit/test_ci_release_workflow.py::test_regular_ci_includes_native_macos_offline_gate",
   "tests/unit/test_ci_release_workflow.py::test_offline_workflow_verifies_macos_packages_on_pinned_arm64_runner",
+  "tests/unit/test_ci_release_workflow.py::test_release_emits_sbom_checksums_and_build_provenance",
+  "tests/unit/test_formula_package_sync.py::test_formula_node_package_dependencies_stay_in_sync",
+  "tests/unit/test_formula_package_sync.py::test_formula_lockfiles_pin_same_formula_dependency_versions",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_repository_contract_is_valid",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_duplicate_change_id_is_rejected",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_missing_implementation_test_and_audit_references_are_rejected",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_support_matrix_drift_is_rejected",
+  "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_formula_node_package_drift_is_rejected",
+  "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_release_attestation_contract_and_workflow_drift_are_rejected",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_camoufox_and_removed_flaresolverr_boundaries_are_enforced",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_contract_keeps_portable_and_native_evidence_explicit",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_windows_entrypoint_rejects_unix_only_dependencies",
@@ -220,17 +240,25 @@ title = "生成可迁移、可签名且可启动的原生工具"
 area = "native-packaging"
 status = "implemented"
 risk = "P0"
-summary = "构建器收集并重定位非系统 dylib，记录 macOS deployment target，对 texmath 及其依赖执行 ad-hoc 签名；verifier 用安全 tar filter、canonical Mach-O 闭包和 LC_RPATH 检查后才启动 Playwright Node。"
+summary = "构建器收集并重定位非系统 dylib，记录 macOS deployment target，对 texmath 及其依赖执行 ad-hoc 签名；两套公式 Node manifest/lock 共同固定 KaTeX 0.18.4 与 mathml-to-latex 1.8.0；verifier 用安全 tar filter、canonical Mach-O 闭包和 LC_RPATH 检查后才启动 Playwright Node。"
 rationale = "不能让恶意归档路径、Homebrew 构建机绝对依赖、bundle 外链接或不可启动的 Node/Mach-O 泄漏进发布包。"
 implementation_paths = [
   "scripts/build-offline-package.sh",
   "scripts/verify-offline-package.sh",
+  "package.json",
+  "package-lock.json",
+  "src/paper_fetch/resources/formula/package.json",
+  "src/paper_fetch/resources/formula/package-lock.json",
+  "scripts/validate_macos_adaptation.py",
 ]
 test_nodes = [
   "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_macos_build_contract_declares_arm64_minimum_os_and_relocatable_formula_bundle",
   "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_macos_offline_verifier_uses_zsh_and_native_formula_checks",
   "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_macos_binary_checks_do_not_accept_arm64_from_path_text",
   "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_offline_verifier_rejects_malicious_tar_members_before_extraction",
+  "tests/unit/test_formula_package_sync.py::test_formula_node_package_dependencies_stay_in_sync",
+  "tests/unit/test_formula_package_sync.py::test_formula_lockfiles_pin_same_formula_dependency_versions",
+  "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_formula_node_package_drift_is_rejected",
 ]
 audit_cases = ["MAC-AUD-004", "MAC-AUD-005", "MAC-AUD-006"]
 portable_validation = "static"
@@ -399,17 +427,21 @@ title = "把原生 macOS 证据纳入 split offline 发布门禁"
 area = "ci-release"
 status = "implemented"
 risk = "P0"
-summary = "常规 CI 在固定 macos-15 arm64 runner 上精确测试 /var 或 /tmp 的系统 cache alias 并构建验证 cp314；可复用 offline workflow 验证 cp311-cp314 全矩阵，稳定发布必须等待 offline workflow。"
+summary = "常规 CI 在固定 macos-15 arm64 runner 上精确测试 /var 或 /tmp 的系统 cache alias 并构建验证 cp314；可复用 offline workflow 验证 cp311-cp314 全矩阵，稳定发布必须等待 offline workflow，并用固定 SHA 的 actions/attest-build-provenance v4.2.2 为全部发布资产生成 provenance。"
 rationale = "每次变更需要快速原生 cp314 回归，发布还需要完整 ABI 矩阵；Linux、WSL 和 Windows 的静态或模拟测试无法证明 Mach-O、codesign、xattr、Zsh 和原生安装行为。"
 implementation_paths = [
   ".github/workflows/ci.yml",
   ".github/workflows/offline.yml",
   ".github/workflows/release.yml",
   "scripts/verify-offline-package.sh",
+  "docs/macos-adaptation-contract.toml",
+  "scripts/validate_macos_adaptation.py",
 ]
 test_nodes = [
   "tests/unit/test_ci_release_workflow.py::test_regular_ci_includes_native_macos_offline_gate",
   "tests/unit/test_ci_release_workflow.py::test_offline_workflow_verifies_macos_packages_on_pinned_arm64_runner",
+  "tests/unit/test_ci_release_workflow.py::test_release_emits_sbom_checksums_and_build_provenance",
+  "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_release_attestation_contract_and_workflow_drift_are_rejected",
 ]
 audit_cases = ["MAC-AUD-002", "MAC-AUD-006"]
 portable_validation = "static"

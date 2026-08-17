@@ -40,7 +40,9 @@
 - 自动证据：静态 contract gate 检查 workflow；普通 push/PR 的
   `.github/workflows/ci.yml` 在 CPython 3.14 执行原生 build + verifier，
   release / offline workflow 实际执行四个 `macos-15` ABI job；普通 CI 还在
-  Ubuntu 与 Windows 分别执行 portable contract entrypoint。
+  Ubuntu 与 Windows 分别执行 portable contract entrypoint。release workflow
+  的 provenance 步骤还会校验 `actions/attest-build-provenance` v4.2.2 的完整
+  SHA、精确一次调用和 `release-assets/**/*` subject path。
 - 平台：S / L 只能验证 YAML；D 才能提供平台证据。
 - 关闭条件：四个 ABI job 都在固定 runner 通过，不能用 `macos-latest` 或
   Windows / WSL 结果代替。
@@ -75,7 +77,9 @@
   `LC_RPATH`，随包 Node 只在递归闭包通过后真实启动。
 - 自动证据：`scripts/verify-offline-package.sh` 使用 `file`、`lipo -archs` 和
   `otool -L` 检查 texmath、dylib 与 Node，并执行 Node `--version`；安装器在
-  checksum 工具之前验证精确 payload inventory，再校验每个 digest。
+  checksum 工具之前验证精确 payload inventory，再校验每个 digest。机器合约、
+  validator 和 unit test 还要求根目录与随包公式资源的两套 Node manifest / lock
+  都精确固定 KaTeX 0.18.4 和 `mathml-to-latex` 1.8.0。
 - 平台：S / L 只能检查脚本存在和调用；D 才能解释实际 Mach-O。
 - 关闭条件：原生 verifier 对发布 tarball 通过，且 manifest target 与产物一致。
 
