@@ -52,6 +52,7 @@ def open_browser_context(
     manager = CamoufoxBrowserManager(
         binary_path=config.binary_path,
         headless=config.headless,
+        auto_prepare=config.auto_prepare,
     )
     return manager, manager.new_context(**context_kwargs)
 

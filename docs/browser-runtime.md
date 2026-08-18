@@ -30,6 +30,8 @@ provider 只读取显式 `BrowserRuntimeConfig`，不探测 backend、不持有�
 - provider storage-state 目录隔离，默认以 `<provider>-camoufox` 命名。
 - 显式 executable 启动会读取相邻 Camoufox `version.json`，让隔离子进程复用已准备的官方 runtime，而不是从隔离 cache 误判为未安装。
 - Camoufox 启动进度写入 stderr；MCP stdio 的 stdout 始终只承载 JSON-RPC。
+- managed runtime 准备进度同样写入 CLI stderr；MCP 启用准备时通过 logging
+  notification 转发，不污染 JSON-RPC stdout。
 
 ## HTML 策略、短期复用与资源阻断
 
@@ -68,6 +70,7 @@ browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默�
 唯一 backend 值为 `camoufox`。可使用：
 
 - `PAPER_FETCH_BROWSER_HEADLESS`
+- `PAPER_FETCH_BROWSER_AUTO_PREPARE`
 - `PAPER_FETCH_BROWSER_BINARY_PATH`
 - `PAPER_FETCH_BROWSER_PROFILE_DIR`
 - `PAPER_FETCH_BROWSER_USER_DATA_DIR`
@@ -76,9 +79,13 @@ browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默�
 `PAPER_FETCH_BROWSER_USER_AGENT` 只用于允许覆盖 UA 的 direct publisher request；
 Camoufox 启动不接受固定 UA，以避免生成的 Firefox 指纹内部不一致。
 
-默认 managed runtime 会先用 `download_if_missing=False` 确认用户已经显式执行过
-`python -m camoufox fetch`，随后由 Camoufox package 自行解析 active browser
-version。paper-fetch 不会把官方 macOS app 内的 `Contents/MacOS/camoufox` 再当成
+默认 managed runtime 启动仍用 `download_if_missing=False` 做最终无下载检查；在此
+之前，CLI browser fetch/auth/preflight 默认允许按需调用 Camoufox 官方 CLI 安装、
+修复并每 24 小时检查更新。`--no-browser-auto-prepare` 或
+`PAPER_FETCH_BROWSER_AUTO_PREPARE=false` 可关闭；MCP/库默认关闭，只有请求参数
+`browser_auto_prepare=true` 或环境显式开启才准备。所有调用共享跨进程锁和 900 秒
+预算；更新失败但旧 runtime 有效时告警继续。随后由 Camoufox package 自行解析 active
+browser version。paper-fetch 不会把官方 macOS app 内的 `Contents/MacOS/camoufox` 再当成
 custom executable 传回去，因为 Camoufox 的 bundle metadata 位于
 `Contents/Resources`。只有显式 `PAPER_FETCH_BROWSER_BINARY_PATH` 才作为 custom
 `executable_path` 透传；在 macOS 上优先使用 managed runtime，除非 custom bundle
@@ -103,8 +110,9 @@ WindowServer 或物理显示器。
 
 ## 诊断边界
 
-`doctor`/`provider_status` 不启动 runtime。`browser-preflight` 才执行 live 页面
-访问和可选 storage-state 保存。challenge、登录、验证码、付费和 entitlement
+`doctor`/`provider_status` 不启动或准备 runtime。CLI `browser-preflight` 默认可先按需
+准备；MCP `browser_preflight` 默认关闭准备。之后才执行 live 页面访问和可选
+storage-state 保存。challenge、登录、验证码、付费和 entitlement
 边界始终需要合法用户操作，工具不会自动绕过。
 
 IEEE preflight 不以初始 HTTP 202 或 `/rest/document/` 请求作为终态：它最多等待

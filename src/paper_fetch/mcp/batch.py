@@ -13,6 +13,7 @@ from mcp.server.mcpserver import Context
 from mcp.types import CallToolResult
 
 from ..reason_codes import ERROR
+from ..config import apply_browser_auto_prepare_policy
 from ..runtime import RuntimeContext
 from ..workflow.batch_runner import (
     BatchFailure,
@@ -298,11 +299,21 @@ def batch_check_payload(
     queries: list[str],
     mode: str = "metadata",
     concurrency: int = 1,
+    browser_auto_prepare: bool | None = None,
     env: Mapping[str, str] | None = None,
     deps: MCPDeps = default_mcp_deps(),
 ) -> dict[str, Any]:
-    request = BatchCheckRequest(queries=queries, mode=mode, concurrency=concurrency)
-    runtime_env = deps.build_runtime_env(env)
+    request = BatchCheckRequest(
+        queries=queries,
+        mode=mode,
+        concurrency=concurrency,
+        browser_auto_prepare=browser_auto_prepare,
+    )
+    runtime_env = apply_browser_auto_prepare_policy(
+        deps.build_runtime_env(env),
+        override=request.browser_auto_prepare,
+        default=False,
+    )
     runtime_context = RuntimeContext(env=runtime_env, download_dir=None)
     try:
         runtime_context.get_clients()
@@ -399,19 +410,32 @@ async def batch_check_tool_async(
     queries: list[str],
     mode: str = "metadata",
     concurrency: int = 1,
+    browser_auto_prepare: bool | None = None,
     env: Mapping[str, str] | None = None,
     ctx: Context | None = None,
     deps: MCPDeps = default_mcp_deps(),
 ) -> CallToolResult:
     try:
-        request = BatchCheckRequest(queries=queries, mode=mode, concurrency=concurrency)
+        request = BatchCheckRequest(
+            queries=queries,
+            mode=mode,
+            concurrency=concurrency,
+            browser_auto_prepare=browser_auto_prepare,
+        )
     except Exception as error:
         return _tool_result(error_payload_from_exception(error), is_error=True)
 
     total_queries = len(request.queries)
     await report_progress(ctx, 0, total_queries, "Starting batch_check")
 
-    runtime_env = deps.build_runtime_env(env)
+    try:
+        runtime_env = apply_browser_auto_prepare_policy(
+            deps.build_runtime_env(env),
+            override=request.browser_auto_prepare,
+            default=False,
+        )
+    except Exception as error:
+        return _tool_result(error_payload_from_exception(error), is_error=True)
     cancelled = threading.Event()
     runtime_context = RuntimeContext(
         env=runtime_env, download_dir=None, cancel_check=cancelled.is_set

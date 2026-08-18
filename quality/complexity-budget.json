@@ -94,31 +94,37 @@
       "code": "PLR0913",
       "path": "src/paper_fetch/mcp/batch_fetch.py",
       "symbol": "batch_fetch_tool_async",
-      "value": 26
+      "value": 27
     },
     {
       "code": "PLR0913",
       "path": "src/paper_fetch/mcp/browser_preflight.py",
       "symbol": "browser_preflight_payload",
+      "value": 12
+    },
+    {
+      "code": "PLR0913",
+      "path": "src/paper_fetch/mcp/browser_preflight.py",
+      "symbol": "browser_preflight_tool_async",
       "value": 11
     },
     {
       "code": "PLR0913",
       "path": "src/paper_fetch/mcp/fetch_tool.py",
       "symbol": "_fetch_request_from_inputs",
-      "value": 11
+      "value": 12
     },
     {
       "code": "PLR0913",
       "path": "src/paper_fetch/mcp/fetch_tool.py",
       "symbol": "fetch_paper_payload",
-      "value": 16
+      "value": 17
     },
     {
       "code": "PLR0913",
       "path": "src/paper_fetch/mcp/fetch_tool.py",
       "symbol": "fetch_paper_tool_async",
-      "value": 15
+      "value": 16
     },
     {
       "code": "PLR0913",
@@ -136,13 +142,13 @@
       "code": "PLR0913",
       "path": "src/paper_fetch/mcp/server.py",
       "symbol": "build_server.batch_fetch",
-      "value": 21
+      "value": 22
     },
     {
       "code": "PLR0913",
       "path": "src/paper_fetch/mcp/server.py",
       "symbol": "build_server.fetch_paper",
-      "value": 13
+      "value": 14
     },
     {
       "code": "PLR0913",

@@ -15,10 +15,14 @@ from mcp.server.mcpserver import Context
 from mcp.types import CallToolResult, ImageContent, TextContent
 
 from ..artifacts import ArtifactMode
+from ..config import apply_browser_auto_prepare_policy
 from ..diagnostics import provider_status_payload as _shared_provider_status_payload
 from ..http import HttpTransport
 from ..models import ArticleModel, Asset, FetchEnvelope
 from ..provider_catalog import provider_status_order
+from ..providers.browser_runtime.preparation import (
+    browser_runtime_preparation_scope,
+)
 from ..resolve.query import StructuredResolveRequest
 from ..runtime import RuntimeContext
 from ..utils import extend_unique, normalize_text
@@ -278,34 +282,40 @@ def _fetch_paper_envelope(
                 deps=deps,
             )
 
-    return (
-        FetchPipeline(deps.service_fetch_paper)
-        .run(
-            build_fetch_pipeline_request(
-                query=request.query,
-                modes=_service_modes_for_fetch_request(
-                    request, include_article_for_assets=include_article_for_assets
-                ),  # type: ignore[arg-type]
-                strategy=request.strategy.to_service_strategy(),
-                render=request.to_render_options(),
-                env=runtime_env,
-                transport=transport,
-                context=context,
-                cancel_check=cancel_check,
-                download_dir=cache_download_dir,
-                artifact_mode=request.artifact_mode,
-                no_download=request.no_download,
-                fetch_cache=FetchCache(
-                    service_download_dir,
-                    credential_scope=cache_credential_scope,
-                ),
-                cache_hooks=FetchPipelineCacheHooks(
-                    load=load_cached, write=write_cached
-                ),
-            )
-        )
-        .envelope
+    preparation_cancel_check = cancel_check or (
+        context.cancel_check if context is not None else None
     )
+    with browser_runtime_preparation_scope(
+        cancel_check=preparation_cancel_check,
+    ):
+        return (
+            FetchPipeline(deps.service_fetch_paper)
+            .run(
+                build_fetch_pipeline_request(
+                    query=request.query,
+                    modes=_service_modes_for_fetch_request(
+                        request, include_article_for_assets=include_article_for_assets
+                    ),  # type: ignore[arg-type]
+                    strategy=request.strategy.to_service_strategy(),
+                    render=request.to_render_options(),
+                    env=runtime_env,
+                    transport=transport,
+                    context=context,
+                    cancel_check=cancel_check,
+                    download_dir=cache_download_dir,
+                    artifact_mode=request.artifact_mode,
+                    no_download=request.no_download,
+                    fetch_cache=FetchCache(
+                        service_download_dir,
+                        credential_scope=cache_credential_scope,
+                    ),
+                    cache_hooks=FetchPipelineCacheHooks(
+                        load=load_cached, write=write_cached
+                    ),
+                )
+            )
+            .envelope
+        )
 
 
 def _fetch_envelope_cache_path(download_dir: Path, doi: str) -> Path:
@@ -342,6 +352,7 @@ def _fetch_request_from_inputs(
     save_markdown: bool,
     markdown_output_dir: str | None,
     markdown_filename: str | None,
+    browser_auto_prepare: bool | None,
 ) -> FetchPaperRequest:
     return FetchPaperRequest.model_validate(
         {
@@ -356,6 +367,7 @@ def _fetch_request_from_inputs(
             "save_markdown": save_markdown,
             "markdown_output_dir": markdown_output_dir,
             "markdown_filename": markdown_filename,
+            "browser_auto_prepare": browser_auto_prepare,
         }
     )
 
@@ -455,6 +467,7 @@ def fetch_paper_payload(
     save_markdown: bool = False,
     markdown_output_dir: str | None = None,
     markdown_filename: str | None = None,
+    browser_auto_prepare: bool | None = None,
     env: Mapping[str, str] | None = None,
     download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
     transport: HttpTransport | None = None,
@@ -473,10 +486,16 @@ def fetch_paper_payload(
         save_markdown=save_markdown,
         markdown_output_dir=markdown_output_dir,
         markdown_filename=markdown_filename,
+        browser_auto_prepare=browser_auto_prepare,
+    )
+    runtime_env = apply_browser_auto_prepare_policy(
+        deps.build_runtime_env(env),
+        override=request.browser_auto_prepare,
+        default=False,
     )
     envelope = deps.fetch_paper_envelope(
         request,
-        env=env,
+        env=runtime_env,
         download_dir=download_dir,
         transport=transport,
         include_article_for_assets=False,
@@ -727,6 +746,7 @@ async def fetch_paper_tool_async(
     save_markdown: bool = False,
     markdown_output_dir: str | None = None,
     markdown_filename: str | None = None,
+    browser_auto_prepare: bool | None = None,
     env: Mapping[str, str] | None = None,
     download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
     ctx: Context | None = None,
@@ -748,6 +768,7 @@ async def fetch_paper_tool_async(
             save_markdown=save_markdown,
             markdown_output_dir=markdown_output_dir,
             markdown_filename=markdown_filename,
+            browser_auto_prepare=browser_auto_prepare,
         )
     except Exception as error:
         await report_progress(
@@ -757,8 +778,12 @@ async def fetch_paper_tool_async(
 
     await report_progress(ctx, 1, _FETCH_PROGRESS_TOTAL, "Fetching paper content")
     cancelled = threading.Event()
-    runtime_env = deps.build_runtime_env(env)
     try:
+        runtime_env = apply_browser_auto_prepare_policy(
+            deps.build_runtime_env(env),
+            override=request.browser_auto_prepare,
+            default=False,
+        )
         loop = asyncio.get_running_loop()
         bridge = PaperFetchLogBridge(ctx=ctx, loop=loop) if ctx is not None else None
         if bridge is None:

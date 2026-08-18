@@ -17,6 +17,7 @@ from mcp.server.mcpserver import Context
 from mcp.types import CallToolResult
 
 from ..artifacts import ArtifactMode
+from ..config import apply_browser_auto_prepare_policy
 from ..manifest import (
     DEFAULT_MANIFEST_BUILDER_DEPENDENCIES,
     LegacyArtifactField,
@@ -690,7 +691,11 @@ async def _execute_batch_fetch(
     requested_run_id: UUID | None,
     tool_version: str,
 ) -> dict[str, Any]:
-    runtime_env = deps.build_runtime_env(env)
+    runtime_env = apply_browser_auto_prepare_policy(
+        deps.build_runtime_env(env),
+        override=request.browser_auto_prepare,
+        default=False,
+    )
     download_arg = _download_argument(request)
     cache_dir = _resolved_cache_dir(
         request,
@@ -1018,6 +1023,7 @@ async def batch_fetch_tool_async(
     batch_results: str | None = None,
     resume: str | None = None,
     overwrite: bool = False,
+    browser_auto_prepare: bool | None = None,
     env: Mapping[str, str] | None = None,
     ctx: Context | None = None,
     deps: MCPDeps = default_mcp_deps(),
@@ -1045,6 +1051,7 @@ async def batch_fetch_tool_async(
         "batch_results": batch_results,
         "resume": resume,
         "overwrite": overwrite,
+        "browser_auto_prepare": browser_auto_prepare,
     }
     if download_dir is not _MCP_DEFAULT_DOWNLOAD_DIR:
         request_payload["download_dir"] = (

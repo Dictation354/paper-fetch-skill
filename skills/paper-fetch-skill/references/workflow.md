@@ -68,14 +68,14 @@
 ### 8. 必要状态检查
 
 - 仅当 provider 凭证、浏览器运行时、人工登录或合法访问上下文可能影响目标时调用 `provider_status()`，并按 [`environment.md`](environment.md) 处理。
-- 对 runtime `ProviderSpec.requires_browser_runtime=True` 的 provider，在首次联网抓取前先用 `provider_status(provider=...)` 确认静态 runtime；需要真实链路证明时再运行 MCP `browser_preflight(provider=...)` 或 CLI `paper-fetch browser-preflight --provider ...`。live preflight 可能联网并写 storage-state，不能当作只读检查。
+- 对 runtime `ProviderSpec.requires_browser_runtime=True` 的 provider，在首次联网抓取前先用 `provider_status(provider=...)` 确认静态 runtime；需要真实链路证明时再运行 MCP `browser_preflight(provider=..., browser_auto_prepare=true)` 或 CLI `paper-fetch browser-preflight --provider ...`。CLI 默认允许 managed runtime 首次按需准备，MCP 默认关闭，只有任务确需 browser 且允许联网/本地 runtime 写入时才显式开启。live preflight 可能联网并写 storage-state，不能当作只读检查。
 - 同一 MCP server 进程中，PNAS、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、T&F 已验收并成功提交 storage-state 的 preflight HTML 可能被紧随其后的正式 fetch 一次性复用，fetch 仍会用正式 metadata 重跑正文与资产抽取。该优化不改变调用顺序，也不是额外成功证据；独立 CLI 进程以及 Wiley、IEEE、Science 不共享该 HTML，AIP 因 Camoufox 指纹边界明确禁用跨 `RuntimeContext` 复用。
 - 预检的 `challenge` / `auth_required` 才转入显式人工 `auth`；`runtime_error` 先修本地运行时，`ready` 才继续 fetch。预检不执行 PDF fallback 或自动 auth，也不得尝试绕过 challenge。
 - 需要人工登录/授权时使用 `manual_auth` 暂停；遇到付费、许可或合法访问边界时使用 `lawful_access_boundary` 暂停。不得绕过登录、验证码、付费墙或访问控制。
 
 ### 9. fetch
 
-- 对尚未由合格本地/cache 满足的目标执行抓取或分诊；按意图使用 `has_fulltext(...)`、`batch_check(...)`、`fetch_paper(...)` 或 `batch_fetch(...)`，CLI 只接收规范目标并按选定的批量归档参数运行。
+- 对尚未由合格本地/cache 满足的目标执行抓取或分诊；按意图使用 `has_fulltext(...)`、`batch_check(...)`、`fetch_paper(...)` 或 `batch_fetch(...)`，CLI 只接收规范目标并按选定的批量归档参数运行。MCP 目标明确需要 browser 且静态状态显示 managed runtime 未准备时，对实际 fetch 同步传 `browser_auto_prepare=true`；受限网络或用户禁用时保持 `false` 并报告 runtime 边界。
 - `batch_check(mode="metadata")` 只给出 `likely_yes` / `unknown` 的低成本探测，不代表已抓取全文；超过 50 条时按原始 1-based index 分块并在合并后恢复原顺序。
 - `batch_fetch` 才是 MCP 的真实批量全文入口；单块最多 50 条，默认只返回 input-ordered compact manifest/acceptance，实际完成顺序另列。显式 run manifest 才能 resume；临时阅读不应为获得正文而取消 compact 上限。
 - 同一阶段内允许在 runtime 限制和 provider 速率约束下受控并发；不要求所有论文严格逐篇串行，浏览器资产下载仍服从 runtime 自身的串行约束。

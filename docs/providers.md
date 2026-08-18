@@ -1236,7 +1236,7 @@ MCP 入口为 `provider_status(provider=None, group=None, detail="full")`。无�
 
 MCP `browser_preflight(provider=None, detail="full")` 无 provider 时按 browser runtime catalog 顺序逐项执行，与 CLI 默认一致；指定 `test_url` 或 `storage_state_path` 时必须同时指定单一 provider。它会发送 progress，逐项返回 `ready/challenge/auth_required/runtime_error/cancelled`，并在取消时保留已完成项。默认 `save_storage_state=true` 可能写 provider storage-state；设为 `save_storage_state=false` 可禁止本轮保存。compact 每项只含 `provider/status/reason_code/reason/next_action`。该工具的 annotations 明确是 open-world、非只读和非 idempotent；它不自动 auth、不绕过 challenge，也不进入 PDF fallback。
 
-操作顺序应是 `provider_status` / `doctor`（静态配置与本地依赖）→ `browser-preflight`（CLI）/ `browser_preflight`（MCP）（真实样例网页链路，可能更新 storage-state）→ `auth`（仅在明确需要时由用户人工完成合法登录/验证）。任何静态 `ready` 都不是真实页面可访问、已授权或一定能取得全文的承诺。
+操作顺序应是 `provider_status` / `doctor`（静态配置与本地依赖）→ `browser-preflight`（CLI）/ `browser_preflight`（MCP）（真实样例网页链路，可能更新 storage-state）→ `auth`（仅在明确需要时由用户人工完成合法登录/验证）。CLI live 入口默认允许按需准备 managed Camoufox；MCP 默认关闭，须传 `browser_auto_prepare=true` 或由环境开启。任何静态 `ready` 都不是真实页面可访问、已授权或一定能取得全文的承诺。
 
 当前 provider 状态语义按 runtime catalog 派生，主要分为：
 

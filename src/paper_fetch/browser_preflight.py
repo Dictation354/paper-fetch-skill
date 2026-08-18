@@ -35,6 +35,9 @@ from .providers.browser_runtime import (
 )
 from .providers.browser_runtime.paths import runtime_with_default_storage_profile
 from .providers.browser_runtime.paths import commit_staged_storage_state
+from .providers.browser_runtime.preparation import (
+    browser_runtime_preparation_scope,
+)
 from .providers.browser_workflow.client import BrowserWorkflowClient
 from .providers.browser_workflow.shared import (
     BrowserWorkflowDeps,
@@ -45,6 +48,10 @@ from .providers.registry import build_clients
 from .reason_codes import (
     BROWSER_CONTEXT_CREATE_FAILED,
     BROWSER_PAGE_CREATE_FAILED,
+    BROWSER_RUNTIME_PREPARE_CANCELLED,
+    BROWSER_RUNTIME_PREPARE_FAILED,
+    BROWSER_RUNTIME_PREPARE_TIMEOUT,
+    BROWSER_RUNTIME_REPAIR_FAILED,
     CDP_CONNECT_FAILED,
     ERROR,
     MANAGED_CHROME_CDP_TIMEOUT,
@@ -103,11 +110,20 @@ _EXTRACTION_REASON_CODES = frozenset(
     }
 )
 IEEE_PREFLIGHT_READINESS_WAIT_SECONDS = 15
-_CANCELLED_REASON_CODES = frozenset({"cancelled", "request_cancelled"})
+_CANCELLED_REASON_CODES = frozenset(
+    {
+        BROWSER_RUNTIME_PREPARE_CANCELLED,
+        "cancelled",
+        "request_cancelled",
+    }
+)
 _RUNTIME_REASON_CODES = frozenset(
     {
         BROWSER_CONTEXT_CREATE_FAILED,
         BROWSER_PAGE_CREATE_FAILED,
+        BROWSER_RUNTIME_PREPARE_FAILED,
+        BROWSER_RUNTIME_PREPARE_TIMEOUT,
+        BROWSER_RUNTIME_REPAIR_FAILED,
         CDP_CONNECT_FAILED,
         MANAGED_CHROME_CDP_TIMEOUT,
         MANAGED_CHROME_EXITED_BEFORE_CDP,
@@ -341,6 +357,10 @@ def static_browser_capabilities(
             "backend",
             "browser_user_agent_ignored",
             "storage_state_path",
+            "auto_prepare",
+            "download_required",
+            "runtime_state",
+            "runtime_version",
         }
     }
     runtime_status = (
@@ -1004,16 +1024,17 @@ def run_browser_provider_preflight(
                 on_result(result, len(results), total)
             break
         try:
-            result = preflight_browser_provider(
-                provider,
-                env=runtime_env,
-                target_url=target_url,
-                storage_state_path=storage_state_path,
-                save_storage_state=save_storage_state,
-                cancel_check=cancel_check,
-                download_dir=active_runtime_options.download_dir,
-                artifact_mode=active_runtime_options.artifact_mode,
-            )
+            with browser_runtime_preparation_scope(cancel_check=cancel_check):
+                result = preflight_browser_provider(
+                    provider,
+                    env=runtime_env,
+                    target_url=target_url,
+                    storage_state_path=storage_state_path,
+                    save_storage_state=save_storage_state,
+                    cancel_check=cancel_check,
+                    download_dir=active_runtime_options.download_dir,
+                    artifact_mode=active_runtime_options.artifact_mode,
+                )
         except RequestCancelledError:
             if not cancel_as_result:
                 raise
@@ -1032,4 +1053,6 @@ def run_browser_provider_preflight(
         results.append(result)
         if on_result is not None:
             on_result(result, len(results), total)
+        if result.status == "cancelled":
+            break
     return results

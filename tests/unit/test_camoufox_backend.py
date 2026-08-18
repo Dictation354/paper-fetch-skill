@@ -27,6 +27,7 @@ from paper_fetch.providers.browser_runtime.camoufox_manager import (
     _launch_executable_path,
     _launch_firefox_major_version,
 )
+from paper_fetch.providers.browser_runtime.preparation import CamoufoxRuntimeProbe
 from paper_fetch.providers.browser_runtime.context import context_options_for_config
 from paper_fetch.providers.browser_runtime import context as browser_runtime_context
 from paper_fetch.providers.browser_runtime.types import (
@@ -285,6 +286,45 @@ def test_camoufox_official_runtime_path_is_resolved_by_package(monkeypatch) -> N
     )
 
 
+def test_camoufox_manager_prepares_before_final_no_download_resolution(
+    monkeypatch,
+) -> None:
+    order: list[str] = []
+    browser = SimpleNamespace(close=mock.Mock())
+    playwright = SimpleNamespace(stop=mock.Mock())
+    playwright_manager = SimpleNamespace(start=mock.Mock(return_value=playwright))
+    pkgman = SimpleNamespace(
+        camoufox_path=mock.Mock(side_effect=lambda **_kwargs: order.append("resolve"))
+    )
+
+    def import_module(name: str):
+        if name == "camoufox.pkgman":
+            return pkgman
+        if name == "playwright.sync_api":
+            return SimpleNamespace(
+                sync_playwright=mock.Mock(return_value=playwright_manager)
+            )
+        if name == "camoufox.sync_api":
+            return SimpleNamespace(NewBrowser=mock.Mock(return_value=browser))
+        raise AssertionError(name)
+
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.preparation.ensure_camoufox_managed_runtime",
+        lambda: order.append("prepare"),
+    )
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.camoufox_manager.importlib.import_module",
+        import_module,
+    )
+
+    manager = CamoufoxBrowserManager(headless=True, auto_prepare=True)
+    assert manager.browser() is browser
+    manager.close()
+
+    assert order == ["prepare", "resolve"]
+    pkgman.camoufox_path.assert_called_once_with(download_if_missing=False)
+
+
 def test_camoufox_persistent_official_runtime_path_is_resolved_by_package(
     monkeypatch, tmp_path
 ) -> None:
@@ -457,17 +497,8 @@ def test_camoufox_static_probe_reads_runtime_without_fetching(
     active_version = "browsers/official/test-version"
     runtime_path = tmp_path / active_version
     runtime_path.mkdir(parents=True)
-    config_path = tmp_path / "config.json"
-    config_path.write_text(
-        '{"active_version": "browsers/official/test-version"}',
-        encoding="utf-8",
-    )
-    forbidden_fetch = mock.Mock(side_effect=AssertionError("must not fetch"))
-    pkgman = SimpleNamespace(
-        INSTALL_DIR=tmp_path,
-        camoufox_path=forbidden_fetch,
-    )
-    multiversion = SimpleNamespace(CONFIG_FILE=config_path)
+    executable = runtime_path / "camoufox"
+    executable.touch()
 
     monkeypatch.setattr(
         "paper_fetch.providers.browser_runtime.backends.camoufox.importlib_util.find_spec",
@@ -478,13 +509,16 @@ def test_camoufox_static_probe_reads_runtime_without_fetching(
         lambda _name: "test-version",
     )
     monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.backends.camoufox.importlib.import_module",
-        lambda name: (
-            pkgman
-            if name == "camoufox.pkgman"
-            else multiversion
-            if name == "camoufox.multiversion"
-            else pytest.fail(f"unexpected module import: {name}")
+        "paper_fetch.providers.browser_runtime.backends.camoufox.probe_camoufox_managed_runtime",
+        lambda: CamoufoxRuntimeProbe(
+            state="ready",
+            installed=True,
+            valid=True,
+            runtime_path=runtime_path,
+            executable_path=executable,
+            version="test-version",
+            active_spec=active_version,
+            managed_path_safe=True,
         ),
     )
 
@@ -494,7 +528,78 @@ def test_camoufox_static_probe_reads_runtime_without_fetching(
     assert details["package_ready"] is True
     assert details["download_required"] is False
     assert details["runtime_path"] == str(runtime_path)
-    forbidden_fetch.assert_not_called()
+
+
+def test_camoufox_runtime_readiness_auto_prepares_managed_runtime(
+    monkeypatch, tmp_path
+) -> None:
+    backend = CamoufoxBackend()
+    config = BrowserRuntimeConfig(
+        provider="science",
+        doi="10.1126/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        backend="camoufox",
+        auto_prepare=True,
+    )
+    missing = {
+        "packages": {"playwright": True, "camoufox": True},
+        "package_ready": True,
+        "runtime_installed": False,
+        "runtime_valid": False,
+    }
+    ready = {**missing, "runtime_installed": True, "runtime_valid": True}
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.backends.camoufox._dependency_details",
+        mock.Mock(side_effect=(missing, ready)),
+    )
+    prepare = mock.Mock()
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.backends.camoufox.ensure_camoufox_managed_runtime",
+        prepare,
+    )
+
+    backend.ensure_runtime_ready(config)
+
+    prepare.assert_called_once_with()
+
+
+def test_explicit_camoufox_binary_never_invokes_managed_runtime_preparation(
+    monkeypatch, tmp_path
+) -> None:
+    executable = tmp_path / "custom-camoufox"
+    executable.touch()
+    config = BrowserRuntimeConfig(
+        provider="science",
+        doi="10.1126/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        binary_path=str(executable),
+        backend="camoufox",
+        auto_prepare=True,
+    )
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.backends.camoufox._dependency_details",
+        lambda: {
+            "packages": {"playwright": True, "camoufox": True},
+            "package_ready": True,
+            "runtime_installed": False,
+            "runtime_valid": False,
+        },
+    )
+    prepare = mock.Mock(
+        side_effect=AssertionError("managed runtime must stay untouched")
+    )
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.backends.camoufox.ensure_camoufox_managed_runtime",
+        prepare,
+    )
+
+    CamoufoxBackend().ensure_runtime_ready(config)
+
+    prepare.assert_not_called()
 
 
 def test_camoufox_runtime_readiness_rejects_missing_runtime_without_download(

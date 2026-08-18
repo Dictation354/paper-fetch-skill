@@ -24,6 +24,7 @@ class BrowserRuntimeConfig:
     user_data_dir: Path | None = None
     storage_state_path: Path | None = None
     persist_storage_state: bool = True
+    auto_prepare: bool = False
 
 
 @dataclass(frozen=True)

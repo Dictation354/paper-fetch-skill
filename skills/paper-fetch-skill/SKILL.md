@@ -13,7 +13,7 @@ description: "适用场景：已知论文阅读、总结、全文获取与核验
 - 身份和意图明确后读取 [`references/presets.md`](references/presets.md)，把任务映射为五个显式预设之一；分别按 CLI/MCP 矩阵设置主输出、cache、artifact、资产与完全不落盘语义，不依赖运行时默认值。
 - 只允许状态机的 BLOCKING 白名单暂停工作。普通上下文阅读/总结不因保存策略缺失而阻塞，后端选择本身也不要求用户确认。
 - 对单篇使用 `resolve_paper(...)`，对成批候选使用 `batch_resolve(...)`；身份去重后优先检查同 scope 的 `get_cached(doi, detail="compact", preferred_only=true, ...)`，只有 DOI 未知且确需浏览 scope 时才用 `list_cached()`，再按需使用 `has_fulltext(...)`、`batch_check(...)`、`fetch_paper(...)` 或结构化全文批量入口 `batch_fetch(...)`。
-- 只在 provider、凭证或浏览器运行时可能影响结果时调用 `provider_status()`；对 runtime `ProviderSpec.requires_browser_runtime=True` 的 provider，首次联网抓取前先做静态检查，需要 live 证明时再调用 `browser_preflight(provider=...)`，仅在结果明确要求时进入人工 auth。
+- 只在 provider、凭证或浏览器运行时可能影响结果时调用 `provider_status()`；对 runtime `ProviderSpec.requires_browser_runtime=True` 的 provider，首次联网抓取前先做静态检查，需要 live 证明时再调用 `browser_preflight(provider=..., browser_auto_prepare=true)`。MCP runtime 准备默认关闭，只有任务确需 browser 且允许联网/本地写入时开启；仅在结果明确要求时进入人工 auth。
 - 抓取不是终点。始终按 [`references/acceptance.md`](references/acceptance.md) 检查实际响应、文件和统一 acceptance 结果，再报告身份、来源、降级、产物路径和下一步；不得用 `.gitignore` 或 `git status` 是否变化代替文件验收。
 - 不要仅因为本地没有 PDF 或缓存文本文件就断定论文不可读；也不要把 abstract-only 或 metadata-only 报告成全文成功。
 - Browser HTML 失败但 PDF/ePDF fallback 成功时，仍按 trace 中的精确 browser code 报告降级，并要求 `acceptance.overall=degraded`；不得用顶层 `status=ok` 抹掉 HTML failure provenance。

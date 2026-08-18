@@ -12,6 +12,30 @@ from paper_fetch.providers import browser_runtime
 
 
 class ConfigTests(unittest.TestCase):
+    def test_browser_auto_prepare_policy_is_strict_and_tri_state(self) -> None:
+        name = config.BROWSER_AUTO_PREPARE_ENV_VAR
+
+        self.assertFalse(config.resolve_browser_auto_prepare({}, default=False))
+        self.assertTrue(config.resolve_browser_auto_prepare({}, default=True))
+        self.assertTrue(config.resolve_browser_auto_prepare({name: "yes"}))
+        self.assertFalse(config.resolve_browser_auto_prepare({name: "OFF"}))
+        self.assertFalse(
+            config.resolve_browser_auto_prepare({name: "true"}, override=False)
+        )
+        with self.assertRaisesRegex(ValueError, name):
+            config.resolve_browser_auto_prepare({name: "sometimes"})
+
+    def test_apply_browser_auto_prepare_policy_copies_and_canonicalizes(self) -> None:
+        original = {"EXISTING": "value"}
+
+        resolved = config.apply_browser_auto_prepare_policy(
+            original,
+            override=True,
+        )
+
+        self.assertEqual(original, {"EXISTING": "value"})
+        self.assertEqual(resolved[config.BROWSER_AUTO_PREPARE_ENV_VAR], "true")
+
     def test_default_user_agent_matches_project_version(self) -> None:
         pyproject_path = Path(__file__).resolve().parents[2] / "pyproject.toml"
         project = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))["project"]

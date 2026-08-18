@@ -207,9 +207,12 @@ ELSEVIER_API_KEY="..."
 ```
 
 部分 browser-backed provider 需要本机 browser runtime 或手动登录态。离线包只
-包含 Camoufox / Playwright 的 Python 包，不包含 Camoufox 浏览器 binary；fetch
-不会自动下载浏览器。进入受限网络或离线环境前，必须在联网状态先用离线
-runtime 下载 Camoufox binary，再运行 `browser-preflight` 验证 provider：
+包含 Camoufox / Playwright 的 Python 包，不包含 Camoufox 浏览器 binary。CLI 的
+`fetch`、`auth` 和 `browser-preflight` 在真正需要 managed Camoufox 时默认会显示
+进度并按需安装、修复或检查更新；可用 `--no-browser-auto-prepare` 或
+`PAPER_FETCH_BROWSER_AUTO_PREPARE=false` 禁止。MCP/库默认不自动联网，需传
+`browser_auto_prepare=true` 或用环境变量显式开启。进入受限网络或离线环境前，仍应
+在联网状态预置 binary 并运行 preflight：
 
 ```bash
 source ~/.local/share/paper-fetch-skill/activate-offline.sh
@@ -220,8 +223,9 @@ paper-fetch auth wiley
 
 不想依赖已激活 shell 时，也可以运行
 `~/.local/share/paper-fetch-skill/runtime/paper-fetch-python -m camoufox fetch`。
-`browser-preflight` 会访问网络并启动浏览器做验证，但不会代替
-`python -m camoufox fetch` 下载 binary。当前原生 Mac 验证覆盖 Python 包导入
+CLI `browser-preflight` 默认可以完成缺失 runtime 的按需准备；若策略被关闭，必须先
+显式运行 `python -m camoufox fetch`。preflight 还会访问出版社页面。当前原生 Mac
+验证覆盖 Python 包导入
 和在线准备入口，尚未关闭“预置后真正断网启动 Camoufox”的审计项，因此 macOS
 tarball 不能被描述为完整离线浏览器包。
 

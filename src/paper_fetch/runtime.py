@@ -288,7 +288,7 @@ class RuntimeContext:
         init=False,
         repr=False,
     )
-    _camoufox_browser_managers: dict[tuple[int, bool, str], Any] = field(
+    _camoufox_browser_managers: dict[tuple[int, bool, str, bool], Any] = field(
         default_factory=dict,
         init=False,
         repr=False,
@@ -482,6 +482,7 @@ class RuntimeContext:
             threading.get_ident(),
             bool(config.headless),
             str(config.binary_path or "").strip(),
+            bool(config.auto_prepare),
         )
         with self._browser_context_manager_lock:
             manager = self._camoufox_browser_managers.get(key)
@@ -493,6 +494,8 @@ class RuntimeContext:
                 manager = CamoufoxBrowserManager(
                     binary_path=config.binary_path,
                     headless=config.headless,
+                    auto_prepare=config.auto_prepare,
+                    cancel_check=self.cancel_check,
                 )
                 self._camoufox_browser_managers[key] = manager
         return manager.new_context(**context_kwargs)

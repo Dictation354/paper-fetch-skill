@@ -8,13 +8,13 @@
 
 - 所有 tool 成功/失败 JSON payload 顶层使用 `schema_version=2`。新 fetch/cache payload 的完整 trace 只在顶层出现；`quality.trace` 已删除。旧 v1 FetchEnvelope cache 只在读取时按顶层 → quality → article quality 的顺序迁移，新写入不再生成 v1。
 - `resolve_paper(query | title, authors, year)`: 在抓取前规范化 DOI、URL 或标题查询，并尽早暴露歧义。标题输入必须先解析出 DOI 或落地页，再交给 `fetch_paper(...)`。
-- `fetch_paper(...)`: 返回稳定 JSON 载荷；成功响应包含兼容态 `status="ok"`、七分面紧凑 `acceptance`、溯源信息、`token_estimate_breakdown={abstract,body,refs}`，并按需附带 `article`、`markdown`、`metadata`。`acceptance.overall` 才是任务级结论；当 `save_markdown=true` 时，响应会改为紧凑结果，只保留路径、元数据、acceptance 和诊断字段。
+- `fetch_paper(..., browser_auto_prepare=None)`: 返回稳定 JSON 载荷；成功响应包含兼容态 `status="ok"`、七分面紧凑 `acceptance`、溯源信息、`token_estimate_breakdown={abstract,body,refs}`，并按需附带 `article`、`markdown`、`metadata`。`acceptance.overall` 才是任务级结论；当 `save_markdown=true` 时，响应会改为紧凑结果，只保留路径、元数据、acceptance 和诊断字段。MCP managed runtime 准备默认关闭；需按需安装/修复/更新时显式传 `true`。
 - `list_cached(cache_mode="index|refresh|rescan")` / `get_cached(doi, download_dir=..., detail="full|compact", preferred_only=false, modes=..., strategy=..., include_refs=..., max_tokens=...)`: 多轮会话重新抓取前，在同一个显式 cache scope 内检查缓存；已知 DOI 优先使用请求敏感的 `get_cached` compact 结果。
 - `has_fulltext(query)`: 使用解析结果、Crossref 元数据、轻量 Elsevier 元数据探测和落地页 HTML meta 做低成本全文可用性探测，不触发完整抓取流程。
 - `provider_status(provider=None, group=None, detail="full|compact")`: 返回 catalog-backed 本地静态诊断，不调用远程出版商 API；已知 provider 时应筛选，避免把全 catalog checks 放入上下文。
-- `browser_preflight(provider=None, test_url=None, timeout_ms=None, browser_user_agent=None, storage_state_path=None, save_storage_state=true, detail="full|compact")`: 对一个或全部 browser provider 运行 live HTML 预检；会访问出版社页面，默认可能更新过滤后的 storage-state，但不运行 PDF fallback 或自动认证。
-- `batch_resolve(queries, concurrency)` / `batch_check(queries, mode, concurrency)`: 默认 `concurrency=1`，允许范围 `1..8`，每次最多 `50` 个查询。
-- `batch_fetch(queries, concurrency, ...)`: 对 `1..50` 篇执行真实全文抓取，复用 `fetch_paper` 的 modes/strategy/cache/artifact/Markdown 参数；默认只返回按输入 index 排列的紧凑 manifest/acceptance 记录，不返回多篇完整正文。
+- `browser_preflight(provider=None, test_url=None, timeout_ms=None, browser_user_agent=None, storage_state_path=None, save_storage_state=true, detail="full|compact", browser_auto_prepare=None)`: 对一个或全部 browser provider 运行 live HTML 预检；会访问出版社页面，默认可能更新过滤后的 storage-state，但不运行 PDF fallback 或自动认证。MCP 默认不准备 managed runtime，传 `browser_auto_prepare=true` 才允许。
+- `batch_resolve(queries, concurrency)` / `batch_check(queries, mode, concurrency, browser_auto_prepare=None)`: 默认 `concurrency=1`，允许范围 `1..8`，每次最多 `50` 个查询；只有 article check 可能进入浏览器准备。
+- `batch_fetch(queries, concurrency, ..., browser_auto_prepare=None)`: 对 `1..50` 篇执行真实全文抓取，复用 `fetch_paper` 的 modes/strategy/cache/artifact/Markdown 参数；默认只返回按输入 index 排列的紧凑 manifest/acceptance 记录，不返回多篇完整正文。
 
 ## MCP Prompts（不是 Tools）
 
@@ -29,9 +29,10 @@
 - MCP 同一服务进程中，PNAS、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、T&F 的成功 preflight 可把已验收 HTML 一次性交给紧随其后的正式 fetch；命中只减少重复导航，正式 metadata、Markdown/资产抽取和 acceptance 都会重新执行。该内部状态通过既有 `source_trail`/diagnostics 标记观察，不新增或改变公开工具 schema；CLI 跨进程以及 Wiley、IEEE、Science、AIP 不承诺这种复用。
 - `test_url` 和 `storage_state_path` 只允许与一个显式 `provider` 一起使用。`test_url` 必须是无内嵌凭据的 HTTP(S) URL；`timeout_ms` 范围为 `1..600000`。`save_storage_state=false` 只关闭本轮保存，仍可读取已有 storage-state；默认 `true` 可能创建或原子更新 provider storage-state 文件。
 - 工具 annotations 为 open-world、非只读、非 destructive、非 idempotent：它会使用 Camoufox runtime 打开出版社页面，也可能写 storage-state。它不调用 PDF fallback，且 `auth_attempted=false`；challenge、验证码、付费或登录边界不会被自动绕过。
+- `browser_auto_prepare` 未传时 MCP/库默认 `false`；显式 `true` 才允许官方 Camoufox CLI 在跨进程锁内安装、修复或做 24 小时更新检查。支持 logging 的宿主会收到阶段与命令输出；显式 custom binary 永不进入该维护路径。
 - 每个 provider 独立返回 `ready`、`challenge`、`auth_required`、`network_timeout`、`extraction_error`、`runtime_error` 或 `cancelled`，并给出唯一 `status/reason_code/stage/message/next_action` 契约。前一个 provider 的 challenge/runtime failure 不会删除其它已完成结果；取消会保留取消前的结果，并停止调度后续 provider。
 - `detail="compact"` 的每项严格只有 `provider/status/reason_code/stage/message/next_action`；`full` 另含 provider label、脱敏目标/最终 URL、title、storage-state 保存诊断和 browser/page diagnostics。顶层始终显式报告 `pdf_fallback_attempted=false`、`auth_attempted=false` 和逐状态汇总。
-- browser runtime 失败沿用 fetch trace 的稳定 code：`managed_chrome_profile_in_use`、`managed_chrome_exited_before_cdp`、`managed_chrome_cdp_timeout`、`cdp_connect_failed`、`browser_context_create_failed`、`browser_page_create_failed`。full diagnostics 在可用时保留 `stage`、`exit_code`、脱敏 `stderr_summary` 和 `diagnostic_path`；确认 stale singleton 后 runtime 会受控恢复并至多重启一次，无法确认时不会删除 profile 状态。
+- browser runtime 失败沿用 fetch trace 的稳定 code，包括 `browser_runtime_prepare_cancelled`、`browser_runtime_prepare_failed`、`browser_runtime_prepare_timeout`、`browser_runtime_repair_failed`、`cdp_connect_failed`、`browser_context_create_failed`、`browser_page_create_failed`。full diagnostics 在可用时保留 stage、版本状态和有界命令输出；custom binary 不会被自动删除或更新。
 - 支持 progress 的宿主会收到开始、逐 provider 完成和最终完成通知。`challenge` / `auth_required` 的下一步是显式人工 auth；`runtime_error` 先修复静态配置或本地 runtime；`ready` 才继续目标 fetch。
 
 ## Cache Query Contract

@@ -4,6 +4,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from paper_fetch.config import BROWSER_AUTO_PREPARE_ENV_VAR
+
 from ._mcp_support import *
 
 
@@ -79,7 +81,10 @@ def test_browser_preflight_payload_passes_scoped_live_and_storage_options(
         on_result=lambda result, completed, total: progress.append(
             (result.provider, completed, total)
         ),
-        deps=mcp_test_deps(run_browser_provider_preflight=fake_preflight),
+        deps=mcp_test_deps(
+            build_runtime_env=lambda env=None: dict(env or {}),
+            run_browser_provider_preflight=fake_preflight,
+        ),
     )
 
     assert state_path.is_file()
@@ -90,6 +95,7 @@ def test_browser_preflight_payload_passes_scoped_live_and_storage_options(
     assert captured["storage_state_path"] == state_path
     assert captured["save_storage_state"] is True
     assert captured["cancel_as_result"] is True
+    assert captured["runtime_options"].env[BROWSER_AUTO_PREPARE_ENV_VAR] == "false"
     assert progress == [("wiley", 1, 1)]
     assert payload["status"] == "ready"
     assert payload["pdf_fallback_attempted"] is False
@@ -101,6 +107,26 @@ def test_browser_preflight_payload_passes_scoped_live_and_storage_options(
         "saved": True,
         "reason": None,
     }
+
+
+def test_browser_preflight_payload_allows_request_auto_prepare_override() -> None:
+    captured: dict[str, object] = {}
+
+    def fake_preflight(**kwargs):
+        captured.update(kwargs)
+        return [_preflight_result("wiley", ok=True)]
+
+    payload = mcp_tools.browser_preflight_payload(
+        provider="wiley",
+        browser_auto_prepare=True,
+        deps=mcp_test_deps(
+            build_runtime_env=lambda env=None: dict(env or {}),
+            run_browser_provider_preflight=fake_preflight,
+        ),
+    )
+
+    assert payload["status"] == "ready"
+    assert captured["runtime_options"].env[BROWSER_AUTO_PREPARE_ENV_VAR] == "true"
 
 
 def test_browser_preflight_payload_keeps_per_provider_action_states() -> None:

@@ -12,6 +12,7 @@ from mcp.server.mcpserver import Context
 from mcp.types import CallToolResult
 
 from ..provider_catalog import browser_preflight_provider_names
+from ..config import apply_browser_auto_prepare_policy
 from ..browser_preflight import (
     BrowserPreflightResult,
     BrowserPreflightRuntimeOptions,
@@ -20,6 +21,7 @@ from ..browser_preflight import (
 from ..utils import normalize_text
 from ._deps import MCPDeps, default_mcp_deps
 from .batch import report_progress, run_blocking_call
+from .log_bridge import PaperFetchLogBridge
 from .results import _tool_result, error_payload_from_exception, with_schema_version
 from .schemas import BrowserPreflightRequest
 
@@ -158,6 +160,7 @@ def browser_preflight_payload(
     storage_state_path: str | None = None,
     save_storage_state: bool = True,
     detail: str = "full",
+    browser_auto_prepare: bool | None = None,
     env: Mapping[str, str] | None = None,
     cancel_check: Callable[[], bool] | None = None,
     on_result: Callable[[BrowserPreflightResult, int, int], None] | None = None,
@@ -174,7 +177,13 @@ def browser_preflight_payload(
             "storage_state_path": storage_state_path,
             "save_storage_state": save_storage_state,
             "detail": detail,
+            "browser_auto_prepare": browser_auto_prepare,
         }
+    )
+    runtime_env = apply_browser_auto_prepare_policy(
+        deps.build_runtime_env(env),
+        override=request.browser_auto_prepare,
+        default=False,
     )
     results = deps.run_browser_provider_preflight(
         providers=[request.provider] if request.provider is not None else None,
@@ -190,7 +199,7 @@ def browser_preflight_payload(
         save_storage_state=request.save_storage_state,
         cancel_as_result=True,
         on_result=on_result,
-        runtime_options=BrowserPreflightRuntimeOptions(env=env),
+        runtime_options=BrowserPreflightRuntimeOptions(env=runtime_env),
     )
     return _response_payload(results, request=request)
 
@@ -204,6 +213,7 @@ async def browser_preflight_tool_async(
     storage_state_path: str | None = None,
     save_storage_state: bool = True,
     detail: str = "full",
+    browser_auto_prepare: bool | None = None,
     env: Mapping[str, str] | None = None,
     ctx: Context | None = None,
     deps: MCPDeps = default_mcp_deps(),
@@ -218,6 +228,7 @@ async def browser_preflight_tool_async(
                 "storage_state_path": storage_state_path,
                 "save_storage_state": save_storage_state,
                 "detail": detail,
+                "browser_auto_prepare": browser_auto_prepare,
             }
         )
     except Exception as error:
@@ -246,21 +257,42 @@ async def browser_preflight_tool_async(
             return
 
     try:
-        payload = await run_blocking_call(
-            browser_preflight_payload,
-            provider=request.provider,
-            test_url=request.test_url,
-            timeout_ms=request.timeout_ms,
-            browser_user_agent=request.browser_user_agent,
-            storage_state_path=request.storage_state_path,
-            save_storage_state=request.save_storage_state,
-            detail=request.detail,
-            env=env,
-            cancel_check=cancelled.is_set,
-            on_result=on_result,
-            deps=deps,
-            cancel_event=cancelled,
-        )
+        bridge = PaperFetchLogBridge(ctx=ctx, loop=loop) if ctx is not None else None
+        if bridge is None:
+            payload = await run_blocking_call(
+                browser_preflight_payload,
+                provider=request.provider,
+                test_url=request.test_url,
+                timeout_ms=request.timeout_ms,
+                browser_user_agent=request.browser_user_agent,
+                storage_state_path=request.storage_state_path,
+                save_storage_state=request.save_storage_state,
+                detail=request.detail,
+                browser_auto_prepare=request.browser_auto_prepare,
+                env=env,
+                cancel_check=cancelled.is_set,
+                on_result=on_result,
+                deps=deps,
+                cancel_event=cancelled,
+            )
+        else:
+            with bridge:
+                payload = await run_blocking_call(
+                    browser_preflight_payload,
+                    provider=request.provider,
+                    test_url=request.test_url,
+                    timeout_ms=request.timeout_ms,
+                    browser_user_agent=request.browser_user_agent,
+                    storage_state_path=request.storage_state_path,
+                    save_storage_state=request.save_storage_state,
+                    detail=request.detail,
+                    browser_auto_prepare=request.browser_auto_prepare,
+                    env=env,
+                    cancel_check=cancelled.is_set,
+                    on_result=on_result,
+                    deps=deps,
+                    cancel_event=cancelled,
+                )
     except asyncio.CancelledError:
         cancelled.set()
         raise

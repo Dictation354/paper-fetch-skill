@@ -41,12 +41,12 @@ core 运行时要求 MCP Python SDK 2.x（`mcp>=2,<3`）。server 使用 v2
 - 如果存在 `.env.example` 且用户配置文件还不存在，按 `platformdirs` 创建配置：
   Linux 常见路径是 `~/.config/paper-fetch/.env`，macOS 是
   `~/Library/Application Support/paper-fetch/.env`
-- 安装 Python 依赖、外部公式后端和图片转换后端；provider-owned HTML bootstrap 使用本地 Camoufox Python 包，但 fetch 不自动下载 Camoufox 浏览器 binary
+- 安装 Python 依赖、外部公式后端和图片转换后端；不在安装阶段下载 Camoufox 浏览器 binary，真实 CLI browser 路径默认首次按需准备
 - 安装结束时提示 Elsevier 官方 API key 的申请入口和配置位置；抓取 Elsevier 全文前需要从 <https://dev.elsevier.com/> 申请并设置 `ELSEVIER_API_KEY`
 
 补充说明：
 
-- 这是在线一键安装入口：用户不需要手动准备公式后端；浏览器路径统一由 selected-browser facade 负责。browser-backed provider 第一次使用前仍应在联网状态运行 `python -m camoufox fetch` 下载 browser binary，再用 `paper-fetch browser-preflight` 验证
+- 这是在线一键安装入口：用户不需要手动准备公式后端；浏览器路径统一由 selected-browser facade 负责。CLI 首次 browser fetch/auth/preflight 可显示进度并按需准备 managed Camoufox；MCP/库默认关闭该联网行为。进入受限网络前仍建议显式运行 `python -m camoufox fetch`，再用 `paper-fetch browser-preflight` 验证
 - 如果只想安装 Python 包和配置骨架，不准备外部公式或图片转换后端，使用 `./install.sh --lite`
 - 如果要装进当前 `python3` 环境而不是 `.venv`，使用 `./install.sh --system`
 - arXiv 不需要本地转换器；official HTML 不可用或质量检测失败时直接进入 PDF fallback
@@ -145,7 +145,8 @@ xattr -dr com.apple.quarantine \
 安装器不会自行移除 quarantine。包内 texmath 使用 ad-hoc codesign；这验证
 Mach-O 结构，不等同于 Developer ID 签名或 Apple notarization。
 
-如果要在之后进入受限网络或离线环境，请在仍联网时显式准备并验证浏览器：
+如果要在之后进入受限网络或离线环境，请在仍联网时显式准备并验证浏览器。虽然
+CLI live 入口默认也能按需准备，但预置可把联网副作用留在可控阶段：
 
 ```bash
 source ~/.local/share/paper-fetch-skill/activate-offline.sh
@@ -211,7 +212,7 @@ source ~/.local/share/paper-fetch-skill/activate-offline.sh
 - Linux / macOS 安装时会把通过 `PAPER_FETCH_OFFLINE_PYTHON_BIN` / `python3` 选中的解释器路径写入 `runtime/python-bin`，后续 `runtime/paper-fetch-python` 私有 launcher、CLI wrapper 和 MCP 都复用该解释器；`bin/` 不暴露通用 `python` wrapper，避免全局 PATH 前置后遮蔽用户自己的 Python
 - Windows 安装器固定使用包内 CPython 3.13 x64 embeddable runtime；目标机不需要预装 Python
 - Linux 构建阶段用临时 wheelhouse 把项目和依赖安装进 `runtime/site-packages`，然后只把安装后的 runtime、`bin/` 启动器、公式工具和 skill 放进自解压 `.sh` payload；目标机安装阶段不运行 pip，不包含源码树、`dist/` 或 `wheelhouse/`
-- Playwright 和 Camoufox Python 依赖随 Linux / macOS `runtime/site-packages` 和 Windows embedded runtime 分发；Camoufox 浏览器 binary 不随包分发，paper fetch 也不会自动下载。进入受限网络或离线环境前，必须联网用离线 runtime 运行 `python -m camoufox fetch` 下载 binary，再运行 `paper-fetch browser-preflight` 做启动/provider 验证；preflight 会访问网络，但不会代替前一个下载命令。当前验证尚未覆盖预置后真正断网的 Camoufox launch，因此不能宣称完整离线浏览器支持
+- Playwright 和 Camoufox Python 依赖随 Linux / macOS `runtime/site-packages` 和 Windows embedded runtime 分发；Camoufox 浏览器 binary 不随包分发，安装器与静态诊断不下载。CLI `fetch` / `auth` / `browser-preflight` 默认可按需安装、修复和每 24 小时检查更新；`--no-browser-auto-prepare` 或 `PAPER_FETCH_BROWSER_AUTO_PREPARE=false` 可禁止。MCP/库默认禁止，需环境或单次请求 `browser_auto_prepare=true` 开启。进入受限网络或离线环境前仍必须联网预置 binary，并运行 preflight 做启动/provider 验证。当前验证尚未覆盖预置后真正断网的 Camoufox launch，因此不能宣称完整离线浏览器支持
 - Linux `.sh` payload 不包含仓库源码快照和 `tests/` 目录；离线安装目标是运行已打包工具，不在目标机执行项目测试
 - Linux、macOS、Windows 离线包都携带原生 texmath 0.13.2，分别位于 `formula-tools/bin/texmath` 和 `formula-tools/bin/texmath.exe`，并将它作为首选公式后端；锁定的 `mathml-to-latex` 1.8.0、KaTeX 0.18.4 和随 Playwright 分发的 Node 作为二级回退及 LaTeX 验证工具。根目录与随 Python 包分发的两套 Node manifest/lock 必须完全一致，机器合约和 unit test 会同时拒绝声明或锁定版本漂移。目标机不编译 texmath，也不运行 `npm install`。CI / release 公式构建固定使用 `haskell-actions/setup` v2.12.0 的完整 SHA、GHC 9.10.3 和 Cabal 3.12.1.0；v2.12.0 随附的 GHCup 0.2.6.2 只更新构建工具链，不改变 texmath 0.13.2、公式入口、安装布局或产物接口。macOS 构建会把非系统 Mach-O dylib 复制到 `formula-tools/lib`，用 `@rpath` / `@loader_path` 重写引用，并对 texmath 与随包 dylib 做 ad-hoc codesign
 - Linux / macOS 会配置安装目录内 `image-tools` 作为图片转换工具查找目录；离线构建不会把构建机 PATH 上的 Ghostscript/libvips 符号链接固化进包内。运行时找到 Ghostscript 时可转 EPS，找到 libvips 时可转 TIFF；缺少对应工具时只影响 AMS `Download Figure` 源图转换，网页 JPG/PNG 候选仍可回退
@@ -388,7 +389,7 @@ offline manifest schema 3 保留 `version`、`git_revision`、`built_at_utc`、`
 
 升级后应从目标安装 runtime 执行带 `--install-root` 的诊断，确认 `install_provenance.status=ready`，再重启 Codex、Claude Code 和 Antigravity，使宿主重新扫描已验证的 skill/MCP。
 
-部署排查顺序为：`doctor` / `provider_status` 静态检查 → 若 browser binary 尚未准备，在联网状态用离线 runtime 执行 `python -m camoufox fetch` → 对 browser provider 运行 CLI `paper-fetch browser-preflight` 或 MCP `browser_preflight` 做真实页面启动/页面预检 → 只有返回 challenge/auth required 或实际抓取明确需要时，才由用户运行 `paper-fetch auth <provider>`。后两步会访问网络，preflight 默认可能更新 provider storage-state；MCP 可显式设 `save_storage_state=false` 禁止本轮保存。两种 preflight 入口共用 HTML 核心，均不运行 PDF fallback 或自动 auth，也不会下载缺失的 browser binary；静态 `ready` 不代表网页当前健康或账号已有访问权。普通 fetch 不承担 browser binary 下载，预置后真正断网的 Camoufox launch 仍是公开审计项。
+部署排查顺序为：`doctor` / `provider_status` 静态检查 → 对 browser provider 运行 CLI `paper-fetch browser-preflight`，或 MCP `browser_preflight(browser_auto_prepare=true)`，完成必要的 managed runtime 准备和真实页面预检 → 只有返回 challenge/auth required 或实际抓取明确需要时，才由用户运行 `paper-fetch auth <provider>`。也可先显式执行 `python -m camoufox fetch`，尤其是在即将进入受限网络时。live 步骤会访问网络，preflight 默认可能更新 provider storage-state；MCP 可显式设 `save_storage_state=false` 禁止本轮保存。两种 preflight 入口共用 HTML 核心，均不运行 PDF fallback 或自动 auth；CLI 默认允许 runtime 准备，MCP 默认禁止。静态 `ready` 不代表网页当前健康或账号已有访问权，预置后真正断网的 Camoufox launch 仍是公开审计项。
 
 ### CI / GitHub Actions
 
@@ -442,10 +443,11 @@ browser workflow 的通用配置：
 
 ```bash
 export PAPER_FETCH_BROWSER_BACKEND="camoufox"
+export PAPER_FETCH_BROWSER_AUTO_PREPARE="true"
 export PAPER_FETCH_BROWSER_TIMEOUT_MS="120000"
 export PAPER_FETCH_BROWSER_HEADLESS="true"
 export PAPER_FETCH_BROWSER_PROFILE_DIR="$HOME/.cache/paper-fetch/browser-profile"
-# 联网准备官方 managed runtime；普通抓取不会自动执行这一步
+# 可提前联网准备官方 managed runtime；CLI 也可首次按需执行
 python -m camoufox fetch
 ```
 

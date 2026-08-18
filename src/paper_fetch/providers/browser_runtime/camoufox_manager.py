@@ -8,6 +8,7 @@ import importlib
 import sys
 import threading
 from typing import Any
+from collections.abc import Callable
 
 
 def _launch_executable_path(binary_path: str | None) -> str | None:
@@ -37,6 +38,26 @@ def _launch_firefox_major_version(executable_path: str) -> int | None:
     return None
 
 
+def _prepare_managed_runtime_if_enabled(
+    *,
+    binary_path: str | None,
+    auto_prepare: bool,
+    cancel_check: Callable[[], bool] | None,
+) -> None:
+    if binary_path is not None or not auto_prepare:
+        return
+    from .preparation import (
+        browser_runtime_preparation_scope,
+        ensure_camoufox_managed_runtime,
+    )
+
+    if cancel_check is None:
+        ensure_camoufox_managed_runtime()
+        return
+    with browser_runtime_preparation_scope(cancel_check=cancel_check):
+        ensure_camoufox_managed_runtime()
+
+
 class CamoufoxBrowserManager:
     """Reuse one native Firefox/Juggler process and create isolated contexts."""
 
@@ -45,9 +66,13 @@ class CamoufoxBrowserManager:
         *,
         binary_path: str | None = None,
         headless: bool = True,
+        auto_prepare: bool = False,
+        cancel_check: Callable[[], bool] | None = None,
     ) -> None:
         self.binary_path = str(binary_path or "").strip() or None
         self.headless = bool(headless)
+        self.auto_prepare = bool(auto_prepare)
+        self.cancel_check = cancel_check
         self._owner_thread_id: int | None = None
         self._playwright: Any | None = None
         self._browser: Any | None = None
@@ -67,6 +92,11 @@ class CamoufoxBrowserManager:
         self._assert_owner_thread()
         if self._browser is not None:
             return self._browser
+        _prepare_managed_runtime_if_enabled(
+            binary_path=self.binary_path,
+            auto_prepare=self.auto_prepare,
+            cancel_check=self.cancel_check,
+        )
         sync_api = importlib.import_module("camoufox.sync_api")
         playwright_api = importlib.import_module("playwright.sync_api")
         self._playwright = playwright_api.sync_playwright().start()
@@ -133,10 +163,14 @@ class CamoufoxPersistentContextManager:
         user_data_dir: str,
         binary_path: str | None = None,
         headless: bool = False,
+        auto_prepare: bool = False,
+        cancel_check: Callable[[], bool] | None = None,
     ) -> None:
         self.user_data_dir = user_data_dir
         self.binary_path = str(binary_path or "").strip() or None
         self.headless = bool(headless)
+        self.auto_prepare = bool(auto_prepare)
+        self.cancel_check = cancel_check
         self._owner_thread_id: int | None = None
         self._playwright: Any | None = None
         self._context: Any | None = None
@@ -150,6 +184,11 @@ class CamoufoxPersistentContextManager:
         self._owner_thread_id = thread_id
         if self._context is not None:
             return self._context
+        _prepare_managed_runtime_if_enabled(
+            binary_path=self.binary_path,
+            auto_prepare=self.auto_prepare,
+            cancel_check=self.cancel_check,
+        )
         sync_api = importlib.import_module("camoufox.sync_api")
         playwright_api = importlib.import_module("playwright.sync_api")
         self._playwright = playwright_api.sync_playwright().start()

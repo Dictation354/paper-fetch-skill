@@ -1,10 +1,46 @@
 # ruff: noqa: F403,F405
 from __future__ import annotations
 
+from paper_fetch.config import BROWSER_AUTO_PREPARE_ENV_VAR
+
 from ._mcp_support import *
 
 
 class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
+    async def test_fetch_paper_auto_prepare_defaults_off_and_request_can_enable(
+        self,
+    ) -> None:
+        observed: list[str] = []
+
+        def fake_envelope(request, **kwargs):
+            observed.append(kwargs["env"][BROWSER_AUTO_PREPARE_ENV_VAR])
+            return sample_envelope(
+                modes=set(request.requested_modes()),
+                doi=request.query,
+            )
+
+        deps = mcp_test_deps(
+            build_runtime_env=lambda env=None: dict(env or {}),
+            fetch_paper_envelope=fake_envelope,
+        )
+        first = await mcp_tools.fetch_paper_tool_async(
+            query="10.1000/default-off",
+            no_download=True,
+            download_dir=None,
+            deps=deps,
+        )
+        second = await mcp_tools.fetch_paper_tool_async(
+            query="10.1000/explicit-on",
+            no_download=True,
+            browser_auto_prepare=True,
+            download_dir=None,
+            deps=deps,
+        )
+
+        self.assertFalse(first.is_error)
+        self.assertFalse(second.is_error)
+        self.assertEqual(observed, ["false", "true"])
+
     async def test_structured_log_notification_handler_prefers_structured_data_with_spaces(
         self,
     ) -> None:
@@ -207,6 +243,30 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
                 for message in ctx.session.messages
             )
         )
+
+    async def test_batch_check_applies_browser_prepare_request_override(self) -> None:
+        observed: list[str] = []
+
+        def fake_probe(query, *, context=None):
+            observed.append(context.env[BROWSER_AUTO_PREPARE_ENV_VAR])
+            return sample_probe_result(query, doi=query, title="Title")
+
+        with (
+            mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
+            mock.patch.object(
+                mcp_tools,
+                "service_probe_has_fulltext",
+                side_effect=fake_probe,
+            ),
+        ):
+            result = await mcp_tools.batch_check_tool_async(
+                queries=["10.1000/one"],
+                mode="metadata",
+                browser_auto_prepare=True,
+            )
+
+        self.assertFalse(result.is_error)
+        self.assertEqual(observed, ["true"])
 
     async def test_batch_check_tool_async_rejects_too_many_queries(self) -> None:
         result = await mcp_tools.batch_check_tool_async(

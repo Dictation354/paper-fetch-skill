@@ -56,6 +56,14 @@ jobs:
             tests/unit/test_runtime_deadline_and_readiness.py::test_reset_request_deadline_preserves_item_state_and_shared_transport \
             tests/unit/test_cli_manifest_v2.py::test_batch_resolution_and_queue_time_do_not_consume_fetch_deadline \
             tests/unit/test_mcp_batch_fetch.py::test_batch_fetch_resolution_and_queue_time_do_not_consume_fetch_deadline
+      - name: Camoufox on-demand preparation policy regressions
+        run: |
+          PYTHONPATH=src uv run pytest -q \
+            tests/unit/test_camoufox_preparation.py \
+            tests/unit/test_camoufox_backend.py::test_camoufox_runtime_readiness_auto_prepares_managed_runtime \
+            tests/unit/test_camoufox_backend.py::test_camoufox_manager_prepares_before_final_no_download_resolution \
+            tests/unit/test_camoufox_backend.py::test_explicit_camoufox_binary_never_invokes_managed_runtime_preparation \
+            tests/unit/test_config.py::ConfigTests::test_browser_auto_prepare_policy_is_strict_and_tri_state
       - name: IEEE AWS WAF, readiness, and asset recovery regressions
         run: |
           PYTHONPATH=src uv run pytest -q \
@@ -202,6 +210,7 @@ jobs:
       - name: Verify provider page preparation on native macOS
         run: |
           PYTHONPATH=src uv run pytest -q \
+            tests/unit/test_camoufox_preparation.py \
             tests/unit/test_camoufox_backend.py::test_camoufox_provider_page_preparation_runs_before_html_capture \
             tests/unit/test_tandf_provider.py::test_tandf_browser_page_preparation_hydrates_official_csv_table \
             tests/unit/test_tandf_provider.py::test_tandf_browser_page_preparation_uses_bounded_embedded_table_fallback

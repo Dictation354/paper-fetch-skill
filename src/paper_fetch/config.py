@@ -48,6 +48,7 @@ BROWSER_BINARY_PATH_ENV_VAR = "PAPER_FETCH_BROWSER_BINARY_PATH"
 BROWSER_PROFILE_DIR_ENV_VAR = "PAPER_FETCH_BROWSER_PROFILE_DIR"
 BROWSER_USER_DATA_DIR_ENV_VAR = "PAPER_FETCH_BROWSER_USER_DATA_DIR"
 BROWSER_TIMEOUT_MS_ENV_VAR = "PAPER_FETCH_BROWSER_TIMEOUT_MS"
+BROWSER_AUTO_PREPARE_ENV_VAR = "PAPER_FETCH_BROWSER_AUTO_PREPARE"
 DEFAULT_BROWSER_BACKEND = "camoufox"
 SUPPORTED_BROWSER_BACKENDS = frozenset({"camoufox"})
 ENV_FILE_ENV_VAR = "PAPER_FETCH_ENV_FILE"
@@ -360,3 +361,48 @@ def resolve_asset_download_concurrency(env: Mapping[str, str] | None = None) -> 
 def env_flag_enabled(env: Mapping[str, str], name: str) -> bool:
     value = str(env.get(name, "")).strip().lower()
     return value in {"1", "true", "yes", "on"}
+
+
+_TRUE_ENV_VALUES = frozenset({"1", "true", "yes", "on"})
+_FALSE_ENV_VALUES = frozenset({"0", "false", "no", "off"})
+
+
+def resolve_browser_auto_prepare(
+    env: Mapping[str, str],
+    *,
+    override: bool | None = None,
+    default: bool = False,
+) -> bool:
+    """Resolve the browser preparation policy with a strict tri-state override."""
+
+    if override is not None:
+        return bool(override)
+    if BROWSER_AUTO_PREPARE_ENV_VAR not in env:
+        return bool(default)
+    value = str(env.get(BROWSER_AUTO_PREPARE_ENV_VAR, "")).strip().lower()
+    if value in _TRUE_ENV_VALUES:
+        return True
+    if value in _FALSE_ENV_VALUES:
+        return False
+    raise ValueError(
+        f"{BROWSER_AUTO_PREPARE_ENV_VAR} must be one of "
+        "1/0, true/false, yes/no, or on/off."
+    )
+
+
+def apply_browser_auto_prepare_policy(
+    env: Mapping[str, str],
+    *,
+    override: bool | None = None,
+    default: bool = False,
+) -> dict[str, str]:
+    """Return a copied environment containing one canonical resolved policy."""
+
+    resolved = resolve_browser_auto_prepare(
+        env,
+        override=override,
+        default=default,
+    )
+    values = dict(env)
+    values[BROWSER_AUTO_PREPARE_ENV_VAR] = "true" if resolved else "false"
+    return values

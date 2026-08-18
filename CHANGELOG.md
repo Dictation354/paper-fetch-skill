@@ -6,6 +6,18 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.4.0 - 2026-08-18
+
+### Added — on-demand Camoufox runtime preparation
+
+- Added first-use preparation for the managed Camoufox browser runtime on CLI browser paths. `paper-fetch fetch`, `paper-fetch auth`, and `paper-fetch browser-preflight` now prepare a missing runtime only when browser work is actually requested, using the official Camoufox CLI for installation, repair, and update checks. Valid runtimes are checked at most once every 24 hours, and a failed update continues with the existing valid runtime.
+- Added structured preparation progress, a 900-second child-process deadline, cooperative cancellation, failure cooldowns, and a cross-process file lock so concurrent commands share one installation attempt. Runtime probing rejects managed paths that escape the Camoufox root or traverse symlinks/junctions before any repair is attempted.
+
+### Changed — explicit browser networking policy
+
+- Added `--browser-auto-prepare` / `--no-browser-auto-prepare`, `PAPER_FETCH_BROWSER_AUTO_PREPARE`, and MCP request-level `browser_auto_prepare` controls. CLI browser commands default to enabled; MCP tools and direct library calls default to disabled so service and embedded modes never acquire browser binaries merely by being invoked.
+- Kept explicit custom browser binaries outside managed-runtime mutation, and kept static diagnostics, `provider_status`, offline installers, and offline package verification free of browser downloads. Synchronized the Linux, Windows, and native macOS CI contracts, regression coverage, operator documentation, and bundled skill guidance with the new boundary.
+
 ## 5.3.2 - 2026-08-17
 
 ### Changed — formula and release integrity

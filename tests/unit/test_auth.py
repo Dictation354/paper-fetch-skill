@@ -111,6 +111,7 @@ def _install_fake_browser_manager(monkeypatch) -> type[_FakeAuthBrowserManager]:
             profile_dir: Path | None = None,
             user_data_dir: Path | None = None,
             headless: bool = True,
+            auto_prepare: bool = False,
         ) -> None:
             super().__init__()
             self.binary_path = binary_path
@@ -118,6 +119,7 @@ def _install_fake_browser_manager(monkeypatch) -> type[_FakeAuthBrowserManager]:
             self.profile_dir = profile_dir
             self.user_data_dir = user_data_dir
             self.headless = headless
+            self.auto_prepare = auto_prepare
 
     monkeypatch.setattr(auth, "CamoufoxPersistentContextManager", FakeManager)
     return FakeManager

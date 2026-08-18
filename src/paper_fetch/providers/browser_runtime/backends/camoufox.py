@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import importlib
+from dataclasses import replace
 from importlib import metadata as importlib_metadata
 from importlib import util as importlib_util
-import json
 import os
 from pathlib import Path
 import time
@@ -19,6 +18,7 @@ from ....config import (
     BROWSER_USER_AGENT_ENV_VAR,
     browser_env_value,
     parse_positive_int_env,
+    resolve_browser_auto_prepare,
     resolve_user_data_dir,
 )
 from ....failure import FailureDiagnostics
@@ -33,6 +33,10 @@ from ...base import (
 )
 from .. import paths as runtime_paths
 from ..context import open_browser_context
+from ..preparation import (
+    ensure_camoufox_managed_runtime,
+    probe_camoufox_managed_runtime,
+)
 from ..types import BrowserFetchedHtml, BrowserRuntimeConfig, BrowserWarmResult
 
 CAMOUFOX_STATUS_PROBE_ID = "probe://camoufox/status"
@@ -65,31 +69,18 @@ def _dependency_details() -> dict[str, Any]:
             details[f"{package}_version"] = None
     if packages["camoufox"]:
         try:
-            pkgman = importlib.import_module("camoufox.pkgman")
-            multiversion = importlib.import_module("camoufox.multiversion")
-            config_path = Path(multiversion.CONFIG_FILE)
-            config_payload = (
-                json.loads(config_path.read_text(encoding="utf-8"))
-                if config_path.is_file()
-                else {}
-            )
-            active_version = normalize_text(
-                str(
-                    config_payload.get("active_version")
-                    if isinstance(config_payload, Mapping)
-                    else ""
-                )
-            )
-            runtime_path = (
-                Path(pkgman.INSTALL_DIR) / active_version if active_version else None
-            )
+            probe = probe_camoufox_managed_runtime()
+            runtime_path = probe.runtime_path
             details["runtime_path"] = (
                 str(runtime_path) if runtime_path is not None else None
             )
-            details["runtime_installed"] = bool(
-                runtime_path is not None and runtime_path.is_dir()
-            )
-            details["download_required"] = not details["runtime_installed"]
+            details["runtime_installed"] = probe.installed
+            details["runtime_valid"] = probe.valid
+            details["runtime_state"] = probe.state
+            details["runtime_version"] = probe.version
+            details["download_required"] = not probe.valid
+            if probe.message:
+                details["runtime_probe_message"] = probe.message
         except Exception as exc:
             details["runtime_probe_error"] = normalize_text(str(exc))
     return details
@@ -107,6 +98,8 @@ def _package_ready(details: Mapping[str, Any]) -> bool:
 def _runtime_installed(details: Mapping[str, Any]) -> bool:
     # The fallback keeps third-party/test probes that predate the richer status
     # payload compatible. The production probe always supplies runtime_installed.
+    if "runtime_valid" in details:
+        return bool(details.get("runtime_valid"))
     if "runtime_installed" not in details:
         return _package_ready(details)
     return bool(details.get("runtime_installed"))
@@ -162,6 +155,10 @@ class CamoufoxBackend:
             ),
         )
         timeout_value = browser_env_value(env, BROWSER_TIMEOUT_MS_ENV_VAR)
+        try:
+            auto_prepare = resolve_browser_auto_prepare(env, default=False)
+        except ValueError as exc:
+            raise ProviderFailure(NOT_CONFIGURED, str(exc)) from exc
         return BrowserRuntimeConfig(
             provider=provider,
             doi=doi,
@@ -185,6 +182,7 @@ class CamoufoxBackend:
             user_data_dir=user_data_dir,
             storage_state_path=storage_state_path,
             backend=self.name,
+            auto_prepare=auto_prepare,
         )
 
     def ensure_runtime_ready(self, config: BrowserRuntimeConfig) -> None:
@@ -194,6 +192,9 @@ class CamoufoxBackend:
                 NOT_CONFIGURED,
                 "Camoufox browser workflow requires compatible camoufox and playwright packages.",
             )
+        if not config.binary_path and config.auto_prepare:
+            ensure_camoufox_managed_runtime()
+            details = _dependency_details()
         if not config.binary_path and not _runtime_installed(details):
             raise ProviderFailure(
                 NOT_CONFIGURED,
@@ -203,7 +204,9 @@ class CamoufoxBackend:
                     details={
                         "package_ready": True,
                         "runtime_installed": False,
+                        "runtime_valid": False,
                         "download_required": True,
+                        "auto_prepare": config.auto_prepare,
                     }
                 ),
             )
@@ -247,6 +250,7 @@ class CamoufoxBackend:
                         "browser_user_agent_ignored": bool(
                             normalize_text(env.get(BROWSER_USER_AGENT_ENV_VAR))
                         ),
+                        "auto_prepare": config.auto_prepare,
                         "package_ready": package_ready,
                         "runtime_installed": runtime_installed,
                         "download_required": package_ready
@@ -293,6 +297,9 @@ class CamoufoxBackend:
                     ),
                     "download_required": package_ready and not available,
                     "runtime_path": details.get("runtime_path"),
+                    "runtime_state": details.get("runtime_state"),
+                    "runtime_version": details.get("runtime_version"),
+                    "auto_prepare": bool(config is not None and config.auto_prepare),
                 },
             )
         )
@@ -301,8 +308,9 @@ class CamoufoxBackend:
             manager = context = None
             started = time.monotonic()
             try:
-                self.ensure_runtime_ready(config)
-                manager, context = open_browser_context(config)
+                deep_config = replace(config, auto_prepare=False)
+                self.ensure_runtime_ready(deep_config)
+                manager, context = open_browser_context(deep_config)
                 deep_check = build_provider_status_check(
                     "browser_context",
                     OK,

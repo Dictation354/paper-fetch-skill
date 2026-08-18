@@ -65,6 +65,7 @@ schema 从 v4 的实际文件和风险出发，不继承过时路径或旧浏览
 | `MAC-V4-006` | 原生 macOS CI / release 证据 | `MAC-AUD-002`、`MAC-AUD-006` |
 | `MAC-V4-007` | Windows / WSL 可执行维护合约 | `MAC-AUD-001`、`MAC-AUD-011` |
 | `MAC-V4-008` | Camoufox 官方 Mac app bundle 解析 | `MAC-AUD-013` |
+| `MAC-V4-009` | managed Camoufox 首次按需准备策略 | `MAC-AUD-013` |
 
 表中的 ID 与
 [`macos-adaptation-contract.toml`](macos-adaptation-contract.toml) 一一对应；
@@ -222,8 +223,9 @@ macOS user-config 的 installer managed block，但保留用户自行写入的�
 ## MAC-V4-003：“离线包”的浏览器边界
 
 `runtime/site-packages` 内包含 `uv.lock` 选定的兼容 Camoufox 0.5.x 和 Playwright
-**Python 包**，但不
-包含 Camoufox 浏览器 binary。`paper-fetch` 的 fetch 路径不会自动下载浏览器。
+**Python 包**，但不包含 Camoufox 浏览器 binary，安装器和静态诊断也不下载。
+CLI 的真实 browser 路径默认可首次按需准备；MCP/库默认 opt-in，详见
+`MAC-V4-009`。
 构建器要求 wheelhouse 中恰好有一个 Camoufox wheel，读取其 METADATA 验证版本，
 安装后再通过 distribution metadata 复核，并把已验证版本写入
 `offline-manifest.json.components.camoufox.python_package_version`；声明、lock、
@@ -237,8 +239,8 @@ wheel、installed runtime 与 manifest 任一漂移都会 fail closed。
 4. 需要人工登录时再运行 `paper-fetch auth <provider>`；
 5. 之后才进入计划中的受限网络或离线环境。
 
-`browser-preflight` 本身会访问网络，但不会下载缺失的 binary；下载动作属于
-显式的 `python -m camoufox fetch`。当前证据只证明 Python 包导入和在线准备
+CLI `browser-preflight` 本身会访问网络，并在策略允许时准备缺失 binary；策略关闭
+或 MCP 未 opt-in 时仍需显式 `python -m camoufox fetch`。当前证据只证明 Python 包导入和在线准备
 路径；“预置后在真正断网环境中启动 Camoufox 并完成 browser-backed fetch”仍是
 未关闭审计项，见
 [`macos-adaptation-audit.md`](macos-adaptation-audit.md#mac-aud-012)。
@@ -319,6 +321,30 @@ flag、active config 和 browser containment，避免把任意目录交给 packa
 screen constraint，避免 headless 原生 CI 查询 WindowServer/物理显示器。远端
 provider 的 CAPTCHA、登录或超时仍是独立的访问状态，不能与 app bundle 创建
 失败混为一谈。
+
+### MAC-V4-009：受策略控制的 managed Camoufox 首次按需准备
+
+离线包继续只包含 Camoufox Python package，不包含 browser binary，POSIX、Windows
+安装器也继续禁止在安装阶段联网。变化只发生在真实会进入浏览器的运行路径：
+
+- CLI `fetch`、`auth` 与 `browser-preflight` 默认允许首次按需调用 Camoufox 官方
+  `python -m camoufox fetch`，可用 `--no-browser-auto-prepare` 或
+  `PAPER_FETCH_BROWSER_AUTO_PREPARE=false` 禁止；
+- MCP `fetch_paper`、`batch_fetch`、`batch_check` 与 `browser_preflight` 以及直接库调用
+  默认不自动准备，只有环境变量或单次请求 `browser_auto_prepare=true` 明确开启后才会
+  联网；
+- managed runtime 缺失时安装、损坏时只通过官方 CLI 修复安全映射且路径链不含
+  symlink/junction/reparse point 的版本，并在已有 runtime 可用时每 24 小时检查一次
+  最新版本。更新失败但旧 runtime 仍有效时仅告警并继续，下一小时后才重试；
+- 所有进程共享 managed-cache 旁的文件锁，等待和子进程均支持取消，单次准备预算为
+  900 秒。CLI 把阶段与官方命令输出写到 stderr，MCP 通过 logging notification 转发；
+- 显式 `PAPER_FETCH_BROWSER_BINARY_PATH` 始终视为 custom binary，绝不触发 managed
+  cache 的安装、删除或更新。`doctor` 与 `provider_status` 仍保持只读无网络。
+
+portable 测试使用临时目录、mock 官方 CLI 与真实跨进程锁原语验证安装、24 小时节流、
+失败回退、精确修复、并发合并和取消。原生 `macos-15` CI 仍先显式准备固定版本再启动
+app bundle，因此自动准备的 portable 绿灯不替代原生 bundle 证据，也不改变
+`MAC-AUD-012` 的完整断网浏览器缺口。
 
 ## MAC-V4-007：Windows / WSL 同步上游 main
 

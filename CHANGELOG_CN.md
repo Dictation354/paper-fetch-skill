@@ -6,6 +6,18 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.4.0 - 2026-08-18
+
+### 新增——Camoufox 运行时首次按需准备
+
+- 为 CLI 浏览器路径新增托管 Camoufox 运行时的首次按需准备。`paper-fetch fetch`、`paper-fetch auth` 和 `paper-fetch browser-preflight` 只有在实际请求浏览器工作时才会准备缺失运行时，并复用 Camoufox 官方 CLI 完成安装、修复与更新检查。有效运行时最多每 24 小时检查一次更新；更新失败时继续使用原有有效运行时。
+- 新增结构化准备进度、900 秒子进程超时、协作式取消、失败冷却和跨进程文件锁，使并发命令共享同一次安装尝试。任何修复前都会验证托管路径没有逃逸 Camoufox 根目录，也没有经过符号链接或 junction。
+
+### 变更——显式浏览器联网策略
+
+- 新增 `--browser-auto-prepare` / `--no-browser-auto-prepare`、`PAPER_FETCH_BROWSER_AUTO_PREPARE` 与 MCP 请求级 `browser_auto_prepare` 控制。CLI 浏览器命令默认开启；MCP 工具和直接库调用默认关闭，避免服务或嵌入模式仅因被调用就获取浏览器 binary。
+- 显式自定义浏览器 binary 始终不受托管运行时变更影响；静态诊断、`provider_status`、离线安装器及离线包验证继续保持不下载浏览器。Linux、Windows 与原生 macOS CI 合约、回归覆盖、运维文档及随包 skill 指引已同步这一边界。
+
 ## 5.3.2 - 2026-08-17
 
 ### 变更——公式与发布完整性

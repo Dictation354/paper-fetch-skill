@@ -11,7 +11,11 @@ from mcp.server.mcpserver import Context
 
 from ..utils import normalize_text
 
-_FETCH_LOGGER_NAMES = ("paper_fetch.service", "paper_fetch.http")
+_FETCH_LOGGER_NAMES = (
+    "paper_fetch.service",
+    "paper_fetch.http",
+    "paper_fetch.browser_runtime",
+)
 _LOG_LEVEL_BY_RECORD_LEVEL = {
     logging.DEBUG: "debug",
     logging.INFO: "info",

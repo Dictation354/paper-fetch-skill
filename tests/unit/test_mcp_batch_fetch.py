@@ -11,6 +11,7 @@ from typing import Any
 import pytest
 
 from paper_fetch.http import RequestCancelledError, RequestFailure
+from paper_fetch.config import BROWSER_AUTO_PREPARE_ENV_VAR
 from paper_fetch.manifest import ManifestRecordStatus
 from paper_fetch.manifest_writer import (
     RunManifestState,
@@ -76,6 +77,39 @@ def _temporary_kwargs(**overrides: Any) -> dict[str, Any]:
     }
     values.update(overrides)
     return values
+
+
+@pytest.mark.parametrize(
+    ("override", "expected"),
+    ((None, "false"), (True, "true"), (False, "false")),
+)
+def test_batch_fetch_applies_per_request_browser_prepare_policy(
+    override: bool | None,
+    expected: str,
+) -> None:
+    observed: list[str] = []
+
+    def fetch(request, **kwargs):
+        observed.append(kwargs["env"][BROWSER_AUTO_PREPARE_ENV_VAR])
+        return _successful_fetch(request)
+
+    deps = replace(
+        _deps(fetch),
+        build_runtime_env=lambda env=None: dict(env or {}),
+    )
+    result = asyncio.run(
+        batch_fetch_tool_async(
+            **_temporary_kwargs(
+                queries=["10.1000/one"],
+                concurrency=1,
+                browser_auto_prepare=override,
+                deps=deps,
+            )
+        )
+    )
+
+    assert result.is_error is False
+    assert observed == [expected]
 
 
 def test_batch_fetch_preserves_input_order_and_completion_metadata_with_bounded_text() -> (

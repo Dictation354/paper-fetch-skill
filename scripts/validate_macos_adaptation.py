@@ -25,7 +25,7 @@ PINNED_ACTION_USE_RE = re.compile(
     r"(?:\s+#\s*(?P<version>\S+))?\s*$"
 )
 
-EXPECTED_CHANGE_IDS = {f"MAC-V4-{index:03d}" for index in range(1, 9)}
+EXPECTED_CHANGE_IDS = {f"MAC-V4-{index:03d}" for index in range(1, 10)}
 EXPECTED_AUDIT_IDS = {f"MAC-AUD-{index:03d}" for index in range(1, 14)}
 EXPECTED_PYTHON_VERSIONS = ["3.11", "3.12", "3.13", "3.14"]
 EXPECTED_PYTHON_TAGS = ["cp311", "cp312", "cp313", "cp314"]
@@ -184,6 +184,7 @@ REQUIRED_CHANGE_FIELDS = {
 
 WINDOWS_STATIC_TEST_FILES = {
     "tests/unit/test_camoufox_backend.py",
+    "tests/unit/test_camoufox_preparation.py",
     "tests/unit/test_ci_release_workflow.py",
     "tests/unit/test_formula_package_sync.py",
     "tests/unit/test_macos_adaptation_validator.py",
@@ -1002,8 +1003,17 @@ def _validate_browser_boundary(
             "browser_binary_prepare_command",
             "preflight_command",
             "preflight_downloads_browser",
+            "auto_prepare_policy",
+            "auto_prepare_overrides",
+            "managed_runtime_maintenance",
+            "update_check_interval_hours",
+            "concurrency_control",
+            "prepare_timeout_seconds",
+            "prepare_progress",
+            "prepare_cancellation",
             "managed_runtime_resolution",
             "explicit_binary_override",
+            "explicit_binary_auto_prepare",
             "native_ci_runtime",
             "native_test_addon_policy",
             "native_test_screen_policy",
@@ -1023,9 +1033,18 @@ def _validate_browser_boundary(
             "<install>/runtime/paper-fetch-python -m camoufox fetch"
         ),
         "preflight_command": "paper-fetch browser-preflight",
-        "preflight_downloads_browser": False,
+        "preflight_downloads_browser": "cli-default-enabled-mcp-default-disabled",
+        "auto_prepare_policy": ("cli-default-enabled-mcp-library-default-disabled"),
+        "auto_prepare_overrides": ["environment", "request"],
+        "managed_runtime_maintenance": ["install", "repair", "update"],
+        "update_check_interval_hours": 24,
+        "concurrency_control": "cross-process-file-lock",
+        "prepare_timeout_seconds": 900,
+        "prepare_progress": "cli-stderr-mcp-logging",
+        "prepare_cancellation": "cooperative-child-termination",
         "managed_runtime_resolution": "camoufox-package-managed",
         "explicit_binary_override": "configured-executable-only",
+        "explicit_binary_auto_prepare": False,
         "native_ci_runtime": "official/152.0.4-beta.28",
         "native_test_addon_policy": "exclude-default-addons",
         "native_test_screen_policy": "fixed-synthetic-screen",
@@ -2179,7 +2198,7 @@ def _validate_changes(
         missing = sorted(EXPECTED_CHANGE_IDS - seen_change_ids)
         unexpected = sorted(seen_change_ids - EXPECTED_CHANGE_IDS)
         errors.append(
-            "changes must contain exactly MAC-V4-001 through MAC-V4-008; "
+            "changes must contain exactly MAC-V4-001 through MAC-V4-009; "
             f"missing={missing}, unexpected={unexpected}"
         )
     return all_test_nodes

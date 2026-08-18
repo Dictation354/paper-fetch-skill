@@ -253,10 +253,19 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract["components"]["camoufox"]["version_verification"] = "declaration"
         contract["components"]["camoufox"]["manifest_version_field"] = "missing"
         contract["components"]["camoufox"]["preflight_downloads_browser"] = True
+        contract["components"]["camoufox"]["auto_prepare_policy"] = "always"
+        contract["components"]["camoufox"]["auto_prepare_overrides"] = []
+        contract["components"]["camoufox"]["managed_runtime_maintenance"] = []
+        contract["components"]["camoufox"]["update_check_interval_hours"] = 0
+        contract["components"]["camoufox"]["concurrency_control"] = "none"
+        contract["components"]["camoufox"]["prepare_timeout_seconds"] = 0
+        contract["components"]["camoufox"]["prepare_progress"] = "silent"
+        contract["components"]["camoufox"]["prepare_cancellation"] = "ignored"
         contract["components"]["camoufox"]["managed_runtime_resolution"] = (
             "forced-executable-path"
         )
         contract["components"]["camoufox"]["explicit_binary_override"] = "ignored"
+        contract["components"]["camoufox"]["explicit_binary_auto_prepare"] = True
         contract["components"]["camoufox"]["native_ci_runtime"] = "latest"
         contract["components"]["camoufox"]["native_test_addon_policy"] = "download"
         contract["components"]["camoufox"]["native_test_screen_policy"] = "host"
@@ -287,7 +296,44 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             diagnostic,
         )
         self.assertIn(
-            "components.camoufox.preflight_downloads_browser must be False",
+            "components.camoufox.preflight_downloads_browser must be "
+            "'cli-default-enabled-mcp-default-disabled'",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.auto_prepare_policy must be "
+            "'cli-default-enabled-mcp-library-default-disabled'",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.auto_prepare_overrides must be "
+            "['environment', 'request']",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.managed_runtime_maintenance must be "
+            "['install', 'repair', 'update']",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.update_check_interval_hours must be 24",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.concurrency_control must be 'cross-process-file-lock'",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.prepare_timeout_seconds must be 900",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.prepare_progress must be 'cli-stderr-mcp-logging'",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.prepare_cancellation must be "
+            "'cooperative-child-termination'",
             diagnostic,
         )
         self.assertIn(
@@ -298,6 +344,10 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         self.assertIn(
             "components.camoufox.explicit_binary_override must be "
             "'configured-executable-only'",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.explicit_binary_auto_prepare must be False",
             diagnostic,
         )
         self.assertIn(

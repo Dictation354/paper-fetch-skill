@@ -20,8 +20,9 @@ python -m pip install "paper-fetch-skill[full]"
 
 离线安装包始终按 `full` 构建，但不重新分发浏览器 binary。完全离线环境需提前
 准备 Camoufox active runtime，包括相邻配置、addons 和字体；只复制可执行文件
-不足以组成可用 runtime。联网准备阶段应显式运行 `python -m camoufox fetch`，
-普通抓取随后使用 Camoufox package 管理的 active runtime。
+不足以组成可用 runtime。联网时可显式运行 `python -m camoufox fetch`；CLI 的实际
+browser fetch/auth/preflight 也默认会显示进度并首次按需准备。MCP 与库默认不允许
+该联网副作用，须按请求或环境显式开启。
 
 ## 选择与配置
 
@@ -33,6 +34,7 @@ python -m pip install "paper-fetch-skill[full]"
 | 变量 | 含义 |
 |---|---|
 | `PAPER_FETCH_BROWSER_BACKEND` | 唯一合法值为 `camoufox` |
+| `PAPER_FETCH_BROWSER_AUTO_PREPARE` | managed runtime 按需安装/修复/更新策略；CLI 未设置时默认开，MCP/库默认关，接受 `true/false`、`1/0`、`yes/no`、`on/off` |
 | `PAPER_FETCH_BROWSER_HEADLESS` | managed runtime 是否 headless |
 | `PAPER_FETCH_BROWSER_BINARY_PATH` | 仅用于自行维护、且支持 Camoufox custom-executable metadata 语义的 executable 覆盖 |
 | `PAPER_FETCH_BROWSER_PROFILE_DIR` | provider storage-state/profile 目录覆盖 |
@@ -61,9 +63,10 @@ runtime 明确实现 Camoufox 的 custom-path metadata 布局时才使用该覆�
 配置及 provider storage-state，但 Playwright sync 对象不会跨线程共享。
 
 `doctor` 和 `provider_status` 只做静态依赖/配置检查，不启动浏览器、不下载
-runtime、不访问出版社页面。`browser-preflight` 是显式 live 操作，可以打开
-页面并保存过滤后的 storage-state；它不会自动认证、绕过 challenge/paywall，
-也不会调用 PDF fallback。
+runtime、不访问出版社页面。CLI `browser-preflight` 是显式 live 操作，默认允许在
+runtime 缺失时先按需准备，并打开页面、保存过滤后的 storage-state；MCP
+`browser_preflight` 默认禁止准备，传 `browser_auto_prepare=true` 才允许。两者都不会
+自动认证、绕过 challenge/paywall，也不会调用 PDF fallback。
 
 ## 4.0 迁移
 

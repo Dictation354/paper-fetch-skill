@@ -19,6 +19,7 @@ from .config import (
     BROWSER_TIMEOUT_MS_ENV_VAR,
     BROWSER_USER_AGENT_ENV_VAR,
     WILEY_STORAGE_STATE_JSON_ENV_VAR,
+    apply_browser_auto_prepare_policy,
     build_runtime_env,
 )
 from .extraction.html.signals import detect_html_block, summarize_html
@@ -54,6 +55,7 @@ from .reason_codes import (
     AUTH_STATE_SAVE_FAILED,
     AUTH_STATE_STAGE_FAILED,
     ERROR,
+    NOT_CONFIGURED,
 )
 from .runtime_browser import BrowserContextManager
 from .utils import normalize_text, provider_display_name
@@ -434,13 +436,25 @@ def authenticate_provider_profile(
     timeout_ms: int | None = None,
     browser_user_agent: str | None = None,
     confirm: Callable[[str], object] | None = input,
+    env: Mapping[str, str] | None = None,
+    browser_auto_prepare: bool | None = None,
 ) -> AuthResult:
     provider_key = _require_browser_auth_provider(provider)
     provider_label = _provider_label(provider_key)
     auth_target = _auth_target_for_provider(provider_key, target_url=target_url)
     active_url = target_url or auth_target.url
 
-    runtime_env = build_runtime_env()
+    try:
+        base_runtime_env = (
+            build_runtime_env() if env is None else build_runtime_env(env)
+        )
+        runtime_env = apply_browser_auto_prepare_policy(
+            base_runtime_env,
+            override=browser_auto_prepare,
+            default=False,
+        )
+    except ValueError as exc:
+        raise ProviderFailure(NOT_CONFIGURED, str(exc)) from exc
     runtime_env[BROWSER_HEADLESS_ENV_VAR] = "0"
     legacy_storage_env_var = _LEGACY_AUTH_STORAGE_STATE_ENV_VARS.get(provider_key)
     if legacy_storage_env_var is not None:
@@ -488,6 +502,7 @@ def authenticate_provider_profile(
                 user_data_dir=str(profile_dir),
                 binary_path=runtime.binary_path,
                 headless=False,
+                auto_prepare=runtime.auto_prepare,
             )
             context = manager.new_context()
         else:

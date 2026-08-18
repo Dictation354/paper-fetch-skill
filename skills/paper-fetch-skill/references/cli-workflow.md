@@ -103,6 +103,7 @@ paper-fetch fetch --query-file ./queries.txt \
 - `--format markdown|json|both` 控制 stdout、显式 `--output` 或默认主输出格式；`--save-markdown` 是额外 Markdown 副本，不是主输出开关。
 - `--no-download` 是 CLI 的 `--artifact-mode none` alias，不禁止显式主输出、`--output-dir` 默认主输出或 `--save-markdown`。
 - Runtime fetch failure 的结构化 JSON 写 stderr；argparse 参数错误仍使用标准 stderr/exit 2。歧义、访问、限流、网络和取消的重试只遵循 [`failure-handling.md`](failure-handling.md)。
+- 实际进入 browser 的 CLI fetch 默认按需准备 managed Camoufox，并在 stderr 显示阶段；受限网络或禁止本地 runtime 写入时传 `--no-browser-auto-prepare`。该 flag 不影响静态 doctor，也不改变论文产物的 `--no-download` 语义。
 - 使用 `paper-fetch --help` 和 `paper-fetch fetch|manifest|doctor|browser-preflight --help` 读取当前安装的有效枚举和默认值，不从旧安装或外部仓库文档猜测。
 - 安装/升级排查使用 `paper-fetch doctor --install-root <安装根目录> --json`；只有 `install_provenance.status=ready` 才证明 runtime、User-Agent、offline manifest、entrypoint 和三个宿主 skill 副本同版同 hash。源码开发态没有 offline manifest 时该安装部分为 `not_applicable`。
 

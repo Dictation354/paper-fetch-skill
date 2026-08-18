@@ -92,6 +92,12 @@ paper-fetch doctor --install-root ~/.local/share/paper-fetch-skill --json
 
 诊断顺序固定为：先用 `doctor` / MCP `provider_status` 检查静态配置与本地依赖；browser-backed provider 需要真实链路证明时再运行 CLI `browser-preflight` 或 MCP `browser_preflight`；只有预检或实际抓取明确要求登录/验证时，才显式运行 `auth`。`doctor` 退出码为 `0=ready`、`1=degraded`、`2=error`；它的 `ready` 仍不表示出版社网页当前可访问。
 
+`doctor` 和 `provider_status` 始终只读、无网络。真正进入浏览器的 CLI `fetch`、
+`auth`、`browser-preflight` 默认允许首次按需准备 managed Camoufox，并把下载/修复/
+更新阶段写到 stderr。可在任一命令传 `--no-browser-auto-prepare`，或设置
+`PAPER_FETCH_BROWSER_AUTO_PREPARE=false`，确保缺失 runtime 时直接返回结构化失败而
+不联网。反向的 `--browser-auto-prepare` 会覆盖全局关闭。
+
 ## Browser 登录态
 
 4.0 的唯一浏览器后端是原生 Firefox/Juggler Camoufox。HTML、PDF fallback、图片/补充文件、preflight 和 auth 都通过同一 browser-runtime facade；失败不会静默切换其它 backend。默认 core 安装不包含浏览器依赖，使用这些命令前需安装 `paper-fetch-skill[browser]` 或 `[full]`。完整配置见 [`browser-backends.md`](browser-backends.md)。
@@ -114,7 +120,7 @@ paper-fetch browser-preflight --provider wiley --provider science --timeout-ms 1
 
 预检会按 runtime catalog 中 `requires_browser_runtime=True` 的 provider 顺序使用内置样例 DOI/URL 构造正常 HTML candidates，并复用 provider HTML bootstrap、同一 browser context 重试和 availability 判定。内置样例优先选择结构较轻、已有 fixture 覆盖的 full-text 页面，降低预热耗时；成功时会保存对应 `publisher-browser-profiles/<provider>/storage-state.json`。IEEE 会等待最多 15 秒，只有匹配文章号的 `#article` 才算 ready；初始 HTTP 202 不会单独决定结果，持续 AWS WAF 页报告 `aws_waf_challenge`，顶层状态仍为 `challenge`。结果使用唯一 `status/reason_code/stage/message` 契约：`challenge/auth_required` 才建议人工认证，`network_timeout` 建议重试，`extraction_error` 指向页面/selector 诊断，`runtime_error` 先修复本地运行时，`cancelled` 显式重跑。失败时 stdout 还会在可用时输出脱敏 final URL、Chrome exit/stderr 与 diagnostic artifact。该命令只验证 HTML 路径，不触发 PDF fallback；它会真实访问出版社样例页，不同于 MCP `provider_status()` 的本地能力检查。
 
-MCP 的 `browser_preflight` 直接调用同一个 preflight 核心。无参数时与 CLI 一样检查全部 browser provider；单 provider 可传 `provider`，并可同时指定 `test_url`、`timeout_ms`、`browser_user_agent`、`storage_state_path`、`save_storage_state` 和 `detail="full|compact"`。`test_url` / `storage_state_path` 要求显式单 provider；默认 `save_storage_state=true`，因此该 open-world 工具不是只读操作。返回逐 provider `ready/challenge/auth_required/network_timeout/extraction_error/runtime_error/cancelled`、下一步与进度；compact 每项只保留路由字段。一个 provider 失败不抹掉其它已完成结果，取消保留已完成结果并停止后续调度。该工具始终报告未尝试 PDF fallback 和 auth；需要登录或处理 challenge 时只建议用户显式运行 `paper-fetch auth <provider>`。
+MCP 的 `browser_preflight` 直接调用同一个 preflight 核心。无参数时与 CLI 一样检查全部 browser provider；单 provider 可传 `provider`，并可同时指定 `test_url`、`timeout_ms`、`browser_user_agent`、`storage_state_path`、`save_storage_state`、`browser_auto_prepare` 和 `detail="full|compact"`。MCP 的 managed runtime 准备默认关闭；只有 `browser_auto_prepare=true` 或环境显式开启时才安装/修复/更新，并通过 MCP logging notification 报告进度。`test_url` / `storage_state_path` 要求显式单 provider；默认 `save_storage_state=true`，因此该 open-world 工具不是只读操作。返回逐 provider `ready/challenge/auth_required/network_timeout/extraction_error/runtime_error/cancelled`、下一步与进度；compact 每项只保留路由字段。一个 provider 失败不抹掉其它已完成结果，取消保留已完成结果并停止后续调度。该工具始终报告未尝试 PDF fallback 和 auth；需要登录或处理 challenge 时只建议用户显式运行 `paper-fetch auth <provider>`。
 
 普通 `paper-fetch fetch --query ...` 默认使用 managed headless Camoufox；`PAPER_FETCH_BROWSER_HEADLESS` 控制 headed/headless。只有 `paper-fetch auth <provider>` 或显式关闭 headless 时才显示窗口。
 
@@ -123,6 +129,8 @@ MCP 的 `browser_preflight` 直接调用同一个 preflight 核心。无参数�
 - `--url <url>`：覆盖内置样例文章，打开具体失败文章页。
 - `--timeout-ms <ms>`：设置浏览器导航超时。
 - `--browser-user-agent <ua>`：Camoufox 会拒绝该参数，以保持生成的 Firefox 指纹一致。
+- `--browser-auto-prepare` / `--no-browser-auto-prepare`：允许/禁止本次 CLI 命令维护
+  managed Camoufox；默认允许，环境变量可改变默认。
 - storage-state 保存位置优先通过 `PAPER_FETCH_BROWSER_PROFILE_DIR` 或 `PAPER_FETCH_BROWSER_USER_DATA_DIR` 覆盖。
 
 storage-state JSON 是主要复用状态，只是本地辅助状态，不绕过权限，也不是跨机器通用凭据；站点 session 可能按时间、网络、设备或浏览器指纹失效。未配置持久凭证不会阻止正常抓取；抓取仍会按当前 browser workflow 和 provider PDF / abstract-only / metadata fallback 运行。手动 auth 后再次抓取同一 provider 会复用同一个 publisher storage-state 文件。
@@ -270,7 +278,7 @@ CLI 先在 run lock 内执行只读审计。只有 query、工具版本和关键
 ```json
 {
   "schema_version": 2,
-  "tool_version": "5.3.2",
+  "tool_version": "5.4.0",
   "run_id": "10000000-0000-4000-8000-000000000001",
   "record_id": "20000000-0000-4000-8000-000000000002",
   "index": 2,

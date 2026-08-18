@@ -84,9 +84,18 @@ browser_binary = "not_bundled"
 runtime_download_during_install = false
 browser_binary_prepare_command = "<install>/runtime/paper-fetch-python -m camoufox fetch"
 preflight_command = "paper-fetch browser-preflight"
-preflight_downloads_browser = false
+preflight_downloads_browser = "cli-default-enabled-mcp-default-disabled"
+auto_prepare_policy = "cli-default-enabled-mcp-library-default-disabled"
+auto_prepare_overrides = ["environment", "request"]
+managed_runtime_maintenance = ["install", "repair", "update"]
+update_check_interval_hours = 24
+concurrency_control = "cross-process-file-lock"
+prepare_timeout_seconds = 900
+prepare_progress = "cli-stderr-mcp-logging"
+prepare_cancellation = "cooperative-child-termination"
 managed_runtime_resolution = "camoufox-package-managed"
 explicit_binary_override = "configured-executable-only"
+explicit_binary_auto_prepare = false
 native_ci_runtime = "official/152.0.4-beta.28"
 native_test_addon_policy = "exclude-default-addons"
 native_test_screen_policy = "fixed-synthetic-screen"
@@ -189,6 +198,17 @@ included_test_nodes = [
   "tests/unit/test_camoufox_backend.py::test_camoufox_persistent_official_runtime_path_is_resolved_by_package",
   "tests/unit/test_camoufox_backend.py::test_camoufox_persistent_explicit_binary_path_is_forwarded",
   "tests/unit/test_camoufox_backend.py::test_camoufox_first_launch_requires_prepared_official_runtime",
+  "tests/unit/test_camoufox_backend.py::test_camoufox_runtime_readiness_auto_prepares_managed_runtime",
+  "tests/unit/test_camoufox_backend.py::test_camoufox_manager_prepares_before_final_no_download_resolution",
+  "tests/unit/test_camoufox_backend.py::test_explicit_camoufox_binary_never_invokes_managed_runtime_preparation",
+  "tests/unit/test_camoufox_preparation.py::test_missing_runtime_is_installed_once_with_official_fetch",
+  "tests/unit/test_camoufox_preparation.py::test_valid_runtime_skips_network_for_twenty_four_hours",
+  "tests/unit/test_camoufox_preparation.py::test_failed_update_keeps_existing_valid_runtime_and_backs_off",
+  "tests/unit/test_camoufox_preparation.py::test_reparse_attribute_is_rejected_when_isjunction_is_unavailable",
+  "tests/unit/test_camoufox_preparation.py::test_child_process_timeout_terminates_noninteractive_official_cli",
+  "tests/unit/test_camoufox_preparation.py::test_corrupt_exact_managed_version_is_removed_and_reinstalled",
+  "tests/unit/test_camoufox_preparation.py::test_concurrent_preparations_share_one_download",
+  "tests/unit/test_camoufox_preparation.py::test_lock_wait_honors_cooperative_cancellation",
 ]
 
 [development_surfaces.wsl]
@@ -270,7 +290,7 @@ title = "明确 Camoufox 离线边界并移除 FlareSolverr"
 area = "browser-runtime"
 status = "implemented"
 risk = "P1"
-summary = "browser/full extra 允许兼容的 Camoufox 0.5.x，并由 uv.lock 选择可复现的具体版本；构建器复核下载 wheel metadata 与 installed distribution，并在 manifest 记录该版本。离线包捆绑 Python 包但不捆绑浏览器 binary，安装器不得下载浏览器，用户须先显式执行 camoufox fetch，再用 browser-preflight 验证。原生 macOS CI runtime discovery 使用只读 workflow token 避免匿名 GitHub API 限额，live 验证只保留本地显式入口。selected-browser 页面等待稳定正文 DOM；实质正文就绪后，Wiley 页头登录导航交给正文感知验收，challenge、HTTP 强拒绝、404 与摘要重定向仍早期阻断；provider 可在捕获 HTML 前执行有界、同源、失败不阻断的页面准备。PNAS 使用单次导航和 8 秒正文稳定预算，opt-in provider 只阻断 image/font/media；已验收 preflight HTML 按 DOI/URL/runtime 指纹在同进程一次性复用，AIP 维持跨 RuntimeContext 禁用边界，figure discovery 在同一 runtime 串行复用专用 page。Taylor & Francis 仅用该钩子有界并发读取文章页明确暴露的官方 CSV table action，失败表回退到已加载且不产生新请求的同页 payload，其文章范围内的官方 CMS figure rendition 按 accepted preview 保留。内置 auth/preflight 目标由 catalog 能力与共享测试保持一致，Taylor & Francis 使用已验证的开放文章，避免默认命令在 target_resolution 提前失败。候选循环和保守重试都不得用后续传输/导航失败或 deadline timeout 覆盖已经确认的稳定访问门槛；CLI/MCP 批量解析和 lane 排队不得提前消耗 item fetch deadline；HTTP-200 empty shell 的重试优先下一个既有 provider URL，live MCP 只按精确 access-boundary marker 跳过成功 metadata fallback；活动运行时不得包含 FlareSolverr。"
+summary = "browser/full extra 允许兼容的 Camoufox 0.5.x，并由 uv.lock 选择可复现的具体版本；构建器复核下载 wheel metadata 与 installed distribution，并在 manifest 记录该版本。离线包捆绑 Python 包但不捆绑浏览器 binary，安装器不得下载；CLI live browser 路径可按策略首次准备，MCP/库默认 opt-in，进入受限网络前仍应显式预置并用 browser-preflight 验证。原生 macOS CI runtime discovery 使用只读 workflow token 避免匿名 GitHub API 限额，live 验证只保留本地显式入口。selected-browser 页面等待稳定正文 DOM；实质正文就绪后，Wiley 页头登录导航交给正文感知验收，challenge、HTTP 强拒绝、404 与摘要重定向仍早期阻断；provider 可在捕获 HTML 前执行有界、同源、失败不阻断的页面准备。PNAS 使用单次导航和 8 秒正文稳定预算，opt-in provider 只阻断 image/font/media；已验收 preflight HTML 按 DOI/URL/runtime 指纹在同进程一次性复用，AIP 维持跨 RuntimeContext 禁用边界，figure discovery 在同一 runtime 串行复用专用 page。Taylor & Francis 仅用该钩子有界并发读取文章页明确暴露的官方 CSV table action，失败表回退到已加载且不产生新请求的同页 payload，其文章范围内的官方 CMS figure rendition 按 accepted preview 保留。内置 auth/preflight 目标由 catalog 能力与共享测试保持一致，Taylor & Francis 使用已验证的开放文章，避免默认命令在 target_resolution 提前失败。候选循环和保守重试都不得用后续传输/导航失败或 deadline timeout 覆盖已经确认的稳定访问门槛；CLI/MCP 批量解析和 lane 排队不得提前消耗 item fetch deadline；HTTP-200 empty shell 的重试优先下一个既有 provider URL，live MCP 只按精确 access-boundary marker 跳过成功 metadata fallback；活动运行时不得包含 FlareSolverr。"
 rationale = "Python 包可导入不等于目标浏览器可用，安装时静默联网也会破坏离线包边界；同样，远端挑战、延迟正文或批量调度等待必须与本地 browser context 启动和实际抓取预算分开诊断。"
 implementation_paths = [
   ".github/workflows/ci.yml",
@@ -506,6 +526,45 @@ test_nodes = [
   "tests/unit/test_camoufox_backend.py::test_camoufox_persistent_explicit_binary_path_is_forwarded",
   "tests/unit/test_camoufox_backend.py::test_camoufox_first_launch_requires_prepared_official_runtime",
   "tests/integration/test_camoufox_native_macos.py::test_prepared_official_camoufox_bundle_launches_both_context_modes",
+]
+audit_cases = ["MAC-AUD-013"]
+portable_validation = "simulated"
+native_validation_required = true
+
+[[changes]]
+id = "MAC-V4-009"
+title = "为 managed Camoufox 增加受策略控制的首次按需准备"
+area = "browser-runtime"
+status = "implemented"
+risk = "P1"
+summary = "安装器继续不捆绑且不下载 browser binary；真实 CLI fetch、auth 与 browser-preflight 默认可按需调用 Camoufox 官方 package manager 安装、修复并每 24 小时检查更新，MCP 和库默认关闭且可由环境或单次请求开启。准备过程使用跨进程文件锁、900 秒预算、CLI stderr/MCP 日志进度与协作取消；显式 custom binary 永不进入 managed runtime 维护。"
+rationale = "Windows、Linux 与 macOS 的 Python 包安装成功并不代表 browser binary 已存在。把联网准备放到明确会触发浏览器的入口，同时让自动化入口默认 opt-in，可以避免首次抓取直接失败，也保持安装、静态诊断和受限网络运行模式的可审计边界。"
+implementation_paths = [
+  ".github/workflows/ci.yml",
+  "src/paper_fetch/config.py",
+  "src/paper_fetch/providers/browser_runtime/preparation.py",
+  "src/paper_fetch/providers/browser_runtime/backends/camoufox.py",
+  "src/paper_fetch/providers/browser_runtime/camoufox_manager.py",
+  "src/paper_fetch/cli.py",
+  "src/paper_fetch/mcp/fetch_tool.py",
+  "src/paper_fetch/mcp/batch.py",
+  "src/paper_fetch/mcp/batch_fetch.py",
+  "src/paper_fetch/mcp/browser_preflight.py",
+  "src/paper_fetch/mcp/server.py",
+]
+test_nodes = [
+  "tests/unit/test_config.py::ConfigTests::test_browser_auto_prepare_policy_is_strict_and_tri_state",
+  "tests/unit/test_camoufox_backend.py::test_camoufox_runtime_readiness_auto_prepares_managed_runtime",
+  "tests/unit/test_camoufox_backend.py::test_camoufox_manager_prepares_before_final_no_download_resolution",
+  "tests/unit/test_camoufox_backend.py::test_explicit_camoufox_binary_never_invokes_managed_runtime_preparation",
+  "tests/unit/test_camoufox_preparation.py::test_missing_runtime_is_installed_once_with_official_fetch",
+  "tests/unit/test_camoufox_preparation.py::test_valid_runtime_skips_network_for_twenty_four_hours",
+  "tests/unit/test_camoufox_preparation.py::test_failed_update_keeps_existing_valid_runtime_and_backs_off",
+  "tests/unit/test_camoufox_preparation.py::test_reparse_attribute_is_rejected_when_isjunction_is_unavailable",
+  "tests/unit/test_camoufox_preparation.py::test_child_process_timeout_terminates_noninteractive_official_cli",
+  "tests/unit/test_camoufox_preparation.py::test_corrupt_exact_managed_version_is_removed_and_reinstalled",
+  "tests/unit/test_camoufox_preparation.py::test_concurrent_preparations_share_one_download",
+  "tests/unit/test_camoufox_preparation.py::test_lock_wait_honors_cooperative_cancellation",
 ]
 audit_cases = ["MAC-AUD-013"]
 portable_validation = "simulated"

@@ -416,7 +416,7 @@ function Write-OfflineReadme {
 
 This installer includes the embedded Python runtime, installed Python packages, formula tools, and image-tools configuration for optional conversion tools.
 The offline build does not bundle Ghostscript/libvips from the build host PATH; AMS EPS/TIFF source figure conversion falls back to webpage JPG/PNG candidates when those tools are unavailable.
-It does not redistribute a browser binary for browser-backed providers. Default Camoufox may fetch its runtime on the first real browser-backed request; fully offline hosts must preinstall the complete Camoufox runtime.
+It does not redistribute or install a browser binary for browser-backed providers. CLI browser requests may prepare managed Camoufox on demand with visible progress; MCP/library requests default to no automatic preparation. Fully offline hosts must preinstall the complete Camoufox runtime while online.
 Formula conversion uses the bundled Playwright driver Node via `MATHML_TO_LATEX_NODE_BIN`; do not rely on a bare `node` from PATH in Codex Desktop sessions.
 
 Browser-backed providers use native Camoufox.

@@ -230,7 +230,7 @@
 - 已有证据：离线 runtime 包含 Camoufox / Playwright Python 包，安装 verifier
   检查 import；联网时可先用该 runtime 执行 `python -m camoufox fetch` 下载
   browser binary，再运行 `paper-fetch browser-preflight` 验证启动和 provider
-  state。
+  state；CLI live browser 路径也可在策略允许时按需准备，MCP/库默认禁止。
 - 补充 portable 证据：selected-browser 正文 DOM 稳定等待、MDPI delayed-body
   readiness、Wiley 稳定正文就绪后将页头登录导航交给正文感知验收且保留强阻断，
   以及“已确认的候选/快速 attempt 访问门槛不被后续候选的传输/导航
@@ -257,9 +257,10 @@
 - 缺失证据：在网络完全断开的原生 macOS 15 arm64 环境中，从已预置 cache
   启动 Camoufox，并对 browser-backed provider 完成受控 launch/fetch 的可重复
   测试。
-- 明确边界：Camoufox browser binary 不随 tarball 分发，paper fetch 不会自动
-  下载，`browser-preflight` 也不代替 `python -m camoufox fetch`；preflight
-  本身需要联网。关闭此项前不得宣称“完整离线浏览器支持”。
+- 明确边界：Camoufox browser binary 不随 tarball 分发，安装器和静态诊断不下载。
+  真实 CLI 浏览器路径默认可按需准备，MCP/库默认关闭且必须显式 opt-in；两类入口在
+  禁用策略或断网时仍要求提前执行 `python -m camoufox fetch`。preflight 本身也需要
+  publisher 网络访问。关闭此项前不得宣称“完整离线浏览器支持”。
 - 建议关闭方式：增加独立的原生 Mac 两阶段测试——联网预置后冻结 cache，再在
   禁网 sandbox 中验证 browser launch；测试应区分“浏览器成功启动”和“远端
   publisher 页面当然不可访问”。
@@ -274,15 +275,19 @@
   `Contents/MacOS/camoufox` 强制作为 custom `executable_path`；只有显式
   `PAPER_FETCH_BROWSER_BINARY_PATH` 才透传 custom path。临时 fetch/preflight
   context 和持久 auth context 必须遵循同一规则。
+- 按需准备边界：CLI 浏览器路径默认允许、MCP/库默认禁止；环境与单次请求均可覆盖。
+  安装、精确修复和 24 小时更新检查必须走 Camoufox 官方 CLI，并保留跨进程锁、进度、
+  取消和 900 秒预算。显式 custom binary 不得进入任何 managed-cache 维护路径。
 - 依赖一致性：browser/full extra 接受 `camoufox>=0.5.4,<0.6`，具体版本由
   `uv.lock` 固定；原生 CI 与离线 artifact 因此使用同一 locked package。
   POSIX 构建器从 lockfile 解析版本，验证下载 wheel METADATA 与 installed
   distribution 完全一致，并把实际值写入
   `components.camoufox.python_package_version` manifest 字段。
 - portable 自动证据：`tests/unit/test_camoufox_backend.py` 分别锁定 managed
-  ephemeral、managed persistent、两种 manager 的 explicit override 和 missing-runtime
-  no-download 行为。Windows / WSL 可以执行这些纯 mock 节点，但不能证明 app
-  bundle 实际可启动。
+  ephemeral、managed persistent、两种 manager 的 explicit override 与策略关闭时的
+  no-download 行为；`tests/unit/test_camoufox_preparation.py` 锁定首次安装、节流、失败
+  回退、安全修复、并发与取消。Windows / WSL 可以执行这些纯 mock/临时目录节点，但
+  不能证明 app bundle 实际可启动。
 - 原生自动证据：普通 CI 的 `macos-15` job 显式准备固定的
   `official/152.0.4-beta.28`，设置 `PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST=1`，再以
   `-n 0` 串行运行 `tests/integration/test_camoufox_native_macos.py`。测试要求 Darwin

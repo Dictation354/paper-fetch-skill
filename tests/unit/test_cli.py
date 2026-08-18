@@ -3,6 +3,7 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import logging
 import os
 import sys
 import tempfile
@@ -12,7 +13,8 @@ from types import SimpleNamespace
 from unittest import mock
 
 from paper_fetch import cli as paper_fetch_cli
-from paper_fetch.config import DOWNLOAD_DIR_ENV_VAR
+from paper_fetch.config import BROWSER_AUTO_PREPARE_ENV_VAR, DOWNLOAD_DIR_ENV_VAR
+from paper_fetch.logging_utils import emit_structured_log
 from paper_fetch import service as paper_fetch
 from paper_fetch.models import ArticleModel, Asset, Metadata, RenderOptions
 from paper_fetch.providers.base import ProviderFailure
@@ -21,6 +23,56 @@ from ._paper_fetch_support import build_envelope, sample_article
 
 
 class CliTests(unittest.TestCase):
+    def test_cli_browser_auto_prepare_defaults_on_and_allows_both_overrides(
+        self,
+    ) -> None:
+        with mock.patch.object(paper_fetch_cli, "build_runtime_env", return_value={}):
+            default_env = paper_fetch_cli._cli_browser_runtime_env(
+                browser_auto_prepare=None
+            )
+            disabled_env = paper_fetch_cli._cli_browser_runtime_env(
+                browser_auto_prepare=False
+            )
+            enabled_env = paper_fetch_cli._cli_browser_runtime_env(
+                browser_auto_prepare=True
+            )
+
+        self.assertEqual(default_env[BROWSER_AUTO_PREPARE_ENV_VAR], "true")
+        self.assertEqual(disabled_env[BROWSER_AUTO_PREPARE_ENV_VAR], "false")
+        self.assertEqual(enabled_env[BROWSER_AUTO_PREPARE_ENV_VAR], "true")
+
+    def test_cli_browser_auto_prepare_respects_global_disable(self) -> None:
+        with mock.patch.object(
+            paper_fetch_cli,
+            "build_runtime_env",
+            return_value={BROWSER_AUTO_PREPARE_ENV_VAR: "false"},
+        ):
+            runtime_env = paper_fetch_cli._cli_browser_runtime_env(
+                browser_auto_prepare=None
+            )
+
+        self.assertEqual(runtime_env[BROWSER_AUTO_PREPARE_ENV_VAR], "false")
+
+    def test_cli_renders_camoufox_preparation_progress_on_stderr(self) -> None:
+        stderr = io.StringIO()
+
+        with (
+            contextlib.redirect_stderr(stderr),
+            paper_fetch_cli._browser_preparation_progress(),
+        ):
+            emit_structured_log(
+                logging.getLogger("paper_fetch.browser_runtime"),
+                logging.INFO,
+                "camoufox_runtime_prepare",
+                stage="starting",
+                message="Starting Camoufox runtime install.",
+            )
+
+        self.assertEqual(
+            stderr.getvalue(),
+            "Camoufox: Starting Camoufox runtime install.\n",
+        )
+
     def test_main_version_reports_package_version(self) -> None:
         stdout = io.StringIO()
         stderr = io.StringIO()
@@ -405,6 +457,10 @@ class CliTests(unittest.TestCase):
         self.assertIn("AMS storage state:", stdout.getvalue())
         authenticate.assert_called_once()
         self.assertEqual(authenticate.call_args.kwargs["provider"], "ams")
+        self.assertEqual(
+            authenticate.call_args.kwargs["env"][BROWSER_AUTO_PREPARE_ENV_VAR],
+            "true",
+        )
 
     def test_auth_wiley_subcommand_invokes_generic_auth_helper(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -462,6 +518,34 @@ class CliTests(unittest.TestCase):
             self.assertEqual(kwargs["target_url"], target_url)
             self.assertEqual(kwargs["timeout_ms"], 45000)
             self.assertEqual(kwargs["browser_user_agent"], "Mozilla/5.0 auth-test")
+
+    def test_browser_preflight_can_disable_on_demand_runtime_preparation(self) -> None:
+        result = paper_fetch_cli.BrowserPreflightResult(
+            provider="wiley",
+            provider_label="Wiley",
+            status="ready",
+            reason_code="browser_preflight_ready",
+        )
+        with mock.patch.object(
+            paper_fetch_cli,
+            "run_browser_provider_preflight",
+            return_value=[result],
+        ) as run_preflight:
+            exit_code = paper_fetch_cli.main(
+                [
+                    "browser-preflight",
+                    "--provider",
+                    "wiley",
+                    "--no-browser-auto-prepare",
+                ]
+            )
+
+        self.assertEqual(exit_code, 0)
+        runtime_options = run_preflight.call_args.kwargs["runtime_options"]
+        self.assertEqual(
+            runtime_options.env[BROWSER_AUTO_PREPARE_ENV_VAR],
+            "false",
+        )
 
     def test_auth_rejects_legacy_ams_only_args_for_all_providers(self) -> None:
         cases = (

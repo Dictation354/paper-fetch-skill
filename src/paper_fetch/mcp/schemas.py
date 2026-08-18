@@ -520,6 +520,7 @@ class FetchPaperRequest(_RequiredQueryRequest):
     save_markdown: bool = False
     markdown_output_dir: str | None = None
     markdown_filename: str | None = None
+    browser_auto_prepare: bool | None = None
 
     @field_validator("modes", mode="before")
     @classmethod
@@ -612,6 +613,7 @@ class BatchCheckRequest(BaseModel):
     queries: BatchQueriesInput
     mode: BatchCheckModeInput = "metadata"
     concurrency: ConcurrencyInput = 1
+    browser_auto_prepare: bool | None = None
 
     @field_validator("queries", mode="before")
     @classmethod
@@ -649,6 +651,7 @@ class BatchFetchRequest(BaseModel):
     batch_results: str | None = None
     resume: str | None = None
     overwrite: bool = False
+    browser_auto_prepare: bool | None = None
 
     @field_validator("queries", mode="before")
     @classmethod
@@ -743,6 +746,7 @@ class BatchFetchRequest(BaseModel):
                 "save_markdown": self.save_markdown,
                 "markdown_output_dir": self.markdown_output_dir,
                 "markdown_filename": self.markdown_filename,
+                "browser_auto_prepare": self.browser_auto_prepare,
             }
         )
 
@@ -848,6 +852,7 @@ class BrowserPreflightRequest(BaseModel):
     storage_state_path: str | None = None
     save_storage_state: bool = True
     detail: BrowserPreflightDetailInput = "full"
+    browser_auto_prepare: bool | None = None
 
     @field_validator("test_url", "browser_user_agent", mode="before")
     @classmethod

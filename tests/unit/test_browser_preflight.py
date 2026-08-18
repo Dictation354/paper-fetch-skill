@@ -28,6 +28,7 @@ from paper_fetch.providers.browser_workflow.shared import default_browser_workfl
     ("reason_code", "stage", "expected"),
     [
         ("request_cancelled", None, "cancelled"),
+        ("browser_runtime_prepare_cancelled", "runtime_prepare", "cancelled"),
         ("aws_waf_challenge", "page", "challenge"),
         ("cloudflare_challenge", "page", "challenge"),
         ("publisher_access_denied", "availability", "auth_required"),
@@ -745,6 +746,35 @@ def test_browser_preflight_cancellation_keeps_completed_provider_result() -> Non
     assert results[1].status == "cancelled"
     assert results[1].reason_code == "request_cancelled"
     assert progress == [("science", 1, 3), ("wiley", 2, 3)]
+
+
+def test_browser_preflight_stops_after_runtime_preparation_cancellation() -> None:
+    progress: list[tuple[str, int, int]] = []
+
+    def fake_preflight(provider, **_kwargs):
+        return browser_preflight.BrowserPreflightResult(
+            provider=provider,
+            provider_label=provider.title(),
+            status="cancelled",
+            reason_code="browser_runtime_prepare_cancelled",
+        )
+
+    with mock.patch.object(
+        browser_preflight,
+        "preflight_browser_provider",
+        side_effect=fake_preflight,
+    ):
+        results = browser_preflight.run_browser_provider_preflight(
+            providers=["science", "wiley"],
+            cancel_as_result=True,
+            on_result=lambda result, completed, total: progress.append(
+                (result.provider, completed, total)
+            ),
+            runtime_options=browser_preflight.BrowserPreflightRuntimeOptions(env={}),
+        )
+
+    assert [result.provider for result in results] == ["science"]
+    assert progress == [("science", 1, 2)]
 
 
 def test_browser_preflight_does_not_use_pdf_fallback(tmp_path: Path) -> None:

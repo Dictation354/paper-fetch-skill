@@ -9,6 +9,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from hashlib import sha256
 import json
+import logging
 import os
 import signal
 import sys
@@ -29,7 +30,11 @@ from .browser_preflight import (
     run_browser_provider_preflight,
 )
 from .provider_catalog import browser_preflight_provider_names
-from .config import build_runtime_env, resolve_cli_download_dir
+from .config import (
+    apply_browser_auto_prepare_policy,
+    build_runtime_env,
+    resolve_cli_download_dir,
+)
 from .diagnostics import (
     doctor_payload as build_doctor_payload,
     provider_status_group_names,
@@ -61,7 +66,10 @@ from .publisher_identity import (
     extract_doi,
     extract_doi_from_url,
 )
-from .reason_codes import ERROR, NO_ACCESS, RATE_LIMITED
+from .reason_codes import ERROR, NO_ACCESS, NOT_CONFIGURED, RATE_LIMITED
+from .providers.browser_runtime.preparation import (
+    browser_runtime_preparation_scope,
+)
 from .runtime import (
     RuntimeContext,
     build_http_transport_for_context,
@@ -100,6 +108,38 @@ from .workflow.rendering import rewrite_markdown_asset_links
 from .workflow.rendering import (
     save_markdown_to_disk as save_markdown_to_disk_for_target,
 )
+
+
+class _BrowserPreparationProgressHandler(logging.Handler):
+    """Render browser preparation logs as concise CLI progress on stderr."""
+
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            payload = getattr(record, "structured_data", None)
+            message = (
+                str(payload.get("message") or "").strip()
+                if isinstance(payload, Mapping)
+                else ""
+            )
+            sys.stderr.write(f"Camoufox: {message or record.getMessage()}\n")
+            sys.stderr.flush()
+        except Exception:
+            return
+
+
+@contextlib.contextmanager
+def _browser_preparation_progress():
+    runtime_logger = logging.getLogger("paper_fetch.browser_runtime")
+    previous_level = runtime_logger.level
+    handler = _BrowserPreparationProgressHandler(level=logging.INFO)
+    runtime_logger.addHandler(handler)
+    runtime_logger.setLevel(logging.INFO)
+    try:
+        yield
+    finally:
+        runtime_logger.removeHandler(handler)
+        runtime_logger.setLevel(previous_level)
+        handler.close()
 
 
 @dataclass(frozen=True)
@@ -571,34 +611,40 @@ def run_single_fetch(
     modes = _compute_modes(args)
     render_options = _render_options_from_args(args)
     overwrite = bool(getattr(args, "overwrite", False))
-    try:
-        result = FetchPipeline(fetch_paper).run(
-            build_fetch_pipeline_request(
-                query=query,
-                modes=modes,
-                strategy=FetchStrategy(
-                    allow_metadata_only_fallback=True,
-                    asset_profile=args.asset_profile,
-                ),
-                render=render_options,
-                env=dict(runtime_env),
-                download_dir=output_dir,
-                no_download=args.no_download,
-                artifact_mode=artifact_mode,
-                transport=transport,
-                cancel_check=cancel_check,
-                context=context,
-                markdown_save=_markdown_save_spec(
-                    args,
-                    output_dir=output_dir,
-                    render_options=render_options,
-                ),
+    preparation_cancel_check = cancel_check or (
+        context.cancel_check if context is not None else None
+    )
+    with browser_runtime_preparation_scope(
+        cancel_check=preparation_cancel_check,
+    ):
+        try:
+            result = FetchPipeline(fetch_paper).run(
+                build_fetch_pipeline_request(
+                    query=query,
+                    modes=modes,
+                    strategy=FetchStrategy(
+                        allow_metadata_only_fallback=True,
+                        asset_profile=args.asset_profile,
+                    ),
+                    render=render_options,
+                    env=dict(runtime_env),
+                    download_dir=output_dir,
+                    no_download=args.no_download,
+                    artifact_mode=artifact_mode,
+                    transport=transport,
+                    cancel_check=cancel_check,
+                    context=context,
+                    markdown_save=_markdown_save_spec(
+                        args,
+                        output_dir=output_dir,
+                        render_options=render_options,
+                    ),
+                )
             )
-        )
-    except FileExistsError as exc:
-        raise OutputOverwriteRequired(
-            f"{exc}; rerun with --overwrite after reviewing the existing output"
-        ) from exc
+        except FileExistsError as exc:
+            raise OutputOverwriteRequired(
+                f"{exc}; rerun with --overwrite after reviewing the existing output"
+            ) from exc
     envelope = result.envelope
     if args.primary_output_to_output_dir:
         target = output_dir / _formatted_output_filename(
@@ -1449,6 +1495,16 @@ def _add_fetch_arguments(
         version=f"paper-fetch {package_version()}",
         help="Show the installed paper-fetch version and exit.",
     )
+    parser.add_argument(
+        "--browser-auto-prepare",
+        action=argparse.BooleanOptionalAction,
+        default=_default(None, suppress_defaults=suppress_defaults),
+        help=(
+            "Allow browser-triggering CLI fetches to install, repair, or periodically "
+            "update the managed Camoufox runtime on demand (default: enabled; "
+            "use --no-browser-auto-prepare to forbid browser downloads)."
+        ),
+    )
 
 
 def _build_fetch_parent_parser(*, suppress_defaults: bool) -> argparse.ArgumentParser:
@@ -1476,6 +1532,15 @@ def _add_auth_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--browser-user-agent",
         help="Browser-only User-Agent override for this authentication run (default: runtime configuration).",
+    )
+    parser.add_argument(
+        "--browser-auto-prepare",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help=(
+            "Install, repair, or periodically update the managed Camoufox runtime "
+            "when needed (default: enabled)."
+        ),
     )
     parser.add_argument(
         "--state-json",
@@ -1532,6 +1597,15 @@ def _add_browser_preflight_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--browser-user-agent",
         help="Browser-only User-Agent override for this preflight run (default: runtime configuration).",
+    )
+    parser.add_argument(
+        "--browser-auto-prepare",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help=(
+            "Install, repair, or periodically update the managed Camoufox runtime "
+            "when needed (default: enabled)."
+        ),
     )
     parser.add_argument(
         "--download-dir",
@@ -1922,6 +1996,20 @@ def _write_browser_preflight_failure_hints(
         )
 
 
+def _cli_browser_runtime_env(
+    *,
+    browser_auto_prepare: bool | None,
+) -> dict[str, str]:
+    try:
+        return apply_browser_auto_prepare_policy(
+            build_runtime_env(),
+            override=browser_auto_prepare,
+            default=True,
+        )
+    except ValueError as exc:
+        raise ProviderFailure(NOT_CONFIGURED, str(exc)) from exc
+
+
 def _run_auth_namespace(args: argparse.Namespace) -> int:
     parser = args._command_parser
     uses_direct_storage_args = bool(
@@ -1936,22 +2024,30 @@ def _run_auth_namespace(args: argparse.Namespace) -> int:
             "auth saves provider-scoped storage-state. Use PAPER_FETCH_BROWSER_PROFILE_DIR "
             "or PAPER_FETCH_BROWSER_USER_DATA_DIR to override that location."
         )
+    runtime_env = _cli_browser_runtime_env(
+        browser_auto_prepare=args.browser_auto_prepare,
+    )
     result = authenticate_provider_profile(
         provider=args.provider,
         target_url=args.url,
         timeout_ms=args.timeout_ms,
         browser_user_agent=args.browser_user_agent,
+        env=runtime_env,
     )
     _write_auth_result(args.provider, provider_display_name(args.provider), result)
     return 0
 
 
 def _run_browser_preflight_namespace(args: argparse.Namespace) -> int:
+    runtime_env = _cli_browser_runtime_env(
+        browser_auto_prepare=args.browser_auto_prepare,
+    )
     results = run_browser_provider_preflight(
         providers=args.provider,
         timeout_ms=args.timeout_ms,
         browser_user_agent=args.browser_user_agent,
         runtime_options=BrowserPreflightRuntimeOptions(
+            env=runtime_env,
             download_dir=args.download_dir,
             artifact_mode=args.artifact_mode,
         ),
@@ -1966,7 +2062,8 @@ def run_auth_command(raw_args: list[str]) -> int:
     parser = build_auth_parser()
     args = parser.parse_args(raw_args)
     args._command_parser = parser
-    return _run_auth_namespace(args)
+    with _browser_preparation_progress():
+        return _run_auth_namespace(args)
 
 
 def run_browser_preflight_command(raw_args: list[str]) -> int:
@@ -1974,7 +2071,8 @@ def run_browser_preflight_command(raw_args: list[str]) -> int:
     parser = build_browser_preflight_parser()
     args = parser.parse_args(raw_args)
     args._command_parser = parser
-    return _run_browser_preflight_namespace(args)
+    with _browser_preparation_progress():
+        return _run_browser_preflight_namespace(args)
 
 
 def _write_single_cli_manifest(
@@ -2105,7 +2203,9 @@ def _run_fetch_namespace(args: argparse.Namespace) -> int:
     output_dir: Path | None = None
 
     try:
-        runtime_env = build_runtime_env()
+        runtime_env = _cli_browser_runtime_env(
+            browser_auto_prepare=getattr(args, "browser_auto_prepare", None),
+        )
         output_dir = (
             Path(args.output_dir)
             if args.output_dir
@@ -2254,7 +2354,8 @@ def main(argv: list[str] | None = None) -> int:
         handler = _run_fetch_namespace
 
     try:
-        return handler(args)
+        with _browser_preparation_progress():
+            return handler(args)
     except ProviderFailure as exc:
         sys.stderr.write(json.dumps(_error_payload(exc), ensure_ascii=False) + "\n")
         return exit_code_for_error(exc)

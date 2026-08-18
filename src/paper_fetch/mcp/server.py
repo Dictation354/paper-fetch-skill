@@ -460,6 +460,7 @@ def build_server() -> PaperFetchMCPServer:
         save_markdown: bool = False,
         markdown_output_dir: str | None = None,
         markdown_filename: str | None = None,
+        browser_auto_prepare: bool | None = None,
         download_dir: str | None = None,
         ctx: Context | None = None,
     ) -> Annotated[CallToolResult, FetchPaperOutput]:
@@ -484,6 +485,7 @@ def build_server() -> PaperFetchMCPServer:
                 else None
             ),
             markdown_filename=markdown_filename,
+            browser_auto_prepare=browser_auto_prepare,
             ctx=ctx,
             deps=deps,
             **tool_kwargs,
@@ -602,7 +604,9 @@ def build_server() -> PaperFetchMCPServer:
             "manifest/acceptance results. It may access remote services and write the "
             "same cache, artifacts, or Markdown as fetch_paper. detail=bounded returns "
             "only a batch-wide bounded text sample. Set run_manifest or resume for "
-            "auditable persistence; overwrite defaults false."
+            "auditable persistence; overwrite defaults false. Managed Camoufox "
+            "preparation defaults off unless browser_auto_prepare=true or the environment "
+            "explicitly enables it."
         ),
         annotations=_fetch_annotations(),
         structured_output=True,
@@ -628,6 +632,7 @@ def build_server() -> PaperFetchMCPServer:
         batch_results: str | None = None,
         resume: str | None = None,
         overwrite: bool = False,
+        browser_auto_prepare: bool | None = None,
         ctx: Context | None = None,
     ) -> Annotated[CallToolResult, BatchFetchOutput]:
         parsed_download_dir = _parse_download_dir(download_dir)
@@ -659,6 +664,7 @@ def build_server() -> PaperFetchMCPServer:
             batch_results=batch_results,
             resume=resume,
             overwrite=overwrite,
+            browser_auto_prepare=browser_auto_prepare,
             ctx=ctx,
             deps=deps,
             **tool_kwargs,
@@ -687,7 +693,8 @@ def build_server() -> PaperFetchMCPServer:
         name="batch_check",
         description=(
             "Check multiple papers without returning full bodies, with optional cross-host concurrency. "
-            "Success items keep only lightweight provenance fields."
+            "Success items keep only lightweight provenance fields. Browser preparation "
+            "defaults off; article mode can opt in with browser_auto_prepare=true."
         ),
         annotations=_read_only_annotations(open_world=True),
         structured_output=True,
@@ -696,10 +703,16 @@ def build_server() -> PaperFetchMCPServer:
         queries: BatchQueriesInput,
         mode: BatchCheckModeInput = "metadata",
         concurrency: ConcurrencyInput = 1,
+        browser_auto_prepare: bool | None = None,
         ctx: Context | None = None,
     ) -> Annotated[CallToolResult, BatchCheckOutput]:
         return await batch_check_tool_async(
-            queries=queries, mode=mode, concurrency=concurrency, ctx=ctx, deps=deps
+            queries=queries,
+            mode=mode,
+            concurrency=concurrency,
+            browser_auto_prepare=browser_auto_prepare,
+            ctx=ctx,
+            deps=deps,
         )
 
     @server.tool(
@@ -707,7 +720,9 @@ def build_server() -> PaperFetchMCPServer:
         description=(
             "Live-check the shared browser HTML path for one provider or all browser "
             "providers. This opens publisher pages and may update filtered storage-state; "
-            "it never runs PDF fallback or automatic authentication."
+            "it never runs PDF fallback or automatic authentication. Managed Camoufox "
+            "preparation defaults off unless browser_auto_prepare=true or the environment "
+            "explicitly enables it."
         ),
         annotations=_browser_preflight_annotations(),
         structured_output=True,
@@ -720,6 +735,7 @@ def build_server() -> PaperFetchMCPServer:
         storage_state_path: str | None = None,
         save_storage_state: bool = True,
         detail: BrowserPreflightDetailInput = "full",
+        browser_auto_prepare: bool | None = None,
         ctx: Context | None = None,
     ) -> Annotated[CallToolResult, BrowserPreflightOutput]:
         return await browser_preflight_tool_async(
@@ -730,6 +746,7 @@ def build_server() -> PaperFetchMCPServer:
             storage_state_path=storage_state_path,
             save_storage_state=save_storage_state,
             detail=detail,
+            browser_auto_prepare=browser_auto_prepare,
             ctx=ctx,
             deps=deps,
         )
