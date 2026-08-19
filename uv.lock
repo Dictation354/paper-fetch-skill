@@ -211,7 +211,7 @@ wheels = [
 
 [[package]]
 name = "camoufox"
-version = "0.5.4"
+version = "0.5.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "browserforge" },
@@ -232,9 +232,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "ua-parser" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9f/61/8a02a7060caf0e58843906c615970f77fda54be5fc25927734e60efd129b/camoufox-0.5.4.tar.gz", hash = "sha256:a5213a4dd90398fa140cf010fd865129cc97b9cb4a7c2fc71c067f428ce49ddf", size = 1386260, upload-time = "2026-07-16T22:04:31.469Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ed/13/f413d29251d15da0e43278aede5db16126d71cfd210a6ca2afcbfcb109ac/camoufox-0.5.5.tar.gz", hash = "sha256:18b7ab7f8472efb2a88e72358265aa3eb57aebd7f87d93bdfa8656dcab7035ba", size = 1386265, upload-time = "2026-08-18T01:23:00.861Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b2/67/089c06b3df78638efe4b2c5bd63f37cbb8b2a1fc0ec36399b410dd25a47f/camoufox-0.5.4-py3-none-any.whl", hash = "sha256:c3f5fc4de0416d0f3363c029267c61718a3fda9e2668f526aff982ae36c30703", size = 1397377, upload-time = "2026-07-16T22:04:29.722Z" },
+    { url = "https://files.pythonhosted.org/packages/4f/5c/76e400fac42c166cb950361a918859c052c6cefd4248f230833008c19fc4/camoufox-0.5.5-py3-none-any.whl", hash = "sha256:8e1ca8bc956e15b6fff0fa51190fa46eb08c3df66e917948423d4eb3f810d81a", size = 1397373, upload-time = "2026-08-18T01:22:59.278Z" },
 ]
 
 [[package]]
@@ -1711,7 +1711,7 @@ wheels = [
 
 [[package]]
 name = "paper-fetch-skill"
-version = "5.4.0"
+version = "5.4.1"
 source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },
@@ -1769,8 +1769,8 @@ requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.14,<5" },
     { name = "build", marker = "extra == 'dev'", specifier = ">=1.2,<2" },
     { name = "cachetools", specifier = ">=6,<8" },
-    { name = "camoufox", marker = "extra == 'browser'", specifier = ">=0.5.4,<0.6" },
-    { name = "camoufox", marker = "extra == 'full'", specifier = ">=0.5.4,<0.6" },
+    { name = "camoufox", marker = "extra == 'browser'", specifier = ">=0.5.5,<0.6" },
+    { name = "camoufox", marker = "extra == 'full'", specifier = ">=0.5.5,<0.6" },
     { name = "cyclonedx-bom", marker = "extra == 'dev'", specifier = ">=7,<8" },
     { name = "defusedxml", specifier = ">=0.7.1,<0.8" },
     { name = "filelock", specifier = ">=3.20,<4" },

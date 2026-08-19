@@ -278,7 +278,7 @@ CLI 先在 run lock 内执行只读审计。只有 query、工具版本和关键
 ```json
 {
   "schema_version": 2,
-  "tool_version": "5.4.0",
+  "tool_version": "5.4.1",
   "run_id": "10000000-0000-4000-8000-000000000001",
   "record_id": "20000000-0000-4000-8000-000000000002",
   "index": 2,

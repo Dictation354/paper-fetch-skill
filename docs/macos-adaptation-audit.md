@@ -212,7 +212,8 @@
 **带当前合约的不可变源码与受信任 tooling overlay**
 
 - 要求：源码标签不移动，且必须在 overlay 前通过自身的当前 Mac contract；没有
-  合约或精确 Camoufox pin 的旧上游 `v4.1.0` 拒绝重打包。POSIX/Windows tooling
+  合约、Camoufox 兼容范围或已解析 wheelhouse 版本一致性校验的旧上游 `v4.1.0`
+  拒绝重打包。POSIX/Windows tooling
   ref 都必须是完整 40 字符 commit SHA；POSIX 只允许 builder、installer、verifier
   三个同名 source/destination pair，Windows 只允许自己的 packaging script，均不
   复制 Python wheel source。tooling 脚本是显式信任边界；产物 manifest 分别记录
@@ -278,10 +279,10 @@
 - 按需准备边界：CLI 浏览器路径默认允许、MCP/库默认禁止；环境与单次请求均可覆盖。
   安装、精确修复和 24 小时更新检查必须走 Camoufox 官方 CLI，并保留跨进程锁、进度、
   取消和 900 秒预算。显式 custom binary 不得进入任何 managed-cache 维护路径。
-- 依赖一致性：browser/full extra 接受 `camoufox>=0.5.4,<0.6`，具体版本由
-  `uv.lock` 固定；原生 CI 与离线 artifact 因此使用同一 locked package。
-  POSIX 构建器从 lockfile 解析版本，验证下载 wheel METADATA 与 installed
-  distribution 完全一致，并把实际值写入
+- 依赖一致性：browser/full extra 接受 `camoufox>=0.5.5,<0.6`；开发与原生 CI
+  继续使用 `uv.lock` 的具体版本，离线 artifact 使用依赖 wheelhouse 解析出的兼容版本。
+  POSIX 构建器从唯一 wheel 的 METADATA 解析版本，验证 installed distribution
+  与该 wheel 完全一致，并把实际值写入
   `components.camoufox.python_package_version` manifest 字段。
 - portable 自动证据：`tests/unit/test_camoufox_backend.py` 分别锁定 managed
   ephemeral、managed persistent、两种 manager 的 explicit override 与策略关闭时的

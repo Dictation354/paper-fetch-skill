@@ -6,6 +6,13 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.4.1 - 2026-08-19
+
+### Fixed — compatible Camoufox offline snapshots
+
+- Raised the supported Camoufox line to `>=0.5.5,<0.6` and refreshed the development/CI lock to 0.5.5.
+- Removed the POSIX offline builder's Camoufox-only exact `uv.lock` override. Offline builds now derive the selected version from the resolved wheelhouse while still requiring one Camoufox wheel and verifying wheel metadata, the installed distribution, and the recorded manifest version agree. This prevents frozen rolling snapshots containing a newer compatible Camoufox wheel from being rejected by an older source lock.
+
 ## 5.4.0 - 2026-08-18
 
 ### Added — on-demand Camoufox runtime preparation

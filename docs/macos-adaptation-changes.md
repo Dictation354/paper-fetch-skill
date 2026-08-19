@@ -22,8 +22,8 @@ Windows / WSL 开发时同步上游 `main` 的重放流程。它不是一次性�
   0.18.4 和 `mathml-to-latex` 1.8.0；机器合约和 unit test 同时拒绝版本漂移
 - 稳定发布的 build provenance 固定使用 `actions/attest-build-provenance` v4.2.2
   完整 SHA、一次调用和 `release-assets/**/*` subject path
-- browser/full extra 接受 `camoufox>=0.5.4,<0.6`，由 `uv.lock` 固定原生 browser
-  launch gate 与离线产物实际使用的 Python package 版本
+- browser/full extra 接受 `camoufox>=0.5.5,<0.6`；`uv.lock` 固定开发与原生
+  browser launch gate，离线产物记录 dependency wheelhouse 实际解析的兼容版本
 - `v4.1.0` 是不可移动的上游审计基线，不是本 fork 适配后的发布版本；发布这些
   适配必须先提升 fork 版本并创建新标签，不能移动或复用上游 `v4.1.0` 标签
 
@@ -222,14 +222,15 @@ macOS user-config 的 installer managed block，但保留用户自行写入的�
 
 ## MAC-V4-003：“离线包”的浏览器边界
 
-`runtime/site-packages` 内包含 `uv.lock` 选定的兼容 Camoufox 0.5.x 和 Playwright
+`runtime/site-packages` 内包含 dependency wheelhouse 选定的兼容 Camoufox 0.5.5+
+和 Playwright
 **Python 包**，但不包含 Camoufox 浏览器 binary，安装器和静态诊断也不下载。
 CLI 的真实 browser 路径默认可首次按需准备；MCP/库默认 opt-in，详见
 `MAC-V4-009`。
 构建器要求 wheelhouse 中恰好有一个 Camoufox wheel，读取其 METADATA 验证版本，
 安装后再通过 distribution metadata 复核，并把已验证版本写入
-`offline-manifest.json.components.camoufox.python_package_version`；声明、lock、
-wheel、installed runtime 与 manifest 任一漂移都会 fail closed。
+`offline-manifest.json.components.camoufox.python_package_version`；声明、wheel、
+installed runtime 与 manifest 任一漂移都会 fail closed。
 因此：
 
 1. 在仍可联网的目标 Mac 上安装 tarball；
@@ -412,8 +413,8 @@ contract gate；这些结果用于早期发现漂移，不会提升为原生 Mac
    必须指向 fork 的新版本。
 
 对不可变适配标签做“工具链修复重跑”是另一个受限场景。目标源码 checkout 必须
-先通过自身的当前 macOS contract，包括 browser/full extra 与 lockfile 的精确
-Camoufox pin；没有当前合约的旧上游 `v4.1.0` 会 fail closed，不能靠 overlay
+先通过自身的当前 macOS contract，包括 browser/full extra 的 Camoufox 兼容范围、
+lockfile 合法性与 wheel/install/manifest 一致性；没有当前合约的旧上游 `v4.1.0` 会 fail closed，不能靠 overlay
 改造成适配发行版。之后 `posix_tooling_ref` 必须是完整 40 字符 commit SHA，并且
 只允许从该受信任 commit 复制以下 POSIX 工具链到同名目标：
 

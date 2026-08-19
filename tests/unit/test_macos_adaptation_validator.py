@@ -249,7 +249,7 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract = validator.load_contract()
         contract["components"]["camoufox"]["browser_binary"] = "bundled"
         contract["components"]["camoufox"]["python_package_specifier"] = ">=0"
-        contract["components"]["camoufox"]["locked_version_source"] = "network"
+        contract["components"]["camoufox"]["version_source"] = "network"
         contract["components"]["camoufox"]["version_verification"] = "declaration"
         contract["components"]["camoufox"]["manifest_version_field"] = "missing"
         contract["components"]["camoufox"]["preflight_downloads_browser"] = True
@@ -278,16 +278,16 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             diagnostic,
         )
         self.assertIn(
-            "components.camoufox.python_package_specifier must be '>=0.5.4,<0.6'",
+            "components.camoufox.python_package_specifier must be '>=0.5.5,<0.6'",
             diagnostic,
         )
         self.assertIn(
-            "components.camoufox.locked_version_source must be 'uv.lock'",
+            "components.camoufox.version_source must be 'resolved-wheelhouse'",
             diagnostic,
         )
         self.assertIn(
             "components.camoufox.version_verification must be "
-            "'lock-wheel-installed-manifest'",
+            "'wheel-installed-manifest'",
             diagnostic,
         )
         self.assertIn(
@@ -370,8 +370,9 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         )
 
     def test_camoufox_compatible_patch_versions_are_supported(self) -> None:
-        self.assertTrue(validator._camoufox_version_is_supported("0.5.4"))
+        self.assertTrue(validator._camoufox_version_is_supported("0.5.5"))
         self.assertTrue(validator._camoufox_version_is_supported("0.5.99"))
+        self.assertFalse(validator._camoufox_version_is_supported("0.5.4"))
         self.assertFalse(validator._camoufox_version_is_supported("0.5.3"))
         self.assertFalse(validator._camoufox_version_is_supported("0.6.0"))
         self.assertFalse(validator._camoufox_version_is_supported("latest"))

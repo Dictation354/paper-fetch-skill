@@ -6,6 +6,13 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.4.1 - 2026-08-19
+
+### 修复——Camoufox 兼容离线快照
+
+- 将支持的 Camoufox 范围提升到 `>=0.5.5,<0.6`，并把开发与 CI 锁文件更新到 0.5.5。
+- 移除 POSIX 离线构建器针对 Camoufox 的 `uv.lock` 精确版本覆盖。离线构建现在从已解析 wheelhouse 获取实际版本，同时继续要求唯一 Camoufox wheel，并核验 wheel METADATA、installed distribution 与 manifest 记录一致，避免包含较新兼容 Camoufox wheel 的冻结滚动快照被稳定源码中的旧锁错误拒绝。
+
 ## 5.4.0 - 2026-08-18
 
 ### 新增——Camoufox 运行时首次按需准备

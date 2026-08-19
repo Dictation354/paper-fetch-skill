@@ -31,7 +31,7 @@ EXPECTED_PYTHON_VERSIONS = ["3.11", "3.12", "3.13", "3.14"]
 EXPECTED_PYTHON_TAGS = ["cp311", "cp312", "cp313", "cp314"]
 EXPECTED_BASELINE_REVISION = "fc3bd96e8d781667a2e86e90dc6e8e35a8a26fa7"
 EXPECTED_CONTRACT_VERSION = "4.1.0"
-EXPECTED_CAMOUFOX_SPECIFIER = ">=0.5.4,<0.6"
+EXPECTED_CAMOUFOX_SPECIFIER = ">=0.5.5,<0.6"
 EXPECTED_FORMULA_SETUP_ACTION = "haskell-actions/setup"
 EXPECTED_FORMULA_SETUP_VERSION = "v2.12.0"
 EXPECTED_FORMULA_SETUP_SHA = "6037f33647c3f17758a2356c80fc4a53d7e0685d"
@@ -644,15 +644,11 @@ def _validate_native_packaging(
                 "unused npm launcher symlink pruning",
             ),
             (
-                "locked_camoufox_version",
-                "build Camoufox lockfile version resolution",
-            ),
-            (
-                "Camoufox dependency wheel must be exactly",
+                "Camoufox dependency wheel has no version",
                 "build Camoufox wheel metadata verification",
             ),
             (
-                "Installed Camoufox runtime must be exactly",
+                "Installed Camoufox runtime must match resolved wheel version",
                 "build installed Camoufox version verification",
             ),
             (
@@ -995,7 +991,7 @@ def _validate_browser_boundary(
         required={
             "python_package",
             "python_package_specifier",
-            "locked_version_source",
+            "version_source",
             "version_verification",
             "manifest_version_field",
             "browser_binary",
@@ -1024,8 +1020,8 @@ def _validate_browser_boundary(
     expected_camoufox = {
         "python_package": "bundled",
         "python_package_specifier": EXPECTED_CAMOUFOX_SPECIFIER,
-        "locked_version_source": "uv.lock",
-        "version_verification": "lock-wheel-installed-manifest",
+        "version_source": "resolved-wheelhouse",
+        "version_verification": "wheel-installed-manifest",
         "manifest_version_field": "components.camoufox.python_package_version",
         "browser_binary": "not_bundled",
         "runtime_download_during_install": False,

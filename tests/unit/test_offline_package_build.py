@@ -796,7 +796,7 @@ exit 73
         self.assertIn("tooling_revision = sys.argv[10] or None", manifest_block)
         self.assertIn('{"tooling_revision": tooling_revision}', manifest_block)
 
-    def test_posix_build_enforces_locked_camoufox_runtime_version(self) -> None:
+    def test_posix_build_uses_resolved_camoufox_wheel_version(self) -> None:
         script = BUILD_OFFLINE_PACKAGE.read_text(encoding="utf-8")
         runtime_block = _shell_function(
             script,
@@ -804,16 +804,14 @@ exit 73
             "verify_macos_arm64_binary",
         )
 
-        self.assertIn("locked_camoufox_version()", script)
-        self.assertIn(
-            'CAMOUFOX_PYTHON_PACKAGE_VERSION="$(locked_camoufox_version)"', script
-        )
-        self.assertIn('"camoufox==$CAMOUFOX_PYTHON_PACKAGE_VERSION"', runtime_block)
+        self.assertNotIn("locked_camoufox_version()", script)
+        self.assertNotIn('"camoufox==$CAMOUFOX_PYTHON_PACKAGE_VERSION"', runtime_block)
+        self.assertIn('CAMOUFOX_PYTHON_PACKAGE_VERSION="$(', runtime_block)
         self.assertIn('[ "${#camoufox_wheels[@]}" -eq 1 ]', runtime_block)
         self.assertIn("from email.parser import BytesParser", runtime_block)
         self.assertIn("from zipfile import ZipFile", runtime_block)
         self.assertIn(
-            "Camoufox dependency wheel must be exactly {expected_version}",
+            "Camoufox dependency wheel has no version",
             runtime_block,
         )
         self.assertIn("from importlib.metadata import distributions", runtime_block)
@@ -822,7 +820,7 @@ exit 73
             runtime_block,
         )
         self.assertIn(
-            "Installed Camoufox runtime must be exactly {expected_version}",
+            "Installed Camoufox runtime must match resolved wheel version",
             runtime_block,
         )
 
@@ -834,7 +832,7 @@ exit 73
             "create_self_extracting_installer",
         )
 
-        self.assertIn("expected_camoufox_version = sys.argv[11]", manifest_block)
+        self.assertIn("resolved_camoufox_version = sys.argv[11]", manifest_block)
         self.assertIn(
             "distributions(path=[str(site_packages)])",
             manifest_block,

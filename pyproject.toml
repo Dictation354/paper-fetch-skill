@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paper-fetch-skill"
-version = "5.4.0"
+version = "5.4.1"
 description = "AI-friendly paper fetch tooling"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -55,7 +55,7 @@ Changelog = "https://github.com/Dictation354/paper-fetch-skill/blob/main/CHANGEL
 
 [project.optional-dependencies]
 browser = [
-  "camoufox>=0.5.4,<0.6",
+  "camoufox>=0.5.5,<0.6",
   "lxml>=6,<7",
   "playwright>=1.47,<1.61",
   "trafilatura>=2.0,<3",
@@ -65,7 +65,7 @@ pdf = [
   "pymupdf4llm>=1.27,<2",
 ]
 full = [
-  "camoufox>=0.5.4,<0.6",
+  "camoufox>=0.5.5,<0.6",
   "lxml>=6,<7",
   "playwright>=1.47,<1.61",
   "PyMuPDF>=1.27,<2",

@@ -77,31 +77,6 @@ print(f"cp{sys.version_info.major}{sys.version_info.minor}")
 PY
 }
 
-locked_camoufox_version() {
-  "$PYTHON_BIN" - "$REPO_DIR/uv.lock" <<'PY'
-from __future__ import annotations
-
-from pathlib import Path
-import sys
-import tomllib
-
-lock_path = Path(sys.argv[1])
-with lock_path.open("rb") as handle:
-    lock = tomllib.load(handle)
-matches = [
-    str(package.get("version") or "").strip()
-    for package in lock.get("package", [])
-    if str(package.get("name") or "").casefold() == "camoufox"
-]
-if len(matches) != 1 or not matches[0]:
-    raise SystemExit(
-        "uv.lock must contain exactly one versioned Camoufox package; "
-        f"found {len(matches)}"
-    )
-print(matches[0])
-PY
-}
-
 detect_python_arch() {
   "$PYTHON_BIN" - <<'PY'
 import platform
@@ -345,8 +320,7 @@ build_project_runtime() {
   "$PYTHON_BIN" -m pip download \
     --dest "$wheelhouse" \
     --only-binary=:all: \
-    "${wheels[0]}[full]" \
-    "camoufox==$CAMOUFOX_PYTHON_PACKAGE_VERSION"
+    "${wheels[0]}[full]"
 
   shopt -s nullglob
   local camoufox_wheels=("$wheelhouse"/camoufox-*.whl)
@@ -354,7 +328,8 @@ build_project_runtime() {
   [ "${#camoufox_wheels[@]}" -eq 1 ] \
     || die "Expected one Camoufox dependency wheel, found ${#camoufox_wheels[@]}."
 
-  "$PYTHON_BIN" - "${camoufox_wheels[0]}" "$CAMOUFOX_PYTHON_PACKAGE_VERSION" <<'PY'
+  CAMOUFOX_PYTHON_PACKAGE_VERSION="$(
+    "$PYTHON_BIN" - "${camoufox_wheels[0]}" <<'PY'
 from __future__ import annotations
 
 from email.parser import BytesParser
@@ -363,7 +338,6 @@ import sys
 from zipfile import ZipFile
 
 wheel = Path(sys.argv[1])
-expected_version = sys.argv[2]
 with ZipFile(wheel) as archive:
     candidates = []
     for name in archive.namelist():
@@ -378,12 +352,14 @@ if len(candidates) != 1:
         "Camoufox wheel must contain exactly one Camoufox distribution; "
         f"found {len(candidates)} in {wheel.name}"
     )
-if candidates[0] != expected_version:
+resolved_version = candidates[0].strip()
+if not resolved_version:
     raise SystemExit(
-        f"Camoufox dependency wheel must be exactly {expected_version}; "
-        f"found {candidates[0] or '<missing>'} in {wheel.name}"
+        f"Camoufox dependency wheel has no version in {wheel.name}"
     )
+print(resolved_version)
 PY
+  )" || die "Could not resolve the Camoufox package version from its wheel metadata."
 
   log "Installing project runtime into package"
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
@@ -415,7 +391,7 @@ if len(matches) != 1:
     )
 if matches[0].version != expected_version:
     raise SystemExit(
-        f"Installed Camoufox runtime must be exactly {expected_version}; "
+        f"Installed Camoufox runtime must match resolved wheel version {expected_version}; "
         f"found {matches[0].version or '<missing>'}"
     )
 PY
@@ -826,7 +802,7 @@ minimum_os_version = sys.argv[7] or None
 installer_manifest = json.loads(Path(sys.argv[8]).read_text(encoding="utf-8"))
 skill_bundle = json.loads(sys.argv[9])
 tooling_revision = sys.argv[10] or None
-expected_camoufox_version = sys.argv[11]
+resolved_camoufox_version = sys.argv[11]
 site_packages = staging / "runtime" / "site-packages"
 installed_packages = sorted(path.name for path in site_packages.glob("*.dist-info"))
 camoufox_distributions = [
@@ -840,9 +816,9 @@ if len(camoufox_distributions) != 1:
         f"found {len(camoufox_distributions)}"
     )
 camoufox_version = camoufox_distributions[0].version
-if camoufox_version != expected_camoufox_version:
+if camoufox_version != resolved_camoufox_version:
     raise SystemExit(
-        f"Offline manifest requires Camoufox {expected_camoufox_version}; "
+        f"Offline manifest requires resolved Camoufox {resolved_camoufox_version}; "
         f"found {camoufox_version or '<missing>'}"
     )
 manifest_name_key = f"{target_platform}_manifest_name"
@@ -1048,8 +1024,6 @@ main() {
     die "Offline output directory must not equal or be inside staging: $OUTPUT_DIR"
   fi
   version="$(project_version)"
-  CAMOUFOX_PYTHON_PACKAGE_VERSION="$(locked_camoufox_version)" \
-    || die "Could not resolve the locked Camoufox package version from uv.lock."
 
   copy_runtime_assets "$staging"
   build_project_runtime "$staging" "$package_name"

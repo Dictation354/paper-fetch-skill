@@ -1,8 +1,9 @@
 # Browser runtime ownership
 
 生产 browser runtime 只有 Camoufox；browser/full extra 接受
-`camoufox>=0.5.4,<0.6`，具体可复现版本由 `uv.lock` 选择，并由
-`paper_fetch.providers.browser_runtime` 统一管理。
+`camoufox>=0.5.5,<0.6`。开发和常规 CI 使用 `uv.lock` 中的具体版本，离线构建使用
+依赖 wheelhouse 实际解析出的兼容版本，并由 `paper_fetch.providers.browser_runtime`
+统一管理。
 
 ## 依赖方向
 
