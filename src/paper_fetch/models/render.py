@@ -133,9 +133,20 @@ def _build_article_header_block(article: ArticleModel) -> RenderedBlock:
     display_title = (
         normalize_inline_html_text(article.metadata.title) or "Untitled Article"
     )
+    lines.append(f'source: "{article.source}"')
+    if article.acquisition is not None:
+        lines.extend(
+            [
+                "acquisition:",
+                f'  provider: "{article.acquisition.provider}"',
+                f'  route: "{article.acquisition.route}"',
+                f'  representation: "{article.acquisition.representation}"',
+                f'  transport: "{article.acquisition.transport}"',
+                f"  fallback_used: {str(article.acquisition.fallback_used).lower()}",
+            ]
+        )
     lines.extend(
         [
-            f'source: "{article.source}"',
             f"has_fulltext: {str(article.quality.has_fulltext).lower()}",
             f'content_kind: "{article.quality.content_kind}"',
             f"has_abstract: {str(article.quality.has_abstract).lower()}",

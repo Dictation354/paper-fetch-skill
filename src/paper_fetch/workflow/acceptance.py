@@ -9,6 +9,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..models import (
+    AcquisitionProvenance,
     QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION,
     Asset,
     AssetProfile,
@@ -17,6 +18,10 @@ from ..models import (
     SemanticLosses,
 )
 from ..publisher_identity import normalize_doi
+from ..provider_catalog import (
+    acquisition_matches_provider_route,
+    provider_for_source,
+)
 from ..reason_codes import (
     ABSTRACT_ONLY,
     ERROR,
@@ -26,7 +31,7 @@ from ..reason_codes import (
     PDF_FALLBACK,
     RATE_LIMITED,
 )
-from ..tracing import TraceEvent
+from ..tracing import TraceEvent, acquisition_fallback_used
 from ..utils import normalize_text
 
 FETCH_ACCEPTANCE_SCHEMA_VERSION = 2
@@ -223,6 +228,7 @@ class OutputAcceptanceFacet(_AcceptanceModel):
 class ProvenanceAcceptanceFacet(_AcceptanceModel):
     status: ProvenanceAcceptanceStatus
     source: str | None = None
+    acquisition: AcquisitionProvenance | None = None
     trace_event_count: int = Field(default=0, ge=0)
     fallback_codes: tuple[str, ...] = ()
     warning_codes: tuple[str, ...] = ()
@@ -713,6 +719,7 @@ def _structured_warning_codes(
 def _provenance_facet(
     *,
     source: str | None,
+    acquisition: AcquisitionProvenance | None,
     trace: Sequence[TraceEvent],
     quality: Quality,
     asset: AssetAcceptanceFacet,
@@ -720,6 +727,17 @@ def _provenance_facet(
     failure_code: str | None,
 ) -> ProvenanceAcceptanceFacet:
     normalized_source = normalize_text(source) or None
+    source_provider = provider_for_source(normalized_source)
+    acquisition_consistent = False
+    if acquisition_matches_provider_route(acquisition) and acquisition is not None:
+        if source_provider is not None:
+            acquisition_consistent = source_provider == acquisition.provider
+        elif normalized_source == METADATA_ONLY:
+            acquisition_consistent = acquisition.provider == "crossref"
+        acquisition_consistent = acquisition_consistent and (
+            acquisition.fallback_used
+            == acquisition_fallback_used(trace, source_trail=quality.source_trail)
+        )
     has_resolve = any(
         normalize_text(event.stage).lower() == "resolve" for event in trace
     )
@@ -735,6 +753,7 @@ def _provenance_facet(
     )
     if (
         normalized_source
+        and acquisition_consistent
         and has_resolve
         and has_provider_selection
         and has_terminal_route
@@ -773,6 +792,7 @@ def _provenance_facet(
     return ProvenanceAcceptanceFacet(
         status=status,
         source=normalized_source,
+        acquisition=acquisition,
         trace_event_count=len(trace),
         fallback_codes=_normalized_codes(
             [_trace_fact_code(event) for event in fallback_events]
@@ -913,6 +933,7 @@ def evaluate_fetch_acceptance(
     output = _output_facet(envelope, requested_outputs)
     provenance = _provenance_facet(
         source=resolved_source,
+        acquisition=envelope.acquisition if envelope is not None else None,
         trace=trace,
         quality=quality,
         asset=asset,

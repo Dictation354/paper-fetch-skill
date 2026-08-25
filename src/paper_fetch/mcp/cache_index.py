@@ -8,7 +8,7 @@ import os
 import stat
 import mimetypes
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from hashlib import sha1, sha256
 from pathlib import Path
@@ -18,6 +18,7 @@ from filelock import FileLock
 
 from ..artifacts import ArtifactStore
 from ..http.content_types import STRUCTURED_TEXT_MIME_TYPES, content_type_base
+from ..models import AcquisitionProvenance, coerce_acquisition_provenance
 from ..publisher_identity import normalize_doi
 from ..utils import sanitize_filename
 from .markdown_frontmatter import read_markdown_front_matter
@@ -177,6 +178,7 @@ def _build_entry(
     path: Path,
     identity_proof: str,
     source: str | None = None,
+    acquisition: AcquisitionProvenance | None = None,
     has_fulltext: bool | None = None,
     content_kind: str | None = None,
     completed_at: str | None = None,
@@ -198,6 +200,7 @@ def _build_entry(
         entry.update(
             {
                 "source": source,
+                "acquisition": asdict(acquisition) if acquisition is not None else None,
                 "has_fulltext": has_fulltext,
                 "content_kind": content_kind,
                 "completed_at": completed_at or _mtime_as_completed_at(stat.st_mtime),
@@ -353,6 +356,7 @@ def _markdown_entry_from_front_matter(
         path=path,
         identity_proof=IDENTITY_PROOF_MARKDOWN_FRONT_MATTER,
         source=front_matter.source,
+        acquisition=front_matter.acquisition,
         has_fulltext=front_matter.has_fulltext,
         content_kind=front_matter.content_kind,
         completed_at=front_matter.completed_at,
@@ -383,12 +387,17 @@ def _registered_markdown_entry(
     if current_digest != registered_digest:
         return None
     completed_at = raw.get("completed_at")
+    raw_acquisition = raw.get("acquisition")
+    acquisition = coerce_acquisition_provenance(raw_acquisition)
+    if raw_acquisition is not None and acquisition is None:
+        return None
     return _build_entry(
         doi=doi,
         kind="markdown",
         path=path,
         identity_proof=IDENTITY_PROOF_MARKDOWN_REGISTRATION,
         source=source.strip(),
+        acquisition=acquisition,
         has_fulltext=has_fulltext,
         content_kind=content_kind,
         completed_at=completed_at if isinstance(completed_at, str) else None,
@@ -782,6 +791,7 @@ def register_markdown_entry(
     path: Path,
     *,
     source: str,
+    acquisition: AcquisitionProvenance | None = None,
     has_fulltext: bool,
     content_kind: str,
     completed_at: str | None = None,
@@ -791,6 +801,7 @@ def register_markdown_entry(
 
     normalized_doi = normalize_doi(doi)
     normalized_source = str(source or "").strip()
+    normalized_acquisition = coerce_acquisition_provenance(acquisition)
     normalized_kind = str(content_kind or "").strip().lower()
     scoped_path = _scoped_file(download_dir, str(path))
     if (
@@ -800,6 +811,7 @@ def register_markdown_entry(
         or normalized_kind not in _CONTENT_KINDS
         or scoped_path is None
         or scoped_path.suffix.lower() != ".md"
+        or (acquisition is not None and normalized_acquisition is None)
     ):
         return None
     front_matter = read_markdown_front_matter(scoped_path)
@@ -812,6 +824,7 @@ def register_markdown_entry(
         path=scoped_path,
         identity_proof=IDENTITY_PROOF_MARKDOWN_REGISTRATION,
         source=normalized_source,
+        acquisition=normalized_acquisition,
         has_fulltext=has_fulltext,
         content_kind=normalized_kind,
         completed_at=completed_at,

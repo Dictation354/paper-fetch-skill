@@ -37,6 +37,7 @@ _ASSET_KINDS: tuple[AssetLogicalKind, ...] = (
     "decoration",
 )
 _BODY_ASSET_KINDS = frozenset({"figure", "formula", "table"})
+_DUPLICATE_SHA_ASSET_KINDS = frozenset({"figure", "table"})
 _REMOTE_PREFIXES = ("http://", "https://", "//")
 _REMOTE_FIELDS = (
     "url",
@@ -281,7 +282,8 @@ def _diagnose_asset(
         ).startswith("image/"):
             suspected_reasons.append("invalid_mime")
         if (
-            width is not None
+            kind != "formula"
+            and width is not None
             and height is not None
             and (
                 min(width, height) <= PLACEHOLDER_SUSPECT_MAX_DIMENSION
@@ -345,7 +347,7 @@ def _apply_duplicate_sha_suspicions(
         if (
             path_exists
             and diagnostic.sha256
-            and diagnostic.kind in _BODY_ASSET_KINDS
+            and diagnostic.kind in _DUPLICATE_SHA_ASSET_KINDS
             and diagnostic.status != "failed"
         ):
             by_sha.setdefault(diagnostic.sha256, []).append((diagnostic, identity))

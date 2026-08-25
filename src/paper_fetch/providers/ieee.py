@@ -54,7 +54,7 @@ from . import _ieee_html as ieee_html
 from . import _ieee_landing as ieee_landing
 from . import _ieee_metadata as ieee_metadata
 from . import _ieee_recovery_policy as ieee_recovery_policy
-from . import _ieee_routes as ieee_routes
+from ._ieee_routes import IEEE_ROUTES, landing_route_name
 from . import _ieee_supplementary as ieee_supplementary
 from . import _ieee_url as ieee_url
 from . import browser_runtime
@@ -113,7 +113,7 @@ register_provider_bundle(
             provider_managed_abstract_only=True,
             client_factory_path="paper_fetch.providers.ieee:IeeeClient",
             status_order=6,
-            routes=ieee_routes.IEEE_ROUTES,
+            routes=IEEE_ROUTES,
         ),
         html_rules=ProviderHtmlRules(
             name="ieee",
@@ -348,16 +348,16 @@ class IeeeClient(ProviderClient):
         content_type = header_value(
             response.get("headers"), "content-type", "text/html"
         )
-        cleaned_body = extraction.html_text.encode("utf-8")
         extracted_assets = self._html_extraction_assets_with_landing_payloads(
             extraction, landing_attempt
         )
         return build_provider_payload(
             provider=self.name,
             route_kind="html",
+            route_name="rest_html",
             source_url=response_url,
             content_type=content_type,
-            body=cleaned_body,
+            body=extraction.html_text.encode("utf-8"),
             markdown_text=extraction.markdown_text,
             merged_metadata=landing_attempt.merged_metadata,
             diagnostics={
@@ -530,6 +530,7 @@ class IeeeClient(ProviderClient):
         return build_provider_payload(
             provider=self.name,
             route_kind=PDF_FALLBACK,
+            route_name=("browser_pdf" if direct_failure is not None else "direct_pdf"),
             source_url=pdf_result.final_url,
             content_type=PDF_MIME_TYPE,
             body=pdf_result.pdf_bytes,
@@ -572,13 +573,13 @@ class IeeeClient(ProviderClient):
                 NO_RESULT,
                 "IEEE landing metadata did not include provider abstract content.",
             )
-        body = markdown_text.encode("utf-8")
         return build_provider_payload(
             provider=self.name,
             route_kind=ABSTRACT_ONLY,
+            route_name=landing_route_name(landing_attempt.acquisition_source),
             source_url=landing_attempt.response_url,
             content_type="text/markdown",
-            body=body,
+            body=markdown_text.encode("utf-8"),
             markdown_text=markdown_text,
             merged_metadata=landing_attempt.merged_metadata,
             diagnostics=diagnostics,
@@ -684,6 +685,7 @@ class IeeeClient(ProviderClient):
             [
                 ProviderWaterfallStep(
                     label="html",
+                    route_name="rest_html",
                     run=lambda _state: self._fetch_dynamic_html_payload(
                         landing_attempt, context=runtime_context
                     ),
@@ -714,6 +716,7 @@ class IeeeClient(ProviderClient):
                 ),
                 ProviderWaterfallStep(
                     label="pdf",
+                    route_name="direct_pdf",
                     run=run_pdf,
                     failure_marker=fulltext_marker("ieee", "fail", route="pdf"),
                     continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
@@ -723,6 +726,7 @@ class IeeeClient(ProviderClient):
                 ),
                 ProviderWaterfallStep(
                     label="abstract",
+                    route_name="direct_landing",
                     run=run_abstract,
                     continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
                 ),

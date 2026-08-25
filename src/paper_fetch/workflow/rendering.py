@@ -32,6 +32,7 @@ from ..utils import (
     _extract_year,
     extend_unique,
     format_paper_stem,
+    is_http_url,
     normalize_text,
     sanitize_filename,
 )
@@ -68,9 +69,8 @@ def relative_asset_link(value: str | None, *, target_path: Path) -> str | None:
     if not original or original.startswith(("http://", "https://", "//")):
         return None
     source_path = Path(original).expanduser()
-    if not source_path.is_absolute():
-        if not source_path.exists():
-            return None
+    if not source_path.is_file():
+        return None
     source_path = source_path.resolve()
     target_dir = target_path.parent.resolve()
     relative = Path(os.path.relpath(source_path, start=target_dir))
@@ -195,6 +195,20 @@ def _remote_asset_basename(destination: str) -> str | None:
     return basename or None
 
 
+def _publisher_root_relative_asset_link(
+    value: str | None,
+    *,
+    article: ArticleModel | None,
+) -> str | None:
+    original = str(value or "").strip()
+    if not original.lower().startswith("/cms/") or article is None:
+        return None
+    landing_page_url = normalize_text(article.metadata.landing_page_url)
+    if not is_http_url(landing_page_url):
+        return None
+    return urllib.parse.urljoin(landing_page_url, original)
+
+
 def _render_asset_markdown_image(
     asset: Any,
     *,
@@ -254,7 +268,13 @@ def rewrite_markdown_asset_links(
                 if match_value is not None:
                     relative_path = match_value[0]
         if relative_path is None:
-            return match.group(0)
+            remote_path = _publisher_root_relative_asset_link(
+                destination,
+                article=envelope.article,
+            )
+            if remote_path is None:
+                return match.group(0)
+            return f"{prefix}{remote_path}{match.group(3)}"
         return f"{prefix}{relative_path}{match.group(3)}"
 
     def rewrite_image(image: Any) -> str:
@@ -284,6 +304,12 @@ def rewrite_markdown_asset_links(
         if relative_path is None:
             relative_path = relative_asset_link(destination, target_path=target_path)
         if relative_path is None:
+            remote_path = _publisher_root_relative_asset_link(
+                destination,
+                article=envelope.article,
+            )
+            if remote_path is not None:
+                return image.text.replace(destination, remote_path, 1)
             return image.text
         if matched_asset is None:
             return image.text.replace(destination, relative_path, 1)
@@ -408,6 +434,7 @@ def build_fetch_envelope(
         doi=article.doi,
         source=public_source_for_article(article),
         has_fulltext=article.quality.has_fulltext,
+        acquisition=article.acquisition,
         content_kind=article.quality.content_kind,
         has_abstract=article.quality.has_abstract,
         warnings=list(article.quality.warnings),

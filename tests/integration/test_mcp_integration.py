@@ -27,7 +27,7 @@ SERVER_SCRIPT = textwrap.dedent(
     import logging
     from pathlib import Path
 
-    from paper_fetch.models import ArticleModel, Asset, FetchEnvelope, Metadata, Quality, Section, TokenEstimateBreakdown
+    from paper_fetch.models import AcquisitionProvenance, ArticleModel, Asset, FetchEnvelope, Metadata, Quality, Section, TokenEstimateBreakdown
     from dataclasses import replace
 
     from paper_fetch.browser_preflight import BrowserPreflightResult
@@ -37,6 +37,7 @@ SERVER_SCRIPT = textwrap.dedent(
     from paper_fetch.providers.base import ProviderStatusResult, build_provider_status_check
     from paper_fetch.resolve.query import ResolvedQuery
     from paper_fetch.service import HasFulltextProbeResult
+    from paper_fetch.tracing import trace_event
     from paper_fetch.utils import sanitize_filename
 
     def fake_resolve(query, *, context=None):
@@ -64,7 +65,13 @@ SERVER_SCRIPT = textwrap.dedent(
                 (
                     "---\\n"
                     f'doi: "{query}"\\n'
-                    'source: "crossref_meta"\\n'
+                    'source: "elsevier_xml"\\n'
+                    "acquisition:\\n"
+                    '  provider: "elsevier"\\n'
+                    '  route: "xml_api"\\n'
+                    '  representation: "xml"\\n'
+                    '  transport: "api"\\n'
+                    "  fallback_used: false\\n"
                     "has_fulltext: true\\n"
                     'content_kind: "fulltext"\\n'
                     "---\\n\\n# Example Article\\n\\nExample body.\\n"
@@ -84,7 +91,7 @@ SERVER_SCRIPT = textwrap.dedent(
 
         article = ArticleModel(
             doi=query,
-            source="crossref_meta",
+            source="elsevier_xml",
             metadata=Metadata(
                 title=f"Example Article for {query}",
                 authors=["Alice Example"],
@@ -110,14 +117,39 @@ SERVER_SCRIPT = textwrap.dedent(
                 source_trail=["source:ok"],
                 token_estimate_breakdown=TokenEstimateBreakdown(abstract=16, body=48, refs=20),
             ),
+            acquisition=AcquisitionProvenance(
+                provider="elsevier",
+                route="xml_api",
+                representation="xml",
+                transport="api",
+                fallback_used=False,
+            ),
         )
         requested_modes = set(modes or set())
         return FetchEnvelope(
             doi=query,
             source="elsevier_xml",
             has_fulltext=True,
+            acquisition=article.acquisition,
             warnings=[],
             source_trail=["source:ok"],
+            trace=[
+                trace_event("resolve", "doi_selected", "ok"),
+                trace_event(
+                    "metadata",
+                    "elsevier",
+                    "ok",
+                    provider="elsevier",
+                    route="metadata_api",
+                ),
+                trace_event(
+                    "fulltext",
+                    "elsevier_xml",
+                    "ok",
+                    provider="elsevier",
+                    route="xml_api",
+                ),
+            ],
             token_estimate=64,
             token_estimate_breakdown=TokenEstimateBreakdown(abstract=16, body=48, refs=20),
             article=article if "article" in requested_modes else None,

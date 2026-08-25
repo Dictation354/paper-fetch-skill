@@ -9,6 +9,51 @@
       "title": "AcceptanceOutputKind",
       "type": "string"
     },
+    "AcquisitionProvenance": {
+      "description": "Exact final content-acquisition route alongside the legacy source label.",
+      "properties": {
+        "fallback_used": {
+          "default": false,
+          "title": "Fallback Used",
+          "type": "boolean"
+        },
+        "provider": {
+          "title": "Provider",
+          "type": "string"
+        },
+        "representation": {
+          "enum": [
+            "metadata",
+            "html",
+            "xml",
+            "pdf"
+          ],
+          "title": "Representation",
+          "type": "string"
+        },
+        "route": {
+          "title": "Route",
+          "type": "string"
+        },
+        "transport": {
+          "enum": [
+            "api",
+            "browser",
+            "http"
+          ],
+          "title": "Transport",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider",
+        "route",
+        "representation",
+        "transport"
+      ],
+      "title": "AcquisitionProvenance",
+      "type": "object"
+    },
     "ArtifactVerificationStatus": {
       "description": "File state observed while the immutable record was built.",
       "enum": [
@@ -921,6 +966,17 @@
     },
     "ProvenanceAcceptanceFacet": {
       "properties": {
+        "acquisition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AcquisitionProvenance"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "failure_codes": {
           "default": [],
           "items": {
@@ -1025,6 +1081,17 @@
   "properties": {
     "acceptance": {
       "$ref": "#/$defs/FetchAcceptanceReport"
+    },
+    "acquisition": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AcquisitionProvenance"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "asset_summary": {
       "$ref": "#/$defs/AssetAcceptanceFacet"

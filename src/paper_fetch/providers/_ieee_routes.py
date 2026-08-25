@@ -7,7 +7,7 @@ from ..provider_catalog import ProviderRouteSpec
 
 IEEE_ROUTES = (
     ProviderRouteSpec(name="metadata", kind="metadata"),
-    ProviderRouteSpec(name="rest_html", kind="html"),
+    ProviderRouteSpec(name="rest_html", kind="html", transport="api"),
     ProviderRouteSpec(
         name="browser_html",
         kind="html",
@@ -30,7 +30,24 @@ IEEE_ROUTES = (
         concurrency=1,
         timeout_seconds=120,
     ),
+    ProviderRouteSpec(name="direct_landing", kind="html", transport="http"),
+    ProviderRouteSpec(
+        name="browser_landing",
+        kind="html",
+        browser_optional=True,
+        browser_preflight=True,
+        concurrency=1,
+        timeout_seconds=120,
+    ),
 )
 
 
-__all__ = ["IEEE_ROUTES"]
+def landing_route_name(acquisition_source: str) -> str:
+    return (
+        "browser_landing"
+        if acquisition_source.endswith("_browser")
+        else "direct_landing"
+    )
+
+
+__all__ = ["IEEE_ROUTES", "landing_route_name"]

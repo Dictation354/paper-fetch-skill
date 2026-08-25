@@ -7,6 +7,7 @@ import hashlib
 import io
 import json
 from pathlib import Path
+import shutil
 from types import SimpleNamespace
 from unittest import mock
 from uuid import UUID
@@ -20,8 +21,12 @@ from paper_fetch.manifest import (
     ManifestRecordStatus,
     parse_manifest_record,
 )
-from paper_fetch.models import Asset, SemanticLosses
+from paper_fetch.manifest_writer import ManifestAuditStatus, audit_manifest_path
+from paper_fetch.models import AcquisitionProvenance, Asset, SemanticLosses
+from paper_fetch.providers import springer as springer_provider
+from paper_fetch.providers._asset_retry import merge_asset_retry_results
 from paper_fetch.providers.base import ProviderFailure
+from paper_fetch.quality.assets import build_asset_quality_summary
 from paper_fetch.reason_codes import MANAGED_CHROME_EXITED_BEFORE_CDP, RATE_LIMITED
 from paper_fetch.tracing import trace_event
 from paper_fetch.workflow.acceptance import (
@@ -424,6 +429,123 @@ def test_cli_adapter_exposes_fulltext_limited_and_asset_acceptance(
     assert record.status == "ok"
     assert record.acceptance.overall == overall
     assert record.asset_summary.status == asset_status
+
+
+def test_springer_formula_rendition_aliases_produce_complete_manifest(
+    tmp_path: Path,
+) -> None:
+    fixture_dir = (
+        Path(__file__).parents[1]
+        / "fixtures"
+        / "golden_criteria"
+        / "10.1371_journal.pone.0015338"
+        / "body_assets"
+    )
+    source_images = [
+        fixture_dir / f"pone.0015338.e{index:03d}.png" for index in range(1, 5)
+    ]
+    extracted_assets: list[dict[str, object]] = []
+    downloaded_assets: list[dict[str, object]] = []
+    for index, (size, source_image) in enumerate(
+        zip((220, 40, 35, 80), source_images, strict=True),
+        start=1,
+    ):
+        filename = f"41586_2016_BFnature16457_IEq{index}_HTML.gif"
+        preview_url = (
+            f"https://media.springernature.com/lw{size}/springer-static/image/"
+            f"art%3A10.1038%2Fnature16457/MediaObjects/{filename}"
+        )
+        full_url = preview_url.replace(f"/lw{size}/", "/full/")
+        local_path = tmp_path / f"nature16457-formula-{index}.png"
+        shutil.copyfile(source_image, local_path)
+        extracted_assets.append(
+            {
+                "kind": "formula",
+                "heading": f"Formula {index}",
+                "original_url": preview_url,
+                "url": preview_url,
+            }
+        )
+        downloaded_assets.append(
+            {
+                "kind": "formula",
+                "heading": f"Formula {index}",
+                "original_url": full_url,
+                "url": full_url,
+                "path": str(local_path),
+                "download_tier": "full",
+            }
+        )
+
+    merged_assets = merge_asset_retry_results(
+        extracted_assets,
+        downloaded_assets,
+        policy=springer_provider.SPRINGER_ASSET_RETRY_POLICY,
+    )
+    assets = [Asset(**item) for item in merged_assets]
+    asset_summary = build_asset_quality_summary(
+        assets,
+        asset_profile="body",
+        archive_enabled=True,
+    )
+    envelope = _envelope(assets=assets)
+    envelope.doi = "10.1038/nature16457"
+    envelope.source = "springer_html"
+    assert envelope.article is not None
+    envelope.article.doi = envelope.doi
+    envelope.article.source = envelope.source
+    envelope.acquisition = AcquisitionProvenance(
+        provider="springer",
+        route="direct_html",
+        representation="html",
+        transport="http",
+    )
+    envelope.article.acquisition = envelope.acquisition
+    envelope.quality.asset_summary = asset_summary
+    envelope.markdown = envelope.article.to_ai_markdown(
+        asset_profile="body",
+        include_refs="all",
+        max_tokens="full_text",
+    )
+
+    output_path = tmp_path / "nature16457.md"
+    manifest_path = tmp_path / "nature16457.manifest.json"
+    with (
+        mock.patch.object(cli, "build_runtime_env", return_value={}),
+        mock.patch.object(cli, "fetch_paper", return_value=envelope),
+        redirect_stdout(io.StringIO()),
+        redirect_stderr(io.StringIO()),
+    ):
+        exit_code = cli.main(
+            [
+                "fetch",
+                "--query",
+                envelope.doi,
+                "--output",
+                str(output_path),
+                "--output-dir",
+                str(tmp_path),
+                "--artifact-mode",
+                "markdown-assets",
+                "--asset-profile",
+                "body",
+                "--manifest",
+                str(manifest_path),
+            ]
+        )
+
+    assert exit_code == 0
+    record = parse_manifest_record(json.loads(manifest_path.read_text("utf-8")))
+    assert len(merged_assets) == 4
+    assert record.acceptance.overall == OverallAcceptanceStatus.COMPLETE
+    assert record.asset_summary.status == AssetAcceptanceStatus.COMPLETE
+    assert record.asset_summary.total == 4
+    assert record.asset_summary.local == 4
+    assert record.asset_summary.full_size == 4
+    assert record.asset_summary.failed == 0
+    assert record.asset_summary.remote_only_count == 0
+    assert record.asset_summary.issue_codes == ()
+    assert audit_manifest_path(manifest_path).status == ManifestAuditStatus.OK
 
 
 def test_cli_adapter_publishes_semantic_losses(tmp_path: Path) -> None:

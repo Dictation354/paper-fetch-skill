@@ -181,6 +181,7 @@ class McpPayloadCacheTests(unittest.TestCase):
                 "asset",
                 "output",
                 "provenance",
+                "acquisition",
                 "has_fulltext",
                 "has_abstract",
                 "token_estimate",

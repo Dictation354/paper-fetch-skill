@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import hashlib
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Literal, cast
 
@@ -28,6 +28,7 @@ from ..models import (
     coerce_asset_failure_diagnostics,
     coerce_asset_provenance,
     coerce_asset_quality_summary,
+    coerce_acquisition_provenance,
     coerce_body_quality_metrics,
     coerce_semantic_losses,
     coerce_token_estimate_breakdown,
@@ -43,6 +44,7 @@ from ..workflow.acceptance import (
     FetchAcceptanceStatus,
     IdentityAcceptanceStatus,
     OutputAcceptanceStatus,
+    ProvenanceAcceptanceStatus,
     evaluate_fetch_acceptance,
 )
 from ..workflow.types import effective_asset_profile
@@ -65,7 +67,7 @@ from .cache_index import (
 )
 from .schemas import FetchPaperRequest
 
-FETCH_ENVELOPE_CACHE_VERSION = 4
+FETCH_ENVELOPE_CACHE_VERSION = 5
 FETCH_ENVELOPE_EXTRACTION_REVISION = EXTRACTION_REVISION
 PUBLIC_CREDENTIAL_SCOPE = "public"
 _CREDENTIAL_ENV_TOKENS = ("API_KEY", "APIKEY", "TOKEN", "ACCESS_KEY", "SECRET")
@@ -80,11 +82,24 @@ class _CacheRequestSchema(BaseModel):
     max_tokens: int | str
 
 
+class _CacheAcquisitionSchema(BaseModel):
+    """Strict JSON shape used at the cache trust boundary."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    provider: str = Field(min_length=1)
+    route: str = Field(min_length=1)
+    representation: Literal["metadata", "html", "xml", "pdf"]
+    transport: Literal["api", "browser", "http"]
+    fallback_used: bool
+
+
 class _CacheEnvelopePayloadSchema(BaseModel):
     model_config = ConfigDict(extra="allow", strict=True)
 
     doi: str
     source: str = Field(min_length=1)
+    acquisition: _CacheAcquisitionSchema
     has_fulltext: bool
     content_kind: Literal["fulltext", "abstract_only", "metadata_only"]
     has_abstract: bool
@@ -221,6 +236,7 @@ def _acceptance_summary(report: FetchAcceptanceReport) -> dict[str, Any]:
         "asset": payload["asset"]["status"],
         "output": payload["output"]["status"],
         "provenance": payload["provenance"]["status"],
+        "acquisition": payload["provenance"].get("acquisition"),
     }
 
 
@@ -340,6 +356,8 @@ def cached_envelope_satisfies_request(
         return False
     if not normalize_text(envelope.source):
         return False
+    if envelope.acquisition is None:
+        return False
     if envelope.has_fulltext != (envelope.content_kind == "fulltext"):
         return False
 
@@ -382,6 +400,7 @@ def cached_envelope_satisfies_request(
         acceptance.identity.status == IdentityAcceptanceStatus.RESOLVED
         and acceptance.fetch.status == FetchAcceptanceStatus.OK
         and acceptance.output.status == OutputAcceptanceStatus.COMPLETE
+        and acceptance.provenance.status == ProvenanceAcceptanceStatus.COMPLETE
     )
 
 
@@ -594,6 +613,7 @@ def article_from_payload(value: Mapping[str, Any] | None) -> ArticleModel | None
         doi=normalize_text(value.get("doi")) or None,
         source=cast(SourceKind, normalize_text(value.get("source")) or "crossref_meta"),
         metadata=metadata,
+        acquisition=coerce_acquisition_provenance(value.get("acquisition")),
         sections=sections,
         references=references,
         assets=[
@@ -682,6 +702,7 @@ def envelope_from_payload(payload: Mapping[str, Any]) -> FetchEnvelope:
         doi=normalize_text(payload.get("doi")) or None,
         source=cast(SourceKind, normalize_text(payload.get("source")) or METADATA_ONLY),
         has_fulltext=bool(payload.get("has_fulltext")),
+        acquisition=coerce_acquisition_provenance(payload.get("acquisition")),
         content_kind=cast(
             ContentKind, normalize_text(payload.get("content_kind")) or METADATA_ONLY
         ),
@@ -1007,6 +1028,7 @@ class FetchCache:
             doi,
             path,
             source=str(envelope.source),
+            acquisition=envelope.acquisition,
             has_fulltext=envelope.has_fulltext,
             content_kind=str(envelope.content_kind),
             commit_guard=commit_guard,
@@ -1369,6 +1391,15 @@ class FetchCache:
             )
         )
         confidence = str(envelope.quality.confidence) if envelope is not None else None
+        acquisition = (
+            asdict(envelope.acquisition)
+            if envelope is not None and envelope.acquisition is not None
+            else (
+                preferred_markdown.get("acquisition")
+                if isinstance(preferred_markdown, Mapping)
+                else None
+            )
+        )
         acceptance_summary = (
             _acceptance_summary(acceptance)
             if acceptance is not None
@@ -1403,6 +1434,7 @@ class FetchCache:
             "content_kind": content_kind,
             "has_fulltext": has_fulltext,
             "confidence": confidence,
+            "acquisition": acquisition,
             "acceptance": acceptance_summary,
             "asset_summary": asset_summary,
             "warning_summary": _warning_summary(envelope, acceptance),

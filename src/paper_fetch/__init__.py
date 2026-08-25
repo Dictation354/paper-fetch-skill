@@ -1,6 +1,7 @@
 """Public package surface for paper-fetch."""
 
 from .models import (
+    AcquisitionProvenance,
     ArticleModel,
     FetchEnvelope,
     Metadata,
@@ -13,6 +14,7 @@ from .service import FetchStrategy, PaperFetchFailure, fetch_paper, resolve_pape
 from .version import __version__
 
 __all__ = [
+    "AcquisitionProvenance",
     "ArticleModel",
     "FetchEnvelope",
     "FetchStrategy",

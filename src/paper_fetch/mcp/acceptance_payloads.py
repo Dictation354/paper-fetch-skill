@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any
 
 from ..publisher_identity import extract_doi, extract_doi_from_url
@@ -27,6 +28,11 @@ def compact_acceptance_payload(
         "asset": report.asset.status.value,
         "output": report.output.status.value,
         "provenance": report.provenance.status.value,
+        "acquisition": (
+            asdict(report.provenance.acquisition)
+            if report.provenance.acquisition is not None
+            else None
+        ),
         "has_fulltext": report.content.has_fulltext,
         "has_abstract": report.content.has_abstract,
         "token_estimate": report.content.token_estimate,

@@ -437,6 +437,7 @@ def _browser_workflow_html_payload(
             source_url=html_result.final_url,
             content_type="text/html",
             body=html_bytes,
+            route_name="browser_html",
             markdown_text=markdown_text,
             diagnostics=diagnostics,
             fetcher=fetcher,

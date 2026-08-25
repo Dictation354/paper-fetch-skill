@@ -23,7 +23,7 @@ from pydantic import (
     model_validator,
 )
 
-from .models import AssetProfile, FetchEnvelope
+from .models import AcquisitionProvenance, AssetProfile, FetchEnvelope
 from .tracing import TraceEvent, trace_from_markers
 from .utils import normalize_text
 from .workflow.acceptance import (
@@ -257,6 +257,7 @@ class ManifestRecord(_ManifestModel):
     started_at: AwareDatetime
     completed_at: AwareDatetime
     source: str | None
+    acquisition: AcquisitionProvenance | None = None
     acceptance: FetchAcceptanceReport
     trace: tuple[ManifestTraceEvent, ...]
     fallback_codes: tuple[str, ...]
@@ -284,6 +285,10 @@ class ManifestRecord(_ManifestModel):
             raise ValueError("doi must be the normalized acceptance DOI")
         if self.source != self.acceptance.provenance.source:
             raise ValueError("source must be the acceptance provenance source")
+        if self.acquisition != self.acceptance.provenance.acquisition:
+            raise ValueError(
+                "acquisition must be the acceptance provenance acquisition"
+            )
         if self.asset_summary != self.acceptance.asset:
             raise ValueError("asset_summary must be the acceptance asset facet")
         if self.fallback_codes != self.acceptance.provenance.fallback_codes:
@@ -616,6 +621,7 @@ def build_manifest_record(
         started_at=effective_started_at,
         completed_at=effective_completed_at,
         source=acceptance.provenance.source,
+        acquisition=acceptance.provenance.acquisition,
         acceptance=acceptance,
         trace=_trace_for_record(envelope, manifest_error, trace),
         fallback_codes=acceptance.provenance.fallback_codes,

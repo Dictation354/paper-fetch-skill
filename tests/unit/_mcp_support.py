@@ -58,6 +58,7 @@ from paper_fetch.mcp.results import error_payload_from_exception
 from paper_fetch.mcp.schemas import FetchPaperRequest
 from paper_fetch.providers.registry import build_clients
 from paper_fetch.models import (
+    AcquisitionProvenance,
     ArticleModel,
     Asset,
     EXTRACTION_REVISION,
@@ -69,6 +70,7 @@ from paper_fetch.models import (
     Section,
     TokenEstimateBreakdown,
 )
+from paper_fetch.tracing import trace_event
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.resolve.query import ResolvedQuery
 from paper_fetch.service import (
@@ -251,6 +253,13 @@ def sample_article() -> ArticleModel:
                 abstract=32, body=96, refs=24
             ),
         ),
+        acquisition=AcquisitionProvenance(
+            provider="elsevier",
+            route="xml_api",
+            representation="xml",
+            transport="api",
+            fallback_used=False,
+        ),
     )
 
 
@@ -266,6 +275,23 @@ def sample_envelope(*, modes: set[str], doi: str = "10.1000/example") -> FetchEn
         has_fulltext=True,
         warnings=["example warning"],
         source_trail=["source:ok"],
+        trace=[
+            trace_event("resolve", "doi_selected", "ok"),
+            trace_event(
+                "metadata",
+                "elsevier",
+                "ok",
+                provider="elsevier",
+                route="metadata_api",
+            ),
+            trace_event(
+                "fulltext",
+                "elsevier_xml",
+                "ok",
+                provider="elsevier",
+                route="xml_api",
+            ),
+        ],
         token_estimate=article.quality.token_estimate,
         token_estimate_breakdown=article.quality.token_estimate_breakdown,
         quality=article.quality,
@@ -274,6 +300,7 @@ def sample_envelope(*, modes: set[str], doi: str = "10.1000/example") -> FetchEn
         if "markdown" in modes
         else None,
         metadata=article.metadata if "metadata" in modes else None,
+        acquisition=article.acquisition,
     )
 
 

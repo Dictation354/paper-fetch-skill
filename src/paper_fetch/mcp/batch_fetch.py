@@ -6,7 +6,7 @@ import asyncio
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from contextlib import ExitStack, nullcontext
-from dataclasses import dataclass, replace
+from dataclasses import asdict, dataclass, replace
 from datetime import datetime
 from pathlib import Path
 import threading
@@ -556,6 +556,9 @@ def _compact_run_payload(
             "request_fingerprint": record.request_fingerprint,
             "doi": record.doi,
             "source": record.source,
+            "acquisition": (
+                asdict(record.acquisition) if record.acquisition is not None else None
+            ),
             "reused": record.index not in attempted_indices,
             "cache_hit": cache_hits.get(key, False),
             "acceptance": compact_acceptance_payload(record.acceptance),

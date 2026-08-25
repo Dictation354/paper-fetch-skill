@@ -153,6 +153,100 @@ def test_placeholder_signals_are_suspected_and_never_delete_files(
     assert {path: path.read_bytes() for path in paths} == before
 
 
+def test_formula_dimensions_and_duplicate_hashes_are_not_placeholder_signals(
+    tmp_path: Path,
+) -> None:
+    tiny_formula = tmp_path / "tiny-formula.svg"
+    duplicate_one = tmp_path / "formula-one.png"
+    duplicate_two = tmp_path / "formula-two.png"
+    tiny_formula.write_bytes(_svg(1, 1))
+    duplicate_one.write_bytes(VALID_PNG.read_bytes())
+    duplicate_two.write_bytes(VALID_PNG.read_bytes())
+
+    summary = build_asset_quality_summary(
+        [
+            Asset(
+                kind="formula",
+                heading="Formula 1",
+                path=str(tiny_formula),
+                download_tier="preview",
+                preview_accepted=True,
+            ),
+            Asset(
+                kind="formula",
+                heading="Formula 2",
+                path=str(duplicate_one),
+                download_tier="preview",
+                preview_accepted=True,
+            ),
+            Asset(
+                kind="formula",
+                heading="Formula 3",
+                path=str(duplicate_two),
+                download_tier="preview",
+                preview_accepted=True,
+            ),
+        ],
+        asset_profile="body",
+        archive_enabled=True,
+    )
+
+    assert summary.preview == 3
+    assert summary.accepted_preview == 3
+    assert summary.fallback_preview == 0
+    assert summary.placeholder_suspected == 0
+    assert summary.issue_codes == []
+    assert all(item.status == "available" for item in summary.diagnostics)
+    assert all(
+        "tiny_dimensions" not in item.suspected_reasons
+        and "duplicate_sha256" not in item.suspected_reasons
+        for item in summary.diagnostics
+    )
+
+
+def test_formula_payload_and_path_failures_remain_diagnostic(
+    tmp_path: Path,
+) -> None:
+    zero = tmp_path / "zero-formula.png"
+    blank = tmp_path / "Blank.svg"
+    invalid = tmp_path / "invalid-formula.png"
+    missing = tmp_path / "missing-formula.png"
+    zero.write_bytes(b"")
+    blank.write_bytes(_svg(120, 80))
+    invalid.write_bytes(b"<html>not an image</html>" * 2)
+
+    summary = build_asset_quality_summary(
+        [
+            Asset(kind="formula", heading="Formula 1", path=str(zero)),
+            Asset(
+                kind="formula",
+                heading="Formula 2",
+                url="https://example.test/assets/Blank.svg",
+                path=str(blank),
+            ),
+            Asset(kind="formula", heading="Formula 3", path=str(invalid)),
+            Asset(kind="formula", heading="Formula 4", path=str(missing)),
+        ],
+        asset_profile="body",
+        archive_enabled=True,
+    )
+
+    assert [item.status for item in summary.diagnostics] == [
+        "placeholder_suspected",
+        "placeholder_suspected",
+        "placeholder_suspected",
+        "failed",
+    ]
+    assert {"zero_byte", "invalid_mime"} <= set(
+        summary.diagnostics[0].suspected_reasons
+    )
+    assert summary.diagnostics[1].suspected_reasons == ["blank_url"]
+    assert "invalid_mime" in summary.diagnostics[2].suspected_reasons
+    assert summary.diagnostics[3].failure_code == "missing_path"
+    assert summary.placeholder_suspected == 3
+    assert summary.failed == 1
+
+
 def test_none_and_no_archive_policy_are_distinct_from_failures() -> None:
     assets = [
         Asset(

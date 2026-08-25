@@ -222,6 +222,44 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         self.assertEqual(len(merged), 1)
         self.assertEqual(merged[0]["path"], "/tmp/example-figure-1.png")
 
+    def test_springer_asset_retry_policy_reconciles_preview_and_full_formula_urls(
+        self,
+    ) -> None:
+        preview_url = (
+            "https://media.springernature.com/lw220/springer-static/image/"
+            "art%3A10.1038%2Fnature16457/MediaObjects/"
+            "41586_2016_BFnature16457_IEq1_HTML.gif"
+        )
+        full_url = preview_url.replace("/lw220/", "/full/")
+
+        merged = merge_asset_retry_results(
+            [
+                {
+                    "kind": "formula",
+                    "heading": "Formula 1",
+                    "original_url": preview_url,
+                    "url": preview_url,
+                }
+            ],
+            [
+                {
+                    "kind": "formula",
+                    "heading": "Formula 1",
+                    "original_url": full_url,
+                    "url": full_url,
+                    "path": "/tmp/nature16457-formula-1.png",
+                    "download_tier": "full",
+                }
+            ],
+            policy=springer_provider.SPRINGER_ASSET_RETRY_POLICY,
+        )
+
+        self.assertEqual(len(merged), 1)
+        self.assertEqual(merged[0]["original_url"], full_url)
+        self.assertEqual(merged[0]["url"], full_url)
+        self.assertEqual(merged[0]["path"], "/tmp/nature16457-formula-1.png")
+        self.assertEqual(merged[0]["download_tier"], "full")
+
     def _build_article_from_html(
         self,
         html_path: Path,

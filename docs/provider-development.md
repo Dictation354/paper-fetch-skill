@@ -215,12 +215,15 @@ provider 内部多步骤 fallback 应声明 `paper_fetch.providers._waterfall.Wa
 每个 step 要定义：
 
 - `label`
+- `route_name`：必须精确匹配 `ProviderSpec.routes[*].name`；`label` 和既有 source-trail marker 可继续保留兼容别名。
 - `run`
 - `failure_marker`
 - `success_markers`
 - `continue_codes`
 - `failure_warning`
 - `success_warning`
+
+每条非 asset route 还必须在 `ProviderRouteSpec.transport` 中声明或由 catalog 确定 `api|browser|http`。成功 payload 在产生处写入 `ProviderContent.route_name`；共享 waterfall 只在 payload 未标记时用 step 的 `route_name` 补齐。Workflow 用最终 route 与 catalog 生成 `acquisition`，不得从 URL、fetcher 名称或兼容 `source` 反推。
 
 错误类别使用稳定的 `ProviderFailure.code`：
 

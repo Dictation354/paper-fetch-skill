@@ -349,6 +349,7 @@ class OxfordAcademicClient(ProviderClient):
         return build_provider_payload(
             provider=self.name,
             route_kind="html",
+            route_name="direct_html",
             source_url=attempt.final_url,
             content_type=content_type,
             body=extraction.html_text.encode("utf-8"),
@@ -455,6 +456,7 @@ class OxfordAcademicClient(ProviderClient):
             return build_provider_payload(
                 provider=self.name,
                 route_kind=PDF_FALLBACK,
+                route_name="direct_pdf",
                 source_url=pdf_result.final_url,
                 content_type=PDF_MIME_TYPE,
                 body=pdf_result.pdf_bytes,
@@ -579,6 +581,7 @@ class OxfordAcademicClient(ProviderClient):
             [
                 ProviderWaterfallStep(
                     label="article_html",
+                    route_name="direct_html",
                     run=run_article_html,
                     failure_marker=fulltext_marker(self.name, "fail", route="html"),
                     success_markers=(fulltext_marker(self.name, "ok", route="html"),),
@@ -589,6 +592,7 @@ class OxfordAcademicClient(ProviderClient):
                 ),
                 ProviderWaterfallStep(
                     label="pdf_fallback",
+                    route_name="direct_pdf",
                     run=run_pdf_fallback,
                     failure_marker=fulltext_marker(
                         self.name, "fail", route=PDF_FALLBACK

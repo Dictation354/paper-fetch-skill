@@ -20,10 +20,11 @@ def provider_failure_diagnostics(
     return diagnostics
 
 
-def build_provider_payload(
+def build_provider_payload(  # noqa: PLR0913 - explicit typed payload boundary
     *,
     provider: str,
     route_kind: str,
+    route_name: str | None = None,
     source_url: str,
     content_type: str,
     body: bytes,
@@ -47,6 +48,7 @@ def build_provider_payload(
         source_url=source_url,
         content_type=content_type,
         body=body,
+        route_name=route_name,
         markdown_text=markdown_text,
         merged_metadata=dict(merged_metadata)
         if isinstance(merged_metadata, Mapping)

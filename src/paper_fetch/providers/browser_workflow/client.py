@@ -353,6 +353,7 @@ class BrowserWorkflowClient(ProviderClient):
             [
                 ProviderWaterfallStep(
                     label="pdf",
+                    route_name="browser_pdf",
                     run=run_pdf_fallback,
                     success_markers=(
                         fulltext_marker(self.name, "ok", route=PDF_FALLBACK),

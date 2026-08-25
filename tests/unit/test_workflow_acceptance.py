@@ -12,6 +12,7 @@ from paper_fetch.mcp.fetch_cache import (
 )
 from paper_fetch.mcp.schemas import FetchPaperRequest
 from paper_fetch.models import (
+    AcquisitionProvenance,
     QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION,
     ArticleModel,
     Asset,
@@ -24,7 +25,11 @@ from paper_fetch.models import (
     apply_quality_assessment,
 )
 from paper_fetch.reason_codes import METADATA_ONLY, NO_ACCESS, RATE_LIMITED
-from paper_fetch.tracing import source_trail_from_trace, trace_event
+from paper_fetch.tracing import (
+    acquisition_fallback_used,
+    source_trail_from_trace,
+    trace_event,
+)
 from paper_fetch.workflow.acceptance import (
     AssetAcceptanceStatus,
     AssetAcceptanceSummary,
@@ -76,6 +81,12 @@ def _envelope(
         doi="10.1000/acceptance",
         source="elsevier_xml",
         metadata=Metadata(title="Acceptance Article", abstract=abstract),
+        acquisition=AcquisitionProvenance(
+            provider="elsevier",
+            route="xml_api",
+            representation="xml",
+            transport="api",
+        ),
         sections=sections,
         assets=list(assets or []),
         quality=Quality(),
@@ -93,6 +104,13 @@ def _envelope(
         ]
         if trace is None
         else trace
+    )
+    article.acquisition = AcquisitionProvenance(
+        provider="elsevier",
+        route="xml_api",
+        representation="xml",
+        transport="api",
+        fallback_used=acquisition_fallback_used(events),
     )
     article.quality.asset_failures = list(asset_failures or [])
     article.quality.source_trail = source_trail_from_trace(events)
@@ -540,6 +558,73 @@ def test_incomplete_provenance_is_reported_separately() -> None:
 
     assert report.provenance.status == ProvenanceAcceptanceStatus.PARTIAL
     assert report.overall == OverallAcceptanceStatus.DEGRADED
+
+
+def test_missing_acquisition_is_partial_without_guessing_from_source() -> None:
+    envelope = _envelope()
+    envelope.acquisition = None
+    assert envelope.article is not None
+    envelope.article.acquisition = None
+
+    report = evaluate_fetch_acceptance(envelope, asset_profile="none")
+
+    assert report.provenance.source == "elsevier_xml"
+    assert report.provenance.acquisition is None
+    assert report.provenance.status == ProvenanceAcceptanceStatus.PARTIAL
+    assert report.overall == OverallAcceptanceStatus.DEGRADED
+
+
+def test_catalog_inconsistent_acquisition_is_partial() -> None:
+    envelope = _envelope()
+    inconsistent = AcquisitionProvenance(
+        provider="elsevier",
+        route="xml_api",
+        representation="pdf",
+        transport="api",
+    )
+    envelope.acquisition = inconsistent
+    assert envelope.article is not None
+    envelope.article.acquisition = inconsistent
+
+    report = evaluate_fetch_acceptance(envelope, asset_profile="none")
+
+    assert report.provenance.acquisition == inconsistent
+    assert report.provenance.status == ProvenanceAcceptanceStatus.PARTIAL
+
+
+def test_fallback_flag_must_match_structured_trace() -> None:
+    events = [
+        trace_event("resolve", "doi_selected", "ok"),
+        trace_event(
+            "fulltext",
+            "elsevier_xml",
+            "fail",
+            provider="elsevier",
+            route="xml_api",
+        ),
+        trace_event(
+            "fulltext",
+            "elsevier_pdf",
+            "ok",
+            provider="elsevier",
+            route="pdf_api",
+        ),
+    ]
+    envelope = _envelope(trace=events)
+    mismatched = AcquisitionProvenance(
+        provider="elsevier",
+        route="pdf_api",
+        representation="pdf",
+        transport="api",
+        fallback_used=False,
+    )
+    envelope.acquisition = mismatched
+    assert envelope.article is not None
+    envelope.article.acquisition = mismatched
+
+    report = evaluate_fetch_acceptance(envelope, asset_profile="none")
+
+    assert report.provenance.status == ProvenanceAcceptanceStatus.PARTIAL
 
 
 def test_recovered_rate_limit_remains_structured_degradation() -> None:

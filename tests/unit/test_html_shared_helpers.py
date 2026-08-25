@@ -406,6 +406,47 @@ class SharedHtmlHelperTests(unittest.TestCase):
             [asset["kind"] for asset in scoped_assets], ["figure", "formula"]
         )
 
+    def test_explicit_formula_url_in_figure_caption_is_a_formula_asset(self) -> None:
+        """rule: rule-preserve-formula-image-fallbacks"""
+        html = """
+<html>
+  <body>
+    <figure id="F3">
+      <img src="/cms/asset/jgrg21136-fig-0003-m.jpg" alt="Figure 3" />
+      <figcaption>
+        <span class="label">Figure 3.</span>
+        Attribution components
+        <img src="/cms/asset/jgrg21136-math-0029.png" alt="" />
+        are compared across methods.
+      </figcaption>
+    </figure>
+  </body>
+</html>
+"""
+        source_url = "https://onlinelibrary.wiley.com/doi/full/10.1029/2018JG004401"
+
+        figure_assets = html_assets.extract_figure_assets(html, source_url)
+        formula_assets = html_assets.extract_formula_assets(
+            html,
+            source_url,
+            noise_profile="wiley",
+        )
+        scoped_assets = html_assets.extract_scoped_html_assets(
+            html,
+            source_url,
+            asset_profile="body",
+            noise_profile="wiley",
+        )
+
+        self.assertEqual(len(figure_assets), 1)
+        self.assertIn("jgrg21136-fig-0003-m.jpg", figure_assets[0]["url"])
+        self.assertEqual(len(formula_assets), 1)
+        self.assertIn("jgrg21136-math-0029.png", formula_assets[0]["url"])
+        self.assertEqual(formula_assets[0]["preview_accepted"], "true")
+        self.assertEqual(
+            [asset["kind"] for asset in scoped_assets], ["figure", "formula"]
+        )
+
     def test_scoped_assets_prefer_formula_when_figure_reuses_formula_url(self) -> None:
         html = """
 <html>
@@ -1163,6 +1204,51 @@ class SharedHtmlHelperTests(unittest.TestCase):
         )
 
         self.assertEqual(candidates[0], "https://example.test/full.png")
+
+    def test_formula_bitmap_download_is_an_accepted_preview(self) -> None:
+        """rule: rule-image-download-validates-real-images"""
+        formula_url = "https://example.test/cms/example-math-0001.png"
+        formula_body = golden_criteria_asset(
+            "10.1371/journal.pone.0015338",
+            "body_assets/pone.0015338.e003.png",
+        ).read_bytes()
+        transport = _StaticAssetTransport(
+            {
+                ("GET", formula_url): {
+                    "status_code": 200,
+                    "headers": {"content-type": "image/png"},
+                    "body": formula_body,
+                    "url": formula_url,
+                }
+            }
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = html_assets.download_assets(
+                html_assets.FIGURE_KIND,
+                transport,
+                article_id="10.5555/formula-preview",
+                assets=[
+                    {
+                        "kind": "formula",
+                        "heading": "Formula 1",
+                        "caption": "",
+                        "url": formula_url,
+                        "preview_url": formula_url,
+                        "preview_accepted": "true",
+                        "section": "body",
+                    }
+                ],
+                output_dir=Path(tmpdir),
+                user_agent="paper-fetch-test",
+                asset_profile="body",
+            )
+
+        self.assertEqual(result["asset_failures"], [])
+        self.assertEqual(len(result["assets"]), 1)
+        self.assertEqual(result["assets"][0]["kind"], "formula")
+        self.assertEqual(result["assets"][0]["download_tier"], "preview")
+        self.assertTrue(result["assets"][0]["preview_accepted"])
 
     def test_download_assets_figure_kind_converts_eps_source_to_png_and_keeps_original(
         self,

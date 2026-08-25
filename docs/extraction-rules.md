@@ -422,12 +422,12 @@ metadata
 <a id="rule-rewrite-inline-figure-links"></a>
 ### 已下载的正文图片和公式图片要改写成正文附近的本地链接
 
-- 这条规则约束的是：正文里已经有 figure、table image 或 formula image 锚点时，最终 markdown 应该尽量把远程图链接或绝对本地路径改写成当前 markdown 文件可用的本地资源链接，而且图和图之间不能误绑；改写后还要重新规范 Markdown 图片块边界和短 alt 标签，不能让图片和标题、正文句子或公式围栏粘在一起。
+- 这条规则约束的是：正文里已经有 figure、table image 或 formula image 锚点时，最终 markdown 应该尽量把远程图链接或绝对本地路径改写成当前 markdown 文件可用的本地资源链接，而且图和图之间不能误绑；只有真实存在的本地文件才能生成相对路径。未匹配本地资产的 `/cms/...` 根相对链接应使用有效的 publisher `landing_page_url` 补成完整远程 URL；没有有效 HTTP(S) 基址时保留原链接。改写后还要重新规范 Markdown 图片块边界和短 alt 标签，不能让图片和标题、正文句子或公式围栏粘在一起。
 - 公式图片锚点只能按 formula 资产改写；它不能被 inline figure 注入逻辑当作 figure 占位，也不能消耗后续正文 figure 的本地资产。
 - 已存在的 Markdown 图片块会按 alt 和图片 URL basename 提取 `Figure N` 去重键；即使 caption label 暂时不可用或同一 figure 资产重复出现，正文里的 `Figure N` 交叉引用也不能再触发第二次插图。
-- 如果违反，用户会看到：图片链接还是远程 URL、还是绝对路径、图 4 的本地资源被错绑到图 1 的 caption 上，table 图片被错改成下一张 figure，或者出现 `Heading![Figure]`、`text.![Formula]` 这类坏 Markdown。
+- 如果违反，用户会看到：图片链接还是不可用的根相对 URL、绝对路径，或被伪造成 `../../cms/...` 这类不存在的本地路径；也可能出现图 4 的本地资源被错绑到图 1 的 caption、table 图片被错改成下一张 figure，或者 `Heading![Figure]`、`text.![Formula]` 这类坏 Markdown。
 - 它对应的阶段是：`asset-link-rewrite`、`article-assembly`、`markdown-normalization`、`final-rendering`。
-- Owner：`paper_fetch.extraction.html.figure_links`。
+- Owner：`paper_fetch.extraction.html.figure_links` 与 `paper_fetch.workflow.rendering`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/_scenarios/inline_figure_link_rewrite/article.md`](../tests/fixtures/golden_criteria/_scenarios/inline_figure_link_rewrite/article.md)
   - [`../tests/fixtures/golden_criteria/_scenarios/inline_figure_link_rewrite/assets.json`](../tests/fixtures/golden_criteria/_scenarios/inline_figure_link_rewrite/assets.json)
@@ -447,6 +447,8 @@ metadata
   - CLI / models 覆盖：
     - [`../tests/unit/test_cli.py`](../tests/unit/test_cli.py) 中的 `test_save_markdown_to_disk_rewrites_local_asset_links_relative_to_saved_file`
     - [`../tests/unit/test_cli.py`](../tests/unit/test_cli.py) 中的 `test_rewrite_markdown_asset_links_maps_remote_figure_urls_to_downloaded_local_assets`
+    - [`../tests/unit/test_cli.py`](../tests/unit/test_cli.py) 中的 `test_rewrite_markdown_asset_links_prefers_downloaded_root_relative_formula`
+    - [`../tests/unit/test_cli.py`](../tests/unit/test_cli.py) 中的 `test_rewrite_markdown_asset_links_expands_unmatched_cms_url_from_landing_page` 与 `test_rewrite_markdown_asset_links_keeps_cms_url_without_valid_landing_page`
     - [`../tests/unit/test_models_render.py`](../tests/unit/test_models_render.py) 中的 `test_article_from_markdown_rewrites_inline_asset_urls_to_downloaded_paths`
     - [`../tests/unit/test_models_render.py`](../tests/unit/test_models_render.py) 中的 `test_article_from_markdown_normalizes_after_inline_asset_url_rewrite`
     - [`../tests/unit/test_models_render.py`](../tests/unit/test_models_render.py) 中的 `test_normalize_markdown_text_separates_adjacent_block_images`
@@ -454,6 +456,7 @@ metadata
 - 边界说明：
   - 这条规则只改写 Markdown 链接目标，不会去改普通正文里的纯文本路径。
   - 只有当系统手里确实有可用的本地资产时，才应该把链接改写成对应本地路径。
+  - 已下载资产匹配优先于 publisher 远程 fallback；远程 fallback 只修复未匹配的 `/cms/...`，不把任意缺失的绝对本地路径猜成网页 URL。
   - `![Table ...]`、`![Extended Data Table ...]` 和 `![Supplementary Table ...]` 图片块不参与 figure 顺序 fallback；table image 的原位链接由 table/provider 链路维护。
   - 对 preview 降级，正文里如果仍引用 full-size 远端 URL，也必须能通过 `original_url` / `full_size_url` / `preview_url` / `download_url` / `source_url` 映射到实际保存的本地 preview 文件。
 
@@ -491,7 +494,7 @@ metadata
 <a id="rule-image-download-validates-real-images"></a>
 ### 图片下载必须验证真实图片内容
 
-- 这条规则约束的是：正文图片下载不能把 Cloudflare challenge HTML、Chrome 图片查看器壳或过小的站点图标当成论文图片保存；preview 图只有尺寸达标或 provider 明确接受，并在 `Asset.preview_accepted` 中保存该事实时，才算可接受结果。下载后的统一审计必须用 `filetype` 读取真实 MIME、用 `imagesize` 读取尺寸，并记录文件实际字节数和 `SHA256`，不能信任扩展名、响应头或 provider 声明值代替文件事实。
+- 这条规则约束的是：正文图片下载不能把 Cloudflare challenge HTML、Chrome 图片查看器壳或过小的站点图标当成论文图片保存；preview 图只有尺寸达标或 provider 明确接受，并在 `Asset.preview_accepted` 中保存该事实时，才算可接受结果。publisher 只提供的规范公式位图属于显式 accepted preview，不要求伪造 full-size tier。下载后的统一审计必须用 `filetype` 读取真实 MIME、用 `imagesize` 读取尺寸，并记录文件实际字节数和 `SHA256`，不能信任扩展名、响应头或 provider 声明值代替文件事实。
 - 如果违反，用户会看到：正文缺图，或本地图片文件其实是 HTML / 站点图标，后续渲染和 live review 都无法解释失败原因。
 - 它对应的阶段是：`asset-download`、`asset-validation`、`availability-quality`。
 - Owner：`paper_fetch.extraction.html.assets` 与 `paper_fetch.providers.browser_workflow.fetchers`。
@@ -507,6 +510,7 @@ metadata
     - [`../tests/unit/test_atypon_browser_workflow_provider_asset_downloads.py`](../tests/unit/test_atypon_browser_workflow_provider_asset_downloads.py) 中的 `test_science_provider_records_preview_dimensions_and_acceptance`
     - [`../tests/unit/test_atypon_browser_workflow_provider_asset_failures.py`](../tests/unit/test_atypon_browser_workflow_provider_asset_failures.py) 中的 `test_science_provider_replay_for_adz3492_saves_svg_body_asset`
     - [`../tests/unit/test_atypon_browser_workflow_provider_asset_failures.py`](../tests/unit/test_atypon_browser_workflow_provider_asset_failures.py) 中的 `test_science_provider_records_asset_failure_when_shared_browser_preview_fails`
+    - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_formula_bitmap_download_is_an_accepted_preview`
   - Service / live review 覆盖：
     - [`../tests/unit/test_service_probe_and_assets.py`](../tests/unit/test_service_probe_and_assets.py) 中的 `test_fetch_paper_accepts_preview_images_with_sufficient_dimensions`
     - [`../tests/devtools/test_golden_criteria_live.py`](../tests/devtools/test_golden_criteria_live.py) 中的 `test_science_preview_accepted_is_not_an_asset_issue`
@@ -515,11 +519,12 @@ metadata
   - 统一真实性审计：
     - [`../tests/unit/test_asset_quality.py`](../tests/unit/test_asset_quality.py) 中的 `test_valid_png_jpeg_svg_and_pseudo_extension_record_real_facts`
     - [`../tests/unit/test_asset_quality.py`](../tests/unit/test_asset_quality.py) 中的 `test_placeholder_signals_are_suspected_and_never_delete_files`
+    - [`../tests/unit/test_asset_quality.py`](../tests/unit/test_asset_quality.py) 中的 `test_formula_dimensions_and_duplicate_hashes_are_not_placeholder_signals` 与 `test_formula_payload_and_path_failures_remain_diagnostic`
     - [`../tests/unit/test_asset_quality.py`](../tests/unit/test_asset_quality.py) 中的 `test_missing_path_and_explicit_failure_are_definite_and_classified`
 - 边界说明：
-- `download_tier="preview"` 不是天然错误；当下载阶段判定 preview 尺寸满足阈值，或 provider 明确把该 preview 标记为可接受，并设置 `preview_accepted=true` 时，它不应写入普通 warning，也不产生 asset issue。source trail 只保留摘要诊断，不能代替该结构化字段。
-- 任意 kind 的 fallback preview 都产生 `asset_fidelity_degraded`，但不产生 `asset_download_failure`；只有 accepted preview 且无其它 issue 时，资产分面保持 `complete`。
-  - `Blank.svg` / `Blank.png` URL、零字节、异常小文件或尺寸、无效真实 MIME、MIME 与扩展名不一致，以及多个不同逻辑正文图共享完全相同 `SHA256`，都只是保守的 `placeholder_suspected` 信号。审计器不会据此删除、覆盖或改写文件，也不会声称已经完成视觉语义判断。
+  - `download_tier="preview"` 不是天然错误；当下载阶段判定 preview 尺寸满足阈值，或 provider 明确把该 preview 标记为可接受，并设置 `preview_accepted=true` 时，它不应写入普通 warning，也不产生 asset issue。source trail 只保留摘要诊断，不能代替该结构化字段。
+  - 任意 kind 的 fallback preview 都产生 `asset_fidelity_degraded`，但不产生 `asset_download_failure`；只有 accepted preview 且无其它 issue 时，资产分面保持 `complete`，并继续满足 `preview = accepted_preview + fallback_preview`。
+  - `Blank.svg` / `Blank.png` URL、零字节、异常小文件、无效真实 MIME、MIME 与扩展名不一致，以及多个不同逻辑 figure/table 共享完全相同 `SHA256`，都只是保守的 `placeholder_suspected` 信号。公式位图不使用 `tiny_dimensions` 或 `duplicate_sha256` 推断占位，因为规范表达式本来可能很小或重复；但公式仍检查 blank URL、零字节、异常小文件、无效 MIME、扩展名不符、文件缺失或不可读。审计器不会据此删除、覆盖或改写文件，也不会声称已经完成视觉语义判断。
   - 明确的下载 failure diagnostic、声明了本地路径但文件不存在或不可读，才属于确定的资产失败；这些失败仍不能把已经成功的正文内容改判成抓取失败。
   - `asset_profile=none` 时，保留下来的远程链接逐项记为 `not_requested`，不能对它们执行本地存在性失败判定；请求了对应 kind、但 no-download / artifact policy 禁止归档时记为 `not_archived`。`body` profile 不请求 supplement，`all` 才请求 supplement 和 decoration。
   - `figure`、`formula`、`table`、`supplement`、`decoration` 必须分别汇总；公式占位嫌疑不能冒充正文主图失败，主图失败也不能被公式成功掩盖。
@@ -542,12 +547,15 @@ metadata
     - [`../tests/unit/test_workflow_acceptance.py`](../tests/unit/test_workflow_acceptance.py) 中的 `test_audited_quality_asset_summary_matches_explicit_acceptance_adapter`
   - Provider 覆盖：
     - [`../tests/unit/test_asset_retry_policy.py`](../tests/unit/test_asset_retry_policy.py) 中的 `test_provider_asset_retry_policies_round_trip_merge_and_retry`
+    - [`../tests/unit/test_springer_html_regressions.py`](../tests/unit/test_springer_html_regressions.py) 中的 `test_springer_asset_retry_policy_reconciles_preview_and_full_formula_urls`
+    - [`../tests/unit/test_cli_manifest_v2.py`](../tests/unit/test_cli_manifest_v2.py) 中的 `test_springer_formula_rendition_aliases_produce_complete_manifest`
     - [`../tests/unit/test_atypon_browser_workflow_provider_retries.py`](../tests/unit/test_atypon_browser_workflow_provider_retries.py) 中的 `test_browser_workflow_download_related_assets_retries_after_partial_failures`
     - [`../tests/unit/test_atypon_browser_workflow_provider_retries.py`](../tests/unit/test_atypon_browser_workflow_provider_retries.py) 中的 `test_browser_workflow_retries_only_failed_supplementary_assets`
     - [`../tests/unit/test_atypon_browser_workflow_provider_retries.py`](../tests/unit/test_atypon_browser_workflow_provider_retries.py) 中的 `test_browser_workflow_retries_only_failed_body_assets`
     - [`../tests/unit/test_atypon_browser_workflow_provider_asset_failures.py`](../tests/unit/test_atypon_browser_workflow_provider_asset_failures.py) 中的 `test_science_provider_records_asset_failure_when_shared_browser_preview_fails`
 - 边界说明：
   - 本规则只要求诊断字段不丢失，不要求所有 provider 使用同一种远端下载实现。
+  - Springer/Nature 的 `media.springernature.com/lwNN/springer-static/...` 与对应 `/full/...` 是同一远端对象的尺寸 rendition；provider 必须复用既有 full-size URL promotion 规则规范化 retry identity。成功的 `/full/...` 本地记录覆盖预览别名后只能进入一次逻辑资产验收，不能让无本地路径的 `lwNN` 别名另计为 `missing_path` 或 `asset_remote_only`；真正没有对应本地记录的远端资产仍按失败处理。
   - Browser workflow 的 retry 只覆盖网络、超时、browser context/fetch error 和 challenge 类可恢复失败；404、非目标 content type、unsupported scheme 等确定性失败不触发重试。403、429 和 5xx 只有在 reason 同时指向 challenge 或 browser fetch/context 临时失败时才重试。
   - 诊断字段不能替代用户可见内容；caption、占位和 warnings 仍由渲染规则决定。
   - EPS/TIFF 源转换失败后，如果后续 JPG/PNG 候选成功，最终资产保持成功且记录 `conversion_degraded` provenance；不能保留一个虚假的最终 asset failure。只有所有候选均失败时才计入 `failed`。
@@ -934,22 +942,30 @@ metadata
 ### HTML 公式图片 fallback 必须保留并进入资产链路
 
 - 这条规则约束的是：HTML 中的 MathML、publisher fallback span、inline equation image 和 display equation image 要尽量转成可读公式；如果 MathML 无法转换或公式本来只以图片存在，就保留 `![Formula](...)`，并把它作为 `kind="formula"` 的正文资产候选进入下载和本地链接改写流程。
-- 公式图片 URL 中的强信号（如 `_IEqN_HTML`、`_EquN_HTML`、`math-*`）优先于 figure-context 排除；只有 URL 没有公式信号时，figure / Silverchair figure wrapper 才用于避免把普通正文图按 alt/title 中的 `Equation` 误判为公式。
-- 如果违反，用户会看到：公式静默消失、被渲染成 `[Formula unavailable]` 的假失败，或者正文里残留远程公式图片链接且无法跟下载资产对应。
-- 它对应的阶段是：`html-cleanup`、`formula-rendering`、`asset-discovery`、`article-assembly`。
-- Owner：`paper_fetch.extraction.html.formula_rules`。
+- display formula 的候选优先级必须是：可转换的 MathML / 显式 TeX、公式图片、非编号可见文本、`[Formula unavailable]`。`(1)`、`Equation 1.` 这类编号只属于 equation label，不能冒充 LaTeX，也不能抢在已有公式图片之前生成 `$$ (1) $$` 伪公式。
+- 已经形成的完整 `$$ ... $$` display-math 块属于 Markdown 辅助块，正文后处理不能再用“短全大写 front matter”启发式把它删除；单独的 `$$` 围栏仍按原有块边界规则处理。
+- 公式图片 URL 中的强信号（如 `_IEqN_HTML`、`_EquN_HTML`、`math-*`）优先于 figure-context 排除，即使裸公式图片位于 figure caption 中也必须进入 formula 资产链路；只有 URL 没有公式信号时，figure / Silverchair figure wrapper 才用于避免把普通正文图按文件名、alt/title 或 caption 中的 `Equation` 误判为公式。
+- 只有公式 bitmap 候选且 publisher 没有更大版本时，下载结果继续如实记录 `download_tier="preview"`，同时设置 `preview_accepted=true`；它不伪装成 full-size，也不单独产生 `asset_fidelity_degraded`。
+- 如果违反，用户会看到：公式静默消失、编号被渲染成 `$$ (1) $$` 伪公式、被渲染成 `[Formula unavailable]` 的假失败，或者正文里残留远程公式图片链接且无法跟下载资产对应。
+- 它对应的阶段是：`html-cleanup`、`formula-rendering`、`asset-discovery`、`markdown-normalization`、`article-assembly`、`final-rendering`。
+- Owner：`paper_fetch.extraction.html.formula_rules`、`paper_fetch.providers.atypon_browser_workflow.formulas` 与 Atypon browser-workflow Markdown postprocess。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1111_gcb.15322/original.html`](../tests/fixtures/golden_criteria/10.1111_gcb.15322/original.html)
+  - [`../tests/fixtures/golden_criteria/10.1111_gcb.16011/original.html`](../tests/fixtures/golden_criteria/10.1111_gcb.16011/original.html)
   - [`../tests/fixtures/golden_criteria/10.1038_nature12915/original.html`](../tests/fixtures/golden_criteria/10.1038_nature12915/original.html)
   - [`../tests/fixtures/golden_criteria/10.1038_nature13376/original.html`](../tests/fixtures/golden_criteria/10.1038_nature13376/original.html)
-  - 这些样本分别覆盖 Wiley fallback formula image、早期 Nature display equation 图片 `_EquN_HTML.jpg` 和早期 Nature inline equation image `_IEqN_HTML.jpg`。
+  - 这些样本分别覆盖 Wiley 无标签与有 `(N)` 标签的 fallback formula image、早期 Nature display equation 图片 `_EquN_HTML.jpg` 和早期 Nature inline equation image `_IEqN_HTML.jpg`。
 - 对应测试：
   - [`../tests/unit/test_atypon_browser_workflow_markdown.py`](../tests/unit/test_atypon_browser_workflow_markdown.py) 中的 `test_wiley_formula_image_fallbacks_are_preserved`
+  - [`../tests/unit/test_atypon_browser_workflow_markdown.py`](../tests/unit/test_atypon_browser_workflow_markdown.py) 中的 `test_wiley_labeled_formula_image_fixture_does_not_render_label_as_math`
   - [`../tests/unit/test_atypon_browser_workflow_markdown.py`](../tests/unit/test_atypon_browser_workflow_markdown.py) 中的 `test_wiley_inline_mathml_with_fallback_span_does_not_emit_placeholder`
   - [`../tests/unit/test_atypon_browser_workflow_markdown.py`](../tests/unit/test_atypon_browser_workflow_markdown.py) 中的 `test_wiley_display_formula_can_fall_back_to_alt_image_span`
+  - [`../tests/unit/test_atypon_browser_workflow_markdown.py`](../tests/unit/test_atypon_browser_workflow_markdown.py) 中的 `test_wiley_labeled_empty_mathml_prefers_formula_image_over_label_text`、`test_wiley_display_formula_prefers_structured_tex_over_image` 与 `test_wiley_label_only_display_formula_is_unavailable_not_pseudo_math`
+  - [`../tests/unit/test_atypon_browser_workflow_postprocess_units.py`](../tests/unit/test_atypon_browser_workflow_postprocess_units.py) 中的 `test_postprocess_preserves_complete_display_math_block`
   - [`../tests/unit/test_springer_html_regressions.py`](../tests/unit/test_springer_html_regressions.py) 中的 `test_old_nature_fixture_preserves_inline_equation_images`
   - [`../tests/unit/test_springer_html_regressions.py`](../tests/unit/test_springer_html_regressions.py) 中的 `test_old_nature_fixture_keeps_single_methods_summary_and_methods_sections`
   - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_formula_rules_detect_real_formula_image_urls`
+  - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_explicit_formula_url_in_figure_caption_is_a_formula_asset`
   - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_provider_formula_container_tokens_require_explicit_profile`
   - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_extract_formula_assets_reuses_shared_formula_rules`
   - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_wiley_formula_asset_extractor_accepts_altimg_fallback_span`
@@ -957,8 +973,10 @@ metadata
   - [`../tests/unit/test_models_render.py`](../tests/unit/test_models_render.py) 中的 `test_article_from_markdown_rewrites_inline_asset_urls_to_downloaded_paths`
 - 边界说明：
   - 这条规则不是保证所有 HTML 公式都能转成 LaTeX；保留公式图片 fallback 是正确输出。
+  - 只有编号而没有可转换结构、公式图片或其它公式文本时，应保留 equation label 并明确输出 `[Formula unavailable]`，不能根据编号猜造表达式。
   - Nature display equation 结构 `c-article-equation` / `c-article-equation__content` 和 `_Equ1_HTML.jpg` 这类 URL 必须渲染为 `![Formula](...)` 并进入 `kind="formula"` 资产链路；其中 publisher-specific class / selector 只通过 `ProviderHtmlRules` 和显式 `noise_profile="springer_nature"` 生效，不进入 generic 默认 token。
   - 只有看起来属于公式容器、公式 URL、公式 fallback 属性或公式 alt/title 的图片才进入公式资产链路，普通 `FigN_HTML` 正文图片仍按 figure/table 处理。
+  - 普通 figure 的文件名或图注只是提到 equation 时仍属于 figure；figure caption 中显式命中 `math-N`、`_IEqN` 或 `_EquN` 的图片才覆盖 figure-context 排除。
 
 <a id="rule-formula-latex-normalization"></a>
 ### LaTeX normalization 必须产出 KaTeX 可渲染表达
@@ -997,6 +1015,7 @@ metadata
   - [已下载的正文图片和公式图片要改写成正文附近的本地链接](#rule-rewrite-inline-figure-links)
   - [表格能展平就转 Markdown 表，展不平就退成可读列表](#rule-table-flatten-or-list)
   - [HTML 公式图片 fallback 必须保留并进入资产链路](#rule-preserve-formula-image-fallbacks)
+  - [下载资产必须保留诊断字段](#rule-asset-download-diagnostic-fields)
 - 不适用 / 部分适用说明：
   - [浏览器工作流图片下载必须使用 shared browser 主链路](#rule-browser-primary-image-download-path) 不适用于 Springer direct HTML；Springer 图片下载走 direct HTML 资产链路。
   - [前言摘要族的顺序与去重必须稳定](#rule-stable-frontmatter-order) 只在 Springer/Nature 页面暴露可识别 frontmatter 结构时适用，不要求所有 Springer 页面生成前言族。
@@ -1979,7 +1998,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 | golden / Annual Reviews | `10.1146_annurev-control-030123-013355`, `10.1146_annurev-environ-102511-084654`, `10.1146_annurev-med-120811-171056`, `10.1146_annurev-neuro-062111-150343` | Annual Reviews onboarding 的 HTML 结构/figure/references/formula/supplementary 与 PDF fallback fixture；waterfall 路线说明归 providers.md，provider-owned 清洗依据记录在 cleaning proposal 和 provider-local tests。 |
 | golden / PNAS | `10.1073_pnas.1915921117`, `10.1073_pnas.2208095119`, `10.1073_pnas.2305050120`, `10.1073_pnas.2310157121`, `10.1073_pnas.2314265121`, `10.1073_pnas.2317456120`, `10.1073_pnas.2322622121`, `10.1073_pnas.2402656121`, `10.1073_pnas.2410294121` | PNAS golden corpus 的 article-type 和 live review breadth 回归池。 |
 | golden / Science | `10.1126_sciadv.abf8021`, `10.1126_sciadv.abg9690`, `10.1126_sciadv.abj3309`, `10.1126_sciadv.adm9732`, `10.1126_science.ade0347`, `10.1126_science.ady3136` | Science / Science Advances golden corpus 的 article-type 和 expected payload 回归池。 |
-| golden / Wiley | `10.1111_cas.16117`, `10.1111_gcb.16011`, `10.1111_gcb.16455`, `10.1111_gcb.16561`, `10.1111_gcb.16745`, `10.1111_gcb.16758`, `10.1111_gcb.17141` | Wiley golden corpus 的 article-type、asset 和 expected payload 回归池。 |
+| golden / Wiley | `10.1111_cas.16117`, `10.1111_gcb.16455`, `10.1111_gcb.16561`, `10.1111_gcb.16745`, `10.1111_gcb.16758`, `10.1111_gcb.17141` | Wiley golden corpus 的 article-type、asset 和 expected payload 回归池。 |
 | golden / Copernicus XML | `10.5194_amt-17-1-2024`, `10.5194_bg-21-1-2024`, `10.5194_essd-16-1-2024`, `10.5194_gmd-17-1-2024`, `10.5194_hess-28-1-2024`, `10.5194_nhess-24-1-2024`, `10.5194_tc-18-1-2024` | Copernicus XML golden corpus 的跨期刊 breadth 和 expected payload 回归池。 |
 | golden / Copernicus PDF fallback | `10.5194_acp-1-1-2001`, `10.5194_bg-1-1-2004`, `10.5194_cp-1-1-2005`, `10.5194_dwes-1-1-2008` | Copernicus 早期 abstract-only XML 落到 PDF fallback 的 route 和 expected payload 回归池；waterfall 归 providers.md。 |
 | golden / PLOS XML | `10.1371_journal.pcbi.1003118`, `10.1371_journal.pone.0015338`, `10.1371_journal.pone.0026949`, `10.1371_journal.pone.0126635`, `10.1371_journal.pone.0218513`, `10.1371_journal.pone.0263725`, `10.1371_journal.pone.0304873` | PLOS public JATS XML onboarding 的结构、figure、references、formula、supplementary 和 table 合约样本；waterfall 和 provider route 语义归 providers.md，provider-owned 清洗依据记录在 cleaning proposal 和 provider-local tests。 |

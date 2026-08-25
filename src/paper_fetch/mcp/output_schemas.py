@@ -109,6 +109,14 @@ class MetadataOutput(TypedDict, total=False):
     landing_page_url: str | None
 
 
+class AcquisitionProvenanceOutput(TypedDict, total=False):
+    provider: str
+    route: str
+    representation: str
+    transport: str
+    fallback_used: bool
+
+
 class SectionOutput(TypedDict, total=False):
     heading: str
     level: int
@@ -290,6 +298,7 @@ class QualityOutput(TypedDict, total=False):
 class ArticleOutput(TypedDict, total=False):
     doi: str | None
     source: str
+    acquisition: AcquisitionProvenanceOutput | None
     metadata: MetadataOutput
     sections: list[SectionOutput]
     references: list[ReferenceOutput]
@@ -305,6 +314,7 @@ class FetchAcceptanceSummaryOutput(TypedDict, total=False):
     asset: str
     output: str
     provenance: str
+    acquisition: AcquisitionProvenanceOutput | None
     has_fulltext: bool
     has_abstract: bool
     token_estimate: int
@@ -313,6 +323,7 @@ class FetchAcceptanceSummaryOutput(TypedDict, total=False):
 class FetchPaperOutput(ErrorPayloadOutput, total=False):
     doi: str | None
     source: str
+    acquisition: AcquisitionProvenanceOutput | None
     has_fulltext: bool
     content_kind: str
     has_abstract: bool
@@ -337,6 +348,7 @@ class CacheEntryOutput(TypedDict, total=False):
     mtime: float
     identity_proof: str
     source: str | None
+    acquisition: AcquisitionProvenanceOutput | None
     has_fulltext: bool | None
     likely_has_fulltext: bool | None
     content_kind: str | None
@@ -364,6 +376,7 @@ class CacheAcceptanceSummaryOutput(TypedDict, total=False):
     asset: str
     output: str
     provenance: str
+    acquisition: AcquisitionProvenanceOutput | None
     reason_code: str | None
 
 
@@ -440,6 +453,7 @@ class GetCachedOutput(ErrorPayloadOutput, total=False):
     content_kind: str | None
     has_fulltext: bool | None
     confidence: str | None
+    acquisition: AcquisitionProvenanceOutput | None
     acceptance: CacheAcceptanceSummaryOutput
     asset_summary: CacheAssetSummaryOutput
     warning_summary: CacheWarningSummaryOutput
@@ -463,6 +477,7 @@ class BatchCheckItemOutput(ErrorPayloadOutput, total=False):
     doi: str | None
     title: str | None
     source: str | None
+    acquisition: AcquisitionProvenanceOutput | None
     has_fulltext: bool | None
     content_kind: str | None
     has_abstract: bool | None
@@ -503,6 +518,7 @@ class BatchFetchItemOutput(TypedDict, total=False):
     request_fingerprint: str
     doi: str | None
     source: str | None
+    acquisition: AcquisitionProvenanceOutput | None
     reused: bool
     cache_hit: bool
     acceptance: FetchAcceptanceSummaryOutput

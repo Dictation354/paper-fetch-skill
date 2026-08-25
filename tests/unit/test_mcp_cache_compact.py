@@ -270,7 +270,7 @@ def test_get_cached_reports_old_and_corrupt_sidecars_without_false_reuse(
 
     old_path = _sidecar_path(old_scope)
     old_payload = json.loads(old_path.read_text(encoding="utf-8"))
-    old_payload["version"] = 1
+    old_payload["version"] = 4
     old_path.write_text(json.dumps(old_payload), encoding="utf-8")
     _sidecar_path(corrupt_scope).write_text("{broken", encoding="utf-8")
 

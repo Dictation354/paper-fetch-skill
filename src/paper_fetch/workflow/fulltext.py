@@ -15,6 +15,7 @@ from ..http import HttpTransport
 from ..logging_utils import emit_structured_log
 from ..models import ArticleModel, AssetProfile, metadata_only_article
 from ..provider_catalog import (
+    acquisition_for_provider_route,
     is_official_provider,
     provider_emits_html_managed_marker,
     provider_managed_abstract_only_names,
@@ -37,6 +38,7 @@ from ..quality.reason_codes import FULLTEXT
 from ..runtime import RUNTIME_UNSET, RuntimeContext, resolve_runtime_context
 from ..tracing import (
     TraceEvent,
+    acquisition_fallback_used,
     fallback_marker,
     fulltext_marker,
     merge_trace,
@@ -97,12 +99,41 @@ def build_metadata_only_result(
 ) -> ArticleModel:
     from ..publisher_identity import normalize_doi
 
-    return metadata_only_article(
+    article = metadata_only_article(
         source="crossref_meta",
         metadata=metadata,
         doi=normalize_doi(safe_text(metadata.get("doi") or resolved.doi)) or None,
         warnings=list(warnings or []),
         trace=merge_trace(trace_from_markers(list(source_trail or [])), trace),
+    )
+    effective_trace = merge_trace(trace_from_markers(list(source_trail or [])), trace)
+    article.acquisition = acquisition_for_provider_route(
+        "crossref",
+        "metadata",
+        fallback_used=acquisition_fallback_used(
+            effective_trace,
+            source_trail=source_trail or (),
+        ),
+    )
+    return article
+
+
+def _apply_article_acquisition(
+    article: ArticleModel,
+    *,
+    provider_name: str,
+    content: object | None,
+    trace: Sequence[TraceEvent],
+    source_trail: Sequence[str],
+) -> None:
+    route_name = safe_text(getattr(content, "route_name", "")) or None
+    article.acquisition = acquisition_for_provider_route(
+        provider_name,
+        route_name,
+        fallback_used=acquisition_fallback_used(
+            trace,
+            source_trail=source_trail,
+        ),
     )
 
 
@@ -309,6 +340,13 @@ def _try_official_provider(
             source_trail=source_trail,
         )
         article = provider_result.article
+        _apply_article_acquisition(
+            article,
+            provider_name=provider_result.provider or provider_name,
+            content=provider_result.content,
+            trace=workflow_trace,
+            source_trail=source_trail,
+        )
         artifact_store.audit_article_assets(
             article,
             asset_profile=resolved_asset_profile,

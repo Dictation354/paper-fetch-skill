@@ -16,6 +16,10 @@ DISPLAY_MATH_BLOCK_PATTERN = re.compile(r"\$\$\s*(.+?)\s*\$\$", flags=re.DOTALL)
 DISPLAY_MATH_TRAILING_PATTERN = re.compile(r"(?<=\$\$)(?=[^\s\n])")
 
 
+def is_display_math_markdown_block(markdown_text: str) -> bool:
+    return bool(DISPLAY_MATH_BLOCK_PATTERN.fullmatch(str(markdown_text or "").strip()))
+
+
 def normalize_equation_markdown_blocks(markdown_text: str) -> str:
     text = EQUATION_HEADING_JOIN_PATTERN.sub(r"\1\n\n\2", markdown_text)
     text = DISPLAY_MATH_OPEN_PATTERN.sub(r"\n\n\1", text)

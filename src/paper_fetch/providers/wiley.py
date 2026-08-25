@@ -116,6 +116,7 @@ register_provider_bundle(
                 ProviderRouteSpec(
                     name="tdm_pdf",
                     kind="pdf",
+                    transport="api",
                     requires_pdf_conversion=True,
                 ),
                 ProviderRouteSpec(
@@ -548,6 +549,7 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
 
         browser_step = ProviderWaterfallStep(
             label="browser_pdf",
+            route_name="browser_pdf",
             run=run_browser_pdf,
             failure_marker=fulltext_marker(self.name, "fail", route="pdf_browser"),
             success_markers=(
@@ -558,6 +560,7 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
         )
         api_step = ProviderWaterfallStep(
             label="pdf_api",
+            route_name="tdm_pdf",
             run=run_tdm_api,
             failure_marker=fulltext_marker(self.name, "fail", route="pdf_api"),
             success_markers=(

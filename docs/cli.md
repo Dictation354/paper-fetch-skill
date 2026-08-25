@@ -70,6 +70,8 @@ paper-fetch fetch --query "10.1186/1471-2105-11-421" \
 
 该文件包含一条与批量 JSONL 完全相同的 v2 record。主输出和额外保存的 Markdown 都先通过原子替换完成最终写入，record 随后读取最终文件的 size、SHA256 和 mtime；因此 `output_artifacts` 描述的是 record 建立时的最终文件，而不是临时 `.part` 文件。显式 manifest 自身也通过原子替换写入，且 manifest 路径不能与主输出或额外 Markdown 路径相同。目标 manifest 或最终输出已存在时默认拒绝替换；人工检查后可显式传 `--overwrite`。单篇不能同时使用 `--query-file` 和 `--manifest`；批量结果使用 `--batch-results`。
 
+JSON、manifest v2 与 Markdown YAML front matter 都保留原有 `source`，并增量输出 `acquisition.provider/route/representation/transport/fallback_used`。例如 Wiley TDM PDF 的 `source` 仍是 `wiley_browser`，精确路线另记为 `wiley/tdm_pdf/pdf/api`。若旧 Markdown 没有该块仍可读取，值视为 `null`；新抓取无法确认精确路线时也保持 `null`，对应 provenance 不会被判为 complete。
+
 单篇 manifest 与批量 run 使用同一只读审计逻辑。例如：
 
 ```bash
@@ -159,7 +161,7 @@ paper-fetch fetch --query-file ./queries.txt \
 
 论文元数据无法提供标题且 query 也不含 DOI 时，`paper-stem` 使用规范化 query 的 16 位 SHA-256 摘要（例如 `unknown_unknown_article_<digest>`）。该回退在并发和续跑之间保持稳定，避免不同 URL 结果争用同一个匿名文件名，也不会把完整 query 写入文件名。
 
-如果未提供 `--output-dir`，CLI 使用默认下载目录。默认事件文件是 `<output-dir>/batch-results.jsonl`，可用 `--batch-results <path>` 覆盖；原子 run 摘要默认写在事件文件同目录的 `run-manifest.json`，可用 `--run-manifest <path>` 覆盖。JSONL 每行是一条 schema v2 attempt record；旧的 `index`、`query`、`status`、`doi`、`source`、`output_path`、`saved_markdown_path`、`warnings` 和 `error` 九个顶层字段保持原名和原语义，旧消费者可以继续只读取这些字段。v2 只做增量扩展，不要求消费者一次理解所有新增字段。
+如果未提供 `--output-dir`，CLI 使用默认下载目录。默认事件文件是 `<output-dir>/batch-results.jsonl`，可用 `--batch-results <path>` 覆盖；原子 run 摘要默认写在事件文件同目录的 `run-manifest.json`，可用 `--run-manifest <path>` 覆盖。JSONL 每行是一条 schema v2 attempt record；旧的 `index`、`query`、`status`、`doi`、`source`、`output_path`、`saved_markdown_path`、`warnings` 和 `error` 九个顶层字段保持原名和原语义，旧消费者可以继续只读取这些字段。`acquisition` 是 v2 的可选增量字段；v2 不要求消费者一次理解所有新增字段。
 
 ```bash
 paper-fetch fetch --query-file ./queries.txt \
@@ -278,7 +280,7 @@ CLI 先在 run lock 内执行只读审计。只有 query、工具版本和关键
 ```json
 {
   "schema_version": 2,
-  "tool_version": "5.4.1",
+  "tool_version": "5.5.0",
   "run_id": "10000000-0000-4000-8000-000000000001",
   "record_id": "20000000-0000-4000-8000-000000000002",
   "index": 2,

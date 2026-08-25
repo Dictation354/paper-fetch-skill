@@ -1721,6 +1721,107 @@ class CliTests(unittest.TestCase):
                 rewritten,
             )
 
+    def test_rewrite_markdown_asset_links_prefers_downloaded_root_relative_formula(
+        self,
+    ) -> None:
+        article = sample_article()
+        article.metadata.landing_page_url = (
+            "https://onlinelibrary.wiley.com/doi/full/10.1029/2018JG004401"
+        )
+        root_relative_url = (
+            "/cms/asset/c6fe1dcf-2f28-4c4b-8f62-dcd6a5346827/jgrg21136-math-0029.png"
+        )
+        absolute_url = f"https://onlinelibrary.wiley.com{root_relative_url}"
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir) / "downloads"
+            asset_dir = output_dir / "10.1029_2018jg004401_assets"
+            asset_dir.mkdir(parents=True)
+            formula_path = asset_dir / "jgrg21136-math-0029.png"
+            formula_path.write_bytes(b"formula")
+            article.assets = [
+                Asset(
+                    kind="formula",
+                    heading="Formula 29",
+                    url=absolute_url,
+                    original_url=absolute_url,
+                    path=str(formula_path),
+                    section="body",
+                )
+            ]
+            envelope = paper_fetch.build_fetch_envelope(
+                article,
+                modes={"article", "markdown"},
+                render=RenderOptions(asset_profile="body"),
+            )
+            envelope.markdown = f"![Formula]({root_relative_url})"
+
+            rewritten = paper_fetch_cli.rewrite_markdown_asset_links(
+                envelope.markdown,
+                envelope,
+                target_path=output_dir / "article.md",
+                render=RenderOptions(asset_profile="body"),
+            )
+
+        self.assertEqual(
+            rewritten,
+            "![Formula](10.1029_2018jg004401_assets/jgrg21136-math-0029.png)",
+        )
+        self.assertNotIn("onlinelibrary.wiley.com", rewritten)
+
+    def test_rewrite_markdown_asset_links_expands_unmatched_cms_url_from_landing_page(
+        self,
+    ) -> None:
+        article = sample_article()
+        article.metadata.landing_page_url = (
+            "https://onlinelibrary.wiley.com/doi/full/10.1029/2018JG004401"
+        )
+        root_relative_url = "/cms/asset/example/jgrg21136-math-0029.png"
+        envelope = paper_fetch.build_fetch_envelope(
+            article,
+            modes={"article", "markdown"},
+            render=RenderOptions(asset_profile="body"),
+        )
+        envelope.markdown = f"![Formula]({root_relative_url})"
+
+        rewritten = paper_fetch_cli.rewrite_markdown_asset_links(
+            envelope.markdown,
+            envelope,
+            target_path=Path("output/article.md"),
+            render=RenderOptions(asset_profile="body"),
+        )
+
+        self.assertEqual(
+            rewritten,
+            "![Formula](https://onlinelibrary.wiley.com/cms/asset/example/jgrg21136-math-0029.png)",
+        )
+        self.assertNotIn("../../cms", rewritten)
+
+    def test_rewrite_markdown_asset_links_keeps_cms_url_without_valid_landing_page(
+        self,
+    ) -> None:
+        root_relative_url = "/cms/asset/example/jgrg21136-math-0029.png"
+        for landing_page_url in (None, "/relative/article", "ftp://example.test/paper"):
+            with self.subTest(landing_page_url=landing_page_url):
+                article = sample_article()
+                article.metadata.landing_page_url = landing_page_url
+                envelope = paper_fetch.build_fetch_envelope(
+                    article,
+                    modes={"article", "markdown"},
+                    render=RenderOptions(asset_profile="body"),
+                )
+                envelope.markdown = f"![Formula]({root_relative_url})"
+
+                rewritten = paper_fetch_cli.rewrite_markdown_asset_links(
+                    envelope.markdown,
+                    envelope,
+                    target_path=Path("output/article.md"),
+                    render=RenderOptions(asset_profile="body"),
+                )
+
+                self.assertEqual(rewritten, envelope.markdown)
+                self.assertNotIn("../../cms", rewritten)
+
     def test_rewrite_markdown_asset_links_maps_ieee_full_and_preview_fallback_urls(
         self,
     ) -> None:

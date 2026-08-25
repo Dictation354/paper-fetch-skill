@@ -123,6 +123,7 @@ jobs:
         if: ${{ matrix.install == 'core' }}
         run: |
           PYTHONPATH=src uv run pytest -q \
+            tests/unit/test_acquisition_provenance.py \
             tests/unit/test_config.py \
             tests/unit/test_mcp_fetch_acceptance.py \
             tests/unit/test_models_render.py \

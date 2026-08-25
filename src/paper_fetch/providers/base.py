@@ -128,6 +128,9 @@ class ProviderContent:
     html_failure_message: str | None = None
     extracted_assets: list[dict[str, Any]] = field(default_factory=list)
     needs_local_copy: bool = False
+    # Additive field kept last so positional construction by external providers
+    # retains the pre-acquisition argument order.
+    route_name: str | None = None
 
 
 @dataclass(frozen=True)
@@ -162,6 +165,7 @@ class PreparedFetchResultPayload:
 
 STRUCTURED_METADATA_KEYS = {
     "route",
+    "route_name",
     "reason",
     "markdown_text",
     "merged_metadata",
@@ -236,6 +240,8 @@ class RawFulltextPayload:
         if content is not None:
             if content.route_kind:
                 payload["route"] = content.route_kind
+            if content.route_name:
+                payload["route_name"] = content.route_name
             if content.reason:
                 payload["reason"] = content.reason
             if content.markdown_text is not None:

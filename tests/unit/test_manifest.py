@@ -136,6 +136,9 @@ def test_complete_record_derives_identity_acceptance_trace_and_legacy_projection
     assert record.identity == record.acceptance.identity
     assert record.doi == "10.1000/acceptance"
     assert record.source == "elsevier_xml"
+    assert record.acquisition == record.acceptance.provenance.acquisition
+    assert record.acquisition is not None
+    assert record.acquisition.route == "xml_api"
     assert record.acceptance.overall == OverallAcceptanceStatus.COMPLETE
     assert record.trace[0].stage == "resolve"
     assert record.fallback_codes == ()

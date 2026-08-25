@@ -833,6 +833,11 @@ CLI 主输出、artifact 与命令组合的用户语义见 [`cli.md`](cli.md)；
 
 - `source`
   - 粗粒度公开来源，完整当前枚举与 provider 映射从 `resource://paper-fetch/provider-catalog` 的 `source_provider_map` 读取；`metadata_only` 只在 `FetchEnvelope.source` 的 metadata fallback 中出现。
+  - 这是兼容字段，不区分同一 provider 下的 API、direct HTTP、browser、HTML/XML/PDF 等精确抓取路线；既有值保持不变。
+- `acquisition`
+  - 最终正文或元数据的结构化抓取事实：`provider`、catalog `route`、`representation=metadata|html|xml|pdf`、`transport=api|browser|http`、`fallback_used`。
+  - route 在 provider payload 产生处标记，representation/transport 由同一 runtime catalog 校验，fallback 由结构化 trace 派生。无法确认精确 route 时返回 `null`，acceptance provenance 为 `partial`，不会根据 URL、fetcher 名称或 `source` 猜测。
+  - 例如 Wiley TDM PDF 保留 `source="wiley_browser"`，同时报告 `acquisition={provider:"wiley",route:"tdm_pdf",representation:"pdf",transport:"api",fallback_used:true}`。
 - `has_fulltext`
   - 最终抓取瀑布后的 verdict
 - `warnings`

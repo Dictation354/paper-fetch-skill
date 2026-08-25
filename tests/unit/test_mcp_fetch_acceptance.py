@@ -8,6 +8,7 @@ from paper_fetch.mcp.fetch_tool import build_fetch_tool_result
 from paper_fetch.mcp.schemas import FetchPaperRequest
 from paper_fetch.mcp.server import build_server
 from paper_fetch.models import (
+    AcquisitionProvenance,
     ArticleModel,
     FetchEnvelope,
     Metadata,
@@ -54,6 +55,12 @@ def _fulltext_envelope(
         doi="10.1000/acceptance",
         source="elsevier_xml",
         metadata=metadata,
+        acquisition=AcquisitionProvenance(
+            provider="elsevier",
+            route="xml_api",
+            representation="xml",
+            transport="api",
+        ),
         sections=[
             Section(
                 heading="Introduction",
@@ -105,6 +112,12 @@ def _limited_envelope(content_kind: str) -> FetchEnvelope:
         doi="10.1000/limited",
         source="crossref_meta",
         has_fulltext=False,
+        acquisition=AcquisitionProvenance(
+            provider="crossref",
+            route="metadata",
+            representation="metadata",
+            transport="api",
+        ),
         content_kind=content_kind,
         has_abstract=has_abstract,
         source_trail=source_trail,
@@ -152,6 +165,13 @@ def test_successful_fetch_returns_ok_status_and_compact_acceptance() -> None:
         "asset": "not_requested",
         "output": "complete",
         "provenance": "complete",
+        "acquisition": {
+            "provider": "elsevier",
+            "route": "xml_api",
+            "representation": "xml",
+            "transport": "api",
+            "fallback_used": False,
+        },
         "has_fulltext": True,
         "has_abstract": True,
         "token_estimate": 128,

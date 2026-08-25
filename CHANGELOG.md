@@ -6,6 +6,21 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.5.0 - 2026-08-25
+
+### Added — exact acquisition provenance
+
+- Kept the legacy `source` scalar unchanged and added `acquisition={provider,route,representation,transport,fallback_used}` to fetch envelopes, articles, Markdown front matter, acceptance, manifest v2, MCP fetch/cache/batch payloads, and cache-index entries. Exact route and transport facts come from the provider route catalog; unavailable facts remain `null` and make provenance partial instead of being guessed from `source`.
+- Raised the fetch-envelope sidecar version to 5 so pre-acquisition v4 sidecars are reported as stale and refetched, while existing Markdown files remain readable with `acquisition=null`. Provider waterfalls now stamp the winning catalog route without changing established public `source` values or legacy source-trail markers.
+- Required complete provenance to agree with the catalog route, source owner, and structured fallback trace; manifest auditing now detects Markdown acquisition drift. Generated route documentation exposes `api|browser|http`, success traces retain the exact winning route, and the additive contract is covered by core CI without changing manifest or MCP schema v2.
+
+### Fixed — formula assets, equation fallbacks, and Markdown links
+
+- Fixed Wiley/Atypon display equations whose empty MathML exposed only a numbered label: structured TeX still wins, otherwise the official formula image is used before visible text; label-only equations remain explicitly unavailable instead of becoming pseudo-math, and complete display-math blocks survive Markdown post-processing.
+- Allowed explicit formula URLs such as `math-N`, `_IEqN`, and `_EquN` inside figure captions to enter formula asset discovery while preserving the main figure and leaving ordinary equation-related graphics classified as figures. Publisher-supplied bitmap-only formulas remain truthful `download_tier="preview"` assets but are accepted previews, so intrinsically small or duplicate formulas no longer raise placeholder or fidelity-degradation issues; real payload and path defects remain diagnostic.
+- Reconciled Springer/Nature `media.springernature.com/lwNN/...` rendition aliases with their `/full/...` downloads before asset acceptance. A successfully archived formula or figure is now counted once as a local logical asset instead of leaving a duplicate remote-only record that falsely degrades Manifest audit with `missing_path` and `asset_below_request`.
+- Stopped root-relative publisher assets from being rewritten as nonexistent `../../cms/...` paths. Only existing local files become relative links, downloaded assets still take precedence, and unmatched `/cms/...` links use a valid publisher landing page to remain complete remote URLs or stay unchanged when no valid base exists. Preview fallback warnings are now asset-neutral.
+
 ## 5.4.1 - 2026-08-19
 
 ### Fixed — compatible Camoufox offline snapshots

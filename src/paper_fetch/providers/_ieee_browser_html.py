@@ -345,6 +345,7 @@ def fetch_ieee_browser_html_payload(
         return build_provider_payload(
             provider=provider_name,
             route_kind="html",
+            route_name="browser_html",
             source_url=source_url,
             content_type=content_type,
             body=extraction.html_text.encode("utf-8"),

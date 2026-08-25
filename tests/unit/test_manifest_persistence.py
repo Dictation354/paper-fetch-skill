@@ -59,6 +59,12 @@ def _markdown(
     return f"""---
 doi: {doi}
 source: {source}
+acquisition:
+  provider: elsevier
+  route: xml_api
+  representation: xml
+  transport: api
+  fallback_used: false
 has_fulltext: {str(has_fulltext).lower()}
 content_kind: {content_kind}
 completed_at: 2026-07-13T08:01:00+00:00

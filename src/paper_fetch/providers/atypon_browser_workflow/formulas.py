@@ -31,6 +31,10 @@ from .profile import _dedupe_top_level_nodes
 from bs4 import BeautifulSoup, NavigableString, Tag
 
 EQUATION_NUMBER_PATTERN = re.compile(r"(\d+[A-Za-z]?)")
+EQUATION_LABEL_ONLY_PATTERN = re.compile(
+    r"^(?:equation\s*)?\(?\s*\d+[A-Za-z]?\s*\)?[.:]?$",
+    flags=re.IGNORECASE,
+)
 
 
 def _is_non_table_paragraph_node(node: Tag) -> bool:
@@ -52,7 +56,7 @@ def _mathml_element_from_node(node: Tag | None):
     return mathml_element_from_html_node(node)
 
 
-def _latex_from_math_node(node: Tag, *, display_mode: bool) -> str:
+def _structured_latex_from_math_node(node: Tag, *, display_mode: bool) -> str:
     element = _mathml_element_from_node(node)
     if element is not None:
         expression = normalize_text(
@@ -61,6 +65,13 @@ def _latex_from_math_node(node: Tag, *, display_mode: bool) -> str:
         if expression:
             return expression
     expression = normalize_text(html_formula_latex_from_node(node))
+    if expression:
+        return expression
+    return ""
+
+
+def _latex_from_math_node(node: Tag, *, display_mode: bool) -> str:
+    expression = _structured_latex_from_math_node(node, display_mode=display_mode)
     if expression:
         return expression
     return _short_text(node)
@@ -77,6 +88,13 @@ def _looks_like_formula_image_node(node: Tag) -> bool:
 def _formula_image_markdown(node: Tag) -> str:
     url = _formula_image_url_from_node(node)
     return render_markdown_image("formula", "", url)
+
+
+def _display_formula_text_fallback(node: Tag) -> str:
+    text = _short_text(node)
+    if not text or EQUATION_LABEL_ONLY_PATTERN.fullmatch(text):
+        return ""
+    return text
 
 
 def _display_formula_nodes(container: Tag) -> list[Tag]:
@@ -122,7 +140,7 @@ def _equation_label(node: Tag) -> str:
 
 
 def _display_formula_replacement(node: Tag, soup: BeautifulSoup) -> Tag | None:
-    latex = _latex_from_math_node(node, display_mode=True)
+    latex = _structured_latex_from_math_node(node, display_mode=True)
     replacement = soup.new_tag("div")
     label = _equation_label(node)
     if label:
@@ -134,6 +152,11 @@ def _display_formula_replacement(node: Tag, soup: BeautifulSoup) -> Tag | None:
     image_markdown = _formula_image_markdown(node)
     if image_markdown:
         _append_text_block(replacement, image_markdown, soup=soup)
+        return replacement
+    text_fallback = _display_formula_text_fallback(node)
+    if text_fallback:
+        for line in ("$$", text_fallback, "$$"):
+            _append_text_block(replacement, line, soup=soup)
         return replacement
     _append_text_block(replacement, "[Formula unavailable]", soup=soup)
     return replacement

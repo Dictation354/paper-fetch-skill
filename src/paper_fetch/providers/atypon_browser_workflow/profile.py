@@ -51,6 +51,7 @@ from ...quality.html_availability import (
 )
 from .._html_authors import ATYPON_VIEW_ALL_ARTICLES_LABEL
 from ...utils import normalize_text
+from .._atypon_browser_workflow_postprocess import is_display_math_markdown_block
 from .._atypon_browser_workflow_profiles import (
     noise_profile_for_publisher as _profile_noise_profile_for_publisher,
     publisher_profile as _publisher_profile,
@@ -387,6 +388,8 @@ def _looks_like_post_content_noise_block(
 
 
 def _looks_like_markdown_auxiliary_block(text: str) -> bool:
+    if is_display_math_markdown_block(text):
+        return True
     lowered = normalize_text(text).lower()
     if not lowered:
         return False

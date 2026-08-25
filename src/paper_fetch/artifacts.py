@@ -362,7 +362,7 @@ class ArtifactStore:
                     warnings,
                     [
                         (
-                            f"{provider_display_name(provider_name)} figure downloads fell back to preview images for "
+                            f"{provider_display_name(provider_name)} asset downloads fell back to preview images for "
                             f"{preview_fallback_count} asset(s) because full-size/original downloads were unavailable."
                         )
                     ],

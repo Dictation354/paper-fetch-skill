@@ -6,6 +6,21 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.5.0 - 2026-08-25
+
+### 新增——精确抓取来源
+
+- 保持兼容字段 `source` 的原值不变，并在 fetch envelope、article、Markdown front matter、acceptance、manifest v2、MCP fetch/cache/batch payload 与 cache-index entry 中新增 `acquisition={provider,route,representation,transport,fallback_used}`。精确 route 与 transport 由 provider route catalog 提供；事实缺失时保留 `null` 并把 provenance 判为 partial，不再从 `source` 猜测。
+- FetchEnvelope sidecar 版本提升到 5，缺少 acquisition 的 v4 sidecar 会明确判为旧版并重新抓取；既有 Markdown 仍可读取且 `acquisition=null`。Provider waterfall 会标记最终胜出的 catalog route，同时不改变既有公开 `source` 或兼容 source-trail marker。
+- Complete provenance 现在必须同时匹配 catalog route、source owner 与结构化 fallback trace，manifest 审计也会检测 Markdown acquisition 漂移。生成的 route 文档公开 `api|browser|http`，成功 trace 保留精确胜出路线，并由 core CI 覆盖这一增量协议；manifest 与 MCP wire schema 继续保持 v2。
+
+### 修复——公式资产、公式回退与 Markdown 链接
+
+- 修复 Wiley/Atypon display equation 的空 MathML 只暴露公式编号时的错误渲染：仍优先使用结构化 TeX，否则先使用出版社公式图片，再考虑可见文本；只有编号的公式明确保留 unavailable 状态，不再生成伪公式，完整 display-math 块也不会被 Markdown 后处理误删。
+- 允许 figure caption 内显式命中 `math-N`、`_IEqN` 或 `_EquN` 的公式 URL 进入公式资产发现，同时保留正文主图，并继续把普通 equation 相关图片归为 figure。出版社只提供的公式位图继续如实记录为 `download_tier="preview"`，但作为 accepted preview 验收；公式固有的小尺寸或重复内容不再触发 placeholder 或 fidelity-degradation 误报，真实 payload 与路径故障仍保留诊断。
+- 在资产验收前合并 Springer/Nature `media.springernature.com/lwNN/...` 尺寸别名与对应的 `/full/...` 下载记录。已成功归档的公式或正文图现在只计为一个本地逻辑资产，不再残留重复的 remote-only 记录并以 `missing_path`、`asset_below_request` 错误降级 Manifest 审计。
+- 阻止根相对 publisher 资产被改写成不存在的 `../../cms/...` 路径。只有真实存在的本地文件才生成相对链接，已下载资产仍然优先；未匹配的 `/cms/...` 使用有效 publisher landing page 补成完整远程 URL，没有有效基址时保持原样。preview fallback 警告也改为 asset-neutral 文案。
+
 ## 5.4.1 - 2026-08-19
 
 ### 修复——Camoufox 兼容离线快照

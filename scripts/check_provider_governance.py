@@ -370,7 +370,7 @@ def generated_route_docs(specs: tuple[Any, ...]) -> str:
         "本文件由 `scripts/check_provider_governance.py --update` 从运行时 "
         "`ProviderSpec.routes` 生成，请勿手工编辑。",
         "",
-        "| Provider | 顺序 | Route | Kind / Source | 状态 / Runtime | 限制 | Acceptance / Assets |",
+        "| Provider | 顺序 | Route | Kind / Source / Transport | 状态 / Runtime | 限制 | Acceptance / Assets |",
         "| --- | ---: | --- | --- | --- | --- | --- |",
     ]
     for spec in specs:
@@ -390,7 +390,7 @@ def generated_route_docs(specs: tuple[Any, ...]) -> str:
             lines.append(
                 "| "
                 f"`{spec.name}` | {route.order} | `{route.name}` | "
-                f"`{route.kind}` / `{route.source}` | "
+                f"`{route.kind}` / `{route.source}` / `{route.transport}` | "
                 f"`{route.implementation_status}` / `{runtime}` | "
                 f"{limits} | `{route.acceptance_policy}` / `{route.asset_scope}` |"
             )

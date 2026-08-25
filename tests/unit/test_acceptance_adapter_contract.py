@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 from contextlib import redirect_stderr, redirect_stdout
+from dataclasses import asdict
 from pathlib import Path
 from unittest import mock
 
@@ -65,7 +66,7 @@ def _contract_envelope():
     return envelope
 
 
-def _summary(report: FetchAcceptanceReport) -> dict[str, str]:
+def _summary(report: FetchAcceptanceReport) -> dict[str, object]:
     return {
         "status": "evaluated",
         "overall": report.overall.value,
@@ -75,6 +76,11 @@ def _summary(report: FetchAcceptanceReport) -> dict[str, str]:
         "asset": report.asset.status.value,
         "output": report.output.status.value,
         "provenance": report.provenance.status.value,
+        "acquisition": (
+            asdict(report.provenance.acquisition)
+            if report.provenance.acquisition is not None
+            else None
+        ),
     }
 
 

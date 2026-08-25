@@ -66,6 +66,12 @@ def _markdown(*, doi: str, source: str, marker: str = "initial") -> str:
     return f"""---
 doi: {doi}
 source: {source}
+acquisition:
+  provider: elsevier
+  route: xml_api
+  representation: xml
+  transport: api
+  fallback_used: false
 has_fulltext: true
 content_kind: fulltext
 completed_at: 2026-07-13T10:00:00+00:00

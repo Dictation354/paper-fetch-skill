@@ -212,9 +212,12 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
 
         self.assertTrue(
             any(
-                "fell back to preview images" in warning
+                "Science asset downloads fell back to preview images" in warning
                 for warning in envelope.warnings
             )
+        )
+        self.assertFalse(
+            any("Science figure downloads" in warning for warning in envelope.warnings)
         )
 
     def test_fetch_paper_accepts_preview_images_with_sufficient_dimensions(

@@ -120,6 +120,7 @@ register_provider_bundle(
                 ProviderRouteSpec(
                     name="atom_metadata",
                     kind="metadata",
+                    transport="api",
                     qps=1 / 3,
                     rate_policy="arxiv_three_second_pacing",
                 ),
@@ -353,6 +354,7 @@ class ArxivClient(ProviderClient):
         return build_provider_payload(
             provider=self.name,
             route_kind="html",
+            route_name="official_html",
             source_url=final_url,
             content_type=content_type,
             body=body,
@@ -422,6 +424,7 @@ class ArxivClient(ProviderClient):
         return build_provider_payload(
             provider=self.name,
             route_kind=PDF_FALLBACK,
+            route_name="direct_pdf",
             source_url=final_url,
             content_type=PDF_MIME_TYPE,
             body=pdf_result.pdf_bytes,
@@ -478,6 +481,7 @@ class ArxivClient(ProviderClient):
             [
                 ProviderWaterfallStep(
                     label="html",
+                    route_name="official_html",
                     run=run_html,
                     failure_marker=fulltext_marker(self.name, "fail", route="html"),
                     success_markers=(fulltext_marker(self.name, "ok", route="html"),),
@@ -489,6 +493,7 @@ class ArxivClient(ProviderClient):
                 ),
                 ProviderWaterfallStep(
                     label="pdf",
+                    route_name="direct_pdf",
                     run=run_pdf,
                     failure_marker=fulltext_marker(self.name, "fail", route="pdf"),
                     success_markers=(

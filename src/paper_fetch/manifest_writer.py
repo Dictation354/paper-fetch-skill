@@ -646,6 +646,15 @@ def _audit_artifact(
                             path=artifact.path,
                         )
                     )
+                if front_matter.acquisition != record.acquisition:
+                    findings.append(
+                        _finding(
+                            "markdown_acquisition_mismatch",
+                            "Markdown front matter acquisition differs from attempt provenance",
+                            record=record,
+                            path=artifact.path,
+                        )
+                    )
                 if front_matter.content_kind != record.acceptance.content.status.value:
                     findings.append(
                         _finding(

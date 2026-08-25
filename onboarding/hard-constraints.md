@@ -23,6 +23,7 @@ Worker 和 coordinator 必须满足下列机器可判约束。
 - Every non-null fixture and `extra_fixtures` item must be recorded in `onboarding/reviews/<provider>.yml` with `sample_representative: true` and `markdown_semantic_reviewed: true`; the preferred path is final batch signoff through `scripts/onboard_from_manifests.py finalize-review-artifact --confirmed-final-quality`, not manual per-fixture YAML editing.
 - Every non-null `markdown_contract.<purpose>` from the provider manifest must be represented by provider-local Markdown assertions before extraction cleanup is changed.
 - Every `main_path` step must have `route_contract.<step>` and provider-local success / rejection coverage before that route is accepted as implemented.
+- Every runtime catalog route must expose `ProviderRouteSpec.transport` as `api`, `browser`, or `http`, and every successful provider payload must stamp `ProviderContent.route_name` with that exact catalog route; compatibility source labels and trace aliases do not replace either structured fact.
 - Provider-local route coverage is checked by `tests/unit/test_provider_route_contract.py`; exact markers should use `route-contract: step=<step> condition=<condition>` when a route condition cannot be proven by an existing step/source/DOI assertion.
 - The main success path must include both positive Markdown assertions and negative assertions for site chrome, access noise, or duplicate boilerplate.
 - Markdown cleanup fixes discovered during review must land only in provider-owned implementation files and provider-local tests.

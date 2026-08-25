@@ -6,6 +6,12 @@ import json
 from dataclasses import asdict, dataclass, field
 from typing import Any, Literal
 
+from ..acquisition import (
+    AcquisitionProvenance,
+    AcquisitionRepresentation,
+    AcquisitionTransport,
+    coerce_acquisition_provenance,
+)
 from ..tracing import TraceEvent, source_trail_from_trace, trace_from_markers
 from ..utils import normalize_text
 
@@ -391,6 +397,8 @@ class FetchEnvelope:
     markdown: str | None = None
     metadata: Metadata | None = None
     diagnostic_artifacts: list[dict[str, Any]] = field(default_factory=list)
+    # Additive field kept last so existing positional callers remain compatible.
+    acquisition: AcquisitionProvenance | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -402,8 +410,17 @@ class FetchEnvelope:
         from .quality import _clone_quality, _dedupe_strings
         from .tokens import coerce_token_estimate_breakdown
 
+        self.acquisition = coerce_acquisition_provenance(self.acquisition)
         if self.article is not None:
             self.quality = _clone_quality(self.article.quality)
+            if self.acquisition is None:
+                self.acquisition = self.article.acquisition
+            elif self.article.acquisition is None:
+                self.article.acquisition = self.acquisition
+            elif self.article.acquisition != self.acquisition:
+                raise ValueError(
+                    "FetchEnvelope and ArticleModel acquisition provenance must match."
+                )
         if self.trace and not self.source_trail:
             self.source_trail = source_trail_from_trace(self.trace)
         elif self.source_trail and not self.trace:
@@ -456,6 +473,8 @@ class ArticleModel:
     quality: Quality = field(
         default_factory=lambda: Quality(has_fulltext=False, token_estimate=0)
     )
+    # Additive field kept last so existing positional callers remain compatible.
+    acquisition: AcquisitionProvenance | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -467,6 +486,7 @@ class ArticleModel:
         from .quality import apply_quality_assessment, classify_content
         from .sections import first_abstract_text
 
+        self.acquisition = coerce_acquisition_provenance(self.acquisition)
         abstract_text = first_abstract_text(
             abstract_text=self.metadata.abstract, sections=self.sections
         )
@@ -597,6 +617,9 @@ class ArticleModel:
 __all__ = [
     "EXTRACTION_REVISION",
     "TRUNCATION_WARNING",
+    "AcquisitionProvenance",
+    "AcquisitionRepresentation",
+    "AcquisitionTransport",
     "ArticleModel",
     "Asset",
     "AssetDiagnostic",
@@ -623,4 +646,5 @@ __all__ = [
     "SemanticLosses",
     "SourceKind",
     "TokenEstimateBreakdown",
+    "coerce_acquisition_provenance",
 ]

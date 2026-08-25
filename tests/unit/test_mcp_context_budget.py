@@ -19,12 +19,13 @@ ALL_TOOL_DESCRIPTIONS_MAX_CHARS = 5_000
 HOST_NARRATIVE_MAX_CHARS = 24_000
 
 # PF-018 snapshot for the ten-tool native contract after adding structured batch_fetch,
-# compact single-fetch acceptance, compacting presentation-only output-schema metadata,
-# and exposing the request-scoped Camoufox preparation policy. The allowance is only
-# for small constraint drift, not new unbudgeted tools or restored schema annotations.
-NATIVE_TOOLS_LIST_BASELINE_BYTES = 71_327
+# compact single-fetch acceptance, structured acquisition provenance, compacting
+# presentation-only output-schema metadata, and exposing the request-scoped Camoufox
+# preparation policy. The allowance is only for small constraint drift, not new
+# unbudgeted tools or restored schema annotations.
+NATIVE_TOOLS_LIST_BASELINE_BYTES = 73_307
 NATIVE_TOOLS_LIST_GROWTH_ALLOWANCE_BYTES = 1_024
-NATIVE_SCHEMA_BASELINE_BYTES = 67_398
+NATIVE_SCHEMA_BASELINE_BYTES = 69_378
 NATIVE_SCHEMA_GROWTH_ALLOWANCE_BYTES = 512
 
 

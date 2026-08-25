@@ -3,6 +3,12 @@ from __future__ import annotations
 # ruff: noqa: F403
 
 from ..utils import normalize_text as normalize_text, safe_text as safe_text
+from ..acquisition import (
+    AcquisitionProvenance as AcquisitionProvenance,
+    AcquisitionRepresentation as AcquisitionRepresentation,
+    AcquisitionTransport as AcquisitionTransport,
+    coerce_acquisition_provenance as coerce_acquisition_provenance,
+)
 from .builders import (
     article_from_markdown as article_from_markdown,
     article_from_structure as article_from_structure,

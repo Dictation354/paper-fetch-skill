@@ -29,11 +29,11 @@ def _looks_like_formula_image(
     *,
     noise_profile: str | None = None,
 ) -> bool:
+    if looks_like_formula_image(tag, url, noise_profile=noise_profile):
+        return True
     if html_node_is_figure_asset_context(tag, noise_profile=noise_profile):
         return False
     if FORMULA_IMAGE_URL_PATTERN.search(url):
-        return True
-    if looks_like_formula_image(tag, url, noise_profile=noise_profile):
         return True
     if not isinstance(tag, Tag):
         return False
@@ -136,6 +136,7 @@ def extract_formula_assets(
                 "caption": "",
                 "url": absolute_url,
                 "preview_url": absolute_url,
+                "preview_accepted": "true",
                 "section": "body",
             }
         )

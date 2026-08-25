@@ -343,6 +343,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
             {
                 "doi",
                 "source",
+                "acquisition",
                 "has_fulltext",
                 "content_kind",
                 "has_abstract",

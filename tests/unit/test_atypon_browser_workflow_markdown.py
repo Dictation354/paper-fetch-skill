@@ -313,6 +313,23 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         self.assertIn("gcb15322-math-0001.png", markdown)
         self.assertNotIn("**Equation 1.**![Formula]", markdown)
 
+    def test_wiley_labeled_formula_image_fixture_does_not_render_label_as_math(
+        self,
+    ) -> None:
+        markdown, _ = self._extract_fixture_markdown(
+            golden_criteria_asset("10.1111/gcb.16011", "original.html"),
+            "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16011",
+            "wiley",
+            "10.1111/gcb.16011",
+        )
+
+        for equation_number in range(1, 7):
+            self.assertIn(f"**Equation {equation_number}.**", markdown)
+        self.assertIn("gcb16011-math-0001.png", markdown)
+        self.assertIn("gcb16011-math-0016.png", markdown)
+        self.assertNotIn("$$\n(1)\n$$", markdown)
+        self.assertNotIn("$$\n(6)\n$$", markdown)
+
     def test_pnas_formula_images_do_not_consume_inline_figure_slots(self) -> None:
         body_text = " ".join(["PNAS formula boundary body text."] * 220)
         html = f"""
@@ -528,6 +545,98 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         rendered = str(container)
         self.assertNotIn("[Formula unavailable]", rendered)
         self.assertIn("![Formula](/cms/asset/example-math-0001.png)", rendered)
+
+    def test_wiley_labeled_empty_mathml_prefers_formula_image_over_label_text(
+        self,
+    ) -> None:
+        soup = BeautifulSoup(
+            """
+            <div class="article-section__content">
+              <div class="paragraph-element">
+                Formula:
+                <div class="inline-equation" id="jgrg21136-disp-0001">
+                  <span class="inline-equation__construct">
+                    <span>
+                      <span class="fallback__mathEquation" data-altimg="/cms/asset/example-math-0001.png"></span>
+                      <mjx-container>
+                        <mjx-assistive-mml display="block">
+                          <math display="block"><semantics><mrow /></semantics></math>
+                        </mjx-assistive-mml>
+                      </mjx-container>
+                    </span>
+                  </span>
+                  <span class="inline-equation__label">(1)</span>
+                </div>
+              </div>
+            </div>
+            """,
+            "html.parser",
+        )
+
+        container = soup.select_one(".article-section__content")
+        self.assertIsNotNone(container)
+        atypon_browser_workflow_normalization._normalize_display_formula_blocks(
+            container
+        )
+
+        rendered = str(container)
+        self.assertIn("**Equation 1.**", rendered)
+        self.assertIn("![Formula](/cms/asset/example-math-0001.png)", rendered)
+        self.assertNotIn("<p>$$</p>", rendered)
+        self.assertNotIn("<p>(1)</p>", rendered)
+
+    def test_wiley_display_formula_prefers_structured_tex_over_image(self) -> None:
+        soup = BeautifulSoup(
+            """
+            <div class="article-section__content">
+              <div class="display-formula" id="equation-1">
+                <script type="math/tex">x+y</script>
+                <span class="fallback__mathEquation" data-altimg="/cms/asset/example-math-0001.png"></span>
+              </div>
+            </div>
+            """,
+            "html.parser",
+        )
+
+        container = soup.select_one(".article-section__content")
+        self.assertIsNotNone(container)
+        atypon_browser_workflow_normalization._normalize_display_formula_blocks(
+            container
+        )
+
+        rendered = str(container)
+        self.assertIn("<p>$$</p>", rendered)
+        self.assertIn("<p>x+y</p>", rendered)
+        self.assertNotIn("![Formula]", rendered)
+
+    def test_wiley_label_only_display_formula_is_unavailable_not_pseudo_math(
+        self,
+    ) -> None:
+        soup = BeautifulSoup(
+            """
+            <div class="article-section__content">
+              <div class="inline-equation" id="jgrg21136-disp-0001">
+                <span class="inline-equation__construct">
+                  <math display="block"><semantics><mrow /></semantics></math>
+                </span>
+                <span class="inline-equation__label">(1)</span>
+              </div>
+            </div>
+            """,
+            "html.parser",
+        )
+
+        container = soup.select_one(".article-section__content")
+        self.assertIsNotNone(container)
+        atypon_browser_workflow_normalization._normalize_display_formula_blocks(
+            container
+        )
+
+        rendered = str(container)
+        self.assertIn("**Equation 1.**", rendered)
+        self.assertIn("[Formula unavailable]", rendered)
+        self.assertNotIn("<p>$$</p>", rendered)
+        self.assertNotIn("<p>(1)</p>", rendered)
 
     def test_wiley_references_use_visible_citation_text_not_doi_only(self) -> None:
         """rule: rule-wiley-reference-text"""

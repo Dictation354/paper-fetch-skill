@@ -646,6 +646,7 @@ class FrontiersClient(ProviderClient):
         return build_provider_payload(
             provider=self.name,
             route_kind="xml",
+            route_name="xml",
             source_url=final_url,
             content_type=content_type,
             body=body,
@@ -706,6 +707,7 @@ class FrontiersClient(ProviderClient):
         return build_provider_payload(
             provider=self.name,
             route_kind=PDF_FALLBACK,
+            route_name="direct_pdf",
             source_url=pdf_result.final_url or pdf_result.source_url or route.pdf_url,
             content_type=PDF_MIME_TYPE,
             body=pdf_result.pdf_bytes,

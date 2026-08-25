@@ -153,6 +153,7 @@ def test_batch_fetch_preserves_input_order_and_completion_metadata_with_bounded_
         "asset",
         "output",
         "provenance",
+        "acquisition",
         "has_fulltext",
         "has_abstract",
         "token_estimate",

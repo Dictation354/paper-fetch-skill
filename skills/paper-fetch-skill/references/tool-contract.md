@@ -6,9 +6,9 @@
 
 ## MCP Tools
 
-- 所有 tool 成功/失败 JSON payload 顶层使用 `schema_version=2`。新 fetch/cache payload 的完整 trace 只在顶层出现；`quality.trace` 已删除。旧 v1 FetchEnvelope cache 只在读取时按顶层 → quality → article quality 的顺序迁移，新写入不再生成 v1。
+- 所有 tool 成功/失败 JSON payload 顶层使用 `schema_version=2`。新 fetch/cache payload 的完整 trace 只在顶层出现；`quality.trace` 已删除。FetchEnvelope sidecar 当前为 version 5 并要求 acquisition；v4 及更旧 sidecar 明确失效后重新抓取，既有 Markdown 不删除。
 - `resolve_paper(query | title, authors, year)`: 在抓取前规范化 DOI、URL 或标题查询，并尽早暴露歧义。标题输入必须先解析出 DOI 或落地页，再交给 `fetch_paper(...)`。
-- `fetch_paper(..., browser_auto_prepare=None)`: 返回稳定 JSON 载荷；成功响应包含兼容态 `status="ok"`、七分面紧凑 `acceptance`、溯源信息、`token_estimate_breakdown={abstract,body,refs}`，并按需附带 `article`、`markdown`、`metadata`。`acceptance.overall` 才是任务级结论；当 `save_markdown=true` 时，响应会改为紧凑结果，只保留路径、元数据、acceptance 和诊断字段。MCP managed runtime 准备默认关闭；需按需安装/修复/更新时显式传 `true`。
+- `fetch_paper(..., browser_auto_prepare=None)`: 返回稳定 JSON 载荷；成功响应包含兼容态 `status="ok"`、原值不变的 `source`、可空的 `acquisition={provider,route,representation,transport,fallback_used}`、七分面紧凑 `acceptance`、溯源信息、`token_estimate_breakdown={abstract,body,refs}`，并按需附带 `article`、`markdown`、`metadata`。`acceptance.overall` 才是任务级结论；当 `save_markdown=true` 时，响应会改为紧凑结果，只保留路径、元数据、acceptance 和诊断字段。MCP managed runtime 准备默认关闭；需按需安装/修复/更新时显式传 `true`。
 - `list_cached(cache_mode="index|refresh|rescan")` / `get_cached(doi, download_dir=..., detail="full|compact", preferred_only=false, modes=..., strategy=..., include_refs=..., max_tokens=...)`: 多轮会话重新抓取前，在同一个显式 cache scope 内检查缓存；已知 DOI 优先使用请求敏感的 `get_cached` compact 结果。
 - `has_fulltext(query)`: 使用解析结果、Crossref 元数据、轻量 Elsevier 元数据探测和落地页 HTML meta 做低成本全文可用性探测，不触发完整抓取流程。
 - `provider_status(provider=None, group=None, detail="full|compact")`: 返回 catalog-backed 本地静态诊断，不调用远程出版商 API；已知 provider 时应筛选，避免把全 catalog checks 放入上下文。
@@ -39,7 +39,7 @@
 
 - `get_cached` 默认 `detail="full"`、`preferred_only=false`，保留既有 `entries`、`preferred` 和 index 字段。`preferred_only=true` 的 full 响应只在 `entries` 中保留优选 Markdown/primary payload，并把 `preferred.assets` 置空；`entry_summary` 仍统计 scope 中全部已证明条目。
 - 常规 cache-first 决策使用 `detail="compact"`，并显式传与随后 `fetch_paper` 相同的 `modes`、`strategy`、`include_refs`、`max_tokens` 和 `download_dir`。compact 不返回 `entries`、完整正文、sidecar payload 或资产数组，只返回优选 Markdown/primary entry、内容/置信度、acceptance/asset/warning 摘要、sidecar/request 状态与稳定 SHA-256 fingerprint。
-- 顶层 `status="hit"` 只表示该 DOI 在当前 scope 有身份可证明的 index entry，不表示 fetch-envelope 可复用。只有 `request_satisfied=true` 才表示 sidecar version、extraction revision、payload DOI 均有效，既有 `cached_request_matches()` 严格匹配本次请求，且 payload 包含全部请求 modes。
+- 顶层 `status="hit"` 只表示该 DOI 在当前 scope 有身份可证明的 index entry，不表示 fetch-envelope 可复用。只有 `request_satisfied=true` 才表示 sidecar version、extraction revision、payload DOI 与 acquisition 均有效，既有 `cached_request_matches()` 严格匹配本次请求，且 payload 包含全部请求 modes。
 - `cached_request` / `cached_request_fingerprint` 描述被选中的 sidecar；`requested_request` / `requested_request_fingerprint` 描述本次查询。FetchEnvelope cache 以 DOI + request fingerprint 保存多版本 sidecar，同一 DOI 的 modes、strategy、`include_refs`、`max_tokens` 变体可以并存，不再由最后一次窄请求覆盖富请求。读取优先精确 fingerprint，再按质量/时间检查兼容候选；不兼容 entry 仍只能得到 `request_status="mismatch"`。
 - fingerprint 同时包含摘要化 `credential_scope`，不保存秘密或本地 state 内容。查询先尝试当前 runtime 的精确 scope；带 API token/storage-state capability 的调用在精确 sidecar 缺失或 scope 不匹配时可以单向复用 public sidecar，public 调用绝不读取 private sidecar，不同 private scope 之间也不复用。
 - `sidecar.status` 明确区分 `ready`、`missing`、`corrupt`、`unreadable`、`version_mismatch`、`extraction_revision_mismatch`、`doi_mismatch`、`invalid_scope` 等状态。损坏/旧版/错误 DOI sidecar 以及 `identity_status="no_proven_entries"` 都令 `request_satisfied=false`，但 cache miss 仍是正常路由结果，不是工具失败。
@@ -107,7 +107,7 @@
 ## Local Markdown and Cache Identity
 
 - `download_dir` 是 cache scope。`get_cached`、refresh 和 rescan 只读该目录，不跨目录搜索，也不因 miss 联网。
-- 本地 Markdown 只有两种可信身份来源：`save_markdown=true` 后由已知 envelope DOI + 实际 `saved_markdown_path` 显式注册；或 YAML front matter 经结构化解析后同时含 `doi`、`source`、布尔 `has_fulltext` 和 `content_kind`。文件名或正文里的 DOI 文本不能证明归属。
+- 本地 Markdown 只有两种可信身份来源：`save_markdown=true` 后由已知 envelope DOI + 实际 `saved_markdown_path` 显式注册；或 YAML front matter 经结构化解析后同时含 `doi`、`source`、布尔 `has_fulltext` 和 `content_kind`。新文件另含 acquisition；旧文件缺少时仍可读但值为 `null`，不能据此宣称 provenance complete。文件名或正文里的 DOI 文本不能证明归属。
 - DOI URL、大小写和合法特殊字符都通过 `normalize_doi()` 后比较。错误 DOI、坏 YAML、metadata 缺字段和目录外路径不会作为命中返回。
 - `preferred.markdown` 优先有效 fulltext，再按 `completed_at`（缺失时按 mtime）选最新版本；entry 的 `identity_proof` 说明归属证据，Markdown entry 还返回 `source`、`has_fulltext`、`content_kind`、`completed_at` 与内容 SHA-256。
 - `cache_mode="index"` 只读当前 manifest，`list_cached(..., cache_mode="refresh")` 校验/修复现有 manifest，`get_cached(doi)` 才刷新单个 DOI；`rescan` 从可证明的 sidecar/front matter 重建整个 index。v1 会在 refresh 时迁移到 v2 并删除无法重新证明的旧 Markdown；未知版本使用 rescan。
@@ -117,5 +117,5 @@
 ## Dynamic Provider Catalog
 
 - `resource://paper-fetch/provider-catalog` 是 MCP provider/source/capability 的机器可读权威入口；需要选择 `provider_hint`、`preferred_providers`、status/preflight 路径或解释公开 source 时先读该 resource，不从工具 description 或本文推测静态名单。
-- resource 直接从 runtime `ProviderSpec` 和 `SOURCE_PROVIDER_MAP` 生成，返回 `schema_version`、`tool_version`、provider/source 数量、逐 provider 的 `sources`、`asset_default` 与 browser/runtime/status/preflight capabilities，以及完整 `source_provider_map`。新 provider 或 source 注册后无需同步第二张表。
+- resource 直接从 runtime `ProviderSpec` 和 `SOURCE_PROVIDER_MAP` 生成，返回 `schema_version`、`tool_version`、provider/source 数量、逐 provider 的 `sources`、带 `transport=api|browser|http` 的 routes、`asset_default` 与 browser/runtime/status/preflight capabilities，以及完整 `source_provider_map`。新 provider 或 source 注册后无需同步第二张表。
 - resource 只描述当前 runtime 能力，不代表本地依赖已就绪或远端页面可访问。本地静态状态继续调用 `provider_status`；browser 真实页面健康度继续调用 open-world `browser_preflight`，并保留人工认证与访问控制边界。

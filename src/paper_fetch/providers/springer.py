@@ -77,6 +77,7 @@ from ._pdf_common import (
 )
 from ._pdf_fallback import PdfFallbackStrategy, PdfFetchFailure, fetch_pdf_over_http
 from ._payloads import build_provider_payload
+from ._springer_dom import promote_springer_media_url_to_full_size
 from ._waterfall import (
     DEFAULT_WATERFALL_CONTINUE_CODES,
     ProviderWaterfallStep,
@@ -320,7 +321,9 @@ def springer_site_family_profile(
 
 
 def _springer_asset_retry_key(asset: Mapping[str, Any]) -> tuple[Any, ...]:
-    return (normalize_text(html_asset_identity_key(asset)),)
+    identity = normalize_text(html_asset_identity_key(asset))
+    canonical_identity = promote_springer_media_url_to_full_size(identity)
+    return (normalize_text(canonical_identity or identity),)
 
 
 SPRINGER_ASSET_RETRY_POLICY = AssetRetryPolicy(
@@ -444,6 +447,7 @@ def _springer_html_payload_from_attempt(
     return build_provider_payload(
         provider="springer",
         route_kind="html",
+        route_name="direct_html",
         source_url=attempt.response_url,
         content_type=content_type,
         body=attempt.response["body"],
@@ -1176,6 +1180,7 @@ class SpringerClient(ProviderClient):
         return build_provider_payload(
             provider="springer",
             route_kind=PDF_FALLBACK,
+            route_name="direct_pdf",
             source_url=pdf_result.final_url,
             content_type=PDF_MIME_TYPE,
             body=pdf_result.pdf_bytes,
@@ -1390,6 +1395,7 @@ class SpringerClient(ProviderClient):
             [
                 ProviderWaterfallStep(
                     label="html",
+                    route_name="direct_html",
                     run=run_html,
                     failure_marker=fulltext_marker("springer", "fail", route="html"),
                     failure_warning=lambda failure, _state: (
@@ -1398,6 +1404,7 @@ class SpringerClient(ProviderClient):
                 ),
                 ProviderWaterfallStep(
                     label="pdf",
+                    route_name="direct_pdf",
                     run=run_pdf,
                     success_markers=(
                         fulltext_marker("springer", "ok", route=PDF_FALLBACK),
@@ -1552,6 +1559,7 @@ class SpringerClient(ProviderClient):
                 [
                     ProviderWaterfallStep(
                         label="html",
+                        route_name="direct_html",
                         run=run_html,
                         failure_marker=fulltext_marker(
                             "springer", "fail", route="html"
@@ -1598,6 +1606,7 @@ class SpringerClient(ProviderClient):
                     source_url=response_url,
                     content_type="text/html",
                     body=html_text.encode("utf-8"),
+                    route_name="direct_html",
                     merged_metadata=dict(merged_metadata),
                     reason="Springer HTML route was not usable.",
                 ),
@@ -1677,6 +1686,7 @@ class SpringerClient(ProviderClient):
                 [
                     ProviderWaterfallStep(
                         label="pdf",
+                        route_name="direct_pdf",
                         run=run_pdf,
                         success_markers=(
                             fulltext_marker("springer", "ok", route=PDF_FALLBACK),

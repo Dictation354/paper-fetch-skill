@@ -49,7 +49,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         }
       ],
       "sources": [
@@ -107,7 +108,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "structured_xml_body",
@@ -140,7 +142,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -175,7 +178,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "validated_asset",
@@ -208,7 +212,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         }
       ],
       "sources": [
@@ -269,7 +274,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "provider_html_body",
@@ -304,7 +310,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "http"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -341,7 +348,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "http"
         }
       ],
       "sources": [
@@ -401,7 +409,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "provider_html_body",
@@ -437,7 +446,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -473,7 +483,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -510,7 +521,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         }
       ],
       "sources": [
@@ -568,7 +580,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "provider_html_body",
@@ -603,7 +616,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -639,7 +653,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         }
       ],
       "sources": [
@@ -697,7 +712,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "provider_html_body",
@@ -732,7 +748,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -768,7 +785,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         }
       ],
       "sources": [
@@ -825,7 +843,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "provider_html_body",
@@ -857,7 +876,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "provider_html_body",
@@ -891,7 +911,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -925,7 +946,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "http"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -960,7 +982,76 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
+        },
+        {
+          "acceptance_policy": "provider_html_body",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "hosts": [
+            "ieeexplore.ieee.org"
+          ],
+          "implementation_status": "available",
+          "kind": "html",
+          "name": "direct_landing",
+          "notes": null,
+          "order": 5,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "ieee_html",
+          "timeout_seconds": 20,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ],
+          "transport": "http"
+        },
+        {
+          "acceptance_policy": "provider_html_body",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": true,
+          "browser_preflight": true,
+          "browser_required": false,
+          "concurrency": 1,
+          "hosts": [
+            "ieeexplore.ieee.org"
+          ],
+          "implementation_status": "available",
+          "kind": "html",
+          "name": "browser_landing",
+          "notes": null,
+          "order": 6,
+          "qps": null,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "ieee_html",
+          "timeout_seconds": 120,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "temporary_dns"
+          ],
+          "transport": "browser"
         }
       ],
       "sources": [
@@ -1018,7 +1109,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "provider_html_body",
@@ -1050,7 +1142,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "http"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -1084,7 +1177,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "http"
         }
       ],
       "sources": [
@@ -1140,7 +1234,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "structured_xml_body",
@@ -1170,7 +1265,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "http"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -1202,7 +1298,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "http"
         }
       ],
       "sources": [
@@ -1261,7 +1358,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "provider_html_body",
@@ -1296,7 +1394,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -1332,7 +1431,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         }
       ],
       "sources": [
@@ -1391,7 +1491,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "provider_html_body",
@@ -1426,7 +1527,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -1462,7 +1564,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         }
       ],
       "sources": [
@@ -1520,7 +1623,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "provider_html_body",
@@ -1554,7 +1658,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -1589,7 +1694,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         }
       ],
       "sources": [
@@ -1648,7 +1754,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "provider_html_body",
@@ -1683,7 +1790,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -1719,7 +1827,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         }
       ],
       "sources": [
@@ -1777,7 +1886,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "structured_xml_body",
@@ -1809,7 +1919,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "http"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -1843,7 +1954,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "http"
         }
       ],
       "sources": [
@@ -1901,7 +2013,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "provider_html_body",
@@ -1933,7 +2046,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "http"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -1967,7 +2081,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "http"
         }
       ],
       "sources": [
@@ -2027,7 +2142,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "provider_html_body",
@@ -2063,7 +2179,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -2100,7 +2217,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         }
       ],
       "sources": [
@@ -2157,7 +2275,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "provider_html_body",
@@ -2191,7 +2310,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -2226,7 +2346,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         }
       ],
       "sources": [
@@ -2284,7 +2405,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "provider_html_body",
@@ -2318,7 +2440,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -2353,7 +2476,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         }
       ],
       "sources": [
@@ -2412,7 +2536,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "structured_xml_body",
@@ -2445,7 +2570,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "http"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -2480,7 +2606,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "http"
         }
       ],
       "sources": [
@@ -2539,7 +2666,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "api"
         },
         {
           "acceptance_policy": "provider_html_body",
@@ -2574,7 +2702,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         },
         {
           "acceptance_policy": "validated_pdf",
@@ -2610,7 +2739,8 @@
             "connection_reset",
             "connection_closed",
             "temporary_dns"
-          ]
+          ],
+          "transport": "browser"
         }
       ],
       "sources": [
@@ -2659,5 +2789,5 @@
     "tandf_pdf": "tandf",
     "wiley_browser": "wiley"
   },
-  "tool_version": "5.4.1"
+  "tool_version": "5.5.0"
 }

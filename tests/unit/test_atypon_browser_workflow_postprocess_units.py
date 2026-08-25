@@ -7,6 +7,9 @@ from bs4 import BeautifulSoup
 from paper_fetch.providers.atypon_browser_workflow import (
     extract_atypon_browser_workflow_markdown,
 )
+from paper_fetch.providers.atypon_browser_workflow.postprocess import (
+    _postprocess_browser_workflow_markdown,
+)
 from paper_fetch.providers import _science_html
 from paper_fetch.providers.atypon_browser_workflow import (
     normalization as atypon_browser_workflow_normalization,
@@ -15,6 +18,25 @@ from tests.golden_criteria import golden_criteria_scenario_asset
 
 
 class AtyponBrowserWorkflowPostprocessUnitTests(unittest.TestCase):
+    def test_postprocess_preserves_complete_display_math_block(self) -> None:
+        markdown = _postprocess_browser_workflow_markdown(
+            """
+# Example Article
+
+## Results
+
+This body sentence establishes the main article content.
+
+$$
+E = MC^2
+$$
+            """,
+            title="Example Article",
+            publisher="wiley",
+        )
+
+        self.assertIn("$$\nE = MC^2\n$$", markdown)
+
     def test_figure_like_nodes_uses_registered_teaser_filter(self) -> None:
         soup = BeautifulSoup(
             """

@@ -9,11 +9,13 @@ from dataclasses import asdict, dataclass, replace
 from types import MappingProxyType
 from typing import Any, Literal
 
+from .acquisition import AcquisitionProvenance, AcquisitionTransport
 from .metadata.types import ProviderMetadata
 
 AssetDefault = Literal["none", "body", "all"]
 MetadataProbeShortCircuit = Callable[[str], ProviderMetadata | None]
 ProviderRouteKind = Literal["metadata", "html", "xml", "pdf", "assets"]
+ProviderRouteTransport = AcquisitionTransport
 ProviderRouteImplementationStatus = Literal[
     "available",
     "not_configured",
@@ -73,12 +75,32 @@ class ProviderRouteSpec:
     acceptance_policy: str | None = None
     asset_scope: AssetDefault | None = None
     notes: str | None = None
+    # Additive field kept last so existing positional route declarations retain
+    # their pre-acquisition argument order.
+    transport: ProviderRouteTransport | None = None
 
     def __post_init__(self) -> None:
         if self.browser_required and self.browser_optional:
             raise ValueError(
                 "A provider route cannot be both browser-required and browser-optional."
             )
+        effective_transport = self.transport
+        if effective_transport is None:
+            if self.browser_required or self.browser_optional:
+                effective_transport = "browser"
+            elif self.kind == "metadata" or self.name.endswith("_api"):
+                effective_transport = "api"
+            else:
+                effective_transport = "http"
+            object.__setattr__(self, "transport", effective_transport)
+        if effective_transport not in {"api", "browser", "http"}:
+            raise ValueError(
+                f"Unsupported provider route transport: {effective_transport!r}"
+            )
+        if (self.browser_required or self.browser_optional) and (
+            effective_transport != "browser"
+        ):
+            raise ValueError("Browser-backed routes must use browser transport.")
         if (self.browser_required or self.browser_optional) and not (
             self.requires_playwright
         ):
@@ -434,6 +456,62 @@ def provider_batch_concurrency(provider_name: str | None) -> int:
 def provider_routes(provider_name: str | None) -> tuple[ProviderRouteSpec, ...]:
     spec = _provider_spec(provider_name)
     return spec.routes if spec is not None else ()
+
+
+def provider_route(
+    provider_name: str | None, route_name: str | None
+) -> ProviderRouteSpec | None:
+    normalized_route = _normalize_catalog_token(route_name)
+    return next(
+        (
+            route
+            for route in provider_routes(provider_name)
+            if route.name == normalized_route
+        ),
+        None,
+    )
+
+
+def acquisition_for_provider_route(
+    provider_name: str | None,
+    route_name: str | None,
+    *,
+    fallback_used: bool = False,
+) -> AcquisitionProvenance | None:
+    """Build exact public acquisition provenance from the route catalog."""
+
+    normalized_provider = _normalize_catalog_token(provider_name)
+    route = provider_route(normalized_provider, route_name)
+    if (
+        not normalized_provider
+        or route is None
+        or route.kind == "assets"
+        or route.transport is None
+    ):
+        return None
+    return AcquisitionProvenance(
+        provider=normalized_provider,
+        route=route.name,
+        representation=route.kind,
+        transport=route.transport,
+        fallback_used=fallback_used,
+    )
+
+
+def acquisition_matches_provider_route(
+    acquisition: AcquisitionProvenance | None,
+) -> bool:
+    """Validate an acquisition object against the authoritative route catalog."""
+
+    if acquisition is None:
+        return False
+    route = provider_route(acquisition.provider, acquisition.route)
+    return bool(
+        route is not None
+        and route.kind != "assets"
+        and route.kind == acquisition.representation
+        and route.transport == acquisition.transport
+    )
 
 
 def provider_has_browser_route(provider_name: str | None) -> bool:

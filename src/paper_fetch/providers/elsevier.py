@@ -147,7 +147,7 @@ register_provider_bundle(
                     kind="pdf",
                     requires_pdf_conversion=True,
                 ),
-                ProviderRouteSpec(name="object_assets", kind="assets"),
+                ProviderRouteSpec(name="object_assets", kind="assets", transport="api"),
             ),
         ),
         html_rules=ProviderHtmlRules(
@@ -882,6 +882,7 @@ class ElsevierClient(ProviderClient):
         return build_provider_payload(
             provider="elsevier",
             route_kind="official",
+            route_name="xml_api",
             source_url=response["url"],
             content_type=content_type,
             body=body,
@@ -967,6 +968,7 @@ class ElsevierClient(ProviderClient):
         return build_provider_payload(
             provider="elsevier",
             route_kind=PDF_FALLBACK,
+            route_name="pdf_api",
             source_url=pdf_result.final_url,
             content_type=PDF_MIME_TYPE,
             body=pdf_result.pdf_bytes,
@@ -1221,6 +1223,7 @@ class ElsevierClient(ProviderClient):
         steps = [
             ProviderWaterfallStep(
                 label="xml",
+                route_name="xml_api",
                 run=run_xml,
                 failure_marker=fulltext_marker("elsevier", "fail", route="xml"),
                 failure_warning=xml_failure_warning,
@@ -1234,6 +1237,7 @@ class ElsevierClient(ProviderClient):
             ),
             ProviderWaterfallStep(
                 label="pii_xml",
+                route_name="xml_api",
                 run=run_pii_xml,
                 condition=pii_xml_condition,
                 failure_marker=fulltext_marker("elsevier", "fail", route="xml_pii"),
@@ -1251,6 +1255,7 @@ class ElsevierClient(ProviderClient):
             ),
             ProviderWaterfallStep(
                 label="pdf",
+                route_name="pdf_api",
                 run=lambda _state: self._fetch_official_pdf_payload(
                     normalized_doi,
                     asset_profile=pdf_asset_profile_from_context(context),

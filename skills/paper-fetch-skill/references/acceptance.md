@@ -18,7 +18,9 @@
 
 MCP 单篇 `fetch_paper` 成功响应直接返回紧凑 `acceptance`；`batch_fetch` 在每个 result 中返回同形摘要。两者的七分面状态必须由同一个统一验收报告投影，不能从 warning 文本或 `has_fulltext` 另行推断。
 
-当前 acceptance wire schema 是 v2（`schema_version=2`、`minimum_reader_schema_version=2`）。asset 分面分别记录 `accepted_preview`、`fallback_preview` 与有序去重 `issue_codes`，同时保留 `preview` 且要求它等于前两者之和。只有 accepted preview 且无其它 issue 时可以 complete；fallback preview 是 `asset_fidelity_degraded`，不等同于 `asset_download_failure`。
+当前 acceptance wire schema 是 v2（`schema_version=2`、`minimum_reader_schema_version=2`）。provenance 分面增量包含可空的 `acquisition={provider,route,representation,transport,fallback_used}`，兼容 `source` 保持原值；只有 acquisition 与 catalog route、source owner 和 trace fallback 事实一致时 provenance 才能 complete，缺失时必须 partial，不能从 `source` 猜测。asset 分面分别记录 `accepted_preview`、`fallback_preview` 与有序去重 `issue_codes`，同时保留 `preview` 且要求它等于前两者之和。只有 accepted preview 且无其它 issue 时可以 complete；publisher 明确接受的规范公式位图即使尺寸小或内容重复，也按结构化 `preview_accepted` 事实验收，不据此另造 placeholder issue。fallback preview 是 `asset_fidelity_degraded`，不等同于 `asset_download_failure`。
+
+资产验收统计 provider 合并后的逻辑资产，而不是同一远端对象的每个尺寸 URL。Springer/Nature 的 `media.springernature.com/lwNN/...` 预览别名与对应 `/full/...` 下载记录必须先按既有 full-size promotion 规则合并；全尺寸记录已有本地路径时，预览别名不能再作为第二个 `missing_path` / remote-only 资产进入 Manifest。没有对应本地记录的真实远端资产仍按原规则验收失败。
 
 ## 响应验收
 
@@ -26,6 +28,7 @@ MCP 单篇 `fetch_paper` 成功响应直接返回紧凑 `acceptance`；`batch_fe
 - 核对 `content` 是否满足当前 [`presets.md`](presets.md) 的文本意图；任务只需摘要时可接受 limited，用户明确需要全文时不能升级结论。
 - 只有请求了资产才检查 asset 完整度。允许保留的远程链接、被接受的 preview 和 `asset_profile=none` 不是自动失败；结构化 asset failure 和 placeholder 仍需报告。
 - 核对请求输出集合，保留 table/formula/asset 降级、fallback code 和 source trail。普通 warning 不按字符串猜测类别。
+- 同时报告兼容 `source` 与结构化 `acquisition`；若 acquisition 为 `null` 或与 catalog/trace 不一致，明确保留 provenance partial/degraded，不以 provider 名或 URL 补全。
 - envelope、acceptance 和 manifest 的完整 trace event count 必须一致；两个 retry 的同 code 是两条事实，不能按 marker 去重。`quality` 中的 source trail 只是摘要，不得回拼成第二份 trace。
 
 ## 文件、路径与 hash 验收
@@ -62,4 +65,4 @@ PY
 
 ## 最终报告
 
-每项至少报告原始 index/query、规范 identity、local/cache 是否复用、所选执行面、provider/source、attempt、`overall` 与 content/asset/output 降级、结构化 code、实际产物路径和 hash，以及仍需用户完成的动作。批量另给 complete/degraded/limited/failed/action-required、限流、取消和未调度汇总。需要重试时只按 [`failure-handling.md`](failure-handling.md) 的上限和状态变化条件执行。
+每项至少报告原始 index/query、规范 identity、local/cache 是否复用、所选执行面、provider/source/acquisition、attempt、`overall` 与 content/asset/output 降级、结构化 code、实际产物路径和 hash，以及仍需用户完成的动作。批量另给 complete/degraded/limited/failed/action-required、限流、取消和未调度汇总。需要重试时只按 [`failure-handling.md`](failure-handling.md) 的上限和状态变化条件执行。

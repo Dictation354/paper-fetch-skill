@@ -125,7 +125,7 @@ Date: 2026-07-29
 | `content` | 只使用 `fulltext`、`abstract_only`、`metadata_only`、`unavailable`，同时保留 `has_fulltext`、`has_abstract`、confidence 和 flags。表格布局降级、表格语义损失、公式 fallback/missing 保持独立计数。 |
 | `asset` | 显式记录 profile、`requested`、本地/远程、full-size、preview、failure、placeholder suspected 和 not-archived。`asset_profile=none` 必须得到 `requested=false/status=not_requested`，未完成 fetch 时已请求资产是 `unavailable`；仍保留的远程链接由 `remote_link_count`、`remote_only_count` 和 `remote_links_preserved` 单独表达，不是假失败。 |
 | `output` | 只验收调用方声明请求的 article/Markdown/metadata；未请求是 `not_requested`，请求但缺失才是 `partial/missing`。 |
-| `provenance` | 从 `TraceEvent.stage/outcome/code`、`Quality.flags`、`SemanticLosses` 和结构化 asset failures 派生 fallback/warning/failure codes。原 warning 只计数，不按消息子串分类；`cached_with_current_revision` 等显式信息型 flag 保留在 content facts 中但不制造降级。 |
+| `provenance` | 保留兼容 `source`，并校验结构化 `acquisition={provider,route,representation,transport,fallback_used}` 是否与 provider catalog、source owner 和 trace fallback 事实一致；同时从 trace、质量与 asset failure 派生 fallback/warning/failure codes。原 warning 只计数，不按消息子串分类。 |
 
 常见状态组合是：
 
@@ -239,7 +239,7 @@ provider 身份与能力配置统一来自 provider entry module 顶部注册的
 - `RuntimeContext.stage_timings` 使用独立 monotonic 计时器记录 browser、DOM readiness、HTTP、retry、asset、formula 与 render；golden live 报告另保留总耗时，并按 `provider + route + stage` 聚合。单样本只输出 observed duration，至少两个样本才复用 tracing 的 nearest-rank 算法输出 p50/p95，禁止从 trace duration 求和。
 - 本地转换工具链使用进程内有界缓存降低重复探测：Ghostscript/libvips 候选路径、`--version` probe 和工具 env overlay 按相关 env/目录/文件指纹失效；公式转换保留 MathML 结果缓存和 `mathml-to-latex` worker 复用；PDF fallback 对无图片导出路径的同一 PDF hash 复用 Markdown 渲染结果，并在成功结果 diagnostics 中记录 hash、字节数、页数、cache status 和耗时。
 - `ArtifactStore` / `DownloadPolicy` 管理 artifact mode：provider PDF/binary local copy、PDF fallback 源文件、provider 原始 HTML、Markdown 保存、asset 诊断、HTTP textual cache 开关，以及 fetch-envelope/cache-index JSON 的原子写入。
-- `FetchCache` 管理 MCP fetch-envelope sidecar reuse/write 语义与 cache index refresh；sidecar version、`EXTRACTION_REVISION` 校验、resource URI 与 scoped cache resource 语义稳定，实际 JSON materialization 委托给 `ArtifactStore`。MCP cache index 读取会校验 `INDEX_VERSION`；旧版/坏 schema 默认拒绝作为可信 manifest，`list_cached(cache_mode="index")` 只读 manifest，`refresh` 只校验/修剪现有 manifest，`rescan` 只从可证明 DOI 归属的 fetch-envelope sidecar 重建。`get_cached(detail="compact")` 仍由该 facade 读取确定性 sidecar：请求兼容唯一调用 `cached_request_matches()`，质量摘要调用统一 `evaluate_fetch_acceptance()`，request fingerprint 复用 manifest canonical hash；adapter 只裁剪 full/preferred/compact 视图，不复制匹配或验收规则。查询先使用当前 runtime 的摘要化 `credential_scope`；带凭据 scope 在精确 sidecar 缺失或 scope 不匹配时可安全复用 public sidecar，public scope 绝不反向读取 API token 或 storage-state sidecar。
+- `FetchCache` 管理 MCP fetch-envelope sidecar reuse/write 语义与 cache index refresh；当前 sidecar version 为 5，并要求完整 acquisition，缺少该事实的 v4 sidecar 以 `version_mismatch` 失效后重新抓取，不删除既有 Markdown。sidecar version、`EXTRACTION_REVISION` 校验、resource URI 与 scoped cache resource 语义稳定，实际 JSON materialization 委托给 `ArtifactStore`。MCP cache index 读取会校验 `INDEX_VERSION`；旧版/坏 schema 默认拒绝作为可信 manifest，`list_cached(cache_mode="index")` 只读 manifest，`refresh` 只校验/修剪现有 manifest，`rescan` 只从可证明 DOI 归属的 fetch-envelope sidecar 重建。`get_cached(detail="compact")` 仍由该 facade 读取确定性 sidecar：请求兼容唯一调用 `cached_request_matches()`，质量摘要调用统一 `evaluate_fetch_acceptance()`，request fingerprint 复用 manifest canonical hash；adapter 只裁剪 full/preferred/compact 视图，不复制匹配或验收规则。查询先使用当前 runtime 的摘要化 `credential_scope`；带凭据 scope 在精确 sidecar 缺失或 scope 不匹配时可安全复用 public sidecar，public scope 绝不反向读取 API token 或 storage-state sidecar。
 
 ### 9. Transport 层
 
@@ -314,7 +314,7 @@ workflow 尽量拿到 Crossref metadata 与 publisher metadata（`elsevier` 仍�
 
 ### `FetchEnvelope`
 
-固定返回形状的公开抓取结果。始终承载 `doi`、`source`、`has_fulltext`、`warnings`、`source_trail`、`token_estimate`、`token_estimate_breakdown`；按 `modes` 决定是否附带 `article` / `markdown` / `metadata`。
+固定返回形状的公开抓取结果。始终承载 `doi`、兼容 `source`、可空的结构化 `acquisition`、`has_fulltext`、`warnings`、`source_trail`、`token_estimate`、`token_estimate_breakdown`；按 `modes` 决定是否附带 `article` / `markdown` / `metadata`。`source` 不因新增字段改值；无法从 provider 原点确认 acquisition 时保持 `null`，不做启发式补全。
 
 MCP tool 返回的是在业务 payload 顶层追加 `schema_version=2` 的 JSON-safe 形状；FetchEnvelope sidecar 新写入也使用 v2，但两者仍是不同契约。失败时 `status` 仍是旧客户端可读的粗粒度状态，细粒度失败原因放在 `code` / `error_category`，HTTP 与限流细节放在 `http_status` / `retry_after_seconds`。
 

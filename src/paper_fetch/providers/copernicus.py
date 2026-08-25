@@ -560,6 +560,7 @@ class CopernicusClient(ProviderClient):
                 return build_provider_payload(
                     provider=self.name,
                     route_kind="xml",
+                    route_name="xml",
                     source_url=response_url,
                     content_type=content_type,
                     body=body,
@@ -635,6 +636,7 @@ class CopernicusClient(ProviderClient):
         return build_provider_payload(
             provider=self.name,
             route_kind=PDF_FALLBACK,
+            route_name="direct_pdf",
             source_url=final_url,
             content_type=PDF_MIME_TYPE,
             body=pdf_result.pdf_bytes,
@@ -701,6 +703,7 @@ class CopernicusClient(ProviderClient):
             [
                 ProviderWaterfallStep(
                     label="xml",
+                    route_name="xml",
                     run=run_xml,
                     failure_marker=fulltext_marker(self.name, "fail", route="xml"),
                     success_markers=(fulltext_marker(self.name, "ok", route="xml"),),
@@ -711,6 +714,7 @@ class CopernicusClient(ProviderClient):
                 ),
                 ProviderWaterfallStep(
                     label="pdf",
+                    route_name="direct_pdf",
                     run=run_pdf,
                     failure_marker=fulltext_marker(self.name, "fail", route="pdf"),
                     success_markers=(

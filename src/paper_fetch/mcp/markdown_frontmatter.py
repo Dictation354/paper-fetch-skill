@@ -10,6 +10,7 @@ from typing import Any
 
 import yaml
 
+from ..models import AcquisitionProvenance, coerce_acquisition_provenance
 from ..publisher_identity import normalize_doi
 
 _CONTENT_KINDS = frozenset({"fulltext", "abstract_only", "metadata_only"})
@@ -24,6 +25,7 @@ class MarkdownFrontMatter:
     has_fulltext: bool
     content_kind: str
     completed_at: str | None = None
+    acquisition: AcquisitionProvenance | None = None
 
     @property
     def is_fulltext(self) -> bool:
@@ -79,11 +81,16 @@ def parse_markdown_front_matter(markdown: str) -> MarkdownFrontMatter | None:
     content_kind = raw_content_kind.strip().lower()
     if not doi or not source or content_kind not in _CONTENT_KINDS:
         return None
+    raw_acquisition = parsed.get("acquisition")
+    acquisition = coerce_acquisition_provenance(raw_acquisition)
+    if raw_acquisition is not None and acquisition is None:
+        return None
     return MarkdownFrontMatter(
         doi=doi,
         source=source,
         has_fulltext=raw_has_fulltext,
         content_kind=content_kind,
+        acquisition=acquisition,
         completed_at=_completed_at_text(parsed.get("completed_at")),
     )
 

@@ -245,6 +245,39 @@ def source_trail_from_trace(
     return markers
 
 
+def acquisition_fallback_used(
+    trace: Iterable[TraceEvent],
+    *,
+    source_trail: Iterable[str] = (),
+) -> bool:
+    """Return whether content acquisition reached a fallback or failed route."""
+
+    failure_outcomes = {
+        "fail",
+        "error",
+        "negative",
+        "not_usable",
+        "unavailable",
+        NOT_CONFIGURED,
+        RATE_LIMITED,
+    }
+    for event in trace:
+        stage = normalize_text(event.stage).lower()
+        outcome = normalize_text(event.outcome).lower()
+        if stage == "fallback":
+            return True
+        if stage == "fulltext" and outcome in failure_outcomes:
+            return True
+    for event in trace_from_markers(tuple(source_trail)):
+        stage = normalize_text(event.stage).lower()
+        outcome = normalize_text(event.outcome).lower()
+        if stage == "fallback":
+            return True
+        if stage == "fulltext" and outcome in failure_outcomes:
+            return True
+    return False
+
+
 def trace_from_markers(markers: list[str] | tuple[str, ...] | None) -> list[TraceEvent]:
     return [
         trace_event_from_marker(marker)
