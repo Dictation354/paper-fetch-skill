@@ -18,16 +18,13 @@ from typing import Any
 from collections.abc import Callable, Mapping
 
 from ..http import (
-    BrowserNetworkGuard,
     DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
     HttpRequestPolicy,
     HttpTransport,
     PDF_ACCEPT_HEADER,
     RequestCancelledError,
     RequestFailure,
-    SafeRemoteUrlPolicy,
     diagnostic_url_payload,
-    hosts_from_urls,
     provider_allowed_hosts,
     provider_request_policy,
     redact_text_for_diagnostics,
@@ -391,7 +388,6 @@ def _seed_pdf_browser_page(
     page: Any,
     seed_urls: list[str] | None,
     request: PdfRequestContext,
-    network_guard: BrowserNetworkGuard,
 ) -> PdfFallbackFailure | None:
     deadline = request.deadline_monotonic
     if deadline is None:
@@ -401,7 +397,6 @@ def _seed_pdf_browser_page(
     ]:
         _raise_if_cancelled(request.runtime)
         try:
-            network_guard.validate(seed_url, resolve_dns=True)
             timeout_ms = (
                 _remaining_pdf_timeout_seconds(
                     request.runtime,
@@ -414,12 +409,6 @@ def _seed_pdf_browser_page(
                 seed_url,
                 wait_until="domcontentloaded",
                 timeout=timeout_ms,
-            )
-            final_url = normalize_text(str(getattr(page, "url", "") or "")) or seed_url
-            network_guard.validate(
-                final_url,
-                previous_url=seed_url,
-                resolve_dns=True,
             )
         except PdfFallbackFailure as exc:
             return exc
@@ -687,11 +676,10 @@ def _response_to_pdf_result(
     final_url: str,
     page: Any | None = None,
     request: PdfRequestContext = PdfRequestContext(),
-    network_guard: BrowserNetworkGuard | None = None,
 ) -> PdfFetchResult | None:
     """Refuse browser-owned binary bodies.
 
-    The caller may reuse browser cookies and the validated final URL with
+    The caller may reuse browser cookies and the browser-discovered final URL with
     ``fetch_pdf_over_http``.  Playwright response bodies are intentionally not
     materialized because they cannot provide the pinned, bounded streaming
     guarantees of ``HttpTransport``.
@@ -706,7 +694,6 @@ def _response_to_pdf_result(
         final_url,
         page,
         request,
-        network_guard,
     )
     if response is None:
         return None
@@ -723,7 +710,6 @@ def _refetch_pdf_with_browser_request(
     source_url: str,
     final_url: str,
     request: PdfRequestContext = PdfRequestContext(),
-    network_guard: BrowserNetworkGuard | None = None,
 ) -> PdfFetchResult | None:
     del (
         page,
@@ -734,7 +720,6 @@ def _refetch_pdf_with_browser_request(
         source_url,
         final_url,
         request,
-        network_guard,
     )
     raise PdfFallbackFailure(
         "browser_stream_unavailable",
@@ -780,7 +765,6 @@ def _running_asyncio_loop_active() -> bool:
 
 @dataclass(frozen=True)
 class _PdfBrowserCompatibility:
-    remote_url_policy: SafeRemoteUrlPolicy | None = None
     provider_name: str | None = None
     allow_thread_handoff: bool = True
     use_runtime_browser: bool = True
@@ -797,19 +781,11 @@ class _PdfBrowserResolvedConfig:
     storage_state_path: Path | None
 
 
-@dataclass(frozen=True)
-class _PdfBrowserNetwork:
-    guard: BrowserNetworkGuard
-    candidate_urls: list[str]
-    seed_urls: list[str]
-
-
 def _pdf_browser_compatibility(
     compatibility: Mapping[str, Any],
 ) -> _PdfBrowserCompatibility:
     options = dict(compatibility)
     result = _PdfBrowserCompatibility(
-        remote_url_policy=options.pop("remote_url_policy", None),
         provider_name=options.pop("provider_name", None),
         allow_thread_handoff=bool(options.pop("_allow_thread_handoff", True)),
         use_runtime_browser=bool(options.pop("_use_runtime_browser", True)),
@@ -855,72 +831,6 @@ def _resolved_pdf_browser_config(
     )
 
 
-def _prepare_pdf_browser_network(
-    candidate_urls: list[str],
-    seed_urls: list[str],
-    *,
-    referer: str | None,
-    browser_cookies: list[dict[str, Any]] | None,
-    config: _PdfBrowserResolvedConfig,
-    declared_hosts: tuple[str, ...],
-    context: RuntimeContext | None,
-    remote_url_policy: SafeRemoteUrlPolicy | None,
-) -> _PdfBrowserNetwork:
-    fallback_hosts = hosts_from_urls(
-        [*candidate_urls, *seed_urls, normalize_text(referer)]
-    )
-    context_policy = getattr(
-        getattr(context, "transport", None), "remote_url_policy", None
-    )
-    active_remote_url_policy = (
-        remote_url_policy
-        or (context_policy if isinstance(context_policy, SafeRemoteUrlPolicy) else None)
-        or SafeRemoteUrlPolicy()
-    )
-    credentialed_context = bool(
-        browser_cookies
-        or config.storage_state_path
-        or config.profile_dir
-        or config.user_data_dir
-    )
-    if credentialed_context and not declared_hosts:
-        raise PdfFallbackFailure(
-            "browser_credential_hosts_missing",
-            "Credentialed PDF browser route has no catalog host allowlist.",
-        )
-    network_guard = BrowserNetworkGuard(
-        allowed_hosts=declared_hosts or fallback_hosts,
-        policy=active_remote_url_policy,
-    )
-    if credentialed_context:
-        credential_origin_url = (
-            next(iter(seed_urls), "") or normalize_text(referer) or candidate_urls[0]
-        )
-        network_guard.set_credential_origin(credential_origin_url)
-
-    safe_candidate_urls = _safe_pdf_browser_urls(network_guard, candidate_urls)
-    if not safe_candidate_urls:
-        raise PdfFallbackFailure(
-            "unsafe_browser_url",
-            "All PDF browser candidates were rejected by the network safety policy.",
-        )
-    return _PdfBrowserNetwork(
-        guard=network_guard,
-        candidate_urls=safe_candidate_urls,
-        seed_urls=_safe_pdf_browser_urls(network_guard, seed_urls),
-    )
-
-
-def _safe_pdf_browser_urls(
-    network_guard: BrowserNetworkGuard, urls: list[str]
-) -> list[str]:
-    safe_urls: list[str] = []
-    for url in urls:
-        with contextlib.suppress(Exception):
-            safe_urls.append(network_guard.validate(url, resolve_dns=True))
-    return safe_urls
-
-
 def _playwright_pdf_error_types() -> tuple[Any, Any]:
     try:
         from playwright.sync_api import Error as PlaywrightError
@@ -937,20 +847,11 @@ def _playwright_pdf_error_types() -> tuple[Any, Any]:
 
 def _initialize_pdf_browser_page(
     browser_context: Any,
-    network_guard: BrowserNetworkGuard,
     *,
     browser_cookies: list[dict[str, Any]] | None,
     seed_urls: list[str],
     request: PdfRequestContext,
 ) -> tuple[Any, PdfFallbackFailure | None]:
-    try:
-        network_guard.install_on_context(browser_context)
-    except Exception as exc:
-        raise PdfFallbackFailure(
-            "browser_network_guard_install_failed",
-            "Unable to install the PDF browser network safety interceptor.",
-        ) from exc
-
     if browser_cookies:
         try:
             browser_context.add_cookies(browser_cookies)
@@ -961,7 +862,7 @@ def _initialize_pdf_browser_page(
             ) from exc
 
     page = browser_context.new_page()
-    return page, _seed_pdf_browser_page(page, seed_urls, request, network_guard)
+    return page, _seed_pdf_browser_page(page, seed_urls, request)
 
 
 def fetch_pdf_with_browser(
@@ -1025,7 +926,6 @@ def fetch_pdf_with_browser(
                 seed_urls=seed_urls,
                 allow_pdf_only=allow_pdf_only,
                 request=active_request,
-                remote_url_policy=browser_compatibility.remote_url_policy,
                 provider_name=browser_compatibility.provider_name,
                 _allow_thread_handoff=False,
                 _use_runtime_browser=False,
@@ -1089,20 +989,6 @@ def fetch_pdf_with_browser(
         except PdfFallbackFailure as exc:
             last_failure = exc
 
-    network = _prepare_pdf_browser_network(
-        candidate_urls,
-        normalized_seed_urls,
-        referer=referer,
-        browser_cookies=browser_cookies,
-        config=resolved_config,
-        declared_hosts=declared_hosts,
-        context=context,
-        remote_url_policy=browser_compatibility.remote_url_policy,
-    )
-    network_guard = network.guard
-    candidate_urls = network.candidate_urls
-    normalized_seed_urls = network.seed_urls
-    seed_urls = network.seed_urls
     PlaywrightError, PlaywrightTimeoutError = _playwright_pdf_error_types()
 
     context_kwargs: dict[str, Any] = browser_context_options(
@@ -1137,16 +1023,14 @@ def fetch_pdf_with_browser(
 
         page, seed_failure = _initialize_pdf_browser_page(
             browser_context,
-            network_guard,
             browser_cookies=browser_cookies,
-            seed_urls=network.seed_urls,
+            seed_urls=normalized_seed_urls,
             request=active_request,
         )
         last_failure = seed_failure or last_failure
         for attempt_index, url in enumerate(candidate_urls):
             _raise_if_cancelled(context)
             try:
-                network_guard.validate(url, resolve_dns=True)
                 goto_timeout_ms = (
                     _remaining_pdf_timeout_seconds(
                         context, request_deadline, maximum=60
@@ -1174,14 +1058,6 @@ def fetch_pdf_with_browser(
                 with page.expect_download(timeout=download_timeout_ms) as download_info:
                     try:
                         initial_response = page.goto(url, **goto_kwargs)
-                        current_page_url = (
-                            normalize_text(str(getattr(page, "url", "") or "")) or url
-                        )
-                        network_guard.validate(
-                            current_page_url,
-                            previous_url=url,
-                            resolve_dns=True,
-                        )
                     except PlaywrightError as exc:
                         if "Download is starting" not in str(exc):
                             raise
@@ -1197,14 +1073,6 @@ def fetch_pdf_with_browser(
                             * 1000
                         )
                         response = page.goto(url, **goto_kwargs)
-                        current_page_url = (
-                            normalize_text(str(getattr(page, "url", "") or "")) or url
-                        )
-                        network_guard.validate(
-                            current_page_url,
-                            previous_url=url,
-                            resolve_dns=True,
-                        )
                     except PdfFallbackFailure as exc:
                         last_failure = exc
                         break
@@ -1222,7 +1090,6 @@ def fetch_pdf_with_browser(
                             final_url=page.url,
                             page=page,
                             request=active_request,
-                            network_guard=network_guard,
                         )
                         if pdf_result is not None:
                             return pdf_result
@@ -1232,18 +1099,6 @@ def fetch_pdf_with_browser(
                 title = normalize_text(page.title())
                 html = page.content()
                 current_url = normalize_text(page.url)
-                try:
-                    current_url = network_guard.validate(
-                        current_url or url,
-                        previous_url=url,
-                        resolve_dns=True,
-                    )
-                except Exception:
-                    last_failure = PdfFallbackFailure(
-                        "unsafe_browser_final_url",
-                        "PDF browser navigation returned an unsafe final URL.",
-                    )
-                    continue
                 html_base_url = current_url
                 parsed_current_url = urllib.parse.urlparse(current_url)
                 if parsed_current_url.scheme not in {
@@ -1371,42 +1226,12 @@ def fetch_pdf_with_browser(
                     if isinstance(raw_download_url, str)
                     else ""
                 )
-                validated_download_url = ""
-                if download_url:
-                    try:
-                        validated_download_url = network_guard.validate(
-                            download_url,
-                            previous_url=url,
-                            resolve_dns=True,
-                            # The browser payload is never consumed. A declared
-                            # CDN URL is only discovered here and handed to the
-                            # cookie-scoped pinned direct transport below.
-                            enforce_credential_origin=False,
-                        )
-                    except Exception:
-                        with contextlib.suppress(Exception):
-                            download.cancel()
-                        last_failure = PdfFallbackFailure(
-                            "browser_stream_unavailable",
-                            "Browser download URL cannot be replayed through pinned streaming.",
-                            details={
-                                "source_url": redact_url_for_diagnostics(url),
-                                "download_url": redact_url_for_diagnostics(
-                                    download_url
-                                ),
-                            },
-                        )
-                        continue
-                validated_final_url = network_guard.validate(
-                    normalize_text(str(getattr(page, "url", "") or "")) or url,
-                    previous_url=url,
-                    resolve_dns=True,
-                )
+                final_url = normalize_text(str(getattr(page, "url", "") or "")) or url
                 with contextlib.suppress(Exception):
                     download.cancel()
                 try:
                     context_cookies = browser_context.cookies(
-                        [validated_download_url or validated_final_url]
+                        [download_url or final_url]
                     )
                 except TypeError:
                     context_cookies = browser_context.cookies()
@@ -1414,14 +1239,14 @@ def fetch_pdf_with_browser(
                     context_cookies = list(browser_cookies or [])
                 context_cookies = filter_browser_cookies_for_url(
                     list(context_cookies or []),
-                    validated_download_url or validated_final_url,
+                    download_url or final_url,
                 )
                 replay_candidates = list(
                     dict.fromkeys(
                         candidate
                         for candidate in (
-                            validated_download_url,
-                            validated_final_url,
+                            download_url,
+                            final_url,
                             url,
                         )
                         if candidate

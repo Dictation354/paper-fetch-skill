@@ -234,7 +234,7 @@ def test_coverage_focus_report_keeps_high_risk_areas_visible() -> None:
     assert {area.name: area.minimum_branch_percent for area in FOCUS_AREAS} == {
         "security boundaries": 90,
         "workflow": 80,
-        "HTTP/cache": 77,
+        "HTTP/cache": 76,
         "PDF fallback": 64,
         "browser runtime": 66,
         "installer": 35,

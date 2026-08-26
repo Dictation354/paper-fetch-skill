@@ -110,12 +110,8 @@ explicit_binary_auto_prepare = false
 native_ci_runtime = "official/152.0.4-beta.28"
 native_test_addon_policy = "exclude-default-addons"
 native_test_screen_policy = "fixed-synthetic-screen"
-network_policy = "safe-remote-url-policy-per-request-and-final-url"
 route_allowlist_source = "provider-catalog"
 route_execution_policy = "compiled-catalog-host-timeout-retry-qps-acceptance-assets"
-credentialed_context_policy = "same-origin-only"
-cross_origin_asset_policy = "controlled-direct-transport"
-service_worker_policy = "block-before-credential-seed"
 storage_state_cache_scope = "actual-use-provider-backend-path-digest"
 storage_state_load_diagnostics = "path-exists-used"
 binary_asset_transport = "browser-discovery-pinned-direct-stream"
@@ -365,7 +361,7 @@ title = "明确 Camoufox 离线边界并移除 FlareSolverr"
 area = "browser-runtime"
 status = "implemented"
 risk = "P1"
-summary = "browser/full extra 允许兼容的 Camoufox 0.5.5+ 版本；开发与常规 CI 继续消费 uv.lock，离线构建则以已解析 wheelhouse 中的唯一 Camoufox wheel为版本来源，并复核 wheel metadata、installed distribution 与 manifest 一致。离线包捆绑 Python 包但不捆绑浏览器 binary，安装器不得下载；CLI live browser 路径可按策略首次准备，MCP/库默认 opt-in，进入受限网络前仍应显式预置并用 browser-preflight 验证。原生 macOS CI runtime discovery 使用只读 workflow token 避免匿名 GitHub API 限额，live 验证只保留本地显式入口。所有 Camoufox/Playwright navigation、request、redirect 和最终 URL 共用 SafeRemoteUrlPolicy 与 catalog route host allowlist；catalog route 统一编译 hosts、timeout、retry、QPS、acceptance 与 asset cap，browser runtime 使用同一编译结果限制导航 deadline。带登录状态的 context 仅允许认证 origin，跨 origin 资产回退到受控 direct transport。实际注入的 storage-state 以 provider/backend/canonical path/final digest 进入 MCP private cache scope，并用 path/exists/used diagnostics 区分配置与使用，空路径不得污染 public。selected-browser 页面等待稳定正文 DOM；实质正文就绪后，Wiley 页头登录导航交给正文感知验收，challenge、HTTP 强拒绝、404 与摘要重定向仍早期阻断；provider 可在捕获 HTML 前执行有界、同源、失败不阻断的页面准备。PNAS 使用单次导航和 8 秒正文稳定预算，opt-in provider 只阻断 image/font/media；已验收 preflight HTML 按 DOI/URL/runtime 指纹在同进程一次性复用，AIP 维持跨 RuntimeContext 禁用边界，figure discovery 在同一 runtime 串行复用专用 page。Taylor & Francis 仅用该钩子有界并发读取文章页明确暴露的官方 CSV table action，失败表回退到已加载且不产生新请求的同页 payload，其文章范围内的官方 CMS figure rendition 按 accepted preview 保留。内置 auth/preflight 目标由 catalog 能力与共享测试保持一致，Taylor & Francis 使用已验证的开放文章，避免默认命令在 target_resolution 提前失败。候选循环和保守重试都不得用后续传输/导航失败或 deadline timeout 覆盖已经确认的稳定访问门槛；CLI/MCP 批量解析和 lane 排队不得提前消耗 item fetch deadline；HTTP-200 empty shell 的重试优先下一个既有 provider URL，live MCP 只按精确 access-boundary marker 跳过成功 metadata fallback；活动运行时不得包含 FlareSolverr。"
+summary = "browser/full extra 允许兼容的 Camoufox 0.5.5+ 版本；开发与常规 CI 继续消费 uv.lock，离线构建则以已解析 wheelhouse 中的唯一 Camoufox wheel为版本来源，并复核 wheel metadata、installed distribution 与 manifest 一致。离线包捆绑 Python 包但不捆绑浏览器 binary，安装器不得下载；CLI live browser 路径可按策略首次准备，MCP/库默认 opt-in，进入受限网络前仍应显式预置并用 browser-preflight 验证。原生 macOS CI runtime discovery 使用只读 workflow token 避免匿名 GitHub API 限额，live 验证只保留本地显式入口。Camoufox/Playwright navigation、redirect、子资源与 service worker 使用浏览器原生网络行为，不安装 context-wide URL/DNS interceptor，也不限制 credentialed context origin；catalog route 仍统一编译 hosts、timeout、retry、QPS、acceptance 与 asset cap，并限制 browser navigation deadline，browser 发现的二进制由 SafeRemoteUrlPolicy 与 catalog host policy 约束的 direct transport 流式获取。实际注入的 storage-state 以 provider/backend/canonical path/final digest 进入 MCP private cache scope，并用 path/exists/used diagnostics 区分配置与使用，空路径不得污染 public。selected-browser 页面等待稳定正文 DOM；实质正文就绪后，Wiley 页头登录导航交给正文感知验收，challenge、HTTP 强拒绝、404 与摘要重定向仍早期阻断；provider 可在捕获 HTML 前执行有界、同源、失败不阻断的页面准备。PNAS 使用单次导航和 8 秒正文稳定预算，opt-in provider 只阻断 image/font/media；已验收 preflight HTML 按 DOI/URL/runtime 指纹在同进程一次性复用，AIP 维持跨 RuntimeContext 禁用边界，figure discovery 在同一 runtime 串行复用专用 page。Taylor & Francis 仅用该钩子有界并发读取文章页明确暴露的官方 CSV table action，失败表回退到已加载且不产生新请求的同页 payload，其文章范围内的官方 CMS figure rendition 按 accepted preview 保留。内置 auth/preflight 目标由 catalog 能力与共享测试保持一致，Taylor & Francis 使用已验证的开放文章，避免默认命令在 target_resolution 提前失败。候选循环和保守重试都不得用后续传输/导航失败或 deadline timeout 覆盖已经确认的稳定访问门槛；CLI/MCP 批量解析和 lane 排队不得提前消耗 item fetch deadline；HTTP-200 empty shell 的重试优先下一个既有 provider URL，live MCP 只按精确 access-boundary marker 跳过成功 metadata fallback；活动运行时不得包含 FlareSolverr。"
 rationale = "Python 包可导入不等于目标浏览器可用，安装时静默联网也会破坏离线包边界；同样，远端挑战、延迟正文或批量调度等待必须与本地 browser context 启动和实际抓取预算分开诊断。"
 implementation_paths = [
   ".github/workflows/ci.yml",
@@ -386,7 +382,6 @@ implementation_paths = [
   "src/paper_fetch/extraction/html/assets/state.py",
   "src/paper_fetch/extraction/html/assets/silverchair.py",
   "src/paper_fetch/extraction/html/signals.py",
-  "src/paper_fetch/http/browser_policy.py",
   "src/paper_fetch/http/provider_policy.py",
   "src/paper_fetch/http/transport.py",
   "src/paper_fetch/http/url_policy.py",
@@ -447,19 +442,15 @@ test_nodes = [
   "tests/unit/test_camoufox_backend.py::test_open_context_records_successful_storage_state_injection",
   "tests/unit/test_camoufox_backend.py::test_camoufox_trace_reports_storage_state_was_loaded",
   "tests/unit/test_capability_scope.py::test_fetch_writer_uses_final_digest_of_actually_loaded_state",
-  "tests/unit/test_camoufox_backend.py::test_browser_private_candidate_is_rejected_before_context_or_page_call",
-  "tests/unit/test_safe_remote_url_policy.py::test_browser_guard_rejects_mixed_dns_and_public_to_private_redirect",
-  "tests/unit/test_browser_workflow_fetchers.py::test_browser_asset_fetchers_reject_private_urls_before_playwright_calls",
-  "tests/unit/test_browser_workflow_fetchers.py::test_credentialed_browser_asset_cross_origin_falls_back_before_context",
+  "tests/unit/test_camoufox_backend.py::test_browser_candidate_uses_native_navigation_without_context_guard",
+  "tests/unit/test_browser_workflow_fetchers.py::test_credentialed_browser_asset_cross_origin_uses_native_context_without_route",
   "tests/unit/test_browser_workflow_fetchers.py::test_browser_file_descriptor_defers_redirects_to_direct_transport",
-  "tests/unit/test_auth.py::test_auth_private_dns_is_rejected_before_runtime_or_playwright_call",
-  "tests/unit/test_auth.py::test_auth_context_blocks_allowed_cross_origin_request_with_credentials",
-  "tests/unit/test_ieee_provider_routes.py::IeeeProviderRouteTests::test_browser_html_private_dns_rejected_before_context_creation",
-  "tests/unit/test_ieee_provider_routes.py::IeeeProviderRouteTests::test_browser_html_revalidates_unsafe_final_url",
-  "tests/unit/test_pdf_fallback_helpers.py::PdfFallbackHelperTests::test_pdf_private_candidate_is_rejected_before_browser_context",
-  "tests/unit/test_pdf_fallback_helpers.py::PdfFallbackHelperTests::test_pdf_request_context_redirect_rejects_private_hop",
+  "tests/unit/test_auth.py::test_auth_context_does_not_install_context_wide_network_route",
+  "tests/unit/test_ieee_provider_routes.py::IeeeProviderRouteTests::test_browser_html_accepts_native_final_url_without_context_route",
+  "tests/unit/test_pdf_fallback_helpers.py::PdfFallbackHelperTests::test_credentialed_pdf_cross_origin_uses_native_browser_context",
   "tests/unit/test_route_execution_policy.py::test_browser_runtime_caps_deadline_from_compiled_route_policy",
-  "tests/unit/test_runtime_browser.py::test_browser_manager_service_worker_block_forces_isolated_external_context",
+  "tests/unit/test_runtime_browser.py::test_browser_context_options_do_not_override_service_workers",
+  "tests/unit/test_runtime_browser.py::test_browser_manager_reuses_existing_cdp_context_without_closing_it",
   "tests/unit/test_asset_budget.py::test_asset_budget_defaults_and_route_concurrency_cap",
   "tests/unit/test_asset_budget.py::test_compressed_length_budget_failure_cancels_pending_asset_work",
   "tests/unit/test_asset_budget.py::test_parallel_figure_and_supplementary_calls_share_worker_slots",
@@ -469,7 +460,7 @@ test_nodes = [
   "tests/unit/test_asset_budget.py::test_arxiv_archive_counts_duplicate_regular_members_before_deduplication",
   "tests/unit/test_safe_remote_url_policy.py::test_asset_stream_uses_catalog_sensitive_headers_on_redirect",
   "tests/unit/test_safe_remote_url_policy.py::test_seed_redirect_preserves_multiple_cookies_and_refreshes_next_hop",
-  "tests/unit/test_pdf_fallback_helpers.py::PdfFallbackHelperTests::test_pdf_browser_owned_download_url_fails_closed_before_direct_replay",
+  "tests/unit/test_pdf_fallback_helpers.py::PdfFallbackHelperTests::test_pdf_browser_owned_download_url_is_rejected_by_direct_replay",
   "tests/unit/test_aip_provider.py::test_aip_cold_html_retry_reuses_transient_seed_without_persisting_state",
   "tests/unit/test_provider_request_options.py::ProviderRequestOptionsTests::test_browser_workflow_preserves_fast_access_gate_when_retry_times_out",
   "tests/unit/test_live_runtime_env.py::test_live_mcp_no_access_detection_requires_machine_readable_boundary",

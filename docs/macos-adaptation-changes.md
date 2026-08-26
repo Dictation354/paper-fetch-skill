@@ -269,18 +269,15 @@ CLI `browser-preflight` 本身会访问网络，并在策略允许时准备缺�
 仍可按各自数据源与凭据边界独立使用。
 
 同一浏览器边界还要求把“本地 runtime 可启动”和“远端页面可取得正文”分开：
-Camoufox/Playwright 的主文导航、子资源 request、显式 request-context 下载、重定向
-和最终 URL 都经过共享 `SafeRemoteUrlPolicy`。provider catalog 的 route 由唯一的
-`RouteExecutionPolicy` 编译 publisher/API/资产 host、timeout、retry、QPS、acceptance
-与资产并发上限；browser navigation deadline 与 direct transport 消费同一结果。
-route interceptor 会在浏览器发包前拒绝 loopback、
-RFC1918、link-local、reserved、multicast、混合公私 DNS 与 HTTPS downgrade；无法对
-任意跨 origin 页面内 `fetch()` 保证相同逐跳策略时，资产交回受控 direct transport。
-加载 cookie、storage state、profile 或 user-data 的 context 只允许认证 origin，不能
-把登录状态带到 catalog 中的另一个 origin。context 在凭据 seed 和 page 创建前阻断
-service worker 并安装 context-wide route；不能满足该配置的 external borrowed context
-不复用。这些规则属于 portable Python 行为契约，
-在 macOS 上使用相同实现，但仍不替代原生 prepared Camoufox bundle 启动证据。
+Camoufox/Playwright 的主文导航、重定向、跨源子资源与 service worker 使用浏览器原生
+网络行为；项目不安装 context-wide URL/DNS interceptor，也不把加载 cookie、storage
+state、profile 或 user-data 的 context 额外绑定到单一 origin，external CDP 可继续
+借用既有 context。Provider image/font/media 屏蔽只保留为 page-scope 性能策略。
+provider catalog 的 route 仍由唯一 `RouteExecutionPolicy` 编译 publisher/API/资产
+host、timeout、retry、QPS、acceptance 与资产并发上限，并限制 browser navigation
+deadline；direct HTTP/API 与 browser 发现后二进制 replay 仍由 `SafeRemoteUrlPolicy`
+和 catalog request policy 逐跳验证。这些规则属于 portable Python 行为契约，在
+macOS 上使用相同实现，但仍不替代原生 prepared Camoufox bundle 启动证据。
 
 Browser 二进制资产进一步固定为“浏览器只发现 URL、verified-IP direct transport
 流式落盘”。同一 `RuntimeContext` 的 figure 与 supplementary 共用 128 文件、

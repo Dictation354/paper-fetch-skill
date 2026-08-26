@@ -20,6 +20,17 @@ from paper_fetch.runtime_browser import BrowserContextManager
 from paper_fetch.workflow.batch_runner import run_batch
 
 
+def test_browser_context_options_do_not_override_service_workers() -> None:
+    options = runtime_browser.browser_context_options(accept_downloads=True)
+
+    assert options == {
+        "locale": runtime_browser.DEFAULT_BROWSER_LOCALE,
+        "viewport": runtime_browser.DEFAULT_BROWSER_VIEWPORT,
+        "accept_downloads": True,
+    }
+    assert "service_workers" not in options
+
+
 def _write_stale_singletons(profile_dir: Path, *, pid: int = 99_999_999) -> None:
     profile_dir.mkdir(parents=True, exist_ok=True)
     (profile_dir / "SingletonLock").symlink_to(f"{socket.gethostname()}-{pid}")
@@ -774,34 +785,6 @@ def test_browser_manager_external_new_context_does_not_borrow_existing_context(
     assert len(cdp_browser.contexts) == 2
     assert existing_context.close_count == 0
     assert cdp_browser.new_context_kwargs == [{"locale": "en-US"}]
-    assert diagnostics["borrowed_existing_context"] is False
-
-
-def test_browser_manager_service_worker_block_forces_isolated_external_context(
-    monkeypatch,
-) -> None:
-    existing_context = _FakeCdpContext()
-    cdp_browser = _FakeCdpBrowser([existing_context])
-    monkeypatch.setattr(
-        runtime_browser,
-        "connect_browser_over_cdp",
-        lambda _endpoint: cdp_browser,
-    )
-    lifecycle = BrowserContextManager(
-        cdp_endpoint="ws://127.0.0.1:9222/devtools/browser/test"
-    )
-
-    context = lifecycle.new_context(
-        headless=True,
-        service_workers="block",
-    )
-    diagnostics = context._paper_fetch_external_cdp_diagnostics
-    context.close()
-    lifecycle.close()
-
-    assert len(cdp_browser.contexts) == 2
-    assert existing_context.close_count == 0
-    assert cdp_browser.new_context_kwargs == [{"service_workers": "block"}]
     assert diagnostics["borrowed_existing_context"] is False
 
 

@@ -1,8 +1,6 @@
 # ruff: noqa: F403,F405
 from __future__ import annotations
 
-import socket
-
 from paper_fetch.providers import (
     _ieee_block_page,
     _ieee_browser_html,
@@ -13,7 +11,6 @@ from paper_fetch.providers import (
     browser_runtime,
 )
 from paper_fetch.extraction.html.html_tags import HTML_DROP_TAGS
-from paper_fetch.http import SafeRemoteUrlPolicy
 
 from ._ieee_provider_support import *
 
@@ -68,6 +65,12 @@ class _FakeIeeeBrowserPage:
         self.delayed_html_text = delayed_html_text
         self.closed = False
         self._response_handler = None
+        self.route_pattern = ""
+        self.route_handler = None
+
+    def route(self, pattern, handler):
+        self.route_pattern = pattern
+        self.route_handler = handler
 
     def on(self, event_name, handler):
         assert event_name == "response"
@@ -156,55 +159,7 @@ def _browser_landing_attempt(
 
 
 class IeeeProviderRouteTests(unittest.TestCase):
-    def test_browser_html_private_dns_rejected_before_context_creation(self) -> None:
-        doi = "10.1109/TIM.2024.3509573"
-        article_number = "10772041"
-        landing_attempt = _browser_landing_attempt(doi, article_number)
-        document_url = landing_attempt.landing_url
-        rest_url = (
-            f"https://ieeexplore.ieee.org/rest/document/{article_number}/"
-            "?logAccess=true"
-        )
-        runtime_context = RuntimeContext(env={})
-        runtime_config = browser_runtime.BrowserRuntimeConfig(
-            provider="ieee",
-            doi=doi,
-            artifact_dir=Path(tempfile.mkdtemp()),
-            headless=True,
-            user_agent=None,
-            backend="camoufox",
-        )
-        open_context = mock.Mock(
-            side_effect=AssertionError("browser context must not be created")
-        )
-
-        with mock.patch.object(
-            _ieee_browser_html,
-            "browser_context",
-            open_context,
-        ):
-            with self.assertRaises(ieee_provider.ProviderFailure) as raised:
-                _ieee_browser_html.fetch_ieee_browser_html_payload(
-                    provider_name="ieee",
-                    browser_user_agent=None,
-                    landing_attempt=landing_attempt,
-                    document_url=document_url,
-                    rest_url=rest_url,
-                    direct_html_failure=None,
-                    context=runtime_context,
-                    runtime_config=runtime_config,
-                    extraction_assets=lambda _extraction, _landing: [],
-                    remote_url_policy=SafeRemoteUrlPolicy(
-                        resolver=lambda _host, port, *, type: [
-                            (socket.AF_INET, type, 6, "", ("127.0.0.1", port))
-                        ]
-                    ),
-                )
-
-        self.assertEqual(raised.exception.code, "no_result")
-        open_context.assert_not_called()
-
-    def test_browser_html_revalidates_unsafe_final_url(self) -> None:
+    def test_browser_html_accepts_native_final_url_without_context_route(self) -> None:
         doi = "10.1109/TIM.2024.3509573"
         article_number = "10772041"
         landing_attempt = _browser_landing_attempt(doi, article_number)
@@ -220,7 +175,10 @@ class IeeeProviderRouteTests(unittest.TestCase):
                 self.url = "http://127.0.0.1/internal"
                 return response
 
-        page = RedirectPage(document_url)
+        page = RedirectPage(
+            document_url,
+            html_text=_dynamic_html(article_number).decode("utf-8"),
+        )
         fake_context = _FakeIeeeBrowserContext(page)
         fake_runtime = mock.Mock()
         fake_runtime.env = {"PAPER_FETCH_BROWSER_BACKEND": "camoufox"}
@@ -233,28 +191,21 @@ class IeeeProviderRouteTests(unittest.TestCase):
             user_agent=None,
             backend="camoufox",
         )
-        policy = SafeRemoteUrlPolicy(
-            resolver=lambda _host, port, *, type: [
-                (socket.AF_INET, type, 6, "", ("8.8.8.8", port))
-            ]
+        result = _ieee_browser_html.fetch_ieee_browser_html_payload(
+            provider_name="ieee",
+            browser_user_agent=None,
+            landing_attempt=landing_attempt,
+            document_url=document_url,
+            rest_url=rest_url,
+            direct_html_failure=None,
+            context=fake_runtime,
+            runtime_config=runtime_config,
+            extraction_assets=lambda _extraction, _landing: [],
         )
 
-        with self.assertRaises(ieee_provider.ProviderFailure) as raised:
-            _ieee_browser_html.fetch_ieee_browser_html_payload(
-                provider_name="ieee",
-                browser_user_agent=None,
-                landing_attempt=landing_attempt,
-                document_url=document_url,
-                rest_url=rest_url,
-                direct_html_failure=None,
-                context=fake_runtime,
-                runtime_config=runtime_config,
-                extraction_assets=lambda _extraction, _landing: [],
-                remote_url_policy=policy,
-            )
-
-        self.assertEqual(raised.exception.code, "no_result")
-        self.assertEqual(fake_context.route_pattern, "**/*")
+        self.assertEqual(result.content.route_kind, "html")
+        self.assertEqual(fake_context.route_pattern, "")
+        self.assertEqual(page.route_pattern, "**/*")
 
     def test_landing_nonrecoverable_statuses_do_not_load_browser_runtime(self) -> None:
         doi = "10.1109/example.landing"
@@ -884,7 +835,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
             def close(self):
                 self.closed = True
 
-        # The response listener sees REST metadata, while the guarded page DOM
+        # The response listener sees REST metadata, while the page DOM
         # is the only full-text body source.
         fake_browser_context = _FakeIeeeBrowserContext(
             _FakeIeeeBrowserPage(
@@ -922,7 +873,8 @@ class IeeeProviderRouteTests(unittest.TestCase):
             ],
             "no_access",
         )
-        self.assertEqual(fake_browser_context.route_pattern, "**/*")
+        self.assertEqual(fake_browser_context.route_pattern, "")
+        self.assertEqual(fake_browser_context.page.route_pattern, "**/*")
         self.assertTrue(fake_browser_context.closed)
         self.assertTrue(fake_browser_context.page.closed)
 

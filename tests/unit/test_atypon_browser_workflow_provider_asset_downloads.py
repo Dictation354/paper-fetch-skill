@@ -601,14 +601,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
         )
         self.assertEqual(result["asset_failures"], [])
         self.assertEqual(len(private_contexts), 2)
-        self.assertTrue(
-            all(
-                len(context.route_calls) == 1
-                and context.route_calls[0][0] == "**/*"
-                and callable(context.route_calls[0][1])
-                for context in private_contexts
-            )
-        )
+        self.assertTrue(all(context.route_calls == [] for context in private_contexts))
         self.assertTrue(all(context.closed for context in private_contexts))
 
     def test_pnas_provider_download_related_assets_uses_figure_page_and_falls_back_to_preview(

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-import socket
 import threading
 from unittest import mock
 
@@ -36,20 +35,6 @@ from paper_fetch.providers.browser_runtime.types import (
     BrowserRuntimeConfig,
 )
 from paper_fetch.runtime import RuntimeContext
-from paper_fetch.http import SafeRemoteUrlPolicy
-
-
-@pytest.fixture(autouse=True)
-def _default_public_browser_dns(monkeypatch):
-    monkeypatch.setattr(
-        _playwright_browser,
-        "SafeRemoteUrlPolicy",
-        lambda: SafeRemoteUrlPolicy(
-            resolver=lambda _host, port, *, type: [
-                (socket.AF_INET, type, 6, "", ("8.8.8.8", port))
-            ]
-        ),
-    )
 
 
 def test_backend_selection_defaults_to_camoufox_and_accepts_explicit_value() -> None:
@@ -167,7 +152,7 @@ def test_camoufox_context_options_do_not_override_fingerprint(tmp_path) -> None:
 
     options = context_options_for_config(config)
 
-    assert options == {"accept_downloads": True, "service_workers": "block"}
+    assert options == {"accept_downloads": True}
     assert "user_agent" not in options
     assert "viewport" not in options
     assert "locale" not in options
@@ -200,7 +185,6 @@ def test_open_context_records_successful_storage_state_injection(tmp_path) -> No
     runtime.new_browser_context_for_runtime_config.assert_called_once_with(
         config,
         accept_downloads=True,
-        service_workers="block",
         storage_state=str(state),
     )
     runtime.record_browser_state_capability_use.assert_called_once_with(
@@ -447,7 +431,6 @@ def test_camoufox_persistent_official_runtime_path_is_resolved_by_package(
         persistent_context=True,
         headless=False,
         user_data_dir=str(tmp_path / "profile"),
-        service_workers="block",
     )
 
 
@@ -493,7 +476,6 @@ def test_camoufox_persistent_explicit_binary_path_is_forwarded(
         headless=False,
         user_data_dir=str(tmp_path / "profile"),
         executable_path="/custom/camoufox",
-        service_workers="block",
     )
     assert version_type.from_path.call_count == 2
 
@@ -805,9 +787,10 @@ class _Context:
         pass
 
 
-def test_browser_private_candidate_is_rejected_before_context_or_page_call(
+def test_browser_candidate_uses_native_navigation_without_context_guard(
     monkeypatch, tmp_path
 ) -> None:
+    context = _Context()
     config = BrowserRuntimeConfig(
         provider="annualreviews",
         doi="10.1146/example",
@@ -817,20 +800,19 @@ def test_browser_private_candidate_is_rejected_before_context_or_page_call(
         persist_storage_state=False,
         backend="camoufox",
     )
-    open_context = mock.Mock(
-        side_effect=AssertionError("browser context must not be created")
-    )
+    open_context = mock.Mock(return_value=(None, context))
     monkeypatch.setattr(_playwright_browser, "open_browser_context", open_context)
 
-    with pytest.raises(browser_runtime.BrowserRuntimeFailure) as captured:
-        _playwright_browser.fetch_html_with_playwright(
-            ["http://127.0.0.1:8080/internal"],
-            publisher="annualreviews",
-            config=config,
-        )
+    result = _playwright_browser.fetch_html_with_playwright(
+        ["http://127.0.0.1:8080/internal"],
+        publisher="annualreviews",
+        config=config,
+        wait_seconds=0,
+    )
 
-    assert captured.value.kind == "unsafe_browser_url"
-    open_context.assert_not_called()
+    assert result.final_url == "http://127.0.0.1:8080/internal"
+    open_context.assert_called_once()
+    assert context.route_handler is None
 
 
 def test_camoufox_html_retry_applies_provider_seed_before_page_creation(
@@ -977,11 +959,6 @@ def test_camoufox_html_navigation_uses_commit_and_keeps_images(
         config=config,
         wait_seconds=0,
         disable_media=True,
-        remote_url_policy=SafeRemoteUrlPolicy(
-            resolver=lambda _host, port, *, type: [
-                (socket.AF_INET, type, 6, "", ("8.8.8.8", port))
-            ]
-        ),
     )
 
     assert result.response_status == 200
@@ -991,7 +968,7 @@ def test_camoufox_html_navigation_uses_commit_and_keeps_images(
     image_route = mock.Mock()
     image_route.request.resource_type = "image"
     image_route.request.url = context.page.url
-    context.route_handler(image_route)
+    context.page.route_handler(image_route)
     image_route.continue_.assert_called_once()
     image_route.abort.assert_not_called()
 
@@ -1026,11 +1003,6 @@ def test_camoufox_trace_reports_storage_state_was_loaded(monkeypatch, tmp_path) 
         publisher="annualreviews",
         config=config,
         wait_seconds=0,
-        remote_url_policy=SafeRemoteUrlPolicy(
-            resolver=lambda _host, port, *, type: [
-                (socket.AF_INET, type, 6, "", ("8.8.8.8", port))
-            ]
-        ),
     )
 
     assert result.diagnostics["browser_runtime_trace"]["storage_state_load"] == {
@@ -1127,19 +1099,14 @@ def test_provider_resource_policy_blocks_only_configured_heavy_types(
         options=browser_runtime.BrowserHtmlFetchOptions(
             blocked_resource_types=frozenset({"image", "font", "media"})
         ),
-        remote_url_policy=SafeRemoteUrlPolicy(
-            resolver=lambda _host, port, *, type: [
-                (socket.AF_INET, type, 6, "", ("8.8.8.8", port))
-            ]
-        ),
     )
 
     routes = {}
     for resource_type in ("image", "font", "media", "stylesheet", "script", "xhr"):
         route = mock.Mock()
         route.request.resource_type = resource_type
-        route.request.url = context.page.url
-        context.route_handler(route)
+        route.request.url = f"https://cross-origin-assets.test/{resource_type}"
+        context.page.route_handler(route)
         routes[resource_type] = route
     for resource_type in ("image", "font", "media"):
         routes[resource_type].abort.assert_called_once()
@@ -1147,6 +1114,7 @@ def test_provider_resource_policy_blocks_only_configured_heavy_types(
     for resource_type in ("stylesheet", "script", "xhr"):
         routes[resource_type].continue_.assert_called_once()
         routes[resource_type].abort.assert_not_called()
+    assert context.route_handler is None
 
     trace = result.diagnostics["browser_runtime_trace"]
     assert trace["blocked_resource_types"] == ["font", "image", "media"]
@@ -1226,11 +1194,6 @@ def test_unconfigured_science_fast_policy_keeps_legacy_media_only_blocking(
         config=config,
         wait_seconds=0,
         disable_media=True,
-        remote_url_policy=SafeRemoteUrlPolicy(
-            resolver=lambda _host, port, *, type: [
-                (socket.AF_INET, type, 6, "", ("8.8.8.8", port))
-            ]
-        ),
     )
 
     routes = {}
@@ -1238,7 +1201,7 @@ def test_unconfigured_science_fast_policy_keeps_legacy_media_only_blocking(
         route = mock.Mock()
         route.request.resource_type = resource_type
         route.request.url = context.page.url
-        context.route_handler(route)
+        context.page.route_handler(route)
         routes[resource_type] = route
     routes["media"].abort.assert_called_once()
     for resource_type in ("image", "font", "stylesheet", "script", "xhr"):

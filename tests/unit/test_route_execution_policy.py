@@ -266,6 +266,11 @@ def test_browser_runtime_caps_deadline_from_compiled_route_policy(
             hosts=("annualreviews.com",),
         ),
     )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        mock.Mock(side_effect=RuntimeError("controlled context failure")),
+    )
     config = BrowserRuntimeConfig(
         provider="annualreviews",
         doi="10.1146/example",
@@ -278,12 +283,12 @@ def test_browser_runtime_caps_deadline_from_compiled_route_policy(
 
     with pytest.raises(_playwright_browser.PlaywrightBrowserFailure) as captured:
         _playwright_browser.fetch_html_with_playwright(
-            ["http://127.0.0.1/private"],
+            ["https://www.annualreviews.org/doi/10.1146/example"],
             publisher="annualreviews",
             config=config,
         )
 
-    assert captured.value.kind == "unsafe_browser_url"
+    assert captured.value.kind == "browser_context_create_failed"
     assert captured.value.details["trace"]["timeout_budget_ms"] == 7_000
 
 

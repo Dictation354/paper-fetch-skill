@@ -7,72 +7,17 @@ from typing import Any
 from collections.abc import Mapping
 
 from ..extraction.html.signals import detect_html_block, summarize_visible_html
-from ..failure import FailureDiagnostics
-from ..http import (
-    BrowserNetworkGuard,
-    SafeRemoteUrlPolicy,
-    provider_allowed_hosts,
-    redact_url_for_diagnostics,
-)
+from ..http import redact_url_for_diagnostics
 from ..http.headers import header_value
 from ..page_diagnostics import PageDiagnosticRequest, capture_page_diagnostic
 from ..runtime import RuntimeContext
-from ..reason_codes import ERROR, NO_RESULT
+from ..reason_codes import ERROR
 from ..utils import normalize_text
 from . import _ieee_html as ieee_html
 from . import _ieee_metadata as ieee_metadata
 from . import _ieee_url as ieee_url
 from .browser_runtime import BrowserRuntimeConfig, BrowserRuntimeFailure
 from .base import ProviderFailure
-
-
-def _ieee_browser_network_guard(
-    *,
-    provider_name: str,
-    landing_attempt: ieee_metadata.IeeeLandingAttempt,
-    document_url: str,
-    rest_url: str,
-    context: RuntimeContext,
-    runtime_config: BrowserRuntimeConfig,
-    remote_url_policy: SafeRemoteUrlPolicy | None,
-) -> tuple[BrowserNetworkGuard, list[dict[str, Any]]]:
-    context_policy = getattr(
-        getattr(context, "transport", None), "remote_url_policy", None
-    )
-    active_policy = (
-        remote_url_policy
-        or (context_policy if isinstance(context_policy, SafeRemoteUrlPolicy) else None)
-        or SafeRemoteUrlPolicy()
-    )
-    guard = BrowserNetworkGuard(
-        allowed_hosts=provider_allowed_hosts(provider_name, "browser_html"),
-        policy=active_policy,
-    )
-    cookies = list(landing_attempt.browser_context_seed.get("browser_cookies") or [])
-    credentialed = bool(
-        cookies
-        or runtime_config.storage_state_path
-        or runtime_config.profile_dir
-        or runtime_config.user_data_dir
-    )
-    if credentialed:
-        guard.set_credential_origin(document_url)
-    try:
-        guard.validate(document_url, resolve_dns=True)
-        guard.validate(rest_url, previous_url=document_url, resolve_dns=True)
-    except Exception as exc:
-        raise ProviderFailure(
-            NO_RESULT,
-            "IEEE browser HTML URLs were rejected by the network safety policy.",
-            diagnostics=FailureDiagnostics(
-                provider=provider_name,
-                route="browser_html",
-                stage="network_policy",
-                error_category="unsafe_browser_url",
-                retryable=False,
-            ),
-        ) from exc
-    return guard, cookies
 
 
 def _playwright_timeout_error(runtime_config: BrowserRuntimeConfig) -> type[Exception]:
@@ -146,7 +91,7 @@ def _captured_rest_html(
     rest_url: str,
 ) -> _CapturedRestHtml | None:
     # A Playwright Response cannot provide a bounded/streaming body read.  Keep
-    # metadata for diagnostics, while article readiness comes from the guarded
+    # metadata for diagnostics, while article readiness comes from the loaded
     # page DOM.  The direct transport owns any future REST replay.
     headers = _playwright_response_headers(response)
     return _CapturedRestHtml(

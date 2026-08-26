@@ -23,12 +23,9 @@ Direct HTTP connections are pinned to the public IP addresses validated by the
 remote-URL policy while retaining the original HTTP Host and TLS identity.
 Redirects are revalidated hop by hop, and provider-declared credentials require
 a route host allowlist and are stripped on cross-origin redirects. Browser
-navigation and asset requests use the same URL/IP policy; credentialed browser
-contexts are same-origin only, with cross-origin assets delegated to the
-controlled direct transport. New contexts block service workers and install a
-context-wide interceptor before credentials or pages are added; an external
-context that cannot honor that boundary is not borrowed. Browser cookies retain their standard domain,
-path, secure, and expiry scope when converted for direct requests.
+navigation, redirects, and subresources follow the selected browser runtime's
+native networking behavior. Browser cookies retain their standard domain, path,
+secure, and expiry scope when converted for controlled direct requests.
 
 Structured and human-readable logging centrally removes URL query data and
 standard or provider-specific credentials. MCP requests share one routing

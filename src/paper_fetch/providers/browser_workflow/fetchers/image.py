@@ -178,8 +178,6 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
         normalized_url = normalize_text(image_url)
         if not normalized_url:
             return None
-        if not self._browser_target_is_allowed(normalized_url):
-            return None
         page = self._ensure_page(normalized_url)
         if page is None:
             return None
@@ -285,16 +283,11 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
         image_src = normalize_text(str(image_url or ""))
         if not image_src:
             return None
-        if self._network_guard is None and not self._browser_target_is_allowed(
-            image_src
-        ):
-            return None
         if budget.exhausted():
             return None
         return self._stream_descriptor(
             image_src,
             headers={"content-type": "image/*"},
-            previous_url=image_src,
         )
 
     def _payload_from_context_request(
@@ -303,16 +296,11 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
         budget = budget or self._active_budget()
         if self._context is None:
             return None
-        if self._network_guard is None and not self._browser_target_is_allowed(
-            image_url
-        ):
-            return None
         if budget.timeout_ms(_IMAGE_DOCUMENT_NAVIGATION_TIMEOUT_MS) <= 0:
             return None
         return self._stream_descriptor(
             image_url,
             headers={"content-type": "image/*"},
-            previous_url=image_url,
         )
 
     def _payload_from_navigation_response(
@@ -330,13 +318,6 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
         headers = _browser_response_headers(response)
         content_type = headers.get("content-type", "")
         final_url = normalize_text(getattr(response, "url", "") or "") or fallback_url
-        if not self._validate_browser_url(
-            final_url,
-            previous_url=attempted_url,
-            resolve_dns=True,
-        ):
-            self._record_failure(attempted_url, reason="unsafe_browser_final_url")
-            return None
         status = _browser_response_status(response)
         if _looks_like_placeholder_image_url(final_url):
             self._record_failure(
@@ -351,7 +332,6 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
             final_url,
             status=int(status or 200),
             headers=headers,
-            previous_url=attempted_url,
         )
 
     def _wait_for_primary_image(
@@ -455,12 +435,6 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
         image_src = normalize_text(str(image_url or ""))
         if not image_src:
             return None
-        if self._network_guard is None and not self._browser_target_is_allowed(
-            image_src
-        ):
-            return None
-        if not self._validate_browser_url(image_src, resolve_dns=True):
-            return None
         budget = budget or self._active_budget()
         timeout_ms = (
             budget.timeout_ms(_IMAGE_DOCUMENT_FETCH_TIMEOUT_MS)
@@ -477,7 +451,6 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
                 "width": int((dimensions or {}).get("width") or 0),
                 "height": int((dimensions or {}).get("height") or 0),
             },
-            previous_url=image_src,
         )
 
     def _payload_from_page_fetch(
@@ -518,7 +491,6 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
                 "width": int(image_info.get("width") or 0),
                 "height": int(image_info.get("height") or 0),
             },
-            previous_url=image_src,
         )
 
 

@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import json
-import socket
 from pathlib import Path
-from unittest import mock
 
 import pytest
 
@@ -11,7 +9,6 @@ from paper_fetch import auth
 from paper_fetch.config import XDG_DATA_HOME_ENV_VAR
 from paper_fetch.provider_catalog import browser_preflight_provider_names
 from paper_fetch.providers.base import ProviderFailure
-from paper_fetch.http import SafeRemoteUrlPolicy
 
 
 class _FakeAuthPage:
@@ -144,15 +141,6 @@ def _patch_auth_runtime(
         runtime_env.update(env)
     monkeypatch.setattr(auth, "build_runtime_env", lambda: dict(runtime_env))
     monkeypatch.setattr(auth, "ensure_runtime_ready", lambda _runtime: None)
-    monkeypatch.setattr(
-        auth,
-        "SafeRemoteUrlPolicy",
-        lambda: SafeRemoteUrlPolicy(
-            resolver=lambda _host, port, *, type: [
-                (socket.AF_INET, type, 6, "", ("8.8.8.8", port))
-            ]
-        ),
-    )
     monkeypatch.setattr(
         auth,
         "_verify_staged_auth_state",
@@ -442,54 +430,7 @@ def test_authenticate_provider_profile_allows_url_for_catalog_provider_without_s
     assert fake_manager.instances[0].context.page.goto_calls[0][0] == target_url
 
 
-def test_auth_private_dns_is_rejected_before_runtime_or_playwright_call(
-    monkeypatch, tmp_path
-) -> None:
-    fake_manager = _install_fake_browser_manager(monkeypatch)
-    _patch_auth_runtime(monkeypatch, tmp_path)
-    ensure_ready = mock.Mock()
-    monkeypatch.setattr(auth, "ensure_runtime_ready", ensure_ready)
-    policy = SafeRemoteUrlPolicy(
-        resolver=lambda _host, port, *, type: [
-            (socket.AF_INET, type, 6, "", ("127.0.0.1", port))
-        ]
-    )
-
-    with pytest.raises(ProviderFailure) as raised:
-        auth.authenticate_provider_profile(
-            provider="wiley",
-            confirm=lambda _prompt: None,
-            remote_url_policy=policy,
-        )
-
-    assert raised.value.code == "auth_final_url_invalid"
-    ensure_ready.assert_not_called()
-    assert fake_manager.instances == []
-
-
-def test_auth_final_url_is_dns_revalidated(monkeypatch, tmp_path) -> None:
-    _install_fake_browser_manager(monkeypatch)
-    _patch_auth_runtime(monkeypatch, tmp_path)
-    resolutions = 0
-
-    def resolver(_host: str, port: int, *, type: int):
-        nonlocal resolutions
-        resolutions += 1
-        address = "8.8.8.8" if resolutions == 1 else "127.0.0.1"
-        return [(socket.AF_INET, type, 6, "", (address, port))]
-
-    with pytest.raises(ProviderFailure) as raised:
-        auth.authenticate_provider_profile(
-            provider="wiley",
-            confirm=lambda _prompt: None,
-            remote_url_policy=SafeRemoteUrlPolicy(resolver=resolver),
-        )
-
-    assert raised.value.code == "auth_final_url_invalid"
-    assert resolutions == 2
-
-
-def test_auth_context_blocks_allowed_cross_origin_request_with_credentials(
+def test_auth_context_does_not_install_context_wide_network_route(
     monkeypatch, tmp_path
 ) -> None:
     fake_manager = _install_fake_browser_manager(monkeypatch)
@@ -501,10 +442,4 @@ def test_auth_context_blocks_allowed_cross_origin_request_with_credentials(
     )
 
     context = fake_manager.instances[0].context
-    route = mock.Mock()
-    route.request.url = "https://api.wiley.com/steal"
-    route.request.redirected_from = None
-    assert context.route_handler is not None
-    context.route_handler(route)
-    route.abort.assert_called_once()
-    route.continue_.assert_not_called()
+    assert context.route_handler is None

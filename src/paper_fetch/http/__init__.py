@@ -89,12 +89,6 @@ from .url_policy import (
     ValidatedRemoteUrl,
 )
 from .provider_policy import provider_allowed_hosts, provider_request_policy
-from .browser_policy import (
-    BrowserNetworkGuard,
-    guarded_browser_request_get,
-    hosts_from_urls,
-    url_origin,
-)
 
 __all__ = [
     "CACHE_KEY_HEADER_NAMES",
@@ -132,7 +126,6 @@ __all__ = [
     "TEXTUAL_CONTENT_TYPES",
     "TRANSIENT_HTTP_STATUS_CODES",
     "UNSTABLE_CACHE_HEADER_NAMES",
-    "BrowserNetworkGuard",
     "HttpRequestPolicy",
     "HttpStreamOptions",
     "HttpTransport",
@@ -153,8 +146,6 @@ __all__ = [
     "decode_json_object_response",
     "decompress_gzip_body",
     "diagnostic_url_payload",
-    "guarded_browser_request_get",
-    "hosts_from_urls",
     "http_timing_collector",
     "is_pdf_content_type",
     "is_retryable_network_error",
@@ -173,5 +164,4 @@ __all__ = [
     "redact_url_for_cache",
     "redact_url_for_diagnostics",
     "time",
-    "url_origin",
 ]

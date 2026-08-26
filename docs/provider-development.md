@@ -335,7 +335,7 @@ Publisher 私有的 supplementary 属性或埋点必须由 provider extractor �
 - 官方 PDF fallback 优先走 `PdfFallbackStrategy`；如果直接调用 `pdf_fetch_result_from_response()` / `pdf_fetch_result_from_bytes()`，应显式允许真实 PDF 的 PDF-only 保留，避免扫描 PDF 无法转 Markdown 时降级成 Crossref metadata-only source。
 - `context.parse_cache` 用于同一次 fetch 内复用 XML root、HTML extraction payload、asset extraction payload。
 - Browser runtime 只能通过 `RuntimeContext`、browser runtime facade 或现有 browser workflow helper 管理；生产路径统一使用 Camoufox 打开 context/page。
-- Browser navigation、request-context、redirect、最终 URL 和资产 fallback 必须复用 `BrowserNetworkGuard` / `SafeRemoteUrlPolicy` 及 catalog route host allowlist。guard 必须在 BrowserContext scope、cookie seed 和 page 创建前安装，并为新 context 阻断 service worker；安装失败不得降级为不受控 page。带 cookie/storage/profile 的 context 只能访问其认证 origin；跨 origin 资产交给受控 direct transport，不能新增任意跨源页面内 `fetch()`。
+- Browser navigation、redirect、子资源和 service worker 使用浏览器原生网络行为；不要新增 context-wide URL/DNS interceptor 或凭据同源限制。Provider image/font/media 屏蔽只能作为 page-scope 资源优化。Browser 发现的图片、附件和 PDF URL 仍必须交给现有 pinned direct transport，由 `SafeRemoteUrlPolicy`、catalog route host、敏感 header、预算和流式写盘边界负责实际二进制读取。
 - Browser workflow 的 browser-backed HTML、PDF fallback 与资产下载必须通过 `RuntimeContext` / `BrowserContextManager` 管理的 keyed browser manager；managed Chrome 生命周期按进程共享，具体 context/page 必须在调用线程通过线程本地 CDP 连接创建。不得把主线程持有的同步 Playwright page/context 交给 worker 线程使用。
 - 普通 HTTP 资产下载仍可并发；只有显式 thread-private browser fetcher 才能在 worker 线程创建并关闭自己的 page/context/manager，且必须在同一个 worker 线程内关闭这些 sync browser 对象，否则容易残留浏览器子进程。
 

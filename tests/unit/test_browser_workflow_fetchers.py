@@ -5,8 +5,6 @@ import threading
 import types
 from unittest import mock
 
-import pytest
-
 from paper_fetch.providers import browser_workflow
 from paper_fetch.providers.browser_workflow.fetchers import context as fetcher_context
 from paper_fetch.providers.browser_workflow.fetchers import file as file_fetchers
@@ -15,20 +13,8 @@ from paper_fetch.providers.browser_workflow.fetchers.memo import (
     _MemoizedFigurePageFetcher,
 )
 from paper_fetch.runtime import RuntimeContext
-from tests.unit._browser_workflow_deps import (
-    public_test_url_policy as _public_test_url_policy,
-)
 
 TEST_CDP_ENDPOINT = "ws://127.0.0.1:9222/devtools/browser/test"
-
-
-@pytest.fixture(autouse=True)
-def _default_public_browser_dns(monkeypatch):
-    monkeypatch.setattr(
-        fetcher_context,
-        "SafeRemoteUrlPolicy",
-        _public_test_url_policy,
-    )
 
 
 def test_figure_page_memo_uses_canonical_http_url_and_caches_failures() -> None:
@@ -45,34 +31,16 @@ def test_figure_page_memo_uses_canonical_http_url_and_caches_failures() -> None:
     )
 
 
-def test_browser_asset_fetchers_reject_private_urls_before_playwright_calls() -> None:
-    image_fetcher = image_fetchers._SharedBrowserImageDocumentFetcher(
-        browser_context_seed_getter=lambda: {},
-        seed_urls_getter=lambda: [],
-    )
-    image_fetcher._ensure_page = mock.Mock(
-        side_effect=AssertionError("page must not be created")
-    )
-    file_fetcher = file_fetchers._SharedBrowserFileDocumentFetcher(
-        browser_context_seed_getter=lambda: {},
-        seed_urls_getter=lambda: [],
-    )
-    file_fetcher._ensure_context = mock.Mock(
-        side_effect=AssertionError("context must not be created")
-    )
-
-    assert image_fetcher("http://127.0.0.1:8080/internal.png", {}) is None
-    assert image_fetcher("http://10.0.0.8/internal.png", {}) is None
-    assert file_fetcher("http://169.254.169.254/latest/meta-data/iam", {}) is None
-    assert file_fetcher("https://[::1]/internal", {}) is None
-    assert file_fetcher("https://[fe80::1]/internal", {}) is None
-    image_fetcher._ensure_page.assert_not_called()
-    file_fetcher._ensure_context.assert_not_called()
-
-
-def test_credentialed_browser_asset_cross_origin_falls_back_before_context() -> None:
+def test_credentialed_browser_asset_cross_origin_uses_native_context_without_route() -> (
+    None
+):
     article_url = "https://publisher.example.test/article"
-    fetcher = image_fetchers._SharedBrowserImageDocumentFetcher(
+    asset_url = "https://assets.other.test/supplement.pdf"
+    page = mock.Mock()
+    context = mock.Mock()
+    context.new_page.return_value = page
+    context.cookies.return_value = []
+    fetcher = file_fetchers._SharedBrowserFileDocumentFetcher(
         browser_context_seed_getter=lambda: {
             "browser_final_url": article_url,
             "browser_cookies": [
@@ -86,34 +54,21 @@ def test_credentialed_browser_asset_cross_origin_falls_back_before_context() -> 
         },
         seed_urls_getter=lambda: [article_url],
     )
-    fetcher._ensure_page = mock.Mock(
-        side_effect=AssertionError("credentialed cross-origin browser call")
+    with mock.patch.object(
+        fetcher_context,
+        "_new_browser_context",
+        return_value=(None, None, context),
+    ):
+        result = fetcher(asset_url, {"kind": "supplementary"})
+
+    assert result is not None
+    assert result["_paper_fetch_browser_stream_url"] == asset_url
+    context.route.assert_not_called()
+    page.goto.assert_called_once_with(
+        article_url,
+        wait_until="domcontentloaded",
+        timeout=30000,
     )
-
-    assert fetcher("https://assets.other.test/figure.png", {}) is None
-    fetcher._ensure_page.assert_not_called()
-
-
-def test_credentialed_browser_asset_without_origin_fails_closed() -> None:
-    fetcher = image_fetchers._SharedBrowserImageDocumentFetcher(
-        browser_context_seed_getter=lambda: {
-            "browser_cookies": [
-                {
-                    "name": "session",
-                    "value": "secret",
-                    "domain": "publisher.example.test",
-                    "path": "/",
-                }
-            ]
-        },
-        seed_urls_getter=lambda: [],
-    )
-    fetcher._ensure_page = mock.Mock(
-        side_effect=AssertionError("credentialed context with unknown origin")
-    )
-
-    assert fetcher("https://publisher.example.test/figure.png", {}) is None
-    fetcher._ensure_page.assert_not_called()
 
 
 def test_browser_file_descriptor_defers_redirects_to_direct_transport() -> None:
@@ -123,12 +78,8 @@ def test_browser_file_descriptor_defers_redirects_to_direct_transport() -> None:
     fetcher = file_fetchers._SharedBrowserFileDocumentFetcher(
         browser_context_seed_getter=lambda: {},
         seed_urls_getter=lambda: [first_url],
-        browser_options=file_fetchers.BrowserDocumentFetcherOptions(
-            remote_url_policy=_public_test_url_policy()
-        ),
     )
     fetcher._context = mock.Mock(request=request_client)
-    fetcher._configure_network_guard(first_url)
 
     result = fetcher._fetch_with_context_request(first_url, {})
 
@@ -372,9 +323,6 @@ def test_browser_image_fetcher_applies_budget_to_navigation_only() -> None:
     fetcher = image_fetchers._SharedBrowserImageDocumentFetcher(
         browser_context_seed_getter=lambda: {},
         seed_urls_getter=lambda: seed_urls,
-        browser_options=image_fetchers.BrowserDocumentFetcherOptions(
-            remote_url_policy=_public_test_url_policy()
-        ),
     )
     fetcher._page = page
     fetcher._context = context
@@ -563,9 +511,6 @@ def test_serial_image_and_file_fetchers_share_ready_article_page_until_owner_clo
         browser_context_seed_getter=lambda: seed,
         seed_urls_getter=lambda: [article_url],
         runtime_context=runtime_context,
-        browser_options=image_fetchers.BrowserDocumentFetcherOptions(
-            remote_url_policy=_public_test_url_policy()
-        ),
     )
     image_fetcher._fetch_with_page = mock.Mock(
         return_value={
@@ -580,9 +525,6 @@ def test_serial_image_and_file_fetchers_share_ready_article_page_until_owner_clo
         browser_context_seed_getter=lambda: seed,
         seed_urls_getter=lambda: [article_url],
         runtime_context=runtime_context,
-        browser_options=file_fetchers.BrowserDocumentFetcherOptions(
-            remote_url_policy=_public_test_url_policy()
-        ),
     )
 
     with mock.patch.object(
@@ -822,12 +764,8 @@ def test_file_fetcher_forwards_explicit_asset_referer() -> None:
     fetcher = browser_workflow._SharedBrowserFileDocumentFetcher(
         browser_context_seed_getter=lambda: {},
         seed_urls_getter=lambda: [],
-        browser_options=browser_workflow.BrowserDocumentFetcherOptions(
-            remote_url_policy=_public_test_url_policy()
-        ),
     )
     fetcher._context = mock.Mock(request=request_client)
-    fetcher._configure_network_guard(file_url)
 
     result = fetcher._fetch_with_context_request(
         file_url,
@@ -974,7 +912,6 @@ def test_threaded_file_fetcher_close_releases_all_thread_private_browser_resourc
     def build_fetcher() -> None:
         inner_fetcher = fetcher._get_fetcher()
         created_fetchers.append(inner_fetcher)
-        inner_fetcher._configure_network_guard("https://example.test/supplement.pdf")
         inner_fetcher._ensure_context("https://example.test/supplement.pdf")
 
     try:

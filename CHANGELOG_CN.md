@@ -27,8 +27,6 @@
 
 - 将 urllib3 direct connection 固定到 `SafeRemoteUrlPolicy` 选定的公网 IP，同时保留原始 Host、TLS SNI 与证书 hostname；每个 redirect hop 都会独立解析和验证。
 - 新增由 catalog 派生的 provider-sensitive header request policy，以及强制性的 credential route host allowlist。Elsevier、Wiley 与 Crossref 自定义凭据在同源 redirect 中保留，在跨源 301/302/303/307/308 response 中移除。
-- 将共享 remote URL 与 route-host policy 应用于 Camoufox/Playwright navigation、request-context call、redirect target、final URL 与 browser asset recovery。带凭据的 context 仅允许同源；跨源 asset 回退到受控 direct transport。
-- 在 cookie seeding/page creation 前于 BrowserContext 作用域安装 browser guard，并阻断 service worker；无法遵守这些选项的外部 CDP context 会被隔离，不再借用。
 - 以标准 cookie jar policy 替换手工 browser-cookie matching，从而保留 host-only/domain、RFC path、secure、expiry、HttpOnly 与 SameSite 作用域。
 - 集中处理 human/structured log 中 URL/query/header/text secret 的脱敏，增加防御性 MCP filtering，并用一个引用计数 router 加 context-local request ownership 取代逐请求 global handler。Bridge teardown 前会在锁内使 request target 失效，因此持有 context 副本的 worker 无法向已结束的 MCP session 或重叠请求发出消息；closed loop 会在构造 notification coroutine 前被拒绝。
 

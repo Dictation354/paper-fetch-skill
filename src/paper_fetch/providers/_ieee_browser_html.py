@@ -9,12 +9,7 @@ from typing import Any
 
 from ..extraction.html.signals import detect_html_block, summarize_visible_html
 from ..failure import FailureDiagnostics
-from ..http import (
-    RequestCancelledError,
-    RequestFailure,
-    SafeRemoteUrlPolicy,
-    redact_url_for_diagnostics,
-)
+from ..http import RequestCancelledError, redact_url_for_diagnostics
 from ..http.headers import header_value
 from ..quality.html_availability import (
     HtmlQualityAssessor,
@@ -32,7 +27,6 @@ from ._ieee_browser_readiness import (
     _BrowserFailureContext,
     _RestHtmlSelection,
     _capture_rest_html,
-    _ieee_browser_network_guard,
     _page_content,
     _page_has_article,
     _page_title,
@@ -112,17 +106,7 @@ def fetch_ieee_browser_html_payload(
         [ieee_html.IeeeHtmlExtraction, ieee_metadata.IeeeLandingAttempt],
         list[dict[str, Any]],
     ],
-    remote_url_policy: SafeRemoteUrlPolicy | None = None,
 ) -> RawFulltextPayload:
-    network_guard, landing_cookies = _ieee_browser_network_guard(
-        provider_name=provider_name,
-        landing_attempt=landing_attempt,
-        document_url=document_url,
-        rest_url=rest_url,
-        context=context,
-        runtime_config=runtime_config,
-        remote_url_policy=remote_url_policy,
-    )
     PlaywrightTimeoutError = _playwright_timeout_error(runtime_config)
 
     article_number = landing_attempt.article_number
@@ -130,7 +114,6 @@ def fetch_ieee_browser_html_payload(
     active_browser_context = None
     page = None
     rest_responses: list[Any] = []
-    response_network_failures: list[Exception] = []
     navigation_response = None
     browser_final_url = document_url
     navigation_status: int | None = None
@@ -159,36 +142,33 @@ def fetch_ieee_browser_html_payload(
         )
         session = browser_session_scope.__enter__()
         active_browser_context = session.context
-
-        def route_after_validation(route: Any) -> None:
-            resource_type = normalize_text(
-                getattr(route.request, "resource_type", "")
-            ).lower()
-            if resource_type in BROWSER_HTML_BLOCKED_RESOURCE_TYPES:
-                route.abort()
-                return
-            route.continue_()
-
-        network_guard.install_on_context(
-            active_browser_context,
-            after_validation=route_after_validation,
+        landing_cookies = list(
+            landing_attempt.browser_context_seed.get("browser_cookies") or []
         )
         if landing_cookies:
             active_browser_context.add_cookies(landing_cookies)
         page = active_browser_context.new_page()
 
+        def route_handler(route: Any) -> None:
+            try:
+                resource_type = normalize_text(
+                    getattr(route.request, "resource_type", "")
+                ).lower()
+                if resource_type in BROWSER_HTML_BLOCKED_RESOURCE_TYPES:
+                    route.abort()
+                    return
+                route.continue_()
+            except Exception:
+                with contextlib.suppress(Exception):
+                    route.continue_()
+
+        if BROWSER_HTML_BLOCKED_RESOURCE_TYPES:
+            with contextlib.suppress(Exception):
+                page.route("**/*", route_handler)
+
         def remember_rest_response(response: Any) -> None:
             response_url = str(getattr(response, "url", "") or "")
             if ieee_url._is_ieee_rest_document_url(response_url, article_number):
-                try:
-                    network_guard.validate(
-                        response_url,
-                        previous_url=rest_url,
-                        resolve_dns=True,
-                    )
-                except Exception as exc:
-                    response_network_failures.append(exc)
-                    return
                 rest_responses.append(response)
 
         page.on("response", remember_rest_response)
@@ -208,24 +188,6 @@ def fetch_ieee_browser_html_payload(
         browser_final_url = (
             normalize_text(str(getattr(page, "url", "") or "")) or document_url
         )
-        try:
-            network_guard.validate(
-                browser_final_url,
-                previous_url=document_url,
-                resolve_dns=True,
-            )
-        except Exception as exc:
-            raise RequestFailure(
-                None,
-                "IEEE browser navigation returned an unsafe final URL.",
-                error_category="unsafe_redirect",
-            ) from exc
-        if response_network_failures:
-            raise RequestFailure(
-                None,
-                "IEEE browser observed an unsafe REST response URL.",
-                error_category="unsafe_redirect",
-            ) from response_network_failures[0]
         navigation_status = _playwright_response_status(navigation_response)
         navigation_headers = _playwright_response_headers(navigation_response)
 
@@ -429,18 +391,6 @@ def fetch_ieee_browser_html_payload(
         ) from exc
     except RequestCancelledError:
         raise
-    except RequestFailure as exc:
-        raise ProviderFailure(
-            NO_RESULT,
-            "IEEE browser HTML request was blocked by the network safety policy.",
-            diagnostics=FailureDiagnostics(
-                provider=provider_name,
-                route="browser_html",
-                stage="network_policy",
-                error_category="unsafe_browser_url",
-                retryable=False,
-            ),
-        ) from exc
     except ProviderFailure:
         raise
     except Exception as exc:

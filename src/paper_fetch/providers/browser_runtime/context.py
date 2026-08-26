@@ -19,11 +19,7 @@ def context_options_for_config(config: BrowserRuntimeConfig) -> dict[str, Any]:
     if config.backend != "camoufox":
         raise RuntimeError(f"Unsupported browser backend {config.backend!r}.")
     storage_options = paths.storage_context_options(config)
-    return {
-        "accept_downloads": True,
-        "service_workers": "block",
-        **storage_options,
-    }
+    return {"accept_downloads": True, **storage_options}
 
 
 def open_browser_context(

@@ -30,10 +30,7 @@ from paper_fetch.providers.elsevier import (
 from paper_fetch.providers.springer import SpringerClient
 from paper_fetch.providers.wiley import WileyClient
 from paper_fetch.runtime import RuntimeContext
-from tests.unit._browser_workflow_deps import (
-    browser_workflow_deps,
-    public_test_url_policy,
-)
+from tests.unit._browser_workflow_deps import browser_workflow_deps
 from tests.unit._paper_fetch_support import RecordingTransport
 
 
@@ -89,16 +86,6 @@ def elsevier_body_asset_xml(urls: list[str]) -> bytes:
 
 
 class ProviderRequestOptionsTests(unittest.TestCase):
-    def setUp(self) -> None:
-        super().setUp()
-        policy_patch = mock.patch.object(
-            fetcher_context,
-            "SafeRemoteUrlPolicy",
-            public_test_url_policy,
-        )
-        policy_patch.start()
-        self.addCleanup(policy_patch.stop)
-
     def test_crossref_metadata_uses_default_timeout_and_rate_limit_retry(self) -> None:
         transport = RecordingTransport(
             {
@@ -1525,7 +1512,6 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             status=403,
             reason="cloudflare_challenge",
         )
-        fetcher._configure_network_guard(image_url)
 
         result = fetcher._payload_from_loaded_image(
             page, {"src": image_url, "width": 500, "height": 198}

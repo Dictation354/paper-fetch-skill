@@ -11,16 +11,6 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from ....logging_utils import emit_structured_log
-from ....http import (
-    BrowserNetworkGuard,
-    RequestErrorCategory,
-    RequestFailure,
-    SafeRemoteUrlPolicy,
-    guarded_browser_request_get,
-    hosts_from_urls,
-    provider_allowed_hosts,
-    url_origin,
-)
 from ....runtime import RuntimeContext
 from ....runtime_browser import browser_context_options
 from ....utils import dedupe_normalized, normalize_text
@@ -41,15 +31,13 @@ _RUNTIME_FIGURE_PAGE_SESSION_KEY = (
     "browser_workflow",
     "shared_figure_page_session",
 )
-_BROWSER_MAX_REDIRECTS = 5
 
 
 @dataclass(frozen=True)
 class BrowserDocumentFetcherOptions:
-    """Browser runtime and URL-policy options shared by document fetchers."""
+    """Browser runtime options shared by document fetchers."""
 
     runtime_config: BrowserRuntimeConfig | None = None
-    remote_url_policy: SafeRemoteUrlPolicy | None = None
 
 
 class _SharedBrowserPageSession:
@@ -386,9 +374,6 @@ class _BaseBrowserDocumentFetcher:
             Path(user_data_dir).expanduser() if user_data_dir is not None else None
         )
         self._browser_config = options.runtime_config
-        self._remote_url_policy = options.remote_url_policy or SafeRemoteUrlPolicy()
-        self._network_guard: BrowserNetworkGuard | None = None
-        self._network_guard_installed_on: Any | None = None
         self._shared_page_session = _runtime_shared_page_session(runtime_context)
         self._browser_manager = None
         self._context = None
@@ -432,134 +417,6 @@ class _BaseBrowserDocumentFetcher:
         seed = self._browser_context_seed_getter()
         return seed if isinstance(seed, Mapping) else {}
 
-    def _has_browser_credentials(self) -> bool:
-        seed = self._current_seed()
-        browser_config = self._browser_config
-        return bool(
-            list(seed.get("browser_cookies") or [])
-            or (
-                browser_config
-                and (
-                    browser_config.storage_state_path
-                    or browser_config.profile_dir
-                    or browser_config.user_data_dir
-                )
-            )
-            or self._profile_dir
-            or self._user_data_dir
-        )
-
-    def _credential_origin(self) -> tuple[str, str, int] | None:
-        if not self._has_browser_credentials():
-            return None
-        seed = self._current_seed()
-        origin_url = normalize_text(str(seed.get("browser_final_url") or ""))
-        if not origin_url:
-            origin_url = next(iter(self._seed_urls()), "")
-        return url_origin(origin_url)
-
-    def _configure_network_guard(self, source_url: str) -> BrowserNetworkGuard:
-        provider = normalize_text(
-            self._browser_config.provider if self._browser_config is not None else ""
-        ).lower()
-        declared_hosts = provider_allowed_hosts(provider) if provider else ()
-        seed_urls = [
-            *self._seed_urls(),
-            normalize_text(str(self._current_seed().get("browser_final_url") or "")),
-        ]
-        fallback_hosts = hosts_from_urls([*seed_urls, source_url])
-        credential_origin = self._credential_origin()
-        if self._has_browser_credentials() and credential_origin is None:
-            raise RequestFailure(
-                None,
-                "Credentialed browser asset fetch has no authenticated origin.",
-                url=source_url,
-                error_category=RequestErrorCategory.UNSAFE_REDIRECT,
-            )
-        guard = BrowserNetworkGuard(
-            allowed_hosts=declared_hosts or fallback_hosts,
-            policy=self._remote_url_policy,
-            credential_origin=credential_origin,
-        )
-        guard.validate(source_url, resolve_dns=True)
-        self._network_guard = guard
-        return guard
-
-    def _browser_target_is_allowed(self, source_url: str) -> bool:
-        try:
-            self._configure_network_guard(source_url)
-        except Exception as exc:
-            self._record_failure(
-                source_url,
-                reason="unsafe_browser_url",
-                error_type=exc.__class__.__name__,
-            )
-            return False
-        return True
-
-    def _install_network_guard(self) -> None:
-        guard = self._network_guard
-        if guard is None or self._context is None:
-            raise RequestFailure(
-                None,
-                "Browser context cannot be opened without a network guard.",
-                error_category=RequestErrorCategory.UNSAFE_REDIRECT,
-            )
-        if self._context is self._network_guard_installed_on:
-            return
-        guard.install_on_context(self._context)
-        self._network_guard_installed_on = self._context
-
-    def _validate_browser_url(
-        self,
-        url: str,
-        *,
-        previous_url: str | None = None,
-        resolve_dns: bool = False,
-    ) -> bool:
-        guard = self._network_guard
-        if guard is None:
-            return False
-        try:
-            guard.validate(
-                url,
-                previous_url=previous_url,
-                resolve_dns=resolve_dns,
-            )
-        except Exception:
-            return False
-        return True
-
-    def _is_same_page_origin(self, url: str, *, page: Any | None = None) -> bool:
-        active_page = page if page is not None else self._page
-        page_url = normalize_text(str(getattr(active_page, "url", "") or ""))
-        return bool(page_url and url_origin(page_url) == url_origin(url))
-
-    def _context_request_get(
-        self,
-        url: str,
-        *,
-        headers: Mapping[str, str],
-        timeout: int,
-    ) -> Any | None:
-        """Follow APIRequestContext redirects under the shared URL policy."""
-
-        context = self._context
-        guard = self._network_guard
-        if context is None or guard is None:
-            return None
-        try:
-            return guarded_browser_request_get(
-                context.request,
-                url,
-                guard=guard,
-                headers=headers,
-                timeout_ms=timeout,
-                max_redirects=_BROWSER_MAX_REDIRECTS,
-            )
-        except Exception:
-            return None
-
     def _stream_descriptor(
         self,
         source_url: str,
@@ -567,20 +424,11 @@ class _BaseBrowserDocumentFetcher:
         status: int = 200,
         headers: Mapping[str, str] | None = None,
         dimensions: Mapping[str, Any] | None = None,
-        previous_url: str | None = None,
     ) -> dict[str, Any] | None:
-        """Describe a browser-authorized URL for pinned direct streaming."""
+        """Describe a browser-discovered URL for pinned direct streaming."""
 
         normalized_url = normalize_text(source_url)
-        if not normalized_url or not self._validate_browser_url(
-            normalized_url,
-            previous_url=previous_url,
-            resolve_dns=True,
-        ):
-            self._record_failure(
-                source_url,
-                reason="unsafe_browser_final_url",
-            )
+        if not normalized_url:
             return None
         cookies: list[dict[str, Any]] = []
         if self._context is not None:
@@ -605,14 +453,12 @@ class _BaseBrowserDocumentFetcher:
 
     def _ensure_context(self, source_url: str | None = None):
         if self._context is not None:
-            self._install_network_guard()
             return self._context
         shared_session = self._shared_page_session
         if shared_session is not None and shared_session.context is not None:
             self._browser_manager = shared_session.manager
             self._context = shared_session.context
             self._page = shared_session.page
-            self._install_network_guard()
             return self._context
 
         active_user_agent = normalize_text(
@@ -640,7 +486,6 @@ class _BaseBrowserDocumentFetcher:
             context = self._context
             if context is None:
                 return None
-            self._install_network_guard()
             self._sync_context_cookies()
             self._page = context.new_page()
             if shared_session is not None:
@@ -676,7 +521,6 @@ class _BaseBrowserDocumentFetcher:
 
     def _ensure_page(self, source_url: str | None = None):
         if self._page is not None:
-            self._install_network_guard()
             return self._page
         if self._ensure_context(source_url) is None:
             return None
@@ -722,18 +566,7 @@ class _BaseBrowserDocumentFetcher:
             if max_urls is not None and warmed_count >= max_urls:
                 break
             try:
-                if not self._validate_browser_url(seed_url, resolve_dns=True):
-                    warmed_count += 1
-                    continue
                 page.goto(seed_url, wait_until="domcontentloaded", timeout=timeout_ms)
-                final_url = normalize_text(str(getattr(page, "url", "") or ""))
-                if final_url and not self._validate_browser_url(
-                    final_url,
-                    previous_url=seed_url,
-                    resolve_dns=True,
-                ):
-                    warmed_count += 1
-                    continue
                 if (
                     shared_session is not None
                     and shared_session.seed_page_ready_waiter is not None

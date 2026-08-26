@@ -260,15 +260,14 @@
   access-boundary marker，而不接受一般 limited 结果；HTTP-200 empty shell 的重试
   会切换到下一个既有 provider URL。这些证据能区分远端 access state 与 runtime
   failure，但不构成原生 macOS 断网启动证明。
-- Browser 网络边界证据：portable 回归验证主导航在创建 context 前拒绝私网/IP literal，
-  route interceptor 拒绝混合公私 DNS 和公网到 link-local 的重定向，image/file
-  request-context 每跳复核 URL，带 cookie/storage/profile 的 context 只允许认证
-  origin，跨 origin 资产在进入 Playwright 前回退受控 direct transport。catalog route
-  经唯一 compiler 固定 hosts、timeout、retry、QPS、acceptance 与 asset cap，browser
-  deadline 和 direct transport 共享该结果。机器合约固定 policy、catalog allowlist、
-  credential origin、service-worker 阻断和跨源
-  fallback 规则；这些
-  行为在 Darwin 与其他平台共用 Python 实现，但不声称替代原生浏览器启动证据。
+- Browser 网络行为证据：portable 回归验证主导航、redirect、跨源子资源与 service
+  worker 使用浏览器原生行为，不安装 context-wide URL/DNS route，带 cookie/storage/
+  profile 的 context 不再由项目绑定单一 origin，external CDP 恢复借用既有 context。
+  Provider image/font/media 优化仍是 page-scope 资源类型策略；catalog compiler 继续固定
+  browser deadline 与 direct route 的 hosts、timeout、retry、QPS、acceptance 和 asset
+  cap。机器合约不再声明 browser SSRF、credential origin 或 service-worker 阻断保证；
+  direct HTTP/API 和二进制流式 transport 的 URL/redirect/凭据策略由独立回归继续锁定。
+  这些行为在 Darwin 与其他平台共用 Python 实现，但不替代原生浏览器启动证据。
 - Browser state/cache scope 证据：portable 回归覆盖默认 provider data 目录、profile、
   user-data 和显式 storage-state 的 canonical path/content digest；只有 context 创建成功
   且实际注入 state 才记录 use，并在 fetch 完成时按最终 digest 写 private sidecar。

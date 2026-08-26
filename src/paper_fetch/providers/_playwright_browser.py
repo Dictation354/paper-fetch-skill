@@ -18,14 +18,7 @@ from ..extraction.html.signals import (
     summarize_html,
     summarize_visible_html,
 )
-from ..http import (
-    BrowserNetworkGuard,
-    RequestCancelledError,
-    SafeRemoteUrlPolicy,
-    diagnostic_url_payload,
-    hosts_from_urls,
-    provider_allowed_hosts,
-)
+from ..http import RequestCancelledError, diagnostic_url_payload
 from ..page_diagnostics import PageDiagnosticRequest, capture_page_diagnostic
 from ..provider_catalog import compile_route_execution_policy_for_kind
 from ..quality.html_availability import choose_parser, extract_page_title
@@ -956,86 +949,9 @@ def _browser_route_timeout_ms(
             * 1000
         )
     except ValueError:
-        # Unknown names are retained only for deterministic browser doubles;
-        # the host guard still fails closed for real network origins.
+        # Unknown names are retained for deterministic browser doubles.
         route_timeout_ms = configured_timeout_ms
     return min(configured_timeout_ms, route_timeout_ms)
-
-
-def _prepare_browser_network_guard(
-    candidate_urls: list[str],
-    *,
-    publisher: str,
-    config: PlaywrightRuntimeConfig,
-    browser_context_seed: Mapping[str, Any] | None,
-    remote_url_policy: SafeRemoteUrlPolicy | None,
-    trace: dict[str, Any],
-) -> tuple[BrowserNetworkGuard, list[str]]:
-    # RFC 6761 ``.test`` origins are used by deterministic browser doubles.
-    # They can pass syntax/allowlist checks, but any real request still fails
-    # the interceptor's DNS/public-address validation.
-    reserved_test_hosts = tuple(
-        host
-        for host in hosts_from_urls(candidate_urls)
-        if host == "test" or host.endswith(".test")
-    )
-    allowed_hosts = tuple(
-        dict.fromkeys(
-            (*provider_allowed_hosts(publisher, "browser_html"), *reserved_test_hosts)
-        )
-    )
-    if not allowed_hosts:
-        raise PlaywrightBrowserFailure(
-            "browser_network_policy_missing",
-            f"No browser host allowlist is declared for provider {publisher!r}.",
-        )
-    network_guard = BrowserNetworkGuard(
-        allowed_hosts=allowed_hosts,
-        policy=remote_url_policy or SafeRemoteUrlPolicy(),
-    )
-    safe_candidate_urls: list[str] = []
-    rejected_candidate_urls: list[dict[str, Any]] = []
-    for raw_candidate_url in candidate_urls:
-        normalized_candidate_url = normalize_text(raw_candidate_url)
-        if not normalized_candidate_url:
-            continue
-        try:
-            network_guard.validate(
-                normalized_candidate_url,
-                resolve_dns=True,
-                enforce_credential_origin=False,
-            )
-        except Exception as exc:
-            rejected_candidate_urls.append(
-                {
-                    **diagnostic_url_payload(normalized_candidate_url),
-                    "error_type": exc.__class__.__name__,
-                }
-            )
-            continue
-        safe_candidate_urls.append(normalized_candidate_url)
-    trace["network_policy_rejections"] = rejected_candidate_urls
-    if not safe_candidate_urls:
-        raise PlaywrightBrowserFailure(
-            "unsafe_browser_url",
-            "All browser candidates were rejected by the network safety policy.",
-            details={"trace": trace},
-        )
-    credentialed_context = bool(
-        list((browser_context_seed or {}).get("browser_cookies") or [])
-        or config.storage_state_path
-        or config.profile_dir
-        or config.user_data_dir
-    )
-    if credentialed_context:
-        credential_origin_url = (
-            normalize_text(
-                str((browser_context_seed or {}).get("browser_final_url") or "")
-            )
-            or safe_candidate_urls[0]
-        )
-        network_guard.set_credential_origin(credential_origin_url)
-    return network_guard, safe_candidate_urls
 
 
 def fetch_html_with_playwright(
@@ -1050,7 +966,6 @@ def fetch_html_with_playwright(
     runtime_context: RuntimeContext | None = None,
     browser_context_seed: Mapping[str, Any] | None = None,
     options: BrowserHtmlFetchOptions = DEFAULT_BROWSER_HTML_FETCH_OPTIONS,
-    remote_url_policy: SafeRemoteUrlPolicy | None = None,
 ) -> BrowserFetchedHtml:
     return_image_payload = options.return_image_payload
     return_screenshot = options.return_screenshot
@@ -1125,14 +1040,6 @@ def fetch_html_with_playwright(
     trace["timeout_budget_ms"] = timeout_ms
     readiness_deadline: float | None = None
     observed_blocked_resource_types: set[str] = set()
-    network_guard, candidate_urls = _prepare_browser_network_guard(
-        candidate_urls,
-        publisher=publisher,
-        config=config,
-        browser_context_seed=browser_context_seed,
-        remote_url_policy=remote_url_policy,
-        trace=trace,
-    )
 
     def remaining_timeout_ms() -> int:
         remaining = max(0.0, local_deadline - time.monotonic())
@@ -1148,18 +1055,6 @@ def fetch_html_with_playwright(
         create=bool(reuse_runtime_page),
     )
 
-    def route_after_validation(route: Any) -> None:
-        resource_type = normalize_text(str(route.request.resource_type or "")).lower()
-        if resource_type in active_blocked_resource_types:
-            trace["blocked_request_count"] = (
-                int(trace.get("blocked_request_count") or 0) + 1
-            )
-            observed_blocked_resource_types.add(resource_type)
-            trace["blocked_request_types"] = sorted(observed_blocked_resource_types)
-            route.abort()
-            return
-        route.continue_()
-
     try:
         _raise_if_cancelled(runtime_context)
         manager, browser_context, page = _open_browser_html_context(
@@ -1173,17 +1068,6 @@ def fetch_html_with_playwright(
             # Reused pages belong to a context opened with the same runtime config;
             # either way, reaching this point means the configured state was loaded.
             storage_state_load["used"] = bool(storage_state_load.get("exists"))
-        try:
-            network_guard.install_on_context(
-                browser_context,
-                after_validation=route_after_validation,
-            )
-        except Exception as exc:
-            raise PlaywrightBrowserFailure(
-                "browser_network_guard_install_failed",
-                "Unable to install the browser network safety interceptor.",
-                details={"trace": trace, "error_type": exc.__class__.__name__},
-            ) from exc
         if trace.get("runtime_page_reused"):
             trace["browser_context_seed"] = {
                 "provided": browser_context_seed is not None,
@@ -1204,6 +1088,30 @@ def fetch_html_with_playwright(
             shared_page_session=shared_page_session,
             trace=trace,
         )
+
+        def route_handler(route: Any) -> None:
+            try:
+                resource_type = normalize_text(
+                    str(route.request.resource_type or "")
+                ).lower()
+                if resource_type in active_blocked_resource_types:
+                    trace["blocked_request_count"] = (
+                        int(trace.get("blocked_request_count") or 0) + 1
+                    )
+                    observed_blocked_resource_types.add(resource_type)
+                    trace["blocked_request_types"] = sorted(
+                        observed_blocked_resource_types
+                    )
+                    route.abort()
+                    return
+                route.continue_()
+            except Exception:
+                with contextlib.suppress(Exception):
+                    route.continue_()
+
+        if active_blocked_resource_types:
+            with contextlib.suppress(Exception):
+                page.route("**/*", route_handler)
 
         for url in candidate_urls:
             _raise_if_cancelled(runtime_context)
@@ -1226,10 +1134,6 @@ def fetch_html_with_playwright(
             trace["candidates"].append(candidate_trace)
             candidate_started = time.monotonic()
             try:
-                network_guard.validate(
-                    normalized_url,
-                    resolve_dns=True,
-                )
                 logger.debug(
                     "browser_request backend=%s provider=%s action=request wait_seconds=%s url=%s",
                     backend_name,
@@ -1256,11 +1160,6 @@ def fetch_html_with_playwright(
                     final_url = (
                         normalize_text(str(getattr(page, "url", "") or ""))
                         or normalized_url
-                    )
-                    network_guard.validate(
-                        final_url,
-                        previous_url=normalized_url,
-                        resolve_dns=True,
                     )
                     status = _browser_response_status(response, zero_as_none=False)
                     headers = _browser_response_headers(response)
@@ -1379,11 +1278,6 @@ def fetch_html_with_playwright(
                     normalize_text(str(getattr(page, "url", "") or ""))
                     or normalized_url
                 )
-                network_guard.validate(
-                    final_url,
-                    previous_url=normalized_url,
-                    resolve_dns=True,
-                )
                 html = str(page.content() or "")
                 title = normalize_text(str(page.title() or ""))
                 if not title and normalize_text(publisher).lower() != "ieee":
@@ -1425,12 +1319,6 @@ def fetch_html_with_playwright(
                             request_url=normalized_url,
                             final_url=final_url,
                         )
-                        if image_payload is not None:
-                            network_guard.validate(
-                                normalize_text(str(image_payload.get("url") or "")),
-                                previous_url=normalized_url,
-                                resolve_dns=True,
-                            )
                     except Exception:
                         image_payload = None
                     image_failure = getattr(page, _IMAGE_PAYLOAD_FAILURE_ATTR, None)

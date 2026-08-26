@@ -93,9 +93,8 @@ class SafeRemoteUrlPolicy:
                 raise _unsafe_url_failure(url, "HTTPS to HTTP redirect downgrade")
 
         # IP literals never require DNS, so they must remain subject to the
-        # public-address checks even in syntax-only validation paths.  This is
-        # important for browser guards that perform the DNS lookup in a request
-        # interceptor immediately before the browser sends the request.
+        # public-address checks even when a direct-transport caller requests a
+        # syntax-only validation pass.
         try:
             ipaddress.ip_address(host.split("%", 1)[0])
         except ValueError:

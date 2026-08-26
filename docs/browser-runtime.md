@@ -68,19 +68,16 @@ browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默�
 
 ## 网络与登录态边界
 
-- 主文 `page.goto`、所有 page/context request、每个 redirect hop 和最终 URL 共用
-  `SafeRemoteUrlPolicy`；provider catalog 同时提供 publisher、API、CDN/资产 host
-  allowlist。route interceptor 在浏览器真正发包前拒绝 loopback、RFC1918、IPv6
-  loopback/ULA、link-local、reserved、multicast、混合 DNS、公网到私网 redirect、
-  非批准端口与 HTTPS downgrade。
-- 使用 cookie、storage state、profile 或 user-data 的 context 绑定到认证页面 origin。
-  catalog 即使同时批准另一个 CDN/API origin，也不会把登录 context 的 credential
-  带过去；跨 origin 资产返回现有 direct fallback，由受控 Python transport 获取。
-- 所有新 context 显式配置 `service_workers="block"`，context-wide route 在添加 cookie
-  和创建 page 前安装；无法应用该配置的 borrowed CDP context 不复用，而创建隔离
-  context，route 安装失败则终止本次 browser route。
-- 页面内 `fetch()` 只用于同 origin，因为浏览器脚本结果不能可靠暴露全部 redirect
-  hop；request-context fetch 显式关闭自动 redirect，并由 Python 循环逐跳验证。
+- Camoufox/Playwright 的主文导航、重定向、子资源和 service worker 使用浏览器原生
+  网络行为；项目不安装 context-wide URL/DNS 安全 interceptor，也不把带 cookie、
+  storage state、profile 或 user-data 的 context 额外限制为单一 origin。外部 CDP
+  默认仍可借用既有 context。
+- Provider 的 image/font/media 屏蔽是 page scope 的性能优化，只按 catalog/runtime
+  配置处理资源类型，不承担 URL allowlist 或 SSRF 安全保证；其它跨源页面资源继续
+  交给浏览器原生加载。
+- Direct HTTP/API、browser 发现后的二进制流式下载与 cookie-seeded direct fallback
+  继续使用 `SafeRemoteUrlPolicy` 和 provider catalog request policy：每个 redirect hop
+  重新验证公网地址、批准端口、HTTPS downgrade、route host 和敏感 header。
 - Browser cookie 转 direct opener 时使用标准 `CookieJar`，保留 host-only/domain、
   RFC path boundary、secure 与 expiry，避免把 publisher cookie 扩到子域或相邻路径。
 - Browser context diagnostics 用 `storage_state_load={path,exists,used}` 明确区分“已配置”
@@ -92,8 +89,8 @@ browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默�
 
 ## 二进制资产与资源预算
 
-- Camoufox/Playwright 只解析页面、发现最终 `http(s)` 资产 URL，并传递经过同源约束的
-  cookie/storage-state 授权事实；图片、附件和 PDF 不调用 browser `response.body()`、
+- Camoufox/Playwright 只解析页面、发现最终 `http(s)` 资产 URL，并传递浏览器 cookie；
+  图片、附件和 PDF 不调用 browser `response.body()`、
   `arrayBuffer()` 或 base64 整包回传。URL 必须能交给 verified-IP pinned direct
   transport 流式获取，否则以 `browser_stream_unavailable` fail closed。
 - 同一论文的正文图和 supplementary 共用 `RuntimeContext` 的一个 `AssetBudget`：默认
@@ -110,8 +107,9 @@ browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默�
   CookieJar 不跨线程共享；每个已验证 redirect hop 的多条 `Set-Cookie` 都先按
   domain/path/secure 语义导入，再为下一 hop 刷新 Cookie，候选响应 cookie 也只保留在
   当前 worker。它们不会写入 HTTP response cache，catalog 自定义凭据在跨源 hop 删除。
-- Browser 触发 PDF download 后，只把经 DNS/host policy 验证的 `download.url` 加入 direct
-  replay 候选；`blob:`/`data:` 等 browser-owned URL 返回 `browser_stream_unavailable`。
+- Browser 触发 PDF download 后，把 `download.url` 加入 direct replay 候选；随后由
+  direct transport 执行 DNS/host/redirect policy。`blob:`/`data:` 等无法经该 transport
+  获取的 browser-owned URL 返回 `browser_stream_unavailable`。
 - 显式请求的页面 screenshot 是诊断输出而非远端 asset：普通 browser screenshot 只截
   viewport，PNG 超过 16 MiB 即丢弃；PDF failure screenshot 直接写文件，超过 16 MiB
   即删除。两者都不作为二进制恢复 fallback，也不会绕过上述 direct-stream 边界。

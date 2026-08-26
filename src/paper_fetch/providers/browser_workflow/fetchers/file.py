@@ -54,8 +54,6 @@ class _SharedBrowserFileDocumentFetcher(_BaseBrowserDocumentFetcher):
         normalized_url = normalize_text(file_url)
         if not normalized_url:
             return None
-        if not self._browser_target_is_allowed(normalized_url):
-            return None
         if self._ensure_context(normalized_url) is None:
             return None
 
@@ -93,7 +91,6 @@ class _SharedBrowserFileDocumentFetcher(_BaseBrowserDocumentFetcher):
         descriptor = self._stream_descriptor(
             file_url,
             headers=headers,
-            previous_url=file_url,
         )
         if descriptor is None:
             return None

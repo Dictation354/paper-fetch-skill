@@ -27,8 +27,6 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 - Pinned direct urllib3 connections to the public IP selected by `SafeRemoteUrlPolicy` while preserving the original Host, TLS SNI, and certificate hostname; every redirect hop is resolved and validated independently.
 - Added catalog-derived request policies for provider-sensitive headers and mandatory credential route host allowlists. Elsevier, Wiley, and Crossref custom credentials remain on same-origin redirects and are stripped on cross-origin 301/302/303/307/308 responses.
-- Applied the shared remote URL and route-host policy to Camoufox/Playwright navigation, request-context calls, redirect targets, final URLs, and browser asset recovery. Credentialed contexts are same-origin only; cross-origin assets fall back to controlled direct transport.
-- Installed browser guards at BrowserContext scope before cookie seeding/page creation and blocked service workers; external CDP contexts that cannot honor these options are isolated instead of borrowed.
 - Replaced manual browser-cookie matching with the standard cookie jar policy so host-only/domain, RFC path, secure, expiry, HttpOnly, and SameSite scope are retained.
 - Centralized URL/query/header/text secret redaction for human and structured logs, added defensive MCP filtering, and replaced per-request global handlers with one ref-counted router plus context-local request ownership. Request targets are lock-invalidated before bridge teardown, so workers retaining a copied context cannot emit into an ended MCP session or an overlapping request; closed loops are rejected before a notification coroutine is constructed.
 

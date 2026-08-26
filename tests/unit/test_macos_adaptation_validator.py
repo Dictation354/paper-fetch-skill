@@ -333,16 +333,10 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract["components"]["camoufox"]["native_ci_runtime"] = "latest"
         contract["components"]["camoufox"]["native_test_addon_policy"] = "download"
         contract["components"]["camoufox"]["native_test_screen_policy"] = "host"
-        contract["components"]["camoufox"]["network_policy"] = "unrestricted"
         contract["components"]["camoufox"]["route_allowlist_source"] = "page"
         contract["components"]["camoufox"]["route_execution_policy"] = (
             "declarative-only"
         )
-        contract["components"]["camoufox"]["credentialed_context_policy"] = (
-            "cross-origin"
-        )
-        contract["components"]["camoufox"]["cross_origin_asset_policy"] = "browser"
-        contract["components"]["camoufox"]["service_worker_policy"] = "allow"
         contract["components"]["camoufox"]["storage_state_cache_scope"] = "public"
         contract["components"]["camoufox"]["storage_state_load_diagnostics"] = (
             "configured-only"
@@ -449,32 +443,12 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             diagnostic,
         )
         self.assertIn(
-            "components.camoufox.network_policy must be "
-            "'safe-remote-url-policy-per-request-and-final-url'",
-            diagnostic,
-        )
-        self.assertIn(
             "components.camoufox.route_allowlist_source must be 'provider-catalog'",
             diagnostic,
         )
         self.assertIn(
             "components.camoufox.route_execution_policy must be "
             "'compiled-catalog-host-timeout-retry-qps-acceptance-assets'",
-            diagnostic,
-        )
-        self.assertIn(
-            "components.camoufox.credentialed_context_policy must be "
-            "'same-origin-only'",
-            diagnostic,
-        )
-        self.assertIn(
-            "components.camoufox.cross_origin_asset_policy must be "
-            "'controlled-direct-transport'",
-            diagnostic,
-        )
-        self.assertIn(
-            "components.camoufox.service_worker_policy must be "
-            "'block-before-credential-seed'",
             diagnostic,
         )
         self.assertIn(
