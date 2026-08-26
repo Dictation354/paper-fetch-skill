@@ -68,7 +68,7 @@ paper-fetch fetch --query "10.1186/1471-2105-11-421" \
   --manifest ./papers/example.manifest.json
 ```
 
-该文件包含一条与批量 JSONL 完全相同的 v2 record。主输出和额外保存的 Markdown 都先通过原子替换完成最终写入，record 随后读取最终文件的 size、SHA256 和 mtime；因此 `output_artifacts` 描述的是 record 建立时的最终文件，而不是临时 `.part` 文件。显式 manifest 自身也通过原子替换写入，且 manifest 路径不能与主输出或额外 Markdown 路径相同。目标 manifest 或最终输出已存在时默认拒绝替换；人工检查后可显式传 `--overwrite`。单篇不能同时使用 `--query-file` 和 `--manifest`；批量结果使用 `--batch-results`。
+该文件包含一条与批量 JSONL 完全相同的 v2 record。主输出、额外 Markdown 和 manifest 都使用目标 path-scoped lock、唯一同目录 staging file、flush/fsync 与原子替换；取消 fence 与最终 replace 由同一临界区线性化。record 随后读取最终文件的 size、SHA256 和 mtime，因此 `output_artifacts` 不描述临时 `.part`。默认不覆盖时，相同字节视为幂等成功且不改写，不同字节明确冲突；人工检查后显式 `--overwrite` 才允许串行原子替换。manifest 路径不能与主输出或额外 Markdown 相同。单篇不能同时使用 `--query-file` 和 `--manifest`；批量结果使用 `--batch-results`。
 
 JSON、manifest v2 与 Markdown YAML front matter 都保留原有 `source`，并增量输出 `acquisition.provider/route/representation/transport/fallback_used`。例如 Wiley TDM PDF 的 `source` 仍是 `wiley_browser`，精确路线另记为 `wiley/tdm_pdf/pdf/api`。若旧 Markdown 没有该块仍可读取，值视为 `null`；新抓取无法确认精确路线时也保持 `null`，对应 provenance 不会被判为 complete。
 
@@ -90,7 +90,7 @@ paper-fetch doctor --env-file /path/to/offline.env --json
 paper-fetch doctor --install-root ~/.local/share/paper-fetch-skill --json
 ```
 
-`--provider` 只返回一个 catalog provider；`--group` 支持 `all`、`official`、`browser`、`direct` 和 `metadata`；`--detail compact` 的每个 provider 只保留 `provider/status/reason_code/reason/suggested_action`，`full` 额外保留原有 checks、配置来源与本地能力。provider、group 或 detail 非法时会在参数校验阶段拒绝。配置诊断只报告变量名、是否存在以及来源层，不回显 token、cookie、endpoint 或其它配置值。`--install-root` 显式核对一个离线安装目录；未指定时会从当前 module、entrypoint、`PAPER_FETCH_ENV_FILE` 或 PATH CLI 附近发现 `offline-manifest.json`。`--json` 的 `install_provenance` 会列出 source/distribution/UA/PATH CLI/offline manifest/installed runtime 的版本与路径，并逐一校验 bundle 和 Codex、Claude、Antigravity 三份 skill；纯源码开发态没有可发现的 offline manifest 时返回 `not_applicable`，版本或 hash 不一致返回 `drift`。
+`--provider` 只返回一个 catalog provider；`--group` 支持 `all`、`official`、`browser`、`direct` 和 `metadata`；`--detail compact` 的每个 provider 只保留 `provider/status/reason_code/reason/suggested_action`，`full` 额外保留原有 checks、配置来源与本地能力。provider、group 或 detail 非法时会在参数校验阶段拒绝。配置诊断只报告变量名、是否存在以及来源层，不回显 token、cookie、endpoint 或其它配置值。`--install-root` 显式核对一个离线安装目录；未指定时会从当前 module、entrypoint、`PAPER_FETCH_ENV_FILE` 或 PATH CLI 附近发现 `offline-manifest.json`。`--json` 的 `install_provenance` 会列出 source/distribution/UA/PATH CLI/offline manifest/installed runtime 的版本与路径，并逐一校验 bundle 和 Codex、Claude、Antigravity 三份 skill；纯源码开发态还会比较仓库 source bundle 与当前 project（优先）或 user Codex skill。aggregate content version 缺失、不一致或 active skill 缺失均返回 `drift` 并使总体状态 degraded；没有离线 manifest 本身仍是 `not_applicable`。
 
 诊断顺序固定为：先用 `doctor` / MCP `provider_status` 检查静态配置与本地依赖；browser-backed provider 需要真实链路证明时再运行 CLI `browser-preflight` 或 MCP `browser_preflight`；只有预检或实际抓取明确要求登录/验证时，才显式运行 `auth`。`doctor` 退出码为 `0=ready`、`1=degraded`、`2=error`；它的 `ready` 仍不表示出版社网页当前可访问。
 
@@ -175,7 +175,7 @@ paper-fetch fetch --query-file ./queries.txt \
   --max-tokens full_text
 ```
 
-`--batch-concurrency` 默认是 `1`，允许范围是 `1..8`。CLI 使用共享增量 runner，只维持有限的 in-flight 项。某个可静态识别的 provider lane 被限速后，不再向该 lane 提交新任务；无法从 URL/DOI 可靠判断 provider 的标题查询进入通用 lane。批量解析和 provider lane 排队不计入单篇论文的 request deadline；该预算在 fetch worker 真正取得执行槽时开始，而单篇内部的 HTML、browser、PDF 与 fallback 仍共享同一 deadline。已提交任务正常终态化，未调度项也各写一条 `record_status=aborted`、`status=aborted` 的记录。一次正常完成的批量运行保证输入数、record 数和唯一 `index` 数相等。第一次 Ctrl-C 只发出协作式取消并等待在途 worker 收敛；超过宽限期 runner 才关闭共享 browser manager，第二次 Ctrl-C 可立即升级强制关闭。
+`--batch-concurrency` 默认是 `1`，允许范围是 `1..8`。CLI 使用共享增量 runner，只维持有限的 in-flight 项。某个 provider lane 被限速后，不再向该 lane 提交新任务；标题查询会先在自己的 child context 解析实际 provider 并保留该 session cache。批量解析和 provider lane 排队不计入单篇论文的 request deadline；该预算在 fetch worker 真正取得执行槽时开始，而单篇内部的 HTML、browser、PDF 与 fallback 仍共享同一 deadline。规范 DOI 相同的 DOI、DOI URL、大小写变体或标题解析结果只抓取 representative 一次，再按原 `index/query` fan-out。已提交任务正常终态化，未调度项也各写一条 `record_status=aborted`、`status=aborted` 的记录。一次正常完成的批量运行保证输入数、record 数和唯一 `index` 数相等。第一次 Ctrl-C 只发出协作式取消并等待在途 worker 收敛；超过宽限期 runner 才关闭共享 browser manager，第二次 Ctrl-C 可立即升级强制关闭。
 
 单个条目的普通 provider 错误不会停止其它 lane；失败条目会写入 JSONL 的 `error` 字段。全部调用成功且没有 aborted 时退出码为 `0`；工具失败或 aborted 为非零，并继续按 `no_access`、`rate_limited`、`ambiguous` 优先映射到 `3`、`4`、`2`，其它失败/aborted 为 `1`。`acceptance.overall=degraded` 本身不会把退出码升级为非零。
 
@@ -195,7 +195,7 @@ paper-fetch fetch --query-file ./queries.txt \
   --max-tokens full_text
 ```
 
-上面的命令最多同时抓取 `4` 篇。每篇抓取会独立创建运行时上下文，避免跨任务共享 provider 解析状态；同一个 batch 会共享 HTTP transport，并按 browser 配置共享且保留 managed browser manager，因此连接池、同 host 限流、请求缓存和 provider Chrome lifecycle 可以跨条目复用，而 context/page 仍逐条隔离。item context 在预解析阶段保留已解析身份，fetch worker 开始时只重置请求时钟，不丢弃该缓存。JSONL 汇总仍由主线程在每个终态到达时立即写入并 flush，避免并发写文件。并行模式下 `batch-results.jsonl` 按任务完成顺序追加，不保证与输入文件顺序一致；`index` 始终是输入文件过滤空行和注释后的稳定 1-based 序号，消费者必须按 `index` 关联或重排输入，不能把行号当成输入顺序。
+上面的命令最多同时抓取 `4` 篇。每篇抓取会独立创建运行时上下文，避免跨任务共享 provider 解析状态；同一个 batch 只共享明确线程安全的 HTTP transport 和不可变环境，因此连接池、同 host 限流和 HTTP cache 可以跨条目复用。Provider client、session、CookieJar、trace、timing、diagnostics 与 browser context/page 均逐条隔离；managed browser process lifecycle 可以复用，但其 context 不复用。item context 在预解析阶段保留已解析身份，fetch worker 开始时只重置请求时钟，不丢弃该缓存；duplicate、未调度或取消的 context 最终也会关闭。JSONL 汇总仍由主线程在每个终态到达时立即写入并 flush，避免并发写文件。并行模式下 `batch-results.jsonl` 按任务完成顺序追加，不保证与输入文件顺序一致；`index` 始终是输入文件过滤空行和注释后的稳定 1-based 序号，消费者必须按 `index` 关联或重排输入，不能把行号当成输入顺序。
 
 ### Run 目录、状态与 attempts
 
@@ -210,7 +210,7 @@ papers/
 
 跨进程 run/file locks 位于 `platformdirs` 解析出的当前用户 runtime 目录，不写进论文输出目录，也不计入论文输出或 attempt event。
 
-`run-manifest.json` 记录 schema 版本、run id、工具版本、完整有序输入、关键抓取/渲染/输出配置及其 fingerprint、时间、状态统计和事件文件位置。状态从 `running` 开始，正常终态为 `completed`；键盘中断、协作式取消和其它持久化后的失败分别落为 `interrupted`、`cancelled`、`failed`。每条完成事件写入后都会 checkpoint 摘要，因此异常退出后仍可审计已经持久化的部分。
+`run-manifest.json` 记录 schema 版本、run id、工具版本、完整有序输入、关键抓取/渲染/输出语义及其 `request_fingerprint`、独立 `execution_policy`、时间、状态统计和事件文件位置。并发、retry/rate wait 与 continue-on-error 属于可覆盖执行策略，不进入内容语义 fingerprint。状态从 `running` 开始，正常终态为 `completed`；键盘中断、协作式取消和其它持久化后的失败分别落为 `interrupted`、`cancelled`、`failed`。每条完成事件写入后都会 checkpoint 摘要，因此异常退出后仍可审计已经持久化的部分。
 
 事件文件只追加 attempt，不会在恢复时改写历史记录。`index` 在同一 run 内始终对应原输入位置，`attempt` 从 `1` 连续递增；`record_id` 由 run/index/attempt 稳定确定。JSONL 仍按终态到达顺序排列，当前状态应按每个 `index` 的最大 `attempt` 重建。
 
@@ -235,7 +235,7 @@ stdout 是稳定 JSON 报告，包含 manifest 类型、run 状态、输入/reco
 
 ### 安全 resume 与 overwrite
 
-恢复时必须同时提供原始 query 文件及原运行的完整关键选项：
+恢复时必须同时提供原始 query 文件及原运行的完整内容/输出语义选项；执行策略可以显式调整：
 
 ```bash
 paper-fetch fetch --query-file ./queries.txt \
@@ -249,9 +249,9 @@ paper-fetch fetch --query-file ./queries.txt \
   --resume ./papers/run-manifest.json
 ```
 
-CLI 先在 run lock 内执行只读审计。只有 query、工具版本和关键配置 fingerprint 全部匹配，且当前输出的 hash、front matter 与 acceptance 仍满足请求的 index 才会跳过。缺失、stale、失败或低于请求质量的 index 会产生下一条 attempt；输入顺序或关键配置变化会直接拒绝恢复并要求新建 run。`--resume` 不能与 `--run-manifest` 同时使用；显式 `--batch-results` 时必须与 run 摘要记录的事件路径一致。
+CLI 先在 run lock 内执行只读审计。只有有序 query、工具版本和抓取/渲染/输出 semantic fingerprint 全部匹配，且当前输出的 hash、front matter 与 acceptance 仍满足请求的 index 才会跳过。缺失、stale、失败或低于请求质量的 index 会产生下一条 attempt；输入顺序或内容语义变化会直接拒绝恢复并要求新建 run。`--batch-concurrency`、retry/rate 和 continue-on-error 可以在 resume 时覆盖并写回 `execution_policy`。旧 manifest 若把已知 execution 字段嵌入 request parameters，会在结构/语义验证后迁移；未知字段差异仍拒绝。`--resume` 不能与 `--run-manifest` 同时使用；显式 `--batch-results` 时必须与 run 摘要记录的事件路径一致。
 
-安全边界是“默认不覆盖”。新 run 的摘要、事件文件或最终输出已存在时会拒绝；resume 若需要替换仍存在的 stale/低质量输出，也会先拒绝。只有人工确认这些路径可以替换后才传 `--overwrite`。输出已缺失时可直接重新生成，无需 `--overwrite`。写入通过 path/run lock、同目录临时文件和原子替换完成；此机制不自动编辑用户 Markdown，也不提供跨机器同步。
+安全边界是“默认不覆盖”。新 run 的摘要、事件文件或最终输出已存在且内容不同会拒绝；相同内容是无改写的幂等成功。resume 若需要替换仍存在的 stale/低质量输出，也会先拒绝。只有人工确认这些路径可以替换后才传 `--overwrite`。输出已缺失时可直接重新生成，无需 `--overwrite`。写入通过 path/run lock、唯一同目录临时文件、flush/fsync、commit fence 和原子替换完成；此机制不自动编辑用户 Markdown，也不提供跨机器同步。
 
 ### JSONL schema v2 字段
 
@@ -261,7 +261,7 @@ CLI 先在 run lock 内执行只读审计。只有 query、工具版本和关键
 | `tool_version` | 产生记录的 paper-fetch 版本 |
 | `run_id` / `record_id` | 同一批共享的 run UUID 和每条记录独立的 UUID；单篇也各有一个 |
 | `index` / `attempt` | 稳定 1-based 输入序号和连续 attempt；resume 重试时递增 |
-| `query` / `request` / `request_fingerprint` | 原始输入、影响抓取/渲染/输出的请求参数，以及规范 JSON 的 SHA256 指纹 |
+| `query` / `request` / `request_fingerprint` | 原始输入、影响抓取/渲染/输出的不可变语义参数，以及规范 JSON 的 SHA256 指纹；run 级并发/重试策略不在此列 |
 | `record_status` / `status` | v2 终态 `completed/failed/aborted`，以及旧状态字段；成功调用仍是 `status=ok` |
 | `identity` / `doi` / `source` | 规范化 identity、兼容 DOI 字段和最终 source |
 | `started_at` / `completed_at` | 带时区的 attempt 开始和终态时间 |
@@ -274,6 +274,8 @@ CLI 先在 run lock 内执行只读审计。只有 query、工具版本和关键
 | `output_path` / `saved_markdown_path` | 从 `output_artifacts` 派生的两个旧兼容路径字段 |
 
 `status=ok` 继续只表示该调用没有抛异常，不等于已取得完整正文。全文成功通常是 `acceptance.overall=complete` 或 `degraded`；preview、资产失败或语义损失可使其为 `degraded`；abstract-only / metadata-only 是 `limited`；工具或必需输出失败是 `failed` 或 `action_required`。因此旧脚本可继续检查 `status`，需要判断全文和资产质量的新脚本应读取 `acceptance`。
+
+Identity acceptance 不再把普通 title 当作唯一论文证明。DOI-less 结果只有在 runtime 同时提供 canonical landing URL、已验证标记和唯一性标记时才是 `resolved`；否则为 `unavailable/action_required`。MCP `get_cached.asset_summary` 的 advertised v2 schema 覆盖完整 acceptance asset facet（含 audit/discovered/attempted/preview/issue facts），`batch_fetch.output_artifacts[]` 的 schema 同样声明实际返回的 `route` 与 `failure_code`。
 
 下面是为阅读裁剪过的一条完成记录；真实 JSONL 还会包含表中列出的全部验收子字段：
 
@@ -407,9 +409,19 @@ CLI 默认：
 
 `--asset-profile` 只控制本地内容资产下载范围，不决定主输出是否写文件。
 
+省略该选项时使用获胜 provider route 编译后的 `asset_scope`；显式传入
+`none`、`body` 或 `all` 时以用户选择为准，不会被 route 默认值扩大或缩小。
+
 - `none`：不下载本地资产；不主动清除 Markdown 中已有或 provider 可解析出的远程图片链接。
 - `body`：默认值，保存正文图片、图表、公式图片等。
 - `all`：在正文资产之外，额外保存可识别的补充材料等相关资产。
+
+`body` 与 `all` 不会放宽运行时安全上限。同一篇论文的正文与补充资产共享默认预算：
+最多 128 个文件、单文件 32 MiB、累计 256 MiB、单图 64,000,000 像素，并发最多 4
+且受 provider route 限制。达到上限会删除未发布的 staging、停止剩余下载，并在
+`asset_failures[*].reason` 返回稳定的 `asset_file_limit_exceeded`、
+`asset_bytes_per_asset_exceeded`、`asset_bytes_total_exceeded` 或
+`asset_pixel_limit_exceeded`；已完成正文不会因此被覆盖。
 
 PDF fallback 在 `body` / `all` 且 artifact mode 允许资产落盘时，会保存 `pymupdf4llm` 从 PDF 导出的正文图片到 `<doi>_assets/`；`none` 或 `--artifact-mode none` 保持不保存本地图片资产。
 

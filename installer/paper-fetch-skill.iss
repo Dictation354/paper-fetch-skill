@@ -38,13 +38,16 @@ UninstallDisplayName=Paper Fetch Skill
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "offline.env"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#SourceDir}\offline.env"; DestDir: "{app}"; Flags: ignoreversion onlyifdoesntexist
+Source: "{#SourceDir}\offline.env"; DestDir: "{app}"; Flags: ignoreversion onlyifdoesntexist uninsneveruninstall
 
 [Run]
 Filename: "notepad.exe"; Parameters: """{app}\offline.env"""; Description: "Open offline.env to set ELSEVIER_API_KEY"; Flags: postinstall skipifsilent unchecked nowait
 
 [UninstallRun]
 Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\scripts\windows-installer-helper.ps1"" -Action Uninstall"; Flags: runhidden waituntilterminated
+
+[UninstallDelete]
+Type: files; Name: "{app}\install-helper.log"
 
 [Code]
 var
@@ -186,8 +189,10 @@ begin
   AppDir := ExpandConstant('{app}');
   if DirExists(AppDir) then
   begin
-    Log('Cleaning old Paper Fetch Skill install directory: ' + AppDir);
-    DelTree(AppDir, True, True, True);
+    if RemoveDir(AppDir) then
+      Log('Removed empty old Paper Fetch Skill install directory: ' + AppDir)
+    else
+      Log('Preserving user-owned content in old Paper Fetch Skill install directory: ' + AppDir);
   end;
 end;
 

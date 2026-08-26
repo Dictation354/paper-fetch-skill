@@ -73,6 +73,62 @@ class CliTests(unittest.TestCase):
             "Camoufox: Starting Camoufox runtime install.\n",
         )
 
+    def test_emit_structured_log_redacts_human_and_structured_secrets(self) -> None:
+        logger = logging.getLogger("paper_fetch.test.redaction")
+
+        with self.assertLogs(logger, level=logging.INFO) as captured:
+            emit_structured_log(
+                logger,
+                logging.INFO,
+                "signed_download",
+                url="https://cdn.example/file?X-Amz-Signature=private",
+                headers={
+                    "Authorization": "Bearer private",
+                    "X-ELS-APIKey": "private-key",
+                    "Content-Type": "application/pdf",
+                },
+                message="token=private https://cdn.example/file?api_key=private",
+            )
+
+        record = captured.records[0]
+        payload = record.structured_data
+        self.assertEqual(payload["url"], "https://cdn.example/file")
+        self.assertEqual(payload["headers"]["Authorization"], "***")
+        self.assertEqual(payload["headers"]["X-ELS-APIKey"], "***")
+        self.assertEqual(payload["headers"]["Content-Type"], "application/pdf")
+        self.assertNotIn("private", record.getMessage())
+        self.assertNotIn("private", str(payload))
+
+    def test_structured_log_redacts_nested_query_credentials_and_fragments(
+        self,
+    ) -> None:
+        logger = logging.getLogger("paper_fetch.test.deep-redaction")
+
+        with self.assertLogs(logger, level=logging.INFO) as captured:
+            emit_structured_log(
+                logger,
+                logging.INFO,
+                "signed_query",
+                request={
+                    "params": {
+                        "nested": {
+                            "X-Amz-Credential": "private-amz",
+                            "X-Goog-Signature": "private-goog",
+                            "page": "2",
+                        }
+                    }
+                },
+                message="open https://cdn.example/file#private-fragment",
+            )
+
+        payload = captured.records[0].structured_data
+        nested = payload["request"]["params"]["nested"]
+        self.assertEqual(nested["X-Amz-Credential"], "***")
+        self.assertEqual(nested["X-Goog-Signature"], "***")
+        self.assertEqual(nested["page"], "2")
+        self.assertNotIn("private", captured.records[0].getMessage())
+        self.assertNotIn("private", str(payload))
+
     def test_main_version_reports_package_version(self) -> None:
         stdout = io.StringIO()
         stderr = io.StringIO()

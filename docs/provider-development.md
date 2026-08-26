@@ -60,7 +60,7 @@ resolve
 开发前先在 issue、TODO 或设计段落中写清楚：
 
 - Provider 名称、公开 `source` 名称和是否 official。
-- 路由信号：domain、Crossref publisher alias、DOI prefix，按 `domain > publisher > DOI fallback` 理解优先级。
+- 路由信号：domain、Crossref publisher alias、DOI prefix，并写清一致/冲突时的证据强度；DOI prefix 或两个独立信号一致属于 strong，单独 domain/publisher 属于 weak。
 - 主路径顺序：例如 `landing HTML -> XML -> cleaned HTML -> PDF fallback -> abstract-only`。
 - 每一步成功和失败的判定条件，尤其是 access gate、abstract-only、空壳 HTML、非 PDF wrapper 和正文不足。
 - 权限边界：是否需要 API key、机构授权或 CDP 浏览器上下文；不自动登录、不处理 CAPTCHA、不伪造授权。
@@ -89,7 +89,7 @@ python3 scripts/scaffold_provider.py --name newpub --doi 10.1234/sample [--fullt
 
 新增 provider 的第一批代码改动应该集中在 provider entry module，例如 `src/paper_fetch/providers/newpub.py` 顶部；scaffold 初期的 `_newpub_html.py` 只作为 provider-owned helper / compatibility facade：
 
-- 调用 `register_provider_bundle(ProviderBundle(...))`，一次性声明 `catalog=ProviderSpec(...)`、`html_rules=ProviderHtmlRules(...)`、`sources=(...)`，以及需要的 asset retry / metadata merge 配置。
+- 调用 `register_provider_bundle(ProviderBundle(...))`，一次性声明 `catalog=ProviderSpec(...)`、`html_rules=ProviderHtmlRules(...)`、`sources=(...)`，以及需要的 asset retry / metadata merge 配置；AI/coordinator 的字段事实源仍是 [`onboarding/provider-manifest.md`](../onboarding/provider-manifest.md)。
 - `sources` 只登记实际写入 `ArticleModel.source` / envelope `source` 的公开来源；provider 内部 route marker 不单独登记。例如 Springer HTML / PDF fallback 分别公开 `springer_html` / `springer_pdf`，二者都映射到 `springer` provider。
 - `domains` 只登记明确 host；需要覆盖同一注册域下持续新增子域时，用 `domain_suffixes`，例如 Copernicus 使用 `("copernicus.org",)` 而不是穷举 journal 子域。
 - `probe_capability` 必须描述 routing 能力：有可提前调用的官方 metadata API 时设为 `metadata_api`；只可作为 DOI/domain/publisher 路由信号时设为 `routing_signal`。通用 routing 会按该字段决定是否发起早期 metadata probe。
@@ -104,6 +104,10 @@ python3 scripts/scaffold_provider.py --name newpub --doi 10.1234/sample [--fullt
 - 正文长度阈值统一走 `body_text_thresholds`。通用 HTML 使用默认阈值；确有差异的 provider 只覆盖差异字段。
 - `client_factory_path` 指向最终 client，例如 `paper_fetch.providers.mdpi:MdpiClient`。
 - `status_order` 插入稳定顺序，避免 UI / MCP status 抖动。
+- 每条可执行路线用 `ProviderRouteSpec` 声明 hosts、timeout、retry、QPS/rate wait、acceptance 和 asset scope；runtime 只消费 `compile_route_execution_policy()` 的结果。`hosts` 会与 provider 的 exact/suffix/base domain、`api_hosts`、`cdn_hosts` 和绝对 URL template host 合并，不要在 request/browser/PDF/asset helper 内再写平行 timeout、retry 或 allowlist。
+- `asset_scope` 是调用者未指定 profile 时的 route 默认值，不是绕过用户选择的隐式开关：显式 `none|body|all` 始终覆盖；`none` 必须在 resolver/网络调用前停止。`acceptance_policy` 只可使用 runtime 已实现的 `metadata_identity`、`provider_html_body`、`structured_xml_body`、`validated_pdf`、`validated_asset`；新增值在 evaluator 支持前会 fail closed。`validated_asset` 需要已发布本地资产，或经 audited 证明 `expected=0`。
+- 对已知 provider route，request spy 必须断言实际传入 policy 的 hosts、timeout、transient/rate retry、minimum interval、asset scope 与 acceptance 都来自 compiler。只有明确注入的 generic/test transport 可以保留 compatibility base policy，并须在生产 capability gate 前有注释和反例。
+- `publisher_aliases`、`doi_prefixes`、`domains` / `domain_suffixes` 会在注册阶段统一检查规范化冲突。确需有意覆盖时，冲突双方都必须声明不同的 `identity_priority` 和可审计 `identity_conflict_reason`；不允许依赖模块导入顺序。
 
 ```python
 register_provider_bundle(
@@ -286,6 +290,16 @@ Provider-specific 代码只负责：
 - `body`：只下载 provider-cleaned 正文 scope 中的 figure、正文表格原图和可识别公式图片 fallback。
 - `all`：在 `body` 基础上额外下载明确 supplementary / supporting / multimedia scope 中的附件。
 
+所有 provider 必须把同一个 `RuntimeContext` 继续传入 figure 与 supplementary 下载，
+不得为 kind、候选或 fallback 新建独立预算。standalone helper 可显式创建一次 attempt
+budget，但 browser fetcher 只能返回受策略验证的 URL descriptor；二进制必须由共享
+pinned `HttpTransport` 流式写盘，不能调用 browser body/arrayBuffer/base64 API。
+`AssetBudget` 的默认边界是 128 文件、单文件 32 MiB、累计 256 MiB、64 MP、并发最多
+4（可被 route cap 收紧）。新增压缩、archive 或 path conversion 路线必须让输入 staging
+和输出文件分别 reserve/rollback/commit，并传播稳定 `asset_*` reason。
+arXiv source archive 的解包与 LaTeX 引用解析位于 `_arxiv_source_archive.py`；archive
+遍历必须在名称清洗和去重前计数 regular member，避免重复/非法条目绕过文件门禁。
+
 Supplementary discovery 必须来自明确附件 scope。不能在整篇正文里凭 `data`、`code`、`.csv`、`.zip`、`.mp4`、`.pdf` 等词面或后缀全局扫描并归为 supplementary。
 Publisher 私有的 supplementary 属性或埋点必须由 provider extractor 处理，不能放进通用 `paper_fetch.extraction.html.assets`。例如 Wiley 的 `data-test="supp-info-link"` / `data-track-action="view supplementary info"` 归 Wiley extractor 所有。
 
@@ -316,10 +330,12 @@ Publisher 私有的 supplementary 属性或埋点必须由 provider extractor �
 - Fulltext 路线使用 `DEFAULT_FULLTEXT_TIMEOUT_SECONDS`。
 - 可重试的 publisher GET 使用 `retry_on_transient=True`。
 - API 或限流敏感路线根据现有 provider 模式启用 rate-limit retry。
+- Provider API/TDM 请求使用 `provider_request_policy(provider, route)` 编译 `HttpRequestPolicy`，不要手写或遗漏 `allowed_hosts` / `sensitive_headers`。catalog `ProviderSpec.sensitive_headers` 中实际出现于 request 的凭据会强制要求非空 route host allowlist；同 origin redirect 保留凭据，跨 origin redirect 对全部 301/302/303/307/308 删除标准和 provider 自定义敏感 header。
 - API / metadata 路线用 `build_user_agent(env)` 构造稳定工具 UA；publisher-facing HTML/PDF 直连用浏览器形态 UA，例如 `build_publisher_user_agent(env)` 或 browser workflow 现有 header helper，避免把 `paper-fetch-skill/...` 发给出版社 CDN。
 - 官方 PDF fallback 优先走 `PdfFallbackStrategy`；如果直接调用 `pdf_fetch_result_from_response()` / `pdf_fetch_result_from_bytes()`，应显式允许真实 PDF 的 PDF-only 保留，避免扫描 PDF 无法转 Markdown 时降级成 Crossref metadata-only source。
 - `context.parse_cache` 用于同一次 fetch 内复用 XML root、HTML extraction payload、asset extraction payload。
 - Browser runtime 只能通过 `RuntimeContext`、browser runtime facade 或现有 browser workflow helper 管理；生产路径统一使用 Camoufox 打开 context/page。
+- Browser navigation、request-context、redirect、最终 URL 和资产 fallback 必须复用 `BrowserNetworkGuard` / `SafeRemoteUrlPolicy` 及 catalog route host allowlist。guard 必须在 BrowserContext scope、cookie seed 和 page 创建前安装，并为新 context 阻断 service worker；安装失败不得降级为不受控 page。带 cookie/storage/profile 的 context 只能访问其认证 origin；跨 origin 资产交给受控 direct transport，不能新增任意跨源页面内 `fetch()`。
 - Browser workflow 的 browser-backed HTML、PDF fallback 与资产下载必须通过 `RuntimeContext` / `BrowserContextManager` 管理的 keyed browser manager；managed Chrome 生命周期按进程共享，具体 context/page 必须在调用线程通过线程本地 CDP 连接创建。不得把主线程持有的同步 Playwright page/context 交给 worker 线程使用。
 - 普通 HTTP 资产下载仍可并发；只有显式 thread-private browser fetcher 才能在 worker 线程创建并关闭自己的 page/context/manager，且必须在同一个 worker 线程内关闭这些 sync browser 对象，否则容易残留浏览器子进程。
 
@@ -361,8 +377,17 @@ Fixtures 规则：
 
 Golden corpus 规则：
 
-- provider 稳定后，补 representative fixture 和 snapshot 产物。
+- provider 稳定后，补 canonical raw asset、`expected.json` 和可执行 adapter。
+  Governance 直接复用 `tests.golden_corpus.golden_corpus_replay_inventory()`：只有
+  三者齐备且当前环境能调用 builder 的 `real_replay` 才可覆盖 route；
+  `synthetic`、`unit_only`、`manifest_only` 和 `unexecutable` 单独计数，不能冒充 replay。
 - fixture coverage 以 `provider + route family` 计数，不再只按 provider 是否出现；新增 `available` HTML/XML/PDF route 或 Springer site-family 时，必须同时增加对应 golden replay，或在 `quality/provider-governance.yml` 写明经审核且会过期的临时 waiver。browser route 还需要 access/block replay，direct XML route 需要 abstract-only/empty-body replay。
+- Block manifest 必须声明 `negative_case_kind`、provider route/source identity 和
+  exact reason/failure/content contract；测试必须从 `raw.html|raw.xml` 运行当前
+  extractor/availability，历史 `extracted.md` 不能作为治理证据。
+- Waiver 必须逐 route 指定 owner、限制类型、具体补证计划、review date 和独立
+  expiry。缺字段、过期、超过 183 天或共用到期日会令 governance 失败；不得用
+  一次批量延期替代 route-specific evidence review。
 - `expected.json` 应锁用户可见 summary，不锁无意义格式噪声；Markdown 语义基准只看 `extracted.md`。
 - agent 必须按 `markdown-quality-prompt.md` 阅读 `extracted.md` 并写回 `markdown-quality.json`；该报告必须 `review_method: agent_prompt`、`status: pass` 且没有 blocking issue，最终批量人工 review 才能通过 `finalize-review-artifact --confirmed-final-quality` 把 `markdown_semantic_reviewed` 标为 true。
 - 如果 agent-authored report 为 fail，可用 `repair-markdown-quality --provider <provider> --doi <doi>` 进入自动修复闭环；该命令仍要求先补/更新 provider-local regression test，再修实现并重新 snapshot/review，不会自动把 `markdown_semantic_reviewed` 改为 true。
@@ -372,16 +397,24 @@ Golden corpus 规则：
 常规验证命令：
 
 ```bash
-PYTHONPATH=src python3 -m pytest tests/unit -q
-PYTHONPATH=src python3 -m pytest tests/integration -q
+PYTHONPATH=src uv run python -m pytest tests/unit -q
+PYTHONPATH=src uv run python -m pytest tests/integration -q
 PYTHONPATH=src python3 scripts/check_provider_governance.py
 ```
 
-这两条常规 unit / integration 命令默认复用 `pyproject.toml` 中的 `pytest-xdist` 配置，不要额外加 `-n 0`。完整 golden corpus regression 也按 fixture 参数化运行，默认保持并行：
+这两条常规 unit / integration 命令默认复用 `pyproject.toml` 中的 `pytest-xdist` 配置，不要额外加 `-n 0`。140 个 exact fixture 按 provider 整体分到四个稳定 shard，普通 CI 对每个 `push` / `pull_request` 都运行四个 shard；本地可逐 shard复现：
+
+pytest 会在 fixture/corpus 收集前检查项目锁定环境的 MCP major 和 trafilatura `extract()` 行为契约。若误用 ambient Python，会在运行测试代码前给出 `uv sync --frozen --extra dev --extra full` 与精确 `uv run` 重试命令；不要通过跳过 bootstrap 让不可执行 fixture 被误计为 replay。
 
 ```bash
-PAPER_FETCH_RUN_FULL_GOLDEN=1 PYTHONPATH=src python3 -m pytest tests/integration/test_golden_corpus.py -q
+for shard in 0 1 2 3; do
+  PAPER_FETCH_GOLDEN_SHARD="$shard" PYTHONPATH=src uv run python -m pytest \
+    tests/integration/test_golden_corpus.py::test_golden_corpus_expected_summary_matches_current_extractor -q
+done
 ```
+
+兼容入口 `PAPER_FETCH_RUN_FULL_GOLDEN=1` 仍可一次运行全部 exact fixture。分片
+planner 保证 provider 不跨 shard，且每个可执行 fixture 恰好出现一次。
 
 如果改了 `docs/extraction-rules.md`，还必须运行：
 

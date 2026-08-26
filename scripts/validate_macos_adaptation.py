@@ -38,9 +38,20 @@ EXPECTED_FORMULA_SETUP_SHA = "6037f33647c3f17758a2356c80fc4a53d7e0685d"
 EXPECTED_FORMULA_GHC_VERSION = "9.10.3"
 EXPECTED_FORMULA_CABAL_VERSION = "3.12.1.0"
 EXPECTED_FORMULA_WORKFLOW_USES = {
-    ".github/workflows/ci.yml": 1,
+    ".github/workflows/verify.yml": 1,
     ".github/workflows/offline.yml": 2,
 }
+EXPECTED_OFFLINE_TARGETS = [
+    "linux-x86_64-cp311",
+    "linux-x86_64-cp312",
+    "linux-x86_64-cp313",
+    "linux-x86_64-cp314",
+    "macos-arm64-cp311",
+    "macos-arm64-cp312",
+    "macos-arm64-cp313",
+    "macos-arm64-cp314",
+    "windows-x86_64-cp313",
+]
 EXPECTED_FORMULA_NODE_DEPENDENCIES = {
     "katex": "0.18.4",
     "mathml-to-latex": "1.8.0",
@@ -58,12 +69,30 @@ EXPECTED_RELEASE_ATTESTATION_VERSION = "v4.2.2"
 EXPECTED_RELEASE_ATTESTATION_SHA = "4d101475d8b20a2381f78447822ac1eab6504dd8"
 EXPECTED_RELEASE_ATTESTATION_USES = 1
 EXPECTED_RELEASE_ATTESTATION_SUBJECT_PATH = "release-assets/**/*"
+EXPECTED_RELEASE_ASSET_PREPARER = "scripts/prepare_release_assets.py"
+EXPECTED_STABLE_RELEASE_ASSET_COUNT = 31
 EXPECTED_POSIX_TOOLING_PATHS = [
     "scripts/build-offline-package.sh",
     "install-offline.sh",
     "scripts/verify-offline-package.sh",
+    "scripts/generate_offline_evidence.py",
 ]
-EXPECTED_WINDOWS_TOOLING_PATHS = ["scripts/build-offline-package-windows.ps1"]
+EXPECTED_WINDOWS_TOOLING_PATHS = [
+    "scripts/build-offline-package-windows.ps1",
+    "scripts/generate_offline_evidence.py",
+    "scripts/verify-windows-installer-lifecycle.ps1",
+    "scripts/windows-installer-helper.ps1",
+    "installer/manifest.json",
+    "installer/paper-fetch-skill.iss",
+]
+EXPECTED_WINDOWS_EMBEDDED_RUNTIME = {
+    "implementation": "CPython",
+    "architecture": "x86_64",
+    "version": "3.13.13",
+    "archive": "python-3.13.13-embed-amd64.zip",
+    "url": ("https://www.python.org/ftp/python/3.13.13/python-3.13.13-embed-amd64.zip"),
+    "sha256": "8766a8775746235e23cf5aee5027ab1060bb981d93110577adcf3508aa0cbd55",
+}
 
 ALLOWED_RISKS = {"P0", "P1", "P2"}
 ALLOWED_STATUSES = {"implemented"}
@@ -89,6 +118,7 @@ REQUIRED_TOP_LEVEL = {
     "support",
     "build_safety",
     "install_safety",
+    "skill_integrity",
     "components",
     "native_verifier",
     "shell",
@@ -134,6 +164,17 @@ REQUIRED_INSTALL_SAFETY = {
     "upgrade_preserves",
     "uninstall_removes_managed_user_config",
 }
+REQUIRED_SKILL_INTEGRITY = {
+    "schema_version",
+    "aggregate_version",
+    "inventory_policy",
+    "canonical_agent_manifest",
+    "source_verifier",
+    "shared_installer",
+    "check_mode",
+    "doctor_scope",
+    "drift_affects_readiness",
+}
 REQUIRED_NATIVE_VERIFIER = {
     "entrypoint",
     "archive_extraction",
@@ -156,14 +197,24 @@ REQUIRED_PORTABLE_CI = {
 }
 REQUIRED_RELEASE_TOOLING = {
     "workflow",
+    "verify_workflow",
     "trusted_ref_format",
     "source_tag_immutable",
+    "tag_commit_resolution",
+    "verified_sha_reused_for_all_jobs",
     "adapted_release_requires_version_bump",
     "adapted_release_requires_new_tag",
     "source_contract_required_before_overlay",
     "legacy_source_without_contract",
     "overlay_copy_destinations_exclude_python_source",
     "manifest_records_tooling_revision",
+    "frozen_dependency_targets",
+    "dependency_evidence",
+    "python_distribution_inventory",
+    "release_asset_preparer",
+    "stable_release_asset_count",
+    "release_asset_namespace",
+    "windows_uninstall_allowlist",
     "trusted_posix_overlay_paths",
     "trusted_windows_overlay_paths",
 }
@@ -188,7 +239,10 @@ WINDOWS_STATIC_TEST_FILES = {
     "tests/unit/test_ci_release_workflow.py",
     "tests/unit/test_formula_package_sync.py",
     "tests/unit/test_macos_adaptation_validator.py",
+    "tests/unit/test_offline_evidence.py",
     "tests/unit/test_offline_package_build.py",
+    "tests/unit/test_python_distribution_inventory.py",
+    "tests/unit/test_release_asset_inventory.py",
 }
 
 
@@ -544,6 +598,79 @@ def _validate_safety_values(
             errors.append(f"native_verifier.{key} must be {expected!r}")
 
 
+def _validate_skill_integrity(
+    contract: dict[str, Any],
+    *,
+    repo_root: Path,
+    errors: list[str],
+) -> None:
+    skill_integrity = _validate_required_keys(
+        contract.get("skill_integrity"),
+        required=REQUIRED_SKILL_INTEGRITY,
+        field="skill_integrity",
+        errors=errors,
+    )
+    expected = {
+        "schema_version": 2,
+        "aggregate_version": "sha256-of-sorted-path-and-file-sha256",
+        "inventory_policy": "exact-regular-files-no-symlink-or-special",
+        "canonical_agent_manifest": "skills/paper-fetch-skill/agents/openai.yaml",
+        "source_verifier": "src/paper_fetch/skill_integrity.py",
+        "shared_installer": "scripts/_skill_install_common.sh",
+        "check_mode": "strictly-read-only-user-or-project",
+        "doctor_scope": "source-or-offline-to-active-codex",
+        "drift_affects_readiness": True,
+    }
+    for key, expected_value in expected.items():
+        if skill_integrity.get(key) != expected_value:
+            errors.append(f"skill_integrity.{key} must be {expected_value!r}")
+
+    verifier = _read_repo_file(
+        str(expected["source_verifier"]), repo_root=repo_root, errors=errors
+    )
+    installer = _read_repo_file(
+        str(expected["shared_installer"]), repo_root=repo_root, errors=errors
+    )
+    provenance = _read_repo_file(
+        "src/paper_fetch/provenance.py", repo_root=repo_root, errors=errors
+    )
+    _read_repo_file(
+        str(expected["canonical_agent_manifest"]),
+        repo_root=repo_root,
+        errors=errors,
+    )
+    _require_fragments(
+        verifier,
+        (
+            ("SKILL_BUNDLE_SCHEMA_VERSION = 2", "skill bundle schema"),
+            ("def _bundle_content_sha256", "skill aggregate hash"),
+            ('"unexpected_files": unexpected_files', "skill exact inventory"),
+            ('"symlink_files": list(inventory.symlink_files)', "skill symlink guard"),
+            ('"special_files": list(inventory.special_files)', "skill special guard"),
+            ("def compare_skill_directories", "skill source comparison"),
+        ),
+        errors=errors,
+    )
+    _require_fragments(
+        installer,
+        (
+            ("--check)", "shared installer check argument"),
+            ('if [ "$PF_CHECK" = "1" ]; then', "shared installer check branch"),
+            ("pf_skill_compare_bundle", "shared installer bundle comparison"),
+            ("--check is read-only", "shared installer readonly diagnostic"),
+        ),
+        errors=errors,
+    )
+    _require_fragments(
+        provenance,
+        (
+            ("def _source_skill_records", "source doctor skill comparison"),
+            ('"component": f"host_skill.', "active skill readiness issue"),
+        ),
+        errors=errors,
+    )
+
+
 def _validate_native_packaging(
     contract: dict[str, Any],
     *,
@@ -576,7 +703,7 @@ def _validate_native_packaging(
         errors=errors,
     )
     ci_workflow = _read_repo_file(
-        ".github/workflows/ci.yml",
+        ".github/workflows/verify.yml",
         repo_root=repo_root,
         errors=errors,
     )
@@ -1013,6 +1140,18 @@ def _validate_browser_boundary(
             "native_ci_runtime",
             "native_test_addon_policy",
             "native_test_screen_policy",
+            "network_policy",
+            "route_allowlist_source",
+            "route_execution_policy",
+            "credentialed_context_policy",
+            "cross_origin_asset_policy",
+            "service_worker_policy",
+            "storage_state_cache_scope",
+            "storage_state_load_diagnostics",
+            "binary_asset_transport",
+            "asset_budget_defaults",
+            "asset_worker_policy",
+            "browser_only_binary_policy",
         },
         field="components.camoufox",
         errors=errors,
@@ -1044,6 +1183,22 @@ def _validate_browser_boundary(
         "native_ci_runtime": "official/152.0.4-beta.28",
         "native_test_addon_policy": "exclude-default-addons",
         "native_test_screen_policy": "fixed-synthetic-screen",
+        "network_policy": "safe-remote-url-policy-per-request-and-final-url",
+        "route_allowlist_source": "provider-catalog",
+        "route_execution_policy": (
+            "compiled-catalog-host-timeout-retry-qps-acceptance-assets"
+        ),
+        "credentialed_context_policy": "same-origin-only",
+        "cross_origin_asset_policy": "controlled-direct-transport",
+        "service_worker_policy": "block-before-credential-seed",
+        "storage_state_cache_scope": "actual-use-provider-backend-path-digest",
+        "storage_state_load_diagnostics": "path-exists-used",
+        "binary_asset_transport": "browser-discovery-pinned-direct-stream",
+        "asset_budget_defaults": (
+            "128-files-32mib-per-asset-256mib-total-64000000-pixels"
+        ),
+        "asset_worker_policy": "shared-runtime-max4-route-capped-as-completed",
+        "browser_only_binary_policy": ("fail-closed-browser-stream-unavailable"),
     }
     for key, expected in expected_camoufox.items():
         if camoufox.get(key) != expected:
@@ -1087,7 +1242,9 @@ def _validate_browser_boundary(
         "setup_action_sha": EXPECTED_FORMULA_SETUP_SHA,
         "ghc_version": EXPECTED_FORMULA_GHC_VERSION,
         "cabal_version": EXPECTED_FORMULA_CABAL_VERSION,
-        "ci_workflow_uses": EXPECTED_FORMULA_WORKFLOW_USES[".github/workflows/ci.yml"],
+        "ci_workflow_uses": EXPECTED_FORMULA_WORKFLOW_USES[
+            ".github/workflows/verify.yml"
+        ],
         "offline_workflow_uses": EXPECTED_FORMULA_WORKFLOW_USES[
             ".github/workflows/offline.yml"
         ],
@@ -1375,7 +1532,7 @@ def _validate_portable_and_release_tooling(
         errors=errors,
     )
     expected_portable = {
-        "workflow": ".github/workflows/ci.yml",
+        "workflow": ".github/workflows/verify.yml",
         "job": "macos-contract-portable",
         "runners": ["ubuntu-latest", "windows-latest"],
         "linux_entrypoint": "scripts/test-macos-contract.sh",
@@ -1394,14 +1551,31 @@ def _validate_portable_and_release_tooling(
     )
     expected_release = {
         "workflow": ".github/workflows/offline.yml",
+        "verify_workflow": ".github/workflows/verify.yml",
         "trusted_ref_format": "full-commit-sha",
         "source_tag_immutable": True,
+        "tag_commit_resolution": "refs-tags-peel-commit-sha",
+        "verified_sha_reused_for_all_jobs": True,
         "adapted_release_requires_version_bump": True,
         "adapted_release_requires_new_tag": True,
         "source_contract_required_before_overlay": True,
         "legacy_source_without_contract": "reject",
         "overlay_copy_destinations_exclude_python_source": True,
         "manifest_records_tooling_revision": True,
+        "frozen_dependency_targets": EXPECTED_OFFLINE_TARGETS,
+        "dependency_evidence": [
+            "dependency-manifest.json",
+            "paper-fetch-sbom.cdx.json",
+        ],
+        "python_distribution_inventory": ("quality/python-distribution-inventory.json"),
+        "release_asset_preparer": EXPECTED_RELEASE_ASSET_PREPARER,
+        "stable_release_asset_count": EXPECTED_STABLE_RELEASE_ASSET_COUNT,
+        "release_asset_namespace": "flat-basename-only",
+        "windows_uninstall_allowlist": [
+            "offline.env",
+            "downloads/",
+            "downloads/user-owned.txt",
+        ],
         "trusted_posix_overlay_paths": EXPECTED_POSIX_TOOLING_PATHS,
         "trusted_windows_overlay_paths": EXPECTED_WINDOWS_TOOLING_PATHS,
     }
@@ -1409,13 +1583,13 @@ def _validate_portable_and_release_tooling(
         if release_tooling.get(key) != expected:
             errors.append(f"release_tooling.{key} must be {expected!r}")
 
-    ci_workflow = _read_repo_file(
-        ".github/workflows/ci.yml",
+    verify_workflow = _read_repo_file(
+        ".github/workflows/verify.yml",
         repo_root=repo_root,
         errors=errors,
     )
     _require_fragments(
-        ci_workflow,
+        verify_workflow,
         (
             ("  macos-contract-portable:", "portable macOS contract CI job"),
             (
@@ -1554,6 +1728,179 @@ def _validate_portable_and_release_tooling(
         )
 
 
+def _validate_windows_embedded_runtime(
+    contract: dict[str, Any],
+    *,
+    repo_root: Path,
+    errors: list[str],
+) -> None:
+    components = contract.get("components")
+    component = (
+        components.get("windows_embedded_cpython", {})
+        if isinstance(components, dict)
+        else {}
+    )
+    expected_component = {
+        **EXPECTED_WINDOWS_EMBEDDED_RUNTIME,
+        "pin_source": "installer/manifest.json",
+        "verification": "sha256-before-extract",
+        "provenance_fields": [
+            "version",
+            "url",
+            "expected_sha256",
+            "actual_sha256",
+        ],
+    }
+    if component != expected_component:
+        errors.append(
+            "components.windows_embedded_cpython must match the official pinned "
+            f"runtime contract: {expected_component!r}"
+        )
+
+    manifest_text = _read_repo_file(
+        "installer/manifest.json", repo_root=repo_root, errors=errors
+    )
+    try:
+        manifest = json.loads(manifest_text)
+    except json.JSONDecodeError as exc:
+        errors.append(f"cannot parse installer/manifest.json: {exc}")
+        manifest = {}
+    runtime = (
+        manifest.get("embedded_runtimes", {}).get("windows_cpython_x86_64", {})
+        if isinstance(manifest, dict)
+        else {}
+    )
+    if runtime != EXPECTED_WINDOWS_EMBEDDED_RUNTIME:
+        errors.append(
+            "installer embedded_runtimes.windows_cpython_x86_64 must match "
+            f"{EXPECTED_WINDOWS_EMBEDDED_RUNTIME!r}"
+        )
+
+    builder = _read_repo_file(
+        "scripts/build-offline-package-windows.ps1",
+        repo_root=repo_root,
+        errors=errors,
+    )
+    _require_fragments(
+        builder,
+        (
+            (
+                "Get-FileHash -LiteralPath $archive -Algorithm SHA256",
+                "embedded runtime digest",
+            ),
+            ("expected_sha256 = $EmbeddedPythonSha256", "expected runtime provenance"),
+            (
+                "actual_sha256 = $EmbeddedPythonActualSha256",
+                "actual runtime provenance",
+            ),
+        ),
+        errors=errors,
+    )
+    _require_order(
+        builder,
+        "Get-FileHash -LiteralPath $archive -Algorithm SHA256",
+        "Expand-Archive -LiteralPath $archive",
+        label="embedded runtime digest verification before extraction",
+        errors=errors,
+    )
+
+
+def _validate_release_verification_chain(
+    *,
+    repo_root: Path,
+    errors: list[str],
+) -> None:
+    ci_workflow = _read_repo_file(
+        ".github/workflows/ci.yml", repo_root=repo_root, errors=errors
+    )
+    verify_workflow = _read_repo_file(
+        ".github/workflows/verify.yml", repo_root=repo_root, errors=errors
+    )
+    release_workflow = _read_repo_file(
+        ".github/workflows/release.yml", repo_root=repo_root, errors=errors
+    )
+    offline_workflow = _read_repo_file(
+        ".github/workflows/offline.yml", repo_root=repo_root, errors=errors
+    )
+    _require_fragments(
+        ci_workflow,
+        (("uses: ./.github/workflows/verify.yml", "ordinary reusable verify gate"),),
+        errors=errors,
+    )
+    _require_fragments(
+        verify_workflow,
+        (
+            ("workflow_call", "reusable verify trigger"),
+            ("ref: ${{ inputs.ref }}", "exact verify source checkout"),
+            ("scripts/verify_python_distribution.py", "exact distribution inventory"),
+        ),
+        errors=errors,
+    )
+    release_fragments = [
+        ('git rev-parse "refs/tags/$tag^{commit}"', "annotated tag commit peel"),
+        ("uses: ./.github/workflows/verify.yml", "stable reusable verify gate"),
+        ("frozen_dependencies: true", "stable frozen dependencies"),
+        (
+            "dependency_tooling_ref: ${{ needs.verify-tag.outputs.source_sha }}",
+            "frozen verifier SHA",
+        ),
+        ('--target "$SOURCE_SHA"', "release target SHA binding"),
+        (
+            "scripts/prepare_release_assets.py prepare-stable",
+            "exact flat stable release asset preparation",
+        ),
+        ("--input-root release-inputs", "isolated nested release inputs"),
+        ("--output-dir release-assets", "flat release publication directory"),
+        (
+            "find release-assets -maxdepth 1 -type f -print0",
+            "flat publication enumeration",
+        ),
+    ]
+    release_fragments.extend(
+        (target, f"stable dependency target {target}")
+        for target in EXPECTED_OFFLINE_TARGETS
+    )
+    _require_fragments(release_workflow, tuple(release_fragments), errors=errors)
+    if "uv export" in release_workflow:
+        errors.append("stable release must not use uv export as an artifact SBOM")
+    if "find release-assets -type f ! -name SHA256SUMS" in release_workflow:
+        errors.append("stable SHA256SUMS must not contain nested release input paths")
+    _require_fragments(
+        offline_workflow,
+        (
+            ("generate_offline_evidence.py", "actual staged dependency evidence"),
+            ("paper-fetch-evidence-", "per-target evidence sidecars"),
+            ("verify-windows-installer-lifecycle.ps1", "final Windows EXE lifecycle"),
+        ),
+        errors=errors,
+    )
+    inventory = repo_root / "quality" / "python-distribution-inventory.json"
+    if not inventory.is_file():
+        errors.append("quality/python-distribution-inventory.json must exist")
+    preparer = repo_root / EXPECTED_RELEASE_ASSET_PREPARER
+    if not preparer.is_file():
+        errors.append(f"{EXPECTED_RELEASE_ASSET_PREPARER} must exist")
+
+    lifecycle = _read_repo_file(
+        "scripts/verify-windows-installer-lifecycle.ps1",
+        repo_root=repo_root,
+        errors=errors,
+    )
+    _require_fragments(
+        lifecycle,
+        (
+            (
+                "Get-ChildItem -LiteralPath $InstallRoot -Recurse -Force",
+                "recursive Windows uninstall residue enumeration",
+            ),
+            ("downloads/user-owned.txt", "preserved install-root user payload"),
+            ("offline.env", "preserved offline environment"),
+            ("Compare-Object", "exact Windows uninstall allowlist comparison"),
+        ),
+        errors=errors,
+    )
+
+
 def _validate_native_gates(
     contract: dict[str, Any],
     *,
@@ -1578,12 +1925,15 @@ def _validate_native_gates(
             "network_smoke_required",
             "native_tools",
             "cache_alias_test_node",
+            "windows_installer_lifecycle_script",
+            "windows_installer_lifecycle_runner",
+            "windows_installer_lifecycle_serial",
         },
         field="native_gate",
         errors=errors,
     )
     expected = {
-        "ci_workflow": ".github/workflows/ci.yml",
+        "ci_workflow": ".github/workflows/verify.yml",
         "ci_job": "macos-native",
         "runner": "macos-15",
         "ci_python_version": "3.14",
@@ -1610,6 +1960,11 @@ def _validate_native_gates(
             "CacheIndexSemanticsTests::"
             "test_cache_scope_accepts_equivalent_filesystem_alias_for_root"
         ),
+        "windows_installer_lifecycle_script": (
+            "scripts/verify-windows-installer-lifecycle.ps1"
+        ),
+        "windows_installer_lifecycle_runner": "windows-latest",
+        "windows_installer_lifecycle_serial": True,
     }
     for key, value in expected.items():
         if native_gate.get(key) != value:
@@ -1624,7 +1979,7 @@ def _validate_native_gates(
         )
 
     ci_workflow = _read_repo_file(
-        ".github/workflows/ci.yml",
+        ".github/workflows/verify.yml",
         repo_root=repo_root,
         errors=errors,
     )
@@ -1722,7 +2077,10 @@ def _validate_native_gates(
                 "uses: ./.github/workflows/offline.yml",
                 "release reusable offline workflow",
             ),
-            ("needs: [verify-tag, offline]", "release offline publish gate"),
+            (
+                "needs: [verify-tag, verify, merge-dependencies, offline]",
+                "release offline publish gate",
+            ),
         ),
         errors=errors,
     )
@@ -2262,6 +2620,7 @@ def validate_contract(
     _validate_source_baseline(contract, errors=errors)
     _validate_support_values(contract, repo_root=repo_root, errors=errors)
     _validate_safety_values(contract, errors=errors)
+    _validate_skill_integrity(contract, repo_root=repo_root, errors=errors)
     _validate_native_packaging(contract, repo_root=repo_root, errors=errors)
     _validate_browser_boundary(contract, repo_root=repo_root, errors=errors)
     _validate_portable_and_release_tooling(
@@ -2269,6 +2628,12 @@ def validate_contract(
         repo_root=repo_root,
         errors=errors,
     )
+    _validate_windows_embedded_runtime(
+        contract,
+        repo_root=repo_root,
+        errors=errors,
+    )
+    _validate_release_verification_chain(repo_root=repo_root, errors=errors)
     _validate_native_gates(contract, repo_root=repo_root, errors=errors)
     all_test_nodes = _validate_changes(
         contract,

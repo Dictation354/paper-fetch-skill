@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import json
 import shutil
 import stat
 import subprocess
@@ -97,6 +98,9 @@ def copy_installer_fixture(repo_dir: Path) -> None:
     shutil.copytree(
         STATIC_SKILL_DIR, repo_dir / "skills" / "paper-fetch-skill", dirs_exist_ok=True
     )
+    verifier = repo_dir / "src" / "paper_fetch" / "skill_integrity.py"
+    verifier.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(REPO_ROOT / "src/paper_fetch/skill_integrity.py", verifier)
     shutil.copy2(REPO_ROOT / "pyproject.toml", repo_dir / "pyproject.toml")
 
 
@@ -115,18 +119,20 @@ def assert_skill_bundle_matches_repo(
 ) -> None:
     expected_files = [
         path.relative_to(STATIC_SKILL_DIR).as_posix()
-        for path in iter_skill_markdown_files(STATIC_SKILL_DIR)
+        for path in sorted(STATIC_SKILL_DIR.rglob("*"))
+        if path.is_file()
     ]
     actual_files = [
         path.relative_to(installed_root).as_posix()
-        for path in iter_skill_markdown_files(installed_root)
+        for path in sorted(installed_root.rglob("*"))
+        if path.is_file()
     ]
 
     testcase.assertEqual(actual_files, expected_files)
     for relative_path in expected_files:
         testcase.assertEqual(
-            (installed_root / relative_path).read_text(encoding="utf-8"),
-            (STATIC_SKILL_DIR / relative_path).read_text(encoding="utf-8"),
+            (installed_root / relative_path).read_bytes(),
+            (STATIC_SKILL_DIR / relative_path).read_bytes(),
         )
     testcase.assertEqual(skill_bundle_link_issues(installed_root), [])
 
@@ -297,6 +303,61 @@ class StaticSkillTests(unittest.TestCase):
 
 
 class InstallerSmokeTests(unittest.TestCase):
+    def run_codex_check(
+        self,
+        *,
+        project: bool = False,
+        mutate: bool = False,
+        missing: bool = False,
+    ) -> tuple[subprocess.CompletedProcess[str], Path, dict[str, tuple[int, int, int]]]:
+        temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(temp_dir.cleanup)
+        sandbox = Path(temp_dir.name)
+        repo_dir = sandbox / "repo"
+        codex_home = sandbox / "codex-home"
+        home = sandbox / "home"
+        copy_installer_fixture(repo_dir)
+        codex_home.mkdir(parents=True)
+        home.mkdir()
+        target = (
+            repo_dir / ".codex" / "skills" / "paper-fetch-skill"
+            if project
+            else codex_home / "skills" / "paper-fetch-skill"
+        )
+        if not missing:
+            target.parent.mkdir(parents=True)
+            shutil.copytree(STATIC_SKILL_DIR, target)
+            if mutate:
+                (target / "SKILL.md").write_text("drift\n", encoding="utf-8")
+
+        def snapshot() -> dict[str, tuple[int, int, int]]:
+            return {
+                path.relative_to(sandbox).as_posix(): (
+                    path.lstat().st_mode,
+                    path.lstat().st_size,
+                    path.lstat().st_mtime_ns,
+                )
+                for path in sorted(sandbox.rglob("*"))
+            }
+
+        before = snapshot()
+        env = os.environ.copy()
+        env.update({"HOME": str(home), "CODEX_HOME": str(codex_home)})
+        args = ["bash", str(repo_dir / "scripts/install-codex-skill.sh")]
+        if project:
+            args.append("--project")
+        args.append("--check")
+        completed = subprocess.run(
+            args,
+            cwd=repo_dir,
+            env=env,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(snapshot(), before)
+        return completed, target, before
+
     def run_installer(
         self,
         *,
@@ -461,7 +522,6 @@ class InstallerSmokeTests(unittest.TestCase):
         self.assertFalse((repo_dir / ".venv").exists())
         self.assertFalse((repo_dir / ".env").exists())
         self.assertIn("-m pip install --quiet .", log_path.read_text(encoding="utf-8"))
-        self.assertFalse((installed_root / "agents").exists())
 
     def test_claude_installer_can_register_mcp_server(self) -> None:
         _, _, log_path = self.run_installer(
@@ -484,7 +544,7 @@ class InstallerSmokeTests(unittest.TestCase):
         )
         self.assertIn("-m paper_fetch.mcp.server", log_text)
 
-    def test_codex_installer_adds_openai_manifest_shim(self) -> None:
+    def test_codex_installer_copies_canonical_openai_manifest(self) -> None:
         repo_dir, sandbox, log_path = self.run_installer(
             script_name="install-codex-skill.sh"
         )
@@ -503,6 +563,30 @@ class InstallerSmokeTests(unittest.TestCase):
         self.assertFalse((repo_dir / ".venv").exists())
         self.assertFalse((repo_dir / ".env").exists())
         self.assertIn("-m pip install --quiet .", log_path.read_text(encoding="utf-8"))
+
+    def test_codex_check_is_read_only_for_user_and_project_scopes(self) -> None:
+        for project in (False, True):
+            with self.subTest(project=project):
+                completed, target, _snapshot = self.run_codex_check(project=project)
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+                payload = json.loads(completed.stdout)
+                self.assertEqual(payload["status"], "ready")
+                self.assertEqual(payload["skill_root"], str(target))
+                self.assertEqual(
+                    payload["actual_content_version"],
+                    payload["expected_content_version"],
+                )
+
+    def test_codex_check_reports_drift_and_missing_without_mutation(self) -> None:
+        drift, _target, _snapshot = self.run_codex_check(mutate=True)
+        self.assertEqual(drift.returncode, 1, drift.stderr)
+        self.assertEqual(json.loads(drift.stdout)["status"], "drift")
+
+        missing, target, _snapshot = self.run_codex_check(missing=True)
+        self.assertEqual(missing.returncode, 1, missing.stderr)
+        payload = json.loads(missing.stdout)
+        self.assertEqual(payload["reason_code"], "skill_bundle_missing")
+        self.assertEqual(payload["skill_root"], str(target))
 
     def test_codex_installer_can_register_mcp_server(self) -> None:
         _, _, log_path = self.run_installer(

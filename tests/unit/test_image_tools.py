@@ -16,6 +16,7 @@ from paper_fetch.image_tools.paths import (
     image_tool_timeout_seconds,
 )
 from paper_fetch.reason_codes import (
+    ASSET_BYTES_PER_ASSET_EXCEEDED,
     IMAGE_CONVERSION_BACKEND_MISSING,
     IMAGE_CONVERSION_BACKEND_READY,
     IMAGE_CONVERSION_BACKEND_TIMEOUT,
@@ -299,6 +300,72 @@ class ImageToolsTests(unittest.TestCase):
         self.assertEqual(second.tool, "libvips")
         self.assertEqual(len(version_calls), 1)
         self.assertEqual(len(conversion_calls), 2)
+
+    def test_convert_source_image_path_never_materializes_source_or_output(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            source = Path(tmpdir) / "source.tif"
+            output = Path(tmpdir) / "converted.png"
+            source.write_bytes(b"II*\x00source-on-disk")
+
+            def convert(_source: Path, destination: Path) -> str:
+                destination.write_bytes(b"\x89PNG\r\n\x1a\non-disk")
+                return "libvips"
+
+            with (
+                mock.patch.object(
+                    image_convert,
+                    "_convert_tiff_to_png",
+                    side_effect=convert,
+                ),
+                mock.patch.object(
+                    Path,
+                    "read_bytes",
+                    side_effect=AssertionError("whole-file read is forbidden"),
+                ),
+            ):
+                result = image_convert.convert_source_image_path_to_png(
+                    source,
+                    output,
+                    content_type="image/tiff",
+                    source_url="https://example.test/source.tif",
+                )
+
+            self.assertIsNotNone(result)
+            assert result is not None
+            self.assertEqual(result.path, output)
+            self.assertEqual(result.source_format, "tiff")
+            self.assertEqual(result.output_bytes, output.stat().st_size)
+
+    def test_convert_source_image_path_removes_oversized_output(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            source = Path(tmpdir) / "source.tif"
+            output = Path(tmpdir) / "converted.png"
+            source.write_bytes(b"II*\x00source-on-disk")
+
+            def convert(_source: Path, destination: Path) -> str:
+                destination.write_bytes(b"\x89PNG\r\n\x1a\n-too-large")
+                return "libvips"
+
+            with mock.patch.object(
+                image_convert,
+                "_convert_tiff_to_png",
+                side_effect=convert,
+            ):
+                with self.assertRaises(ImageConversionFailure) as raised:
+                    image_convert.convert_source_image_path_to_png(
+                        source,
+                        output,
+                        content_type="image/tiff",
+                        max_output_bytes=8,
+                    )
+
+            self.assertEqual(
+                raised.exception.reason_code,
+                ASSET_BYTES_PER_ASSET_EXCEEDED,
+            )
+            self.assertFalse(output.exists())
 
     def test_probe_cache_key_changes_when_explicit_binary_env_changes(self) -> None:
         version_calls: list[str] = []

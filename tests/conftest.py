@@ -24,6 +24,8 @@ from tests._environment import (
     PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR,
     PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR,
     PRESERVED_FORMULA_TOOLS_DIR_ENV_VAR,
+    TEST_ENVIRONMENT_REPAIR,
+    locked_test_dependency_issues,
 )
 
 
@@ -117,6 +119,13 @@ def _preserve_explicit_formula_tools_dir() -> None:
 
 
 def pytest_configure(config: pytest.Config) -> None:
+    dependency_issues = locked_test_dependency_issues()
+    if dependency_issues:
+        raise pytest.UsageError(
+            "Incompatible ambient test environment: "
+            + "; ".join(dependency_issues)
+            + f". Repair with: {TEST_ENVIRONMENT_REPAIR}"
+        )
     config.addinivalue_line(
         "markers",
         "browser: test intentionally exercises a real browser/runtime boundary",

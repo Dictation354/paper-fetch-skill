@@ -26,6 +26,7 @@ from ..http import (
     PDF_ACCEPT_HEADER,
     PDF_MIME_TYPE,
     RequestFailure,
+    provider_request_policy,
 )
 from ..extraction.html.landing import REDIRECT_STATUS_CODES
 from ..provider_catalog import (
@@ -180,23 +181,31 @@ def _fetch_wiley_tdm_pdf_result(
     timeout: int = DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
     context: RuntimeContext | None = None,
 ) -> PdfFetchResult:
-    active_timeout = timeout
-    if context is not None:
-        context.initialize_deadline(timeout)
-        active_timeout = max(1, int(math.ceil(context.remaining_seconds(timeout))))
-    request_headers = {"Accept": PDF_ACCEPT_HEADER, **dict(headers)}
+    del timeout
     maximum_pdf_bytes = pdf_max_bytes()
+    route_policy = provider_request_policy(
+        "wiley",
+        "tdm_pdf",
+        base=HttpRequestPolicy(
+            max_response_bytes=maximum_pdf_bytes,
+            max_compressed_response_bytes=maximum_pdf_bytes,
+        ),
+    )
+    active_timeout = int(route_policy.timeout_seconds or 1)
+    if context is not None:
+        context.initialize_deadline(active_timeout)
+        active_timeout = max(
+            1,
+            int(math.ceil(context.remaining_seconds(active_timeout))),
+        )
+    request_headers = {"Accept": PDF_ACCEPT_HEADER, **dict(headers)}
     try:
         response = transport.request(
             "GET",
             api_url,
             headers=request_headers,
             timeout=active_timeout,
-            retry_on_transient=True,
-            request_policy=HttpRequestPolicy(
-                max_response_bytes=maximum_pdf_bytes,
-                max_compressed_response_bytes=maximum_pdf_bytes,
-            ),
+            request_policy=route_policy,
         )
     except RequestFailure as exc:
         raise PdfFallbackFailure(
@@ -220,8 +229,9 @@ def _fetch_wiley_tdm_pdf_result(
         redirected_url = urllib.parse.urljoin(api_url, location)
         return PdfFallbackStrategy(
             transport=transport,
+            provider_name="wiley",
             headers=request_headers,
-            timeout=timeout,
+            timeout=int(route_policy.timeout_seconds or 1),
             artifact_dir=artifact_dir,
             asset_profile=asset_profile,
             asset_output_dir=asset_output_dir,

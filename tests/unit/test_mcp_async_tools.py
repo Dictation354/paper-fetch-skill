@@ -1,12 +1,244 @@
 # ruff: noqa: F403,F405
 from __future__ import annotations
 
+from contextvars import copy_context
 from paper_fetch.config import BROWSER_AUTO_PREPARE_ENV_VAR
+from paper_fetch.mcp import log_bridge as mcp_log_bridge
+from paper_fetch.mcp.batch import run_blocking_call
+from paper_fetch.mcp.log_bridge import PaperFetchLogBridge
+from paper_fetch.runtime import RuntimeContext
 
 from ._mcp_support import *
 
 
 class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
+    async def test_blocking_cancel_grace_fences_late_artifact_commit(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "late.pdf"
+            started = threading.Event()
+            release = threading.Event()
+            late_finished = threading.Event()
+            late_error: list[Exception] = []
+            cancelled = threading.Event()
+            context = RuntimeContext(
+                env={},
+                download_dir=Path(tmpdir),
+                cancel_check=cancelled.is_set,
+            )
+
+            def worker() -> None:
+                started.set()
+                assert release.wait(timeout=2)
+                try:
+                    assert context.artifact_store is not None
+                    context.artifact_store.write_bytes_file(target, b"late")
+                except Exception as error:
+                    late_error.append(error)
+                finally:
+                    late_finished.set()
+
+            task = asyncio.create_task(
+                run_blocking_call(
+                    worker,
+                    cancel_event=cancelled,
+                    cancel_fence=context.fence_commits,
+                    cancel_grace_seconds=0.03,
+                )
+            )
+            await wait_for_threading_event(started, 1.0)
+            cancelled_at = time.monotonic()
+            task.cancel()
+            asyncio.get_running_loop().call_later(0.005, task.cancel)
+            with self.assertRaises(asyncio.CancelledError):
+                await task
+            self.assertGreaterEqual(time.monotonic() - cancelled_at, 0.02)
+            release.set()
+            await wait_for_threading_event(late_finished, 1.0)
+            context.close()
+
+            self.assertFalse(target.exists())
+            self.assertEqual(len(late_error), 1)
+            self.assertIsInstance(late_error[0], mcp_tools.RequestCancelledError)
+
+    async def test_overlapping_log_bridges_do_not_cross_talk_or_leak_level(
+        self,
+    ) -> None:
+        logger = logging.getLogger("paper_fetch.service")
+        original_level = logger.level
+        first = FakeContext()
+        first.request_id = "request-one"
+        second = FakeContext()
+        second.request_id = "request-two"
+        both_entered = asyncio.Event()
+        entered_count = 0
+        entered_lock = asyncio.Lock()
+
+        async def run_request(ctx, query: str) -> None:
+            nonlocal entered_count
+            with PaperFetchLogBridge(ctx=ctx, loop=asyncio.get_running_loop()):
+                async with entered_lock:
+                    entered_count += 1
+                    if entered_count == 2:
+                        both_entered.set()
+                await both_entered.wait()
+                logging.getLogger("paper_fetch.service").debug(
+                    "request scoped log",
+                    extra={
+                        "structured_data": {
+                            "event": "request_scoped",
+                            "query": query,
+                        }
+                    },
+                )
+                await asyncio.sleep(0.02)
+
+        await asyncio.gather(
+            run_request(first, "10.1000/one"),
+            run_request(second, "10.1000/two"),
+        )
+        await asyncio.sleep(0.05)
+
+        self.assertEqual(
+            [message["data"]["query"] for message in first.session.messages],
+            ["10.1000/one"],
+        )
+        self.assertEqual(
+            [message["data"]["query"] for message in second.session.messages],
+            ["10.1000/two"],
+        )
+        self.assertEqual(first.session.messages[0]["related_request_id"], "request-one")
+        self.assertEqual(
+            second.session.messages[0]["related_request_id"], "request-two"
+        )
+        self.assertEqual(logger.level, original_level)
+
+    async def test_exited_log_target_rejects_late_copied_context_worker(self) -> None:
+        logger = logging.getLogger("paper_fetch.service")
+        original_level = logger.level
+        first = FakeContext()
+        first.request_id = "request-one"
+        second = FakeContext()
+        second.request_id = "request-two"
+        first_entered = asyncio.Event()
+        second_entered = asyncio.Event()
+        first_exited = asyncio.Event()
+        release_late_worker = threading.Event()
+        late_worker_started = threading.Event()
+        late_worker_finished = threading.Event()
+        overlap_handler_counts: list[list[int]] = []
+        after_first_exit_handler_counts: list[list[int]] = []
+        worker_threads: list[threading.Thread] = []
+
+        def router_handler_counts() -> list[int]:
+            return [
+                sum(
+                    handler is mcp_log_bridge._GLOBAL_LOG_ROUTER
+                    for handler in logging.getLogger(logger_name).handlers
+                )
+                for logger_name in mcp_log_bridge._FETCH_LOGGER_NAMES
+            ]
+
+        async def run_first_request() -> None:
+            with PaperFetchLogBridge(ctx=first, loop=asyncio.get_running_loop()):
+                worker_context = copy_context()
+
+                def late_worker() -> None:
+                    late_worker_started.set()
+                    assert release_late_worker.wait(timeout=2)
+                    worker_context.run(
+                        logger.debug,
+                        "late request scoped log",
+                        extra={
+                            "structured_data": {
+                                "event": "request_scoped",
+                                "query": "10.1000/late-one",
+                            }
+                        },
+                    )
+                    late_worker_finished.set()
+
+                worker = threading.Thread(target=late_worker, daemon=True)
+                worker_threads.append(worker)
+                worker.start()
+                self.assertTrue(
+                    await wait_for_threading_event(late_worker_started, 1.0)
+                )
+                first_entered.set()
+                await second_entered.wait()
+            first_exited.set()
+
+        async def run_second_request() -> None:
+            await first_entered.wait()
+            with PaperFetchLogBridge(ctx=second, loop=asyncio.get_running_loop()):
+                overlap_handler_counts.append(router_handler_counts())
+                second_entered.set()
+                await first_exited.wait()
+                after_first_exit_handler_counts.append(router_handler_counts())
+                logger.debug(
+                    "active request scoped log",
+                    extra={
+                        "structured_data": {
+                            "event": "request_scoped",
+                            "query": "10.1000/two",
+                        }
+                    },
+                )
+                release_late_worker.set()
+                self.assertTrue(
+                    await wait_for_threading_event(late_worker_finished, 1.0)
+                )
+                await asyncio.sleep(0.05)
+
+        await asyncio.gather(run_first_request(), run_second_request())
+        for worker in worker_threads:
+            worker.join(timeout=1)
+
+        self.assertEqual(first.session.messages, [])
+        self.assertEqual(
+            [message["data"]["query"] for message in second.session.messages],
+            ["10.1000/two"],
+        )
+        expected_active_handler_counts = [
+            1 for _logger_name in mcp_log_bridge._FETCH_LOGGER_NAMES
+        ]
+        self.assertEqual(overlap_handler_counts, [expected_active_handler_counts])
+        self.assertEqual(
+            after_first_exit_handler_counts,
+            [expected_active_handler_counts],
+        )
+        self.assertEqual(
+            router_handler_counts(),
+            [0 for _logger_name in mcp_log_bridge._FETCH_LOGGER_NAMES],
+        )
+        self.assertEqual(mcp_log_bridge._ROUTER_REFCOUNT, 0)
+        self.assertEqual(logger.level, original_level)
+
+    async def test_log_handler_does_not_construct_message_for_closed_loop(self) -> None:
+        ctx = FakeContext()
+        ctx.session.send_log_message = mock.Mock(
+            side_effect=AssertionError("closed loop must not receive a coroutine")
+        )
+        closed_loop = asyncio.new_event_loop()
+        closed_loop.close()
+        handler = mcp_tools.StructuredLogNotificationHandler(
+            ctx=ctx,
+            loop=closed_loop,
+        )
+        record = logging.LogRecord(
+            name="paper_fetch.service",
+            level=logging.DEBUG,
+            pathname=__file__,
+            lineno=1,
+            msg="closed-loop log",
+            args=(),
+            exc_info=None,
+        )
+
+        handler.emit(record)
+        handler.close()
+
+        ctx.session.send_log_message.assert_not_called()
+
     async def test_fetch_paper_auto_prepare_defaults_off_and_request_can_enable(
         self,
     ) -> None:
@@ -61,6 +293,8 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
             "event": "official_provider_result",
             "provider": "wiley",
             "note": "message with spaces",
+            "url": "https://publisher.example/file?X-Amz-Signature=secret",
+            "headers": {"Wiley-TDM-Client-Token": "private-token"},
         }
 
         handler.emit(record)
@@ -72,6 +306,8 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
                 "event": "official_provider_result",
                 "provider": "wiley",
                 "note": "message with spaces",
+                "url": "https://publisher.example/file",
+                "headers": {"Wiley-TDM-Client-Token": "***"},
                 "logger": "paper_fetch.service",
             },
         )
@@ -239,9 +475,17 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
             ctx.progress,
             [
                 (0, 2, "Starting batch_check"),
-                (1, 2, "Checked 1 of 2 queries"),
-                (2, 2, "Checked 2 of 2 queries"),
-                (2, 2, "batch_check complete"),
+                (
+                    1,
+                    2,
+                    "Checked terminal 1 of 2 queries (completed=1, not_scheduled=0)",
+                ),
+                (
+                    2,
+                    2,
+                    "Checked terminal 2 of 2 queries (completed=2, not_scheduled=0)",
+                ),
+                (2, 2, "batch_check terminalized (terminal=2, not_scheduled=0)"),
             ],
         )
         self.assertTrue(
@@ -311,9 +555,21 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
             ctx.progress,
             [
                 (0, 2, "Starting batch_resolve"),
-                (1, 2, "Resolved 1 of 2 queries"),
-                (2, 2, "Resolved 2 of 2 queries"),
-                (2, 2, "batch_resolve complete"),
+                (
+                    1,
+                    2,
+                    "Resolved terminal 1 of 2 queries (completed=1, not_scheduled=0)",
+                ),
+                (
+                    2,
+                    2,
+                    "Resolved terminal 2 of 2 queries (completed=2, not_scheduled=0)",
+                ),
+                (
+                    2,
+                    2,
+                    "batch_resolve terminalized (terminal=2, not_scheduled=0)",
+                ),
             ],
         )
         self.assertTrue(
@@ -362,7 +618,8 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(seen_queries, ["10.1000/one", "10.1000/two"])
         self.assertEqual(
-            ctx.progress[-1], (3, 3, "batch_resolve stopped after rate limit")
+            ctx.progress[-1],
+            (3, 3, "batch_resolve terminalized (terminal=3, not_scheduled=1)"),
         )
 
     async def test_batch_resolve_tool_async_rejects_too_many_queries(self) -> None:

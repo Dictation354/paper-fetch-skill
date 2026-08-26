@@ -66,6 +66,56 @@ browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默�
 `browser:preflight_reuse_hit|miss|disabled` 与
 `browser:candidate_reorder_hit|miss` 暴露同一事实，不新增公开请求或响应字段。
 
+## 网络与登录态边界
+
+- 主文 `page.goto`、所有 page/context request、每个 redirect hop 和最终 URL 共用
+  `SafeRemoteUrlPolicy`；provider catalog 同时提供 publisher、API、CDN/资产 host
+  allowlist。route interceptor 在浏览器真正发包前拒绝 loopback、RFC1918、IPv6
+  loopback/ULA、link-local、reserved、multicast、混合 DNS、公网到私网 redirect、
+  非批准端口与 HTTPS downgrade。
+- 使用 cookie、storage state、profile 或 user-data 的 context 绑定到认证页面 origin。
+  catalog 即使同时批准另一个 CDN/API origin，也不会把登录 context 的 credential
+  带过去；跨 origin 资产返回现有 direct fallback，由受控 Python transport 获取。
+- 所有新 context 显式配置 `service_workers="block"`，context-wide route 在添加 cookie
+  和创建 page 前安装；无法应用该配置的 borrowed CDP context 不复用，而创建隔离
+  context，route 安装失败则终止本次 browser route。
+- 页面内 `fetch()` 只用于同 origin，因为浏览器脚本结果不能可靠暴露全部 redirect
+  hop；request-context fetch 显式关闭自动 redirect，并由 Python 循环逐跳验证。
+- Browser cookie 转 direct opener 时使用标准 `CookieJar`，保留 host-only/domain、
+  RFC path boundary、secure 与 expiry，避免把 publisher cookie 扩到子域或相邻路径。
+- Browser context diagnostics 用 `storage_state_load={path,exists,used}` 明确区分“已配置”
+  与“实际注入”。只有 context 创建成功且 `storage_state` option 真正传入时，
+  `RuntimeContext` 才记录 capability use；MCP fetch 完成后以 provider、backend、最终
+  canonical path 和最终文件 SHA-256 重新构建 sidecar scope。默认 provider 目录、
+  `PAPER_FETCH_BROWSER_PROFILE_DIR`、`PAPER_FETCH_BROWSER_USER_DATA_DIR` 与 provider
+  显式 storage-state 都遵循同一规则。
+
+## 二进制资产与资源预算
+
+- Camoufox/Playwright 只解析页面、发现最终 `http(s)` 资产 URL，并传递经过同源约束的
+  cookie/storage-state 授权事实；图片、附件和 PDF 不调用 browser `response.body()`、
+  `arrayBuffer()` 或 base64 整包回传。URL 必须能交给 verified-IP pinned direct
+  transport 流式获取，否则以 `browser_stream_unavailable` fail closed。
+- 同一论文的正文图和 supplementary 共用 `RuntimeContext` 的一个 `AssetBudget`：默认
+  最多 128 个文件、单文件 32 MiB、累计 256 MiB、每图 64,000,000 像素，并发最多
+  4 且可被 route cap 进一步收紧。Content-Length、未知长度 chunk、gzip 压缩/解压、
+  EPS/TIFF/PNG 转换输出和 arXiv source archive 解压都计入该边界。
+- 每个候选写入目标同目录的唯一排他 staging；成功后 flush/fsync 并原子发布，失败或
+  取消则回滚 reservation 并删除 staging。达到文件、字节或像素上限会停止后续 worker，
+  对外保留 `asset_file_limit_exceeded`、`asset_bytes_per_asset_exceeded`、
+  `asset_bytes_total_exceeded`、`asset_pixel_limit_exceeded` 或
+  `asset_content_encoding_unsupported` 等稳定 reason。
+- Browser-first 的 warm-up 使用 pinned transport 的有界 GET；每个 worker 的标准
+  `CookieJar` 只 seed 一次，并在同一 runtime 的 figure/supplementary phase 间复用。
+  CookieJar 不跨线程共享；每个已验证 redirect hop 的多条 `Set-Cookie` 都先按
+  domain/path/secure 语义导入，再为下一 hop 刷新 Cookie，候选响应 cookie 也只保留在
+  当前 worker。它们不会写入 HTTP response cache，catalog 自定义凭据在跨源 hop 删除。
+- Browser 触发 PDF download 后，只把经 DNS/host policy 验证的 `download.url` 加入 direct
+  replay 候选；`blob:`/`data:` 等 browser-owned URL 返回 `browser_stream_unavailable`。
+- 显式请求的页面 screenshot 是诊断输出而非远端 asset：普通 browser screenshot 只截
+  viewport，PNG 超过 16 MiB 即丢弃；PDF failure screenshot 直接写文件，超过 16 MiB
+  即删除。两者都不作为二进制恢复 fallback，也不会绕过上述 direct-stream 边界。
+
 ## 配置
 
 唯一 backend 值为 `camoufox`。可使用：
@@ -97,7 +147,7 @@ custom executable 传回去，因为 Camoufox 的 bundle metadata 位于
 
 ```bash
 PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST=1 \
-  PYTHONPATH=src python -m pytest \
+  PYTHONPATH=src uv run python -m pytest \
   tests/integration/test_camoufox_native_macos.py -q -n 0
 ```
 

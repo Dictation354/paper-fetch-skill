@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 import json
 
 import pytest
@@ -25,6 +26,7 @@ from paper_fetch.models import (
     apply_quality_assessment,
 )
 from paper_fetch.reason_codes import METADATA_ONLY, NO_ACCESS, RATE_LIMITED
+import paper_fetch.provider_catalog as provider_catalog_module
 from paper_fetch.tracing import (
     acquisition_fallback_used,
     source_trail_from_trace,
@@ -42,6 +44,7 @@ from paper_fetch.workflow.acceptance import (
     evaluate_fetch_acceptance,
     fetch_acceptance_json_schema,
     parse_fetch_acceptance_report,
+    _route_acceptance_satisfied,
 )
 
 
@@ -154,6 +157,165 @@ def test_complete_fulltext_has_separate_fetch_content_and_overall_statuses() -> 
     assert report.content.status == ContentAcceptanceStatus.FULLTEXT
     assert report.content.has_fulltext is True
     assert report.output.status == OutputAcceptanceStatus.COMPLETE
+    assert report.provenance.acceptance_policy == "structured_xml_body"
+    assert report.provenance.acceptance_policy_satisfied is True
+
+
+def test_catalog_acceptance_policy_mutation_changes_runtime_decision(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    original_catalog = dict(provider_catalog_module.PROVIDER_CATALOG)
+    elsevier = original_catalog["elsevier"]
+    mutated_routes = tuple(
+        replace(route, acceptance_policy="validated_pdf")
+        if route.name == "xml_api"
+        else route
+        for route in elsevier.routes
+    )
+    monkeypatch.setattr(
+        provider_catalog_module,
+        "PROVIDER_CATALOG",
+        {**original_catalog, "elsevier": replace(elsevier, routes=mutated_routes)},
+    )
+
+    report = evaluate_fetch_acceptance(_envelope(), asset_profile="none")
+
+    assert report.provenance.acceptance_policy == "validated_pdf"
+    assert report.provenance.acceptance_policy_satisfied is False
+
+
+def test_route_acceptance_policies_use_their_matching_public_facet() -> None:
+    asset_summary = AssetAcceptanceSummary(
+        requested=True,
+        profile="body",
+        audited=True,
+        expected=1,
+        discovered=1,
+        attempted=1,
+        total=1,
+        local=1,
+        full_size=1,
+    )
+    report = evaluate_fetch_acceptance(
+        _envelope(),
+        asset_profile="body",
+        asset_summary=asset_summary,
+    )
+    common = {
+        "identity": report.identity,
+        "content": report.content,
+        "asset": report.asset,
+    }
+
+    assert _route_acceptance_satisfied(
+        "metadata_identity",
+        acquisition=AcquisitionProvenance(
+            provider="crossref",
+            route="metadata",
+            representation="metadata",
+            transport="api",
+        ),
+        **common,
+    )
+    assert _route_acceptance_satisfied(
+        "provider_html_body",
+        acquisition=AcquisitionProvenance(
+            provider="example",
+            route="html",
+            representation="html",
+            transport="http",
+        ),
+        **common,
+    )
+    assert _route_acceptance_satisfied(
+        "structured_xml_body",
+        acquisition=AcquisitionProvenance(
+            provider="example",
+            route="xml",
+            representation="xml",
+            transport="http",
+        ),
+        **common,
+    )
+    assert _route_acceptance_satisfied(
+        "validated_pdf",
+        acquisition=AcquisitionProvenance(
+            provider="example",
+            route="pdf",
+            representation="pdf",
+            transport="http",
+        ),
+        **common,
+    )
+    assert _route_acceptance_satisfied(
+        "validated_asset",
+        acquisition=AcquisitionProvenance(
+            provider="example",
+            route="asset",
+            representation="xml",
+            transport="http",
+        ),
+        **common,
+    )
+    assert not _route_acceptance_satisfied(
+        "future_unrecognized_policy",
+        acquisition=AcquisitionProvenance(
+            provider="example",
+            route="future",
+            representation="xml",
+            transport="http",
+        ),
+        **common,
+    )
+
+
+def test_validated_asset_requires_local_or_audited_not_applicable_evidence() -> None:
+    no_local = evaluate_fetch_acceptance(
+        _envelope(),
+        asset_profile="body",
+        asset_summary=AssetAcceptanceSummary(
+            requested=True,
+            profile="body",
+            audited=True,
+            expected=1,
+            discovered=1,
+            attempted=1,
+            total=1,
+            remote_link_count=1,
+            remote_only_count=1,
+        ),
+    )
+    not_applicable = evaluate_fetch_acceptance(
+        _envelope(),
+        asset_profile="body",
+        asset_summary=AssetAcceptanceSummary(
+            requested=True,
+            profile="body",
+            audited=True,
+            expected=0,
+        ),
+    )
+    acquisition = AcquisitionProvenance(
+        provider="example",
+        route="assets",
+        representation="xml",
+        transport="http",
+    )
+
+    assert not _route_acceptance_satisfied(
+        "validated_asset",
+        acquisition=acquisition,
+        identity=no_local.identity,
+        content=no_local.content,
+        asset=no_local.asset,
+    )
+    assert _route_acceptance_satisfied(
+        "validated_asset",
+        acquisition=acquisition,
+        identity=not_applicable.identity,
+        content=not_applicable.content,
+        asset=not_applicable.asset,
+    )
 
 
 @pytest.mark.parametrize(
@@ -238,6 +400,38 @@ def test_expected_doi_is_normalized_and_mismatch_requires_action() -> None:
     assert mismatch.identity.status == IdentityAcceptanceStatus.MISMATCH
     assert mismatch.identity.codes == ("identity_mismatch",)
     assert mismatch.overall == OverallAcceptanceStatus.ACTION_REQUIRED
+
+
+def test_doi_less_title_alone_does_not_resolve_identity() -> None:
+    envelope = _envelope()
+    envelope.doi = None
+    assert envelope.article is not None
+    envelope.article.doi = None
+
+    report = evaluate_fetch_acceptance(envelope, asset_profile="none")
+
+    assert report.identity.status == IdentityAcceptanceStatus.UNAVAILABLE
+    assert report.identity.codes == ("canonical_landing_identity_unverified",)
+    assert report.overall == OverallAcceptanceStatus.ACTION_REQUIRED
+
+
+def test_doi_less_verified_unique_canonical_landing_resolves_identity() -> None:
+    envelope = _envelope()
+    envelope.doi = None
+    assert envelope.article is not None
+    envelope.article.doi = None
+
+    report = evaluate_fetch_acceptance(
+        envelope,
+        asset_profile="none",
+        canonical_landing_url="https://publisher.example/article/unique-id",
+        canonical_landing_verified=True,
+        canonical_landing_unique=True,
+    )
+
+    assert report.identity.status == IdentityAcceptanceStatus.RESOLVED
+    assert report.identity.canonical_landing_verified is True
+    assert report.identity.canonical_landing_unique is True
 
 
 def test_asset_profile_none_is_not_requested_and_preserves_remote_links() -> None:

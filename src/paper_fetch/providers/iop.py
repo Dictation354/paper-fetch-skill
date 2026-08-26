@@ -33,6 +33,7 @@ from .base import (
 )
 from .browser_runtime import BrowserRuntimeFailure
 from .browser_workflow.reuse_cache import normalize_browser_cache_url
+from .browser_workflow.fetchers import BrowserDocumentFetcherOptions
 
 
 register_provider_bundle(
@@ -384,7 +385,7 @@ class IopClient(browser_workflow.BrowserWorkflowClient):
             cdp_endpoint=getattr(runtime, "cdp_endpoint", None),
             profile_dir=getattr(runtime, "profile_dir", None),
             user_data_dir=getattr(runtime, "user_data_dir", None),
-            browser_config=runtime,
+            browser_options=BrowserDocumentFetcherOptions(runtime_config=runtime),
         )
         try:
             for index_url, canonical_url in pending_indexes:

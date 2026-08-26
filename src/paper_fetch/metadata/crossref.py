@@ -9,10 +9,10 @@ from collections.abc import Mapping
 from ..config import build_user_agent
 from ..errors import ProviderFailure
 from ..http import (
-    DEFAULT_TIMEOUT_SECONDS,
     HttpTransport,
     RequestFailure,
     decode_json_object_response,
+    provider_request_policy,
 )
 from ..metadata.types import CrossrefMetadata, FulltextLink, ReferenceMetadata
 from ..publisher_identity import normalize_doi
@@ -63,9 +63,7 @@ class CrossrefLookupClient:
                     url,
                     headers=self.headers(),
                     query=self.query_params(),
-                    timeout=DEFAULT_TIMEOUT_SECONDS,
-                    retry_on_rate_limit=True,
-                    retry_on_transient=True,
+                    request_policy=provider_request_policy("crossref", "metadata"),
                 )
             except RequestFailure as exc:
                 raise _map_crossref_request_failure(exc) from exc
@@ -137,9 +135,7 @@ class CrossrefLookupClient:
                 "https://api.crossref.org/works",
                 headers=self.headers(),
                 query=params,
-                timeout=DEFAULT_TIMEOUT_SECONDS,
-                retry_on_rate_limit=True,
-                retry_on_transient=True,
+                request_policy=provider_request_policy("crossref", "metadata"),
             )
         except RequestFailure as exc:
             raise _map_crossref_request_failure(exc) from exc

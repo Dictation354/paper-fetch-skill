@@ -68,5 +68,15 @@
     "macos_manifest_name": "paper-fetch-skill-offline",
     "windows_setup_base_name": "paper-fetch-skill-windows-x86_64-setup",
     "windows_manifest_name": "paper-fetch-skill-windows-setup"
+  },
+  "embedded_runtimes": {
+    "windows_cpython_x86_64": {
+      "implementation": "CPython",
+      "version": "3.13.13",
+      "architecture": "x86_64",
+      "archive": "python-3.13.13-embed-amd64.zip",
+      "url": "https://www.python.org/ftp/python/3.13.13/python-3.13.13-embed-amd64.zip",
+      "sha256": "8766a8775746235e23cf5aee5027ab1060bb981d93110577adcf3508aa0cbd55"
+    }
   }
 }

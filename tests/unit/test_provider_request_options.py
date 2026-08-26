@@ -30,13 +30,17 @@ from paper_fetch.providers.elsevier import (
 from paper_fetch.providers.springer import SpringerClient
 from paper_fetch.providers.wiley import WileyClient
 from paper_fetch.runtime import RuntimeContext
-from tests.unit._browser_workflow_deps import browser_workflow_deps
+from tests.unit._browser_workflow_deps import (
+    browser_workflow_deps,
+    public_test_url_policy,
+)
 from tests.unit._paper_fetch_support import RecordingTransport
 
 
 class _FakeImagePage:
     def __init__(self, result: dict[str, object]) -> None:
         self.result = result
+        self.url = str(result.get("url") or "https://example.test/article")
         self.evaluate_calls: list[tuple[str, object]] = []
         self.wait_for_timeout_calls: list[int] = []
 
@@ -51,6 +55,12 @@ class _FakeImagePage:
 class _FakeQueuedImagePage:
     def __init__(self, results: list[dict[str, object]]) -> None:
         self.results = list(results)
+        self.url = str(
+            next(
+                (result.get("url") for result in self.results if result.get("url")),
+                "https://example.test/article",
+            )
+        )
         self.evaluate_calls: list[tuple[str, object]] = []
 
     def evaluate(self, script, arg):
@@ -79,6 +89,16 @@ def elsevier_body_asset_xml(urls: list[str]) -> bytes:
 
 
 class ProviderRequestOptionsTests(unittest.TestCase):
+    def setUp(self) -> None:
+        super().setUp()
+        policy_patch = mock.patch.object(
+            fetcher_context,
+            "SafeRemoteUrlPolicy",
+            public_test_url_policy,
+        )
+        policy_patch.start()
+        self.addCleanup(policy_patch.stop)
+
     def test_crossref_metadata_uses_default_timeout_and_rate_limit_retry(self) -> None:
         transport = RecordingTransport(
             {
@@ -1120,21 +1140,14 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             page, "https://example.test/cdn/figure.jpg"
         )
 
-        self.assertIsNone(result)
-        script, arg = page.evaluate_calls[0]
-        self.assertIn("AbortController", script)
-        self.assertIn("cache: 'no-store'", script)
+        self.assertIsNotNone(result)
+        assert result is not None
         self.assertEqual(
-            arg,
-            [
-                "https://example.test/cdn/figure.jpg",
-                browser_workflow._IMAGE_DOCUMENT_FETCH_TIMEOUT_MS,
-            ],
+            result["_paper_fetch_browser_stream_url"],
+            "https://example.test/cdn/figure.jpg",
         )
-        self.assertEqual(
-            fetcher.failure_for("https://example.test/cdn/figure.jpg")["reason"],
-            "image_fetch_timeout",
-        )
+        self.assertEqual(page.evaluate_calls, [])
+        self.assertIsNone(fetcher.failure_for("https://example.test/cdn/figure.jpg"))
 
     def test_no_direct_sync_playwright_in_fetchers(self) -> None:
         self.assertNotIn("sync_playwright(", inspect.getsource(fetcher_context))
@@ -1238,8 +1251,11 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         result = fetcher._payload_from_page_fetch_url(page, image_url)
 
-        self.assertIsNone(result)
-        self.assertEqual(fetcher.failure_for(image_url)["reason"], "non_image_response")
+        self.assertIsNotNone(result)
+        assert result is not None
+        self.assertEqual(result["_paper_fetch_browser_stream_url"], image_url)
+        self.assertEqual(page.evaluate_calls, [])
+        self.assertIsNone(fetcher.failure_for(image_url))
 
     def test_browser_image_fetcher_prefers_warmed_article_image_before_direct_request(
         self,
@@ -1280,10 +1296,10 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         self.assertIsNotNone(result)
         assert result is not None
-        self.assertEqual(result["body"], image_body)
-        self.assertEqual(result["headers"]["content-type"], "image/png")
-        self.assertEqual(result["dimensions"], {"width": 640, "height": 480})
-        self.assertEqual(len(page.evaluate_calls), 1)
+        self.assertNotIn("body", result)
+        self.assertEqual(result["headers"]["content-type"], "image/*")
+        self.assertEqual(result["_paper_fetch_browser_stream_url"], image_url)
+        self.assertEqual(page.evaluate_calls, [])
 
     def test_browser_image_fetcher_falls_back_when_warmed_article_lacks_target(
         self,
@@ -1327,9 +1343,11 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         ):
             result = fetcher._fetch_with_page(image_url)
 
-        self.assertEqual(result, direct_payload)
-        mocked_page_fetch.assert_called_once_with(page, image_url)
-        mocked_direct.assert_called_once_with(image_url)
+        self.assertIsNotNone(result)
+        assert result is not None
+        self.assertEqual(result["_paper_fetch_browser_stream_url"], image_url)
+        mocked_page_fetch.assert_not_called()
+        mocked_direct.assert_not_called()
         self.assertEqual(fetcher.failure_for(image_url), None)
 
     def test_browser_image_fetcher_fetches_unloaded_article_target_from_page_context(
@@ -1367,10 +1385,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         self.assertIsNotNone(result)
         assert result is not None
-        self.assertEqual(result["body"], image_body)
-        self.assertEqual(result["headers"]["content-type"], "image/png;charset=UTF-8")
-        self.assertEqual(result["dimensions"], {"width": 570, "height": 820})
-        self.assertEqual(len(page.evaluate_calls), 2)
+        self.assertNotIn("body", result)
+        self.assertEqual(result["_paper_fetch_browser_stream_url"], image_url)
+        self.assertEqual(page.evaluate_calls, [])
 
     def test_browser_image_fetcher_records_challenge_from_article_page_fetch(
         self,
@@ -1406,10 +1423,10 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         result = fetcher._payload_from_warmed_article_image(page, image_url)
 
-        self.assertIsNone(result)
-        self.assertEqual(
-            fetcher.failure_for(image_url)["reason"], "cloudflare_challenge"
-        )
+        self.assertIsNotNone(result)
+        assert result is not None
+        self.assertEqual(result["_paper_fetch_browser_stream_url"], image_url)
+        self.assertEqual(page.evaluate_calls, [])
 
     def test_browser_image_payload_uses_loaded_image_when_fetch_is_challenged(
         self,
@@ -1449,13 +1466,13 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         self.assertIsNotNone(result)
         assert result is not None
-        self.assertEqual(result["body"], image_body)
-        self.assertEqual(result["headers"]["content-type"], "image/png")
+        self.assertNotIn("body", result)
+        self.assertEqual(result["headers"]["content-type"], "image/*")
         self.assertEqual(result["dimensions"], {"width": 500, "height": 198})
-        self.assertEqual(len(page.evaluate_calls), 2)
+        self.assertEqual(page.evaluate_calls, [])
 
     def test_browser_loaded_image_canvas_failure_reasons_are_preserved(self) -> None:
-        image_url = "https://example.test/cdn/figure.png"
+        image_url = "blob:https://example.test/browser-only"
         for reason, error in (
             ("missing_canvas_context", ""),
             ("canvas_tainted", "SecurityError"),
@@ -1481,7 +1498,50 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             )
 
             self.assertIsNone(result)
-            self.assertEqual(fetcher.failure_for(image_url)["reason"], reason)
+            self.assertEqual(
+                fetcher.failure_for(image_url)["reason"],
+                "browser_stream_unavailable",
+            )
+            self.assertEqual(page.evaluate_calls, [])
+
+    def test_browser_loaded_image_failure_merges_existing_diagnostic(self) -> None:
+        image_url = "https://example.test/cdn/figure.png"
+        page = _FakeImagePage(
+            {
+                "ok": False,
+                "reason": "canvas_tainted",
+                "error": "SecurityError",
+                "url": image_url,
+                "title": "Figure image",
+                "contentType": "image/png",
+            }
+        )
+        fetcher = browser_fetchers._SharedBrowserImageDocumentFetcher(
+            browser_context_seed_getter=lambda: {},
+            seed_urls_getter=lambda: [],
+        )
+        fetcher._record_failure(
+            image_url,
+            status=403,
+            reason="cloudflare_challenge",
+        )
+        fetcher._configure_network_guard(image_url)
+
+        result = fetcher._payload_from_loaded_image(
+            page, {"src": image_url, "width": 500, "height": 198}
+        )
+
+        self.assertIsNotNone(result)
+        assert result is not None
+        self.assertNotIn("body", result)
+        self.assertEqual(
+            fetcher.failure_for(image_url),
+            {
+                "source_url": image_url,
+                "status": 403,
+                "reason": "cloudflare_challenge",
+            },
+        )
 
     def test_browser_image_document_payload_requires_image_payload(self) -> None:
         result = browser_runtime.BrowserFetchedHtml(
@@ -1503,7 +1563,6 @@ class ProviderRequestOptionsTests(unittest.TestCase):
     def test_browser_image_document_payload_prefers_browser_exported_pixels(
         self,
     ) -> None:
-        image_body = b"\x89PNG\r\n\x1a\ncanvas-export"
         result = browser_runtime.BrowserFetchedHtml(
             source_url="https://example.test/figure.png",
             final_url="https://example.test/figure.png",
@@ -1515,10 +1574,10 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             browser_context_seed={},
             screenshot_b64=None,
             image_payload={
+                "streamOnly": True,
                 "status": 200,
                 "url": "https://example.test/figure.png",
                 "contentType": "image/png",
-                "bodyB64": base64.b64encode(image_body).decode("ascii"),
                 "width": 40,
                 "height": 30,
             },
@@ -1528,7 +1587,11 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         self.assertIsNotNone(payload)
         assert payload is not None
-        self.assertEqual(payload["body"], image_body)
+        self.assertNotIn("body", payload)
+        self.assertEqual(
+            payload["_paper_fetch_browser_stream_url"],
+            "https://example.test/figure.png",
+        )
         self.assertEqual(payload["dimensions"], {"width": 40, "height": 30})
 
     def test_browser_image_document_payload_rejects_invalid_payload(self) -> None:
@@ -1543,6 +1606,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             browser_context_seed={},
             screenshot_b64=None,
             image_payload={
+                "streamOnly": True,
                 "status": 200,
                 "url": "https://example.test/figure.png",
                 "contentType": "text/html",
@@ -1569,10 +1633,10 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             browser_context_seed={},
             screenshot_b64=None,
             image_payload={
+                "streamOnly": True,
                 "status": 200,
                 "url": "https://example.test/figure.svg",
                 "contentType": "image/svg+xml",
-                "bodyB64": base64.b64encode(svg_body).decode("ascii"),
                 "width": 0,
                 "height": 0,
             },
@@ -1583,7 +1647,11 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertIsNotNone(payload)
         assert payload is not None
         self.assertEqual(payload["headers"]["content-type"], "image/svg+xml")
-        self.assertEqual(payload["body"], svg_body)
+        self.assertNotIn("body", payload)
+        self.assertEqual(
+            payload["_paper_fetch_browser_stream_url"],
+            "https://example.test/figure.svg",
+        )
 
     def test_browser_image_document_payload_rejects_svg_content_type_with_html_body(
         self,
@@ -2206,10 +2274,8 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(
             fetcher._warm_seed_urls.call_args_list[0].kwargs["force"], False
         )
-        self.assertEqual(
-            fetcher._warm_seed_urls.call_args_list[1].kwargs["force"], True
-        )
-        self.assertEqual(fetcher._fetch_with_context_request.call_count, 2)
+        self.assertEqual(fetcher._warm_seed_urls.call_count, 1)
+        self.assertEqual(fetcher._fetch_with_context_request.call_count, 1)
         failure = fetcher.failure_for(file_url)
         assert failure is not None
         self.assertEqual(failure["reason"], "cloudflare_challenge")

@@ -27,7 +27,7 @@ jobs:
           uv lock --upgrade
           uv sync --extra dev --extra full
           uv run python scripts/audit_dependencies.py
-          PYTHONPATH=src uv run pytest tests/unit -q
+          PYTHONPATH=src uv run python -m pytest tests/unit -q
           if ! cmp -s uv.lock "$RUNNER_TEMP/uv.lock.baseline"; then
             echo "::notice::Compatible dependency updates are available; run uv lock --upgrade."
           fi

@@ -103,6 +103,10 @@ def test_registration_conflicts_are_rejected_before_mutation(
     catalog = replace(
         existing.catalog,
         name=f"conflict_{conflict_field}",
+        display_name=f"Conflict {conflict_field}",
+        publisher_aliases=(),
+        doi_prefixes=(),
+        domain_suffixes=(),
         status_order=10_000,
         client_factory_path=f"test.factory:{conflict_field}",
         domains=(f"{conflict_field}.example.test",),

@@ -55,7 +55,7 @@ from .metadata import fetch_metadata_for_resolved_query
 from .rendering import finalize_article
 from .resolution import resolve_paper
 from .routing import (
-    build_official_provider_candidates,
+    build_official_provider_candidate_evidence,
     provider_allowed,
     resolve_query_with_session_cache,
 )
@@ -481,27 +481,37 @@ def _ranked_fulltext_provider_candidates(
     metadata: Mapping[str, Any],
     selected_provider: str | None,
     strategy: FetchStrategy,
-) -> list[tuple[str, str]]:
+) -> list[tuple[str, str, str]]:
     """Return deduplicated, evidence-ranked official full-text candidates."""
 
-    ranked: list[tuple[str, str]] = []
+    evidence = build_official_provider_candidate_evidence(
+        resolved,
+        routing_metadata=metadata,
+        strategy=strategy,
+    )
+    evidence_by_provider = {item.provider: item for item in evidence}
+    ranked: list[tuple[str, str, str]] = []
     seen: set[str] = set()
     if (
         selected_provider
         and is_official_provider(selected_provider)
         and provider_allowed(selected_provider, strategy)
     ):
-        ranked.append((selected_provider, "metadata_selected"))
+        selected_evidence = evidence_by_provider.get(selected_provider)
+        ranked.append(
+            (
+                selected_provider,
+                "metadata_selected",
+                selected_evidence.strength if selected_evidence is not None else "weak",
+            )
+        )
         seen.add(selected_provider)
-    for provider_name, signal in build_official_provider_candidates(
-        resolved,
-        routing_metadata=metadata,
-        strategy=strategy,
-    ):
+    for candidate in evidence:
+        provider_name = candidate.provider
         if provider_name in seen:
             continue
         seen.add(provider_name)
-        ranked.append((provider_name, signal))
+        ranked.append((provider_name, candidate.signal, candidate.strength))
     return ranked
 
 
@@ -627,7 +637,7 @@ def fetch_article(
             selected_provider=provider_name,
             strategy=strategy,
         )
-        for rank, (candidate_provider, signal) in enumerate(
+        for rank, (candidate_provider, signal, identity_strength) in enumerate(
             provider_candidates,
             start=1,
         ):
@@ -635,6 +645,11 @@ def fetch_article(
             source_trail.append(
                 route_marker(
                     f"provider_candidate_{candidate_provider}_{signal}_rank_{rank}"
+                )
+            )
+            source_trail.append(
+                route_marker(
+                    f"provider_candidate_{candidate_provider}_identity_{identity_strength}"
                 )
             )
             attempt_outputs = _ProviderAttemptOutputs(
@@ -668,13 +683,21 @@ def fetch_article(
             source_trail.append(
                 route_marker(f"provider_candidate_{candidate_provider}_rejected")
             )
-            if any(failure.code == NO_ACCESS for failure in attempt_outputs.failures):
+            if identity_strength == "strong" and any(
+                failure.code == NO_ACCESS for failure in attempt_outputs.failures
+            ):
                 source_trail.append(
                     route_marker(
                         f"provider_candidate_{candidate_provider}_access_boundary_stop"
                     )
                 )
                 break
+            if any(failure.code == NO_ACCESS for failure in attempt_outputs.failures):
+                source_trail.append(
+                    route_marker(
+                        f"provider_candidate_{candidate_provider}_access_boundary_weak_continue"
+                    )
+                )
         _record_stage_timing(runtime, "fulltext_seconds", fulltext_started_at)
         if article is not None:
             return article

@@ -777,6 +777,34 @@ def test_browser_manager_external_new_context_does_not_borrow_existing_context(
     assert diagnostics["borrowed_existing_context"] is False
 
 
+def test_browser_manager_service_worker_block_forces_isolated_external_context(
+    monkeypatch,
+) -> None:
+    existing_context = _FakeCdpContext()
+    cdp_browser = _FakeCdpBrowser([existing_context])
+    monkeypatch.setattr(
+        runtime_browser,
+        "connect_browser_over_cdp",
+        lambda _endpoint: cdp_browser,
+    )
+    lifecycle = BrowserContextManager(
+        cdp_endpoint="ws://127.0.0.1:9222/devtools/browser/test"
+    )
+
+    context = lifecycle.new_context(
+        headless=True,
+        service_workers="block",
+    )
+    diagnostics = context._paper_fetch_external_cdp_diagnostics
+    context.close()
+    lifecycle.close()
+
+    assert len(cdp_browser.contexts) == 2
+    assert existing_context.close_count == 0
+    assert cdp_browser.new_context_kwargs == [{"service_workers": "block"}]
+    assert diagnostics["borrowed_existing_context"] is False
+
+
 def test_runtime_context_passes_explicit_cdp_endpoint_to_browser_manager(
     monkeypatch,
 ) -> None:

@@ -36,6 +36,7 @@ from .cache import (
     _CacheKey,
     _DiskCacheEntry,
     diagnostic_url_payload,
+    is_sensitive_query_param_name,
     redact_text_for_diagnostics,
     redact_url_for_cache,
     redact_url_for_diagnostics,
@@ -54,6 +55,7 @@ from .errors import (
     build_http_error_message,
     build_network_error_detail,
     classify_network_error,
+    is_retryable_network_error,
     is_timeout_network_error,
     iter_network_error_causes,
 )
@@ -73,6 +75,7 @@ from .transport import (
     DEFAULT_POOL_NUM_POOLS,
     DEFAULT_TIMEOUT_SECONDS,
     HttpRequestPolicy,
+    HttpStreamOptions,
     HttpTransport,
     HttpTransportOptions,
     _PreparedRequest,
@@ -84,6 +87,13 @@ from .url_policy import (
     DEFAULT_SAFE_REMOTE_URL_POLICY,
     SafeRemoteUrlPolicy,
     ValidatedRemoteUrl,
+)
+from .provider_policy import provider_allowed_hosts, provider_request_policy
+from .browser_policy import (
+    BrowserNetworkGuard,
+    guarded_browser_request_get,
+    hosts_from_urls,
+    url_origin,
 )
 
 __all__ = [
@@ -122,7 +132,9 @@ __all__ = [
     "TEXTUAL_CONTENT_TYPES",
     "TRANSIENT_HTTP_STATUS_CODES",
     "UNSTABLE_CACHE_HEADER_NAMES",
+    "BrowserNetworkGuard",
     "HttpRequestPolicy",
+    "HttpStreamOptions",
     "HttpTransport",
     "HttpTransportOptions",
     "RequestCancelledError",
@@ -141,8 +153,12 @@ __all__ = [
     "decode_json_object_response",
     "decompress_gzip_body",
     "diagnostic_url_payload",
+    "guarded_browser_request_get",
+    "hosts_from_urls",
     "http_timing_collector",
     "is_pdf_content_type",
+    "is_retryable_network_error",
+    "is_sensitive_query_param_name",
     "is_textual_content_type",
     "is_timeout_network_error",
     "is_transient_http_status",
@@ -151,8 +167,11 @@ __all__ = [
     "logger",
     "normalize_content_encoding",
     "parse_retry_after_seconds",
+    "provider_allowed_hosts",
+    "provider_request_policy",
     "redact_text_for_diagnostics",
     "redact_url_for_cache",
     "redact_url_for_diagnostics",
     "time",
+    "url_origin",
 ]

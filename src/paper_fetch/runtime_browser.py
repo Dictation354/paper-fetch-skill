@@ -526,6 +526,7 @@ def browser_context_options(
     options: dict[str, Any] = {
         "locale": locale,
         "viewport": dict(DEFAULT_BROWSER_VIEWPORT if viewport is None else viewport),
+        "service_workers": "block",
     }
     active_user_agent = str(user_agent or "").strip()
     if active_user_agent:
@@ -1129,7 +1130,14 @@ class BrowserContextManager:
                 ) from exc
             if using_external_endpoint:
                 contexts = list(getattr(browser, "contexts", []) or [])
-                if contexts and not self.external_new_context:
+                requires_isolated_context = (
+                    context_kwargs.get("service_workers") == "block"
+                )
+                if (
+                    contexts
+                    and not self.external_new_context
+                    and not requires_isolated_context
+                ):
                     context = contexts[0]
                     storage_state = context_kwargs.get("storage_state")
                     cookie_count = 0

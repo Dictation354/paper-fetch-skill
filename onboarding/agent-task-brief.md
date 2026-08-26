@@ -152,10 +152,10 @@ output_requirements:
     - fix
 acceptance:
   pytest:
-    - PYTHONPATH=src python3 -m pytest tests/unit/test_mdpi_provider.py -q
-    - PYTHONPATH=src python3 -m pytest tests/unit/test_provider_markdown_review_contract.py -q
-    - PYTHONPATH=src python3 -m pytest tests/unit/test_provider_route_contract.py -q
-    - PYTHONPATH=src python3 -m pytest tests/unit/test_provider_bundle_completeness.py tests/unit/test_provider_owner_reuse.py -q
+    - PYTHONPATH=src uv run python -m pytest tests/unit/test_mdpi_provider.py -q
+    - PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_markdown_review_contract.py -q
+    - PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_route_contract.py -q
+    - PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_bundle_completeness.py tests/unit/test_provider_owner_reuse.py -q
   grep_must_be_empty:
     - pattern: mdpi
       paths:

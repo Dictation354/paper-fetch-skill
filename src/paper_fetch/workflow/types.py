@@ -12,6 +12,7 @@ from ..models import AssetProfile
 from ..provider_catalog import (
     default_asset_profile_for_provider,
     default_asset_profile_for_source,
+    effective_route_asset_scope,
     provider_names,
 )
 from ..reason_codes import ERROR
@@ -52,11 +53,16 @@ def effective_asset_profile(
     *,
     provider_name: str | None = None,
     source_name: str | None = None,
+    route_name: str | None = None,
 ) -> AssetProfile:
     if asset_profile is not None:
         return asset_profile
     if provider_name is not None:
-        return provider_default_asset_profile(provider_name)
+        return effective_route_asset_scope(
+            None,
+            provider_name=provider_name,
+            route_name=route_name,
+        )
     return source_default_asset_profile(source_name)
 
 

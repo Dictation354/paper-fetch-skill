@@ -15,6 +15,8 @@
 
 部署入口见 [`deployment.md`](deployment.md)，架构说明见 [`architecture/overview.md`](architecture/overview.md)。安装后自包含的配置优先级、Chrome/CDP、公式/图片工具和诊断入口见 skill 的 [`environment.md`](../skills/paper-fetch-skill/references/environment.md)；agent 需要 provider/source/capability 名单时只读取动态 `resource://paper-fetch/provider-catalog`，不复制本页矩阵。逐 route 的顺序、runtime、并发、超时、acceptance 与资产范围见自动生成的 [`provider-routes.generated.md`](provider-routes.generated.md)。
 
+Browser HTML/PDF fallback、HTTP streaming 和 HTML assets 的高参数入口内部以现有 request/options dataclass 收敛，并把网络守卫、候选准备、预算状态和 batch 生命周期拆成可单测 helper；旧公开关键字调用保持兼容。维护这些 helper 时不得绕过 catalog 编译的 host/timeout/retry、DNS pinning、redirect 逐跳校验、Content-Length/未知长度流式预算或 RuntimeContext 取消边界，复杂度 checker 的历史集合只能单调下降。
+
 <a id="provider-canonical-sources"></a>
 `references/api_notes.md` 和 `references/routing_rules.md` 只保留 API 约束和补充说明；provider/routing/waterfall 的 canonical 事实来源是本文档和 `paper_fetch.provider_catalog.PROVIDER_CATALOG`。
 
@@ -300,7 +302,7 @@ resolve
 ### 2. metadata 与路由
 
 - 系统会先尽可能拿到 Crossref metadata。
-- `elsevier` 和 `arxiv` 会参加 provider metadata probe；`arxiv` 通过项目内部 Atom API client 调用官方 arXiv API，使用 60 秒专用超时并对 timeout / 5xx 做 2 次 transient retry，获取 title、authors、abstract、published、categories、arXiv DOI、abs URL 和 PDF URL。
+- `elsevier` 和 `arxiv` 会参加 provider metadata probe；`arxiv` 通过项目内部 Atom API client 调用官方 arXiv API，使用 catalog 编译出的 60 秒超时、2 次 transient retry 与跨 worker/同 scope 至少 3 秒 pacing。每个 scope 使用串行 start gate；迟到的 `Retry-After` 移动队首后，后续 waiter 仍按实际起点间隔三秒，而不是在 cooldown deadline 一起放行。该调用获取 title、authors、abstract、published、categories、arXiv DOI、abs URL 和 PDF URL。
 - `springer`、`wiley`、`science`、`pnas`、`ieee`、`copernicus`、`ams`、`mdpi`、`royalsocietypublishing`、`annualreviews`、`plos`、`frontiers`、`oxfordacademic`、`acs`、`iop`、`aip`、`tandf` 在 `probe_official_provider()` 和 `has_fulltext()` 中都只依赖 Crossref / landing-page / DOI 信号，不调用 publisher metadata API。
 - 最终会合并 primary / secondary metadata，统一生成正文抓取需要的元数据。
 
@@ -423,7 +425,7 @@ resolve
 - `arxiv`
   - 固定顺序是 `arXiv ID 解析 -> arXiv official HTML -> direct HTTP PDF fallback -> metadata-only`。
   - resolve 支持 `https://arxiv.org/abs/{id}`、`/html/{id}`、`/pdf/{id}`、`arXiv:{id}`、裸 `{id}` / `{id}vN`，以及 `10.48550/arXiv.{id}`。
-  - DOI、URL、裸 ID 或已有 metadata 中能可靠推导 arXiv ID 时，会先构造最小 metadata：`doi`、`arxiv_id`、`landing_page_url`、`html_url`、`pdf_url`、`provider=arxiv`，并立即执行 HTML -> PDF waterfall；主链结束后默认通过内部 Atom API client 执行 arXiv API metadata enrichment，Atom API 使用 60 秒专用超时并对 timeout / 5xx 做 2 次 transient retry，最终失败或 429 只记录 warning/diagnostic，不会阻塞全文获取。
+  - DOI、URL、裸 ID 或已有 metadata 中能可靠推导 arXiv ID 时，会先构造最小 metadata：`doi`、`arxiv_id`、`landing_page_url`、`html_url`、`pdf_url`、`provider=arxiv`，并立即执行 HTML -> PDF waterfall；主链结束后默认通过内部 Atom API client 执行 arXiv API metadata enrichment，Atom API 从 `RouteExecutionPolicy` 取得 60 秒超时、2 次 transient retry 和 3 秒共享 pacing，最终失败或 429 只记录 warning/diagnostic，不会阻塞全文获取。
   - official HTML front matter 会补齐 `title`、`authors`、`abstract`、`published`、`primary_category`、canonical DOI、HTML/PDF URL；合并优先级是 arXiv API metadata > HTML front matter > derived arXiv URLs，因此 API 不可用时也不应出现 `Untitled Article` 或 authorless arXiv fulltext。
   - official HTML 是主路径，直接请求 `https://arxiv.org/html/{id}`，抽取 Markdown、官方 bibliography references 和正文 figure 资产候选；可匹配到下载 URL 的正文 figure 会在原 caption 附近先以内联图片 Markdown 表达，下载后改写为 `body_assets/...` 本地链接；如果 official HTML 只有 `ltx_missing_image` 这类缺失图片占位符，会读取 `https://arxiv.org/e-print/{id}` source 包，按 LaTeX figure 顺序 / caption 匹配恢复图片或将 source PDF 图渲染为 PNG，再插回对应 figure caption 前；HTML 正文不足、非 HTML、不可访问或质量门控失败时直接继续 PDF fallback。
   - official HTML 渲染前会做 arXiv/LaTeXML 专用语义块预处理：`figure.ltx_table` 和裸 `table.ltx_tabular` 复用共享 HTML table renderer 输出 Markdown 表格或 key-value 行，单个全宽 `colspan` 标题行会提升为表格前普通文本，`ltx_listing` / algorithm block 输出标题和 fenced pseudo-code，并用 placeholder 保持原文位置；无法插回的位置会追加到文末并记录 warning。
@@ -1220,7 +1222,7 @@ IEEE direct landing/REST HTML/PDF/资产与 selected-browser recovery 路线当�
 默认护栏包括：
 
 - `max_response_bytes=32 MiB`
-- 只对幂等 GET/HEAD 的 `5xx`、timeout、connection reset/closed 和 temporary DNS 做有限短重试；TLS/security 与确定性 DNS 错误不重试
+- 只对幂等 GET/HEAD 的 `5xx`、timeout、connection reset/closed 和 catalog 声明的 `dns_error` 做有限短重试；TLS/security 与未声明的错误类别不重试
 - backoff 和 cooldown 等待会先释放同 host 并发槽；`429` 优先遵守 `Retry-After` 并进入 host/provider cooldown，不混进普通瞬时错误重试
 - 底层使用 `urllib3.PoolManager` 复用连接
 - Retry policy 使用 `urllib3.util.Retry` 表达；本地 wrapper 继续保留 public request options、structured logs、cancel checks、最大等待时间和 `RequestFailure` 形状

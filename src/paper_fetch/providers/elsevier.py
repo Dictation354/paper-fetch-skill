@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 import mimetypes
 import urllib.parse
@@ -22,8 +21,8 @@ from ..http import (
     RequestFailure,
     decode_json_object_response,
     is_xml_content_type,
+    provider_request_policy,
 )
-from ..http.headers import header_value
 from ..elsevier_identifiers import extract_elsevier_pii_from_url, normalize_elsevier_pii
 from ..metadata.types import ProviderMetadata
 from ..models import (
@@ -38,14 +37,12 @@ from ..publisher_identity import extract_doi, normalize_doi
 from ..runtime import RuntimeContext
 from ..tracing import download_marker, fulltext_marker, trace_from_markers
 from ..utils import (
-    build_asset_output_path,
     choose_public_landing_page_url,
     dedupe_authors,
     empty_asset_results,
     first_non_empty,
     normalize_text,
     sanitize_filename,
-    save_payload,
     strip_html_tags,
 )
 from ..xml_security import XmlParseFailure, parse_xml
@@ -141,11 +138,16 @@ register_provider_bundle(
             xml_file_tokens=("elsevier", "10.1016"),
             routes=(
                 ProviderRouteSpec(name="metadata_api", kind="metadata"),
-                ProviderRouteSpec(name="xml_api", kind="xml"),
+                ProviderRouteSpec(
+                    name="xml_api",
+                    kind="xml",
+                    timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+                ),
                 ProviderRouteSpec(
                     name="pdf_api",
                     kind="pdf",
                     requires_pdf_conversion=True,
+                    timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 ),
                 ProviderRouteSpec(name="object_assets", kind="assets", transport="api"),
             ),
@@ -594,40 +596,8 @@ def download_elsevier_related_assets(
             context.env if context is not None else None
         )
 
-    asset_dir = output_dir / f"{sanitize_filename(doi)}_assets"
-    asset_dir.mkdir(parents=True, exist_ok=True)
-    used_names: set[str] = set()
     downloads: list[dict[str, Any]] = []
     failures: list[dict[str, Any]] = []
-
-    def fetch_body_reference(
-        reference: Mapping[str, Any],
-    ) -> tuple[Mapping[str, Any], dict[str, Any] | None, dict[str, Any] | None]:
-        try:
-            response = transport.request(
-                "GET",
-                reference["source_url"],
-                headers=headers,
-                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                retry_on_rate_limit=True,
-                retry_on_transient=True,
-            )
-        except RequestFailure as exc:
-            failure = {
-                "kind": elsevier_asset_result_kind(reference.get("asset_type")),
-                "asset_type": reference["asset_type"],
-                "source_kind": reference["source_kind"],
-                "source_ref": reference["source_ref"],
-                "source_url": reference["source_url"],
-                "heading": _elsevier_asset_heading(reference),
-                "status": exc.status_code,
-                "reason": str(exc),
-                "section": elsevier_asset_result_section(reference.get("asset_type")),
-            }
-            if exc.error_category is not None:
-                failure["error_category"] = exc.error_category.value
-            return reference, None, failure
-        return reference, dict(response), None
 
     def download_body_references(
         references_to_download: Sequence[Mapping[str, Any]],
@@ -636,88 +606,38 @@ def download_elsevier_related_assets(
     ) -> dict[str, list[dict[str, Any]]]:
         if not references_to_download:
             return empty_asset_results()
-
-        resolved_body_results: list[
-            tuple[Mapping[str, Any], dict[str, Any] | None, dict[str, Any] | None]
-        ] = []
-        with ThreadPoolExecutor(
-            max_workers=min(max(1, concurrency), len(references_to_download))
-        ) as executor:
-            futures = [
-                executor.submit(fetch_body_reference, reference)
-                for reference in references_to_download
-            ]
-            for future in futures:
-                resolved_body_results.append(future.result())
-
-        body_downloads: list[dict[str, Any]] = []
-        body_failures: list[dict[str, Any]] = []
-        for reference, response, failure in resolved_body_results:
-            if failure is not None:
-                body_failures.append(failure)
-                continue
-            assert response is not None
-
-            response_body = response.get("body")
-            body_bytes = (
-                bytes(response_body)
-                if isinstance(response_body, (bytes, bytearray))
-                else b""
-            )
-            content_type = header_value(
-                response.get("headers"), "content-type"
-            ) or normalize_text(str(reference.get("content_type") or ""))
-            block_reason = FIGURE_KIND.response_block_reason(
-                content_type,
-                body_bytes,
-            )
-            if block_reason:
-                body_failures.append(
-                    {
-                        "kind": elsevier_asset_result_kind(reference.get("asset_type")),
-                        "asset_type": reference["asset_type"],
-                        "source_kind": reference["source_kind"],
-                        "source_ref": reference["source_ref"],
-                        "source_url": reference["source_url"],
-                        "heading": _elsevier_asset_heading(reference),
-                        "status": int(response.get("status_code") or 0) or None,
-                        "content_type": content_type or None,
-                        "reason": block_reason,
-                        "section": elsevier_asset_result_section(
-                            reference.get("asset_type")
-                        ),
-                    }
-                )
-                continue
-            asset_type = reference.get("asset_type")
-            output_path = build_asset_output_path(
-                asset_dir,
-                reference.get("filename_hint"),
-                content_type,
-                response["url"],
-                used_names,
-            )
-            body_downloads.append(
-                {
-                    "kind": elsevier_asset_result_kind(asset_type),
-                    "heading": _elsevier_asset_heading(reference),
-                    "caption": "",
-                    "asset_type": asset_type,
-                    "source_kind": reference["source_kind"],
-                    "source_ref": reference["source_ref"],
-                    "download_url": reference["source_url"],
-                    "source_url": response["url"],
-                    "content_type": content_type,
-                    "path": save_payload(output_path, body_bytes),
-                    "downloaded_bytes": len(body_bytes),
-                    "section": elsevier_asset_result_section(asset_type),
-                    "download_tier": "object_reference",
-                }
-            )
-        return {
-            "assets": body_downloads,
-            "asset_failures": body_failures,
-        }
+        normalized_assets = [
+            {
+                **dict(reference),
+                "kind": elsevier_asset_result_kind(reference.get("asset_type")),
+                "heading": _elsevier_asset_heading(reference),
+                "caption": "",
+                "section": elsevier_asset_result_section(reference.get("asset_type")),
+                "url": reference.get("source_url"),
+                "download_url": reference.get("source_url"),
+            }
+            for reference in references_to_download
+        ]
+        result = download_assets(
+            FIGURE_KIND,
+            transport,
+            article_id=doi,
+            assets=normalized_assets,
+            output_dir=output_dir,
+            user_agent=headers.get("User-Agent", ""),
+            asset_profile=asset_profile,
+            headers=headers,
+            candidate_builder=lambda _transport, *, asset, **_kwargs: [
+                normalize_text(str(asset.get("source_url") or ""))
+            ],
+            asset_download_concurrency=concurrency,
+            fetch_policy="direct_then_browser",
+            provider_name="elsevier",
+            runtime_context=context,
+        )
+        for asset in result.get("assets") or []:
+            asset["download_tier"] = "object_reference"
+        return result
 
     body_result = download_body_references(
         body_references, concurrency=active_asset_download_concurrency
@@ -776,6 +696,8 @@ def download_elsevier_related_assets(
         asset_profile=asset_profile,
         headers=headers,
         asset_download_concurrency=active_asset_download_concurrency,
+        provider_name="elsevier",
+        runtime_context=context,
     )
     downloads.extend(list(supplementary_result.get("assets") or []))
     failures.extend(list(supplementary_result.get("asset_failures") or []))
@@ -856,9 +778,7 @@ class ElsevierClient(ProviderClient):
                 url,
                 headers=self._base_headers("text/xml"),
                 query={"view": "FULL"},
-                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                retry_on_rate_limit=True,
-                retry_on_transient=True,
+                request_policy=provider_request_policy("elsevier", "xml_api"),
             )
         except RequestFailure as exc:
             raise map_request_failure(
@@ -924,12 +844,13 @@ class ElsevierClient(ProviderClient):
                 url,
                 headers=self._base_headers(PDF_MIME_TYPE),
                 query={"view": "FULL"},
-                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                retry_on_rate_limit=True,
-                retry_on_transient=True,
-                request_policy=HttpRequestPolicy(
-                    max_response_bytes=maximum_pdf_bytes,
-                    max_compressed_response_bytes=maximum_pdf_bytes,
+                request_policy=provider_request_policy(
+                    "elsevier",
+                    "pdf_api",
+                    base=HttpRequestPolicy(
+                        max_response_bytes=maximum_pdf_bytes,
+                        max_compressed_response_bytes=maximum_pdf_bytes,
+                    ),
                 ),
             )
         except RequestFailure as exc:
@@ -1061,8 +982,7 @@ class ElsevierClient(ProviderClient):
                 url,
                 headers=self._base_headers("application/json"),
                 query={"view": "META_ABS"},
-                retry_on_rate_limit=True,
-                retry_on_transient=True,
+                request_policy=provider_request_policy("elsevier", "metadata_api"),
             )
         except RequestFailure as exc:
             raise map_request_failure(exc) from exc

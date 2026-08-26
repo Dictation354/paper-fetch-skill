@@ -1332,6 +1332,43 @@ exit 73
         self.assertIn("npm ci --omit=dev --silent --prefix", script)
         self.assertIn("mathml_to_latex_cli.mjs", script)
 
+    def test_windows_embedded_runtime_is_manifest_pinned_and_verified_before_extract(
+        self,
+    ) -> None:
+        script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
+        manifest = json.loads(
+            (REPO_ROOT / "installer" / "manifest.json").read_text(encoding="utf-8")
+        )
+        runtime = manifest["embedded_runtimes"]["windows_cpython_x86_64"]
+
+        self.assertEqual(runtime["version"], "3.13.13")
+        self.assertEqual(
+            runtime["url"],
+            "https://www.python.org/ftp/python/3.13.13/python-3.13.13-embed-amd64.zip",
+        )
+        self.assertEqual(
+            runtime["sha256"],
+            "8766a8775746235e23cf5aee5027ab1060bb981d93110577adcf3508aa0cbd55",
+        )
+        self.assertNotIn("[string]$EmbeddedPythonVersion", script)
+        digest_check = script.index("CPython embeddable archive SHA-256 mismatch")
+        extraction = script.index("Expand-Archive -LiteralPath $archive")
+        self.assertLess(digest_check, extraction)
+        self.assertIn("expected_sha256 = $EmbeddedPythonSha256", script)
+        self.assertIn("actual_sha256 = $EmbeddedPythonActualSha256", script)
+
+    def test_offline_builders_emit_actual_target_dependency_evidence(self) -> None:
+        posix = BUILD_OFFLINE_PACKAGE.read_text(encoding="utf-8")
+        windows = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
+
+        for script in (posix, windows):
+            self.assertIn("generate_offline_evidence.py", script)
+            self.assertIn("dependency-manifest.json", script)
+            self.assertIn("paper-fetch-sbom.cdx.json", script)
+            self.assertIn("paper-fetch-evidence-", script)
+        self.assertIn('site-packages "$staging/runtime/site-packages"', posix)
+        self.assertIn('Join-Path $Staging "runtime/Lib/site-packages"', windows)
+
     def test_windows_manifest_validates_and_records_optional_tooling_revision(
         self,
     ) -> None:
@@ -1367,7 +1404,7 @@ exit 73
         script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
         wrapper_block = script[
             script.index("function Write-CmdWrappers") : script.index(
-                "function Add-SkillAgentManifest"
+                "function Write-DefaultOfflineEnv"
             )
         ]
         manifest_block = script[

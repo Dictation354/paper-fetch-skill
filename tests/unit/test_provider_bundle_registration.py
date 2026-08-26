@@ -11,15 +11,49 @@ import pytest
 
 import paper_fetch.providers as provider_entries
 from paper_fetch.extraction.html.provider_rules import PROVIDER_HTML_RULES
-from paper_fetch.provider_catalog import PROVIDER_CATALOG, SOURCE_PROVIDER_MAP
+from paper_fetch.provider_catalog import (
+    PROVIDER_CATALOG,
+    SOURCE_PROVIDER_MAP,
+    ProviderSpec,
+)
 from paper_fetch.providers._registry import (
     ProviderBundle,
     ProviderRenderPolicy,
     iter_provider_bundles,
     provider_bundle,
+    validate_provider_identity_conflicts,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _identity_spec(
+    name: str,
+    *,
+    domains: tuple[str, ...] = (),
+    domain_suffixes: tuple[str, ...] = (),
+    doi_prefixes: tuple[str, ...] = (),
+    aliases: tuple[str, ...] = (),
+    identity_priority: int | None = None,
+    identity_conflict_reason: str | None = None,
+) -> ProviderSpec:
+    return ProviderSpec(
+        name=name,
+        display_name=name,
+        official=True,
+        domains=domains,
+        domain_suffixes=domain_suffixes,
+        doi_prefixes=doi_prefixes,
+        publisher_aliases=aliases,
+        asset_default="none",
+        probe_capability="routing_signal",
+        provider_managed_abstract_only=False,
+        client_factory_path=f"tests:{name}",
+        status_order=900 + len(name),
+        html_capable=False,
+        identity_priority=identity_priority,
+        identity_conflict_reason=identity_conflict_reason,
+    )
 
 
 def test_each_provider_bundle_is_registered_once() -> None:
@@ -59,6 +93,57 @@ def test_provider_bundle_fields_are_typed_and_frozen() -> None:
 
     with pytest.raises(FrozenInstanceError):
         bundle.sources = ()  # type: ignore[misc]
+
+
+@pytest.mark.parametrize(
+    ("left", "right", "token"),
+    [
+        (
+            _identity_spec("left", aliases=("Example Publishing",)),
+            _identity_spec("right", aliases=("example-publishing",)),
+            "alias",
+        ),
+        (
+            _identity_spec("left", doi_prefixes=("10.1234/",)),
+            _identity_spec("right", doi_prefixes=("10.1234/journal",)),
+            "doi_prefix",
+        ),
+        (
+            _identity_spec("left", domains=("journal.example",)),
+            _identity_spec("right", domain_suffixes=("example",)),
+            "domain_exact_suffix",
+        ),
+        (
+            _identity_spec("left", domain_suffixes=("journals.example",)),
+            _identity_spec("right", domain_suffixes=("example",)),
+            "domain_suffix",
+        ),
+    ],
+)
+def test_registry_rejects_unresolved_identity_conflicts(
+    left: ProviderSpec,
+    right: ProviderSpec,
+    token: str,
+) -> None:
+    with pytest.raises(ValueError, match=token):
+        validate_provider_identity_conflicts(left, right)
+
+
+def test_registry_allows_conflict_only_with_distinct_priority_and_reasons() -> None:
+    left = _identity_spec(
+        "left",
+        domain_suffixes=("example",),
+        identity_priority=20,
+        identity_conflict_reason="Canonical parent registry owns this suffix.",
+    )
+    right = _identity_spec(
+        "right",
+        domains=("journal.example",),
+        identity_priority=10,
+        identity_conflict_reason="Legacy journal is lower-priority during migration.",
+    )
+
+    validate_provider_identity_conflicts(left, right)
 
 
 def test_provider_bundle_rejects_mutable_sequence_fields() -> None:

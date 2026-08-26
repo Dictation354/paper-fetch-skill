@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import base64
 import time
 from typing import Any
 from collections.abc import Callable, Mapping
@@ -17,24 +16,18 @@ from ....extraction.html.signals import (
     CLOUDFLARE_CHALLENGE_TITLE_TOKENS as _CLOUDFLARE_CHALLENGE_TITLE_TOKENS,
 )
 from ....quality.reason_codes import CLOUDFLARE_CHALLENGE
+from ....reason_codes import BROWSER_STREAM_UNAVAILABLE
 from ....runtime import RuntimeContext
-from ...browser_runtime.types import BrowserRuntimeConfig
 from ....utils import normalize_text
 from ...browser_runtime.types import BrowserFetchedHtml
 from .context import (
+    BrowserDocumentFetcherOptions,
     _BaseBrowserDocumentFetcher,
     _ThreadLocalSharedDocumentFetcher,
     _browser_response_headers,
     _browser_response_status,
 )
-from .diagnostics import (
-    _image_fetch_failure_reason,
-    _looks_like_cloudflare_challenge_title,
-)
-from .scripts import (
-    _ARTICLE_IMAGE_CANVAS_EXPORT_SCRIPT,
-    _LOADED_IMAGE_CANVAS_EXPORT_SCRIPT,
-)
+from .diagnostics import _looks_like_cloudflare_challenge_title
 
 _IMAGE_DOCUMENT_FETCH_TIMEOUT_MS = 15000
 _IMAGE_DOCUMENT_TOTAL_BUDGET_SECONDS = 30.0
@@ -61,16 +54,6 @@ class _ImageFetchBudget:
 
     def loop_deadline(self, max_seconds: float) -> float:
         return time.monotonic() + min(max(0.0, max_seconds), self.remaining_seconds())
-
-
-def _decode_base64_bytes(payload: str | None) -> bytes | None:
-    normalized = normalize_text(payload)
-    if not normalized:
-        return None
-    try:
-        return base64.b64decode(normalized, validate=True)
-    except Exception:
-        return None
 
 
 def _looks_like_image_response_payload(
@@ -107,25 +90,35 @@ def _payload_from_browser_image_payload(
 ) -> dict[str, Any] | None:
     if not isinstance(payload, Mapping):
         return None
-    body = _decode_base64_bytes(str(payload.get("bodyB64") or ""))
+    if payload.get("streamOnly") is not True:
+        return None
+    if "bodyB64" in payload or "body" in payload:
+        return None
     content_type = normalize_text(str(payload.get("contentType") or "")) or "image/png"
     final_url = normalize_text(str(payload.get("url") or "")) or fallback_url
     if _looks_like_placeholder_image_url(final_url):
         return None
-    if body is None or not _looks_like_image_response_payload(
-        content_type, body, final_url
-    ):
+    if not final_url.lower().startswith(("http://", "https://")):
+        return None
+    if not content_type.lower().startswith("image/"):
         return None
     try:
         width = int(payload.get("width") or 0)
         height = int(payload.get("height") or 0)
     except (TypeError, ValueError):
         width = height = 0
+    try:
+        status = int(payload.get("status") or 200)
+    except (TypeError, ValueError):
+        return None
+    if not 200 <= status < 400:
+        return None
     return {
-        "status_code": int(payload.get("status") or 200),
+        "status_code": status,
         "headers": {"content-type": content_type},
-        "body": body,
         "url": final_url,
+        "_paper_fetch_browser_stream_url": final_url,
+        "_paper_fetch_browser_cookies": [],
         "dimensions": {"width": width, "height": height},
     }
 
@@ -160,7 +153,7 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
         cdp_endpoint: str | None = None,
         profile_dir: Any = None,
         user_data_dir: Any = None,
-        browser_config: BrowserRuntimeConfig | None = None,
+        browser_options: BrowserDocumentFetcherOptions | None = None,
     ) -> None:
         super().__init__(
             browser_context_seed_getter=browser_context_seed_getter,
@@ -173,7 +166,7 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
             cdp_endpoint=cdp_endpoint,
             profile_dir=profile_dir,
             user_data_dir=user_data_dir,
-            browser_config=browser_config,
+            browser_options=browser_options,
         )
         self._min_width = min_width
         self._min_height = min_height
@@ -184,6 +177,8 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
     ) -> dict[str, Any] | None:
         normalized_url = normalize_text(image_url)
         if not normalized_url:
+            return None
+        if not self._browser_target_is_allowed(normalized_url):
             return None
         page = self._ensure_page(normalized_url)
         if page is None:
@@ -274,41 +269,7 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
             )
             if warmed_article_payload is not None:
                 return warmed_article_payload
-
-            fetched_payload = self._payload_from_page_fetch_url(page, image_url)
-            if fetched_payload is not None:
-                return fetched_payload
-
-            request_payload = self._payload_from_context_request(image_url)
-            if request_payload is not None:
-                return request_payload
-
-            shared_session = self._shared_page_session
-            if shared_session is not None and shared_session.preserve_seed_page:
-                return None
-
-            navigation_response = None
-            try:
-                timeout_ms = budget.timeout_ms(_IMAGE_DOCUMENT_NAVIGATION_TIMEOUT_MS)
-                if timeout_ms <= 0:
-                    return None
-                navigation_response = page.goto(
-                    image_url, wait_until="domcontentloaded", timeout=timeout_ms
-                )
-            except Exception:
-                navigation_response = None
-
-            direct_payload = self._payload_from_navigation_response(
-                navigation_response, fallback_url=image_url
-            )
-            if direct_payload is not None:
-                return direct_payload
-
-            image_info = self._wait_for_primary_image(page, image_url, budget=budget)
-            if image_info is None:
-                return None
-
-            return self._payload_from_page_fetch(page, image_info, budget=budget)
+            return None
         finally:
             self._active_image_fetch_budget = previous_budget
 
@@ -319,44 +280,22 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
         *,
         budget: _ImageFetchBudget | None = None,
     ) -> dict[str, Any] | None:
+        del page
         budget = budget or self._active_budget()
         image_src = normalize_text(str(image_url or ""))
         if not image_src:
             return None
-        deadline = budget.loop_deadline(15.0)
-        while time.monotonic() < deadline:
-            try:
-                rendered = page.evaluate(
-                    _ARTICLE_IMAGE_CANVAS_EXPORT_SCRIPT,
-                    [image_src, self._min_width, self._min_height],
-                )
-            except Exception:
-                return None
-            if not isinstance(rendered, Mapping):
-                return None
-            if not rendered.get("found"):
-                return None
-            if rendered.get("ok"):
-                return _payload_from_browser_image_payload(
-                    rendered,
-                    fallback_url=image_src,
-                )
-            reason = normalize_text(str(rendered.get("reason") or ""))
-            if reason != "target_image_not_loaded":
-                return None
-            fetched_payload = self._payload_from_page_fetch_url(
-                page,
-                image_src,
-                dimensions=rendered,
-                budget=budget,
-            )
-            if fetched_payload is not None:
-                return fetched_payload
-            try:
-                page.wait_for_timeout(min(500, budget.timeout_ms(500)))
-            except Exception:
-                return None
-        return None
+        if self._network_guard is None and not self._browser_target_is_allowed(
+            image_src
+        ):
+            return None
+        if budget.exhausted():
+            return None
+        return self._stream_descriptor(
+            image_src,
+            headers={"content-type": "image/*"},
+            previous_url=image_src,
+        )
 
     def _payload_from_context_request(
         self, image_url: str, *, budget: _ImageFetchBudget | None = None
@@ -364,34 +303,16 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
         budget = budget or self._active_budget()
         if self._context is None:
             return None
-        timeout_ms = budget.timeout_ms(_IMAGE_DOCUMENT_NAVIGATION_TIMEOUT_MS)
-        if timeout_ms <= 0:
+        if self._network_guard is None and not self._browser_target_is_allowed(
+            image_url
+        ):
             return None
-        try:
-            referer = normalize_text(
-                str(getattr(self._page, "url", "") or "")
-            ) or normalize_text(
-                str(self._current_seed().get("browser_final_url") or "")
-            )
-            request_headers = {
-                "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
-            }
-            if referer:
-                request_headers["Referer"] = referer
-            response = self._context.request.get(
-                image_url,
-                headers=request_headers,
-                timeout=timeout_ms,
-            )
-        except Exception as exc:
-            self._record_failure(
-                image_url,
-                reason=_image_fetch_failure_reason(error=str(exc)),
-                canvas_error=normalize_text(str(exc)),
-            )
+        if budget.timeout_ms(_IMAGE_DOCUMENT_NAVIGATION_TIMEOUT_MS) <= 0:
             return None
-        return self._payload_from_response_body(
-            response, fallback_url=image_url, attempted_url=image_url
+        return self._stream_descriptor(
+            image_url,
+            headers={"content-type": "image/*"},
+            previous_url=image_url,
         )
 
     def _payload_from_navigation_response(
@@ -409,20 +330,14 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
         headers = _browser_response_headers(response)
         content_type = headers.get("content-type", "")
         final_url = normalize_text(getattr(response, "url", "") or "") or fallback_url
-        status = _browser_response_status(response)
-        try:
-            body = response.body()
-        except Exception:
-            body = b""
-        if not isinstance(body, (bytes, bytearray)) or not body:
-            self._record_failure(
-                attempted_url,
-                status=status,
-                content_type=content_type,
-                final_url=final_url,
-                reason="empty_response_body",
-            )
+        if not self._validate_browser_url(
+            final_url,
+            previous_url=attempted_url,
+            resolve_dns=True,
+        ):
+            self._record_failure(attempted_url, reason="unsafe_browser_final_url")
             return None
+        status = _browser_response_status(response)
         if _looks_like_placeholder_image_url(final_url):
             self._record_failure(
                 attempted_url,
@@ -432,22 +347,12 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
                 reason="placeholder_image_response",
             )
             return None
-        if not _looks_like_image_response_payload(content_type, body, final_url):
-            self._record_response_failure(
-                attempted_url,
-                status=status,
-                content_type=content_type,
-                final_url=final_url,
-                body=body,
-            )
-            return None
-        payload: dict[str, Any] = {
-            "status_code": int(getattr(response, "status", 200) or 200),
-            "headers": headers,
-            "body": bytes(body),
-            "url": final_url,
-        }
-        return payload
+        return self._stream_descriptor(
+            final_url,
+            status=int(status or 200),
+            headers=headers,
+            previous_url=attempted_url,
+        )
 
     def _wait_for_primary_image(
         self,
@@ -550,6 +455,12 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
         image_src = normalize_text(str(image_url or ""))
         if not image_src:
             return None
+        if self._network_guard is None and not self._browser_target_is_allowed(
+            image_src
+        ):
+            return None
+        if not self._validate_browser_url(image_src, resolve_dns=True):
+            return None
         budget = budget or self._active_budget()
         timeout_ms = (
             budget.timeout_ms(_IMAGE_DOCUMENT_FETCH_TIMEOUT_MS)
@@ -558,127 +469,16 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
         )
         if timeout_ms <= 0:
             return None
-        try:
-            fetched = page.evaluate(
-                """
-                async ([imageSrc, timeoutMs]) => {
-                  const bytesToBase64 = (bytes) => {
-                    let binary = '';
-                    const chunkSize = 0x8000;
-                    for (let index = 0; index < bytes.length; index += chunkSize) {
-                      const chunk = bytes.subarray(index, index + chunkSize);
-                      binary += String.fromCharCode(...chunk);
-                    }
-                    return btoa(binary);
-                  };
-                  const controller = new AbortController();
-                  const timer = setTimeout(() => controller.abort(), timeoutMs);
-                  const titleFromHtml = (text) => {
-                    const match = String(text || '').match(/<title\\b[^>]*>([\\s\\S]*?)<\\/title>/i);
-                    return match ? match[1].replace(/<[^>]+>/g, ' ').trim() : '';
-                  };
-                  try {
-                    const response = await fetch(imageSrc, {
-                      credentials: 'include',
-                      cache: 'no-store',
-                      signal: controller.signal,
-                    });
-                    const contentType = response.headers.get('content-type') || '';
-                    const normalizedContentType = contentType.split(';', 1)[0].trim().toLowerCase();
-                    if (
-                      normalizedContentType
-                      && !normalizedContentType.startsWith('image/')
-                      && normalizedContentType !== 'application/octet-stream'
-                    ) {
-                      let bodySnippet = '';
-                      try {
-                        bodySnippet = (await response.clone().text()).slice(0, 500);
-                      } catch (error) {}
-                      return {
-                        ok: response.ok,
-                        status: response.status,
-                        url: response.url || imageSrc,
-                        contentType,
-                        nonImage: true,
-                        title: titleFromHtml(bodySnippet) || document.title || '',
-                        bodySnippet,
-                      };
-                    }
-                    const buffer = await response.arrayBuffer();
-                    const bytes = new Uint8Array(buffer);
-                    return {
-                      ok: response.ok,
-                      status: response.status,
-                      url: response.url || imageSrc,
-                      contentType,
-                      bodyB64: bytesToBase64(bytes),
-                    };
-                  } catch (error) {
-                    return {
-                      ok: false,
-                      error: String((error && (error.name || error.message)) || error || ''),
-                      timedOut: error && error.name === 'AbortError',
-                    };
-                  } finally {
-                    clearTimeout(timer);
-                  }
-                }
-                """,
-                [image_src, timeout_ms],
-            )
-        except Exception:
-            return None
-        if not isinstance(fetched, Mapping):
-            return None
-        body = _decode_base64_bytes(str(fetched.get("bodyB64") or ""))
-        final_url = normalize_text(str(fetched.get("url") or "")) or image_src
-        content_type = normalize_text(str(fetched.get("contentType") or ""))
-        if _looks_like_placeholder_image_url(final_url):
-            self._record_failure(
-                image_src,
-                status=int(fetched.get("status") or 0) or None,
-                content_type=content_type,
-                final_url=final_url,
-                reason="placeholder_image_response",
-            )
-            return None
-        if body is None or not _looks_like_image_response_payload(
-            content_type, body, final_url
-        ):
-            fallback_body = body
-            if fallback_body is None:
-                fallback_body = str(fetched.get("bodySnippet") or "").encode(
-                    "utf-8", errors="replace"
-                )
-            failure_reason = (
-                "non_image_response"
-                if fetched.get("nonImage")
-                else _image_fetch_failure_reason(
-                    error=str(fetched.get("error") or ""),
-                    timed_out=bool(fetched.get("timedOut")),
-                )
-            )
-            self._record_response_failure(
-                image_src,
-                status=int(fetched.get("status") or 0) or None,
-                content_type=content_type,
-                final_url=final_url,
-                body=fallback_body,
-                title=normalize_text(str(fetched.get("title") or "")),
-                reason=failure_reason,
-                canvas_error=normalize_text(str(fetched.get("error") or "")),
-            )
-            return None
-        return {
-            "status_code": int(fetched.get("status") or 200),
-            "headers": {"content-type": content_type},
-            "body": body,
-            "url": final_url,
-            "dimensions": {
+        del page
+        return self._stream_descriptor(
+            image_src,
+            headers={"content-type": "image/*"},
+            dimensions={
                 "width": int((dimensions or {}).get("width") or 0),
                 "height": int((dimensions or {}).get("height") or 0),
             },
-        }
+            previous_url=image_src,
+        )
 
     def _payload_from_page_fetch(
         self,
@@ -701,63 +501,25 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
     def _payload_from_loaded_image(
         self, page: Any, image_info: Mapping[str, Any]
     ) -> dict[str, Any] | None:
+        del page
         image_src = normalize_text(str(image_info.get("src") or ""))
         if not image_src:
             return None
-        try:
-            rendered = page.evaluate(
-                _LOADED_IMAGE_CANVAS_EXPORT_SCRIPT,
-                [image_src, self._min_width, self._min_height],
-            )
-        except Exception:
-            return None
-        if not isinstance(rendered, Mapping):
-            return None
-        body = _decode_base64_bytes(str(rendered.get("bodyB64") or ""))
-        final_url = normalize_text(str(rendered.get("url") or "")) or image_src
-        content_type = (
-            normalize_text(str(rendered.get("contentType") or "")) or "image/png"
-        )
-        if _looks_like_placeholder_image_url(final_url):
+        if not image_src.lower().startswith(("http://", "https://")):
             self._record_failure(
                 image_src,
-                final_url=final_url,
-                title_snippet=normalize_text(str(rendered.get("title") or ""))[:160],
-                content_type=content_type,
-                reason="placeholder_image_response",
-                canvas_error=normalize_text(str(rendered.get("error") or "")),
+                reason=BROWSER_STREAM_UNAVAILABLE,
             )
             return None
-        if (
-            not rendered.get("ok")
-            or body is None
-            or not _looks_like_image_response_payload(content_type, body, final_url)
-        ):
-            previous = self.failure_for(image_src) or {}
-            failure_values = {
-                **previous,
-                "final_url": final_url,
-                "title_snippet": normalize_text(str(rendered.get("title") or ""))[:160],
-                "content_type": content_type,
-                "reason": normalize_text(str(rendered.get("reason") or ""))
-                or "canvas_serialization_failed",
-                "canvas_error": normalize_text(str(rendered.get("error") or "")),
-            }
-            self._record_failure(
-                image_src,
-                **failure_values,
-            )
-            return None
-        return {
-            "status_code": int(rendered.get("status") or 200),
-            "headers": {"content-type": content_type},
-            "body": body,
-            "url": final_url,
-            "dimensions": {
-                "width": int(rendered.get("width") or image_info.get("width") or 0),
-                "height": int(rendered.get("height") or image_info.get("height") or 0),
+        return self._stream_descriptor(
+            image_src,
+            headers={"content-type": "image/*"},
+            dimensions={
+                "width": int(image_info.get("width") or 0),
+                "height": int(image_info.get("height") or 0),
             },
-        }
+            previous_url=image_src,
+        )
 
 
 class _ThreadLocalSharedBrowserImageDocumentFetcher(_ThreadLocalSharedDocumentFetcher):
@@ -776,7 +538,7 @@ class _ThreadLocalSharedBrowserImageDocumentFetcher(_ThreadLocalSharedDocumentFe
         cdp_endpoint: str | None = None,
         profile_dir: Any = None,
         user_data_dir: Any = None,
-        browser_config: BrowserRuntimeConfig | None = None,
+        browser_options: BrowserDocumentFetcherOptions | None = None,
     ) -> None:
         requires_caller_thread = (
             runtime_context is not None and use_runtime_shared_browser
@@ -798,7 +560,7 @@ class _ThreadLocalSharedBrowserImageDocumentFetcher(_ThreadLocalSharedDocumentFe
                 cdp_endpoint=cdp_endpoint,
                 profile_dir=profile_dir,
                 user_data_dir=user_data_dir,
-                browser_config=browser_config,
+                browser_options=browser_options,
             ),
         )
 
@@ -817,7 +579,7 @@ def _build_shared_browser_image_fetcher(
     cdp_endpoint: str | None = None,
     profile_dir: Any = None,
     user_data_dir: Any = None,
-    browser_config: BrowserRuntimeConfig | None = None,
+    browser_options: BrowserDocumentFetcherOptions | None = None,
 ) -> _ThreadLocalSharedBrowserImageDocumentFetcher:
     return _ThreadLocalSharedBrowserImageDocumentFetcher(
         browser_context_seed_getter=browser_context_seed_getter,
@@ -832,7 +594,7 @@ def _build_shared_browser_image_fetcher(
         cdp_endpoint=cdp_endpoint,
         profile_dir=profile_dir,
         user_data_dir=user_data_dir,
-        browser_config=browser_config,
+        browser_options=browser_options,
     )
 
 

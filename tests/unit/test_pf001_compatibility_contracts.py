@@ -377,7 +377,26 @@ class Pf001CompatibilityContractTests(unittest.TestCase):
         assert abort_reason is not None
         self.assertEqual(abort_reason["status"], "rate_limited")
         self.assertCountEqual(seen_queries, ["inflight", "rate-limited"])
-        self.assertEqual(len(results), 2)
+        self.assertEqual(len(results), 3)
+        not_scheduled = results[2]
+        self.assertEqual(not_scheduled["index"], 3)
+        self.assertEqual(not_scheduled["query"], "must-not-start")
+        self.assertEqual(not_scheduled["status"], "not_scheduled")
+        self.assertEqual(not_scheduled["provider_lane"], "generic")
+        self.assertIsInstance(not_scheduled["error"], dict)
+        self.assertIn(
+            "provider/resource lane was rate limited",
+            not_scheduled["error"]["reason"],
+        )
+        self.assertEqual(
+            mcp_batch._batch_progress_payload(results),
+            {
+                "total": 3,
+                "terminal": 3,
+                "completed": 2,
+                "not_scheduled": 1,
+            },
+        )
         self.assertNotIn(
             "must-not-start",
             seen_queries,

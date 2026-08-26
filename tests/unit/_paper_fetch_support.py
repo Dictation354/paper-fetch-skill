@@ -348,12 +348,12 @@ class RecordingTransport(HttpTransport):
         *,
         headers=None,
         query=None,
-        timeout=DEFAULT_TIMEOUT_SECONDS,
-        retry_on_rate_limit=False,
-        rate_limit_retries=1,
-        max_rate_limit_wait_seconds=5,
-        retry_on_transient=False,
-        transient_retries=2,
+        timeout=None,
+        retry_on_rate_limit=None,
+        rate_limit_retries=None,
+        max_rate_limit_wait_seconds=None,
+        retry_on_transient=None,
+        transient_retries=None,
         transient_backoff_base_seconds=0.5,
         follow_redirects=True,
         max_redirects=5,
@@ -370,18 +370,52 @@ class RecordingTransport(HttpTransport):
             max_response_bytes=max_response_bytes,
             max_compressed_response_bytes=max_compressed_response_bytes,
         )
+        effective_timeout = int(
+            timeout or policy.timeout_seconds or DEFAULT_TIMEOUT_SECONDS
+        )
+        effective_retry_on_rate_limit = (
+            bool(policy.retry_on_rate_limit)
+            if retry_on_rate_limit is None
+            else bool(retry_on_rate_limit)
+        )
+        effective_rate_limit_retries = int(
+            rate_limit_retries
+            if rate_limit_retries is not None
+            else policy.rate_limit_retries
+            if policy.rate_limit_retries is not None
+            else 1
+        )
+        effective_rate_limit_wait = int(
+            max_rate_limit_wait_seconds
+            if max_rate_limit_wait_seconds is not None
+            else policy.max_rate_limit_wait_seconds
+            if policy.max_rate_limit_wait_seconds is not None
+            else 5
+        )
+        effective_retry_on_transient = (
+            bool(policy.retry_on_transient)
+            if retry_on_transient is None
+            else bool(retry_on_transient)
+        )
+        effective_transient_retries = int(
+            transient_retries
+            if transient_retries is not None
+            else policy.transient_retries
+            if policy.transient_retries is not None
+            else 2
+        )
         self.calls.append(
             {
                 "method": method,
                 "url": url,
                 "headers": dict(headers or {}),
                 "query": dict(query or {}),
-                "timeout": timeout,
-                "retry_on_rate_limit": retry_on_rate_limit,
-                "rate_limit_retries": rate_limit_retries,
-                "max_rate_limit_wait_seconds": max_rate_limit_wait_seconds,
-                "retry_on_transient": retry_on_transient,
-                "transient_retries": transient_retries,
+                "timeout": effective_timeout,
+                "retry_on_rate_limit": effective_retry_on_rate_limit,
+                "rate_limit_retries": effective_rate_limit_retries,
+                "max_rate_limit_wait_seconds": effective_rate_limit_wait,
+                "retry_on_transient": effective_retry_on_transient,
+                "transient_retries": effective_transient_retries,
                 "transient_backoff_base_seconds": (
                     policy.transient_backoff_base_seconds
                 ),

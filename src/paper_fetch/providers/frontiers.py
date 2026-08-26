@@ -685,6 +685,7 @@ class FrontiersClient(ProviderClient):
         try:
             pdf_result = PdfFallbackStrategy(
                 transport=self.transport,
+                provider_name="frontiers",
                 headers=default_pdf_headers(self.user_agent, referer=route.landing_url),
                 timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 asset_profile=effective_asset_profile,
@@ -904,6 +905,8 @@ class FrontiersClient(ProviderClient):
                     candidate_builder=_frontiers_figure_candidates,
                     asset_download_concurrency=concurrency,
                     fetch_policy="direct_then_browser",
+                    provider_name="frontiers",
+                    runtime_context=context,
                 )
             )
         if asset_profile == "all" and supplementary_assets:
@@ -926,6 +929,8 @@ class FrontiersClient(ProviderClient):
                         headers=self._asset_headers(),
                         asset_download_concurrency=concurrency,
                         fetch_policy="direct_then_browser",
+                        provider_name="frontiers",
+                        runtime_context=context,
                     )
                 )
             unresolved_failures = [

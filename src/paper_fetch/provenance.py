@@ -21,8 +21,10 @@ from packaging.version import InvalidVersion, Version
 from .config import DEFAULT_USER_AGENT
 from .skill_integrity import (
     SkillManifestError,
+    build_skill_bundle_manifest,
     read_offline_manifest,
     verify_skill_bundle,
+    verify_skill_directory,
 )
 
 
@@ -588,15 +590,73 @@ def _host_skill_paths(
     context: ProvenanceContext,
     skill_name: str,
 ) -> tuple[tuple[str, Path], ...]:
+    codex_home = Path(context.env.get("CODEX_HOME") or context.home / ".codex")
     antigravity_home = Path(
         context.env.get("ANTIGRAVITY_HOME")
         or context.home / ".gemini" / "antigravity-cli"
     )
     return (
-        ("codex", context.home / ".codex" / "skills" / skill_name),
+        ("codex", codex_home / "skills" / skill_name),
         ("claude", context.home / ".claude" / "skills" / skill_name),
         ("antigravity", antigravity_home / "skills" / skill_name),
     )
+
+
+def _source_skill_records(
+    *,
+    context: ProvenanceContext,
+    manifest_record: Mapping[str, Any],
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    if context.source_root is None:
+        return (
+            {
+                "status": "not_applicable",
+                "reason_code": "skill_manifest_not_applicable",
+                "manifest_path": manifest_record.get("path"),
+            },
+            [],
+        )
+    source_skill = context.source_root / "skills" / SKILL_NAME
+    if not source_skill.is_dir():
+        return (
+            {
+                "status": "not_applicable",
+                "reason_code": "source_skill_not_found",
+                "manifest_path": None,
+                "skill_root": str(source_skill),
+            },
+            [],
+        )
+    try:
+        bundle = build_skill_bundle_manifest(
+            source_skill,
+            name=SKILL_NAME,
+            root=f"skills/{SKILL_NAME}",
+        )
+        bundled = verify_skill_directory(bundle, skill_dir=source_skill)
+    except SkillManifestError as error:
+        return (
+            {
+                "status": "missing",
+                "reason_code": "source_skill_missing_or_invalid",
+                "manifest_path": None,
+                "skill_root": str(source_skill),
+                "error_type": error.__class__.__name__,
+            },
+            [],
+        )
+
+    project_skill = context.source_root / ".codex" / "skills" / SKILL_NAME
+    codex_home = Path(context.env.get("CODEX_HOME") or context.home / ".codex")
+    user_skill = codex_home / "skills" / SKILL_NAME
+    if project_skill.exists() or project_skill.is_symlink():
+        active_skill = project_skill
+        scope = "project"
+    else:
+        active_skill = user_skill
+        scope = "user"
+    active = verify_skill_directory(bundle, skill_dir=active_skill)
+    return bundled, [{"host": "codex", "scope": scope, **active}]
 
 
 def _skill_records(
@@ -607,13 +667,9 @@ def _skill_records(
     context: ProvenanceContext,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     if install_root is None or manifest is None:
-        return (
-            {
-                "status": "not_applicable",
-                "reason_code": "skill_manifest_not_applicable",
-                "manifest_path": manifest_record.get("path"),
-            },
-            [],
+        return _source_skill_records(
+            context=context,
+            manifest_record=manifest_record,
         )
     manifest_path = Path(str(manifest_record["path"]))
     try:
@@ -752,12 +808,36 @@ def install_provenance_payload(
             }
         )
 
+    if bundled_skill.get("status") not in {"ready", "not_applicable"}:
+        issues.append(
+            {
+                "severity": "drift",
+                "reason_code": str(
+                    bundled_skill.get("reason_code") or "skill_bundle_drift"
+                ),
+                "component": "bundled_skill",
+                "path": _component_path(bundled_skill),
+            }
+        )
+    for host_record in host_skills:
+        if host_record.get("status") != "ready":
+            issues.append(
+                {
+                    "severity": "drift",
+                    "reason_code": str(
+                        host_record.get("reason_code") or "host_skill_drift"
+                    ),
+                    "component": f"host_skill.{host_record.get('host')}",
+                    "path": host_record.get("skill_root"),
+                    "scope": host_record.get("scope"),
+                }
+            )
+
     if manifest is not None:
         assert resolved_root is not None
         for component, record in (
             ("installed_runtime", installed_runtime),
             ("entrypoints", entrypoints),
-            ("bundled_skill", bundled_skill),
         ):
             if record.get("status") != "ready":
                 issues.append(
@@ -768,18 +848,6 @@ def install_provenance_payload(
                         ),
                         "component": component,
                         "path": _component_path(record),
-                    }
-                )
-        for host_record in host_skills:
-            if host_record.get("status") != "ready":
-                issues.append(
-                    {
-                        "severity": "drift",
-                        "reason_code": str(
-                            host_record.get("reason_code") or "host_skill_drift"
-                        ),
-                        "component": f"host_skill.{host_record.get('host')}",
-                        "path": host_record.get("skill_root"),
                     }
                 )
         cli_path = active_cli.get("path")
@@ -812,8 +880,12 @@ def install_provenance_payload(
         status = "drift"
         reason_code = "install_provenance_drift"
     elif manifest is None:
-        status = "not_applicable"
-        reason_code = "source_development_without_offline_manifest"
+        if bundled_skill.get("status") == "ready":
+            status = "ready"
+            reason_code = "source_skill_verified_without_offline_manifest"
+        else:
+            status = "not_applicable"
+            reason_code = "source_development_without_offline_manifest"
     else:
         status = "ready"
         reason_code = "install_provenance_verified"

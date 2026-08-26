@@ -124,7 +124,7 @@ MANIFEST_PROVIDER_CONFLICT / UNSUITABLE_DOI_SAMPLE。
 Coordinator 收回后必须跑：
 
 ```bash
-PYTHONPATH=src python3 -m pytest \
+PYTHONPATH=src uv run python -m pytest \
   tests/unit/test_provider_manifest_schema.py \
   tests/unit/test_known_providers_sync.py -q
 python3 scripts/onboard_from_manifests.py advance --provider <NAME> --task discover-manifest
@@ -205,7 +205,7 @@ brief 中 failure_recovery.max_retries = 3。
 Coordinator 收回后必须跑（按 brief 中 acceptance 段定义）：
 
 ```bash
-PYTHONPATH=src python3 -m pytest \
+PYTHONPATH=src uv run python -m pytest \
   tests/unit/test_<NAME>_provider.py \
   tests/unit/test_provider_markdown_review_contract.py \
   tests/unit/test_provider_bundle_completeness.py \

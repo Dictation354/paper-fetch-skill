@@ -40,6 +40,7 @@ class RequestFailure(Exception):
         url: str | None = None,
         retry_after_seconds: int | None = None,
         error_category: RequestErrorCategory | str | None = None,
+        reason_code: str | None = None,
     ) -> None:
         super().__init__(message)
         self.status_code = status_code
@@ -48,6 +49,9 @@ class RequestFailure(Exception):
         self.url = url
         self.retry_after_seconds = retry_after_seconds
         self.error_category = _normalize_request_error_category(error_category)
+        # Additive detail for callers that expose machine-readable diagnostics.
+        # General HTTP consumers can continue to use ``error_category``.
+        self.reason_code = str(reason_code or "").strip()
 
 
 def _normalize_request_error_category(

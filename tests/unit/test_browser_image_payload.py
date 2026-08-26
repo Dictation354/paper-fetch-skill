@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-import base64
 from typing import Any
 from collections.abc import Callable
 
 from paper_fetch.providers import _playwright_browser
 
 
-PNG_BYTES = base64.b64decode(
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII="
-)
+PNG_BYTES = b"\x89PNG\r\n\x1a\nunit"
 
 
 class _FakeResponse:
@@ -25,12 +22,14 @@ class _FakeResponse:
         self.status = status
         self.headers = dict(headers or {})
         self._body = body
+        self.body_calls = 0
 
     def all_headers(self) -> dict[str, str]:
         return dict(self.headers)
 
     def body(self) -> bytes:
-        return self._body
+        self.body_calls += 1
+        raise AssertionError("browser response bodies must not be materialized")
 
 
 class _FakeExpectedResponse:
@@ -45,12 +44,18 @@ class _FakeExpectedResponse:
 
 
 class _FakeImageElement:
-    def __init__(self, *, width: int = 1, height: int = 1) -> None:
+    def __init__(self, *, width: int = 1, height: int = 1, url: str = "") -> None:
         self.width = width
         self.height = height
+        self.url = url
 
     def evaluate(self, _script: str) -> dict[str, object]:
-        return {"complete": True, "width": self.width, "height": self.height}
+        return {
+            "complete": True,
+            "width": self.width,
+            "height": self.height,
+            "url": self.url,
+        }
 
 
 class _FakePage:
@@ -69,6 +74,7 @@ class _FakePage:
         self._image_element = image_element
         self._canvas_result = canvas_result
         self.expect_response_timeout: int | None = None
+        self.evaluate_calls = 0
 
     def expect_response(
         self,
@@ -85,6 +91,7 @@ class _FakePage:
         return self._image_element
 
     def evaluate(self, _script: str, _args: list[object]) -> dict[str, object] | None:
+        self.evaluate_calls += 1
         return self._canvas_result
 
     def content(self) -> str:
@@ -112,9 +119,12 @@ def test_capture_image_payload_returns_png_for_image_response() -> None:
 
     assert payload is not None
     assert payload["contentType"] == "image/png"
-    assert base64.b64decode(payload["bodyB64"]) == PNG_BYTES
+    assert payload["streamOnly"] is True
+    assert "bodyB64" not in payload
     assert payload["url"] == image_url
     assert payload["status"] == 200
+    assert page._response.body_calls == 0
+    assert page.evaluate_calls == 0
 
 
 def test_capture_image_payload_uses_canvas_when_response_is_challenge() -> None:
@@ -133,8 +143,7 @@ def test_capture_image_payload_uses_canvas_when_response_is_challenge() -> None:
         canvas_result={
             "ok": True,
             "status": 200,
-            "dataURL": "data:image/png;base64,"
-            + base64.b64encode(PNG_BYTES).decode("ascii"),
+            "dataURL": "data:image/png;base64,unused",
             "width": 320,
             "height": 240,
         },
@@ -146,12 +155,10 @@ def test_capture_image_payload_uses_canvas_when_response_is_challenge() -> None:
         final_url=final_url,
     )
 
-    assert payload is not None
-    assert payload["contentType"] == "image/png"
-    assert base64.b64decode(payload["bodyB64"]) == PNG_BYTES
-    assert payload["url"] == final_url
-    assert payload["width"] == 320
-    assert payload["height"] == 240
+    assert payload is None
+    assert page._paper_fetch_image_payload_failure["reason"]
+    assert page._response.body_calls == 0
+    assert page.evaluate_calls == 0
 
 
 def test_capture_image_payload_preserves_svg() -> None:
@@ -173,7 +180,9 @@ def test_capture_image_payload_preserves_svg() -> None:
 
     assert payload is not None
     assert payload["contentType"] == "image/svg+xml"
-    assert base64.b64decode(payload["bodyB64"]) == svg_body
+    assert payload["streamOnly"] is True
+    assert "bodyB64" not in payload
+    assert page._response.body_calls == 0
 
 
 def test_capture_image_payload_rejects_html_only() -> None:

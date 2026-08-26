@@ -39,14 +39,14 @@ Worker 和 coordinator 必须满足下列机器可判约束。
 - Provider-local pytest listed in the task brief must pass.
 - `python3 scripts/onboard_from_manifests.py check-cleaning-proposal --provider <provider>` must pass.
 - `python3 scripts/propose_cleaning_chain.py --provider <provider> --check-contract` must pass; warning-only sentinel/cross-route findings are allowed, while missing include, truly vacuous guard, or stale digest is `MARKDOWN_CONTRACT_DRIFT`.
-- `PYTHONPATH=src python3 -m pytest tests/unit/test_provider_markdown_review_contract.py -q` must pass.
-- `PYTHONPATH=src python3 -m pytest tests/unit/test_provider_route_contract.py -q` must pass.
+- `PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_markdown_review_contract.py -q` must pass.
+- `PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_route_contract.py -q` must pass.
 - `onboarding/access-reviews/<provider>.yml` and `onboarding/reviews/<provider>.yml` must pass their schemas.
 - `python3 scripts/validate_extraction_rules.py` must pass before merge-ready.
-- `PYTHONPATH=src python3 -m pytest tests/unit/test_manifest_bundle_sync.py -q` must pass before merge-ready.
-- `PYTHONPATH=src python3 -m pytest tests/unit/test_provider_bundle_completeness.py tests/unit/test_provider_owner_reuse.py -q` must pass before merge-ready.
-- `PYTHONPATH=src python3 -m pytest tests/unit/test_golden_corpus_adapters.py tests/unit/test_provider_benchmark_samples.py tests/devtools/test_golden_criteria_live.py -q` must pass before merge-ready.
-- `PYTHONPATH=src python3 -m pytest tests/unit/test_human_docs_drift.py -q` must pass before merge-ready.
+- `PYTHONPATH=src uv run python -m pytest tests/unit/test_manifest_bundle_sync.py -q` must pass before merge-ready.
+- `PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_bundle_completeness.py tests/unit/test_provider_owner_reuse.py -q` must pass before merge-ready.
+- `PYTHONPATH=src uv run python -m pytest tests/unit/test_golden_corpus_adapters.py tests/unit/test_provider_benchmark_samples.py tests/devtools/test_golden_criteria_live.py -q` must pass before merge-ready.
+- `PYTHONPATH=src uv run python -m pytest tests/unit/test_human_docs_drift.py -q` must pass before merge-ready.
 - `manifest_sync_back.py` is the only allowed writer for sync-back fields in `extraction_hints` and `success_criteria`.
 
 ## Grep Must Be Empty

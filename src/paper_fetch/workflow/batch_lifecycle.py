@@ -38,6 +38,38 @@ class BatchLifecycleOverwriteError(FileExistsError):
     """A batch lifecycle operation would replace an existing artifact."""
 
 
+@dataclass(frozen=True, slots=True)
+class BatchLifecycleMode:
+    """Create/resume and overwrite decisions for one durable run."""
+
+    resume: bool = False
+    overwrite: bool = False
+
+
+_LEGACY_EXECUTION_POLICY_KEYS = frozenset(
+    {
+        "batch_concurrency",
+        "concurrency",
+        "continue_on_error",
+        "retry_count",
+        "retries",
+        "rate_limit",
+        "rate_wait_seconds",
+    }
+)
+
+
+def _split_legacy_request_parameters(
+    parameters: Mapping[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    semantic: dict[str, Any] = {}
+    execution: dict[str, Any] = {}
+    for key, value in parameters.items():
+        target = execution if key in _LEGACY_EXECUTION_POLICY_KEYS else semantic
+        target[key] = value
+    return semantic, execution
+
+
 class BatchLifecycleItem(Protocol):
     """Minimum item surface needed by lifecycle terminalization."""
 
@@ -119,17 +151,22 @@ def prepare_batch_run(
     store: RunManifestStore | None,
     queries: Sequence[str],
     request_parameters: Mapping[str, Any],
+    execution_policy: Mapping[str, Any] | None = None,
     tool_version: str,
     requested_run_id: UUID | None,
-    resume: bool,
-    overwrite: bool,
+    mode: BatchLifecycleMode,
     clock: Callable[[], datetime],
     uuid_factory: Callable[[], UUID],
     item_factory: Callable[[int, str, int], ItemT],
 ) -> BatchRunPreparation[ItemT]:
     """Create or validate one run and return the exact items still requiring work."""
 
-    if resume:
+    requested_semantics, embedded_execution = _split_legacy_request_parameters(
+        request_parameters
+    )
+    requested_execution = dict(execution_policy or embedded_execution)
+
+    if mode.resume:
         if store is None:
             raise BatchLifecycleResumeError(
                 "resume did not resolve a run manifest store"
@@ -143,10 +180,12 @@ def prepare_batch_run(
             raise BatchLifecycleResumeError(
                 "queries differ from the recorded run; create a new run instead"
             )
-        if (
-            build_run_request_fingerprint(queries, request_parameters)
-            != manifest.request_fingerprint
-        ):
+        recorded_semantics, legacy_execution = _split_legacy_request_parameters(
+            manifest.request_parameters
+        )
+        if build_run_request_fingerprint(
+            queries, requested_semantics
+        ) != build_run_request_fingerprint(queries, recorded_semantics):
             raise BatchLifecycleResumeError(
                 "critical fetch/output configuration differs from the recorded run; "
                 "create a new run instead"
@@ -167,7 +206,7 @@ def prepare_batch_run(
             reusable_indices=set(report.reusable_indices),
             item_factory=item_factory,
         )
-        if not overwrite:
+        if not mode.overwrite:
             existing_outputs = _existing_retry_outputs(
                 items=items,
                 records=records,
@@ -178,7 +217,19 @@ def prepare_batch_run(
                     "resume would replace existing stale or below-request output; "
                     "review it and enable overwrite: " + ", ".join(existing_outputs)
                 )
-        manifest = store.write(checkpoint_run_manifest(manifest, records))
+        active_execution_policy = dict(
+            requested_execution or manifest.execution_policy or legacy_execution
+        )
+        migrated = manifest.model_copy(
+            update={
+                "request_parameters": requested_semantics,
+                "request_fingerprint": build_run_request_fingerprint(
+                    queries, requested_semantics
+                ),
+                "execution_policy": active_execution_policy,
+            }
+        )
+        manifest = store.write(checkpoint_run_manifest(migrated, records))
         return BatchRunPreparation(
             manifest=manifest,
             records=records,
@@ -189,12 +240,12 @@ def prepare_batch_run(
         )
 
     if store is not None:
-        if store.manifest_path.exists() and not overwrite:
+        if store.manifest_path.exists() and not mode.overwrite:
             raise BatchLifecycleOverwriteError(
                 f"run manifest already exists at {store.manifest_path}; "
                 "enable overwrite or choose another path"
             )
-        if store.events_path.exists() and not overwrite:
+        if store.events_path.exists() and not mode.overwrite:
             raise BatchLifecycleOverwriteError(
                 f"batch event file already exists at {store.events_path}; "
                 "enable overwrite or choose another path"
@@ -204,12 +255,13 @@ def prepare_batch_run(
         run_id=run_id,
         tool_version=tool_version,
         queries=queries,
-        request_parameters=request_parameters,
+        request_parameters=requested_semantics,
+        execution_policy=requested_execution,
         started_at=clock(),
         events_path=store.events_reference() if store is not None else "<memory>",
     )
     if store is not None:
-        manifest = store.create(manifest, overwrite=overwrite)
+        manifest = store.create(manifest, overwrite=mode.overwrite)
     items = [
         item_factory(index, query, 1) for index, query in enumerate(queries, start=1)
     ]

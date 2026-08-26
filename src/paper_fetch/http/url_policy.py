@@ -92,7 +92,21 @@ class SafeRemoteUrlPolicy:
             if previous.scheme.lower() == "https" and scheme != "https":
                 raise _unsafe_url_failure(url, "HTTPS to HTTP redirect downgrade")
 
-        addresses = self._resolve_public_addresses(host, port) if resolve_dns else ()
+        # IP literals never require DNS, so they must remain subject to the
+        # public-address checks even in syntax-only validation paths.  This is
+        # important for browser guards that perform the DNS lookup in a request
+        # interceptor immediately before the browser sends the request.
+        try:
+            ipaddress.ip_address(host.split("%", 1)[0])
+        except ValueError:
+            is_ip_literal = False
+        else:
+            is_ip_literal = True
+        addresses = (
+            self._resolve_public_addresses(host, port)
+            if resolve_dns or is_ip_literal
+            else ()
+        )
         return ValidatedRemoteUrl(
             url=urllib.parse.urlunsplit(
                 (scheme, parsed.netloc, parsed.path or "/", parsed.query, "")

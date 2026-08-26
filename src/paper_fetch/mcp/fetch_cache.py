@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import hashlib
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -12,6 +11,10 @@ from typing import Any, Literal, cast
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..artifacts import ArtifactStore
+from ..capability_scope import (
+    CapabilityScopeBuilder,
+    PUBLIC_CAPABILITY_SCOPE,
+)
 from ..manifest import build_manifest_request_fingerprint
 from ..models import (
     ArticleModel,
@@ -33,7 +36,7 @@ from ..models import (
     coerce_semantic_losses,
     coerce_token_estimate_breakdown,
 )
-from ..publisher_identity import normalize_doi
+from ..publisher_identity import extract_doi, normalize_doi
 from ..reason_codes import METADATA_ONLY
 from ..runtime import RuntimeContext
 from ..tracing import TraceContext, TraceEvent, trace_event
@@ -54,12 +57,14 @@ from .cache_index import (
     CACHE_INDEX_MODE_REFRESH,
     CacheIndexResult,
     _scoped_file,
+    cache_entry_visible_for_scopes,
     cache_file_lock,
     fetch_envelope_lock_path,
     list_cache_entries,
     preferred_cached_entries,
     read_cache_index,
     read_scoped_file,
+    register_cache_files_for_doi,
     register_markdown_entry,
     refresh_cache_index_for_doi,
     refresh_cache_index_for_doi_result,
@@ -69,8 +74,47 @@ from .schemas import FetchPaperRequest
 
 FETCH_ENVELOPE_CACHE_VERSION = 5
 FETCH_ENVELOPE_EXTRACTION_REVISION = EXTRACTION_REVISION
-PUBLIC_CREDENTIAL_SCOPE = "public"
-_CREDENTIAL_ENV_TOKENS = ("API_KEY", "APIKEY", "TOKEN", "ACCESS_KEY", "SECRET")
+PUBLIC_CREDENTIAL_SCOPE = PUBLIC_CAPABILITY_SCOPE
+_ENVELOPE_CAPABILITY_SCOPE_ATTRIBUTE = "_paper_fetch_capability_scope"
+
+
+def mark_envelope_capability_scope(
+    envelope: FetchEnvelope,
+    credential_scope: str,
+) -> None:
+    """Attach the non-serialized capability scope that produced an envelope."""
+
+    normalized_scope = normalize_text(credential_scope) or PUBLIC_CREDENTIAL_SCOPE
+    setattr(envelope, _ENVELOPE_CAPABILITY_SCOPE_ATTRIBUTE, normalized_scope)
+
+
+def envelope_capability_scope(envelope: FetchEnvelope) -> str | None:
+    """Return a transient producer scope without changing the envelope schema."""
+
+    value = normalize_text(
+        getattr(envelope, _ENVELOPE_CAPABILITY_SCOPE_ATTRIBUTE, None)
+    )
+    return value or None
+
+
+def _envelope_proven_artifact_paths(envelope: FetchEnvelope) -> tuple[str, ...]:
+    """Return local paths explicitly carried by the accepted fetch envelope."""
+
+    paths: list[str] = []
+    if envelope.article is not None:
+        paths.extend(
+            path
+            for asset in envelope.article.assets
+            if (path := normalize_text(asset.path))
+        )
+    for diagnostic in envelope.diagnostic_artifacts:
+        if not isinstance(diagnostic, Mapping):
+            continue
+        for key in ("path", "artifact_path", "local_path"):
+            path = normalize_text(diagnostic.get(key))
+            if path:
+                paths.append(path)
+    return tuple(dict.fromkeys(paths))
 
 
 class _CacheRequestSchema(BaseModel):
@@ -139,6 +183,29 @@ class _FetchEnvelopeSidecarSchema(BaseModel):
 class CacheSidecarInspection:
     summary: dict[str, Any]
     envelope: FetchEnvelope | None = None
+    credential_scope: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class FetchCacheDependencies:
+    """Replaceable cache-index operations used by the MCP cache facade."""
+
+    refresh_for_doi: Callable[[Path, str], list[dict[str, Any]]] = (
+        refresh_cache_index_for_doi
+    )
+    refresh_for_doi_result: Callable[[Path, str], CacheIndexResult] = (
+        refresh_cache_index_for_doi_result
+    )
+    read_index: Callable[..., CacheIndexResult] = read_cache_index
+    rescan_index: Callable[[Path], CacheIndexResult] = rescan_cache_index
+    list_entries: Callable[[Path], list[dict[str, Any]]] = list_cache_entries
+    preferred_entries: Callable[[list[dict[str, Any]]], dict[str, Any]] = (
+        preferred_cached_entries
+    )
+    register_markdown: Callable[..., dict[str, Any] | None] = register_markdown_entry
+    register_files_for_doi: Callable[..., list[dict[str, Any]]] = (
+        register_cache_files_for_doi
+    )
 
 
 def fetch_envelope_cache_path(download_dir: Path, doi: str) -> Path:
@@ -163,37 +230,9 @@ def fetch_envelope_variant_path(
 
 
 def credential_scope_from_env(env: Mapping[str, str] | None) -> str:
-    """Build a one-way capability scope for credential-backed cache payloads."""
+    """Compatibility wrapper for callers that only have environment facts."""
 
-    scoped_values: list[tuple[str, str]] = []
-    for raw_name, raw_value in sorted((env or {}).items()):
-        name = str(raw_name).upper()
-        value = normalize_text(raw_value)
-        if not value or name == "CROSSREF_MAILTO":
-            continue
-        if any(token in name for token in _CREDENTIAL_ENV_TOKENS):
-            scoped_values.append((name, value))
-            continue
-        if "STORAGE_STATE" not in name:
-            continue
-        path = Path(value).expanduser()
-        try:
-            if path.is_file():
-                scoped_values.append(
-                    (name, hashlib.sha256(path.read_bytes()).hexdigest())
-                )
-        except OSError:
-            scoped_values.append((name, value))
-    if not scoped_values:
-        return PUBLIC_CREDENTIAL_SCOPE
-    digest = hashlib.sha256(
-        json.dumps(
-            scoped_values,
-            ensure_ascii=True,
-            separators=(",", ":"),
-        ).encode("utf-8")
-    ).hexdigest()
-    return f"credential:{digest}"
+    return CapabilityScopeBuilder(env).build()
 
 
 def request_cache_payload(request: FetchPaperRequest) -> dict[str, Any]:
@@ -806,39 +845,43 @@ class FetchCache:
         download_dir: Path | None,
         *,
         artifact_store: ArtifactStore | None = None,
-        refresh_cache_index_for_doi_fn: Callable[
-            [Path, str], list[dict[str, Any]]
-        ] = refresh_cache_index_for_doi,
-        refresh_cache_index_for_doi_result_fn: Callable[
-            [Path, str], CacheIndexResult
-        ] = refresh_cache_index_for_doi_result,
-        read_cache_index_fn: Callable[..., CacheIndexResult] = read_cache_index,
-        rescan_cache_index_fn: Callable[[Path], CacheIndexResult] = rescan_cache_index,
-        list_cache_entries_fn: Callable[
-            [Path], list[dict[str, Any]]
-        ] = list_cache_entries,
-        preferred_cached_entries_fn: Callable[
-            [list[dict[str, Any]]], dict[str, Any]
-        ] = preferred_cached_entries,
-        register_markdown_entry_fn: Callable[..., dict[str, Any] | None] = (
-            register_markdown_entry
-        ),
+        dependencies: FetchCacheDependencies | None = None,
         credential_scope: str = PUBLIC_CREDENTIAL_SCOPE,
+        read_credential_scopes: Sequence[str] | None = None,
     ) -> None:
+        cache_deps = dependencies or FetchCacheDependencies()
         self._artifact_store = artifact_store or ArtifactStore.from_download_dir(
             download_dir
         )
         self.download_dir = self._artifact_store.download_dir
-        self._refresh_cache_index_for_doi = refresh_cache_index_for_doi_fn
-        self._refresh_cache_index_for_doi_result = refresh_cache_index_for_doi_result_fn
-        self._read_cache_index = read_cache_index_fn
-        self._rescan_cache_index = rescan_cache_index_fn
-        self._list_cache_entries = list_cache_entries_fn
-        self._preferred_cached_entries = preferred_cached_entries_fn
-        self._register_markdown_entry = register_markdown_entry_fn
+        self._refresh_cache_index_for_doi = cache_deps.refresh_for_doi
+        self._refresh_cache_index_for_doi_result = cache_deps.refresh_for_doi_result
+        self._read_cache_index = cache_deps.read_index
+        self._rescan_cache_index = cache_deps.rescan_index
+        self._list_cache_entries = cache_deps.list_entries
+        self._preferred_cached_entries = cache_deps.preferred_entries
+        self._register_markdown_entry = cache_deps.register_markdown
+        self._register_cache_files_for_doi = cache_deps.register_files_for_doi
         self.credential_scope = (
             normalize_text(credential_scope) or PUBLIC_CREDENTIAL_SCOPE
         )
+        self.read_credential_scopes: tuple[str, ...]
+        if self.credential_scope == PUBLIC_CREDENTIAL_SCOPE:
+            self.read_credential_scopes = (PUBLIC_CREDENTIAL_SCOPE,)
+        else:
+            requested_scopes = read_credential_scopes or (self.credential_scope,)
+            normalized_scopes = [
+                normalize_text(scope) or PUBLIC_CREDENTIAL_SCOPE
+                for scope in requested_scopes
+            ]
+            # A private reader may read only its exact scope and then public. It
+            # cannot move laterally into a different private capability scope.
+            self.read_credential_scopes = (
+                self.credential_scope,
+                PUBLIC_CREDENTIAL_SCOPE,
+            )
+            if self.credential_scope not in normalized_scopes:
+                self.read_credential_scopes = (PUBLIC_CREDENTIAL_SCOPE,)
 
     def _candidate_sidecar_paths(
         self,
@@ -847,14 +890,18 @@ class FetchCache:
     ) -> list[Path]:
         if self.download_dir is None:
             return []
-        requested_fingerprint = cache_request_fingerprint(
-            doi,
-            request_cache_payload(request),
-            credential_scope=self.credential_scope,
-        )
-        exact = fetch_envelope_variant_path(
-            self.download_dir, doi, requested_fingerprint
-        )
+        exact_paths = [
+            fetch_envelope_variant_path(
+                self.download_dir,
+                doi,
+                cache_request_fingerprint(
+                    doi,
+                    request_cache_payload(request),
+                    credential_scope=scope,
+                ),
+            )
+            for scope in self.read_credential_scopes
+        ]
         base = sanitize_filename(doi)
 
         def modified_at(path: Path) -> float:
@@ -869,63 +916,7 @@ class FetchCache:
             reverse=True,
         )
         canonical = fetch_envelope_cache_path(self.download_dir, doi)
-        return list(dict.fromkeys([exact, *variants, canonical]))
-
-    def _load_sidecar_path(
-        self,
-        path: Path,
-        *,
-        doi: str,
-        request: FetchPaperRequest,
-    ) -> FetchEnvelope | None:
-        if self.download_dir is None:
-            return None
-        scoped_path = _scoped_file(self.download_dir, str(path))
-        if scoped_path is None:
-            return None
-        try:
-            cache_payload = json.loads(scoped_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return None
-        if not isinstance(cache_payload, Mapping):
-            return None
-        if cache_payload.get("version") != FETCH_ENVELOPE_CACHE_VERSION:
-            return None
-        if (
-            cache_payload.get("extraction_revision")
-            != FETCH_ENVELOPE_EXTRACTION_REVISION
-        ):
-            return None
-        if not _cache_sidecar_schema_is_valid(cache_payload):
-            return None
-        cached_scope = (
-            normalize_text(cache_payload.get("credential_scope"))
-            or PUBLIC_CREDENTIAL_SCOPE
-        )
-        if cached_scope != self.credential_scope:
-            return None
-        cached_request = cache_payload.get("request")
-        payload = cache_payload.get("payload")
-        if not isinstance(cached_request, Mapping) or not isinstance(payload, Mapping):
-            return None
-        if normalize_doi(str(payload.get("doi") or "")) != doi:
-            return None
-        if not cached_request_matches(cached_request, request):
-            return None
-        try:
-            envelope = envelope_from_payload(payload)
-        except Exception:
-            return None
-        if not cached_envelope_assets_are_scoped(envelope, self.download_dir):
-            return None
-        if not cached_envelope_satisfies_request(
-            envelope,
-            payload,
-            request,
-            expected_doi=doi,
-        ):
-            return None
-        return envelope
+        return list(dict.fromkeys([*exact_paths, *variants, canonical]))
 
     def load_fetch_envelope(
         self,
@@ -936,29 +927,34 @@ class FetchCache:
     ) -> FetchEnvelope | None:
         if not request.prefer_cache or self.download_dir is None:
             return None
-        resolved = resolve_paper_fn(request.query, context=context)
-        if resolved.candidates and not resolved.doi:
-            raise PaperFetchFailure(
-                "ambiguous",
-                "Query resolution is ambiguous; choose one of the DOI candidates.",
-                candidates=resolved.candidates,
-            )
-        doi = normalize_doi(normalize_text(resolved.doi))
+        # A syntactically known DOI is a complete local cache identity. Enrichment
+        # (including Crossref provider inference) is deferred until a cache miss.
+        doi = normalize_doi(extract_doi(request.query) or "")
+        if not doi:
+            resolved = resolve_paper_fn(request.query, context=context)
+            if resolved.candidates and not resolved.doi:
+                raise PaperFetchFailure(
+                    "ambiguous",
+                    "Query resolution is ambiguous; choose one of the DOI candidates.",
+                    candidates=resolved.candidates,
+                )
+            doi = normalize_doi(normalize_text(resolved.doi))
         if not doi:
             return None
-        self._refresh_cache_index_for_doi(self.download_dir, doi)
-        envelope = None
-        with cache_file_lock(fetch_envelope_lock_path(self.download_dir, doi)):
-            for cache_path in self._candidate_sidecar_paths(doi, request):
-                envelope = self._load_sidecar_path(
-                    cache_path,
-                    doi=doi,
-                    request=request,
-                )
-                if envelope is not None:
-                    break
+        selected = self._select_sidecar_variant(doi, request)
+        envelope = (
+            selected.envelope
+            if selected is not None
+            and selected.summary.get("request_satisfied") is True
+            else None
+        )
         if envelope is None:
             return None
+        assert selected is not None
+        mark_envelope_capability_scope(
+            envelope,
+            selected.credential_scope or PUBLIC_CREDENTIAL_SCOPE,
+        )
         mark_envelope_cached_with_current_revision(envelope)
         return envelope
 
@@ -974,6 +970,7 @@ class FetchCache:
         doi = normalize_doi(normalize_text(envelope.doi))
         if not doi:
             return
+        mark_envelope_capability_scope(envelope, self.credential_scope)
         request_payload = request_cache_payload(request)
         request_fingerprint = cache_request_fingerprint(
             doi,
@@ -1007,7 +1004,13 @@ class FetchCache:
             )
         if commit_guard is not None:
             commit_guard()
-        self._refresh_cache_index_for_doi(self.download_dir, doi)
+        self._register_cache_files_for_doi(
+            self.download_dir,
+            doi,
+            credential_scope=self.credential_scope,
+            proven_artifact_paths=_envelope_proven_artifact_paths(envelope),
+            commit_guard=commit_guard,
+        )
 
     def register_markdown(
         self,
@@ -1031,6 +1034,7 @@ class FetchCache:
             acquisition=envelope.acquisition,
             has_fulltext=envelope.has_fulltext,
             content_kind=str(envelope.content_kind),
+            credential_scope=self.credential_scope,
             commit_guard=commit_guard,
         )
 
@@ -1040,10 +1044,18 @@ class FetchCache:
         normalized_doi = normalize_doi(doi)
         if not normalized_doi:
             return []
-        return self._refresh_cache_index_for_doi(self.download_dir, normalized_doi)
+        entries = self._refresh_cache_index_for_doi(self.download_dir, normalized_doi)
+        return [
+            entry
+            for entry in entries
+            if cache_entry_visible_for_scopes(entry, self.read_credential_scopes)
+        ]
 
     def list_payload(
-        self, *, cache_mode: str = CACHE_INDEX_MODE_INDEX
+        self,
+        *,
+        cache_mode: str = CACHE_INDEX_MODE_INDEX,
+        _filter_entries: bool = True,
     ) -> dict[str, Any]:
         if self.download_dir is None:
             return {
@@ -1065,16 +1077,24 @@ class FetchCache:
             result = self._read_cache_index(
                 self.download_dir, refresh=False, cache_mode=CACHE_INDEX_MODE_INDEX
             )
+        entries = result.entries
+        if _filter_entries:
+            entries = [
+                entry
+                for entry in entries
+                if cache_entry_visible_for_scopes(entry, self.read_credential_scopes)
+            ]
         return {
             "download_dir": str(self.download_dir),
-            "entries": result.entries,
+            "entries": entries,
             **result.metadata(),
         }
 
-    def _inspect_fetch_envelope_sidecar(
+    def _inspect_sidecar_path(
         self,
         doi: str,
         request: FetchPaperRequest,
+        path: Path,
     ) -> CacheSidecarInspection:
         requested_request = request_cache_payload(request)
         requested_fingerprint = cache_request_fingerprint(
@@ -1082,16 +1102,6 @@ class FetchCache:
             requested_request,
             credential_scope=self.credential_scope,
         )
-        candidate_paths = self._candidate_sidecar_paths(doi, request)
-        path = next(
-            (candidate for candidate in candidate_paths if candidate.exists()), None
-        )
-        if path is None and self.download_dir is not None:
-            path = fetch_envelope_variant_path(
-                self.download_dir,
-                doi,
-                requested_fingerprint,
-            )
         base: dict[str, Any] = {
             "status": "missing",
             "reason_code": "cache_sidecar_missing",
@@ -1110,6 +1120,7 @@ class FetchCache:
             "request_satisfied": False,
             "request_status": "unavailable",
         }
+        candidate_scope: str | None = None
 
         def finish(
             status: str,
@@ -1126,9 +1137,13 @@ class FetchCache:
                 "reason": reason,
                 **dict(updates or {}),
             }
-            return CacheSidecarInspection(summary=summary, envelope=envelope)
+            return CacheSidecarInspection(
+                summary=summary,
+                envelope=envelope,
+                credential_scope=candidate_scope,
+            )
 
-        if self.download_dir is None or path is None:
+        if self.download_dir is None:
             return finish(
                 "disabled",
                 "cache_scope_disabled",
@@ -1157,8 +1172,7 @@ class FetchCache:
                 "The expected fetch-envelope sidecar is not a regular file.",
             )
         try:
-            with cache_file_lock(fetch_envelope_lock_path(self.download_dir, doi)):
-                cache_payload = json.loads(resolved_path.read_text(encoding="utf-8"))
+            cache_payload = json.loads(resolved_path.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             return finish(
                 "corrupt",
@@ -1182,12 +1196,18 @@ class FetchCache:
             normalize_text(cache_payload.get("credential_scope"))
             or PUBLIC_CREDENTIAL_SCOPE
         )
-        if cached_scope != self.credential_scope:
+        candidate_scope = cached_scope
+        if cached_scope not in self.read_credential_scopes:
             return finish(
                 "credential_scope_mismatch",
                 "cache_sidecar_credential_scope_mismatch",
                 "The fetch-envelope sidecar belongs to a different credential scope.",
             )
+        base["requested_request_fingerprint"] = cache_request_fingerprint(
+            doi,
+            requested_request,
+            credential_scope=cached_scope,
+        )
 
         version = cache_payload.get("version")
         extraction_revision = cache_payload.get("extraction_revision")
@@ -1311,6 +1331,130 @@ class FetchCache:
             envelope=envelope,
         )
 
+    @staticmethod
+    def _sidecar_quality_rank(inspection: CacheSidecarInspection) -> tuple[int, int]:
+        envelope = inspection.envelope
+        if envelope is None:
+            return (0, 0)
+        content_rank = {
+            "fulltext": 3,
+            "abstract_only": 2,
+            "metadata_only": 1,
+        }.get(str(envelope.content_kind), 0)
+        payload_modes = sum(
+            value is not None
+            for value in (envelope.article, envelope.markdown, envelope.metadata)
+        )
+        return content_rank, payload_modes
+
+    def _select_sidecar_variant(
+        self,
+        doi: str,
+        request: FetchPaperRequest,
+    ) -> CacheSidecarInspection | None:
+        """Evaluate every variant once and select one for loader and inspectors."""
+
+        if self.download_dir is None or not self.download_dir.exists():
+            return None
+        requested_payload = request_cache_payload(request)
+        exact_paths = {
+            fetch_envelope_variant_path(
+                self.download_dir,
+                doi,
+                cache_request_fingerprint(
+                    doi,
+                    requested_payload,
+                    credential_scope=scope,
+                ),
+            )
+            for scope in self.read_credential_scopes
+        }
+        candidates: list[tuple[tuple[Any, ...], CacheSidecarInspection]] = []
+        with cache_file_lock(fetch_envelope_lock_path(self.download_dir, doi)):
+            for path in self._candidate_sidecar_paths(doi, request):
+                if not path.exists():
+                    continue
+                inspection = self._inspect_sidecar_path(doi, request, path)
+                summary = inspection.summary
+                content_rank, payload_modes = self._sidecar_quality_rank(inspection)
+                cached_scope = inspection.credential_scope
+                try:
+                    scope_rank = len(
+                        self.read_credential_scopes
+                    ) - self.read_credential_scopes.index(
+                        cached_scope or PUBLIC_CREDENTIAL_SCOPE
+                    )
+                except ValueError:
+                    scope_rank = 0
+                try:
+                    mtime = path.stat().st_mtime_ns
+                except OSError:
+                    mtime = 0
+                score = (
+                    summary.get("request_satisfied") is True,
+                    inspection.envelope is not None,
+                    scope_rank,
+                    path in exact_paths,
+                    summary.get("request_matches") is True,
+                    summary.get("payload_satisfies_request") is True,
+                    content_rank,
+                    payload_modes,
+                    mtime,
+                    str(path),
+                )
+                candidates.append((score, inspection))
+        if not candidates:
+            return None
+        return max(candidates, key=lambda item: item[0])[1]
+
+    def _inspect_fetch_envelope_sidecar(
+        self,
+        doi: str,
+        request: FetchPaperRequest,
+    ) -> CacheSidecarInspection:
+        selected = self._select_sidecar_variant(doi, request)
+        if selected is not None:
+            return selected
+        requested_request = request_cache_payload(request)
+        requested_fingerprint = cache_request_fingerprint(
+            doi,
+            requested_request,
+            credential_scope=self.read_credential_scopes[0],
+        )
+        path = (
+            fetch_envelope_variant_path(self.download_dir, doi, requested_fingerprint)
+            if self.download_dir is not None
+            else None
+        )
+        return CacheSidecarInspection(
+            summary={
+                "status": "disabled" if self.download_dir is None else "missing",
+                "reason_code": (
+                    "cache_scope_disabled"
+                    if self.download_dir is None
+                    else "cache_sidecar_missing"
+                ),
+                "reason": (
+                    "The selected cache scope is disabled."
+                    if self.download_dir is None
+                    else "No fetch-envelope sidecar exists in the selected cache scope."
+                ),
+                "path": str(path) if path is not None else None,
+                "version": None,
+                "expected_version": FETCH_ENVELOPE_CACHE_VERSION,
+                "extraction_revision": None,
+                "expected_extraction_revision": FETCH_ENVELOPE_EXTRACTION_REVISION,
+                "cached_request": None,
+                "cached_request_fingerprint": None,
+                "requested_request": requested_request,
+                "requested_request_fingerprint": requested_fingerprint,
+                "request_matches": False,
+                "payload_satisfies_request": False,
+                "request_satisfied": False,
+                "request_status": "unavailable",
+            }
+        )
+
     def get_payload(
         self,
         doi: str,
@@ -1333,7 +1477,11 @@ class FetchCache:
             result = self._refresh_cache_index_for_doi_result(
                 self.download_dir, normalized_doi
             )
-            entries = result.entries
+            entries = [
+                entry
+                for entry in result.entries
+                if cache_entry_visible_for_scopes(entry, self.read_credential_scopes)
+            ]
             index_metadata = result.metadata()
         preferred = self._preferred_cached_entries(entries)
         base_payload = {

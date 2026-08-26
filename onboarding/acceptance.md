@@ -5,8 +5,8 @@ This file defines machine-verifiable merge-ready gates for AI/coordinator provid
 ## Manifest Gates
 
 - `onboarding/access-reviews/<provider>.yml` exists, passes `onboarding/access-review.schema.json`, has `status: approved`, and has `may_continue: true`.
-- `PYTHONPATH=src python3 -m pytest tests/unit/test_provider_manifest_schema.py -q`
-- `PYTHONPATH=src python3 -m pytest tests/unit/test_manifest_bundle_sync.py -q`
+- `PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_manifest_schema.py -q`
+- `PYTHONPATH=src uv run python -m pytest tests/unit/test_manifest_bundle_sync.py -q`
 - Manifest status for merge-ready provider is `ready` or stricter sync-back status accepted by `tests/unit/_manifest_sync.py`.
 - `onboarding/known-providers.yml` entry contains an existing `manifest_path`.
 
@@ -15,9 +15,9 @@ This file defines machine-verifiable merge-ready gates for AI/coordinator provid
 - Every required DOI purpose in `onboarding/provider-manifest.schema.json` is present in `fixtures.doi_samples`.
 - `structure`, `figure`, and `references` DOI values are non-null.
 - Every `main_path` step has a `route_contract` entry with non-empty success requirements.
-- `PYTHONPATH=src python3 -m pytest tests/unit/test_provider_route_contract.py -q`
+- `PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_route_contract.py -q`
 - Every manifest defines `asset_contract.figures`; non-null figure-capable routes use `inline: body` and `download: required`, while `not_applicable` is allowed only with a concrete exception reason.
-- `PYTHONPATH=src python3 -m pytest tests/unit/test_provider_asset_contract.py -q`
+- `PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_asset_contract.py -q`
 - Every non-null fixture purpose has a matching `markdown_contract` entry with positive and negative Markdown assertions.
 - Capture failures use structured JSON stderr with `code` from `failure-recovery.md`.
 - `UNSUITABLE_DOI_SAMPLE` changes only `fixtures.doi_samples.<purpose>` for the failed purpose.
@@ -28,10 +28,10 @@ This file defines machine-verifiable merge-ready gates for AI/coordinator provid
 
 - Provider-local pytest from `briefs/implement-provider.yml` passes.
 - `python3 scripts/propose_cleaning_chain.py --provider <provider> --check-contract` passes; `MARKDOWN_CONTRACT_DRIFT` is retryable and must be resolved by refreshing stale proposal digests or by implementation/contract reconciliation.
-- `PYTHONPATH=src python3 -m pytest tests/unit/test_provider_markdown_review_contract.py -q`
-- `PYTHONPATH=src python3 -m pytest tests/unit/test_provider_route_contract.py -q`
-- `PYTHONPATH=src python3 -m pytest tests/unit/test_provider_bundle_completeness.py tests/unit/test_provider_owner_reuse.py -q`
-- `PYTHONPATH=src python3 -m pytest tests/unit/test_golden_corpus_adapters.py tests/unit/test_provider_benchmark_samples.py tests/devtools/test_golden_criteria_live.py -q`
+- `PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_markdown_review_contract.py -q`
+- `PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_route_contract.py -q`
+- `PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_bundle_completeness.py tests/unit/test_provider_owner_reuse.py -q`
+- `PYTHONPATH=src uv run python -m pytest tests/unit/test_golden_corpus_adapters.py tests/unit/test_provider_benchmark_samples.py tests/devtools/test_golden_criteria_live.py -q`
 - `python3 scripts/validate_extraction_rules.py`
 - `manifest_sync_back.py` is the only writer for `extraction_hints` and `success_criteria` sync-back fields.
 - New provider integration must be synchronized through the provider fact sources: register a golden corpus adapter when golden replay fixtures exist, expose MCP provider status through the bundle-derived catalog, keep benchmark samples covered for official providers, and default provider-local acceptance to one provider subset live assets review unless the provider is an existing low-risk exemption.
@@ -73,7 +73,7 @@ This file defines machine-verifiable merge-ready gates for AI/coordinator provid
 
 ## Drift Gates
 
-- `PYTHONPATH=src python3 -m pytest tests/unit/test_human_docs_drift.py -q`
+- `PYTHONPATH=src uv run python -m pytest tests/unit/test_human_docs_drift.py -q`
 - `git grep -n "Human reference only" -- docs/provider-development.md docs/adding-a-provider.md`
 - `git grep -n "onboarding" -- docs/provider-development.md docs/adding-a-provider.md`
 - Human-guide banned-token grep over `onboarding/` returns no matches.

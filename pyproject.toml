@@ -94,11 +94,12 @@ paper-fetch-install-image-tools = "paper_fetch.image_tools.install:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
+include-package-data = false
 
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["paper_fetch*"]
-exclude = ["paper_fetch_devtools*"]
+exclude = ["paper_fetch_devtools*", "paper_fetch.resources.formula.node_modules*"]
 
 [tool.setuptools.package-data]
 "paper_fetch.resources.arxiv" = ["*.json"]
@@ -106,6 +107,11 @@ exclude = ["paper_fetch_devtools*"]
 "paper_fetch.resources.journal_routes" = ["*.json"]
 "paper_fetch.resources.manifest" = ["*.json"]
 "paper_fetch.models" = ["*.pyi"]
+
+[tool.setuptools.data-files]
+"share/paper-fetch-skill/skills/paper-fetch-skill" = ["skills/paper-fetch-skill/SKILL.md"]
+"share/paper-fetch-skill/skills/paper-fetch-skill/agents" = ["skills/paper-fetch-skill/agents/openai.yaml"]
+"share/paper-fetch-skill/skills/paper-fetch-skill/references" = ["skills/paper-fetch-skill/references/*.md"]
 
 [tool.ruff]
 target-version = "py311"

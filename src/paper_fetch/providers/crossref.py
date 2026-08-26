@@ -33,6 +33,7 @@ register_provider_bundle(
             client_factory_path="paper_fetch.providers.crossref:CrossrefClient",
             status_order=0,
             html_capable=False,
+            api_hosts=("api.crossref.org",),
             sensitive_headers=("cr-clickthrough-client-token",),
         ),
         sources=("crossref_meta",),

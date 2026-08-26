@@ -5,6 +5,7 @@
 #   ./scripts/install-antigravity-skill.sh              # user-scope skill (~/.gemini/antigravity-cli/skills/...)
 #   ./scripts/install-antigravity-skill.sh --project    # project-scope skill (./.agents/skills/...)
 #   ./scripts/install-antigravity-skill.sh --register-mcp [--env-file .env]
+#   ./scripts/install-antigravity-skill.sh --check        # read-only drift check
 #   ./scripts/install-antigravity-skill.sh --uninstall  # remove the installed skill entry
 #
 # Override the global Antigravity config directory with ANTIGRAVITY_HOME

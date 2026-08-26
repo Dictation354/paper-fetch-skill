@@ -1966,7 +1966,7 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertIn("Test-BrowserRuntimePackage", script)
         self.assertNotIn("PLAYWRIGHT_BROWSERS_PATH =", script)
 
-    def test_windows_inno_installer_cleans_old_payload_and_restores_offline_env_before_helper(
+    def test_windows_inno_installer_preserves_user_payload_and_restores_offline_env_before_helper(
         self,
     ) -> None:
         script = WINDOWS_INNO_INSTALLER.read_text(encoding="utf-8")
@@ -1978,7 +1978,10 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertIn("QuietUninstallString", script)
         self.assertIn("UninstallString", script)
         self.assertIn("/VERYSILENT /SUPPRESSMSGBOXES /NORESTART", script)
-        self.assertIn("DelTree(AppDir, True, True, True)", script)
+        self.assertIn("RemoveDir(AppDir)", script)
+        self.assertNotIn("DelTree(AppDir, True, True, True)", script)
+        self.assertIn("Preserving user-owned content", script)
+        self.assertIn("onlyifdoesntexist uninsneveruninstall", script)
         self.assertIn("CurStep = ssInstall", script)
         self.assertIn("CurStep = ssPostInstall", script)
         self.assertIn("RunPostInstallHelper", script)
@@ -1988,6 +1991,8 @@ class OfflineInstallTests(unittest.TestCase):
         )
         self.assertIn("PostInstallHelperWarning := True", script)
         self.assertIn("install-helper.log", script)
+        self.assertIn("[UninstallDelete]", script)
+        self.assertIn('Type: files; Name: "{app}\\install-helper.log"', script)
         self.assertIn('-LogPath "', script)
         self.assertIn('" -Action Install', script)
         self.assertIn("RestoreOfflineEnv;\n    RunPostInstallHelper;", script)

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "distribution": "paper-fetch-skill",
+  "console_scripts": {
+    "paper-fetch": "paper_fetch.cli:main",
+    "paper-fetch-install-formula-tools": "paper_fetch.formula.install:main",
+    "paper-fetch-install-image-tools": "paper_fetch.image_tools.install:main",
+    "paper-fetch-mcp": "paper_fetch.mcp.server:main"
+  },
+  "package_data": [
+    "paper_fetch/models/__init__.pyi",
+    "paper_fetch/resources/arxiv/author_boundaries.json",
+    "paper_fetch/resources/formula/mathml_to_latex_cli.mjs",
+    "paper_fetch/resources/formula/mathml_to_latex_worker.mjs",
+    "paper_fetch/resources/formula/package-lock.json",
+    "paper_fetch/resources/formula/package.json",
+    "paper_fetch/resources/journal_routes/journal-routes-v1.json",
+    "paper_fetch/resources/manifest/manifest-record-v2.schema.json"
+  ],
+  "static_skill": [
+    "skills/paper-fetch-skill/SKILL.md",
+    "skills/paper-fetch-skill/agents/openai.yaml",
+    "skills/paper-fetch-skill/references/acceptance.md",
+    "skills/paper-fetch-skill/references/cli-workflow.md",
+    "skills/paper-fetch-skill/references/environment.md",
+    "skills/paper-fetch-skill/references/failure-handling.md",
+    "skills/paper-fetch-skill/references/presets.md",
+    "skills/paper-fetch-skill/references/tool-contract.md",
+    "skills/paper-fetch-skill/references/workflow.md"
+  ]
+}

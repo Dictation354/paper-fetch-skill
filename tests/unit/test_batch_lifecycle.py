@@ -7,8 +7,9 @@ from uuid import UUID
 
 import pytest
 
-from paper_fetch.manifest_writer import RunManifestStore
+from paper_fetch.manifest_writer import RunManifestStore, create_run_manifest
 from paper_fetch.workflow.batch_lifecycle import (
+    BatchLifecycleMode,
     BatchLifecycleOverwriteError,
     prepare_batch_run,
 )
@@ -36,8 +37,7 @@ def test_in_memory_preparation_uses_ordered_inputs_and_first_attempts() -> None:
         request_parameters={"modes": ["article", "markdown"]},
         tool_version="4.0.0",
         requested_run_id=RUN_ID,
-        resume=False,
-        overwrite=False,
+        mode=BatchLifecycleMode(),
         clock=lambda: NOW,
         uuid_factory=lambda: RUN_ID,
         item_factory=_item,
@@ -67,9 +67,54 @@ def test_durable_preparation_protects_existing_manifest_and_events(
             request_parameters={},
             tool_version="4.0.0",
             requested_run_id=RUN_ID,
-            resume=False,
-            overwrite=False,
+            mode=BatchLifecycleMode(),
             clock=lambda: NOW,
             uuid_factory=lambda: RUN_ID,
             item_factory=_item,
         )
+
+
+def test_resume_migrates_legacy_embedded_execution_policy(
+    tmp_path: Path,
+) -> None:
+    store = RunManifestStore.for_new_run(
+        manifest_path=tmp_path / "run-manifest.json",
+        events_path=tmp_path / "batch-results.jsonl",
+    )
+    legacy = create_run_manifest(
+        run_id=RUN_ID,
+        tool_version="4.0.0",
+        queries=["10.1000/one"],
+        request_parameters={
+            "modes": ["article", "markdown"],
+            "batch_concurrency": 8,
+            "continue_on_error": True,
+        },
+        started_at=NOW,
+        events_path=store.events_reference(),
+    )
+    store.create(legacy)
+
+    prepared = prepare_batch_run(
+        store=store,
+        queries=["10.1000/one"],
+        request_parameters={"modes": ["article", "markdown"]},
+        execution_policy={
+            "batch_concurrency": 1,
+            "continue_on_error": False,
+        },
+        tool_version="4.0.0",
+        requested_run_id=RUN_ID,
+        mode=BatchLifecycleMode(resume=True, overwrite=True),
+        clock=lambda: NOW,
+        uuid_factory=lambda: RUN_ID,
+        item_factory=_item,
+    )
+
+    assert prepared.manifest.request_parameters == {"modes": ["article", "markdown"]}
+    assert prepared.manifest.execution_policy == {
+        "batch_concurrency": 1,
+        "continue_on_error": False,
+    }
+    assert [item.index for item in prepared.items] == [1]
+    assert store.read() == prepared.manifest

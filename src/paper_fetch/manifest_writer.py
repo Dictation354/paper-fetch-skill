@@ -107,6 +107,7 @@ class RunManifest(_PersistenceModel):
     query_count: int = Field(ge=1)
     request_parameters: dict[str, JsonValue]
     request_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
+    execution_policy: dict[str, JsonValue] = Field(default_factory=dict)
     started_at: AwareDatetime
     completed_at: AwareDatetime | None = None
     state: RunManifestState
@@ -254,6 +255,7 @@ def create_run_manifest(
     tool_version: str,
     queries: Sequence[str],
     request_parameters: Mapping[str, JsonValue],
+    execution_policy: Mapping[str, JsonValue] | None = None,
     started_at: datetime,
     events_path: str,
 ) -> RunManifest:
@@ -270,6 +272,7 @@ def create_run_manifest(
         query_count=len(inputs),
         request_parameters=dict(request_parameters),
         request_fingerprint=build_run_request_fingerprint(inputs, request_parameters),
+        execution_policy=dict(execution_policy or {}),
         started_at=started_at,
         state=RunManifestState.RUNNING,
         events_path=events_path,

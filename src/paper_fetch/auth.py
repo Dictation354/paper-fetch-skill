@@ -23,6 +23,12 @@ from .config import (
     build_runtime_env,
 )
 from .extraction.html.signals import detect_html_block, summarize_html
+from .http import (
+    BrowserNetworkGuard,
+    SafeRemoteUrlPolicy,
+    hosts_from_urls,
+    provider_allowed_hosts,
+)
 from .provider_catalog import (
     ordered_provider_specs,
     provider_supports_auth,
@@ -176,6 +182,64 @@ def _auth_target_for_provider(
 
 def _provider_label(provider: str) -> str:
     return provider_display_name(provider)
+
+
+def _auth_network_guard(
+    *,
+    provider: str,
+    target_url: str,
+    remote_url_policy: SafeRemoteUrlPolicy | None = None,
+) -> BrowserNetworkGuard:
+    allowed_hosts = provider_allowed_hosts(provider) or hosts_from_urls([target_url])
+    guard = BrowserNetworkGuard(
+        allowed_hosts=allowed_hosts,
+        policy=remote_url_policy or SafeRemoteUrlPolicy(),
+    )
+    guard.set_credential_origin(target_url)
+    try:
+        guard.validate(target_url, resolve_dns=True)
+    except Exception as exc:
+        raise ProviderFailure(
+            AUTH_FINAL_URL_INVALID,
+            "Authentication target was rejected by the browser network policy.",
+        ) from exc
+    return guard
+
+
+def _install_auth_network_guard(
+    context: Any,
+    guard: BrowserNetworkGuard,
+    *,
+    provider_label: str,
+) -> None:
+    try:
+        guard.install_on_context(context)
+    except Exception as exc:
+        raise ProviderFailure(
+            AUTH_FINAL_URL_INVALID,
+            f"{provider_label} authentication browser could not be secured.",
+        ) from exc
+
+
+def _validate_auth_final_url(
+    page: Any,
+    guard: BrowserNetworkGuard,
+    *,
+    fallback_url: str,
+    provider_label: str,
+) -> None:
+    final_url = normalize_text(str(getattr(page, "url", "") or "")) or fallback_url
+    try:
+        guard.validate(
+            final_url,
+            previous_url=fallback_url,
+            resolve_dns=True,
+        )
+    except Exception as exc:
+        raise ProviderFailure(
+            AUTH_FINAL_URL_INVALID,
+            f"{provider_label} authentication final URL was rejected by the browser network policy.",
+        ) from exc
 
 
 def _dotenv_quote(value: str) -> str:
@@ -365,9 +429,15 @@ def _verify_staged_auth_state(
     *,
     target_url: str,
     provider_label: str,
+    remote_url_policy: SafeRemoteUrlPolicy | None = None,
 ) -> tuple[str, str | None]:
     """Replay a staged state in a fresh context before committing it."""
 
+    network_guard = _auth_network_guard(
+        provider=runtime.provider,
+        target_url=target_url,
+        remote_url_policy=remote_url_policy,
+    )
     stage.path.parent.mkdir(parents=True, exist_ok=True)
     file_descriptor, temporary_name = tempfile.mkstemp(
         prefix=f".{stage.path.name}.auth-replay.",
@@ -400,11 +470,22 @@ def _verify_staged_auth_state(
     page = None
     try:
         manager, context = open_browser_context(replay_config)
+        _install_auth_network_guard(
+            context,
+            network_guard,
+            provider_label=provider_label,
+        )
         page = context.new_page()
         page.goto(
             target_url,
             wait_until="domcontentloaded",
             timeout=replay_config.timeout_ms,
+        )
+        _validate_auth_final_url(
+            page,
+            network_guard,
+            fallback_url=target_url,
+            provider_label=provider_label,
         )
         return _require_accepted_auth_page(
             page,
@@ -438,6 +519,7 @@ def authenticate_provider_profile(
     confirm: Callable[[str], object] | None = input,
     env: Mapping[str, str] | None = None,
     browser_auto_prepare: bool | None = None,
+    remote_url_policy: SafeRemoteUrlPolicy | None = None,
 ) -> AuthResult:
     provider_key = _require_browser_auth_provider(provider)
     provider_label = _provider_label(provider_key)
@@ -473,6 +555,11 @@ def authenticate_provider_profile(
         runtime,
         env=runtime_env,
         provider=provider_key,
+    )
+    network_guard = _auth_network_guard(
+        provider=provider_key,
+        target_url=active_url,
+        remote_url_policy=remote_url_policy,
     )
     ensure_runtime_ready(runtime)
 
@@ -516,6 +603,11 @@ def authenticate_provider_profile(
                 headless=False,
                 **context_options_for_config(runtime),
             )
+        _install_auth_network_guard(
+            context,
+            network_guard,
+            provider_label=provider_label,
+        )
         page = context.new_page()
         page.goto(active_url, wait_until="domcontentloaded", timeout=runtime.timeout_ms)
         _wait_for_manual_completion(
@@ -524,6 +616,12 @@ def authenticate_provider_profile(
             profile_dir=profile_dir,
             storage_state_path=resolved_storage_state_path,
             confirm=confirm,
+        )
+        _validate_auth_final_url(
+            page,
+            network_guard,
+            fallback_url=active_url,
+            provider_label=provider_label,
         )
         final_url, title = _require_accepted_auth_page(
             page,
@@ -569,6 +667,7 @@ def authenticate_provider_profile(
         staged_state,
         target_url=active_url,
         provider_label=provider_label,
+        remote_url_policy=remote_url_policy,
     )
     save_result = commit_staged_storage_state(staged_state, runtime)
     if not save_result.get("saved"):

@@ -869,7 +869,38 @@ payload = {
 
 PY
 
+  "$PYTHON_BIN" "$REPO_DIR/scripts/generate_offline_evidence.py" \
+    --staging "$staging" \
+    --site-packages "$staging/runtime/site-packages" \
+    --offline-manifest "$staging/offline-manifest.json" \
+    --output-dir "$staging" \
+    --target "$target_platform-$target_arch-$python_tag" \
+    --cyclonedx-python "$PYTHON_BIN"
+
   write_checksums "$staging"
+}
+
+publish_dependency_evidence() {
+  local staging="$1"
+  local output_dir="$2"
+  local target="$3"
+  local source destination temporary
+  mkdir -p "$output_dir"
+  for evidence in \
+    "dependency-manifest.json:dependency-manifest.json" \
+    "paper-fetch-sbom.cdx.json:sbom.cdx.json"
+  do
+    source="$staging/${evidence%%:*}"
+    destination="$output_dir/paper-fetch-evidence-$target.${evidence#*:}"
+    temporary="$(mktemp "$output_dir/.paper-fetch-evidence.XXXXXX")"
+    install -m 0644 "$source" "$temporary"
+    "$PYTHON_BIN" - "$temporary" "$destination" <<'PY'
+import os
+import sys
+
+os.replace(sys.argv[1], sys.argv[2])
+PY
+  done
 }
 
 create_self_extracting_installer() (
@@ -1044,6 +1075,10 @@ main() {
   else
     create_self_extracting_installer "$BUILD_DIR" "$package_name" "$OUTPUT_DIR"
   fi
+  publish_dependency_evidence \
+    "$staging" \
+    "$OUTPUT_DIR" \
+    "$target_platform-$target_arch-$python_tag"
 }
 
 main "$@"

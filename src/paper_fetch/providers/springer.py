@@ -15,7 +15,7 @@ from ..common_patterns import (
     TABLE_LABEL_PREFIX_PATTERN,
     table_label_prefix_for_match,
 )
-from ..config import build_publisher_user_agent, resolve_asset_download_concurrency
+from ..config import build_publisher_user_agent
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.landing import (
     LandingHtmlFetchResult,
@@ -1158,6 +1158,7 @@ class SpringerClient(ProviderClient):
         )
         pdf_result = PdfFallbackStrategy(
             transport=self.transport,
+            provider_name="springer",
             headers={
                 "User-Agent": self.user_agent,
                 "Referer": attempt.response_url,
@@ -1290,7 +1291,7 @@ class SpringerClient(ProviderClient):
             output_dir=output_dir,
             user_agent=self.user_agent,
             asset_profile=asset_profile,
-            asset_download_concurrency=resolve_asset_download_concurrency(context.env),
+            runtime_context=context,
         )
 
     def fetch_raw_fulltext(

@@ -136,7 +136,6 @@ register_provider_bundle(
     )
 )
 
-IEEE_PDF_FALLBACK_ARTIFACT_DIR_NAME = "ieee_pdf_fallback"
 _FETCH_PDF_WITH_BROWSER = fetch_pdf_with_playwright = fetch_pdf_with_browser
 
 
@@ -416,7 +415,7 @@ class IeeeClient(ProviderClient):
             "Referer": document_url,
         }
         artifact_dir = (
-            context.download_dir / IEEE_PDF_FALLBACK_ARTIFACT_DIR_NAME
+            context.download_dir / "ieee_pdf_fallback"
             if context.download_dir is not None
             and context.artifact_store is not None
             and context.artifact_store.allows_auxiliary_artifacts
@@ -432,6 +431,7 @@ class IeeeClient(ProviderClient):
         try:
             pdf_result = PdfFallbackStrategy(
                 transport=self.transport,
+                provider_name="ieee",
                 headers=headers,
                 timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 artifact_dir=artifact_dir,

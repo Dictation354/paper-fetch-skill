@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
-import copy
 import atexit
+import contextlib
+import copy
 import hashlib
 import threading
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Hashable, Iterator, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, cast
-from collections.abc import Hashable, Mapping
 
+from .asset_budget import AssetBudget
 from .artifacts import DEFAULT_ARTIFACT_MODE, ArtifactMode, ArtifactStore
 from .config import (
     HTTP_DISK_CACHE_DIR_ENV_VAR,
@@ -42,7 +43,6 @@ from .http import (
     RequestCancelledError,
 )
 from .runtime_browser import BrowserContextManager
-import contextlib
 
 RUNTIME_UNSET = object()
 _PARSE_CACHE_MISSING = object()
@@ -244,6 +244,44 @@ def build_http_transport_for_context(
     )
 
 
+@dataclass(slots=True)
+class RuntimeCommitGuard:
+    """Linearizable cancellation fence for final filesystem commits."""
+
+    cancel_check: Callable[[], bool] | None = None
+    _lock: threading.RLock = field(default_factory=threading.RLock, repr=False)
+    _fenced: bool = field(default=False, init=False, repr=False)
+
+    def _raise_if_cancelled_unlocked(self) -> None:
+        if self._fenced or bool(self.cancel_check is not None and self.cancel_check()):
+            raise RequestCancelledError("Request cancelled.")
+
+    def __call__(self) -> None:
+        with self._lock:
+            self._raise_if_cancelled_unlocked()
+
+    @contextlib.contextmanager
+    def critical_section(self) -> Iterator[None]:
+        """Check and hold the fence lock across the final atomic replace."""
+
+        with self._lock:
+            self._raise_if_cancelled_unlocked()
+            yield
+
+    def fence(self) -> None:
+        """Wait for an active commit to linearize, then reject every later one."""
+
+        with self._lock:
+            self._fenced = True
+
+    @property
+    def cancelled(self) -> bool:
+        with self._lock:
+            return self._fenced or bool(
+                self.cancel_check is not None and self.cancel_check()
+            )
+
+
 @dataclass
 class RuntimeContext:
     """Holds runtime dependencies shared across service, workflow, and adapters."""
@@ -254,6 +292,7 @@ class RuntimeContext:
     download_dir: Path | None = None
     artifact_mode: ArtifactMode = DEFAULT_ARTIFACT_MODE
     asset_profile: str | None = None
+    asset_budget: AssetBudget | None = None
     cancel_check: Callable[[], bool] | None = None
     artifact_store: ArtifactStore | None = None
     fetch_cache: Any | None = None
@@ -262,6 +301,7 @@ class RuntimeContext:
     stage_timings: dict[str, float] = field(default_factory=dict)
     fetch_trace: list[Any] = field(default_factory=list)
     diagnostic_artifacts: list[dict[str, Any]] = field(default_factory=list)
+    capability_uses: list[dict[str, Any]] = field(default_factory=list)
     request_started_at: float = field(default_factory=time.monotonic)
     deadline_monotonic: float | None = None
     _parse_cache_lock: threading.RLock = field(
@@ -274,6 +314,9 @@ class RuntimeContext:
         default_factory=threading.RLock, init=False, repr=False
     )
     _stage_timing_lock: threading.RLock = field(
+        default_factory=threading.RLock, init=False, repr=False
+    )
+    _capability_uses_lock: threading.RLock = field(
         default_factory=threading.RLock, init=False, repr=False
     )
     _clients_lock: threading.RLock = field(
@@ -295,19 +338,25 @@ class RuntimeContext:
     )
     _owns_transport: bool = field(default=False, init=False, repr=False)
     _closed: bool = field(default=False, init=False, repr=False)
+    _commit_guard: RuntimeCommitGuard = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         self._owns_transport = self.transport is None
         self.env = build_runtime_env() if self.env is None else dict(self.env)
+        self._commit_guard = RuntimeCommitGuard(self.cancel_check)
+        if self.asset_budget is None:
+            self.asset_budget = AssetBudget(cancel_check=self.cancel_check)
         if self.artifact_store is None:
             self.artifact_store = ArtifactStore.from_download_dir(
                 self.download_dir,
                 artifact_mode=self.artifact_mode,
+                commit_guard=self._commit_guard,
             )
         else:
             self.artifact_mode = self.artifact_store.artifact_mode
             if self.download_dir is None:
                 self.download_dir = self.artifact_store.download_dir
+            self.artifact_store.default_commit_guard = self._commit_guard
         if self.transport is None:
             self.transport = build_http_transport_for_context(
                 self.env,
@@ -374,13 +423,53 @@ class RuntimeContext:
 
     @property
     def cancelled(self) -> bool:
-        return bool(self.cancel_check is not None and self.cancel_check())
+        return self._commit_guard.cancelled
+
+    @property
+    def commit_guard(self) -> RuntimeCommitGuard:
+        return self._commit_guard
+
+    def fence_commits(self) -> None:
+        """Permanently reject commits from this request after cancellation."""
+
+        self._commit_guard.fence()
 
     def raise_if_cancelled(self) -> None:
         """Fence a commit or expensive stage against cooperative cancellation."""
 
-        if self.cancelled:
-            raise RequestCancelledError("Request cancelled.")
+        self._commit_guard()
+
+    def record_browser_state_capability_use(
+        self,
+        *,
+        provider: str,
+        backend: str,
+        storage_state_path: Path | str,
+        content_sha256: str | None = None,
+    ) -> None:
+        """Record state only after it was successfully injected into a context."""
+
+        from .capability_scope import BrowserStateCapabilityUse
+
+        use = BrowserStateCapabilityUse.from_path(
+            provider=provider,
+            backend=backend,
+            storage_state_path=storage_state_path,
+        )
+        record = {
+            "provider": use.provider,
+            "backend": use.backend,
+            "storage_state_path": use.storage_state_path,
+            "content_sha256": (str(content_sha256 or "").strip() or use.content_sha256),
+            "used": True,
+        }
+        with self._capability_uses_lock:
+            if record not in self.capability_uses:
+                self.capability_uses.append(record)
+
+    def browser_state_capability_uses(self) -> tuple[dict[str, Any], ...]:
+        with self._capability_uses_lock:
+            return tuple(copy.deepcopy(self.capability_uses))
 
     def initialize_deadline(self, timeout_seconds: float) -> float:
         """Initialize the request deadline once from the request start time."""

@@ -400,15 +400,17 @@ def test_run_manifest_rejects_invalid_indices_and_fingerprint() -> None:
         RunManifest.model_validate(payload)
 
 
-def test_store_create_refuses_existing_summary_without_overwrite(
+def test_store_create_is_idempotent_but_refuses_different_existing_summary(
     tmp_path: Path,
 ) -> None:
     store = _store(tmp_path)
     manifest = _manifest(store, ["a"])
     store.create(manifest)
 
-    with pytest.raises(FileExistsError):
-        store.create(manifest)
+    assert store.create(manifest) == manifest
+    different = _manifest(store, ["b"])
+    with pytest.raises(FileExistsError, match="content differs"):
+        store.create(different)
 
 
 def test_atomic_manifest_replace_failure_preserves_previous_summary(
@@ -420,7 +422,9 @@ def test_atomic_manifest_replace_failure_preserves_previous_summary(
     before = store.manifest_path.read_bytes()
     record = _record(tmp_path, index=1)
 
-    with mock.patch.object(Path, "replace", side_effect=OSError("disk failed")):
+    with mock.patch(
+        "paper_fetch.artifacts.os.replace", side_effect=OSError("disk failed")
+    ):
         with pytest.raises(OSError, match="disk failed"):
             store.write(checkpoint_run_manifest(manifest, [record]))
 

@@ -513,6 +513,8 @@ def download_ieee_related_assets(
             headers={"User-Agent": user_agent, "Referer": canonical_landing_url},
             seed_urls=seed_urls,
             asset_download_concurrency=concurrency,
+            provider_name="ieee",
+            runtime_context=runtime_context,
         )
         if body_assets
         else empty_asset_results()
@@ -529,6 +531,8 @@ def download_ieee_related_assets(
             headers={"User-Agent": user_agent, "Referer": canonical_landing_url},
             seed_urls=seed_urls,
             asset_download_concurrency=concurrency,
+            provider_name="ieee",
+            runtime_context=runtime_context,
         )
         if supplementary_assets and asset_profile == "all"
         else empty_asset_results()

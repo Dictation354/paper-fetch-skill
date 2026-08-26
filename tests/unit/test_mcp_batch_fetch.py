@@ -24,12 +24,13 @@ from paper_fetch.manifest_writer import (
 from paper_fetch.mcp import batch_fetch as batch_fetch_module
 from paper_fetch.mcp._deps import default_mcp_deps
 from paper_fetch.mcp.batch_fetch import batch_fetch_tool_async
-from paper_fetch.mcp.fetch_tool import build_fetch_tool_result
+from paper_fetch.mcp.fetch_tool import build_fetch_tool_result, fetch_paper_tool_async
 from paper_fetch.mcp.schemas import FetchPaperRequest
 from paper_fetch.mcp.server import build_server
 from paper_fetch.models import QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION
 from paper_fetch.reason_codes import RATE_LIMITED
 from paper_fetch import runtime as runtime_module
+from paper_fetch.runtime import RuntimeContext
 from paper_fetch.tracing import trace_event
 from tests.paths import REPO_ROOT, SKILL_DIR
 
@@ -144,6 +145,11 @@ def test_batch_fetch_preserves_input_order_and_completion_metadata_with_bounded_
     assert [item["index"] for item in payload["completion_order"]] == [2, 1]
     assert sum(item["content_returned_chars"] for item in payload["results"]) == 11
     assert payload["content_returned_chars"] == 11
+    assert payload["attempted_count"] == 2
+    assert payload["execution_count"] == 2
+    assert payload["deduplicated_count"] == 0
+    assert payload["not_scheduled_count"] == 0
+    assert payload["reused_count"] == 0
     assert all(item["content_truncated"] for item in payload["results"])
     assert set(payload["results"][0]["acceptance"]) == {
         "overall",
@@ -159,7 +165,11 @@ def test_batch_fetch_preserves_input_order_and_completion_metadata_with_bounded_
         "token_estimate",
     }
     assert ctx.progress[0] == (0, 2, "Starting batch_fetch")
-    assert ctx.progress[-1] == (2, 2, "batch_fetch complete")
+    assert ctx.progress[-1] == (
+        2,
+        2,
+        "batch_fetch terminalized (terminal=2, not_scheduled=0)",
+    )
     assert {update[0] for update in ctx.progress[1:-1]} == {1, 2}
     output_model = (
         build_server()._tool_manager._tools["batch_fetch"].fn_metadata.output_model
@@ -219,6 +229,225 @@ def test_batch_fetch_uses_item_local_contexts_with_one_shared_transport() -> Non
     assert len(set(transport_ids)) == 1
 
 
+def test_batch_fetch_deduplicates_canonical_doi_and_fans_out_original_indices() -> None:
+    calls: list[str] = []
+
+    def fetch(request, **_kwargs):
+        calls.append(request.query)
+        return _successful_fetch(request)
+
+    queries = [
+        "10.1000/Example",
+        "https://doi.org/10.1000/example",
+        "10.1000/example",
+    ]
+    result = asyncio.run(
+        batch_fetch_tool_async(
+            **_temporary_kwargs(
+                queries=queries,
+                concurrency=1,
+                deps=_deps(fetch),
+            )
+        )
+    )
+
+    assert result.is_error is False
+    payload = result.structured_content
+    assert payload is not None
+    assert calls == [queries[0]]
+    assert [item["index"] for item in payload["results"]] == [1, 2, 3]
+    assert [item["query"] for item in payload["results"]] == queries
+    assert payload["attempted_count"] == 3
+    assert payload["execution_count"] == 1
+    assert payload["deduplicated_count"] == 2
+    assert payload["not_scheduled_count"] == 0
+    assert len(payload["completion_order"]) == 3
+
+
+def test_overlapping_batch_fetch_requests_share_only_equal_semantics() -> None:
+    owner_started = threading.Event()
+    release_owner = threading.Event()
+    calls: list[tuple[str, tuple[str, ...]]] = []
+    calls_lock = threading.Lock()
+
+    def fetch(request, **_kwargs):
+        with calls_lock:
+            calls.append((request.query, tuple(request.modes)))
+        owner_started.set()
+        assert release_owner.wait(timeout=2)
+        return _successful_fetch(request)
+
+    async def run_equal_requests():
+        first = asyncio.create_task(
+            batch_fetch_tool_async(
+                **_temporary_kwargs(
+                    queries=["10.1000/singleflight"],
+                    concurrency=1,
+                    deps=_deps(fetch),
+                )
+            )
+        )
+        await asyncio.to_thread(owner_started.wait, 2)
+        second = asyncio.create_task(
+            batch_fetch_tool_async(
+                **_temporary_kwargs(
+                    queries=["https://doi.org/10.1000/singleflight"],
+                    concurrency=1,
+                    deps=_deps(fetch),
+                )
+            )
+        )
+        await asyncio.sleep(0.05)
+        release_owner.set()
+        return await asyncio.gather(first, second)
+
+    first, second = asyncio.run(run_equal_requests())
+
+    assert first.is_error is False
+    assert second.is_error is False
+    assert len(calls) == 1
+    assert first.structured_content is not second.structured_content
+
+
+def test_overlapping_single_and_batch_fetch_share_the_same_global_key() -> None:
+    owner_started = threading.Event()
+    release_owner = threading.Event()
+    calls: list[str] = []
+
+    def fetch(request, **_kwargs):
+        calls.append(request.query)
+        owner_started.set()
+        assert release_owner.wait(timeout=2)
+        return _successful_fetch(request)
+
+    deps = _deps(fetch)
+
+    async def run_requests():
+        single = asyncio.create_task(
+            fetch_paper_tool_async(
+                query="10.1000/cross-adapter",
+                strategy={"asset_profile": "none"},
+                no_download=True,
+                artifact_mode="none",
+                deps=deps,
+            )
+        )
+        assert await asyncio.to_thread(owner_started.wait, 2)
+        batch = asyncio.create_task(
+            batch_fetch_tool_async(
+                **_temporary_kwargs(
+                    queries=["https://doi.org/10.1000/cross-adapter"],
+                    concurrency=1,
+                    deps=deps,
+                )
+            )
+        )
+        await asyncio.sleep(0.05)
+        release_owner.set()
+        return await asyncio.gather(single, batch)
+
+    single_result, batch_result = asyncio.run(run_requests())
+
+    assert single_result.is_error is False
+    assert batch_result.is_error is False
+    assert calls == ["10.1000/cross-adapter"]
+
+
+@pytest.mark.parametrize("difference", ["request", "directory", "scope"])
+def test_single_and_batch_singleflight_never_merge_different_semantics(
+    difference: str,
+    tmp_path: Path,
+) -> None:
+    both_started = threading.Barrier(2)
+    calls: list[tuple[str, tuple[str, ...]]] = []
+    calls_lock = threading.Lock()
+
+    def fetch(request, **_kwargs):
+        with calls_lock:
+            calls.append((request.query, tuple(request.modes)))
+        both_started.wait(timeout=2)
+        return _successful_fetch(request)
+
+    deps = _deps(fetch)
+    query = "10.1016/cross-adapter-fingerprint"
+    single_kwargs: dict[str, Any] = {
+        "query": query,
+        "strategy": {"asset_profile": "none"},
+        "no_download": True,
+        "artifact_mode": "none",
+        "deps": deps,
+    }
+    batch_kwargs = _temporary_kwargs(
+        queries=[f"https://doi.org/{query}"],
+        concurrency=1,
+        deps=deps,
+    )
+    if difference == "request":
+        single_kwargs["modes"] = ["article"]
+        batch_kwargs["modes"] = ["metadata"]
+    elif difference == "directory":
+        single_kwargs.update(
+            no_download=False,
+            download_dir=tmp_path / "single-cache",
+        )
+        batch_kwargs.update(
+            no_download=False,
+            download_dir=str(tmp_path / "batch-cache"),
+        )
+    else:
+        single_kwargs["env"] = {"ELSEVIER_API_KEY": "scope-one"}
+        batch_kwargs["env"] = {"ELSEVIER_API_KEY": "scope-two"}
+
+    async def run_requests():
+        return await asyncio.gather(
+            fetch_paper_tool_async(**single_kwargs),
+            batch_fetch_tool_async(**batch_kwargs),
+        )
+
+    results = asyncio.run(run_requests())
+
+    assert all(result.is_error is False for result in results)
+    assert len(calls) == 2
+
+
+def test_overlapping_batch_fetch_requests_do_not_merge_different_modes() -> None:
+    both_started = threading.Barrier(2)
+    calls: list[tuple[str, ...]] = []
+    calls_lock = threading.Lock()
+
+    def fetch(request, **_kwargs):
+        with calls_lock:
+            calls.append(tuple(request.modes))
+        both_started.wait(timeout=2)
+        return _successful_fetch(request)
+
+    async def run_different_requests():
+        return await asyncio.gather(
+            batch_fetch_tool_async(
+                **_temporary_kwargs(
+                    queries=["10.1000/fingerprint"],
+                    concurrency=1,
+                    modes=["article"],
+                    deps=_deps(fetch),
+                )
+            ),
+            batch_fetch_tool_async(
+                **_temporary_kwargs(
+                    queries=["https://doi.org/10.1000/fingerprint"],
+                    concurrency=1,
+                    modes=["metadata"],
+                    deps=_deps(fetch),
+                )
+            ),
+        )
+
+    results = asyncio.run(run_different_requests())
+
+    assert all(result.is_error is False for result in results)
+    assert len(calls) == 2
+    assert set(calls) == {("article",), ("metadata",)}
+
+
 def test_batch_fetch_resolves_generic_queries_before_assigning_lanes() -> None:
     queries = ["title-provider-a-now", "title-provider-b", "title-provider-a-later"]
     providers = {
@@ -259,6 +488,36 @@ def test_batch_fetch_resolves_generic_queries_before_assigning_lanes() -> None:
     assert result.structured_content["lane_cooldowns"][0]["lane"] == "provider-a"
 
 
+def test_prefer_cache_batch_skips_lane_enrichment_for_known_doi(
+    tmp_path: Path,
+) -> None:
+    resolved_queries: list[str] = []
+
+    def resolve(query, **_kwargs):
+        resolved_queries.append(query)
+        return SimpleNamespace(
+            query=query,
+            provider_hint="provider-a",
+            landing_url=None,
+            doi="10.1000/resolved-title",
+        )
+
+    deps = replace(_deps(_successful_fetch), service_resolve_paper=resolve)
+    result = asyncio.run(
+        batch_fetch_tool_async(
+            **_temporary_kwargs(
+                queries=["10.1000/already-known", "A generic paper title"],
+                prefer_cache=True,
+                download_dir=tmp_path,
+                deps=deps,
+            )
+        )
+    )
+
+    assert result.is_error is False
+    assert resolved_queries == ["A generic paper title"]
+
+
 def test_batch_fetch_resolution_and_queue_time_do_not_consume_fetch_deadline(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -271,7 +530,7 @@ def test_batch_fetch_resolution_and_queue_time_do_not_consume_fetch_deadline(
             query=query,
             provider_hint="test-provider",
             landing_url=None,
-            doi="10.1000/resolved",
+            doi=f"10.1000/{query.split()[0].lower()}",
         )
 
     def fetch(request, *, context=None, **_kwargs):
@@ -411,8 +670,29 @@ def test_batch_fetch_continues_after_item_failure_and_terminalizes_every_index()
     assert payload["state"] == "completed"
 
 
-def test_batch_fetch_continue_on_error_false_stops_new_submissions() -> None:
+def test_batch_fetch_continue_on_error_false_stops_new_submissions(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     calls: list[str] = []
+    created_children: set[int] = set()
+    closed_children: set[int] = set()
+    original_new_request_context = RuntimeContext.new_request_context
+    original_close = RuntimeContext.close
+
+    def tracked_new_request_context(self, **kwargs):
+        child = original_new_request_context(self, **kwargs)
+        created_children.add(id(child))
+        return child
+
+    def tracked_close(self):
+        if id(self) in created_children:
+            closed_children.add(id(self))
+        return original_close(self)
+
+    monkeypatch.setattr(
+        RuntimeContext, "new_request_context", tracked_new_request_context
+    )
+    monkeypatch.setattr(RuntimeContext, "close", tracked_close)
 
     def fetch(request, **_kwargs):
         calls.append(request.query)
@@ -439,6 +719,11 @@ def test_batch_fetch_continue_on_error_false_stops_new_submissions() -> None:
         "aborted",
     ]
     assert payload["aborted"] is True
+    assert payload["attempted_count"] == 1
+    assert payload["execution_count"] == 1
+    assert payload["not_scheduled_count"] == 2
+    assert payload["reused_count"] == 0
+    assert created_children == closed_children
 
 
 def test_batch_fetch_rate_limit_aborts_only_limited_lane_and_continues_other_lane(
@@ -544,6 +829,10 @@ def test_batch_fetch_archive_returns_hash_path_and_scoped_resource_uri(
         assert artifact["path"] == str(saved_path)
         assert len(artifact["sha256"]) == 64
         assert artifact["verification_status"] == "verified"
+        assert {"route", "failure_code"} <= set(artifact)
+        schema = build_server()._tool_manager._tools["batch_fetch"].output_schema or {}
+        advertised = set(schema["$defs"]["BatchFetchArtifactOutput"]["properties"])
+        assert set(artifact) <= advertised
         assert item["resource_uri"].startswith("resource://paper-fetch/cached-dir/")
         assert artifact["resource_uri"] == item["resource_uri"]
     names = {path.name for path in tmp_path.iterdir()}
@@ -583,6 +872,8 @@ def test_batch_fetch_persistent_partial_run_resumes_only_retry_indices(
             **_temporary_kwargs(
                 deps=_deps(resumed_fetch),
                 resume=str(manifest_path),
+                concurrency=1,
+                continue_on_error=False,
             )
         )
     )
@@ -592,6 +883,9 @@ def test_batch_fetch_persistent_partial_run_resumes_only_retry_indices(
     assert payload is not None
     assert resumed_calls == ["10.1000/two"]
     assert payload["attempted_count"] == 1
+    assert payload["execution_count"] == 1
+    assert payload["deduplicated_count"] == 0
+    assert payload["not_scheduled_count"] == 0
     assert payload["reused_count"] == 1
     assert [item["attempt"] for item in payload["results"]] == [1, 2]
     assert [item["reused"] for item in payload["results"]] == [True, False]
@@ -603,6 +897,12 @@ def test_batch_fetch_persistent_partial_run_resumes_only_retry_indices(
     assert latest[1].attempt == 1
     assert latest[2].attempt == 2
     assert manifest.state is RunManifestState.COMPLETED
+    assert manifest.execution_policy == {
+        "batch_concurrency": 1,
+        "continue_on_error": False,
+    }
+    assert "batch_concurrency" not in manifest.request_parameters
+    assert "continue_on_error" not in manifest.request_parameters
     assert audit_manifest_path(manifest_path).reusable_indices == (1, 2)
 
 

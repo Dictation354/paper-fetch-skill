@@ -17,6 +17,7 @@
 - 每条 CLI fetch 命令都显式传 `--artifact-mode` 和 `--asset-profile`。`--output` / `--output-dir` 是主输出；`--save-markdown` 只是额外 Markdown 副本。
 - 文本归档使用 `artifact_mode=none`、`asset_profile=none`。用户明确要求正文图时使用 `artifact_mode=markdown-assets`、`asset_profile=body`；明确要求补充材料时使用 `artifact_mode=markdown-assets`、`asset_profile=all`。
 - 只在用户还要求原始 provider 载荷、HTTP disk cache 或调试 sidecar 时使用 `artifact_mode=all`。补充材料范围由 `asset_profile=all` 决定，不由 `artifact_mode=all` 决定。
+- `asset_profile=body|all` 始终受每篇共享预算约束（默认 128 文件、32 MiB/文件、256 MiB 累计、64 MP、最多 4 个资产 worker并受 route cap 限制）；不要通过把正文图和 supplementary 拆成两次调用来规避。超限时以 `asset_failures[*].reason` 的稳定 `asset_*` code 向用户说明未归档项。
 - MCP 的 `no_download` 控制 provider 载荷、资产和 fetch-envelope sidecar，不是 CLI `--no-download` 的同义替换。`save_markdown=true` 仍会写用户要求的 Markdown；PF-005 的 DOI 证明索引也会随显式保存更新。
 - “不保存最终 Markdown”“不建立用户归档”“不写 provider artifact”“允许 cache”和“完全不落盘”是五个独立判断，不要互换。
 
@@ -152,7 +153,7 @@ MCP 文本归档显式把主 Markdown 与 cache scope 放在同一目录：
 }
 ```
 
-`batch_check(mode="metadata")` 固定不写下载目录，结果只有 `likely_yes` 或 `unknown` 的探测证据。它没有抓取全文，不能报告成“已归档”“已验证全文”或“metadata-only 全文”。需要真实正文结论时，对选中的规范 DOI 再进入本地优先决策树并调用 `fetch_paper`。
+`batch_check(mode="metadata")` 固定不写下载目录，结果只有 `likely_yes` 或 `unknown` 的探测证据。结果数组与输入等长、原顺序，每项保留 1-based `index/query/status/error/provider_lane`；`not_scheduled` 不是完成，顶层 progress 会单列。Title 会先在 item-local context 解析 provider lane，已知 DOI 只做本地 canonical 规范化；一个 provider 的 cooldown 不会扩大到其它 lane。它没有抓取全文，不能报告成“已归档”“已验证全文”或“metadata-only 全文”。需要真实正文结论时，对选中的规范 DOI 再进入本地优先决策树并调用 `fetch_paper`。
 
 超过 50 条时按[批量分块与证据等级](#批量分块与证据等级)处理。CLI 当前没有等价的 metadata probe 预设。
 
@@ -197,7 +198,7 @@ paper-fetch --query-file ./queries.txt \
 }
 ```
 
-这个 MCP 组合为每篇返回 input-ordered compact record、实际完成序号、acceptance、输出 SHA-256、Markdown path 和 resource URI，并写可审计/可恢复的 run summary 与 append-only attempts。已有路径默认拒绝覆盖；中断后用同一有序 queries 和关键抓取参数传 `resume="./papers/run-manifest.json"`，不要同时再传 `run_manifest` / `batch_results`。正文图和补充材料仍按上文分别改成 `no_download=false`、`artifact_mode="markdown-assets"`、`asset_profile="body|all"`。`batch_check` 仍不是归档工具，不能用 probe 结果替代 `batch_fetch`/CLI 的真实 fetch 和 acceptance。
+这个 MCP 组合为每篇返回 input-ordered compact record、实际完成序号、acceptance、输出 SHA-256、Markdown path 和 resource URI，并写可审计/可恢复的 run summary 与 append-only attempts。规范 DOI 重复项只抓取 representative 一次，再 fan-out 到原 index；重叠单篇/批量请求只有在完整 fetch 语义、capability scope 和 canonical cache/Markdown 目录一致时才 singleflight。已有不同内容路径默认拒绝覆盖，相同内容幂等；中断后用同一有序 queries 和抓取/渲染/输出语义传 `resume="./papers/run-manifest.json"`，不要同时再传 `run_manifest` / `batch_results`。Resume 可以降低 `concurrency` 或调整 continue/retry/rate policy，这些写入独立 `execution_policy`，不改变 semantic fingerprint。正文图和补充材料仍按上文分别改成 `no_download=false`、`artifact_mode="markdown-assets"`、`asset_profile="body|all"`。`batch_check` 仍不是归档工具，不能用 probe 结果替代 `batch_fetch`/CLI 的真实 fetch 和 acceptance。
 
 ## CLI 输出/落盘矩阵
 

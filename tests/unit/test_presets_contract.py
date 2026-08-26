@@ -581,8 +581,10 @@ class PresetRuntimeContractTests(unittest.TestCase):
                 {"paper.md", ".paper-fetch-mcp-cache.json"},
                 {name for name in archive_files if not name.endswith(".lock")},
             )
+            # A missing cache scope is inspected without materializing a DOI lock;
+            # only the Markdown index commit needs a lock file.
             self.assertEqual(
-                len([name for name in archive_files if name.endswith(".lock")]), 2
+                len([name for name in archive_files if name.endswith(".lock")]), 1
             )
 
     def test_shared_asset_policy_materializes_none_body_and_all_scopes(self) -> None:

@@ -8,11 +8,12 @@ import importlib
 import json
 import sys
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
 import yaml
+from jsonschema import Draft202012Validator
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -37,6 +38,7 @@ KNOWN_PROVIDERS_PATH = REPO_ROOT / "onboarding" / "known-providers.yml"
 GOLDEN_MANIFEST_PATH = (
     REPO_ROOT / "tests" / "fixtures" / "golden_criteria" / "manifest.json"
 )
+FIXTURE_MANIFEST_SCHEMA_PATH = REPO_ROOT / "quality" / "fixture-manifest.schema.json"
 PROVIDERS_DOC_PATH = REPO_ROOT / "docs" / "providers.md"
 PROVIDERS_MATRIX_MARKER = "<!-- SCAFFOLD: providers-capability-matrix -->"
 PRODUCTION_MANIFEST_STATUSES = frozenset({"implemented", "ready", "live"})
@@ -52,6 +54,12 @@ class GovernanceReport:
     waived_route_family_count: int
     negative_coverage_count: int
     waived_negative_coverage_count: int
+    executable_replay_count: int
+    synthetic_fixture_count: int
+    unit_only_fixture_count: int
+    manifest_only_fixture_count: int
+    unexecutable_fixture_count: int
+    negative_replay_count: int
     complexity_violation_count: int
 
     def to_dict(self) -> dict[str, Any]:
@@ -64,6 +72,12 @@ class GovernanceReport:
             "waived_route_family_count": self.waived_route_family_count,
             "negative_coverage_count": self.negative_coverage_count,
             "waived_negative_coverage_count": self.waived_negative_coverage_count,
+            "executable_replay_count": self.executable_replay_count,
+            "synthetic_fixture_count": self.synthetic_fixture_count,
+            "unit_only_fixture_count": self.unit_only_fixture_count,
+            "manifest_only_fixture_count": self.manifest_only_fixture_count,
+            "unexecutable_fixture_count": self.unexecutable_fixture_count,
+            "negative_replay_count": self.negative_replay_count,
             "complexity_violation_count": self.complexity_violation_count,
         }
 
@@ -94,14 +108,21 @@ def _manifest_payloads(
     return manifests
 
 
-def _golden_samples() -> tuple[dict[str, Any], ...]:
+def _fixture_manifest() -> dict[str, Any]:
     payload = json.loads(GOLDEN_MANIFEST_PATH.read_text(encoding="utf-8"))
-    samples = payload.get("samples") if isinstance(payload, dict) else None
-    if not isinstance(samples, dict):
+    if not isinstance(payload, dict) or not isinstance(payload.get("samples"), dict):
         raise ValueError("golden criteria manifest must contain a samples mapping")
-    return tuple(
-        dict(sample) for sample in samples.values() if isinstance(sample, dict)
-    )
+    return payload
+
+
+def _check_fixture_manifest_schema(payload: dict[str, Any], errors: list[str]) -> None:
+    schema = json.loads(FIXTURE_MANIFEST_SCHEMA_PATH.read_text(encoding="utf-8"))
+    validator = Draft202012Validator(schema)
+    for error in sorted(
+        validator.iter_errors(payload), key=lambda item: list(item.path)
+    ):
+        location = ".".join(str(part) for part in error.absolute_path) or "<root>"
+        errors.append(f"fixture manifest schema {location}: {error.message}")
 
 
 def _springer_html_family(sample: dict[str, Any]) -> str:
@@ -134,16 +155,15 @@ def _required_route_families(specs: tuple[Any, ...]) -> set[str]:
     return required
 
 
-def _covered_route_families(samples: tuple[dict[str, Any], ...]) -> set[str]:
+def _covered_route_families(fixtures: tuple[Any, ...]) -> set[str]:
     covered: set[str] = set()
     route_aliases = {"official": "xml", "pdf_fallback": "pdf"}
-    for sample in samples:
-        if sample.get("fixture_family") != "golden":
-            continue
-        provider = str(sample.get("publisher") or "")
+    for fixture in fixtures:
+        sample = fixture.sample
+        provider = fixture.provider
         route_kind = route_aliases.get(
-            str(sample.get("route_kind") or ""),
-            str(sample.get("route_kind") or ""),
+            fixture.route_kind,
+            fixture.route_kind,
         )
         if route_kind not in FULLTEXT_ROUTE_KINDS:
             continue
@@ -171,18 +191,73 @@ def _required_negative_coverage(specs: tuple[Any, ...]) -> set[str]:
     return required
 
 
-def _covered_negative_coverage(samples: tuple[dict[str, Any], ...]) -> set[str]:
-    return {
-        f"{sample.get('publisher')}:access_block"
-        for sample in samples
-        if sample.get("fixture_family") == "block" and sample.get("publisher")
-    }
+def _covered_negative_coverage(
+    specs: tuple[Any, ...], errors: list[str]
+) -> tuple[set[str], int]:
+    from tests.block_fixtures import execute_block_fixture, iter_block_samples
+
+    specs_by_name = {spec.name: spec for spec in specs}
+    covered: set[str] = set()
+    replay_count = 0
+    for fixture in iter_block_samples():
+        prefix = f"block replay {fixture.sample_id}"
+        if fixture.sample.get("origin_kind") != "real_replay":
+            errors.append(f"{prefix}: negative route evidence must be a real replay")
+            continue
+        try:
+            route = next(
+                route
+                for route in specs_by_name[fixture.provider].routes
+                if route.name == fixture.provider_route
+            )
+        except (KeyError, StopIteration):
+            errors.append(
+                f"{prefix}: unknown provider route {fixture.provider}:{fixture.provider_route}"
+            )
+            continue
+        if route.source != fixture.source_identity:
+            errors.append(
+                f"{prefix}: source identity {fixture.source_identity!r} does not match "
+                f"catalog source {route.source!r}"
+            )
+            continue
+        try:
+            result = execute_block_fixture(fixture)
+        except Exception as exc:  # noqa: BLE001 - governance reports fixture failure.
+            errors.append(
+                f"{prefix}: current extractor cannot execute raw replay: {exc}"
+            )
+            continue
+        mismatches = {
+            "accepted": (result.accepted, False),
+            "reason": (result.reason, fixture.expected_reason),
+            "failure_code": (
+                result.failure_code,
+                fixture.expected_failure_code,
+            ),
+            "content_kind": (
+                result.content_kind,
+                fixture.expected_content_kind,
+            ),
+        }
+        mismatch_text = [
+            f"{field}={actual!r} expected {expected!r}"
+            for field, (actual, expected) in mismatches.items()
+            if actual != expected
+        ]
+        if mismatch_text:
+            errors.append(f"{prefix}: " + ", ".join(mismatch_text))
+            continue
+        replay_count += 1
+        covered.add(f"{fixture.provider}:{fixture.negative_case_kind}")
+    return covered, replay_count
 
 
 def _validated_waiver_keys(
     policy: dict[str, Any],
     field: str,
     errors: list[str],
+    expiry_owners: dict[date, str],
 ) -> set[str]:
     entries = policy.get(field)
     if not isinstance(entries, list):
@@ -195,7 +270,25 @@ def _validated_waiver_keys(
         if not isinstance(entry, dict):
             errors.append(f"{prefix} must be a mapping")
             continue
+        expected_fields = {
+            "key",
+            "owner",
+            "restriction",
+            "evidence_plan",
+            "reviewed_at",
+            "expires_at",
+            "reason",
+        }
+        if set(entry) != expected_fields:
+            errors.append(
+                f"{prefix} fields differ: missing={sorted(expected_fields - set(entry))}, "
+                f"extra={sorted(set(entry) - expected_fields)}"
+            )
+            continue
         key = str(entry.get("key") or "").strip()
+        owner = str(entry.get("owner") or "").strip()
+        restriction = str(entry.get("restriction") or "").strip()
+        evidence_plan = str(entry.get("evidence_plan") or "").strip()
         reason = str(entry.get("reason") or "").strip()
         try:
             reviewed_at = date.fromisoformat(str(entry.get("reviewed_at") or ""))
@@ -205,13 +298,34 @@ def _validated_waiver_keys(
             continue
         if not key or key in keys:
             errors.append(f"{prefix} key must be non-empty and unique")
+        elif len(owner) < 3:
+            errors.append(f"{prefix} owner must identify the responsible maintainer")
+        elif restriction not in {
+            "credentials",
+            "copyright",
+            "redistribution_review",
+            "source_stability",
+        }:
+            errors.append(f"{prefix} restriction is invalid")
+        elif len(evidence_plan) < 40:
+            errors.append(f"{prefix} evidence_plan must be concrete and route-specific")
         elif len(reason) < 20:
             errors.append(f"{prefix} reason must explain the reviewed gap")
         elif reviewed_at > today:
             errors.append(f"{prefix} reviewed_at cannot be in the future")
         elif expires_at < today:
             errors.append(f"{prefix} expired on {expires_at.isoformat()}")
+        elif expires_at <= reviewed_at:
+            errors.append(f"{prefix} expires_at must follow reviewed_at")
+        elif expires_at > reviewed_at + timedelta(days=183):
+            errors.append(f"{prefix} waiver lifetime cannot exceed 183 days")
+        elif expires_at in expiry_owners:
+            errors.append(
+                f"{prefix} shares expires_at={expires_at.isoformat()} with "
+                f"{expiry_owners[expires_at]}; batch-expiry waivers are forbidden"
+            )
         else:
+            expiry_owners[expires_at] = f"{field}:{key}"
             keys.add(key)
     return keys
 
@@ -418,13 +532,24 @@ def _check_generated_file(
 
 def collect_report(*, check_generated: bool = True) -> GovernanceReport:
     from paper_fetch.provider_catalog import ordered_provider_specs
+    from tests.golden_corpus import golden_corpus_replay_inventory
 
     errors: list[str] = []
     specs = ordered_provider_specs()
     entries = _known_provider_entries()
     manifests = _manifest_payloads(entries)
-    samples = _golden_samples()
+    fixture_manifest = _fixture_manifest()
+    _check_fixture_manifest_schema(fixture_manifest, errors)
+    replay_inventory = golden_corpus_replay_inventory()
+    replay_fixtures = replay_inventory.replay_fixtures
+    for record in replay_inventory.records:
+        if record.category == "unexecutable":
+            errors.append(
+                f"golden replay {record.sample_id} is not executable: {record.reason}"
+            )
     policy = _load_yaml(POLICY_PATH)
+    if policy.get("schema_version") != 2:
+        errors.append("quality/provider-governance.yml schema_version must be 2")
 
     official = {spec.name for spec in specs if spec.official}
     manifested = set(manifests)
@@ -448,8 +573,11 @@ def collect_report(*, check_generated: bool = True) -> GovernanceReport:
     _check_benchmarks(specs, errors)
 
     route_required = _required_route_families(specs)
-    route_covered = _covered_route_families(samples)
-    route_waivers = _validated_waiver_keys(policy, "route_family_waivers", errors)
+    route_covered = _covered_route_families(replay_fixtures)
+    expiry_owners: dict[date, str] = {}
+    route_waivers = _validated_waiver_keys(
+        policy, "route_family_waivers", errors, expiry_owners
+    )
     route_missing = route_required - route_covered
     if route_missing != route_waivers:
         errors.append(
@@ -459,11 +587,12 @@ def collect_report(*, check_generated: bool = True) -> GovernanceReport:
         )
 
     negative_required = _required_negative_coverage(specs)
-    negative_covered = _covered_negative_coverage(samples)
+    negative_covered, negative_replay_count = _covered_negative_coverage(specs, errors)
     negative_waivers = _validated_waiver_keys(
         policy,
         "negative_fixture_waivers",
         errors,
+        expiry_owners,
     )
     negative_missing = negative_required - negative_covered
     if negative_missing != negative_waivers:
@@ -509,6 +638,12 @@ def collect_report(*, check_generated: bool = True) -> GovernanceReport:
         waived_route_family_count=len(route_waivers),
         negative_coverage_count=len(negative_required),
         waived_negative_coverage_count=len(negative_waivers),
+        executable_replay_count=replay_inventory.count("real_replay"),
+        synthetic_fixture_count=replay_inventory.count("synthetic"),
+        unit_only_fixture_count=replay_inventory.count("unit_only"),
+        manifest_only_fixture_count=replay_inventory.count("manifest_only"),
+        unexecutable_fixture_count=replay_inventory.count("unexecutable"),
+        negative_replay_count=negative_replay_count,
         complexity_violation_count=len(complexity),
     )
 

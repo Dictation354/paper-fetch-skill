@@ -17,8 +17,9 @@ def test_arxiv_provider_module_line_counts_stay_split() -> None:
     )
     limits = {
         "_arxiv_atom.py": 700,
-        # arXiv assets also owns source archive figure recovery and diagnostics.
+        # Source archive decoding is split from asset orchestration/diagnostics.
         "_arxiv_assets.py": 1200,
+        "_arxiv_source_archive.py": 600,
         "_arxiv_authors.py": 500,
         "_arxiv_html.py": 600,
         "_arxiv_metadata.py": 500,

@@ -1888,6 +1888,69 @@ class ArxivProviderTests(unittest.TestCase):
             self.assertNotIn("\n## Figures\n", markdown)
         self.assertIn(source_url, [call["url"] for call in transport.calls])
 
+    def test_source_archive_shared_member_is_published_once_and_fanned_out(
+        self,
+    ) -> None:
+        arxiv_id = "2605.06556v1"
+        source_url = f"https://arxiv.org/e-print/{arxiv_id}"
+        article_url = canonical_arxiv_html_url(arxiv_id)
+        article_html = b"""
+        <article>
+          <figure id="S1.F1" class="ltx_figure">
+            <img src="" id="S1.F1.g1" class="ltx_graphics" />
+            <figcaption>Figure 1. Shared first.</figcaption>
+          </figure>
+          <figure id="S1.F2" class="ltx_figure">
+            <img src="" id="S1.F2.g1" class="ltx_graphics" />
+            <figcaption>Figure 2. Shared second.</figcaption>
+          </figure>
+        </article>
+        """
+        archive = _source_tar(
+            {
+                "main.tex": rb"""
+                \documentclass{article}
+                \begin{document}
+                \begin{figure}
+                  \includegraphics{shared.png}
+                  \caption{Shared first.}
+                \end{figure}
+                \begin{figure}
+                  \includegraphics{shared.png}
+                  \caption{Shared second.}
+                \end{figure}
+                \end{document}
+                """,
+                "shared.png": PNG_1X1,
+            }
+        )
+        transport = RecordingTransport(
+            {
+                ("GET", source_url): http_response(
+                    source_url, archive, "application/gzip"
+                )
+            }
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = _arxiv_assets.download_arxiv_source_figure_assets(
+                transport,
+                arxiv_id=arxiv_id,
+                article_id=arxiv_id,
+                article_html=article_html.decode(),
+                source_url=article_url,
+                output_dir=Path(tmpdir),
+                user_agent="test",
+            )
+
+            self.assertEqual(result["asset_failures"], [])
+            self.assertEqual(len(result["assets"]), 2)
+            paths = [Path(asset["path"]) for asset in result["assets"]]
+            self.assertEqual(paths[0], paths[1])
+            self.assertEqual(paths[0].read_bytes(), PNG_1X1)
+            self.assertEqual(len(list(paths[0].parent.glob("shared*.png"))), 1)
+            self.assertFalse(list(Path(tmpdir).rglob("*.part")))
+
     def test_fetch_paper_uses_arxiv_provider_for_resolved_arxiv_id(self) -> None:
         arxiv_id = "2605.06663v1"
         api_client = ReplayArxivApiClient({arxiv_id: _api_payload(arxiv_id)})

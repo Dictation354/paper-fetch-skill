@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import urllib.parse
 import xml.etree.ElementTree as ET
 from collections.abc import Callable, Iterator, Mapping as MappingABC
 from dataclasses import asdict, dataclass, replace
@@ -78,6 +79,8 @@ class ProviderRouteSpec:
     # Additive field kept last so existing positional route declarations retain
     # their pre-acquisition argument order.
     transport: ProviderRouteTransport | None = None
+    transient_retries: int | None = None
+    rate_limit_retries: int | None = None
 
     def __post_init__(self) -> None:
         if self.browser_required and self.browser_optional:
@@ -119,6 +122,10 @@ class ProviderRouteSpec:
             raise ValueError("Route order must be non-negative.")
         if self.qps is not None and self.qps <= 0:
             raise ValueError("Route qps must be positive.")
+        if self.transient_retries is not None and self.transient_retries < 0:
+            raise ValueError("Route transient_retries must be non-negative.")
+        if self.rate_limit_retries is not None and self.rate_limit_retries < 0:
+            raise ValueError("Route rate_limit_retries must be non-negative.")
         if (
             self.rate_limit_wait_budget_seconds is not None
             and self.rate_limit_wait_budget_seconds < 0
@@ -164,8 +171,19 @@ class ProviderSpec:
     requires_browser_runtime: bool = False
     batch_concurrency: int | None = None
     routes: tuple[ProviderRouteSpec, ...] = ()
+    cdn_hosts: tuple[str, ...] = ()
+    identity_priority: int | None = None
+    identity_conflict_reason: str | None = None
 
     def __post_init__(self) -> None:
+        has_identity_priority = self.identity_priority is not None
+        has_identity_reason = bool(str(self.identity_conflict_reason or "").strip())
+        if has_identity_priority != has_identity_reason:
+            raise ValueError(
+                "identity_priority and identity_conflict_reason must be declared together"
+            )
+        if isinstance(self.identity_priority, bool):
+            raise ValueError("identity_priority must be an integer")
         if self.requires_playwright and not self.requires_browser_runtime:
             object.__setattr__(self, "requires_browser_runtime", True)
         effective_batch_concurrency = self.batch_concurrency
@@ -259,8 +277,18 @@ class ProviderSpec:
                             "timeout",
                             "connection_reset",
                             "connection_closed",
-                            "temporary_dns",
+                            "dns_error",
                         )
+                    ),
+                    transient_retries=(
+                        route.transient_retries
+                        if route.transient_retries is not None
+                        else 2
+                    ),
+                    rate_limit_retries=(
+                        route.rate_limit_retries
+                        if route.rate_limit_retries is not None
+                        else 2
                     ),
                     rate_policy=route.rate_policy or "shared_host_cooldown",
                     required_packages=route.required_packages
@@ -279,6 +307,45 @@ class ProviderSpec:
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)
+
+
+@dataclass(frozen=True)
+class RouteExecutionPolicy:
+    """One compiled provider-route policy consumed by runtime transports.
+
+    Provider declarations remain intentionally descriptive.  Runtime code must
+    consume this compiled form so host boundaries, pacing, retries, acceptance,
+    and asset limits cannot drift into separate provider-specific defaults.
+    """
+
+    provider: str
+    route: str | None
+    kind: ProviderRouteKind | None
+    hosts: tuple[str, ...]
+    sensitive_headers: tuple[str, ...]
+    timeout_seconds: int
+    concurrency: int
+    qps: float | None
+    minimum_interval_seconds: float
+    rate_limit_wait_budget_seconds: float
+    transient_retry_categories: tuple[str, ...]
+    transient_retries: int
+    rate_limit_retries: int
+    rate_policy: str
+    acceptance_policy: str | None
+    asset_scope: AssetDefault
+
+    @property
+    def retry_on_transient(self) -> bool:
+        return bool(self.transient_retry_categories and self.transient_retries)
+
+    @property
+    def retry_on_rate_limit(self) -> bool:
+        return bool(self.rate_limit_wait_budget_seconds and self.rate_limit_retries)
+
+    @property
+    def asset_concurrency_cap(self) -> int:
+        return self.concurrency
 
 
 def _default_route_timeout(route: ProviderRouteSpec) -> int:
@@ -470,6 +537,184 @@ def provider_route(
         ),
         None,
     )
+
+
+def _template_hostname(template: str | None) -> str:
+    value = str(template or "").strip()
+    if "://" not in value:
+        return ""
+    return _normalize_hostname(urllib.parse.urlsplit(value).hostname)
+
+
+def _compiled_provider_hosts(
+    spec: ProviderSpec,
+    route: ProviderRouteSpec | None,
+) -> tuple[str, ...]:
+    """Return every catalog-declared network identity for a route.
+
+    Domain suffixes are deliberately retained as allowlist entries: the shared
+    URL policy interprets them with label-boundary matching.  Absolute URL
+    templates and PDF source declarations are included so API/CDN endpoints do
+    not need ad-hoc runtime exceptions.
+    """
+
+    candidates = [
+        *(route.hosts if route is not None else ()),
+        *spec.domains,
+        *spec.domain_suffixes,
+        *spec.base_domains,
+        *spec.api_hosts,
+        *spec.cdn_hosts,
+        *(source.domain for source in spec.pdf_source_path_templates),
+        *(_template_hostname(template) for _name, template in spec.api_url_templates),
+        *(
+            _template_hostname(template)
+            for template in (
+                *spec.html_path_templates,
+                *spec.xml_path_templates,
+                *spec.landing_path_templates,
+                *spec.pdf_path_templates,
+            )
+        ),
+    ]
+    return tuple(
+        dict.fromkeys(
+            host for value in candidates if (host := _normalize_hostname(value))
+        )
+    )
+
+
+def compile_route_execution_policy(
+    provider_name: str,
+    route_name: str | None = None,
+) -> RouteExecutionPolicy:
+    """Compile the sole catalog-to-runtime policy for a provider route.
+
+    ``route_name=None`` is an additive compatibility mode used by legacy asset
+    and browser helpers that can traverse more than one declared route.  It
+    unions declared hosts and chooses conservative runtime limits; new request
+    call sites should pass the exact route name.
+    """
+
+    normalized_provider = _normalize_catalog_token(provider_name)
+    spec = _provider_spec(normalized_provider)
+    if spec is None:
+        raise ValueError(f"Unknown provider route policy: {provider_name!r}")
+    route = provider_route(normalized_provider, route_name) if route_name else None
+    if route_name and route is None:
+        raise ValueError(
+            f"Unknown provider route policy: {normalized_provider}:{route_name}"
+        )
+    routes = (route,) if route is not None else spec.routes
+    timeout_seconds = (
+        int(route.timeout_seconds or _default_route_timeout(route))
+        if route is not None
+        else max(int(item.timeout_seconds or 20) for item in routes)
+    )
+    concurrency = (
+        int(route.concurrency or 1)
+        if route is not None
+        else min(int(item.concurrency or 1) for item in routes)
+    )
+    qps_values = tuple(float(item.qps) for item in routes if item.qps is not None)
+    qps = min(qps_values) if qps_values else None
+    transient_categories = tuple(
+        dict.fromkeys(
+            category
+            for item in routes
+            for raw_category in item.transient_retry_categories
+            if (category := _normalize_catalog_token(raw_category))
+        )
+    )
+    wait_budget = min(
+        float(item.rate_limit_wait_budget_seconds or 0.0) for item in routes
+    )
+    transient_retries = min(int(item.transient_retries or 0) for item in routes)
+    rate_limit_retries = min(int(item.rate_limit_retries or 0) for item in routes)
+    sensitive_headers = tuple(
+        dict.fromkeys(
+            header
+            for raw_header in spec.sensitive_headers
+            if (header := _normalize_catalog_token(raw_header))
+        )
+    )
+    return RouteExecutionPolicy(
+        provider=normalized_provider,
+        route=route.name if route is not None else None,
+        kind=route.kind if route is not None else None,
+        hosts=_compiled_provider_hosts(spec, route),
+        sensitive_headers=sensitive_headers,
+        timeout_seconds=timeout_seconds,
+        concurrency=concurrency,
+        qps=qps,
+        minimum_interval_seconds=(1.0 / qps if qps is not None else 0.0),
+        rate_limit_wait_budget_seconds=wait_budget,
+        transient_retry_categories=transient_categories,
+        transient_retries=transient_retries,
+        rate_limit_retries=rate_limit_retries,
+        rate_policy=(
+            route.rate_policy
+            if route is not None and route.rate_policy
+            else "shared_host_cooldown"
+        ),
+        acceptance_policy=(route.acceptance_policy if route is not None else None),
+        asset_scope=(route.asset_scope or spec.asset_default)
+        if route is not None
+        else spec.asset_default,
+    )
+
+
+def compile_route_execution_policy_for_kind(
+    provider_name: str,
+    kind: ProviderRouteKind,
+    *,
+    prefer_transport: ProviderRouteTransport | None = None,
+) -> RouteExecutionPolicy:
+    """Compile the first catalog route for a runtime representation kind."""
+
+    candidates = [
+        route
+        for route in provider_routes(provider_name)
+        if route.kind == kind
+        and (prefer_transport is None or route.transport == prefer_transport)
+    ]
+    if not candidates and prefer_transport is not None:
+        candidates = [
+            route for route in provider_routes(provider_name) if route.kind == kind
+        ]
+    if not candidates:
+        return compile_route_execution_policy(provider_name)
+    selected = min(candidates, key=lambda route: int(route.order or 0))
+    return compile_route_execution_policy(provider_name, selected.name)
+
+
+def effective_route_asset_scope(
+    requested: AssetDefault | None,
+    *,
+    provider_name: str | None,
+    route_name: str | None = None,
+) -> AssetDefault:
+    """Merge the public asset profile with the compiled route default.
+
+    An explicit ``none|body|all`` remains a user override for compatibility.
+    When the caller leaves the profile unset, the exact route's compiled
+    ``asset_scope`` selects execution; unknown providers fail closed.
+    """
+
+    if requested is not None:
+        return requested
+    normalized_provider = _normalize_catalog_token(provider_name)
+    if not normalized_provider:
+        return "none"
+    try:
+        compiled = (
+            compile_route_execution_policy(normalized_provider, route_name)
+            if route_name
+            else compile_route_execution_policy_for_kind(normalized_provider, "assets")
+        )
+    except ValueError:
+        return "none"
+    return compiled.asset_scope
 
 
 def acquisition_for_provider_route(
@@ -818,6 +1063,21 @@ def ordered_provider_specs() -> tuple[ProviderSpec, ...]:
     return tuple(sorted(PROVIDER_CATALOG.values(), key=lambda spec: spec.status_order))
 
 
+def identity_ordered_provider_specs() -> tuple[ProviderSpec, ...]:
+    """Return deterministic identity precedence without changing status order."""
+
+    return tuple(
+        sorted(
+            PROVIDER_CATALOG.values(),
+            key=lambda spec: (
+                -(spec.identity_priority or 0),
+                spec.status_order,
+                spec.name,
+            ),
+        )
+    )
+
+
 def provider_names() -> tuple[str, ...]:
     return tuple(spec.name for spec in ordered_provider_specs())
 
@@ -896,8 +1156,10 @@ def provider_supports_metadata_api_probe(provider_name: str | None) -> bool:
 
 
 def doi_prefix_provider_map() -> dict[str, str]:
-    return {
-        prefix: spec.name
-        for spec in ordered_provider_specs()
-        for prefix in spec.doi_prefixes
-    }
+    result: dict[str, str] = {}
+    for spec in identity_ordered_provider_specs():
+        for raw_prefix in spec.doi_prefixes:
+            prefix = _normalize_catalog_token(raw_prefix)
+            if prefix:
+                result.setdefault(prefix, spec.name)
+    return result

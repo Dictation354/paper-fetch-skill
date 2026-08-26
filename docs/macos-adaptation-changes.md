@@ -152,11 +152,29 @@ Linux `.sh` 和 macOS `.tar.gz` 都进入
 - `--uninstall` 保留 runtime，显式安全 `--purge` 才删除安装目录。
 
 artifact 上传设置 `if-no-files-found: error`，避免构建成功但没有产物时继续发布。
-普通 push / PR 的 `.github/workflows/ci.yml` 固定用 `macos-15`、CPython 3.14
-执行原生 build + verifier，并单独运行真实 `/var` ↔ `/private/var` 或
+普通 push / PR 由 `.github/workflows/ci.yml` 把精确 `github.sha` 传给 reusable
+`.github/workflows/verify.yml`；后者固定用 `macos-15`、CPython 3.14 执行原生
+build + verifier，并单独运行真实 `/var` ↔ `/private/var` 或
 `/tmp` ↔ `/private/tmp` cache scope alias pytest node；该 alias 证据来自原生
 CI，而不是 tarball verifier。
 `offline.yml` 和 release gate 则覆盖 CPython 3.11–3.14 四个 ABI。
+
+稳定发布先把 lightweight 或 annotated tag peel 到完整 40 字符 commit SHA，
+然后将该 SHA 传给同一个 reusable verify gate。只有完整 gate 通过后，才在同一
+workflow run 为 Linux cp311–cp314、macOS arm64 cp311–cp314 和 Windows cp313
+九目标生成并合并 frozen dependency snapshot，并以
+`frozen_dependencies=true` 构建。source/tooling checkout、构建、attestation 和
+GitHub Release target 始终绑定该已验证 SHA；发布前再次核对 tag 没有漂移。
+每个实际 staging 生成自己的 Python、Node/Playwright、Camoufox、formula/image/
+native 与 embedded runtime dependency manifest 和 CycloneDX SBOM，证据 sidecar
+随对应离线产物上传，不能用 lock export 代替实际产物盘点。
+
+发布汇总先在隔离的 nested input 目录验证精确 31 个预 checksum 文件：两个 Python
+distribution、一个 distribution inventory、九个离线安装器、十八个 per-target evidence
+sidecar 和一个 merged dependency manifest。任何 missing/extra 或 basename collision 都
+fail closed；合法文件通过排他创建复制到 flat `release-assets/`，随后生成只含 basename
+的 `SHA256SUMS`，所以 GitHub 把资产扁平上传后校验路径仍成立。rolling release 复用同一
+offline asset-set checker。
 
 release workflow 的 build provenance 生成步骤固定到
 `actions/attest-build-provenance` v4.2.2 的完整 commit SHA，并保持一次调用和
@@ -251,6 +269,34 @@ CLI `browser-preflight` 本身会访问网络，并在策略允许时准备缺�
 仍可按各自数据源与凭据边界独立使用。
 
 同一浏览器边界还要求把“本地 runtime 可启动”和“远端页面可取得正文”分开：
+Camoufox/Playwright 的主文导航、子资源 request、显式 request-context 下载、重定向
+和最终 URL 都经过共享 `SafeRemoteUrlPolicy`。provider catalog 的 route 由唯一的
+`RouteExecutionPolicy` 编译 publisher/API/资产 host、timeout、retry、QPS、acceptance
+与资产并发上限；browser navigation deadline 与 direct transport 消费同一结果。
+route interceptor 会在浏览器发包前拒绝 loopback、
+RFC1918、link-local、reserved、multicast、混合公私 DNS 与 HTTPS downgrade；无法对
+任意跨 origin 页面内 `fetch()` 保证相同逐跳策略时，资产交回受控 direct transport。
+加载 cookie、storage state、profile 或 user-data 的 context 只允许认证 origin，不能
+把登录状态带到 catalog 中的另一个 origin。context 在凭据 seed 和 page 创建前阻断
+service worker 并安装 context-wide route；不能满足该配置的 external borrowed context
+不复用。这些规则属于 portable Python 行为契约，
+在 macOS 上使用相同实现，但仍不替代原生 prepared Camoufox bundle 启动证据。
+
+Browser 二进制资产进一步固定为“浏览器只发现 URL、verified-IP direct transport
+流式落盘”。同一 `RuntimeContext` 的 figure 与 supplementary 共用 128 文件、
+32 MiB/文件、256 MiB 累计、64 MP 和最多 4 worker（受 route cap 限制）的
+`AssetBudget`；无法转为 direct stream 的 browser-only 响应以
+`browser_stream_unavailable` fail closed。该约束是跨平台 Python 边界，portable
+测试覆盖 Content-Length/未知长度/gzip、像素、跨 kind 并发、取消和 staging 清理；
+仍不扩大原生 macOS live publisher 访问证据。
+
+同一 portable 边界也覆盖 browser state 与 MCP cache 的授权隔离。context diagnostics
+固定报告 `storage_state_load={path,exists,used}`；只有成功创建 context 且实际传入
+state 时才记录 capability use。写 fetch-envelope sidecar 前重新以 provider、backend、
+canonical storage-state 路径和最终 SHA-256 构建 private scope。macOS 默认
+`platformdirs` provider 目录、显式 profile/user-data 和 provider state override 使用
+同一算法；只配置不存在的路径仍为 public，实际使用的 state 永不降级为 public。
+
 selected-browser provider 在抽取前等待 provider 正文 DOM 达到阈值并连续两次稳定；
 稳定实质正文已经就绪时，页头 `Institutional login` 等普通导航文本不再由前 1,000
 字符摘要提前判为 paywall，而交给正文感知的 provider availability 验收；challenge、
@@ -375,7 +421,8 @@ contract gate；这些结果用于早期发现漂移，不会提升为原生 Mac
    `EXPECTED_CHANGE_IDS`、`EXPECTED_AUDIT_IDS` 及对应 validator unit tests。
    如果新版本确实增加或删除 change/audit case，必须同步机器合约与两份人类
    文档，不能只放宽 validator。审查 upstream
-   对 `.github/workflows/ci.yml`、`.github/workflows/offline.yml`、
+   对 `.github/workflows/ci.yml`、`.github/workflows/verify.yml`、
+   `.github/workflows/offline.yml`、
    `scripts/build-offline-package.sh`、`install-offline.sh`、
    `scripts/verify-offline-package.sh`、`installer/manifest.json` 和相关测试的
    改动。
@@ -403,8 +450,9 @@ contract gate；这些结果用于早期发现漂移，不会提升为原生 Mac
    validator-only 价值：NTFS 挂载不能提供可靠的 Unix executable bit、symlink、
    case sensitivity 或 LF checkout 证据。
 
-7. 推送分支后等待 `.github/workflows/ci.yml` 中固定 `macos-15`、CPython
-   3.14 的原生 build + verifier gate。Windows 或 WSL 绿灯不能豁免该 gate。
+7. 推送分支后等待 `.github/workflows/ci.yml` 调用的 reusable `verify.yml` 中固定
+   `macos-15`、CPython 3.14 的原生 build + verifier gate。Windows 或 WSL
+   绿灯不能豁免该 gate。
 8. 涉及离线包时，再手动运行 `Offline packages` workflow，并核对四个 arm64
    Python ABI tarball 均经过原生 verifier。
 9. 发布适配结果前提升 fork 版本并创建新的不可变标签。不得移动或复用上游
@@ -421,6 +469,7 @@ lockfile 合法性与 wheel/install/manifest 一致性；没有当前合约的�
 - `scripts/build-offline-package.sh`
 - `install-offline.sh`
 - `scripts/verify-offline-package.sh`
+- `scripts/generate_offline_evidence.py`
 
 validator 同时在 immutable source 和受信任工具 checkout 内运行，并验证精确的
 source/destination copy pair。公式 installer 与其它 Python wheel source 明确不在
@@ -428,12 +477,20 @@ copy allow-list 内；tooling 脚本仍属于显式信任边界，不能被描�
 构建器会在 tooling overlay 存在时把 40 位 tooling SHA 写入
 `offline-manifest.json.tooling_revision`，使源码 commit 与覆盖工具 commit 可分别
 追溯；未使用 overlay 时该字段省略而不是写入空字符串。Windows tooling ref 遵循
-相同不可变 SHA 与 provenance 规则，但只复制 Windows packaging script。
+相同不可变 SHA 与 provenance 规则，把 Windows packaging script、同一
+staged-evidence generator、最终 EXE lifecycle verifier、installer helper、installer
+manifest 和 Inno `.iss` 作为来自同一 commit 的完整集合。Windows embedded CPython
+的 version、python.org URL 与官方 SHA-256 同时固定在 installer manifest 与平台
+合约，构建器必须在解压前校验并把 expected/actual digest 写入 provenance/SBOM；
+最终安装器的 silent install→smoke→覆盖升级→卸载流程只由原生 Windows gate
+证明；卸载后安装根只能精确保留 `offline.env`、`downloads/` 和测试创建的
+`downloads/user-owned.txt`，README、checksum、uninstaller 或未来未知残留都会失败。
+Linux/WSL 的静态验证不能冒充这项系统状态证据。
 
 完整 unit 验证继续复用项目 pytest 并行配置：
 
 ```bash
-PYTHONPATH=src python3 -m pytest tests/unit -q
+PYTHONPATH=src uv run python -m pytest tests/unit -q
 ```
 
 不要为常规 unit / integration 验证添加 `-n 0`；只有 live 或共享外部状态的测试
@@ -448,8 +505,8 @@ Playwright 边界、release CI 时，同一提交应同步：
 - [`macos-adaptation-audit.md`](macos-adaptation-audit.md)；
 - 对应 unit / integration 测试；
 - 本文和 [`deployment.md`](deployment.md) 中对用户可见的行为；
-- `.github/workflows/ci.yml` 的 CPython 3.14 原生 macOS gate，以及 release /
-  offline workflow 的 CPython 3.11–3.14 矩阵。
+- `.github/workflows/ci.yml` / `.github/workflows/verify.yml` 的 CPython 3.14
+  原生 macOS gate，以及 release / offline workflow 的 CPython 3.11–3.14 矩阵。
 
 合约 validator 负责检查静态引用、关键字面事实和受信任 tooling overlay 的精确
 路径；Ubuntu / Windows portable job 确保两个维护入口持续可执行；原生 runner

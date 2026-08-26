@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextvars import copy_context
 from collections import Counter
 from collections.abc import Awaitable, Callable, Hashable, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
@@ -532,8 +533,12 @@ class BatchRunner(Generic[ItemT, ResultT]):
                 index = remaining.pop(position)
                 key = lane_keys[index]
                 submitted_at = self._clock()
+                worker_context = copy_context()
                 future = loop.run_in_executor(
-                    executor, self._worker, item_values[index]
+                    executor,
+                    worker_context.run,
+                    self._worker,
+                    item_values[index],
                 )
                 pending[future] = (index, key, submitted_at)
                 lane_in_flight[key] += 1

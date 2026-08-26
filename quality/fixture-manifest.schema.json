@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://paper-fetch.local/schemas/fixture-manifest-v1.json",
+  "title": "Paper Fetch Fixture Manifest",
+  "type": "object",
+  "required": ["samples", "tests"],
+  "properties": {
+    "samples": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/sample"
+      }
+    },
+    "tests": {
+      "type": "array"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sample": {
+      "type": "object",
+      "required": [
+        "doi",
+        "publisher",
+        "origin_kind",
+        "usage_kind",
+        "fixture_family",
+        "assets"
+      ],
+      "properties": {
+        "doi": {
+          "type": "string",
+          "minLength": 1
+        },
+        "publisher": {
+          "type": "string",
+          "minLength": 1
+        },
+        "origin_kind": {
+          "enum": ["real_replay", "real_excerpt", "contract_scenario", "synthetic"]
+        },
+        "usage_kind": {
+          "enum": ["content", "infrastructure"]
+        },
+        "fixture_family": {
+          "enum": ["golden", "block", "scenario"]
+        },
+        "assets": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "negative_case_kind": {
+          "enum": ["access_block", "empty_shell", "xml_empty_or_abstract"]
+        },
+        "provider_route": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected_reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected_failure_code": {
+          "type": "string"
+        },
+        "expected_content_kind": {
+          "type": "string"
+        },
+        "expected_outcome": {
+          "type": "string"
+        },
+        "route_kind": {
+          "enum": ["html", "xml", "official", "pdf_fallback", "blocked", "block"]
+        },
+        "content_type": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "fixture_family": {
+                "const": "block"
+              }
+            },
+            "required": ["fixture_family"]
+          },
+          "then": {
+            "required": [
+              "negative_case_kind",
+              "provider_route",
+              "source_identity",
+              "expected_reason",
+              "expected_failure_code",
+              "expected_content_kind",
+              "expected_outcome",
+              "route_kind",
+              "content_type"
+            ],
+            "properties": {
+              "expected_failure_code": {
+                "enum": ["availability_rejected", "html_extraction_rejected", "xml_extraction_rejected"]
+              },
+              "expected_content_kind": {
+                "enum": ["metadata_only", "abstract_only"]
+              },
+              "expected_outcome": {
+                "enum": ["rejected", "blocked", "metadata_only"]
+              },
+              "assets": {
+                "anyOf": [
+                  {
+                    "required": ["raw.html"]
+                  },
+                  {
+                    "required": ["raw.xml"]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

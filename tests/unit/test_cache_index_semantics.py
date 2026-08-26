@@ -66,7 +66,9 @@ class CacheIndexSemanticsTests(unittest.TestCase):
         self.assertEqual(listed["index_status"], "version_mismatch")
         self.assertEqual(cached["status"], "hit")
         self.assertEqual(cached["index_status"], "version_mismatch")
-        self.assertEqual(len(cached["entries"]), 3)
+        # Only the self-identifying Markdown remains public. DOI-local binary
+        # artifacts without a trusted scope or sidecar proof fail closed.
+        self.assertEqual(len(cached["entries"]), 1)
         self.assertEqual(index_after["version"], 0)
 
     def test_list_cached_rescan_rebuilds_index_from_fetch_envelope_sidecars(
@@ -297,8 +299,9 @@ class CacheIndexSemanticsTests(unittest.TestCase):
             IDENTITY_PROOF_MARKDOWN_REGISTRATION,
         )
         self.assertEqual(changed_payload_a["status"], "miss")
-        self.assertEqual(payload_b["status"], "hit")
-        self.assertEqual(payload_b["entries"][0]["doi"], normalize_doi(doi_b))
+        # Editing an explicitly registered file invalidates both its DOI and its
+        # old scope provenance. The replacement needs explicit registration.
+        self.assertEqual(payload_b["status"], "miss")
 
     def test_cache_scope_accepts_equivalent_filesystem_alias_for_root(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

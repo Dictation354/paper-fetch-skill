@@ -61,7 +61,7 @@ PNAS、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、T&F 的成功 p
 
 ## 诊断顺序
 
-1. 用 `paper-fetch doctor --json` 或 `provider_status(detail="full")` 做无网络静态检查；输出只包含变量名、是否存在和来源层；token, cookie, endpoint, path, and other values are never echoed。
+1. 用 `paper-fetch doctor --json` 或 `provider_status(detail="full")` 做无网络静态检查；输出只包含变量名、是否存在和来源层；token, cookie, endpoint, path, and other values are never echoed。源码 checkout 中 doctor 还会比较仓库 bundle 与 active Codex project/user skill 的 aggregate content version；离线安装则比较 manifest/bundled/Codex/Claude/Antigravity 副本，缺失或漂移均使整体诊断降级。
 2. 只有动态 catalog 表明目标依赖 browser runtime 且需要真实链路证明时，运行 `browser-preflight` / `browser_preflight`；MCP 若需准备缺失 runtime，显式传 `browser_auto_prepare=true`。
 3. 只有结构化结果为 `challenge` / `auth_required` 时进入人工 auth；`runtime_error` 先修 Camoufox runtime/工具链。
 4. 配置或合法访问状态没有变化时，不重复抓取；重试边界统一遵循 [`failure-handling.md`](failure-handling.md)。

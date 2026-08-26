@@ -128,7 +128,7 @@ class FetchPipeline:
                     markdown_filename=request.markdown_save.filename,
                     request_label=request.markdown_save.request_label,
                     overwrite=request.markdown_save.overwrite,
-                    commit_guard=context.raise_if_cancelled,
+                    commit_guard=context.commit_guard,
                 )
                 if (
                     saved_markdown_path is not None

@@ -9,6 +9,58 @@ from paper_fetch.tracing import TraceContext, trace_event
 
 
 class McpPayloadCacheTests(unittest.TestCase):
+    def test_sync_fetch_payload_owns_one_context_through_markdown_commit(
+        self,
+    ) -> None:
+        instances: list[RuntimeContext] = []
+        captured: dict[str, object] = {}
+        original_save = mcp_fetch_tool.save_markdown_to_disk
+
+        class TrackingRuntimeContext(RuntimeContext):
+            close_count = 0
+
+            def __post_init__(self) -> None:
+                super().__post_init__()
+                instances.append(self)
+
+            def close(self) -> None:
+                self.close_count += 1
+                super().close()
+
+        def fake_fetch(request, *, context=None, **_kwargs):
+            captured["fetch_context"] = context
+            return sample_envelope(
+                modes=set(request.requested_modes()),
+                doi=request.query,
+            )
+
+        def tracked_save(*args, **kwargs):
+            captured["save_guard"] = kwargs.get("commit_guard")
+            return original_save(*args, **kwargs)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with (
+                mock.patch.object(
+                    mcp_fetch_tool, "RuntimeContext", TrackingRuntimeContext
+                ),
+                mock.patch.object(
+                    mcp_fetch_tool, "save_markdown_to_disk", side_effect=tracked_save
+                ),
+            ):
+                payload = mcp_fetch_tool.fetch_paper_payload(
+                    query="10.1000/one-context",
+                    save_markdown=True,
+                    markdown_filename="one.md",
+                    download_dir=Path(tmpdir),
+                    deps=replace(default_mcp_deps(), fetch_paper_envelope=fake_fetch),
+                )
+
+        self.assertEqual(payload["status"], "ok")
+        self.assertEqual(len(instances), 1)
+        self.assertIs(captured["fetch_context"], instances[0])
+        self.assertIs(captured["save_guard"], instances[0].commit_guard)
+        self.assertEqual(instances[0].close_count, 1)
+
     def test_v1_trace_migration_uses_top_level_then_quality_then_article(self) -> None:
         base = sample_envelope(
             modes={"article", "markdown"},
@@ -192,6 +244,33 @@ class McpPayloadCacheTests(unittest.TestCase):
             {"$ref": "#/$defs/FetchAcceptanceSummaryOutput"},
         )
 
+        get_cached_schema = (
+            build_server()._tool_manager._tools["get_cached"].output_schema or {}
+        )
+        cache_asset = get_cached_schema["$defs"]["CacheAssetSummaryOutput"][
+            "properties"
+        ]
+        self.assertTrue(
+            {
+                "audited",
+                "expected",
+                "discovered",
+                "attempted",
+                "accepted_preview",
+                "fallback_preview",
+                "issue_codes",
+                "remote_links_preserved",
+            }
+            <= set(cache_asset)
+        )
+
+        batch_schema = (
+            build_server()._tool_manager._tools["batch_fetch"].output_schema or {}
+        )
+        batch_artifact = batch_schema["$defs"]["BatchFetchArtifactOutput"]["properties"]
+        self.assertIn("route", batch_artifact)
+        self.assertIn("failure_code", batch_artifact)
+
     def test_provider_status_tool_returns_success_when_providers_are_unconfigured(
         self,
     ) -> None:
@@ -264,7 +343,13 @@ class McpPayloadCacheTests(unittest.TestCase):
         self.assertEqual(captured["modes"], {"article", "markdown"})
         self.assertEqual(captured["context"].download_dir, default_download_dir)
         self.assertEqual(captured["context"].artifact_mode, "markdown-assets")
-        self.assertEqual(captured["context"].env, runtime_env)
+        self.assertEqual(
+            captured["context"].env,
+            {
+                **runtime_env,
+                "PAPER_FETCH_BROWSER_AUTO_PREPARE": "false",
+            },
+        )
         self.assertEqual(
             captured["render"],
             RenderOptions(

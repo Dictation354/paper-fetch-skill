@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import contextlib
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
@@ -65,6 +66,7 @@ from .providers.base import ProviderFailure
 from .publisher_identity import (
     extract_doi,
     extract_doi_from_url,
+    normalize_doi,
 )
 from .reason_codes import ERROR, NO_ACCESS, NOT_CONFIGURED, RATE_LIMITED
 from .providers.browser_runtime.preparation import (
@@ -92,6 +94,7 @@ from .workflow.batch_runner import (
     run_batch,
 )
 from .workflow.batch_lifecycle import (
+    BatchLifecycleMode,
     BatchLifecycleOverwriteError,
     BatchLifecycleResumeError,
     BatchManifestJournal,
@@ -103,6 +106,7 @@ from .workflow.batch_routing import (
     resolve_provider_lane,
 )
 from .workflow.pipeline import FetchPipeline, MarkdownSaveSpec
+from .workflow.session_cache import RESOLVED_QUERY_KEY
 from .workflow.request_builder import build_fetch_pipeline_request
 from .workflow.rendering import rewrite_markdown_asset_links
 from .workflow.rendering import (
@@ -157,6 +161,7 @@ class CliBatchItem:
     query: str
     lane_key: str
     attempt: int = 1
+    canonical_doi: str | None = None
 
 
 @dataclass(frozen=True)
@@ -279,7 +284,15 @@ def serialize_envelope(
     )
 
 
-def write_output(serialized: str, output: str, *, overwrite: bool = True) -> None:
+def write_output(
+    serialized: str,
+    output: str,
+    *,
+    overwrite: bool = True,
+    commit_guard: Callable[[], None] | None = None,
+) -> None:
+    if commit_guard is not None:
+        commit_guard()
     if output == "-":
         sys.stdout.write(serialized)
         if not serialized.endswith("\n"):
@@ -290,7 +303,10 @@ def write_output(serialized: str, output: str, *, overwrite: bool = True) -> Non
         # Preserve the legacy failure contract for an absent explicit parent.
         target.write_text(serialized, encoding="utf-8")
         return
-    ArtifactStore.from_download_dir(target.parent).write_text_file(
+    ArtifactStore.from_download_dir(
+        target.parent,
+        commit_guard=commit_guard,
+    ).write_text_file(
         target,
         serialized,
         encoding="utf-8",
@@ -405,6 +421,7 @@ def save_formatted_output_copy(
     render: RenderOptions,
     overwrite: bool = True,
     fallback_query: str | None = None,
+    commit_guard: Callable[[], None] | None = None,
 ) -> Path:
     target = output_dir / _formatted_output_filename(
         envelope,
@@ -424,7 +441,10 @@ def save_formatted_output_copy(
     serialized = serialize_envelope(
         envelope, output_format=output_format, markdown_override=markdown_override
     )
-    return ArtifactStore.from_download_dir(output_dir).write_text_file(
+    return ArtifactStore.from_download_dir(
+        output_dir,
+        commit_guard=commit_guard,
+    ).write_text_file(
         target,
         serialized,
         encoding="utf-8",
@@ -608,12 +628,48 @@ def run_single_fetch(
     cancel_check: Callable[[], bool] | None = None,
     context: RuntimeContext | None = None,
 ) -> SingleFetchResult:
+    """Run one complete fetch/output transaction in one runtime context."""
+
+    owns_context = context is None
+    active_context = context or RuntimeContext(
+        env=runtime_env,
+        transport=transport,
+        download_dir=None if args.no_download else output_dir,
+        artifact_mode="none" if args.no_download else artifact_mode,
+        asset_profile=args.asset_profile,
+        cancel_check=cancel_check,
+    )
+    try:
+        return _run_single_fetch_with_context(
+            args,
+            query=query,
+            output_dir=output_dir,
+            runtime_env=runtime_env,
+            artifact_mode=artifact_mode,
+            transport=transport,
+            cancel_check=cancel_check,
+            context=active_context,
+        )
+    finally:
+        if owns_context:
+            active_context.close()
+
+
+def _run_single_fetch_with_context(
+    args: argparse.Namespace,
+    *,
+    query: str,
+    output_dir: Path,
+    runtime_env: Mapping[str, str],
+    artifact_mode: ArtifactMode,
+    transport=None,
+    cancel_check: Callable[[], bool] | None = None,
+    context: RuntimeContext,
+) -> SingleFetchResult:
     modes = _compute_modes(args)
     render_options = _render_options_from_args(args)
     overwrite = bool(getattr(args, "overwrite", False))
-    preparation_cancel_check = cancel_check or (
-        context.cancel_check if context is not None else None
-    )
+    preparation_cancel_check = cancel_check or context.cancel_check
     with browser_runtime_preparation_scope(
         cancel_check=preparation_cancel_check,
     ):
@@ -645,6 +701,7 @@ def run_single_fetch(
             raise OutputOverwriteRequired(
                 f"{exc}; rerun with --overwrite after reviewing the existing output"
             ) from exc
+    context.raise_if_cancelled()
     envelope = result.envelope
     if args.primary_output_to_output_dir:
         target = output_dir / _formatted_output_filename(
@@ -665,6 +722,7 @@ def run_single_fetch(
                     render=render_options,
                     overwrite=overwrite,
                     fallback_query=query,
+                    commit_guard=context.commit_guard,
                 )
             except FileExistsError as exc:
                 raise OutputOverwriteRequired(
@@ -709,6 +767,7 @@ def run_single_fetch(
                     render=render_options,
                     overwrite=overwrite,
                     fallback_query=query,
+                    commit_guard=context.commit_guard,
                 )
             except FileExistsError as exc:
                 raise OutputOverwriteRequired(
@@ -721,7 +780,12 @@ def run_single_fetch(
         and _same_output_path(result.saved_markdown_path, explicit_target)
     ):
         try:
-            write_output(serialized, args.output, overwrite=overwrite)
+            write_output(
+                serialized,
+                args.output,
+                overwrite=overwrite,
+                commit_guard=context.commit_guard,
+            )
         except FileExistsError as exc:
             raise OutputOverwriteRequired(
                 f"{exc}; rerun with --overwrite after reviewing the existing output"
@@ -764,12 +828,20 @@ def _manifest_request_parameters(
             getattr(args, "primary_output_to_output_dir", False)
         ),
         "save_output_copy": bool(getattr(args, "save_output_copy", False)),
+    }
+
+
+def _manifest_execution_policy(args: argparse.Namespace) -> dict[str, Any]:
+    return {
         "batch_concurrency": args.batch_concurrency,
+        "continue_on_error": bool(getattr(args, "continue_on_error", True)),
     }
 
 
 def _expected_doi_for_query(query: str) -> str | None:
-    return extract_doi_from_url(query) or extract_doi(query)
+    return (
+        normalize_doi(extract_doi_from_url(query) or extract_doi(query) or "") or None
+    )
 
 
 def _batch_lane_for_query(query: str) -> str:
@@ -792,7 +864,46 @@ def _resolve_cli_batch_item_lane(
         )
     except Exception:
         return item
-    return replace(item, lane_key=lane_key)
+    resolved = context.get_session_cache(
+        RESOLVED_QUERY_KEY.materialize(normalize_text(item.query) or item.query)
+    )
+    resolved_doi = normalize_doi(
+        str(
+            (
+                resolved.get("doi")
+                if isinstance(resolved, Mapping)
+                else getattr(resolved, "doi", None)
+            )
+            or ""
+        )
+    )
+    return replace(
+        item,
+        lane_key=lane_key,
+        canonical_doi=resolved_doi or item.canonical_doi,
+    )
+
+
+def _deduplicate_cli_batch_items(
+    items: Sequence[CliBatchItem],
+) -> tuple[list[CliBatchItem], dict[int, tuple[CliBatchItem, ...]]]:
+    representatives: list[CliBatchItem] = []
+    owner_by_doi: dict[str, CliBatchItem] = {}
+    duplicates: dict[int, list[CliBatchItem]] = {}
+    for item in items:
+        doi = normalize_doi(item.canonical_doi or "")
+        if not doi:
+            representatives.append(item)
+            continue
+        owner = owner_by_doi.get(doi)
+        if owner is None:
+            owner_by_doi[doi] = item
+            representatives.append(item)
+        else:
+            duplicates.setdefault(owner.index, []).append(item)
+    return representatives, {
+        index: tuple(values) for index, values in duplicates.items()
+    }
 
 
 def _manifest_output_artifacts(
@@ -1151,6 +1262,7 @@ def run_batch_fetch(
         run_started = False
         journal: BatchManifestJournal | None = None
         batch_context: RuntimeContext | None = None
+        item_contexts: dict[int, RuntimeContext] = {}
         try:
             if resume_value:
                 try:
@@ -1175,10 +1287,12 @@ def run_batch_fetch(
                     store=store,
                     queries=queries,
                     request_parameters=request_parameters,
+                    execution_policy=_manifest_execution_policy(args),
                     tool_version=effective_tool_version,
                     requested_run_id=run_id,
-                    resume=bool(resume_value),
-                    overwrite=overwrite,
+                    mode=BatchLifecycleMode(
+                        resume=bool(resume_value), overwrite=overwrite
+                    ),
                     clock=deps.clock,
                     uuid_factory=deps.uuid_factory,
                     item_factory=lambda index, query, attempt: CliBatchItem(
@@ -1186,6 +1300,7 @@ def run_batch_fetch(
                         query=query,
                         lane_key=_batch_lane_for_query(query),
                         attempt=attempt,
+                        canonical_doi=_expected_doi_for_query(query),
                     ),
                 )
             except BatchLifecycleResumeError as exc:
@@ -1238,22 +1353,6 @@ def run_batch_fetch(
                     append=append_events,
                     overwrite=overwrite,
                 ) as writer:
-
-                    def on_completion(
-                        event: BatchCompletionEvent[CliBatchItem, CliFetchOutcome],
-                    ) -> None:
-                        record = _record_from_batch_result(
-                            args,
-                            event.result,
-                            output_dir=output_dir,
-                            artifact_mode=artifact_mode,
-                            run_id=effective_run_id,
-                            tool_version=effective_tool_version,
-                            deps=deps,
-                        )
-                        assert journal is not None
-                        journal.persist(record, writer=writer)
-
                     with _cooperative_batch_cancel(cancel_event):
                         prepared_lanes = run_batch(
                             items,
@@ -1269,6 +1368,45 @@ def run_batch_fetch(
                             result.value if result.value is not None else result.item
                             for result in prepared_lanes.results
                         ]
+                        logical_items = list(items)
+                        items, duplicates_by_owner = _deduplicate_cli_batch_items(
+                            logical_items
+                        )
+                        representative_indices = {item.index for item in items}
+                        for duplicate in logical_items:
+                            if duplicate.index not in representative_indices:
+                                item_contexts[duplicate.index].close()
+
+                        def on_completion(
+                            event: BatchCompletionEvent[CliBatchItem, CliFetchOutcome],
+                        ) -> None:
+                            fanout_items = (
+                                event.result.item,
+                                *duplicates_by_owner.get(event.result.item.index, ()),
+                            )
+                            for position, fanout_item in enumerate(fanout_items):
+                                outcome = event.result.value
+                                if position and outcome is not None:
+                                    with contextlib.suppress(Exception):
+                                        outcome = copy.deepcopy(outcome)
+                                fanout_result = replace(
+                                    event.result,
+                                    item=fanout_item,
+                                    lane_key=fanout_item.lane_key,
+                                    value=outcome,
+                                )
+                                record = _record_from_batch_result(
+                                    args,
+                                    fanout_result,
+                                    output_dir=output_dir,
+                                    artifact_mode=artifact_mode,
+                                    run_id=effective_run_id,
+                                    tool_version=effective_tool_version,
+                                    deps=deps,
+                                )
+                                assert journal is not None
+                                journal.persist(record, writer=writer)
+
                         run_result = run_batch(
                             items,
                             lambda item: _run_batch_item(
@@ -1293,7 +1431,7 @@ def run_batch_fetch(
                         )
                 if run_result.callback_failures:
                     details = "; ".join(
-                        f"index {failure.source_index + 1}: {failure.message}"
+                        f"index {items[failure.source_index].index}: {failure.message}"
                         for failure in run_result.callback_failures
                     )
                     raise OutputDirectoryError(
@@ -1335,6 +1473,8 @@ def run_batch_fetch(
                     )
             raise
         finally:
+            for item_context in item_contexts.values():
+                item_context.close()
             if batch_context is not None:
                 batch_context.close()
 
@@ -1706,6 +1846,30 @@ def _write_doctor_human(report: Mapping[str, Any]) -> None:
                 f" (expected version {expected_version['expected_version']})"
             )
         sys.stdout.write("\n")
+        bundled_skill = provenance.get("bundled_skill")
+        if isinstance(bundled_skill, Mapping) and bundled_skill.get(
+            "expected_content_version"
+        ):
+            sys.stdout.write(
+                "Skill source bundle: "
+                f"{bundled_skill.get('status', 'unknown')} "
+                f"({bundled_skill['expected_content_version']})\n"
+            )
+        for active_skill in provenance.get("host_skills", []):
+            if (
+                not isinstance(active_skill, Mapping)
+                or active_skill.get("host") != "codex"
+            ):
+                continue
+            version = active_skill.get("actual_content_version")
+            sys.stdout.write(
+                "Active Codex skill"
+                f" [{active_skill.get('scope', 'user')}]: "
+                f"{active_skill.get('status', 'unknown')}"
+            )
+            if version:
+                sys.stdout.write(f" ({version})")
+            sys.stdout.write("\n")
         for issue in provenance.get("issues", []):
             if not isinstance(issue, Mapping):
                 continue

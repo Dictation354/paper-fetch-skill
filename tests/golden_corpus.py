@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from dataclasses import asdict, dataclass
 import json
 from pathlib import Path
@@ -146,13 +147,38 @@ class GoldenCorpusFixture:
         return json.loads(self.expected_path.read_text(encoding="utf-8"))
 
 
+@dataclass(frozen=True)
+class GoldenCorpusReplayRecord:
+    """Classify one manifest claim without promoting declarations to replay."""
+
+    sample_id: str
+    provider: str
+    route_kind: str
+    category: str
+    reason: str
+    fixture: GoldenCorpusFixture | None = None
+
+
+@dataclass(frozen=True)
+class GoldenCorpusReplayInventory:
+    records: tuple[GoldenCorpusReplayRecord, ...]
+
+    @property
+    def replay_fixtures(self) -> tuple[GoldenCorpusFixture, ...]:
+        return tuple(
+            record.fixture
+            for record in self.records
+            if record.category == "real_replay" and record.fixture is not None
+        )
+
+    def count(self, category: str) -> int:
+        return sum(record.category == category for record in self.records)
+
+
 def iter_golden_corpus_fixtures() -> tuple[GoldenCorpusFixture, ...]:
-    fixtures = [
-        GoldenCorpusFixture(sample_id=str(sample["sample_id"]), sample=sample)
-        for sample in iter_manifest_samples(fixture_family="golden")
-        if "expected.json" in sample.get("assets", {}) and _has_replay_asset(sample)
-    ]
-    return tuple(sorted(fixtures, key=lambda item: (item.provider, item.doi)))
+    """Return only real, canonical, contracted and locally executable replays."""
+
+    return golden_corpus_replay_inventory().replay_fixtures
 
 
 def _has_replay_asset(sample: dict[str, Any]) -> bool:
@@ -160,6 +186,16 @@ def _has_replay_asset(sample: dict[str, Any]) -> bool:
     return any(
         name in assets
         for name in ("original.html", "original.xml", "original.pdf", "article.html")
+    )
+
+
+def _expected_contract_is_valid(expected: object) -> bool:
+    if not isinstance(expected, dict):
+        return False
+    return (
+        isinstance(expected.get("has"), dict)
+        and isinstance(expected.get("counts"), dict)
+        and expected.get("expected_content_kind") == "fulltext"
     )
 
 
@@ -1296,6 +1332,111 @@ def lightweight_positive_summary_from_fixture(
 
 def golden_contract_for_fixture(fixture: GoldenCorpusFixture) -> ProviderGoldenContract:
     return golden_corpus_adapter(fixture.provider).contract_for_fixture(fixture)
+
+
+def _golden_replay_record(sample: dict[str, Any]) -> GoldenCorpusReplayRecord:
+    sample_id = str(sample["sample_id"])
+    provider = str(sample.get("publisher") or "")
+    route_kind = str(sample.get("route_kind") or "")
+    origin_kind = str(sample.get("origin_kind") or "real_replay")
+    usage_kind = str(sample.get("usage_kind") or "content")
+    base = {
+        "sample_id": sample_id,
+        "provider": provider,
+        "route_kind": route_kind,
+    }
+    if origin_kind == "synthetic":
+        return GoldenCorpusReplayRecord(
+            **base,
+            category="synthetic",
+            reason="manifest origin_kind is synthetic",
+        )
+    if usage_kind != "content" or origin_kind in {"contract_scenario", "real_excerpt"}:
+        return GoldenCorpusReplayRecord(
+            **base,
+            category="unit_only",
+            reason=f"origin={origin_kind}, usage={usage_kind}",
+        )
+    assets = sample.get("assets") if isinstance(sample.get("assets"), dict) else {}
+    if origin_kind != "real_replay" or "expected.json" not in assets:
+        return GoldenCorpusReplayRecord(
+            **base,
+            category="manifest_only",
+            reason="real replay declaration has no expected.json contract",
+        )
+    if not _has_replay_asset(sample):
+        return GoldenCorpusReplayRecord(
+            **base,
+            category="manifest_only",
+            reason="real replay declaration has no canonical raw asset",
+        )
+    fixture = GoldenCorpusFixture(sample_id=sample_id, sample=sample)
+    try:
+        if not fixture.raw_path.is_file() or not fixture.expected_path.is_file():
+            raise FileNotFoundError("declared canonical replay assets are absent")
+        if not _expected_contract_is_valid(fixture.load_expected()):
+            raise ValueError(
+                "expected.json does not contain the exact summary contract"
+            )
+        contract = golden_contract_for_fixture(fixture)
+        if fixture.route_kind != contract.route_kind:
+            raise ValueError("provider adapter route contract does not match fixture")
+        if not fixture.content_type.startswith(contract.content_prefix):
+            raise ValueError("provider adapter content contract does not match fixture")
+        if not callable(golden_corpus_adapter(provider).build_article):
+            raise TypeError("provider adapter is not executable")
+    except (FileNotFoundError, KeyError, TypeError, ValueError) as exc:
+        return GoldenCorpusReplayRecord(
+            **base,
+            category="unexecutable",
+            reason=str(exc),
+        )
+    return GoldenCorpusReplayRecord(
+        **base,
+        category="real_replay",
+        reason="canonical raw asset, exact contract, and provider adapter are executable",
+        fixture=fixture,
+    )
+
+
+def golden_corpus_replay_inventory() -> GoldenCorpusReplayInventory:
+    records = tuple(
+        _golden_replay_record(sample)
+        for sample in iter_manifest_samples(fixture_family="golden")
+    )
+    return GoldenCorpusReplayInventory(
+        records=tuple(sorted(records, key=lambda item: (item.provider, item.sample_id)))
+    )
+
+
+GOLDEN_CORPUS_SHARD_COUNT = 4
+
+
+def plan_golden_corpus_shards(
+    fixtures: tuple[GoldenCorpusFixture, ...] | None = None,
+    *,
+    shard_count: int = GOLDEN_CORPUS_SHARD_COUNT,
+) -> tuple[tuple[GoldenCorpusFixture, ...], ...]:
+    """Assign whole providers to deterministic, count-balanced exact shards."""
+
+    if shard_count <= 0:
+        raise ValueError("golden corpus shard_count must be positive")
+    provider_groups: dict[str, list[GoldenCorpusFixture]] = defaultdict(list)
+    for fixture in fixtures or iter_golden_corpus_fixtures():
+        provider_groups[fixture.provider].append(fixture)
+    shards: list[list[GoldenCorpusFixture]] = [[] for _ in range(shard_count)]
+    for provider, group in sorted(
+        provider_groups.items(), key=lambda item: (-len(item[1]), item[0])
+    ):
+        del provider
+        shard_index = min(
+            range(shard_count), key=lambda index: (len(shards[index]), index)
+        )
+        shards[shard_index].extend(sorted(group, key=lambda item: item.doi))
+    return tuple(
+        tuple(sorted(shard, key=lambda item: (item.provider, item.doi)))
+        for shard in shards
+    )
 
 
 def _register_golden_corpus_adapters() -> None:

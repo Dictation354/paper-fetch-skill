@@ -82,7 +82,7 @@ runner 默认通过本机 Codex CLI（`codex exec --cd <repo-root> --sandbox wor
    - 填 `asset_contract.figures`：有可用 figure asset 的 fixture 必须 `inline: body`、`download: required`、`purposes: [figure]`；text-only PDF fallback、无可下载图片或 access/empty-shell 类样本才允许 `not_applicable`，且必须写明原因。
    - `success_criteria` 和 `extraction_hints` 是 sync-back 字段，初稿只放空对象、空数组或 null。
    - `autofix-manifest --write` 只允许补结构容器、proof/source query 同步、contract 模板和 high-confidence DOI sample replacement；低置信候选只能进入 rejection/proof，不能自动替换样本。
-   - 验证：`PYTHONPATH=src python3 -m pytest tests/unit/test_provider_manifest_schema.py -q`
+   - 验证：`PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_manifest_schema.py -q`
 4. 捕获 fixtures：
    - 运行 `scripts/capture_fixture.py --from-manifest onboarding/manifests/<provider>.yml --all --auto-via --fail-fast`。
    - null purpose 必须有清楚的 `evidence_reason`。
@@ -126,17 +126,17 @@ runner 默认通过本机 Codex CLI（`codex exec --cd <repo-root> --sandbox wor
     - 优先运行 `python3 scripts/onboard_from_manifests.py run-checks --provider <provider> --all-local`。
     - `python3 scripts/onboard_from_manifests.py check-cleaning-proposal --provider <provider>`
     - `python3 scripts/propose_cleaning_chain.py --provider <provider> --check-contract`
-    - `PYTHONPATH=src python3 -m pytest tests/unit/test_<provider>_provider.py -q`
-    - `PYTHONPATH=src python3 -m pytest tests/unit/test_provider_markdown_review_contract.py -q`
-    - `PYTHONPATH=src python3 -m pytest tests/unit/test_provider_asset_contract.py -q`
-    - `PYTHONPATH=src python3 -m pytest tests/unit/test_provider_route_contract.py -q`
-    - `PYTHONPATH=src python3 -m pytest tests/unit/test_provider_bundle_completeness.py tests/unit/test_provider_owner_reuse.py -q`
-    - `PYTHONPATH=src python3 -m pytest tests/unit/test_manifest_bundle_sync.py -q`
-    - `PYTHONPATH=src python3 -m pytest tests/unit/test_human_docs_drift.py -q`
+    - `PYTHONPATH=src uv run python -m pytest tests/unit/test_<provider>_provider.py -q`
+    - `PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_markdown_review_contract.py -q`
+    - `PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_asset_contract.py -q`
+    - `PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_route_contract.py -q`
+    - `PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_bundle_completeness.py tests/unit/test_provider_owner_reuse.py -q`
+    - `PYTHONPATH=src uv run python -m pytest tests/unit/test_manifest_bundle_sync.py -q`
+    - `PYTHONPATH=src uv run python -m pytest tests/unit/test_human_docs_drift.py -q`
     - `python3 scripts/validate_extraction_rules.py`
     - 对未来新增 provider 默认运行一次 provider subset live assets review，例如 `PAPER_FETCH_RUN_LIVE=1 python3 scripts/run_golden_criteria_live_review.py --providers mdpi`；已有低风险 provider 可豁免。
     - 维护期或合并前人工巡检 route-source drift 时，可本地手动运行 `PAPER_FETCH_RUN_LIVE=1 python3 scripts/run_provider_drift_report.py --provider <provider> --output .paper-fetch-runs/drift/<provider>.json`；该命令不是 GitHub CI gate。
-    - `PYTHONPATH=src python3 -m pytest tests/unit -q`
+    - `PYTHONPATH=src uv run python -m pytest tests/unit -q`
 13. 文档同步与 merge-ready：
     - 更新 `docs/providers.md`、`docs/extraction-rules.md`、`CHANGELOG.md` 和 `onboarding/known-providers.yml`。
     - 文档同步后重新运行 docs drift、manifest bundle sync 和 extraction rules validation。

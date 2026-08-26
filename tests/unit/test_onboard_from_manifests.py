@@ -256,14 +256,14 @@ def test_start_provider_dry_run_writes_dag_and_worker_briefs(tmp_path: Path) -> 
         "markdown_contract": "provider_manifest.markdown_contract",
     }
     assert (
-        "PYTHONPATH=src python3 -m pytest "
+        "PYTHONPATH=src uv run python -m pytest "
         "tests/unit/test_provider_markdown_review_contract.py -q"
     ) in implement_brief["acceptance"]["pytest"]
     assert (
-        "PYTHONPATH=src python3 -m pytest tests/unit/test_provider_asset_contract.py -q"
+        "PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_asset_contract.py -q"
     ) in implement_brief["acceptance"]["pytest"]
     assert (
-        "PYTHONPATH=src python3 -m pytest tests/unit/test_provider_route_contract.py -q"
+        "PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_route_contract.py -q"
     ) in implement_brief["acceptance"]["pytest"]
     assert "files_allowed_to_modify" in implement_brief
     assert "files_must_not_modify" in implement_brief
@@ -905,7 +905,9 @@ def test_verify_plan_uses_existing_tool_interfaces(tmp_path: Path) -> None:
     implement_commands = json.loads(implement.stdout)["commands"]
     markdown_contract_command = [
         "PYTHONPATH=src",
-        "python3",
+        "uv",
+        "run",
+        "python",
         "-m",
         "pytest",
         "tests/unit/test_provider_markdown_review_contract.py",
@@ -914,7 +916,9 @@ def test_verify_plan_uses_existing_tool_interfaces(tmp_path: Path) -> None:
     assert markdown_contract_command in implement_commands
     asset_contract_command = [
         "PYTHONPATH=src",
-        "python3",
+        "uv",
+        "run",
+        "python",
         "-m",
         "pytest",
         "tests/unit/test_provider_asset_contract.py",
@@ -923,7 +927,9 @@ def test_verify_plan_uses_existing_tool_interfaces(tmp_path: Path) -> None:
     assert asset_contract_command in implement_commands
     route_contract_command = [
         "PYTHONPATH=src",
-        "python3",
+        "uv",
+        "run",
+        "python",
         "-m",
         "pytest",
         "tests/unit/test_provider_route_contract.py",
@@ -943,7 +949,9 @@ def test_verify_plan_uses_existing_tool_interfaces(tmp_path: Path) -> None:
     shared_commands = json.loads(shared_integration.stdout)["commands"]
     assert [
         "PYTHONPATH=src",
-        "python3",
+        "uv",
+        "run",
+        "python",
         "-m",
         "pytest",
         "tests/unit/test_manifest_bundle_sync.py",
@@ -1501,7 +1509,10 @@ def _write_blocked_state(
                         "result": "planned",
                         "commands": [
                             [
-                                "python3",
+                                "PYTHONPATH=src",
+                                "uv",
+                                "run",
+                                "python",
                                 "-m",
                                 "pytest",
                                 "tests/unit/test_mdpi_provider.py",
@@ -1817,7 +1828,8 @@ def test_summarize_outputs_json_and_markdown_without_fabricated_passes(
     assert "## Verification Plans" in markdown
     assert "- provider-local-acceptance: result=planned" in markdown
     assert (
-        "- command: `python3 -m pytest tests/unit/test_mdpi_provider.py -q`" in markdown
+        "- command: `PYTHONPATH=src uv run python -m pytest "
+        "tests/unit/test_mdpi_provider.py -q`" in markdown
     )
     assert "no recorded run-check results" not in markdown
 

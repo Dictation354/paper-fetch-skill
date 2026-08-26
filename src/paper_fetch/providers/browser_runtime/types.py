@@ -25,6 +25,7 @@ class BrowserRuntimeConfig:
     storage_state_path: Path | None = None
     persist_storage_state: bool = True
     auto_prepare: bool = False
+    capability_storage_state_path: Path | None = None
 
 
 @dataclass(frozen=True)
@@ -128,7 +129,7 @@ class BrowserRuntimeFailure(Exception):
 
 
 class BrowserImagePayload(TypedDict):
-    bodyB64: str
+    streamOnly: bool
     contentType: str
     url: str
     status: int

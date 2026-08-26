@@ -95,7 +95,7 @@ class _DiskCacheEntry:
     stored_at: float
 
 
-def _is_sensitive_query_param_name(name: str) -> bool:
+def is_sensitive_query_param_name(name: str) -> bool:
     normalized = name.lower()
     return (
         normalized in SENSITIVE_QUERY_PARAM_NAMES
@@ -109,7 +109,7 @@ def _url_has_sensitive_query_params(url: str) -> bool:
         return False
     parsed = urllib.parse.urlsplit(url)
     return any(
-        _is_sensitive_query_param_name(key)
+        is_sensitive_query_param_name(key)
         for key, _value in urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
     )
 
@@ -130,7 +130,7 @@ def redact_url_for_cache(url: str) -> str:
         [
             (
                 key,
-                REDACTED_CACHE_VALUE if _is_sensitive_query_param_name(key) else value,
+                REDACTED_CACHE_VALUE if is_sensitive_query_param_name(key) else value,
             )
             for key, value in query_items
         ],
@@ -177,11 +177,40 @@ _DIAGNOSTIC_URL_IN_TEXT_RE = re.compile(
     r"(?P<base>(?:https?://|/)[^\s\"'<>?]+)\?[^\s\"'<>]*",
     re.IGNORECASE,
 )
-_DIAGNOSTIC_SECRET_ASSIGNMENT_RE = re.compile(
-    r"(?P<name>\b(?:x-amz-signature|signature|token|api[_-]?key|access[_-]?key)"
-    r"\s*[=:]\s*)[^\s&;\"'<>]+",
+_DIAGNOSTIC_FRAGMENT_IN_TEXT_RE = re.compile(
+    r"(?P<base>(?:https?://|/)[^\s\"'<>#]+)#[^\s\"'<>]*",
     re.IGNORECASE,
 )
+_BASE_DIAGNOSTIC_SECRET_NAMES = frozenset(
+    {
+        "x-amz-signature",
+        "signature",
+        "token",
+        "api_key",
+        "api-key",
+        "apikey",
+        "access_key",
+        "access-key",
+        "authorization",
+        "proxy-authorization",
+        "cookie",
+        "set-cookie",
+        "password",
+    }
+)
+
+
+@functools.cache
+def _diagnostic_secret_assignment_re() -> re.Pattern[str]:
+    names = _BASE_DIAGNOSTIC_SECRET_NAMES | _sensitive_cache_header_names()
+    name_pattern = "|".join(
+        re.escape(name) for name in sorted(names, key=len, reverse=True)
+    )
+    return re.compile(
+        rf"(?P<name>\b(?:{name_pattern})\b[\"']?\s*[=:]\s*[\"']?\s*)"
+        r"(?:bearer\s+)?[^\s&;,\"'<>}\]]+",
+        re.IGNORECASE,
+    )
 
 
 def redact_text_for_diagnostics(value: str) -> str:
@@ -192,7 +221,11 @@ def redact_text_for_diagnostics(value: str) -> str:
         lambda match: f"{match.group('base')}?[redacted]",
         text,
     )
-    return _DIAGNOSTIC_SECRET_ASSIGNMENT_RE.sub(
+    text = _DIAGNOSTIC_FRAGMENT_IN_TEXT_RE.sub(
+        lambda match: match.group("base"),
+        text,
+    )
+    return _diagnostic_secret_assignment_re().sub(
         lambda match: f"{match.group('name')}[redacted]",
         text,
     )
@@ -216,7 +249,7 @@ def _cache_identity_url(url: str) -> str:
                     f"{REDACTED_CACHE_HEADER_DIGEST_PREFIX}"
                     f"{_secret_cache_digest(key, value)}"
                 )
-                if _is_sensitive_query_param_name(key)
+                if is_sensitive_query_param_name(key)
                 else value,
             )
             for key, value in urllib.parse.parse_qsl(

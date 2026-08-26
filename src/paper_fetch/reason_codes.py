@@ -8,6 +8,13 @@ NOT_CONFIGURED = "not_configured"
 NOT_SUPPORTED = "not_supported"
 RATE_LIMITED = "rate_limited"
 ERROR = "error"
+ASSET_BYTES_PER_ASSET_EXCEEDED = "asset_bytes_per_asset_exceeded"
+ASSET_BYTES_TOTAL_EXCEEDED = "asset_bytes_total_exceeded"
+ASSET_CANCELLED = "asset_cancelled"
+ASSET_CONTENT_ENCODING_UNSUPPORTED = "asset_content_encoding_unsupported"
+ASSET_FILE_LIMIT_EXCEEDED = "asset_file_limit_exceeded"
+ASSET_PIXEL_LIMIT_EXCEEDED = "asset_pixel_limit_exceeded"
+BROWSER_STREAM_UNAVAILABLE = "browser_stream_unavailable"
 IMAGE_CONVERSION_BACKEND_ERROR = "image_conversion_backend_error"
 IMAGE_CONVERSION_BACKEND_MISSING = "image_conversion_backend_missing"
 IMAGE_CONVERSION_BACKEND_READY = "image_conversion_backend_ready"
@@ -59,6 +66,12 @@ READY = "ready"
 
 __all__ = [
     "ABSTRACT_ONLY",
+    "ASSET_BYTES_PER_ASSET_EXCEEDED",
+    "ASSET_BYTES_TOTAL_EXCEEDED",
+    "ASSET_CANCELLED",
+    "ASSET_CONTENT_ENCODING_UNSUPPORTED",
+    "ASSET_FILE_LIMIT_EXCEEDED",
+    "ASSET_PIXEL_LIMIT_EXCEEDED",
     "BROWSER_CONTEXT_CREATE_FAILED",
     "BROWSER_PAGE_CREATE_FAILED",
     "BROWSER_RUNTIME_FAILURE_CODES",
@@ -66,6 +79,7 @@ __all__ = [
     "BROWSER_RUNTIME_PREPARE_FAILED",
     "BROWSER_RUNTIME_PREPARE_TIMEOUT",
     "BROWSER_RUNTIME_REPAIR_FAILED",
+    "BROWSER_STREAM_UNAVAILABLE",
     "CDP_CONNECT_FAILED",
     "ERROR",
     "IDENTITY_MISMATCH",

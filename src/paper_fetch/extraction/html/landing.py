@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 from collections.abc import Callable, Mapping
 
-from ...http import DEFAULT_TIMEOUT_SECONDS, HttpTransport
+from ...http import DEFAULT_TIMEOUT_SECONDS, HttpRequestPolicy, HttpTransport
 from ...metadata.types import HtmlMetadata
 from ._metadata import parse_html_metadata
 from ._runtime import decode_html
@@ -87,6 +87,7 @@ def fetch_landing_html(
     retry_on_transient: bool = True,
     max_redirects: int = 0,
     raise_on_redirect_limit: bool = False,
+    request_policy: HttpRequestPolicy | None = None,
     decoder: HtmlDecoder = decode_html,
     metadata_parser: HtmlMetadataParser = parse_html_metadata,
 ) -> LandingHtmlFetchResult:
@@ -94,12 +95,16 @@ def fetch_landing_html(
 
     current_url = landing_url
     request_headers = dict(headers or {})
+    request_options: dict[str, Any] = (
+        {"request_policy": request_policy}
+        if request_policy is not None
+        else {"timeout": timeout, "retry_on_transient": retry_on_transient}
+    )
     response = transport.request(
         "GET",
         current_url,
         headers=request_headers,
-        timeout=timeout,
-        retry_on_transient=retry_on_transient,
+        **request_options,
     )
 
     for _ in range(max(0, int(max_redirects))):
@@ -117,8 +122,7 @@ def fetch_landing_html(
             "GET",
             current_url,
             headers=request_headers,
-            timeout=timeout,
-            retry_on_transient=retry_on_transient,
+            **request_options,
         )
 
     if raise_on_redirect_limit:

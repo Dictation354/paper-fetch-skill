@@ -221,6 +221,24 @@ jobs:
               "paper-fetch-skill-offline-macos-arm64-cp313.tar.gz",
               "paper-fetch-skill-offline-macos-arm64-cp314.tar.gz",
               "paper-fetch-skill-windows-x86_64-setup.exe",
+              "paper-fetch-evidence-linux-x86_64-cp311.dependency-manifest.json",
+              "paper-fetch-evidence-linux-x86_64-cp311.sbom.cdx.json",
+              "paper-fetch-evidence-linux-x86_64-cp312.dependency-manifest.json",
+              "paper-fetch-evidence-linux-x86_64-cp312.sbom.cdx.json",
+              "paper-fetch-evidence-linux-x86_64-cp313.dependency-manifest.json",
+              "paper-fetch-evidence-linux-x86_64-cp313.sbom.cdx.json",
+              "paper-fetch-evidence-linux-x86_64-cp314.dependency-manifest.json",
+              "paper-fetch-evidence-linux-x86_64-cp314.sbom.cdx.json",
+              "paper-fetch-evidence-macos-arm64-cp311.dependency-manifest.json",
+              "paper-fetch-evidence-macos-arm64-cp311.sbom.cdx.json",
+              "paper-fetch-evidence-macos-arm64-cp312.dependency-manifest.json",
+              "paper-fetch-evidence-macos-arm64-cp312.sbom.cdx.json",
+              "paper-fetch-evidence-macos-arm64-cp313.dependency-manifest.json",
+              "paper-fetch-evidence-macos-arm64-cp313.sbom.cdx.json",
+              "paper-fetch-evidence-macos-arm64-cp314.dependency-manifest.json",
+              "paper-fetch-evidence-macos-arm64-cp314.sbom.cdx.json",
+              "paper-fetch-evidence-windows-x86_64-cp313.dependency-manifest.json",
+              "paper-fetch-evidence-windows-x86_64-cp313.sbom.cdx.json",
           }
           release = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
           assets = {asset["name"]: asset for asset in release.get("assets", [])}
@@ -360,29 +378,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          expected=(
-            dependency-manifest.json
-            paper-fetch-skill-offline-linux-x86_64-cp311.sh
-            paper-fetch-skill-offline-linux-x86_64-cp312.sh
-            paper-fetch-skill-offline-linux-x86_64-cp313.sh
-            paper-fetch-skill-offline-linux-x86_64-cp314.sh
-            paper-fetch-skill-offline-macos-arm64-cp311.tar.gz
-            paper-fetch-skill-offline-macos-arm64-cp312.tar.gz
-            paper-fetch-skill-offline-macos-arm64-cp313.tar.gz
-            paper-fetch-skill-offline-macos-arm64-cp314.tar.gz
-            paper-fetch-skill-windows-x86_64-setup.exe
-          )
-          printf '%s\n' "${expected[@]}" | LC_ALL=C sort > "$RUNNER_TEMP/expected-assets.txt"
-          find release-assets -maxdepth 1 -type f -printf '%f\n' \
-            | LC_ALL=C sort > "$RUNNER_TEMP/actual-assets.txt"
-          if ! diff -u "$RUNNER_TEMP/expected-assets.txt" "$RUNNER_TEMP/actual-assets.txt"; then
-            echo "Rolling release build did not produce the exact expected asset set." >&2
-            exit 1
-          fi
-          (
-            cd release-assets
-            sha256sum "${expected[@]}" | LC_ALL=C sort -k2 > SHA256SUMS
-          )
+          python scripts/prepare_release_assets.py checksum-offline \
+            --asset-dir release-assets
+          find release-assets -maxdepth 1 -type f ! -name SHA256SUMS \
+            -printf '%f\n' | LC_ALL=C sort > "$RUNNER_TEMP/expected-assets.txt"
 
       - name: Write Chinese rolling release notes
         shell: bash

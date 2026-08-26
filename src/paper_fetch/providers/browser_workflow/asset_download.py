@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+from contextvars import copy_context
 from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
@@ -17,7 +18,7 @@ from ...extraction.html.assets import (
 )
 from ...extraction.html.assets.download import browser_asset_recovery_allowed
 from ...models import AssetProfile
-from ...http import RequestCancelledError
+from ...http import RequestCancelledError, provider_allowed_hosts
 from ...utils import dedupe_normalized, empty_asset_results, normalize_text
 from ..browser_runtime import (
     BrowserHtmlFetchOptions,
@@ -673,6 +674,13 @@ def _run_browser_asset_download_attempt(
                 "browser_context_seed": seed_snapshot,
                 "seed_urls": _seed_urls_for(recovery, seed_snapshot),
                 "figure_page_fetcher": figure_page_fetcher,
+                "asset_budget": getattr(recovery.runtime_context, "asset_budget", None),
+                "artifact_store": getattr(
+                    recovery.runtime_context, "artifact_store", None
+                ),
+                "allowed_hosts": provider_allowed_hosts(recovery.provider),
+                "provider_name": recovery.provider,
+                "runtime_context": recovery.runtime_context,
             }
             if plan.fetch_policy != "direct_then_browser" or not serial_browser_assets:
                 return deps.download_assets(
@@ -797,6 +805,13 @@ def _run_browser_asset_download_attempt(
                 "headers": seeded_asset_headers(seed_snapshot),
                 "browser_context_seed": seed_snapshot,
                 "seed_urls": _seed_urls_for(recovery, seed_snapshot),
+                "asset_budget": getattr(recovery.runtime_context, "asset_budget", None),
+                "artifact_store": getattr(
+                    recovery.runtime_context, "artifact_store", None
+                ),
+                "allowed_hosts": provider_allowed_hosts(recovery.provider),
+                "provider_name": recovery.provider,
+                "runtime_context": recovery.runtime_context,
                 **supplementary_kwargs,
             }
             if plan.fetch_policy != "direct_then_browser" or not serial_browser_assets:
@@ -861,8 +876,11 @@ def _run_browser_asset_download_attempt(
             and not serial_browser_assets
         ):
             with ThreadPoolExecutor(max_workers=2) as executor:
-                body_future = executor.submit(download_body_assets)
-                supplementary_future = executor.submit(download_supplementary_assets)
+                body_future = executor.submit(copy_context().run, download_body_assets)
+                supplementary_future = executor.submit(
+                    copy_context().run,
+                    download_supplementary_assets,
+                )
                 body_result = body_future.result()
                 supplementary_result = supplementary_future.result()
         else:

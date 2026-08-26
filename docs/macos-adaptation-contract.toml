@@ -49,6 +49,17 @@ purge_path_policy = "validated-normalized-path"
 upgrade_preserves = ["offline.env", "user-config-unmanaged-content"]
 uninstall_removes_managed_user_config = true
 
+[skill_integrity]
+schema_version = 2
+aggregate_version = "sha256-of-sorted-path-and-file-sha256"
+inventory_policy = "exact-regular-files-no-symlink-or-special"
+canonical_agent_manifest = "skills/paper-fetch-skill/agents/openai.yaml"
+source_verifier = "src/paper_fetch/skill_integrity.py"
+shared_installer = "scripts/_skill_install_common.sh"
+check_mode = "strictly-read-only-user-or-project"
+doctor_scope = "source-or-offline-to-active-codex"
+drift_affects_readiness = true
+
 [components.formula_tools]
 delivery = "bundled"
 architecture = "arm64"
@@ -99,6 +110,18 @@ explicit_binary_auto_prepare = false
 native_ci_runtime = "official/152.0.4-beta.28"
 native_test_addon_policy = "exclude-default-addons"
 native_test_screen_policy = "fixed-synthetic-screen"
+network_policy = "safe-remote-url-policy-per-request-and-final-url"
+route_allowlist_source = "provider-catalog"
+route_execution_policy = "compiled-catalog-host-timeout-retry-qps-acceptance-assets"
+credentialed_context_policy = "same-origin-only"
+cross_origin_asset_policy = "controlled-direct-transport"
+service_worker_policy = "block-before-credential-seed"
+storage_state_cache_scope = "actual-use-provider-backend-path-digest"
+storage_state_load_diagnostics = "path-exists-used"
+binary_asset_transport = "browser-discovery-pinned-direct-stream"
+asset_budget_defaults = "128-files-32mib-per-asset-256mib-total-64000000-pixels"
+asset_worker_policy = "shared-runtime-max4-route-capped-as-completed"
+browser_only_binary_policy = "fail-closed-browser-stream-unavailable"
 
 [native_verifier]
 entrypoint = "scripts/verify-offline-package.sh"
@@ -115,6 +138,17 @@ covers_user_config = true
 [components]
 forbidden = ["flaresolverr"]
 
+[components.windows_embedded_cpython]
+implementation = "CPython"
+architecture = "x86_64"
+version = "3.13.13"
+archive = "python-3.13.13-embed-amd64.zip"
+url = "https://www.python.org/ftp/python/3.13.13/python-3.13.13-embed-amd64.zip"
+sha256 = "8766a8775746235e23cf5aee5027ab1060bb981d93110577adcf3508aa0cbd55"
+pin_source = "installer/manifest.json"
+verification = "sha256-before-extract"
+provenance_fields = ["version", "url", "expected_sha256", "actual_sha256"]
+
 [shell]
 default = "zsh"
 startup_file = ".zshrc"
@@ -122,7 +156,7 @@ activation_shells = ["bash", "zsh"]
 preserve_startup_symlinks = true
 
 [native_gate]
-ci_workflow = ".github/workflows/ci.yml"
+ci_workflow = ".github/workflows/verify.yml"
 ci_job = "macos-native"
 runner = "macos-15"
 ci_python_version = "3.14"
@@ -137,9 +171,12 @@ release_attestation_subject_path = "release-assets/**/*"
 network_smoke_required = false
 native_tools = ["sw_vers", "file", "lipo", "otool", "install_name_tool", "codesign", "xattr"]
 cache_alias_test_node = "tests/unit/test_cache_index_semantics.py::CacheIndexSemanticsTests::test_cache_scope_accepts_equivalent_filesystem_alias_for_root"
+windows_installer_lifecycle_script = "scripts/verify-windows-installer-lifecycle.ps1"
+windows_installer_lifecycle_runner = "windows-latest"
+windows_installer_lifecycle_serial = true
 
 [portable_ci]
-workflow = ".github/workflows/ci.yml"
+workflow = ".github/workflows/verify.yml"
 job = "macos-contract-portable"
 runners = ["ubuntu-latest", "windows-latest"]
 linux_entrypoint = "scripts/test-macos-contract.sh"
@@ -148,20 +185,48 @@ native_equivalent = false
 
 [release_tooling]
 workflow = ".github/workflows/offline.yml"
+verify_workflow = ".github/workflows/verify.yml"
 trusted_ref_format = "full-commit-sha"
 source_tag_immutable = true
+tag_commit_resolution = "refs-tags-peel-commit-sha"
+verified_sha_reused_for_all_jobs = true
 adapted_release_requires_version_bump = true
 adapted_release_requires_new_tag = true
 source_contract_required_before_overlay = true
 legacy_source_without_contract = "reject"
 overlay_copy_destinations_exclude_python_source = true
 manifest_records_tooling_revision = true
+frozen_dependency_targets = [
+  "linux-x86_64-cp311",
+  "linux-x86_64-cp312",
+  "linux-x86_64-cp313",
+  "linux-x86_64-cp314",
+  "macos-arm64-cp311",
+  "macos-arm64-cp312",
+  "macos-arm64-cp313",
+  "macos-arm64-cp314",
+  "windows-x86_64-cp313",
+]
+dependency_evidence = ["dependency-manifest.json", "paper-fetch-sbom.cdx.json"]
+python_distribution_inventory = "quality/python-distribution-inventory.json"
+release_asset_preparer = "scripts/prepare_release_assets.py"
+stable_release_asset_count = 31
+release_asset_namespace = "flat-basename-only"
+windows_uninstall_allowlist = ["offline.env", "downloads/", "downloads/user-owned.txt"]
 trusted_posix_overlay_paths = [
   "scripts/build-offline-package.sh",
   "install-offline.sh",
   "scripts/verify-offline-package.sh",
+  "scripts/generate_offline_evidence.py",
 ]
-trusted_windows_overlay_paths = ["scripts/build-offline-package-windows.ps1"]
+trusted_windows_overlay_paths = [
+  "scripts/build-offline-package-windows.ps1",
+  "scripts/generate_offline_evidence.py",
+  "scripts/verify-windows-installer-lifecycle.ps1",
+  "scripts/windows-installer-helper.ps1",
+  "installer/manifest.json",
+  "installer/paper-fetch-skill.iss",
+]
 
 [development_surfaces.windows]
 entrypoint = "scripts/test-macos-contract.ps1"
@@ -173,12 +238,21 @@ included_test_nodes = [
   "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_macos_offline_verifier_uses_zsh_and_native_formula_checks",
   "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_manifest_records_optional_tooling_revision",
   "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_windows_manifest_validates_and_records_optional_tooling_revision",
+  "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_windows_embedded_runtime_is_manifest_pinned_and_verified_before_extract",
+  "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_offline_builders_emit_actual_target_dependency_evidence",
   "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_manifest_and_readme_document_browser_backend_policy",
   "tests/unit/test_ci_release_workflow.py::test_offline_builds_full_extra_for_supported_python_matrix",
   "tests/unit/test_ci_release_workflow.py::test_offline_windows_tooling_ref_is_immutable_and_provenanced",
   "tests/unit/test_ci_release_workflow.py::test_regular_ci_includes_native_macos_offline_gate",
   "tests/unit/test_ci_release_workflow.py::test_offline_workflow_verifies_macos_packages_on_pinned_arm64_runner",
   "tests/unit/test_ci_release_workflow.py::test_release_emits_sbom_checksums_and_build_provenance",
+  "tests/unit/test_ci_release_workflow.py::test_stable_release_freezes_all_nine_target_dependency_graphs",
+  "tests/unit/test_ci_release_workflow.py::test_python_distributions_get_exact_inventory_and_independent_smokes",
+  "tests/unit/test_ci_release_workflow.py::test_stable_release_validates_and_flattens_the_exact_asset_set",
+  "tests/unit/test_ci_release_workflow.py::test_windows_offline_job_runs_final_exe_lifecycle_serially",
+  "tests/unit/test_offline_evidence.py::test_evidence_is_derived_from_actual_staged_target",
+  "tests/unit/test_python_distribution_inventory.py::test_distribution_inventory_matches_source_tree",
+  "tests/unit/test_release_asset_inventory.py::test_stable_assets_are_exactly_flattened_and_checksums_use_basenames",
   "tests/unit/test_formula_package_sync.py::test_formula_node_package_dependencies_stay_in_sync",
   "tests/unit/test_formula_package_sync.py::test_formula_lockfiles_pin_same_formula_dependency_versions",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_repository_contract_is_valid",
@@ -187,6 +261,7 @@ included_test_nodes = [
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_support_matrix_drift_is_rejected",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_formula_node_package_drift_is_rejected",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_release_attestation_contract_and_workflow_drift_are_rejected",
+  "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_windows_embedded_runtime_pin_drift_is_rejected",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_camoufox_and_removed_flaresolverr_boundaries_are_enforced",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_contract_keeps_portable_and_native_evidence_explicit",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_windows_entrypoint_rejects_unix_only_dependencies",
@@ -290,7 +365,7 @@ title = "明确 Camoufox 离线边界并移除 FlareSolverr"
 area = "browser-runtime"
 status = "implemented"
 risk = "P1"
-summary = "browser/full extra 允许兼容的 Camoufox 0.5.5+ 版本；开发与常规 CI 继续消费 uv.lock，离线构建则以已解析 wheelhouse 中的唯一 Camoufox wheel 为版本来源，并复核 wheel metadata、installed distribution 与 manifest 一致。离线包捆绑 Python 包但不捆绑浏览器 binary，安装器不得下载；CLI live browser 路径可按策略首次准备，MCP/库默认 opt-in，进入受限网络前仍应显式预置并用 browser-preflight 验证。原生 macOS CI runtime discovery 使用只读 workflow token 避免匿名 GitHub API 限额，live 验证只保留本地显式入口。selected-browser 页面等待稳定正文 DOM；实质正文就绪后，Wiley 页头登录导航交给正文感知验收，challenge、HTTP 强拒绝、404 与摘要重定向仍早期阻断；provider 可在捕获 HTML 前执行有界、同源、失败不阻断的页面准备。PNAS 使用单次导航和 8 秒正文稳定预算，opt-in provider 只阻断 image/font/media；已验收 preflight HTML 按 DOI/URL/runtime 指纹在同进程一次性复用，AIP 维持跨 RuntimeContext 禁用边界，figure discovery 在同一 runtime 串行复用专用 page。Taylor & Francis 仅用该钩子有界并发读取文章页明确暴露的官方 CSV table action，失败表回退到已加载且不产生新请求的同页 payload，其文章范围内的官方 CMS figure rendition 按 accepted preview 保留。内置 auth/preflight 目标由 catalog 能力与共享测试保持一致，Taylor & Francis 使用已验证的开放文章，避免默认命令在 target_resolution 提前失败。候选循环和保守重试都不得用后续传输/导航失败或 deadline timeout 覆盖已经确认的稳定访问门槛；CLI/MCP 批量解析和 lane 排队不得提前消耗 item fetch deadline；HTTP-200 empty shell 的重试优先下一个既有 provider URL，live MCP 只按精确 access-boundary marker 跳过成功 metadata fallback；活动运行时不得包含 FlareSolverr。"
+summary = "browser/full extra 允许兼容的 Camoufox 0.5.5+ 版本；开发与常规 CI 继续消费 uv.lock，离线构建则以已解析 wheelhouse 中的唯一 Camoufox wheel为版本来源，并复核 wheel metadata、installed distribution 与 manifest 一致。离线包捆绑 Python 包但不捆绑浏览器 binary，安装器不得下载；CLI live browser 路径可按策略首次准备，MCP/库默认 opt-in，进入受限网络前仍应显式预置并用 browser-preflight 验证。原生 macOS CI runtime discovery 使用只读 workflow token 避免匿名 GitHub API 限额，live 验证只保留本地显式入口。所有 Camoufox/Playwright navigation、request、redirect 和最终 URL 共用 SafeRemoteUrlPolicy 与 catalog route host allowlist；catalog route 统一编译 hosts、timeout、retry、QPS、acceptance 与 asset cap，browser runtime 使用同一编译结果限制导航 deadline。带登录状态的 context 仅允许认证 origin，跨 origin 资产回退到受控 direct transport。实际注入的 storage-state 以 provider/backend/canonical path/final digest 进入 MCP private cache scope，并用 path/exists/used diagnostics 区分配置与使用，空路径不得污染 public。selected-browser 页面等待稳定正文 DOM；实质正文就绪后，Wiley 页头登录导航交给正文感知验收，challenge、HTTP 强拒绝、404 与摘要重定向仍早期阻断；provider 可在捕获 HTML 前执行有界、同源、失败不阻断的页面准备。PNAS 使用单次导航和 8 秒正文稳定预算，opt-in provider 只阻断 image/font/media；已验收 preflight HTML 按 DOI/URL/runtime 指纹在同进程一次性复用，AIP 维持跨 RuntimeContext 禁用边界，figure discovery 在同一 runtime 串行复用专用 page。Taylor & Francis 仅用该钩子有界并发读取文章页明确暴露的官方 CSV table action，失败表回退到已加载且不产生新请求的同页 payload，其文章范围内的官方 CMS figure rendition 按 accepted preview 保留。内置 auth/preflight 目标由 catalog 能力与共享测试保持一致，Taylor & Francis 使用已验证的开放文章，避免默认命令在 target_resolution 提前失败。候选循环和保守重试都不得用后续传输/导航失败或 deadline timeout 覆盖已经确认的稳定访问门槛；CLI/MCP 批量解析和 lane 排队不得提前消耗 item fetch deadline；HTTP-200 empty shell 的重试优先下一个既有 provider URL，live MCP 只按精确 access-boundary marker 跳过成功 metadata fallback；活动运行时不得包含 FlareSolverr。"
 rationale = "Python 包可导入不等于目标浏览器可用，安装时静默联网也会破坏离线包边界；同样，远端挑战、延迟正文或批量调度等待必须与本地 browser context 启动和实际抓取预算分开诊断。"
 implementation_paths = [
   ".github/workflows/ci.yml",
@@ -299,15 +374,36 @@ implementation_paths = [
   "scripts/build-offline-package.sh",
   "install-offline.sh",
   "src/paper_fetch/auth.py",
+  "src/paper_fetch/asset_budget.py",
+  "src/paper_fetch/capability_scope.py",
+  "src/paper_fetch/runtime_browser.py",
   "src/paper_fetch/browser_preflight.py",
   "src/paper_fetch/cli.py",
   "src/paper_fetch/extraction/html/asset_fields.py",
   "src/paper_fetch/extraction/html/assets/figures.py",
+  "src/paper_fetch/extraction/html/assets/download.py",
+  "src/paper_fetch/extraction/html/assets/requester.py",
+  "src/paper_fetch/extraction/html/assets/state.py",
   "src/paper_fetch/extraction/html/assets/silverchair.py",
   "src/paper_fetch/extraction/html/signals.py",
+  "src/paper_fetch/http/browser_policy.py",
+  "src/paper_fetch/http/provider_policy.py",
+  "src/paper_fetch/http/transport.py",
+  "src/paper_fetch/http/url_policy.py",
+  "src/paper_fetch/image_tools/convert.py",
   "src/paper_fetch/mcp/batch_fetch.py",
+  "src/paper_fetch/mcp/fetch_cache.py",
+  "src/paper_fetch/mcp/fetch_tool.py",
   "src/paper_fetch/providers/_atypon_browser_workflow_profiles.py",
   "src/paper_fetch/providers/_playwright_browser.py",
+  "src/paper_fetch/providers/_arxiv_assets.py",
+  "src/paper_fetch/providers/_arxiv_source_archive.py",
+  "src/paper_fetch/providers/_ieee_browser_html.py",
+  "src/paper_fetch/providers/_pdf_fallback.py",
+  "src/paper_fetch/provider_catalog.py",
+  "src/paper_fetch/providers/browser_runtime/camoufox_manager.py",
+  "src/paper_fetch/providers/browser_runtime/context.py",
+  "src/paper_fetch/providers/browser_runtime/types.py",
   "src/paper_fetch/providers/_ieee_asset_recovery.py",
   "src/paper_fetch/providers/_ieee_asset_memo.py",
   "src/paper_fetch/providers/_ieee_supplementary.py",
@@ -323,6 +419,8 @@ implementation_paths = [
   "src/paper_fetch/providers/browser_workflow/assets.py",
   "src/paper_fetch/providers/browser_workflow/bootstrap.py",
   "src/paper_fetch/providers/browser_workflow/fetchers/context.py",
+  "src/paper_fetch/providers/browser_workflow/fetchers/file.py",
+  "src/paper_fetch/providers/browser_workflow/fetchers/image.py",
   "src/paper_fetch/providers/browser_workflow/fetchers/memo.py",
   "src/paper_fetch/providers/browser_workflow/html_extraction.py",
   "src/paper_fetch/providers/browser_workflow/fetchers/readiness.py",
@@ -346,6 +444,32 @@ test_nodes = [
   "tests/unit/test_html_access_signals.py::HtmlAccessSignalsTests::test_detect_html_block_classifies_nature_client_challenge_shell",
   "tests/unit/test_camoufox_backend.py::test_camoufox_candidate_deadline_preserves_observed_access_boundary",
   "tests/unit/test_camoufox_backend.py::test_camoufox_candidate_transport_failure_preserves_observed_access_boundary",
+  "tests/unit/test_camoufox_backend.py::test_open_context_records_successful_storage_state_injection",
+  "tests/unit/test_camoufox_backend.py::test_camoufox_trace_reports_storage_state_was_loaded",
+  "tests/unit/test_capability_scope.py::test_fetch_writer_uses_final_digest_of_actually_loaded_state",
+  "tests/unit/test_camoufox_backend.py::test_browser_private_candidate_is_rejected_before_context_or_page_call",
+  "tests/unit/test_safe_remote_url_policy.py::test_browser_guard_rejects_mixed_dns_and_public_to_private_redirect",
+  "tests/unit/test_browser_workflow_fetchers.py::test_browser_asset_fetchers_reject_private_urls_before_playwright_calls",
+  "tests/unit/test_browser_workflow_fetchers.py::test_credentialed_browser_asset_cross_origin_falls_back_before_context",
+  "tests/unit/test_browser_workflow_fetchers.py::test_browser_file_descriptor_defers_redirects_to_direct_transport",
+  "tests/unit/test_auth.py::test_auth_private_dns_is_rejected_before_runtime_or_playwright_call",
+  "tests/unit/test_auth.py::test_auth_context_blocks_allowed_cross_origin_request_with_credentials",
+  "tests/unit/test_ieee_provider_routes.py::IeeeProviderRouteTests::test_browser_html_private_dns_rejected_before_context_creation",
+  "tests/unit/test_ieee_provider_routes.py::IeeeProviderRouteTests::test_browser_html_revalidates_unsafe_final_url",
+  "tests/unit/test_pdf_fallback_helpers.py::PdfFallbackHelperTests::test_pdf_private_candidate_is_rejected_before_browser_context",
+  "tests/unit/test_pdf_fallback_helpers.py::PdfFallbackHelperTests::test_pdf_request_context_redirect_rejects_private_hop",
+  "tests/unit/test_route_execution_policy.py::test_browser_runtime_caps_deadline_from_compiled_route_policy",
+  "tests/unit/test_runtime_browser.py::test_browser_manager_service_worker_block_forces_isolated_external_context",
+  "tests/unit/test_asset_budget.py::test_asset_budget_defaults_and_route_concurrency_cap",
+  "tests/unit/test_asset_budget.py::test_compressed_length_budget_failure_cancels_pending_asset_work",
+  "tests/unit/test_asset_budget.py::test_parallel_figure_and_supplementary_calls_share_worker_slots",
+  "tests/unit/test_asset_budget.py::test_one_runtime_worker_reuses_seed_session_across_figure_and_supplementary",
+  "tests/unit/test_asset_budget.py::test_arxiv_gzip_expansion_uses_shared_budget_and_cleans_staging",
+  "tests/unit/test_asset_budget.py::test_external_cancellation_propagates_from_as_completed_workers",
+  "tests/unit/test_asset_budget.py::test_arxiv_archive_counts_duplicate_regular_members_before_deduplication",
+  "tests/unit/test_safe_remote_url_policy.py::test_asset_stream_uses_catalog_sensitive_headers_on_redirect",
+  "tests/unit/test_safe_remote_url_policy.py::test_seed_redirect_preserves_multiple_cookies_and_refreshes_next_hop",
+  "tests/unit/test_pdf_fallback_helpers.py::PdfFallbackHelperTests::test_pdf_browser_owned_download_url_fails_closed_before_direct_replay",
   "tests/unit/test_aip_provider.py::test_aip_cold_html_retry_reuses_transient_seed_without_persisting_state",
   "tests/unit/test_provider_request_options.py::ProviderRequestOptionsTests::test_browser_workflow_preserves_fast_access_gate_when_retry_times_out",
   "tests/unit/test_live_runtime_env.py::test_live_mcp_no_access_detection_requires_machine_readable_boundary",
@@ -447,13 +571,17 @@ title = "把原生 macOS 证据纳入 split offline 发布门禁"
 area = "ci-release"
 status = "implemented"
 risk = "P0"
-summary = "常规 CI 在固定 macos-15 arm64 runner 上精确测试 /var 或 /tmp 的系统 cache alias 并构建验证 cp314；可复用 offline workflow 验证 cp311-cp314 全矩阵，稳定发布必须等待 offline workflow，并用固定 SHA 的 actions/attest-build-provenance v4.2.2 为全部发布资产生成 provenance。"
+summary = "常规 CI 与稳定发布共用 verify workflow；标签先 peel 到不可变 commit SHA，同一 SHA 通过完整 verify 后才解析九目标冻结依赖、构建 offline 资产并发布。固定 macos-15 arm64 runner 验证 cp311-cp314，每个 staged target 同附实际 dependency manifest、CycloneDX SBOM 与固定 SHA 的 provenance。"
 rationale = "每次变更需要快速原生 cp314 回归，发布还需要完整 ABI 矩阵；Linux、WSL 和 Windows 的静态或模拟测试无法证明 Mach-O、codesign、xattr、Zsh 和原生安装行为。"
 implementation_paths = [
   ".github/workflows/ci.yml",
+  ".github/workflows/verify.yml",
   ".github/workflows/offline.yml",
   ".github/workflows/release.yml",
   "scripts/verify-offline-package.sh",
+  "scripts/generate_offline_evidence.py",
+  "scripts/prepare_release_assets.py",
+  "quality/python-distribution-inventory.json",
   "docs/macos-adaptation-contract.toml",
   "scripts/validate_macos_adaptation.py",
 ]
@@ -461,6 +589,13 @@ test_nodes = [
   "tests/unit/test_ci_release_workflow.py::test_regular_ci_includes_native_macos_offline_gate",
   "tests/unit/test_ci_release_workflow.py::test_offline_workflow_verifies_macos_packages_on_pinned_arm64_runner",
   "tests/unit/test_ci_release_workflow.py::test_release_emits_sbom_checksums_and_build_provenance",
+  "tests/unit/test_ci_release_workflow.py::test_stable_release_freezes_all_nine_target_dependency_graphs",
+  "tests/unit/test_ci_release_workflow.py::test_python_distributions_get_exact_inventory_and_independent_smokes",
+  "tests/unit/test_ci_release_workflow.py::test_stable_release_validates_and_flattens_the_exact_asset_set",
+  "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_offline_builders_emit_actual_target_dependency_evidence",
+  "tests/unit/test_offline_evidence.py::test_evidence_is_derived_from_actual_staged_target",
+  "tests/unit/test_python_distribution_inventory.py::test_distribution_inventory_matches_source_tree",
+  "tests/unit/test_release_asset_inventory.py::test_stable_assets_are_exactly_flattened_and_checksums_use_basenames",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_release_attestation_contract_and_workflow_drift_are_rejected",
 ]
 audit_cases = ["MAC-AUD-002", "MAC-AUD-006"]
@@ -473,7 +608,7 @@ title = "建立 Windows/WSL 可执行但不冒充原生证据的维护契约"
 area = "cross-platform-maintenance"
 status = "implemented"
 risk = "P1"
-summary = "机器可读 TOML 映射精确 pytest node；普通 CI 在 Ubuntu 与 Windows 运行 portable gate，WSL 使用原生 Linux Python 并把 /mnt checkout 降级为 validator-only。不可变标签重跑必须先通过 source contract，POSIX/Windows tooling ref 都要求完整 SHA，只复制精确同名工具路径而不复制 Python wheel source，并记录 tooling revision。"
+summary = "机器可读 TOML 映射精确 pytest node；普通 CI 在 Ubuntu 与 Windows 运行 portable gate，WSL 使用原生 Linux Python并把 /mnt checkout 降级为 validator-only。Windows embedded CPython 的官方 URL/SHA 固定在 installer manifest，下载后解压前校验；Windows tooling overlay 从同一 SHA 覆盖 builder/evidence/lifecycle/helper/manifest/Inno 定义，原生最终 EXE gate 串行执行安装、smoke、覆盖升级、用户数据保留和卸载后精确残留树检查。"
 rationale = "主开发环境可以尽早发现契约漂移，但必须清楚保留原生 macOS 发布 gate 的证据边界，并避免工具链修复悄然改变不可变标签的业务源码。"
 implementation_paths = [
   "docs/macos-adaptation-contract.toml",
@@ -482,8 +617,13 @@ implementation_paths = [
   "scripts/test-macos-contract.sh",
   ".gitattributes",
   ".github/workflows/ci.yml",
+  ".github/workflows/verify.yml",
   ".github/workflows/offline.yml",
   "scripts/build-offline-package-windows.ps1",
+  "scripts/verify-windows-installer-lifecycle.ps1",
+  "scripts/windows-installer-helper.ps1",
+  "installer/manifest.json",
+  "installer/paper-fetch-skill.iss",
 ]
 test_nodes = [
   "tests/unit/test_ci_release_workflow.py::test_offline_builds_full_extra_for_supported_python_matrix",
@@ -492,6 +632,9 @@ test_nodes = [
   "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_build_rejects_invalid_tooling_revision_before_cleanup",
   "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_manifest_records_optional_tooling_revision",
   "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_windows_manifest_validates_and_records_optional_tooling_revision",
+  "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_windows_embedded_runtime_is_manifest_pinned_and_verified_before_extract",
+  "tests/unit/test_ci_release_workflow.py::test_windows_offline_job_runs_final_exe_lifecycle_serially",
+  "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_windows_embedded_runtime_pin_drift_is_rejected",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_repository_contract_is_valid",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_duplicate_change_id_is_rejected",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_missing_implementation_test_and_audit_references_are_rejected",

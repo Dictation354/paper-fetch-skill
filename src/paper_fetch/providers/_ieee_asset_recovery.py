@@ -28,6 +28,7 @@ from .browser_workflow.asset_download import (
     download_browser_backed_related_assets,
 )
 from .browser_workflow.fetchers import (
+    BrowserDocumentFetcherOptions,
     _MemoizedImageDocumentFetcher,
     _SharedBrowserPageSession,
     _replace_runtime_shared_page_session,
@@ -213,7 +214,9 @@ def download_ieee_assets_with_browser(
                 headless=browser_runtime_config.headless,
                 runtime_context=runtime_context,
                 use_runtime_shared_browser=True,
-                browser_config=browser_runtime_config,
+                browser_options=BrowserDocumentFetcherOptions(
+                    runtime_config=browser_runtime_config
+                ),
                 thread_local=False,
             )
             try:
@@ -319,7 +322,9 @@ def download_ieee_assets_with_browser(
                 cdp_endpoint=request.get("cdp_endpoint"),
                 profile_dir=request.get("profile_dir"),
                 user_data_dir=request.get("user_data_dir"),
-                browser_config=request.get("browser_config"),
+                browser_options=BrowserDocumentFetcherOptions(
+                    runtime_config=request.get("browser_config")
+                ),
             )
         )
         memoized_fetcher.browser_backend = browser_runtime_config.backend
@@ -339,7 +344,9 @@ def download_ieee_assets_with_browser(
             cdp_endpoint=request.get("cdp_endpoint"),
             profile_dir=request.get("profile_dir"),
             user_data_dir=request.get("user_data_dir"),
-            browser_config=request.get("browser_config"),
+            browser_options=BrowserDocumentFetcherOptions(
+                runtime_config=request.get("browser_config")
+            ),
             thread_local=True,
         )
         fetcher.browser_backend = browser_runtime_config.backend

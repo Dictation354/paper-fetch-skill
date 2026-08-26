@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import tomllib
 from pathlib import Path
@@ -112,6 +113,7 @@ def _context(
     cli_path: Path | None = None,
     source_root: Path | None = None,
     sys_prefix: Path | None = None,
+    env: dict[str, str] | None = None,
 ) -> ProvenanceContext:
     distribution_root = root / "executing-environment" / "site-packages"
     metadata_path = (
@@ -136,7 +138,7 @@ def _context(
         ),
         argv0=str(effective_cli_path),
         home=home,
-        env={},
+        env=env or {},
         source_root=source_root,
         current_distribution={
             "status": "ready",
@@ -153,6 +155,20 @@ def _context(
             "version": cli_version,
         },
     )
+
+
+def _create_source_checkout(root: Path) -> Path:
+    source_root = root / "source"
+    _write(
+        source_root / "pyproject.toml",
+        (
+            '[project]\nname = "paper-fetch-skill"\nversion = "5.5.0"\n'
+            'dependencies = ["mcp>=2,<3"]\n'
+        ),
+    )
+    _write(source_root / ".venv" / "bin" / "activate")
+    shutil.copytree(SKILL_DIR, source_root / "skills" / "paper-fetch-skill")
+    return source_root
 
 
 @pytest.mark.parametrize("target_platform", ["linux", "windows"])
@@ -417,8 +433,146 @@ def test_skill_integrity_rejects_extra_files_and_symlinks(tmp_path: Path) -> Non
     assert report["status"] == "drift"
     assert report["unexpected_files"] == ["extra.md"]
     assert report["symlink_files"] == ["linked.md"]
+    assert report["actual_content_sha256"] != report["expected_content_sha256"]
     with pytest.raises(SkillManifestError, match="integrity check failed"):
         require_valid_skill_bundle(manifest_path)
+
+
+def test_skill_content_hash_is_stable_across_mtime_copy_and_order(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source"
+    _write(source / "references" / "second.md", "second\n")
+    _write(source / "SKILL.md", "# Skill\n")
+    _write(source / "references" / "first.md", "first\n")
+
+    initial = build_skill_bundle_manifest(
+        source,
+        name="paper-fetch-skill",
+        root="skills/paper-fetch-skill",
+    )
+    for index, path in enumerate(reversed(sorted(source.rglob("*")))):
+        if path.is_file():
+            os.utime(path, ns=(1_000_000_000 + index, 2_000_000_000 + index))
+    copied = tmp_path / "copied"
+    shutil.copytree(source, copied)
+    rebuilt = build_skill_bundle_manifest(
+        copied,
+        name="paper-fetch-skill",
+        root="skills/paper-fetch-skill",
+    )
+
+    assert rebuilt == initial
+    assert initial["content_version"] == f"sha256:{initial['content_sha256']}"
+    assert [item["path"] for item in initial["files"]] == sorted(
+        item["path"] for item in initial["files"]
+    )
+
+    _write(copied / "references" / "first.md", "changed\n")
+    changed = build_skill_bundle_manifest(
+        copied,
+        name="paper-fetch-skill",
+        root="skills/paper-fetch-skill",
+    )
+    assert changed["content_sha256"] != initial["content_sha256"]
+    assert changed["content_version"] != initial["content_version"]
+
+
+@pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="FIFO requires POSIX")
+def test_skill_integrity_rejects_special_files(tmp_path: Path) -> None:
+    skill = tmp_path / "skill"
+    _write(skill / "SKILL.md", "# Skill\n")
+    bundle = build_skill_bundle_manifest(
+        skill,
+        name="paper-fetch-skill",
+        root="skills/paper-fetch-skill",
+    )
+    manifest = tmp_path / "offline-manifest.json"
+    _write(manifest, json.dumps({"skill_bundle": bundle}))
+    fifo = skill / "special.fifo"
+    os.mkfifo(fifo)
+
+    with pytest.raises(SkillManifestError, match="only regular files"):
+        build_skill_bundle_manifest(
+            skill,
+            name="paper-fetch-skill",
+            root="skills/paper-fetch-skill",
+        )
+    report = verify_skill_bundle(manifest, skill_dir=skill)
+    assert report["status"] == "drift"
+    assert report["special_files"] == ["special.fifo"]
+
+
+def test_source_doctor_reports_matching_codex_user_skill_ready(tmp_path: Path) -> None:
+    source_root = _create_source_checkout(tmp_path)
+    home = tmp_path / "home"
+    codex_home = tmp_path / "custom-codex"
+    home.mkdir()
+    shutil.copytree(
+        SKILL_DIR,
+        codex_home / "skills" / "paper-fetch-skill",
+    )
+
+    report = install_provenance_payload(
+        context=_context(
+            tmp_path,
+            home,
+            source_root=source_root,
+            env={"CODEX_HOME": str(codex_home)},
+        )
+    )
+
+    assert report["status"] == "ready", report
+    assert report["bundled_skill"]["actual_content_version"].startswith("sha256:")
+    [active] = report["host_skills"]
+    assert active["host"] == "codex"
+    assert active["scope"] == "user"
+    assert active["status"] == "ready"
+    assert (
+        active["actual_content_version"]
+        == report["bundled_skill"]["expected_content_version"]
+    )
+
+
+def test_source_doctor_project_skill_wins_and_drift_is_diagnostic(
+    tmp_path: Path,
+) -> None:
+    source_root = _create_source_checkout(tmp_path)
+    home = tmp_path / "home"
+    home.mkdir()
+    shutil.copytree(
+        SKILL_DIR,
+        home / ".codex" / "skills" / "paper-fetch-skill",
+    )
+    project_skill = source_root / ".codex" / "skills" / "paper-fetch-skill"
+    shutil.copytree(SKILL_DIR, project_skill)
+    _write(project_skill / "SKILL.md", "drift\n")
+
+    report = install_provenance_payload(
+        context=_context(tmp_path, home, source_root=source_root)
+    )
+
+    assert report["status"] == "drift"
+    [active] = report["host_skills"]
+    assert active["scope"] == "project"
+    assert active["status"] == "drift"
+    assert active["hash_mismatches"][0]["path"] == "SKILL.md"
+    assert any(issue["component"] == "host_skill.codex" for issue in report["issues"])
+
+
+def test_source_doctor_reports_missing_active_codex_skill(tmp_path: Path) -> None:
+    source_root = _create_source_checkout(tmp_path)
+    home = tmp_path / "home"
+    home.mkdir()
+
+    report = install_provenance_payload(
+        context=_context(tmp_path, home, source_root=source_root)
+    )
+
+    assert report["status"] == "drift"
+    [active] = report["host_skills"]
+    assert active["scope"] == "user"
+    assert active["reason_code"] == "skill_bundle_missing"
 
 
 def test_real_source_staging_and_temp_install_preserve_skill_and_version_provenance(

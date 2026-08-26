@@ -444,10 +444,7 @@ def _run_task_commands(
     if task == "validate-manifest":
         return [
             [
-                "PYTHONPATH=src",
-                "python3",
-                "-m",
-                "pytest",
+                *PYTEST_COMMAND_PREFIX,
                 "tests/unit/test_provider_manifest_schema.py",
                 "-q",
             ]

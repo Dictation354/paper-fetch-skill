@@ -334,6 +334,22 @@ class PublisherIdentityTests(unittest.TestCase):
             "elsevier",
         )
 
+        evidence = publisher_identity.ordered_provider_candidate_evidence(
+            landing_urls=[
+                "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852"
+            ],
+            publishers=["Springer Nature"],
+            doi="10.1111/example",
+        )
+        self.assertEqual(
+            [(item.provider, item.strength) for item in evidence],
+            [("elsevier", "weak"), ("springer", "weak"), ("wiley", "strong")],
+        )
+        self.assertEqual(
+            evidence[0].conflicting_providers,
+            ("springer", "wiley"),
+        )
+
     def test_validate_extracted_identity_rejects_explicit_doi_mismatch(self) -> None:
         result = publisher_identity.validate_extracted_identity(
             {"doi": "10.1000/expected", "title": "Expected title"},

@@ -8,12 +8,6 @@
   "violations": [
     {
       "code": "PLR0913",
-      "path": "src/paper_fetch/cli.py",
-      "symbol": "_build_cli_manifest_record",
-      "value": 16
-    },
-    {
-      "code": "PLR0913",
       "path": "src/paper_fetch/extraction/html/assets/_kind.py",
       "symbol": "_figure_failure_template",
       "value": 13
@@ -23,24 +17,6 @@
       "path": "src/paper_fetch/extraction/html/assets/download.py",
       "symbol": "resolve_asset_download",
       "value": 27
-    },
-    {
-      "code": "PLR0913",
-      "path": "src/paper_fetch/extraction/html/assets/download.py",
-      "symbol": "_retry_seeded_figure_candidate",
-      "value": 14
-    },
-    {
-      "code": "PLR0913",
-      "path": "src/paper_fetch/extraction/html/assets/download.py",
-      "symbol": "download_assets",
-      "value": 19
-    },
-    {
-      "code": "PLR0913",
-      "path": "src/paper_fetch/extraction/html/assets/download.py",
-      "symbol": "resolve_asset_download",
-      "value": 13
     },
     {
       "code": "PLR0913",
@@ -64,7 +40,7 @@
       "code": "PLR0913",
       "path": "src/paper_fetch/http/retry.py",
       "symbol": "RetryMixin._handle_http_failure",
-      "value": 12
+      "value": 11
     },
     {
       "code": "PLR0913",
@@ -127,16 +103,10 @@
       "value": 16
     },
     {
-      "code": "PLR0913",
-      "path": "src/paper_fetch/mcp/results.py",
-      "symbol": "_error_payload",
-      "value": 11
-    },
-    {
       "code": "C901",
       "path": "src/paper_fetch/mcp/server.py",
       "symbol": "build_server",
-      "value": 31
+      "value": 29
     },
     {
       "code": "PLR0913",
@@ -170,21 +140,15 @@
     },
     {
       "code": "C901",
-      "path": "src/paper_fetch/providers/_article_markdown_elsevier_tables.py",
-      "symbol": "render_elsevier_table_result",
-      "value": 26
-    },
-    {
-      "code": "C901",
       "path": "src/paper_fetch/providers/_article_markdown_math.py",
       "symbol": "render_mathml_expression",
-      "value": 59
+      "value": 51
     },
     {
       "code": "C901",
       "path": "src/paper_fetch/providers/_article_markdown_math.py",
       "symbol": "render_mathml_expression.render_node",
-      "value": 45
+      "value": 44
     },
     {
       "code": "C901",
@@ -197,12 +161,6 @@
       "path": "src/paper_fetch/providers/_ieee_asset_recovery.py",
       "symbol": "download_ieee_assets_with_browser",
       "value": 17
-    },
-    {
-      "code": "PLR0913",
-      "path": "src/paper_fetch/providers/_payloads.py",
-      "symbol": "build_provider_payload",
-      "value": 19
     },
     {
       "code": "C901",
@@ -220,7 +178,7 @@
       "code": "C901",
       "path": "src/paper_fetch/providers/_playwright_browser.py",
       "symbol": "fetch_html_with_playwright",
-      "value": 44
+      "value": 41
     },
     {
       "code": "PLR0913",
@@ -293,12 +251,6 @@
       "path": "src/paper_fetch/runtime.py",
       "symbol": "resolve_runtime_context",
       "value": 12
-    },
-    {
-      "code": "PLR0913",
-      "path": "src/paper_fetch/workflow/acceptance.py",
-      "symbol": "evaluate_fetch_acceptance",
-      "value": 11
     },
     {
       "code": "C901",

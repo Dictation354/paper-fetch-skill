@@ -5,6 +5,8 @@
 #   ./scripts/install-codex-skill.sh              # user-scope skill (~/.codex/skills/...)
 #   ./scripts/install-codex-skill.sh --project    # project-scope skill (./.codex/skills/...)
 #   ./scripts/install-codex-skill.sh --register-mcp [--env-file .env]
+#   ./scripts/install-codex-skill.sh --check        # read-only user-scope drift check
+#   ./scripts/install-codex-skill.sh --project --check
 #   ./scripts/install-codex-skill.sh --uninstall  # remove the installed skill entry
 
 set -euo pipefail

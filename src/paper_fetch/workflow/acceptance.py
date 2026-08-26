@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Collection, Mapping, Sequence
 from enum import StrEnum
-from typing import Any, Literal
+from typing import Any, Literal, TypedDict, Unpack
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -20,6 +20,7 @@ from ..models import (
 from ..publisher_identity import normalize_doi
 from ..provider_catalog import (
     acquisition_matches_provider_route,
+    compile_route_execution_policy,
     provider_for_source,
 )
 from ..reason_codes import (
@@ -100,6 +101,21 @@ class AcceptanceOutputKind(StrEnum):
 AcceptanceAssetProfile = Literal["none", "body", "all", "unknown"]
 
 
+class _AcceptanceIdentityLandingOptions(TypedDict, total=False):
+    """Keyword-compatible DOI-less landing facts for acceptance evaluation."""
+
+    title: str | None
+    source: str | None
+    canonical_landing_url: str | None
+    canonical_landing_verified: bool
+    canonical_landing_unique: bool
+
+
+_ACCEPTANCE_IDENTITY_LANDING_OPTION_KEYS = frozenset(
+    _AcceptanceIdentityLandingOptions.__annotations__
+)
+
+
 class _AcceptanceModel(BaseModel):
     # Schema-version-compatible readers ignore additive fields they do not know.
     model_config = ConfigDict(extra="ignore", frozen=True, from_attributes=True)
@@ -111,7 +127,26 @@ class IdentityAcceptanceFacet(_AcceptanceModel):
     expected_doi: str | None = None
     title: str | None = None
     candidate_count: int = Field(default=0, ge=0)
+    canonical_landing_url: str | None = None
+    canonical_landing_verified: bool = False
+    canonical_landing_unique: bool = False
     codes: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    def validate_resolved_identity(self) -> IdentityAcceptanceFacet:
+        if self.status != IdentityAcceptanceStatus.RESOLVED:
+            return self
+        if self.doi:
+            return self
+        if not (
+            self.canonical_landing_url
+            and self.canonical_landing_verified
+            and self.canonical_landing_unique
+        ):
+            raise ValueError(
+                "DOI-less resolved identity requires one verified unique canonical landing"
+            )
+        return self
 
 
 class FetchAcceptanceFacet(_AcceptanceModel):
@@ -234,6 +269,8 @@ class ProvenanceAcceptanceFacet(_AcceptanceModel):
     warning_codes: tuple[str, ...] = ()
     failure_codes: tuple[str, ...] = ()
     unstructured_warning_count: int = Field(default=0, ge=0)
+    acceptance_policy: str | None = None
+    acceptance_policy_satisfied: bool = False
 
 
 class FetchAcceptanceReport(_AcceptanceModel):
@@ -344,6 +381,9 @@ def _identity_facet(
     doi: str | None,
     expected_doi: str | None,
     title: str | None,
+    canonical_landing_url: str | None,
+    canonical_landing_verified: bool,
+    canonical_landing_unique: bool,
 ) -> IdentityAcceptanceFacet:
     raw_doi = normalize_text(doi or (envelope.doi if envelope is not None else None))
     resolved_doi = normalize_doi(raw_doi) or raw_doi
@@ -351,12 +391,16 @@ def _identity_facet(
         expected_doi
     )
     resolved_title = _title_for(envelope, title)
+    resolved_landing_url = normalize_text(canonical_landing_url) or None
+    has_verified_landing_identity = bool(
+        resolved_landing_url and canonical_landing_verified and canonical_landing_unique
+    )
     if identity_status is None:
         if failure_code == "ambiguous":
             status = IdentityAcceptanceStatus.AMBIGUOUS
         elif normalized_expected_doi and resolved_doi != normalized_expected_doi:
             status = IdentityAcceptanceStatus.MISMATCH
-        elif resolved_doi or (envelope is not None and resolved_title):
+        elif resolved_doi or has_verified_landing_identity:
             status = IdentityAcceptanceStatus.RESOLVED
         else:
             status = IdentityAcceptanceStatus.UNAVAILABLE
@@ -366,7 +410,11 @@ def _identity_facet(
     if status == IdentityAcceptanceStatus.MISMATCH:
         identity_code = "identity_mismatch"
     elif status != IdentityAcceptanceStatus.RESOLVED:
-        identity_code = failure_code
+        identity_code = failure_code or (
+            "canonical_landing_identity_unverified"
+            if resolved_title and not resolved_doi
+            else None
+        )
     codes = _normalized_codes([identity_code])
     return IdentityAcceptanceFacet(
         status=status,
@@ -374,6 +422,9 @@ def _identity_facet(
         expected_doi=normalized_expected_doi or None,
         title=resolved_title,
         candidate_count=candidate_count,
+        canonical_landing_url=resolved_landing_url,
+        canonical_landing_verified=bool(canonical_landing_verified),
+        canonical_landing_unique=bool(canonical_landing_unique),
         codes=codes,
     )
 
@@ -716,12 +767,58 @@ def _structured_warning_codes(
     return codes
 
 
+def _route_acceptance_satisfied(
+    policy: str | None,
+    *,
+    acquisition: AcquisitionProvenance,
+    identity: IdentityAcceptanceFacet,
+    content: ContentAcceptanceFacet,
+    asset: AssetAcceptanceFacet,
+) -> bool:
+    """Evaluate the compiled route contract against the matching facet only."""
+
+    if policy == "metadata_identity":
+        return identity.status == IdentityAcceptanceStatus.RESOLVED
+    representation = normalize_text(acquisition.representation).lower()
+    if policy == "provider_html_body":
+        return (
+            representation == "html"
+            and content.status == ContentAcceptanceStatus.FULLTEXT
+        )
+    if policy == "structured_xml_body":
+        return (
+            representation == "xml"
+            and content.status == ContentAcceptanceStatus.FULLTEXT
+        )
+    if policy == "validated_pdf":
+        return (
+            representation == "pdf"
+            and content.status == ContentAcceptanceStatus.FULLTEXT
+        )
+    if policy == "validated_asset":
+        return bool(
+            asset.requested
+            and (
+                (asset.status == AssetAcceptanceStatus.COMPLETE and asset.local > 0)
+                or (
+                    asset.status == AssetAcceptanceStatus.NOT_APPLICABLE
+                    and asset.audited
+                    and asset.expected == 0
+                )
+            )
+        )
+    # Catalog extensions are fail-closed until this versioned evaluator knows
+    # which public facet constitutes sufficient evidence.
+    return False
+
+
 def _provenance_facet(
     *,
     source: str | None,
     acquisition: AcquisitionProvenance | None,
     trace: Sequence[TraceEvent],
     quality: Quality,
+    identity: IdentityAcceptanceFacet,
     asset: AssetAcceptanceFacet,
     content: ContentAcceptanceFacet,
     failure_code: str | None,
@@ -729,7 +826,20 @@ def _provenance_facet(
     normalized_source = normalize_text(source) or None
     source_provider = provider_for_source(normalized_source)
     acquisition_consistent = False
+    route_acceptance_policy: str | None = None
+    route_acceptance_satisfied = False
     if acquisition_matches_provider_route(acquisition) and acquisition is not None:
+        compiled_route = compile_route_execution_policy(
+            acquisition.provider, acquisition.route
+        )
+        route_acceptance_policy = compiled_route.acceptance_policy
+        route_acceptance_satisfied = _route_acceptance_satisfied(
+            route_acceptance_policy,
+            acquisition=acquisition,
+            identity=identity,
+            content=content,
+            asset=asset,
+        )
         if source_provider is not None:
             acquisition_consistent = source_provider == acquisition.provider
         elif normalized_source == METADATA_ONLY:
@@ -754,6 +864,7 @@ def _provenance_facet(
     if (
         normalized_source
         and acquisition_consistent
+        and route_acceptance_satisfied
         and has_resolve
         and has_provider_selection
         and has_terminal_route
@@ -812,6 +923,8 @@ def _provenance_facet(
         ),
         # Kept only for visibility; warning message text is never classified.
         unstructured_warning_count=len(quality.warnings),
+        acceptance_policy=route_acceptance_policy,
+        acceptance_policy_satisfied=route_acceptance_satisfied,
     )
 
 
@@ -872,11 +985,23 @@ def evaluate_fetch_acceptance(
     candidate_count: int = 0,
     doi: str | None = None,
     expected_doi: str | None = None,
-    title: str | None = None,
-    source: str | None = None,
+    **identity_landing: Unpack[_AcceptanceIdentityLandingOptions],
 ) -> FetchAcceptanceReport:
     """Evaluate immutable fetch facts without network, filesystem, or provider work."""
 
+    unknown_identity_landing = (
+        set(identity_landing) - _ACCEPTANCE_IDENTITY_LANDING_OPTION_KEYS
+    )
+    if unknown_identity_landing:
+        unknown = ", ".join(sorted(unknown_identity_landing))
+        raise TypeError(f"unexpected acceptance keyword argument(s): {unknown}")
+    title = identity_landing.get("title")
+    source = identity_landing.get("source")
+    canonical_landing_url = identity_landing.get("canonical_landing_url")
+    canonical_landing_verified = identity_landing.get(
+        "canonical_landing_verified", False
+    )
+    canonical_landing_unique = identity_landing.get("canonical_landing_unique", False)
     if candidate_count < 0:
         raise ValueError("candidate_count must not be negative")
     normalized_failure = normalize_text(failure_code).lower() or None
@@ -926,6 +1051,9 @@ def evaluate_fetch_acceptance(
         doi=doi,
         expected_doi=expected_doi,
         title=title,
+        canonical_landing_url=canonical_landing_url,
+        canonical_landing_verified=canonical_landing_verified,
+        canonical_landing_unique=canonical_landing_unique,
     )
     fetch = _fetch_facet(envelope, effective_failure)
     content = _content_facet(envelope, quality)
@@ -936,6 +1064,7 @@ def evaluate_fetch_acceptance(
         acquisition=envelope.acquisition if envelope is not None else None,
         trace=trace,
         quality=quality,
+        identity=identity,
         asset=asset,
         content=content,
         failure_code=effective_failure,

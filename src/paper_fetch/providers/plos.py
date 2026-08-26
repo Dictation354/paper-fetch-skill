@@ -22,13 +22,13 @@ from ..extraction.html.assets import (
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.provider_rules import ProviderFrontMatterRules, ProviderHtmlRules
 from ..http import (
-    DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
     HttpRequestPolicy,
     HttpTransport,
     PDF_MIME_TYPE,
     RequestFailure,
     redact_url_for_cache,
 )
+from ..http.provider_policy import provider_request_policy
 from ..http.headers import header_value
 from ..journal_routes import provider_journal_mapping
 from ..models import (
@@ -39,6 +39,7 @@ from ..models import (
 )
 from ..provider_catalog import (
     BodyTextThresholds,
+    ProviderRouteSpec,
     ProviderSpec,
     provider_body_text_thresholds,
     provider_pdf_path_templates,
@@ -103,6 +104,26 @@ register_provider_bundle(
             xml_root_tags=("article",),
             xml_file_tokens=("10.1371", "plos"),
             body_text_thresholds=BodyTextThresholds(min_chars=1200),
+            routes=(
+                ProviderRouteSpec(name="metadata", kind="metadata"),
+                ProviderRouteSpec(
+                    name="xml",
+                    kind="xml",
+                    hosts=("plos.org", "doi.org", "storage.googleapis.com"),
+                ),
+                ProviderRouteSpec(
+                    name="direct_pdf",
+                    kind="pdf",
+                    hosts=("plos.org", "storage.googleapis.com"),
+                    requires_pdf_conversion=True,
+                ),
+                ProviderRouteSpec(
+                    name="assets",
+                    kind="assets",
+                    hosts=("plos.org", "storage.googleapis.com"),
+                    asset_scope="body",
+                ),
+            ),
         ),
         html_rules=ProviderHtmlRules(
             name="plos",
@@ -125,8 +146,6 @@ PLOS_DOI_JOURNAL_PATTERN = re.compile(
 PLOS_HOST = "https://journals.plos.org"
 PLOS_REDIRECT_STATUSES = {301, 302, 303, 307, 308}
 PLOS_MAX_REDIRECTS = 4
-PLOS_REMOTE_HOSTS = ("plos.org", "storage.googleapis.com")
-PLOS_RESOLVER_HOSTS = ("doi.org", "plos.org")
 PLOS_JOURNAL_PATH_PATTERN = re.compile(r"^[a-z0-9-]+$")
 
 
@@ -329,8 +348,13 @@ def _fetch_plos_redirected_response(
     candidate_url: str,
     *,
     headers: Mapping[str, str],
-    retry_on_rate_limit: bool = False,
+    route_name: str = "xml",
 ) -> dict[str, Any] | None:
+    request_policy = provider_request_policy(
+        "plos",
+        route_name,
+        base=HttpRequestPolicy(follow_redirects=False),
+    )
     current_url = candidate_url
     visited_urls: set[str] = set()
     for _ in range(PLOS_MAX_REDIRECTS + 1):
@@ -344,13 +368,7 @@ def _fetch_plos_redirected_response(
             "GET",
             current_url,
             headers=headers,
-            timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-            retry_on_rate_limit=retry_on_rate_limit,
-            retry_on_transient=True,
-            request_policy=HttpRequestPolicy(
-                follow_redirects=False,
-                allowed_hosts=PLOS_REMOTE_HOSTS,
-            ),
+            request_policy=request_policy,
         )
         status_code = int(response.get("status_code") or 200)
         if status_code not in PLOS_REDIRECT_STATUSES:
@@ -470,11 +488,10 @@ class PlosClient(ProviderClient):
                         "Accept": "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
                         "User-Agent": self.user_agent,
                     },
-                    timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                    retry_on_transient=True,
-                    request_policy=HttpRequestPolicy(
-                        max_redirects=PLOS_MAX_REDIRECTS,
-                        allowed_hosts=PLOS_RESOLVER_HOSTS,
+                    request_policy=provider_request_policy(
+                        "plos",
+                        "xml",
+                        base=HttpRequestPolicy(max_redirects=PLOS_MAX_REDIRECTS),
                     ),
                 )
             except RequestFailure as exc:
@@ -616,8 +633,8 @@ class PlosClient(ProviderClient):
         try:
             pdf_result = PdfFallbackStrategy(
                 transport=self.transport,
+                provider_name="plos",
                 headers=default_pdf_headers(self.user_agent, referer=candidate),
-                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 asset_profile=effective_asset_profile,
                 asset_output_dir=pdf_asset_output_dir(
                     context, asset_profile=effective_asset_profile, doi=doi
@@ -784,11 +801,13 @@ class PlosClient(ProviderClient):
                     self.transport,
                     url,
                     headers=self._asset_headers(),
-                    retry_on_rate_limit=True,
+                    route_name="assets",
                 ),
                 asset_download_concurrency=resolve_asset_download_concurrency(
                     context.env
                 ),
+                provider_name="plos",
+                runtime_context=context,
             )
             if body_image_assets
             else empty_asset_results()
@@ -809,6 +828,8 @@ class PlosClient(ProviderClient):
                 asset_download_concurrency=resolve_asset_download_concurrency(
                     context.env
                 ),
+                provider_name="plos",
+                runtime_context=context,
             )
             if normalized_supplementary and asset_profile == "all"
             else empty_asset_results()

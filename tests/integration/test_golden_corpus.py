@@ -6,6 +6,7 @@ import os
 import pytest
 
 from tests.golden_corpus import (
+    GOLDEN_CORPUS_SHARD_COUNT,
     GoldenCorpusFixture,
     build_article_from_fixture,
     expected_summary_from_article,
@@ -13,15 +14,38 @@ from tests.golden_corpus import (
     iter_golden_corpus_fixtures,
     iter_golden_corpus_representative_fixtures,
     lightweight_positive_summary_from_fixture,
+    plan_golden_corpus_shards,
 )
 from tests.golden_corpus_adapters import golden_corpus_adapter
 
 
 FULL_GOLDEN_ENV = "PAPER_FETCH_RUN_FULL_GOLDEN"
+GOLDEN_SHARD_ENV = "PAPER_FETCH_GOLDEN_SHARD"
 
 
 GOLDEN_CORPUS_FIXTURES = iter_golden_corpus_fixtures()
 REPRESENTATIVE_GOLDEN_CORPUS_FIXTURES = iter_golden_corpus_representative_fixtures()
+
+
+def _exact_golden_fixtures() -> tuple[GoldenCorpusFixture, ...]:
+    selected = os.environ.get(GOLDEN_SHARD_ENV, "").strip().lower()
+    if os.environ.get(FULL_GOLDEN_ENV) == "1" or selected == "all":
+        return GOLDEN_CORPUS_FIXTURES
+    if not selected:
+        return ()
+    try:
+        shard_index = int(selected)
+    except ValueError as exc:
+        raise ValueError(
+            f"{GOLDEN_SHARD_ENV} must be all or an integer shard index"
+        ) from exc
+    shards = plan_golden_corpus_shards(GOLDEN_CORPUS_FIXTURES)
+    if shard_index < 0 or shard_index >= len(shards):
+        raise ValueError(f"{GOLDEN_SHARD_ENV} must be between 0 and {len(shards) - 1}")
+    return shards[shard_index]
+
+
+EXACT_GOLDEN_CORPUS_FIXTURES = _exact_golden_fixtures()
 
 
 def _fixture_id(fixture: GoldenCorpusFixture) -> str:
@@ -150,10 +174,13 @@ def test_golden_corpus_representative_fixture_matches_primary_fulltext_path(
 
 
 @pytest.mark.skipif(
-    os.environ.get(FULL_GOLDEN_ENV) != "1",
-    reason=f"Set {FULL_GOLDEN_ENV}=1 to run full 133-fixture golden corpus regression.",
+    not EXACT_GOLDEN_CORPUS_FIXTURES,
+    reason=(
+        f"Set {GOLDEN_SHARD_ENV}=0..{GOLDEN_CORPUS_SHARD_COUNT - 1} for one "
+        f"provider shard or {GOLDEN_SHARD_ENV}=all for all 140 exact fixtures."
+    ),
 )
-@pytest.mark.parametrize("fixture", GOLDEN_CORPUS_FIXTURES, ids=_fixture_id)
+@pytest.mark.parametrize("fixture", EXACT_GOLDEN_CORPUS_FIXTURES, ids=_fixture_id)
 def test_golden_corpus_expected_summary_matches_current_extractor(
     fixture: GoldenCorpusFixture,
 ) -> None:

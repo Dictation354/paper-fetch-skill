@@ -19,7 +19,11 @@ def context_options_for_config(config: BrowserRuntimeConfig) -> dict[str, Any]:
     if config.backend != "camoufox":
         raise RuntimeError(f"Unsupported browser backend {config.backend!r}.")
     storage_options = paths.storage_context_options(config)
-    return {"accept_downloads": True, **storage_options}
+    return {
+        "accept_downloads": True,
+        "service_workers": "block",
+        **storage_options,
+    }
 
 
 def open_browser_context(
@@ -33,21 +37,38 @@ def open_browser_context(
         raise RuntimeError(f"Unsupported browser backend {config.backend!r}.")
     context_kwargs = context_options_for_config(config)
     manager: Any
+    context: Any
     if runtime_context is not None:
         from ...runtime import RuntimeContext
 
         if isinstance(runtime_context, RuntimeContext):
-            return None, runtime_context.new_browser_context_for_runtime_config(
+            context = runtime_context.new_browser_context_for_runtime_config(
                 config, **context_kwargs
             )
-        generic_factory = getattr(
-            runtime_context, "new_browser_context_for_runtime_config", None
-        )
-        if callable(generic_factory):
-            return None, generic_factory(config, **context_kwargs)
-        raise RuntimeError(
-            f"Runtime context does not support browser backend {config.backend!r}."
-        )
+        else:
+            generic_factory = getattr(
+                runtime_context, "new_browser_context_for_runtime_config", None
+            )
+            if not callable(generic_factory):
+                raise RuntimeError(
+                    f"Runtime context does not support browser backend {config.backend!r}."
+                )
+            context = generic_factory(config, **context_kwargs)
+        if "storage_state" in context_kwargs:
+            recorder = getattr(
+                runtime_context, "record_browser_state_capability_use", None
+            )
+            if callable(recorder):
+                recorder(
+                    provider=config.provider,
+                    backend=config.backend,
+                    storage_state_path=(
+                        config.capability_storage_state_path
+                        or config.storage_state_path
+                        or context_kwargs["storage_state"]
+                    ),
+                )
+        return None, context
 
     manager = CamoufoxBrowserManager(
         binary_path=config.binary_path,

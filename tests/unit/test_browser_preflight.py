@@ -272,6 +272,10 @@ def test_wiley_preflight_accepts_leading_login_navigation_after_body_readiness(
     class Context:
         def __init__(self) -> None:
             self.page = Page()
+            self.route_handler = None
+
+        def route(self, _pattern, handler):
+            self.route_handler = handler
 
         def new_page(self):
             return self.page

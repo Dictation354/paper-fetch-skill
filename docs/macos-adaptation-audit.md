@@ -38,11 +38,16 @@
 - 要求：CPython 3.11、3.12、3.13、3.14 的 macOS arm64 离线 job 都固定
   `macos-15`，生成 `.tar.gz`，运行原生 verifier，artifact 缺失即失败。
 - 自动证据：静态 contract gate 检查 workflow；普通 push/PR 的
-  `.github/workflows/ci.yml` 在 CPython 3.14 执行原生 build + verifier，
+  `.github/workflows/ci.yml` 把精确 `github.sha` 交给 reusable
+  `.github/workflows/verify.yml`，后者在 CPython 3.14 执行原生 build + verifier；
   release / offline workflow 实际执行四个 `macos-15` ABI job；普通 CI 还在
   Ubuntu 与 Windows 分别执行 portable contract entrypoint。release workflow
-  的 provenance 步骤还会校验 `actions/attest-build-provenance` v4.2.2 的完整
-  SHA、精确一次调用和 `release-assets/**/*` subject path。
+  对 lightweight/annotated tag peel 到完整 commit SHA，并在同一 SHA 通过 reusable
+  verify 后解析九目标 frozen snapshot；source/tooling checkout、离线构建、发布
+  target 与 provenance 都绑定该 SHA。provenance 步骤还会校验
+  `actions/attest-build-provenance` v4.2.2 的完整 SHA、精确一次调用和
+  `release-assets/**/*` subject path；每目标实际 staging 的 dependency manifest
+  与 CycloneDX SBOM 随对应 artifact 上传。
 - 平台：S / L 只能验证 YAML；D 才能提供平台证据。
 - 关闭条件：四个 ABI job 都在固定 runner 通过，不能用 `macos-latest` 或
   Windows / WSL 结果代替。
@@ -90,8 +95,8 @@
 - 要求：texmath 是实体文件；非系统 dylib 收进 `formula-tools/lib`；install
   name 使用 `@rpath` / `@loader_path`；texmath 和随包 dylib 均有可验证的
   ad-hoc 签名。构建 setup 固定为 `haskell-actions/setup` v2.12.0 的完整 SHA，
-  GHC 9.10.3 与 Cabal 3.12.1.0；`ci.yml` 精确使用一次，`offline.yml` 精确使用
-  两次同一 pin。
+  GHC 9.10.3 与 Cabal 3.12.1.0；reusable `verify.yml` 精确使用一次，
+  `offline.yml` 精确使用两次同一 pin。
 - 自动证据：机器合约 validator 拒绝 action、版本注释、SHA、GHC/Cabal 或使用
   次数漂移；原生构建继续执行 smoke、`otool -L`、
   `codesign --verify --strict` 和公式转换 smoke。
@@ -148,7 +153,8 @@
   `/private/tmp/...` 识别为同一根目录，同时
   继续拒绝 scope 根以下的 symlink 与目录外文件。
 - 自动证据：platform-specific installer unit test、等价目录 alias cache test，
-  以及 `.github/workflows/ci.yml` 中固定 `macos-15` 的精确原生 pytest node。
+  以及 `.github/workflows/ci.yml` 调用的 `verify.yml` 中固定 `macos-15` 的精确
+  原生 pytest node。
   tarball verifier 不承担 cache alias 证据。
 - 平台：L 可证明 Linux 路径和通用目录 alias；D 才能证明 Mac 路径与系统
   `/var` 或 `/tmp` alias。
@@ -215,13 +221,22 @@
   合约、Camoufox 兼容范围或已解析 wheelhouse 版本一致性校验的旧上游 `v4.1.0`
   拒绝重打包。POSIX/Windows tooling
   ref 都必须是完整 40 字符 commit SHA；POSIX 只允许 builder、installer、verifier
-  三个同名 source/destination pair，Windows 只允许自己的 packaging script，均不
+  与 staged-evidence generator 四个同名 source/destination pair；Windows 把
+  packaging script、同一 evidence generator、原生 EXE lifecycle verifier、installer
+  helper、installer manifest 和 Inno `.iss` 作为来自同一 tooling SHA 的原子集合，均不
   复制 Python wheel source。tooling 脚本是显式信任边界；产物 manifest 分别记录
-  source `git_revision` 与可选 `tooling_revision`。
+  source `git_revision` 与可选 `tooling_revision`。Windows embedded CPython 的
+  version、python.org URL 和官方 SHA-256 同时固定在 installer manifest 与平台合约，
+  下载后必须先校验再解压，expected/actual digest 写入 staged provenance/SBOM。
 - 自动证据：source 与 tooling validator 的精确 overlay pair allow-list、SHA gate 与
-  `tests/unit/test_ci_release_workflow.py`。
+  `tests/unit/test_ci_release_workflow.py`；原生 Windows offline job 还对最终 Inno EXE
+  串行执行 silent install、installed CLI/doctor/provider/formula/browser smoke、覆盖
+  升级、用户数据保留和 silent uninstall；卸载后递归枚举安装根并与唯一允许的
+  `offline.env`、`downloads/`、`downloads/user-owned.txt` 精确比较，未知残留也失败。
 - 关闭条件：只有已经带当前合约的不可变适配标签可做工具链重跑；发布 fork 适配
   必须提升版本并创建新标签，不能靠 overlay 把上游 `v4.1.0` 冒充为适配发布。
+  Windows lifecycle 关闭证据必须来自原生 runner；S/L 级只证明脚本和 workflow
+  静态契约，不能替代真实 Inno、HKCU 与安装状态。
 
 ### MAC-AUD-012
 
@@ -245,6 +260,25 @@
   access-boundary marker，而不接受一般 limited 结果；HTTP-200 empty shell 的重试
   会切换到下一个既有 provider URL。这些证据能区分远端 access state 与 runtime
   failure，但不构成原生 macOS 断网启动证明。
+- Browser 网络边界证据：portable 回归验证主导航在创建 context 前拒绝私网/IP literal，
+  route interceptor 拒绝混合公私 DNS 和公网到 link-local 的重定向，image/file
+  request-context 每跳复核 URL，带 cookie/storage/profile 的 context 只允许认证
+  origin，跨 origin 资产在进入 Playwright 前回退受控 direct transport。catalog route
+  经唯一 compiler 固定 hosts、timeout、retry、QPS、acceptance 与 asset cap，browser
+  deadline 和 direct transport 共享该结果。机器合约固定 policy、catalog allowlist、
+  credential origin、service-worker 阻断和跨源
+  fallback 规则；这些
+  行为在 Darwin 与其他平台共用 Python 实现，但不声称替代原生浏览器启动证据。
+- Browser state/cache scope 证据：portable 回归覆盖默认 provider data 目录、profile、
+  user-data 和显式 storage-state 的 canonical path/content digest；只有 context 创建成功
+  且实际注入 state 才记录 use，并在 fetch 完成时按最终 digest 写 private sidecar。
+  `path/exists/used` diagnostics、public→private 禁止和不同 private scope 隔离均为跨平台
+  Python 契约；它不扩大原生 macOS browser launch 的证据范围。
+- 二进制资产 portable 证据：Browser 只返回 URL descriptor，pinned direct transport
+  执行逐 chunk 流式落盘；同一 runtime 的 figure/supplementary 共用文件、字节、像素
+  与最多 4 worker 的预算。gzip/未知长度/转换放大、pending future 取消、arXiv archive
+  解压和 staging 清理由小阈值 unit test 固定；这同样不宣称真实 publisher 或离线
+  Camoufox bundle 已在 macOS 上完成资产下载。
 - T&F page-preparation 证据：portable 回归验证 provider hook 在最终 HTML capture
   前执行，并且只把文章 DOM 暴露的同源官方 CSV table action（单次脚本、并发 4、
   每表 2 秒、最多 24 表、输入顺序保持）或已加载的同页 table payload 有界水合为

@@ -613,6 +613,7 @@ class CopernicusClient(ProviderClient):
         try:
             pdf_result = PdfFallbackStrategy(
                 transport=self.transport,
+                provider_name="copernicus",
                 headers=self._pdf_headers(referer=attempt.response_url),
                 timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 asset_profile=effective_asset_profile,
@@ -796,6 +797,8 @@ class CopernicusClient(ProviderClient):
                 asset_download_concurrency=resolve_asset_download_concurrency(
                     context.env
                 ),
+                provider_name="copernicus",
+                runtime_context=context,
             )
             if downloadable_body_assets
             else empty_asset_results()
@@ -814,6 +817,8 @@ class CopernicusClient(ProviderClient):
                 asset_download_concurrency=resolve_asset_download_concurrency(
                     context.env
                 ),
+                provider_name="copernicus",
+                runtime_context=context,
             )
             if supplementary_assets and asset_profile == "all"
             else empty_asset_results()

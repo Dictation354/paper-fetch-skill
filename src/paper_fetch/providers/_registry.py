@@ -9,6 +9,7 @@ import threading
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
+from ..normalize_journal_name import normalize_journal_name
 from ..provider_catalog import ProviderRouteSpec, ProviderSpec
 
 if TYPE_CHECKING:
@@ -116,6 +117,114 @@ _ENSURING_PROVIDER_IMPORTS_THREAD: int | None = None
 _PROVIDER_IMPORT_EVENT: threading.Event | None = None
 
 
+def _identity_token(value: str | None) -> str:
+    return str(value or "").strip().lower().rstrip(".")
+
+
+def _identity_aliases(spec: ProviderSpec) -> frozenset[str]:
+    return frozenset(
+        normalized
+        for value in (spec.display_name, *spec.publisher_aliases)
+        if (normalized := normalize_journal_name(value))
+    )
+
+
+def _prefix_overlaps(left: str, right: str) -> bool:
+    return left == right or left.startswith(right) or right.startswith(left)
+
+
+def _domain_within_suffix(domain: str, suffix: str) -> bool:
+    return domain == suffix or domain.endswith(f".{suffix}")
+
+
+def _provider_identity_conflicts(
+    left: ProviderSpec,
+    right: ProviderSpec,
+) -> tuple[str, ...]:
+    conflicts: set[str] = set()
+    aliases = _identity_aliases(left) & _identity_aliases(right)
+    conflicts.update(f"alias:{alias}" for alias in aliases)
+
+    left_prefixes = tuple(
+        token for value in left.doi_prefixes if (token := _identity_token(value))
+    )
+    right_prefixes = tuple(
+        token for value in right.doi_prefixes if (token := _identity_token(value))
+    )
+    conflicts.update(
+        f"doi_prefix:{left_prefix}|{right_prefix}"
+        for left_prefix in left_prefixes
+        for right_prefix in right_prefixes
+        if _prefix_overlaps(left_prefix, right_prefix)
+    )
+
+    left_exact = tuple(
+        token for value in left.domains if (token := _identity_token(value))
+    )
+    right_exact = tuple(
+        token for value in right.domains if (token := _identity_token(value))
+    )
+    left_suffix = tuple(
+        token for value in left.domain_suffixes if (token := _identity_token(value))
+    )
+    right_suffix = tuple(
+        token for value in right.domain_suffixes if (token := _identity_token(value))
+    )
+    conflicts.update(
+        f"domain_exact:{domain}" for domain in set(left_exact) & set(right_exact)
+    )
+    conflicts.update(
+        f"domain_exact_suffix:{domain}|{suffix}"
+        for domain in left_exact
+        for suffix in right_suffix
+        if _domain_within_suffix(domain, suffix)
+    )
+    conflicts.update(
+        f"domain_exact_suffix:{domain}|{suffix}"
+        for domain in right_exact
+        for suffix in left_suffix
+        if _domain_within_suffix(domain, suffix)
+    )
+    conflicts.update(
+        f"domain_suffix:{left_domain}|{right_domain}"
+        for left_domain in left_suffix
+        for right_domain in right_suffix
+        if _domain_within_suffix(left_domain, right_domain)
+        or _domain_within_suffix(right_domain, left_domain)
+    )
+    return tuple(sorted(conflicts))
+
+
+def validate_provider_identity_conflicts(
+    left: ProviderSpec,
+    right: ProviderSpec,
+) -> None:
+    """Reject ambiguous registry identities without explicit precedence."""
+
+    conflicts = _provider_identity_conflicts(left, right)
+    if not conflicts:
+        return
+    declarations_complete = all(
+        spec.identity_priority is not None
+        and bool(str(spec.identity_conflict_reason or "").strip())
+        for spec in (left, right)
+    )
+    priorities_differ = left.identity_priority != right.identity_priority
+    if declarations_complete and priorities_differ:
+        return
+    details = ", ".join(conflicts)
+    conflict_label = (
+        "domain conflict"
+        if all(conflict.startswith("domain_") for conflict in conflicts)
+        else "identity conflict"
+    )
+    raise ValueError(
+        f"Provider {conflict_label} requires distinct identity_priority and "
+        "identity_conflict_reason declarations: "
+        f"{left.name} vs {right.name}: {details}."
+    )
+
+
 def _ensure_provider_entry_modules_imported() -> None:
     global _ENSURING_PROVIDER_IMPORTS_THREAD, _PROVIDER_IMPORT_EVENT
     current_thread = threading.get_ident()
@@ -172,15 +281,7 @@ def _validate_registration_conflicts(
                 f"{name} and {existing_name} both declare "
                 f"{', '.join(sorted(duplicate_sources))}."
             )
-        duplicate_domains = {domain.lower() for domain in bundle.catalog.domains} & {
-            domain.lower() for domain in existing.catalog.domains
-        }
-        if duplicate_domains:
-            raise ValueError(
-                "Provider domain conflict: "
-                f"{name} and {existing_name} both declare "
-                f"{', '.join(sorted(duplicate_domains))}."
-            )
+        validate_provider_identity_conflicts(bundle.catalog, existing.catalog)
 
 
 def register_provider_bundle(bundle: ProviderBundle) -> None:

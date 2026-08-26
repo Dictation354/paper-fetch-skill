@@ -38,6 +38,8 @@ class McpLoggingInlineImageTests(unittest.TestCase):
             "event": "official_provider_result",
             "provider": "wiley",
             "note": "message with spaces",
+            "landing_url": "https://publisher.example/article?token=secret",
+            "request_headers": {"Authorization": "Bearer secret"},
         }
 
         payload = mcp_tools.structured_log_payload_from_record(record)
@@ -48,9 +50,30 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                 "event": "official_provider_result",
                 "provider": "wiley",
                 "note": "message with spaces",
+                "landing_url": "https://publisher.example/article",
+                "request_headers": {"Authorization": "***"},
                 "logger": "paper_fetch.service",
             },
         )
+
+    def test_log_bridge_defensively_redacts_unstructured_provider_secret(self) -> None:
+        record = logging.LogRecord(
+            name="paper_fetch.service",
+            level=logging.WARNING,
+            pathname=__file__,
+            lineno=1,
+            msg=(
+                "provider failure headers={'Wiley-TDM-Client-Token': "
+                "'private-token'} url=https://cdn.example/file?token=private"
+            ),
+            args=(),
+            exc_info=None,
+        )
+
+        payload = mcp_tools.structured_log_payload_from_record(record)
+
+        self.assertNotIn("private-token", str(payload))
+        self.assertNotIn("token=private", str(payload))
 
     def test_inline_image_contents_limits_and_filters_assets(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

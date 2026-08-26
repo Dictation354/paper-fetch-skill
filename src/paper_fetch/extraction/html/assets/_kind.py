@@ -268,6 +268,18 @@ def _figure_failure_template(
         failure["error_message"] = error_message
     if error_category:
         failure["error_category"] = error_category
+    for key in (
+        "asset_type",
+        "source_kind",
+        "source_ref",
+        "filename_hint",
+        "attachment_type",
+        "object_type",
+        "category",
+    ):
+        value = asset.get(key)
+        if value:
+            failure[key] = value
     return failure
 
 

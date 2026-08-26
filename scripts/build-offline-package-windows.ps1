@@ -2,7 +2,6 @@ param(
     [string]$OutputDir,
     [string]$PackageName,
     [string]$PythonBin = "python",
-    [string]$EmbeddedPythonVersion = "3.13.13",
     [string]$InnoCompiler
 )
 
@@ -28,6 +27,19 @@ if ($null -ne $InstallerManifest.env_sets -and $null -ne $InstallerManifest.env_
     $OfflineEnvKeys = @($InstallerManifest.env_sets.offline_env_keys | ForEach-Object { [string]$_ })
 }
 $WindowsSetupBaseName = [string]$InstallerManifest.packages.windows_setup_base_name
+$EmbeddedPython = $InstallerManifest.embedded_runtimes.windows_cpython_x86_64
+$EmbeddedPythonVersion = [string]$EmbeddedPython.version
+$EmbeddedPythonUrl = [string]$EmbeddedPython.url
+$EmbeddedPythonSha256 = ([string]$EmbeddedPython.sha256).ToLowerInvariant()
+$EmbeddedPythonArchive = [string]$EmbeddedPython.archive
+if (
+    [string]::IsNullOrWhiteSpace($EmbeddedPythonVersion) -or
+    [string]::IsNullOrWhiteSpace($EmbeddedPythonUrl) -or
+    [string]::IsNullOrWhiteSpace($EmbeddedPythonArchive) -or
+    $EmbeddedPythonSha256 -cnotmatch '\A[0-9a-f]{64}\z'
+) {
+    throw "installer/manifest.json must pin the Windows CPython version, archive, URL, and SHA-256."
+}
 $BuildDir = if ($env:PAPER_FETCH_OFFLINE_BUILD_DIR) {
     [System.IO.Path]::GetFullPath($env:PAPER_FETCH_OFFLINE_BUILD_DIR)
 } else {
@@ -39,6 +51,7 @@ if ([string]::IsNullOrWhiteSpace($OutputDir)) {
 $OutputDir = [System.IO.Path]::GetFullPath($OutputDir)
 $ProjectWheelPath = ""
 $DependencyWheelhouse = ""
+$EmbeddedPythonActualSha256 = ""
 
 function Write-Log {
     param([string]$Message)
@@ -187,13 +200,17 @@ function Add-EmbeddedPythonRuntime {
     param([string]$Staging)
 
     $runtime = Join-Path $Staging "runtime"
-    $archive = Join-Path $BuildDir "python-$EmbeddedPythonVersion-embed-amd64.zip"
-    $url = "https://www.python.org/ftp/python/$EmbeddedPythonVersion/python-$EmbeddedPythonVersion-embed-amd64.zip"
+    $archive = Join-Path $BuildDir $EmbeddedPythonArchive
 
     Write-Log "Downloading CPython $EmbeddedPythonVersion embeddable x64 runtime"
     if (-not (Test-Path -LiteralPath $archive -PathType Leaf)) {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        Invoke-WebRequest -Uri $url -OutFile $archive
+        Invoke-WebRequest -Uri $EmbeddedPythonUrl -OutFile $archive
+    }
+    $actualSha256 = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+    $script:EmbeddedPythonActualSha256 = $actualSha256
+    if ($actualSha256 -cne $EmbeddedPythonSha256) {
+        throw "CPython embeddable archive SHA-256 mismatch: expected $EmbeddedPythonSha256, got $actualSha256."
     }
     Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $runtime
     New-Item -ItemType Directory -Force -Path $runtime | Out-Null
@@ -354,20 +371,6 @@ exit /b %ERRORLEVEL%
     Set-Content -LiteralPath (Join-Path $bin "paper-fetch-install-image-tools.cmd") -Value $imageTools -Encoding ASCII
 }
 
-function Add-SkillAgentManifest {
-    param([string]$Staging)
-
-    $agentDir = Join-Path (Join-Path (Join-Path $Staging "skills") $SkillName) "agents"
-    New-Item -ItemType Directory -Force -Path $agentDir | Out-Null
-    $content = @"
-interface:
-  display_name: "$($InstallerManifest.skill.display_name)"
-  short_description: "$($InstallerManifest.skill.short_description)"
-  default_prompt: "$($InstallerManifest.skill.default_prompt)"
-"@
-    [System.IO.File]::WriteAllText((Join-Path $agentDir "openai.yaml"), $content, [System.Text.UTF8Encoding]::new($false))
-}
-
 function Write-DefaultOfflineEnv {
     param([string]$Staging)
 
@@ -462,6 +465,15 @@ function Write-ManifestAndChecksums {
             arch = "x86_64"
             python_tag = $PythonTag
             python_runtime = "cpython-$EmbeddedPythonVersion-embed-amd64"
+            embedded_runtime = [ordered]@{
+                implementation = [string]$EmbeddedPython.implementation
+                version = $EmbeddedPythonVersion
+                architecture = [string]$EmbeddedPython.architecture
+                archive = $EmbeddedPythonArchive
+                url = $EmbeddedPythonUrl
+                expected_sha256 = $EmbeddedPythonSha256
+                actual_sha256 = $EmbeddedPythonActualSha256
+            }
         }
         entrypoint = "$SetupBaseName.exe"
         skill_bundle = $skillBundle
@@ -487,6 +499,14 @@ function Write-ManifestAndChecksums {
     }
     $payload | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $Staging "offline-manifest.json") -Encoding UTF8
 
+    Invoke-Native $PythonBin (Join-Path $RepoDir "scripts/generate_offline_evidence.py") `
+        --staging $Staging `
+        --site-packages (Join-Path $Staging "runtime/Lib/site-packages") `
+        --offline-manifest (Join-Path $Staging "offline-manifest.json") `
+        --output-dir $Staging `
+        --target "windows-x86_64-$PythonTag" `
+        --cyclonedx-python $PythonBin
+
     $checksumLines = Get-ChildItem -LiteralPath $Staging -Recurse -File |
         Where-Object { $_.Name -ne "sha256sums.txt" } |
         Sort-Object FullName |
@@ -496,6 +516,29 @@ function Write-ManifestAndChecksums {
             "$hash  ./$relative"
         }
     $checksumLines | Set-Content -LiteralPath (Join-Path $Staging "sha256sums.txt") -Encoding ASCII
+}
+
+function Publish-DependencyEvidence {
+    param(
+        [string]$Staging,
+        [string]$Target
+    )
+
+    New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
+    foreach ($evidence in @(
+        [pscustomobject]@{ Source = "dependency-manifest.json"; Suffix = "dependency-manifest.json" }
+        [pscustomobject]@{ Source = "paper-fetch-sbom.cdx.json"; Suffix = "sbom.cdx.json" }
+    )) {
+        $source = Join-Path $Staging $evidence.Source
+        $destination = Join-Path $OutputDir "paper-fetch-evidence-$Target.$($evidence.Suffix)"
+        $temporary = "$destination.$([Guid]::NewGuid().ToString('N')).tmp"
+        try {
+            Copy-Item -LiteralPath $source -Destination $temporary
+            Move-Item -LiteralPath $temporary -Destination $destination -Force
+        } finally {
+            Remove-Item -LiteralPath $temporary -Force -ErrorAction SilentlyContinue
+        }
+    }
 }
 
 function Assert-RuntimeOnlyStaging {
@@ -598,9 +641,9 @@ Install-EmbeddedPythonPackages $staging
 Add-FormulaTools -Staging $staging -BuildPython $buildPython
 Add-ImageTools -Staging $staging -BuildPython $buildPython
 Write-CmdWrappers $staging
-Add-SkillAgentManifest $staging
 Write-DefaultOfflineEnv $staging
 Write-OfflineReadme $staging
 Assert-RuntimeOnlyStaging $staging
 Write-ManifestAndChecksums -Staging $staging -Version $version -PythonTag $pythonTag -SetupBaseName $PackageName -ToolingRevision $toolingRevision
 Build-InnoInstaller -Staging $staging -Version $version -SetupBaseName $PackageName
+Publish-DependencyEvidence -Staging $staging -Target "windows-x86_64-$pythonTag"

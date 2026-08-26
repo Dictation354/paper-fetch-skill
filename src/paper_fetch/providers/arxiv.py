@@ -121,6 +121,7 @@ register_provider_bundle(
                     name="atom_metadata",
                     kind="metadata",
                     transport="api",
+                    timeout_seconds=60,
                     qps=1 / 3,
                     rate_policy="arxiv_three_second_pacing",
                 ),
@@ -129,6 +130,14 @@ register_provider_bundle(
                     name="direct_pdf",
                     kind="pdf",
                     requires_pdf_conversion=True,
+                ),
+                ProviderRouteSpec(
+                    name="source_assets",
+                    kind="assets",
+                    hosts=("arxiv.org",),
+                    qps=1 / 3,
+                    rate_policy="arxiv_three_second_pacing",
+                    asset_scope="body",
                 ),
             ),
         ),
@@ -400,6 +409,7 @@ class ArxivClient(ProviderClient):
         try:
             pdf_result = PdfFallbackStrategy(
                 transport=self.transport,
+                provider_name="arxiv",
                 headers=self._pdf_headers(referer=referer),
                 timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 asset_profile=effective_asset_profile,
@@ -571,6 +581,7 @@ class ArxivClient(ProviderClient):
                 ),
                 output_dir=output_dir,
                 user_agent=self.user_agent,
+                runtime_context=context,
             )
         asset_download_concurrency = _arxiv_asset_download_concurrency(context.env)
         initial_result = html_assets.download_assets(
@@ -583,6 +594,8 @@ class ArxivClient(ProviderClient):
             asset_profile=asset_profile,
             headers=self._image_headers(),
             asset_download_concurrency=asset_download_concurrency,
+            provider_name="arxiv",
+            runtime_context=context,
         )
         retry_assets = assets_for_network_retry(
             extracted_assets,
@@ -601,6 +614,8 @@ class ArxivClient(ProviderClient):
             asset_profile=asset_profile,
             headers=self._image_headers(),
             asset_download_concurrency=1,
+            provider_name="arxiv",
+            runtime_context=context,
         )
         return {
             "assets": merge_asset_retry_results(

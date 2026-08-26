@@ -754,6 +754,50 @@ class HttpTransportCacheTests(unittest.TestCase):
             self.assertEqual(request.call_count, 2)
             self.assertEqual(len(transport._cache), 0)
 
+    def test_multi_set_cookie_values_are_return_only_and_never_cached(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            transport = http_module.HttpTransport(
+                cache_ttl=30,
+                cache_capacity=128,
+                disk_cache_dir=tmpdir,
+            )
+            responses = []
+            for body in (b"first", b"second"):
+                headers = urllib3._collections.HTTPHeaderDict()
+                headers.add("content-type", "text/plain")
+                headers.add("set-cookie", "one=secret-one; Path=/")
+                headers.add("set-cookie", "two=secret-two; Path=/article")
+                responses.append(
+                    FakeHTTPResponse(
+                        body,
+                        "https://example.test/article",
+                        headers=headers,  # type: ignore[arg-type]
+                    )
+                )
+            with mock.patch.object(
+                transport,
+                "_perform_request",
+                side_effect=responses,
+            ) as request:
+                first = transport.request("GET", "https://example.test/article")
+                second = transport.request("GET", "https://example.test/article")
+
+            self.assertEqual(request.call_count, 2)
+            self.assertEqual(len(transport._cache), 0)
+            self.assertEqual(
+                first["_paper_fetch_header_values"]["set-cookie"],
+                [
+                    "one=secret-one; Path=/",
+                    "two=secret-two; Path=/article",
+                ],
+            )
+            self.assertEqual(second["body"], b"second")
+            disk_bytes = b"".join(
+                path.read_bytes() for path in Path(tmpdir).rglob("*") if path.is_file()
+            )
+            self.assertNotIn(b"secret-one", disk_bytes)
+            self.assertNotIn(b"secret-two", disk_bytes)
+
     def test_cache_key_distinguishes_accept_language_and_authorization_presence(
         self,
     ) -> None:

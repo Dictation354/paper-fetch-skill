@@ -894,7 +894,12 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         )
                         self.assertEqual(
                             batch_fetch_progress[-1],
-                            (2, 2, "batch_fetch complete"),
+                            (
+                                2,
+                                2,
+                                "batch_fetch terminalized "
+                                "(terminal=2, not_scheduled=0)",
+                            ),
                         )
 
                         default_fetch = await session.call_tool(

@@ -34,6 +34,7 @@ from ..http import (
     PDF_MIME_TYPE,
     RequestFailure,
 )
+from ..http.provider_policy import provider_request_policy
 from ..http.headers import header_value
 from ..models import (
     AssetProfile,
@@ -41,7 +42,7 @@ from ..models import (
     article_from_markdown,
     metadata_only_article,
 )
-from ..provider_catalog import BodyTextThresholds, ProviderSpec
+from ..provider_catalog import BodyTextThresholds, ProviderRouteSpec, ProviderSpec
 from ..pdf_limits import pdf_max_bytes
 from ..publisher_identity import normalize_doi
 from ..reason_codes import NO_RESULT, OK, PDF_FALLBACK
@@ -110,6 +111,19 @@ register_provider_bundle(
             requires_playwright=False,
             requires_browser_runtime=False,
             body_text_thresholds=BodyTextThresholds(min_chars=1200),
+            routes=(
+                ProviderRouteSpec(name="metadata", kind="metadata"),
+                ProviderRouteSpec(
+                    name="direct_html",
+                    kind="html",
+                    timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+                ),
+                ProviderRouteSpec(
+                    name="direct_pdf",
+                    kind="pdf",
+                    requires_pdf_conversion=True,
+                ),
+            ),
         ),
         html_rules=ProviderHtmlRules(
             name="oxfordacademic",
@@ -281,9 +295,12 @@ class OxfordAcademicClient(ProviderClient):
                     requested_url,
                     transport=self.transport,
                     headers=self._html_headers(),
-                    timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                    retry_on_transient=True,
                     max_redirects=self.landing_max_redirects,
+                    request_policy=provider_request_policy(
+                        self.name,
+                        "direct_html",
+                        base=HttpRequestPolicy(follow_redirects=False),
+                    ),
                 )
             except RequestFailure as exc:
                 last_failure = map_request_failure(exc)
@@ -373,17 +390,21 @@ class OxfordAcademicClient(ProviderClient):
         maximum_pdf_bytes = pdf_max_bytes()
         current_url = url
         response: Mapping[str, Any] = {}
+        request_policy = provider_request_policy(
+            self.name,
+            "direct_pdf",
+            base=HttpRequestPolicy(
+                follow_redirects=False,
+                max_response_bytes=maximum_pdf_bytes,
+                max_compressed_response_bytes=maximum_pdf_bytes,
+            ),
+        )
         for redirect_count in range(self.landing_max_redirects + 1):
             response = self.transport.request(
                 "GET",
                 current_url,
                 headers=headers,
-                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                retry_on_transient=True,
-                request_policy=HttpRequestPolicy(
-                    max_response_bytes=maximum_pdf_bytes,
-                    max_compressed_response_bytes=maximum_pdf_bytes,
-                ),
+                request_policy=request_policy,
             )
             response = dict(response)
             response["url"] = urljoin(
@@ -749,6 +770,8 @@ class OxfordAcademicClient(ProviderClient):
                 headers=self._asset_headers(),
                 asset_download_concurrency=concurrency,
                 fetch_policy="direct_then_browser",
+                provider_name="oxfordacademic",
+                runtime_context=context,
             )
             if body_images
             else empty_asset_results()
@@ -765,6 +788,8 @@ class OxfordAcademicClient(ProviderClient):
                 headers=self._asset_headers(),
                 asset_download_concurrency=concurrency,
                 fetch_policy="direct_then_browser",
+                provider_name="oxfordacademic",
+                runtime_context=context,
             )
             if supplementary_assets and asset_profile == "all"
             else empty_asset_results()

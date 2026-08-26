@@ -7,7 +7,7 @@ import hashlib
 import os
 import stat
 import mimetypes
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from hashlib import sha1, sha256
@@ -17,11 +17,15 @@ from typing import Any
 from filelock import FileLock
 
 from ..artifacts import ArtifactStore
+from ..capability_scope import PUBLIC_CAPABILITY_SCOPE
 from ..http.content_types import STRUCTURED_TEXT_MIME_TYPES, content_type_base
 from ..models import AcquisitionProvenance, coerce_acquisition_provenance
 from ..publisher_identity import normalize_doi
 from ..utils import sanitize_filename
-from .markdown_frontmatter import read_markdown_front_matter
+from .markdown_frontmatter import (
+    read_markdown_front_matter,
+    read_markdown_front_matter_file,
+)
 
 INDEX_FILENAME = ".paper-fetch-mcp-cache.json"
 LOCK_DIRNAME = ".paper-fetch-locks"
@@ -56,6 +60,26 @@ _TEXT_MIME_TYPES = {
     *STRUCTURED_TEXT_MIME_TYPES,
     "image/svg+xml",
 }
+
+
+def _credential_scope(value: Any) -> str:
+    return str(value or "").strip() or PUBLIC_CAPABILITY_SCOPE
+
+
+def cache_entry_visible_for_scopes(
+    entry: Mapping[str, Any], allowed_scopes: Sequence[str]
+) -> bool:
+    """Return whether an index entry is readable by an exact scope or public."""
+
+    raw_scope = entry.get("credential_scope")
+    if not isinstance(raw_scope, str) or not raw_scope.strip():
+        # Index entries written before capability visibility metadata are
+        # ambiguous. Fail closed until a lock-free DOI refresh proves their
+        # current sidecar scope and upgrades the entry.
+        return False
+    allowed = {_credential_scope(scope) for scope in allowed_scopes}
+    scope = _credential_scope(raw_scope)
+    return scope == PUBLIC_CAPABILITY_SCOPE or scope in allowed
 
 
 @dataclass(frozen=True)
@@ -171,19 +195,62 @@ def _file_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _stat_fingerprint(path: Path) -> dict[str, int]:
+    current = path.stat()
+    return {
+        "device": int(current.st_dev),
+        "inode": int(current.st_ino),
+        "size": int(current.st_size),
+        "mtime_ns": int(current.st_mtime_ns),
+    }
+
+
+def _optional_stat_fingerprint(path: Path) -> dict[str, int] | None:
+    try:
+        return _stat_fingerprint(path)
+    except OSError:
+        return None
+
+
+def _entry_matches_stat(entry: Mapping[str, Any], path: Path) -> bool:
+    try:
+        current = _stat_fingerprint(path)
+    except OSError:
+        return False
+    return all(entry.get(key) == value for key, value in current.items())
+
+
+def _entry_has_stat_fingerprint(entry: Mapping[str, Any]) -> bool:
+    return all(isinstance(entry.get(key), int) for key in _stat_fingerprint_fields())
+
+
+def _stat_fingerprint_fields() -> tuple[str, ...]:
+    return ("device", "inode", "size", "mtime_ns")
+
+
+@dataclass(frozen=True, slots=True)
+class CacheEntryMetadata:
+    """Optional Markdown facts kept together at the index construction boundary."""
+
+    source: str | None = None
+    acquisition: AcquisitionProvenance | None = None
+    has_fulltext: bool | None = None
+    content_kind: str | None = None
+    completed_at: str | None = None
+    content_sha256: str | None = None
+    front_matter_sha256: str | None = None
+
+
 def _build_entry(
     *,
     doi: str,
     kind: str,
     path: Path,
     identity_proof: str,
-    source: str | None = None,
-    acquisition: AcquisitionProvenance | None = None,
-    has_fulltext: bool | None = None,
-    content_kind: str | None = None,
-    completed_at: str | None = None,
-    content_sha256: str | None = None,
+    metadata: CacheEntryMetadata | None = None,
+    credential_scope: str | None = PUBLIC_CAPABILITY_SCOPE,
 ) -> dict[str, Any]:
+    entry_metadata = metadata or CacheEntryMetadata()
     stat = path.stat()
     resolved = path.resolve()
     entry: dict[str, Any] = {
@@ -194,17 +261,29 @@ def _build_entry(
         "mime": guess_mime_type(resolved),
         "size": stat.st_size,
         "mtime": stat.st_mtime,
+        "mtime_ns": stat.st_mtime_ns,
+        "device": stat.st_dev,
+        "inode": stat.st_ino,
         "identity_proof": identity_proof,
     }
+    if credential_scope is not None:
+        entry["credential_scope"] = _credential_scope(credential_scope)
     if kind == "markdown":
         entry.update(
             {
-                "source": source,
-                "acquisition": asdict(acquisition) if acquisition is not None else None,
-                "has_fulltext": has_fulltext,
-                "content_kind": content_kind,
-                "completed_at": completed_at or _mtime_as_completed_at(stat.st_mtime),
-                "content_sha256": content_sha256 or _file_sha256(resolved),
+                "source": entry_metadata.source,
+                "acquisition": (
+                    asdict(entry_metadata.acquisition)
+                    if entry_metadata.acquisition is not None
+                    else None
+                ),
+                "has_fulltext": entry_metadata.has_fulltext,
+                "content_kind": entry_metadata.content_kind,
+                "completed_at": entry_metadata.completed_at
+                or _mtime_as_completed_at(stat.st_mtime),
+                "content_sha256": entry_metadata.content_sha256
+                or _file_sha256(resolved),
+                "front_matter_sha256": entry_metadata.front_matter_sha256,
             }
         )
     return entry
@@ -343,9 +422,24 @@ def read_scoped_file(
 
 
 def _markdown_entry_from_front_matter(
-    path: Path, *, expected_doi: str | None = None
+    path: Path,
+    *,
+    expected_doi: str | None = None,
+    cached_entry: Mapping[str, Any] | None = None,
 ) -> dict[str, Any] | None:
-    front_matter = read_markdown_front_matter(path)
+    if (
+        cached_entry is not None
+        and cached_entry.get("identity_proof") == IDENTITY_PROOF_MARKDOWN_FRONT_MATTER
+        and _entry_matches_stat(cached_entry, path)
+        and (expected_doi is None or cached_entry.get("doi") == expected_doi)
+        and isinstance(cached_entry.get("content_sha256"), str)
+        and isinstance(cached_entry.get("front_matter_sha256"), str)
+    ):
+        return dict(cached_entry)
+    opened = read_markdown_front_matter_file(path)
+    if opened is None:
+        return None
+    front_matter = opened.front_matter
     if front_matter is None:
         return None
     if expected_doi is not None and front_matter.doi != expected_doi:
@@ -355,11 +449,15 @@ def _markdown_entry_from_front_matter(
         kind="markdown",
         path=path,
         identity_proof=IDENTITY_PROOF_MARKDOWN_FRONT_MATTER,
-        source=front_matter.source,
-        acquisition=front_matter.acquisition,
-        has_fulltext=front_matter.has_fulltext,
-        content_kind=front_matter.content_kind,
-        completed_at=front_matter.completed_at,
+        metadata=CacheEntryMetadata(
+            source=front_matter.source,
+            acquisition=front_matter.acquisition,
+            has_fulltext=front_matter.has_fulltext,
+            content_kind=front_matter.content_kind,
+            completed_at=front_matter.completed_at,
+            content_sha256=opened.content_sha256,
+            front_matter_sha256=opened.front_matter_sha256,
+        ),
     )
 
 
@@ -380,10 +478,13 @@ def _registered_markdown_entry(
         return None
     if not isinstance(registered_digest, str) or len(registered_digest) != 64:
         return None
-    try:
-        current_digest = _file_sha256(path)
-    except OSError:
-        return None
+    if _entry_matches_stat(raw, path):
+        current_digest = registered_digest
+    else:
+        try:
+            current_digest = _file_sha256(path)
+        except OSError:
+            return None
     if current_digest != registered_digest:
         return None
     completed_at = raw.get("completed_at")
@@ -396,16 +497,23 @@ def _registered_markdown_entry(
         kind="markdown",
         path=path,
         identity_proof=IDENTITY_PROOF_MARKDOWN_REGISTRATION,
-        source=source.strip(),
-        acquisition=acquisition,
-        has_fulltext=has_fulltext,
-        content_kind=content_kind,
-        completed_at=completed_at if isinstance(completed_at, str) else None,
-        content_sha256=current_digest,
+        metadata=CacheEntryMetadata(
+            source=source.strip(),
+            acquisition=acquisition,
+            has_fulltext=has_fulltext,
+            content_kind=content_kind,
+            completed_at=completed_at if isinstance(completed_at, str) else None,
+            content_sha256=current_digest,
+        ),
+        credential_scope=(
+            _credential_scope(raw.get("credential_scope"))
+            if "credential_scope" in raw
+            else None
+        ),
     )
 
 
-def _doi_from_fetch_envelope_sidecar(path: Path) -> str | None:
+def _fetch_envelope_sidecar_identity(path: Path) -> tuple[str, str] | None:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
@@ -416,7 +524,97 @@ def _doi_from_fetch_envelope_sidecar(path: Path) -> str | None:
     if not isinstance(envelope, dict):
         return None
     doi = normalize_doi(str(envelope.get("doi") or ""))
-    return doi or None
+    if not doi:
+        return None
+    return doi, _credential_scope(payload.get("credential_scope"))
+
+
+def _doi_from_fetch_envelope_sidecar(path: Path) -> str | None:
+    identity = _fetch_envelope_sidecar_identity(path)
+    return identity[0] if identity is not None else None
+
+
+def _credential_scope_from_entry(entry: Mapping[str, Any] | None) -> str | None:
+    if entry is None:
+        return None
+    raw_scope = entry.get("credential_scope")
+    if not isinstance(raw_scope, str) or not raw_scope.strip():
+        return None
+    return _credential_scope(raw_scope)
+
+
+def _fetch_envelope_scopes_for_doi(
+    download_dir: Path,
+    doi: str,
+) -> frozenset[str]:
+    """Return every valid sidecar scope that may own DOI-local artifacts."""
+
+    base = sanitize_filename(doi)
+    paths = [
+        download_dir / f"{base}.fetch-envelope.json",
+        *sorted(download_dir.glob(f"{base}.*.fetch-envelope.json")),
+    ]
+    scopes: set[str] = set()
+    for path in dict.fromkeys(paths):
+        identity = _fetch_envelope_sidecar_identity(path)
+        if identity is not None and identity[0] == doi:
+            scopes.add(identity[1])
+    return frozenset(scopes)
+
+
+def _artifact_credential_scope(
+    path: Path,
+    *,
+    kind: str,
+    cached_entry: Mapping[str, Any] | None,
+    sidecar_scopes: frozenset[str],
+    artifact_write_scope: str | None = None,
+    proven_artifact_paths: frozenset[str] = frozenset(),
+) -> str | None:
+    """Resolve artifact visibility without guessing from the latest canonical.
+
+    An unchanged entry keeps its already-proven scope. A commit may relabel a
+    changed entry or a path explicitly proven by its envelope. Otherwise only a
+    previously unseen path may inherit a unique sidecar scope; legacy entries and
+    multiple variants remain ambiguous and therefore invisible.
+    """
+
+    cached_scope = _credential_scope_from_entry(cached_entry)
+    if (
+        cached_scope is not None
+        and cached_entry is not None
+        and _entry_matches_stat(cached_entry, path)
+    ):
+        return cached_scope
+
+    normalized_write_scope = (
+        _credential_scope(artifact_write_scope)
+        if artifact_write_scope is not None
+        else None
+    )
+    if normalized_write_scope is not None:
+        if (
+            cached_entry is not None
+            and _entry_has_stat_fingerprint(cached_entry)
+            and not _entry_matches_stat(cached_entry, path)
+        ):
+            return normalized_write_scope
+        if cached_scope is not None or str(path.resolve()) in proven_artifact_paths:
+            return normalized_write_scope
+        if cached_entry is None and sidecar_scopes == frozenset(
+            {normalized_write_scope}
+        ):
+            return normalized_write_scope
+        return None
+
+    if cached_entry is None and len(sidecar_scopes) == 1:
+        return next(iter(sidecar_scopes))
+    if kind == "markdown" and cached_entry is None and not sidecar_scopes:
+        # A newly discovered, self-identifying local Markdown file has no remote
+        # credential provenance. Legacy registered entries are not covered by
+        # this branch and remain fail closed when their scope metadata is absent.
+        return PUBLIC_CAPABILITY_SCOPE
+    return None
 
 
 def _path_proves_non_markdown_doi(
@@ -440,7 +638,12 @@ def _path_proves_non_markdown_doi(
     return kind == "primary_payload" and path.name.startswith(f"{base}.")
 
 
-def _normalize_existing_entry(download_dir: Path, raw: Any) -> dict[str, Any] | None:
+def _normalize_existing_entry(
+    download_dir: Path,
+    raw: Any,
+    *,
+    preserve_stale_for_scan: bool = False,
+) -> dict[str, Any] | None:
     if not isinstance(raw, dict):
         return None
     doi = normalize_doi(str(raw.get("doi") or ""))
@@ -453,15 +656,61 @@ def _normalize_existing_entry(download_dir: Path, raw: Any) -> dict[str, Any] | 
 
     raw_kind = str(raw.get("kind") or "").strip()
     if raw_kind == "markdown" or path.suffix.lower() == ".md":
+        if (
+            preserve_stale_for_scan
+            and raw.get("identity_proof")
+            in {
+                IDENTITY_PROOF_MARKDOWN_FRONT_MATTER,
+                IDENTITY_PROOF_MARKDOWN_REGISTRATION,
+            }
+            and isinstance(raw.get("content_sha256"), str)
+        ):
+            return dict(raw)
+        if (
+            not _entry_has_stat_fingerprint(raw)
+            and raw.get("identity_proof")
+            in {
+                IDENTITY_PROOF_MARKDOWN_FRONT_MATTER,
+                IDENTITY_PROOF_MARKDOWN_REGISTRATION,
+            }
+            and isinstance(raw.get("content_sha256"), str)
+        ):
+            # Version-2 manifests predate the additive stat fields. Keep their
+            # proven entry until the next lock-free refresh upgrades it.
+            return dict(raw)
+        if not _entry_matches_stat(raw, path):
+            return None
         registered = _registered_markdown_entry(path, doi=doi, raw=raw)
         if registered is not None:
-            front_matter = read_markdown_front_matter(path)
-            if front_matter is not None and front_matter.doi != doi:
-                return None
             return registered
-        return _markdown_entry_from_front_matter(path, expected_doi=doi)
+        return _markdown_entry_from_front_matter(
+            path,
+            expected_doi=doi,
+            cached_entry=raw,
+        )
 
     kind = _entry_kind_for_path(path, doi=doi)
+    if (
+        preserve_stale_for_scan
+        and raw_kind == kind
+        and raw.get("identity_proof")
+        in {IDENTITY_PROOF_FETCH_ENVELOPE, IDENTITY_PROOF_DOI_FILENAME}
+    ):
+        return dict(raw)
+    if (
+        raw_kind == kind
+        and not _entry_has_stat_fingerprint(raw)
+        and raw.get("identity_proof")
+        in {IDENTITY_PROOF_FETCH_ENVELOPE, IDENTITY_PROOF_DOI_FILENAME}
+    ):
+        return dict(raw)
+    if (
+        raw_kind == kind
+        and _entry_matches_stat(raw, path)
+        and raw.get("identity_proof")
+        in {IDENTITY_PROOF_FETCH_ENVELOPE, IDENTITY_PROOF_DOI_FILENAME}
+    ):
+        return dict(raw)
     if not _path_proves_non_markdown_doi(download_dir, path, doi=doi, kind=kind):
         return None
     proof = (
@@ -469,11 +718,21 @@ def _normalize_existing_entry(download_dir: Path, raw: Any) -> dict[str, Any] | 
         if kind == "fetch_envelope"
         else IDENTITY_PROOF_DOI_FILENAME
     )
+    # A changed non-sidecar file is no longer proven to belong to the scope in
+    # its old stat fingerprint. Refresh keeps it ambiguous; an explicit commit
+    # uses a stale-preserving snapshot and may bind the change to its write scope.
+    normalized_entry_scope = None
+    if kind == "fetch_envelope":
+        sidecar_identity = _fetch_envelope_sidecar_identity(path)
+        if sidecar_identity is None or sidecar_identity[0] != doi:
+            return None
+        normalized_entry_scope = sidecar_identity[1]
     return _build_entry(
         doi=doi,
         kind=kind,
         path=path,
         identity_proof=proof,
+        credential_scope=normalized_entry_scope,
     )
 
 
@@ -502,12 +761,22 @@ def _index_error_result(
 
 
 def _normalized_index_entries(
-    download_dir: Path, raw_entries: list[Any]
+    download_dir: Path,
+    raw_entries: list[Any],
+    *,
+    preserve_stale_for_scan: bool = False,
 ) -> list[dict[str, Any]]:
     entries = [
         entry
         for raw in raw_entries
-        if (entry := _normalize_existing_entry(download_dir, raw)) is not None
+        if (
+            entry := _normalize_existing_entry(
+                download_dir,
+                raw,
+                preserve_stale_for_scan=preserve_stale_for_scan,
+            )
+        )
+        is not None
     ]
     return _dedupe_entries(entries)
 
@@ -517,6 +786,7 @@ def _read_cache_index_unlocked(
     *,
     repair: bool,
     cache_mode: str,
+    preserve_stale_for_scan: bool = False,
 ) -> CacheIndexResult:
     index_path = cache_index_path(download_dir)
     if not index_path.exists():
@@ -567,7 +837,11 @@ def _read_cache_index_unlocked(
                 version=version,
                 cache_mode=cache_mode,
             )
-        migrated = _normalized_index_entries(download_dir, raw_entries)
+        migrated = _normalized_index_entries(
+            download_dir,
+            raw_entries,
+            preserve_stale_for_scan=preserve_stale_for_scan,
+        )
         _write_index_unlocked(download_dir, migrated)
         return CacheIndexResult(
             entries=migrated,
@@ -580,7 +854,11 @@ def _read_cache_index_unlocked(
             cache_mode=cache_mode,
         )
 
-    deduped = _normalized_index_entries(download_dir, raw_entries)
+    deduped = _normalized_index_entries(
+        download_dir,
+        raw_entries,
+        preserve_stale_for_scan=preserve_stale_for_scan,
+    )
     if deduped != raw_entries:
         if not repair:
             return CacheIndexResult(
@@ -633,7 +911,14 @@ def list_cache_entries(download_dir: Path) -> list[dict[str, Any]]:
 
 
 def scan_cached_files(
-    download_dir: Path, doi: str, *, include_loose_markdown: bool = True
+    download_dir: Path,
+    doi: str,
+    *,
+    include_loose_markdown: bool = True,
+    cached_entries: Sequence[Mapping[str, Any]] = (),
+    markdown_cache: dict[Path, dict[str, Any] | None] | None = None,
+    artifact_write_scope: str | None = None,
+    proven_artifact_paths: Sequence[Path | str] = (),
 ) -> list[dict[str, Any]]:
     """Scan one explicit cache scope for files whose DOI ownership is provable."""
 
@@ -643,8 +928,30 @@ def scan_cached_files(
     if not normalized_doi:
         return []
     base = sanitize_filename(normalized_doi)
+    sidecar_scopes = _fetch_envelope_scopes_for_doi(download_dir, normalized_doi)
     entries: list[dict[str, Any]] = []
     checked_markdown_paths: set[Path] = set()
+    cached_by_path = {str(entry.get("path") or ""): entry for entry in cached_entries}
+    normalized_proven_paths = frozenset(
+        str(path)
+        for candidate in proven_artifact_paths
+        if (
+            path := _scoped_file(
+                download_dir,
+                str(Path(candidate).expanduser().resolve(strict=False)),
+            )
+        )
+        is not None
+    )
+    parsed_markdown = markdown_cache if markdown_cache is not None else {}
+
+    def markdown_entry(path: Path) -> dict[str, Any] | None:
+        if path not in parsed_markdown:
+            parsed_markdown[path] = _markdown_entry_from_front_matter(
+                path,
+                cached_entry=cached_by_path.get(str(path)),
+            )
+        return parsed_markdown[path]
 
     for path in sorted(download_dir.glob(f"{base}.*")):
         if not path.is_file() or path.name.endswith(".part"):
@@ -655,10 +962,21 @@ def scan_cached_files(
             if scoped_path is None:
                 continue
             checked_markdown_paths.add(scoped_path)
-            entry = _markdown_entry_from_front_matter(
-                scoped_path, expected_doi=normalized_doi
-            )
-            if entry is not None:
+            entry = markdown_entry(scoped_path)
+            if entry is not None and entry.get("doi") == normalized_doi:
+                entry = dict(entry)
+                entry_scope = _artifact_credential_scope(
+                    scoped_path,
+                    kind="markdown",
+                    cached_entry=cached_by_path.get(str(scoped_path)),
+                    sidecar_scopes=sidecar_scopes,
+                    artifact_write_scope=artifact_write_scope,
+                    proven_artifact_paths=normalized_proven_paths,
+                )
+                if entry_scope is None:
+                    entry.pop("credential_scope", None)
+                else:
+                    entry["credential_scope"] = entry_scope
                 entries.append(entry)
             continue
         if not _path_proves_non_markdown_doi(
@@ -670,12 +988,28 @@ def scan_cached_files(
             if kind == "fetch_envelope"
             else IDENTITY_PROOF_DOI_FILENAME
         )
+        non_markdown_scope: str | None
+        if kind == "fetch_envelope":
+            sidecar_identity = _fetch_envelope_sidecar_identity(path)
+            if sidecar_identity is None or sidecar_identity[0] != normalized_doi:
+                continue
+            non_markdown_scope = sidecar_identity[1]
+        else:
+            non_markdown_scope = _artifact_credential_scope(
+                path.resolve(),
+                kind=kind,
+                cached_entry=cached_by_path.get(str(path.resolve())),
+                sidecar_scopes=sidecar_scopes,
+                artifact_write_scope=artifact_write_scope,
+                proven_artifact_paths=normalized_proven_paths,
+            )
         entries.append(
             _build_entry(
                 doi=normalized_doi,
                 kind=kind,
                 path=path,
                 identity_proof=proof,
+                credential_scope=non_markdown_scope,
             )
         )
 
@@ -698,6 +1032,14 @@ def scan_cached_files(
                     kind="asset",
                     path=resolved_path,
                     identity_proof=IDENTITY_PROOF_DOI_FILENAME,
+                    credential_scope=_artifact_credential_scope(
+                        resolved_path,
+                        kind="asset",
+                        cached_entry=cached_by_path.get(str(resolved_path)),
+                        sidecar_scopes=sidecar_scopes,
+                        artifact_write_scope=artifact_write_scope,
+                        proven_artifact_paths=normalized_proven_paths,
+                    ),
                 )
             )
 
@@ -708,13 +1050,93 @@ def scan_cached_files(
             scoped_path = _scoped_file(download_dir, str(path.resolve()))
             if scoped_path is None or scoped_path in checked_markdown_paths:
                 continue
-            entry = _markdown_entry_from_front_matter(
-                scoped_path, expected_doi=normalized_doi
-            )
-            if entry is not None:
+            entry = markdown_entry(scoped_path)
+            if entry is not None and entry.get("doi") == normalized_doi:
+                entry = dict(entry)
+                entry_scope = _artifact_credential_scope(
+                    scoped_path,
+                    kind="markdown",
+                    cached_entry=cached_by_path.get(str(scoped_path)),
+                    sidecar_scopes=sidecar_scopes,
+                    artifact_write_scope=artifact_write_scope,
+                    proven_artifact_paths=normalized_proven_paths,
+                )
+                if entry_scope is None:
+                    entry.pop("credential_scope", None)
+                else:
+                    entry["credential_scope"] = entry_scope
                 entries.append(entry)
 
     return _dedupe_entries(entries)
+
+
+def scan_cached_files_for_dois(
+    download_dir: Path,
+    dois: Sequence[str],
+    *,
+    cached_entries: Sequence[Mapping[str, Any]] = (),
+) -> dict[str, list[dict[str, Any]]]:
+    """Scan a DOI set while opening every loose Markdown file at most once.
+
+    Parsed Markdown identities outside the requested set are returned as
+    opportunistic index upserts. Callers still expose results only for the DOI set
+    they were asked to refresh.
+    """
+
+    normalized_dois = tuple(
+        dict.fromkeys(normalized for doi in dois if (normalized := normalize_doi(doi)))
+    )
+    if not normalized_dois or not download_dir.exists():
+        return {doi: [] for doi in normalized_dois}
+    cached_by_path = {str(entry.get("path") or ""): entry for entry in cached_entries}
+    markdown_cache: dict[Path, dict[str, Any] | None] = {}
+    loose_by_doi: dict[str, list[dict[str, Any]]] = {doi: [] for doi in normalized_dois}
+    for path in sorted(download_dir.glob("*.md")):
+        if not path.is_file() or path.name.endswith(".part"):
+            continue
+        scoped_path = _scoped_file(download_dir, str(path.resolve()))
+        if scoped_path is None:
+            continue
+        entry = _markdown_entry_from_front_matter(
+            scoped_path,
+            cached_entry=cached_by_path.get(str(scoped_path)),
+        )
+        if entry is not None:
+            entry = dict(entry)
+            entry_scope = _artifact_credential_scope(
+                scoped_path,
+                kind="markdown",
+                cached_entry=cached_by_path.get(str(scoped_path)),
+                sidecar_scopes=_fetch_envelope_scopes_for_doi(
+                    download_dir, str(entry["doi"])
+                ),
+            )
+            if entry_scope is None:
+                entry.pop("credential_scope", None)
+            else:
+                entry["credential_scope"] = entry_scope
+        markdown_cache[scoped_path] = entry
+        if entry is not None:
+            loose_by_doi.setdefault(str(entry["doi"]), []).append(entry)
+
+    scanned: dict[str, list[dict[str, Any]]] = {}
+    requested = set(normalized_dois)
+    for doi, loose_entries in loose_by_doi.items():
+        targeted_entries = (
+            scan_cached_files(
+                download_dir,
+                doi,
+                include_loose_markdown=False,
+                cached_entries=cached_entries,
+                markdown_cache=markdown_cache,
+            )
+            if doi in requested
+            else []
+        )
+        # DOI-targeted entries know the canonical sidecar capability scope and
+        # therefore win over the same loose Markdown identity.
+        scanned[doi] = _dedupe_entries([*loose_entries, *targeted_entries])
+    return scanned
 
 
 def _discover_rescan_dois(
@@ -736,21 +1158,6 @@ def _discover_rescan_dois(
     return sorted(dois)
 
 
-def _rescan_entries_unlocked(
-    download_dir: Path, seed_entries: list[dict[str, Any]]
-) -> list[dict[str, Any]]:
-    entries: list[dict[str, Any]] = []
-    for doi in _discover_rescan_dois(download_dir, seed_entries):
-        entries.extend(scan_cached_files(download_dir, doi))
-    entries.extend(
-        entry
-        for entry in seed_entries
-        if entry.get("kind") == "markdown"
-        and entry.get("identity_proof") == IDENTITY_PROOF_MARKDOWN_REGISTRATION
-    )
-    return _dedupe_entries(entries)
-
-
 def rescan_cache_index(download_dir: Path) -> CacheIndexResult:
     if not download_dir.exists():
         return CacheIndexResult(
@@ -762,7 +1169,10 @@ def rescan_cache_index(download_dir: Path) -> CacheIndexResult:
         )
     with cache_file_lock(cache_index_lock_path(download_dir)):
         seed = _read_cache_index_unlocked(
-            download_dir, repair=True, cache_mode=CACHE_INDEX_MODE_RESCAN
+            download_dir,
+            repair=True,
+            cache_mode=CACHE_INDEX_MODE_RESCAN,
+            preserve_stale_for_scan=True,
         )
         seed_entries = (
             seed.entries
@@ -774,7 +1184,75 @@ def rescan_cache_index(download_dir: Path) -> CacheIndexResult:
             }
             else []
         )
-        entries = _rescan_entries_unlocked(download_dir, seed_entries)
+        initial_index_fingerprint = _optional_stat_fingerprint(
+            cache_index_path(download_dir)
+        )
+    discovered_dois = _discover_rescan_dois(download_dir, seed_entries)
+    scanned = scan_cached_files_for_dois(
+        download_dir,
+        discovered_dois,
+        cached_entries=seed_entries,
+    )
+    scanned_entries = _dedupe_entries(
+        [
+            *(entry for entries in scanned.values() for entry in entries),
+            *(
+                entry
+                for entry in seed_entries
+                if entry.get("kind") == "markdown"
+                and entry.get("identity_proof") == IDENTITY_PROOF_MARKDOWN_REGISTRATION
+                and _entry_matches_stat(entry, Path(str(entry.get("path") or "")))
+            ),
+        ]
+    )
+    with cache_file_lock(cache_index_lock_path(download_dir)):
+        current = _read_cache_index_unlocked(
+            download_dir,
+            repair=True,
+            cache_mode=CACHE_INDEX_MODE_RESCAN,
+        )
+        if current.index_status not in {
+            CACHE_INDEX_STATUS_OK,
+            CACHE_INDEX_STATUS_REPAIRED,
+            CACHE_INDEX_STATUS_MISSING,
+        }:
+            if (
+                _optional_stat_fingerprint(cache_index_path(download_dir))
+                != initial_index_fingerprint
+            ):
+                return CacheIndexResult(
+                    entries=scanned_entries,
+                    index_status=current.index_status,
+                    index_version=current.index_version,
+                    index_reason=current.index_reason,
+                    cache_mode=CACHE_INDEX_MODE_RESCAN,
+                )
+            # Explicit rescan is the repair path for an unchanged unsupported or
+            # malformed manifest. It may replace that original manifest, but not
+            # a different invalid manifest written while the scan was in flight.
+            current = CacheIndexResult(
+                entries=[],
+                index_status=CACHE_INDEX_STATUS_MISSING,
+                index_version=None,
+                cache_mode=CACHE_INDEX_MODE_RESCAN,
+            )
+
+        # A rescan deliberately happens outside the global lock. Preserve entries
+        # inserted or updated after the initial snapshot, including updates for a
+        # DOI that was itself being rescanned. Stat fingerprints make this an
+        # exact comparison without reading or hashing file contents under lock.
+        snapshot_by_id = {str(entry.get("id") or ""): entry for entry in seed_entries}
+        concurrent_updates = [
+            entry
+            for entry in current.entries
+            if snapshot_by_id.get(str(entry.get("id") or "")) != entry
+        ]
+        valid_scanned_entries = [
+            entry
+            for entry in scanned_entries
+            if _entry_matches_stat(entry, Path(str(entry.get("path") or "")))
+        ]
+        entries = _dedupe_entries([*valid_scanned_entries, *concurrent_updates])
         if entries or cache_index_path(download_dir).exists():
             _write_index_unlocked(download_dir, entries)
         return CacheIndexResult(
@@ -795,6 +1273,7 @@ def register_markdown_entry(
     has_fulltext: bool,
     content_kind: str,
     completed_at: str | None = None,
+    credential_scope: str = PUBLIC_CAPABILITY_SCOPE,
     commit_guard: Callable[[], None] | None = None,
 ) -> dict[str, Any] | None:
     """Register a just-saved Markdown path using the DOI known by the fetch result."""
@@ -823,11 +1302,14 @@ def register_markdown_entry(
         kind="markdown",
         path=scoped_path,
         identity_proof=IDENTITY_PROOF_MARKDOWN_REGISTRATION,
-        source=normalized_source,
-        acquisition=normalized_acquisition,
-        has_fulltext=has_fulltext,
-        content_kind=normalized_kind,
-        completed_at=completed_at,
+        metadata=CacheEntryMetadata(
+            source=normalized_source,
+            acquisition=normalized_acquisition,
+            has_fulltext=has_fulltext,
+            content_kind=normalized_kind,
+            completed_at=completed_at,
+        ),
+        credential_scope=credential_scope,
     )
     with cache_file_lock(cache_index_lock_path(download_dir)):
         existing = _read_cache_index_unlocked(
@@ -840,7 +1322,9 @@ def register_markdown_entry(
         }:
             entries = existing.entries
         else:
-            entries = _rescan_entries_unlocked(download_dir, [])
+            # The entry was already built and hashed outside the global lock.
+            # An invalid manifest is repaired incrementally without scanning here.
+            entries = []
         entry_path = str(scoped_path)
         retained = [
             candidate
@@ -855,11 +1339,234 @@ def register_markdown_entry(
     return entry
 
 
+def register_cache_files_for_doi(
+    download_dir: Path,
+    doi: str,
+    *,
+    credential_scope: str = PUBLIC_CAPABILITY_SCOPE,
+    proven_artifact_paths: Sequence[Path | str] = (),
+    commit_guard: Callable[[], None] | None = None,
+) -> list[dict[str, Any]]:
+    """Incrementally upsert DOI-local artifacts without a global Markdown scan."""
+
+    normalized_doi = normalize_doi(doi)
+    if not normalized_doi or not download_dir.exists():
+        return []
+    with cache_file_lock(cache_index_lock_path(download_dir)):
+        snapshot = _read_cache_index_unlocked(
+            download_dir,
+            repair=True,
+            cache_mode=CACHE_INDEX_MODE_REFRESH,
+            preserve_stale_for_scan=True,
+        )
+    normalized_scope = _credential_scope(credential_scope)
+    scanned = []
+    for entry in scan_cached_files(
+        download_dir,
+        normalized_doi,
+        include_loose_markdown=False,
+        cached_entries=snapshot.entries,
+        artifact_write_scope=normalized_scope,
+        proven_artifact_paths=proven_artifact_paths,
+    ):
+        scanned.append(dict(entry))
+    with cache_file_lock(cache_index_lock_path(download_dir)):
+        current = _read_cache_index_unlocked(
+            download_dir,
+            repair=True,
+            cache_mode=CACHE_INDEX_MODE_REFRESH,
+        )
+        if current.index_status not in {
+            CACHE_INDEX_STATUS_OK,
+            CACHE_INDEX_STATUS_REPAIRED,
+            CACHE_INDEX_STATUS_MISSING,
+        }:
+            return scanned
+        valid_scanned = [
+            entry
+            for entry in scanned
+            if _entry_matches_stat(entry, Path(str(entry.get("path") or "")))
+        ]
+        if commit_guard is not None:
+            commit_guard()
+        scanned_by_id = {str(entry.get("id") or ""): entry for entry in valid_scanned}
+        for entry in current.entries:
+            entry_id = str(entry.get("id") or "")
+            if (
+                entry_id in scanned_by_id
+                and entry.get("kind") == "markdown"
+                and entry.get("identity_proof") == IDENTITY_PROOF_MARKDOWN_REGISTRATION
+            ):
+                # Retain explicit Markdown provenance while updating the scope
+                # inherited from the sidecar committed in this same operation.
+                preserved = dict(entry)
+                scanned_scope = _credential_scope_from_entry(scanned_by_id[entry_id])
+                if scanned_scope is None:
+                    preserved.pop("credential_scope", None)
+                else:
+                    preserved["credential_scope"] = scanned_scope
+                scanned_by_id[entry_id] = preserved
+        # Freshly scanned DOI-local artifacts are ordered last so their final
+        # capability scope replaces stale index metadata. Unrelated concurrent
+        # entries remain intact.
+        merged = _dedupe_entries([*current.entries, *scanned_by_id.values()])
+        if merged or cache_index_path(download_dir).exists():
+            _write_index_unlocked(
+                download_dir,
+                merged,
+                commit_guard=commit_guard,
+            )
+    return valid_scanned
+
+
+def refresh_cache_index_for_dois_result(
+    download_dir: Path,
+    dois: Sequence[str],
+) -> dict[str, CacheIndexResult]:
+    """Refresh a DOI set with one lock-free filesystem scan and atomic merge."""
+
+    normalized_dois = tuple(
+        dict.fromkeys(normalized for doi in dois if (normalized := normalize_doi(doi)))
+    )
+    if not normalized_dois or not download_dir.exists():
+        return {
+            doi: CacheIndexResult(
+                entries=[],
+                index_status=CACHE_INDEX_STATUS_MISSING,
+                index_version=None,
+                index_reason="download directory does not exist or DOI is empty",
+                cache_mode=CACHE_INDEX_MODE_REFRESH,
+            )
+            for doi in normalized_dois
+        }
+
+    with cache_file_lock(cache_index_lock_path(download_dir)):
+        snapshot = _read_cache_index_unlocked(
+            download_dir,
+            repair=True,
+            cache_mode=CACHE_INDEX_MODE_REFRESH,
+            preserve_stale_for_scan=True,
+        )
+    refreshed_by_doi = scan_cached_files_for_dois(
+        download_dir,
+        normalized_dois,
+        cached_entries=snapshot.entries,
+    )
+
+    with cache_file_lock(cache_index_lock_path(download_dir)):
+        current = _read_cache_index_unlocked(
+            download_dir,
+            repair=True,
+            cache_mode=CACHE_INDEX_MODE_REFRESH,
+        )
+        if current.index_status not in {
+            CACHE_INDEX_STATUS_OK,
+            CACHE_INDEX_STATUS_REPAIRED,
+            CACHE_INDEX_STATUS_MISSING,
+        }:
+            return {
+                doi: CacheIndexResult(
+                    entries=refreshed_by_doi[doi],
+                    index_status=current.index_status,
+                    index_version=current.index_version,
+                    index_reason=current.index_reason,
+                    cache_mode=CACHE_INDEX_MODE_REFRESH,
+                )
+                for doi in normalized_dois
+            }
+        requested = set(normalized_dois)
+        repaired = current.index_status == CACHE_INDEX_STATUS_REPAIRED or (
+            snapshot.index_status == CACHE_INDEX_STATUS_REPAIRED
+        )
+        repair_reason = current.index_reason or snapshot.index_reason
+        retained = [
+            entry for entry in current.entries if entry.get("doi") not in requested
+        ]
+        opportunistic = [
+            entry
+            for doi, entries in refreshed_by_doi.items()
+            if doi not in requested
+            for entry in entries
+            if _entry_matches_stat(entry, Path(str(entry.get("path") or "")))
+        ]
+        snapshot_by_id = {
+            str(entry.get("id") or ""): entry for entry in snapshot.entries
+        }
+        results: dict[str, CacheIndexResult] = {}
+        merged_refreshed: list[dict[str, Any]] = []
+        for doi in normalized_dois:
+            valid_refreshed = [
+                entry
+                for entry in refreshed_by_doi[doi]
+                if _entry_matches_stat(entry, Path(str(entry.get("path") or "")))
+            ]
+            refreshed_by_id = {
+                str(entry.get("id") or ""): entry for entry in valid_refreshed
+            }
+            registered: list[dict[str, Any]] = []
+            for entry in current.entries:
+                if not (
+                    entry.get("doi") == doi
+                    and entry.get("kind") == "markdown"
+                    and entry.get("identity_proof")
+                    == IDENTITY_PROOF_MARKDOWN_REGISTRATION
+                    and _entry_matches_stat(entry, Path(str(entry.get("path") or "")))
+                ):
+                    continue
+                preserved = dict(entry)
+                refreshed_entry = refreshed_by_id.get(str(entry.get("id") or ""))
+                if refreshed_entry is not None:
+                    refreshed_scope = _credential_scope_from_entry(refreshed_entry)
+                    if refreshed_scope is None:
+                        preserved.pop("credential_scope", None)
+                    else:
+                        preserved["credential_scope"] = refreshed_scope
+                registered.append(preserved)
+            concurrent_updates = [
+                entry
+                for entry in current.entries
+                if entry.get("doi") == doi
+                and snapshot_by_id.get(str(entry.get("id") or "")) != entry
+            ]
+            refreshed = _dedupe_entries(
+                [*valid_refreshed, *registered, *concurrent_updates]
+            )
+            merged_refreshed.extend(refreshed)
+            results[doi] = CacheIndexResult(
+                entries=refreshed,
+                index_status=(
+                    CACHE_INDEX_STATUS_REPAIRED if repaired else CACHE_INDEX_STATUS_OK
+                ),
+                index_version=INDEX_VERSION,
+                index_reason=(repair_reason if repaired else None),
+                cache_mode=CACHE_INDEX_MODE_REFRESH,
+            )
+        # Existing concurrent/explicit registrations win over opportunistically
+        # parsed front matter for the same path; requested refreshed entries then
+        # replace their old snapshot.
+        merged = _dedupe_entries([*opportunistic, *retained, *merged_refreshed])
+        index_exists = cache_index_path(download_dir).exists()
+        if merged or index_exists:
+            _write_index_unlocked(download_dir, merged)
+        if not merged and not index_exists:
+            results = {
+                doi: CacheIndexResult(
+                    entries=result.entries,
+                    index_status=result.index_status,
+                    index_version=None,
+                    index_reason=result.index_reason,
+                    cache_mode=result.cache_mode,
+                )
+                for doi, result in results.items()
+            }
+        return results
+
+
 def refresh_cache_index_for_doi_result(
     download_dir: Path, doi: str
 ) -> CacheIndexResult:
     normalized_doi = normalize_doi(doi)
-    if not normalized_doi or not download_dir.exists():
+    if not normalized_doi:
         return CacheIndexResult(
             entries=[],
             index_status=CACHE_INDEX_STATUS_MISSING,
@@ -867,55 +1574,31 @@ def refresh_cache_index_for_doi_result(
             index_reason="download directory does not exist or DOI is empty",
             cache_mode=CACHE_INDEX_MODE_REFRESH,
         )
-    with cache_file_lock(cache_index_lock_path(download_dir)):
-        existing = _read_cache_index_unlocked(
-            download_dir, repair=True, cache_mode=CACHE_INDEX_MODE_REFRESH
-        )
-        refreshed = scan_cached_files(download_dir, normalized_doi)
-        registered = [
-            entry
-            for entry in existing.entries
-            if entry.get("doi") == normalized_doi
-            and entry.get("kind") == "markdown"
-            and entry.get("identity_proof") == IDENTITY_PROOF_MARKDOWN_REGISTRATION
-        ]
-        refreshed = _dedupe_entries([*refreshed, *registered])
-        if existing.index_status not in {
-            CACHE_INDEX_STATUS_OK,
-            CACHE_INDEX_STATUS_REPAIRED,
-            CACHE_INDEX_STATUS_MISSING,
-        }:
-            return CacheIndexResult(
-                entries=refreshed,
-                index_status=existing.index_status,
-                index_version=existing.index_version,
-                index_reason=existing.index_reason,
-                cache_mode=CACHE_INDEX_MODE_REFRESH,
-            )
-        retained = [
-            entry for entry in existing.entries if entry.get("doi") != normalized_doi
-        ]
-        merged = _dedupe_entries([*retained, *refreshed])
-        index_exists = cache_index_path(download_dir).exists()
-        if merged or index_exists:
-            _write_index_unlocked(download_dir, merged)
-        return CacheIndexResult(
-            entries=refreshed,
-            index_status=(
-                CACHE_INDEX_STATUS_REPAIRED
-                if existing.index_status == CACHE_INDEX_STATUS_REPAIRED
-                else CACHE_INDEX_STATUS_OK
-            ),
-            index_version=INDEX_VERSION if merged or index_exists else None,
-            index_reason=existing.index_reason
-            if existing.index_status == CACHE_INDEX_STATUS_REPAIRED
-            else None,
+    return refresh_cache_index_for_dois_result(download_dir, [normalized_doi]).get(
+        normalized_doi,
+        CacheIndexResult(
+            entries=[],
+            index_status=CACHE_INDEX_STATUS_MISSING,
+            index_version=None,
+            index_reason="download directory does not exist or DOI is empty",
             cache_mode=CACHE_INDEX_MODE_REFRESH,
-        )
+        ),
+    )
 
 
 def refresh_cache_index_for_doi(download_dir: Path, doi: str) -> list[dict[str, Any]]:
     return refresh_cache_index_for_doi_result(download_dir, doi).entries
+
+
+def refresh_cache_index_for_dois(
+    download_dir: Path, dois: Sequence[str]
+) -> dict[str, list[dict[str, Any]]]:
+    return {
+        doi: result.entries
+        for doi, result in refresh_cache_index_for_dois_result(
+            download_dir, dois
+        ).items()
+    }
 
 
 def find_cached_entry(download_dir: Path, entry_id: str) -> dict[str, Any] | None:
@@ -1004,6 +1687,7 @@ __all__ = [
     "SCOPED_CACHED_RESOURCE_URI_PREFIX",
     "SCOPED_CACHE_INDEX_RESOURCE_PREFIX",
     "CacheIndexResult",
+    "cache_entry_visible_for_scopes",
     "cache_file_lock",
     "cache_index_lock_path",
     "cache_index_path",
@@ -1020,9 +1704,13 @@ __all__ = [
     "read_scoped_file",
     "refresh_cache_index_for_doi",
     "refresh_cache_index_for_doi_result",
+    "refresh_cache_index_for_dois",
+    "refresh_cache_index_for_dois_result",
+    "register_cache_files_for_doi",
     "register_markdown_entry",
     "rescan_cache_index",
     "scan_cached_files",
+    "scan_cached_files_for_dois",
     "scoped_cache_index_resource_uri",
     "scoped_cached_resource_uri",
     "scoped_cached_resource_uri_prefix",

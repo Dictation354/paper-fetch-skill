@@ -200,3 +200,134 @@ def test_cookie_filter_enforces_domain_path_and_secure_scope() -> None:
         )
         is None
     )
+
+
+def test_cookie_jar_preserves_host_only_scope_and_rfc_path_boundary() -> None:
+    cookies = [
+        {
+            "name": "host_only",
+            "value": "yes",
+            "domain": "publisher.example",
+            "path": "/foo",
+        },
+        {
+            "name": "domain_cookie",
+            "value": "yes",
+            "domain": ".publisher.example",
+            "path": "/foo",
+        },
+    ]
+
+    assert (
+        requester.cookie_header_for_url(cookies, "https://publisher.example/foo/bar")
+        == "host_only=yes; domain_cookie=yes"
+    )
+    assert (
+        requester.cookie_header_for_url(
+            cookies, "https://cdn.publisher.example/foo/bar"
+        )
+        == "domain_cookie=yes"
+    )
+    assert (
+        requester.cookie_header_for_url(cookies, "https://publisher.example/foobar")
+        is None
+    )
+
+
+def test_cookie_seeded_opener_imports_browser_cookie_into_cookie_jar() -> None:
+    opener = requester.build_cookie_seeded_opener(
+        [],
+        headers={},
+        timeout=1,
+        browser_cookies=[
+            {
+                "name": "session",
+                "value": "secret",
+                "domain": "publisher.example",
+                "path": "/article",
+                "secure": True,
+            }
+        ],
+    )
+
+    assert opener is not None
+    processor = next(
+        handler
+        for handler in opener.handlers
+        if isinstance(handler, urllib.request.HTTPCookieProcessor)
+    )
+    request = urllib.request.Request("https://publisher.example/article/1")
+    processor.cookiejar.add_cookie_header(request)
+    assert request.get_header("Cookie") == "session=secret"
+
+
+class _PinnedSeedTransport:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, str]] = []
+
+    def request(self, method: str, url: str, **_kwargs: object) -> dict[str, object]:
+        self.calls.append((method, url))
+        return {
+            "status_code": 200,
+            "headers": {"set-cookie": "collapsed=ignored"},
+            "body": b"",
+            "url": url,
+            "_paper_fetch_header_values": {
+                "set-cookie": [
+                    "root=one; Domain=publisher.example; Path=/; Secure",
+                    "article=two; Path=/article",
+                ]
+            },
+        }
+
+
+def test_pinned_session_preserves_multiple_set_cookie_scopes() -> None:
+    transport = _PinnedSeedTransport()
+    session = requester.PinnedAssetSession(
+        transport,  # type: ignore[arg-type]
+        browser_cookies=None,
+        seed_urls=["https://publisher.example/article"],
+        headers={},
+        allowed_hosts=("publisher.example",),
+    )
+
+    session.ensure_seeded()
+    session.ensure_seeded()
+
+    assert transport.calls == [("GET", "https://publisher.example/article")]
+    assert (
+        session.request_headers_for("https://publisher.example/article/1", {})["Cookie"]
+        == "article=two; root=one"
+    )
+    assert (
+        session.request_headers_for("https://cdn.publisher.example/other", {})["Cookie"]
+        == "root=one"
+    )
+    assert (
+        session.request_headers_for("http://publisher.example/article/1", {})["Cookie"]
+        == "article=two"
+    )
+
+
+def test_pinned_session_never_self_authorizes_candidate_host() -> None:
+    session = requester.PinnedAssetSession(
+        _PinnedSeedTransport(),  # type: ignore[arg-type]
+        browser_cookies=[
+            {
+                "name": "broad",
+                "value": "secret",
+                "domain": ".example",
+                "path": "/",
+            }
+        ],
+        seed_urls=[],
+        headers={},
+        allowed_hosts=("publisher.example",),
+    )
+    attacker_url = "https://attacker.example/asset.bin"
+
+    assert session.request_headers_for(attacker_url, {})["Cookie"] == "broad=secret"
+    assert session.request_policy_for(
+        attacker_url,
+        max_response_bytes=10,
+    ).allowed_hosts == ("publisher.example",)

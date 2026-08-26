@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import time as time
 from .context import (
+    BrowserDocumentFetcherOptions,
     _BaseBrowserDocumentFetcher,
     _SharedBrowserPageSession,
     _choose_browser_seed_url,
@@ -43,6 +44,7 @@ __all__ = [
     "BROWSER_CONTEXT_ERROR",
     "_IMAGE_DOCUMENT_FETCH_TIMEOUT_MS",
     "BodyDomReadinessResult",
+    "BrowserDocumentFetcherOptions",
     "_BaseBrowserDocumentFetcher",
     "_MemoizedFigurePageFetcher",
     "_MemoizedImageDocumentFetcher",

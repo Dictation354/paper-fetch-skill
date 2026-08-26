@@ -437,3 +437,8 @@ def test_get_cached_compact_payload_matches_registered_output_schema(
 
     assert output_model is not None
     output_model.model_validate(payload)
+    schema = build_server()._tool_manager._tools["get_cached"].output_schema or {}
+    advertised_asset_keys = set(
+        schema["$defs"]["CacheAssetSummaryOutput"]["properties"]
+    )
+    assert set(payload["asset_summary"]) <= advertised_asset_keys

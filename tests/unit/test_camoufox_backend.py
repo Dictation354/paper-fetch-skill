@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+import socket
 import threading
 from unittest import mock
 
@@ -35,6 +36,20 @@ from paper_fetch.providers.browser_runtime.types import (
     BrowserRuntimeConfig,
 )
 from paper_fetch.runtime import RuntimeContext
+from paper_fetch.http import SafeRemoteUrlPolicy
+
+
+@pytest.fixture(autouse=True)
+def _default_public_browser_dns(monkeypatch):
+    monkeypatch.setattr(
+        _playwright_browser,
+        "SafeRemoteUrlPolicy",
+        lambda: SafeRemoteUrlPolicy(
+            resolver=lambda _host, port, *, type: [
+                (socket.AF_INET, type, 6, "", ("8.8.8.8", port))
+            ]
+        ),
+    )
 
 
 def test_backend_selection_defaults_to_camoufox_and_accepts_explicit_value() -> None:
@@ -152,10 +167,72 @@ def test_camoufox_context_options_do_not_override_fingerprint(tmp_path) -> None:
 
     options = context_options_for_config(config)
 
-    assert options == {"accept_downloads": True}
+    assert options == {"accept_downloads": True, "service_workers": "block"}
     assert "user_agent" not in options
     assert "viewport" not in options
     assert "locale" not in options
+
+
+def test_open_context_records_successful_storage_state_injection(tmp_path) -> None:
+    state = tmp_path / "storage-state.json"
+    state.write_text('{"cookies":[],"origins":[]}', encoding="utf-8")
+    config = BrowserRuntimeConfig(
+        provider="wiley",
+        doi="10.1002/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        backend="camoufox",
+        storage_state_path=state,
+    )
+    browser_context = object()
+    runtime = SimpleNamespace(
+        new_browser_context_for_runtime_config=mock.Mock(return_value=browser_context),
+        record_browser_state_capability_use=mock.Mock(),
+    )
+
+    manager, opened = browser_runtime_context.open_browser_context(
+        config, runtime_context=runtime
+    )
+
+    assert manager is None
+    assert opened is browser_context
+    runtime.new_browser_context_for_runtime_config.assert_called_once_with(
+        config,
+        accept_downloads=True,
+        service_workers="block",
+        storage_state=str(state),
+    )
+    runtime.record_browser_state_capability_use.assert_called_once_with(
+        provider="wiley",
+        backend="camoufox",
+        storage_state_path=state,
+    )
+
+
+def test_open_context_failure_does_not_record_storage_state_use(tmp_path) -> None:
+    state = tmp_path / "storage-state.json"
+    state.write_text('{"cookies":[],"origins":[]}', encoding="utf-8")
+    config = BrowserRuntimeConfig(
+        provider="wiley",
+        doi="10.1002/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        backend="camoufox",
+        storage_state_path=state,
+    )
+    runtime = SimpleNamespace(
+        new_browser_context_for_runtime_config=mock.Mock(
+            side_effect=RuntimeError("context failed")
+        ),
+        record_browser_state_capability_use=mock.Mock(),
+    )
+
+    with pytest.raises(RuntimeError, match="context failed"):
+        browser_runtime_context.open_browser_context(config, runtime_context=runtime)
+
+    runtime.record_browser_state_capability_use.assert_not_called()
 
 
 def test_camoufox_manager_reuses_browser_and_creates_fresh_contexts(
@@ -370,6 +447,7 @@ def test_camoufox_persistent_official_runtime_path_is_resolved_by_package(
         persistent_context=True,
         headless=False,
         user_data_dir=str(tmp_path / "profile"),
+        service_workers="block",
     )
 
 
@@ -415,6 +493,7 @@ def test_camoufox_persistent_explicit_binary_path_is_forwarded(
         headless=False,
         user_data_dir=str(tmp_path / "profile"),
         executable_path="/custom/camoufox",
+        service_workers="block",
     )
     assert version_type.from_path.call_count == 2
 
@@ -706,10 +785,14 @@ class _Context:
         self.page = _Page()
         self.added_cookies: list[dict[str, object]] = []
         self.events: list[str] = []
+        self.route_handler = None
 
     def add_cookies(self, cookies):
         self.events.append("add_cookies")
         self.added_cookies.extend(cookies)
+
+    def route(self, _pattern: str, handler) -> None:
+        self.route_handler = handler
 
     def new_page(self):
         self.events.append("new_page")
@@ -720,6 +803,34 @@ class _Context:
 
     def close(self) -> None:
         pass
+
+
+def test_browser_private_candidate_is_rejected_before_context_or_page_call(
+    monkeypatch, tmp_path
+) -> None:
+    config = BrowserRuntimeConfig(
+        provider="annualreviews",
+        doi="10.1146/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    open_context = mock.Mock(
+        side_effect=AssertionError("browser context must not be created")
+    )
+    monkeypatch.setattr(_playwright_browser, "open_browser_context", open_context)
+
+    with pytest.raises(browser_runtime.BrowserRuntimeFailure) as captured:
+        _playwright_browser.fetch_html_with_playwright(
+            ["http://127.0.0.1:8080/internal"],
+            publisher="annualreviews",
+            config=config,
+        )
+
+    assert captured.value.kind == "unsafe_browser_url"
+    open_context.assert_not_called()
 
 
 def test_camoufox_html_retry_applies_provider_seed_before_page_creation(
@@ -866,6 +977,11 @@ def test_camoufox_html_navigation_uses_commit_and_keeps_images(
         config=config,
         wait_seconds=0,
         disable_media=True,
+        remote_url_policy=SafeRemoteUrlPolicy(
+            resolver=lambda _host, port, *, type: [
+                (socket.AF_INET, type, 6, "", ("8.8.8.8", port))
+            ]
+        ),
     )
 
     assert result.response_status == 200
@@ -874,9 +990,54 @@ def test_camoufox_html_navigation_uses_commit_and_keeps_images(
 
     image_route = mock.Mock()
     image_route.request.resource_type = "image"
-    context.page.route_handler(image_route)
+    image_route.request.url = context.page.url
+    context.route_handler(image_route)
     image_route.continue_.assert_called_once()
     image_route.abort.assert_not_called()
+
+
+def test_camoufox_trace_reports_storage_state_was_loaded(monkeypatch, tmp_path) -> None:
+    context = _Context()
+    state = tmp_path / "storage-state.json"
+    state.write_text('{"cookies":[],"origins":[]}', encoding="utf-8")
+    config = BrowserRuntimeConfig(
+        provider="annualreviews",
+        doi="10.1146/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+        storage_state_path=state,
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "wait_for_atypon_body_dom_ready",
+        lambda *_args, **_kwargs: SimpleNamespace(attempted=True, ready=True),
+    )
+
+    result = _playwright_browser.fetch_html_with_playwright(
+        ["https://example.test/article"],
+        publisher="annualreviews",
+        config=config,
+        wait_seconds=0,
+        remote_url_policy=SafeRemoteUrlPolicy(
+            resolver=lambda _host, port, *, type: [
+                (socket.AF_INET, type, 6, "", ("8.8.8.8", port))
+            ]
+        ),
+    )
+
+    assert result.diagnostics["browser_runtime_trace"]["storage_state_load"] == {
+        "path": str(state),
+        "exists": True,
+        "used": True,
+    }
 
 
 def test_wiley_body_readiness_defers_login_navigation_paywall_text(
@@ -966,13 +1127,19 @@ def test_provider_resource_policy_blocks_only_configured_heavy_types(
         options=browser_runtime.BrowserHtmlFetchOptions(
             blocked_resource_types=frozenset({"image", "font", "media"})
         ),
+        remote_url_policy=SafeRemoteUrlPolicy(
+            resolver=lambda _host, port, *, type: [
+                (socket.AF_INET, type, 6, "", ("8.8.8.8", port))
+            ]
+        ),
     )
 
     routes = {}
     for resource_type in ("image", "font", "media", "stylesheet", "script", "xhr"):
         route = mock.Mock()
         route.request.resource_type = resource_type
-        context.page.route_handler(route)
+        route.request.url = context.page.url
+        context.route_handler(route)
         routes[resource_type] = route
     for resource_type in ("image", "font", "media"):
         routes[resource_type].abort.assert_called_once()
@@ -1059,13 +1226,19 @@ def test_unconfigured_science_fast_policy_keeps_legacy_media_only_blocking(
         config=config,
         wait_seconds=0,
         disable_media=True,
+        remote_url_policy=SafeRemoteUrlPolicy(
+            resolver=lambda _host, port, *, type: [
+                (socket.AF_INET, type, 6, "", ("8.8.8.8", port))
+            ]
+        ),
     )
 
     routes = {}
     for resource_type in ("image", "font", "media", "stylesheet", "script", "xhr"):
         route = mock.Mock()
         route.request.resource_type = resource_type
-        context.page.route_handler(route)
+        route.request.url = context.page.url
+        context.route_handler(route)
         routes[resource_type] = route
     routes["media"].abort.assert_called_once()
     for resource_type in ("image", "font", "stylesheet", "script", "xhr"):
@@ -1543,6 +1716,7 @@ def test_ieee_required_selector_waits_for_matching_article_number(
     monkeypatch, tmp_path
 ) -> None:
     context = _Context()
+    context.page.url = "https://ieeexplore.ieee.org/document/10772041/"
     challenge_html = (
         "<html><head><script src='https://example.token.awswaf.com/challenge.js'>"
         "</script></head><body><div id='challenge-container'></div>"
@@ -1606,6 +1780,7 @@ def test_ieee_required_selector_preserves_aws_waf_timeout_diagnostic(
     monkeypatch, tmp_path
 ) -> None:
     browser_context = _Context()
+    browser_context.page.url = "https://ieeexplore.ieee.org/document/10772041/"
     browser_context.page.wait_for_function.side_effect = RuntimeError(
         "selector timeout"
     )

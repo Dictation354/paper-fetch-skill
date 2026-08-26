@@ -26,6 +26,7 @@ from ..extraction.html.parsing import choose_parser
 from ..extraction.html.semantics import normalize_section_title
 from ..http.headers import header_value
 from ..utils import normalize_text
+from ..config import resolve_asset_download_concurrency
 from ._html_asset_engine import (
     HtmlAssetExtractionPolicy,
     extract_scoped_assets_with_policy,
@@ -545,8 +546,11 @@ def download_assets_for_springer(
     figure_page_fetcher: FigurePageFetcher | None = None,
     browser_context_seed: Mapping[str, Any] | None = None,
     seed_urls: list[str] | None = None,
-    asset_download_concurrency: int | None = None,
+    runtime_context: Any | None = None,
 ):
+    asset_download_concurrency = resolve_asset_download_concurrency(
+        getattr(runtime_context, "env", None)
+    )
     body_assets, supplementary_assets = split_body_and_supplementary_assets(assets)
     body_result = download_assets(
         FIGURE_KIND,
@@ -561,6 +565,8 @@ def download_assets_for_springer(
         seed_urls=seed_urls,
         candidate_builder=figure_download_candidates,
         asset_download_concurrency=asset_download_concurrency,
+        provider_name="springer",
+        runtime_context=runtime_context,
     )
     supplementary_result = download_assets(
         SUPPLEMENTARY_KIND,
@@ -573,6 +579,8 @@ def download_assets_for_springer(
         browser_context_seed=browser_context_seed,
         seed_urls=seed_urls,
         asset_download_concurrency=asset_download_concurrency,
+        provider_name="springer",
+        runtime_context=runtime_context,
     )
     return {
         "assets": [

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import socket
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -9,6 +11,7 @@ from paper_fetch import auth
 from paper_fetch.config import XDG_DATA_HOME_ENV_VAR
 from paper_fetch.provider_catalog import browser_preflight_provider_names
 from paper_fetch.providers.base import ProviderFailure
+from paper_fetch.http import SafeRemoteUrlPolicy
 
 
 class _FakeAuthPage:
@@ -33,6 +36,7 @@ class _FakeAuthContext:
         self.page = _FakeAuthPage()
         self.storage_state_path: str | None = None
         self.closed = False
+        self.route_handler = None
         self.state_payload = {
             "cookies": [
                 {
@@ -67,6 +71,10 @@ class _FakeAuthContext:
 
     def new_page(self) -> _FakeAuthPage:
         return self.page
+
+    def route(self, pattern: str, handler) -> None:
+        assert pattern == "**/*"
+        self.route_handler = handler
 
     def storage_state(self, *, path: str | None = None):
         if path is None:
@@ -138,8 +146,17 @@ def _patch_auth_runtime(
     monkeypatch.setattr(auth, "ensure_runtime_ready", lambda _runtime: None)
     monkeypatch.setattr(
         auth,
+        "SafeRemoteUrlPolicy",
+        lambda: SafeRemoteUrlPolicy(
+            resolver=lambda _host, port, *, type: [
+                (socket.AF_INET, type, 6, "", ("8.8.8.8", port))
+            ]
+        ),
+    )
+    monkeypatch.setattr(
+        auth,
         "_verify_staged_auth_state",
-        lambda _runtime, _stage, *, target_url, provider_label: (
+        lambda _runtime, _stage, *, target_url, provider_label, **_kwargs: (
             target_url,
             f"{provider_label} Article",
         ),
@@ -423,3 +440,71 @@ def test_authenticate_provider_profile_allows_url_for_catalog_provider_without_s
     assert result.provider == "newbrowser"
     assert result.final_url == target_url
     assert fake_manager.instances[0].context.page.goto_calls[0][0] == target_url
+
+
+def test_auth_private_dns_is_rejected_before_runtime_or_playwright_call(
+    monkeypatch, tmp_path
+) -> None:
+    fake_manager = _install_fake_browser_manager(monkeypatch)
+    _patch_auth_runtime(monkeypatch, tmp_path)
+    ensure_ready = mock.Mock()
+    monkeypatch.setattr(auth, "ensure_runtime_ready", ensure_ready)
+    policy = SafeRemoteUrlPolicy(
+        resolver=lambda _host, port, *, type: [
+            (socket.AF_INET, type, 6, "", ("127.0.0.1", port))
+        ]
+    )
+
+    with pytest.raises(ProviderFailure) as raised:
+        auth.authenticate_provider_profile(
+            provider="wiley",
+            confirm=lambda _prompt: None,
+            remote_url_policy=policy,
+        )
+
+    assert raised.value.code == "auth_final_url_invalid"
+    ensure_ready.assert_not_called()
+    assert fake_manager.instances == []
+
+
+def test_auth_final_url_is_dns_revalidated(monkeypatch, tmp_path) -> None:
+    _install_fake_browser_manager(monkeypatch)
+    _patch_auth_runtime(monkeypatch, tmp_path)
+    resolutions = 0
+
+    def resolver(_host: str, port: int, *, type: int):
+        nonlocal resolutions
+        resolutions += 1
+        address = "8.8.8.8" if resolutions == 1 else "127.0.0.1"
+        return [(socket.AF_INET, type, 6, "", (address, port))]
+
+    with pytest.raises(ProviderFailure) as raised:
+        auth.authenticate_provider_profile(
+            provider="wiley",
+            confirm=lambda _prompt: None,
+            remote_url_policy=SafeRemoteUrlPolicy(resolver=resolver),
+        )
+
+    assert raised.value.code == "auth_final_url_invalid"
+    assert resolutions == 2
+
+
+def test_auth_context_blocks_allowed_cross_origin_request_with_credentials(
+    monkeypatch, tmp_path
+) -> None:
+    fake_manager = _install_fake_browser_manager(monkeypatch)
+    _patch_auth_runtime(monkeypatch, tmp_path)
+
+    auth.authenticate_provider_profile(
+        provider="wiley",
+        confirm=lambda _prompt: None,
+    )
+
+    context = fake_manager.instances[0].context
+    route = mock.Mock()
+    route.request.url = "https://api.wiley.com/steal"
+    route.request.redirected_from = None
+    assert context.route_handler is not None
+    context.route_handler(route)
+    route.abort.assert_called_once()
+    route.continue_.assert_not_called()

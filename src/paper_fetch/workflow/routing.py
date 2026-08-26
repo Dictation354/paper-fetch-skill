@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+from contextvars import copy_context
 from dataclasses import dataclass
 from typing import Any, cast
 from collections.abc import Iterator, Mapping, Set as AbstractSet
@@ -30,11 +31,13 @@ from ..providers.protocols import MetadataProvider
 from ..runtime import RUNTIME_UNSET, RuntimeContext, resolve_runtime_context
 from ..tracing import route_marker
 from ..publisher_identity import (
+    ProviderIdentityCandidate,
     infer_provider_from_doi,
     infer_provider_from_publisher,
     infer_provider_from_url,
     normalize_doi,
     ordered_provider_candidates,
+    ordered_provider_candidate_evidence,
 )
 from ..utils import (
     choose_public_landing_page_url,
@@ -134,6 +137,26 @@ def build_official_provider_candidates(
         for provider, signal in candidates
         if provider in official_provider_name_set()
         and provider_allowed(provider, strategy)
+    ]
+
+
+def build_official_provider_candidate_evidence(
+    resolved, *, routing_metadata: Mapping[str, Any] | None, strategy: FetchStrategy
+) -> list[ProviderIdentityCandidate]:
+    """Return filtered candidates while retaining signal strength/conflicts."""
+
+    return [
+        candidate
+        for candidate in ordered_provider_candidate_evidence(
+            landing_urls=[
+                resolved.landing_url,
+                safe_text((routing_metadata or {}).get("landing_page_url")),
+            ],
+            publishers=[safe_text((routing_metadata or {}).get("publisher"))],
+            doi=resolved.doi,
+        )
+        if candidate.provider in official_provider_name_set()
+        and provider_allowed(candidate.provider, strategy)
     ]
 
 
@@ -437,16 +460,22 @@ def probe_has_fulltext(
         max_workers=max(1, 2 + len(initial_metadata_probe_providers))
     ) as executor:
         crossref_future = (
-            executor.submit(fetch_crossref_metadata)
+            executor.submit(copy_context().run, fetch_crossref_metadata)
             if doi and isinstance(crossref_client, MetadataProvider)
             else None
         )
         provider_probe_futures = {
-            provider_name: executor.submit(fetch_provider_probe_metadata, provider_name)
+            provider_name: executor.submit(
+                copy_context().run,
+                fetch_provider_probe_metadata,
+                provider_name,
+            )
             for provider_name in initial_metadata_probe_providers
         }
         landing_future = (
-            executor.submit(fetch_landing_probe, initial_landing_url)
+            executor.submit(
+                copy_context().run, fetch_landing_probe, initial_landing_url
+            )
             if initial_landing_url
             else None
         )

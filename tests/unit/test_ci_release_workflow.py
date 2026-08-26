@@ -23,24 +23,49 @@ def test_workflows_are_split_by_operational_boundary() -> None:
         "ci.yml",
         "dependency-refresh.yml",
         "offline.yml",
+        "provider-canary.yml",
         "release.yml",
         "rolling-release.yml",
+        "verify.yml",
     }
     assert "workflow_call" in _workflow_text("offline.yml")
+    assert "workflow_call" in _workflow_text("verify.yml")
+    assert "uses: ./.github/workflows/verify.yml" in _workflow_text("ci.yml")
+    assert "uses: ./.github/workflows/verify.yml" in _workflow_text("release.yml")
     assert "uses: ./.github/workflows/offline.yml" in _workflow_text("release.yml")
 
 
 def test_regular_ci_runs_complete_unit_coverage_and_devtools() -> None:
-    workflow = _workflow_text("ci.yml")
+    workflow = _workflow_text("verify.yml")
+    assert "ref: ${{ github.sha }}" in _workflow_text("ci.yml")
     assert "pytest tests/unit -q" in workflow
     assert "--cov-branch" in workflow
+    assert "scripts/report_coverage_focus.py" in workflow
+    assert workflow.index("--cov-branch") < workflow.index(
+        "scripts/report_coverage_focus.py"
+    )
     assert "pytest tests/integration -q" in workflow
     assert "pytest tests/devtools -q" in workflow
     assert "tests/live" not in workflow
 
 
+def test_reusable_verify_checks_out_only_the_requested_immutable_ref() -> None:
+    workflow = _workflow("verify.yml")
+
+    for job_name, job in workflow["jobs"].items():
+        checkouts = [
+            step
+            for step in job["steps"]
+            if str(step.get("uses") or "").startswith("actions/checkout@")
+        ]
+        assert checkouts, job_name
+        for checkout in checkouts:
+            assert checkout.get("with", {}).get("ref") == "${{ inputs.ref }}"
+            assert checkout.get("with", {}).get("persist-credentials") is False
+
+
 def test_ci_protects_minimum_and_maximum_python_core_and_full_installs() -> None:
-    workflow = _workflow_text("ci.yml")
+    workflow = _workflow_text("verify.yml")
     assert 'python-version: ["3.11", "3.14"]' in workflow
     assert 'install: ["core", "full"]' in workflow
     assert "tests/unit/test_provider_catalog.py" in workflow
@@ -49,8 +74,8 @@ def test_ci_protects_minimum_and_maximum_python_core_and_full_installs() -> None
 
 
 def test_quality_gate_uses_whole_package_typing_complexity_and_locked_audit() -> None:
-    workflow = _workflow_text("ci.yml")
-    quality_steps = _workflow("ci.yml")["jobs"]["quality"]["steps"]
+    workflow = _workflow_text("verify.yml")
+    quality_steps = _workflow("verify.yml")["jobs"]["quality"]["steps"]
     assert [
         step for step in quality_steps if step.get("name") == "Check lockfile freshness"
     ] == [{"name": "Check lockfile freshness", "run": "uv lock --check"}]
@@ -148,6 +173,21 @@ def test_offline_windows_tooling_ref_is_immutable_and_provenanced() -> None:
     assert (
         "PAPER_FETCH_OFFLINE_TOOLING_REVISION: ${{ inputs.windows_tooling_ref }}"
     ) in workflow
+    trusted_tooling = (
+        "scripts/build-offline-package-windows.ps1",
+        "scripts/generate_offline_evidence.py",
+        "scripts/verify-windows-installer-lifecycle.ps1",
+        "scripts/windows-installer-helper.ps1",
+        "installer/manifest.json",
+        "installer/paper-fetch-skill.iss",
+    )
+    for path in trusted_tooling:
+        assert workflow.count(f'git show "$TOOLING_REF:{path}"') == 1
+        assert workflow.count(f"> {path}") == 1
+    assert workflow.index('git show "$TOOLING_REF:installer/manifest.json"') < build
+    assert workflow.index('git show "$TOOLING_REF:installer/paper-fetch-skill.iss"') < (
+        build
+    )
 
 
 def test_offline_workflow_verifies_macos_packages_on_pinned_arm64_runner() -> None:
@@ -169,7 +209,7 @@ def test_offline_workflow_verifies_macos_packages_on_pinned_arm64_runner() -> No
 
 
 def test_regular_ci_includes_native_macos_offline_gate() -> None:
-    workflow = _workflow_text("ci.yml")
+    workflow = _workflow_text("verify.yml")
 
     assert "macos-contract-portable:" in workflow
     assert "os: [ubuntu-latest, windows-latest]" in workflow
@@ -205,7 +245,7 @@ def test_regular_ci_includes_native_macos_offline_gate() -> None:
 
 
 def test_regular_ci_includes_non_science_browser_performance_regressions() -> None:
-    workflow = _workflow_text("ci.yml")
+    workflow = _workflow_text("verify.yml")
 
     assert "Non-Science browser performance regressions" in workflow
     assert (
@@ -234,8 +274,13 @@ def test_regular_ci_includes_non_science_browser_performance_regressions() -> No
 def test_release_emits_sbom_checksums_and_build_provenance() -> None:
     workflow = _workflow_text("release.yml")
     assert "Existing immutable v* tag to release" in workflow
-    assert "ref: ${{ needs.verify-tag.outputs.tag }}" in workflow
-    assert "paper-fetch-sbom.cdx.json" in workflow
+    assert 'git rev-parse "refs/tags/$tag^{commit}"' in workflow
+    assert "source_sha: ${{ steps.source.outputs.source_sha }}" in workflow
+    assert "ref: ${{ needs.verify-tag.outputs.source_sha }}" in workflow
+    assert "uses: ./.github/workflows/verify.yml" in workflow
+    assert "paper-fetch-evidence-" in _workflow_text("offline.yml")
+    assert "actual-staged-target" not in workflow
+    assert "uv export" not in workflow
     assert "SHA256SUMS" in workflow
     assert (
         workflow.count(
@@ -247,14 +292,114 @@ def test_release_emits_sbom_checksums_and_build_provenance() -> None:
     assert "subject-path: release-assets/**/*" in workflow
     assert "attestations: write" in workflow
     assert "id-token: write" in workflow
+    assert "posix_tooling_ref: ${{ needs.verify-tag.outputs.source_sha }}" in workflow
+    assert "windows_tooling_ref: ${{ needs.verify-tag.outputs.source_sha }}" in workflow
+    assert 'test "$(git rev-parse HEAD)" = "$SOURCE_SHA"' in workflow
+    assert '--target "$SOURCE_SHA"' in workflow
+
+
+def test_stable_release_validates_and_flattens_the_exact_asset_set() -> None:
+    workflow = _workflow_text("release.yml")
+
+    assert "path: release-inputs/python" in workflow
+    assert "path: release-inputs/offline" in workflow
+    assert "path: release-inputs/dependencies" in workflow
+    publish_job = workflow.split("\n  publish:", maxsplit=1)[1]
+    assert "merge-multiple: true" not in publish_job
+    assert "scripts/prepare_release_assets.py prepare-stable" in workflow
+    assert "--input-root release-inputs" in workflow
+    assert "--output-dir release-assets" in workflow
+    assert '--version "$VERSION"' in workflow
+    assert "find release-assets -maxdepth 1 -type f -print0" in workflow
+    assert "find release-assets -type f ! -name SHA256SUMS" not in workflow
+
+    rolling = _workflow_text("rolling-release.yml")
+    assert "scripts/prepare_release_assets.py checksum-offline" in rolling
+
+
+def test_release_build_jobs_check_out_the_verified_tag_commit() -> None:
+    workflow = _workflow("release.yml")
+    expected_ref = "${{ needs.verify-tag.outputs.source_sha }}"
+
+    for job_name in ("resolve-dependencies", "merge-dependencies", "publish"):
+        checkouts = [
+            step
+            for step in workflow["jobs"][job_name]["steps"]
+            if str(step.get("uses") or "").startswith("actions/checkout@")
+        ]
+        assert checkouts, job_name
+        assert checkouts[0].get("with", {}).get("ref") == expected_ref
+        assert checkouts[0].get("with", {}).get("persist-credentials") is False
+
+    offline_inputs = workflow["jobs"]["offline"]["with"]
+    assert offline_inputs["ref"] == expected_ref
+    assert offline_inputs["posix_tooling_ref"] == expected_ref
+    assert offline_inputs["windows_tooling_ref"] == expected_ref
+    assert offline_inputs["dependency_tooling_ref"] == expected_ref
+
+
+def test_stable_release_freezes_all_nine_target_dependency_graphs() -> None:
+    workflow = _workflow_text("release.yml")
+
+    assert "frozen_dependencies: true" in workflow
     assert (
-        "posix_tooling_ref: ${{ github.event_name == 'workflow_dispatch' && github.sha || '' }}"
+        "dependency_tooling_ref: ${{ needs.verify-tag.outputs.source_sha }}" in workflow
+    )
+    assert "scripts/resolve_offline_dependencies.py resolve" in workflow
+    assert "scripts/resolve_offline_dependencies.py merge" in workflow
+    for target in (
+        "linux-x86_64-cp311",
+        "linux-x86_64-cp312",
+        "linux-x86_64-cp313",
+        "linux-x86_64-cp314",
+        "macos-arm64-cp311",
+        "macos-arm64-cp312",
+        "macos-arm64-cp313",
+        "macos-arm64-cp314",
+        "windows-x86_64-cp313",
+    ):
+        assert target in workflow
+
+
+def test_python_distributions_get_exact_inventory_and_independent_smokes() -> None:
+    workflow = _workflow_text("verify.yml")
+
+    assert "scripts/verify_python_distribution.py" in workflow
+    assert "quality/python-distribution-inventory.json" in workflow
+    assert "python-distribution-$kind" in workflow
+    assert "for kind in wheel sdist" in workflow
+    assert '"$venv/bin/paper-fetch" --version' in workflow
+    assert 'build_server().name == "paper-fetch"' in workflow
+    assert "mathml_to_latex_cli.mjs" in workflow
+    assert "manifest-record-v2.schema.json" in workflow
+    assert "references/tool-contract.md" in workflow
+
+
+def test_windows_offline_job_runs_final_exe_lifecycle_serially() -> None:
+    workflow = _workflow_text("offline.yml")
+    verifier = (REPO_ROOT / "scripts/verify-windows-installer-lifecycle.ps1").read_text(
+        encoding="utf-8"
+    )
+
+    assert (
+        "Verify final EXE install, overwrite upgrade, and uninstall serially"
         in workflow
     )
-    assert (
-        "windows_tooling_ref: ${{ github.event_name == 'workflow_dispatch' && github.sha || '' }}"
-        in workflow
-    )
+    assert "verify-windows-installer-lifecycle.ps1" in workflow
+    assert "-n 0 equivalent" in workflow
+    assert "Silent install of final EXE" in verifier
+    assert "In-place overwrite upgrade" in verifier
+    assert "Silent uninstall of final EXE" in verifier
+    assert "USER_LIFECYCLE_SENTINEL" in verifier
+    assert "browser-preflight" in verifier
+    assert '"-Action", "Smoke"' in verifier
+    assert "Assert-ExactPreservedInstallTree" in verifier
+    assert "Get-ChildItem -LiteralPath $InstallRoot -Recurse -Force" in verifier
+    assert '"downloads/user-owned.txt"' in verifier
+    assert '"offline.env"' in verifier
+    assert "Compare-Object" in verifier
+    assert "README/checksum files and a delayed uninstaller" in verifier
+    assert '"install-helper.log"' not in verifier
 
 
 def test_releases_publish_only_chinese_release_notes() -> None:

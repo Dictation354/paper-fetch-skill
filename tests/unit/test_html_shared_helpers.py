@@ -88,6 +88,16 @@ class _DelayedAssetTransport(HttpTransport):
                 self.active -= 1
 
 
+class _InjectedAssetRequesterTransport:
+    """Exercise the explicitly injected legacy requester without real network I/O."""
+
+    _pinned_streaming_ready = False
+    cancelled = False
+
+    def request(self, *_args, **_kwargs):
+        raise AssertionError("injected opener requester should own this test boundary")
+
+
 class _StaticAssetTransport(HttpTransport):
     def __init__(self, responses: dict[tuple[str, str], dict[str, object]]) -> None:
         self.responses = responses
@@ -890,7 +900,7 @@ class SharedHtmlHelperTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             result = html_assets.download_assets(
                 html_assets.SUPPLEMENTARY_KIND,
-                HttpTransport(),
+                _InjectedAssetRequesterTransport(),
                 article_id="10.1111/gcb.16414",
                 assets=[
                     {
@@ -939,7 +949,7 @@ class SharedHtmlHelperTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             result = html_assets.download_assets(
                 html_assets.SUPPLEMENTARY_KIND,
-                HttpTransport(),
+                _InjectedAssetRequesterTransport(),
                 article_id="10.1000/example",
                 assets=[
                     {
@@ -990,7 +1000,7 @@ class SharedHtmlHelperTests(unittest.TestCase):
             output_dir = Path(tmpdir)
             result = html_assets.download_assets(
                 html_assets.SUPPLEMENTARY_KIND,
-                HttpTransport(),
+                _InjectedAssetRequesterTransport(),
                 article_id="10.1000/source-only",
                 assets=[
                     {
@@ -1542,7 +1552,7 @@ class SharedHtmlHelperTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             result = html_assets.download_assets(
                 html_assets.SUPPLEMENTARY_KIND,
-                HttpTransport(),
+                _InjectedAssetRequesterTransport(),
                 article_id="10.5555/parallel",
                 assets=assets,
                 output_dir=Path(tmpdir),
@@ -1596,7 +1606,7 @@ class SharedHtmlHelperTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             result = html_assets.download_assets(
                 html_assets.SUPPLEMENTARY_KIND,
-                HttpTransport(),
+                _InjectedAssetRequesterTransport(),
                 article_id="10.5555/serial",
                 assets=assets,
                 output_dir=Path(tmpdir),

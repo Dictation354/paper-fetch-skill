@@ -6,6 +6,7 @@ from datetime import UTC, datetime, timedelta
 import io
 import json
 from pathlib import Path
+import threading
 from unittest import mock
 from uuid import UUID
 
@@ -22,6 +23,10 @@ from paper_fetch.manifest_writer import (
     read_manifest_events,
     read_run_manifest,
 )
+from paper_fetch.providers.base import ProviderFailure
+from paper_fetch.reason_codes import RATE_LIMITED
+from paper_fetch.runtime import RuntimeContext
+from paper_fetch.workflow.pipeline import FetchPipelineResult
 
 from .test_workflow_acceptance import _envelope
 
@@ -160,6 +165,146 @@ def test_new_batch_writes_atomic_run_summary_and_auditable_events(
     assert report.status == ManifestAuditStatus.OK
     assert report.reusable_indices == (1, 2)
     assert not manifest_path.with_suffix(".json.part").exists()
+
+
+def test_cli_batch_deduplicates_canonical_doi_and_fans_out_records(
+    tmp_path: Path,
+) -> None:
+    args = _args(tmp_path, batch_concurrency=1)
+    queries = [
+        "10.1000/Example",
+        "https://doi.org/10.1000/example",
+        "10.1000/example",
+    ]
+    calls: list[str] = []
+
+    exit_code = _run(args, tmp_path, queries, calls=calls)
+
+    records = read_manifest_events(Path(args.batch_results))
+    assert exit_code == 0
+    assert calls == [queries[0]]
+    assert [record.index for record in records] == [1, 2, 3]
+    assert [record.query for record in records] == queries
+
+
+def test_cli_batch_closes_not_scheduled_item_contexts(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    created_children: set[int] = set()
+    closed_children: set[int] = set()
+    original_new_request_context = RuntimeContext.new_request_context
+    original_close = RuntimeContext.close
+
+    def tracked_new_request_context(self, **kwargs):
+        child = original_new_request_context(self, **kwargs)
+        created_children.add(id(child))
+        return child
+
+    def tracked_close(self):
+        if id(self) in created_children:
+            closed_children.add(id(self))
+        return original_close(self)
+
+    monkeypatch.setattr(
+        RuntimeContext, "new_request_context", tracked_new_request_context
+    )
+    monkeypatch.setattr(RuntimeContext, "close", tracked_close)
+
+    with (
+        mock.patch.object(
+            cli,
+            "run_single_fetch",
+            side_effect=ProviderFailure(
+                RATE_LIMITED,
+                "synthetic provider cooldown",
+                retry_after_seconds=5,
+            ),
+        ) as fetch,
+        mock.patch.object(
+            cli, "build_http_transport_for_context", return_value=object()
+        ),
+    ):
+        exit_code = cli.run_batch_fetch(
+            _args(tmp_path),
+            queries=["10.1000/one", "10.1000/two"],
+            output_dir=tmp_path,
+            runtime_env={},
+            artifact_mode="none",
+            manifest_deps=_deps(),
+            run_id=RUN_ID,
+            tool_version="3.1.0",
+        )
+
+    records = read_manifest_events(tmp_path / "events.jsonl")
+    assert exit_code == 4
+    assert fetch.call_count == 1
+    assert [record.record_status for record in records] == ["failed", "aborted"]
+    assert created_children == closed_children
+
+
+def test_cli_single_fetch_cancellation_after_pipeline_fences_primary_output(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    args = _args(tmp_path)
+    cancelled = threading.Event()
+    runtime_context = RuntimeContext(
+        env={},
+        transport=object(),
+        download_dir=tmp_path,
+        artifact_mode="none",
+        cancel_check=cancelled.is_set,
+    )
+
+    def complete_pipeline(_pipeline, _request):
+        cancelled.set()
+        return FetchPipelineResult(envelope=_envelope())
+
+    monkeypatch.setattr(cli.FetchPipeline, "run", complete_pipeline)
+    try:
+        with pytest.raises(RequestCancelledError):
+            cli.run_single_fetch(
+                args,
+                query="10.1000/cancelled",
+                output_dir=tmp_path,
+                runtime_env={},
+                artifact_mode="none",
+                context=runtime_context,
+            )
+    finally:
+        runtime_context.close()
+
+    assert list(tmp_path.glob("*.md")) == []
+    assert list(tmp_path.glob(".*.part")) == []
+
+
+def test_cli_resume_allows_execution_policy_override(tmp_path: Path) -> None:
+    queries = ["10.1000/one", "10.1000/two"]
+    _run(
+        _args(tmp_path, batch_concurrency=2),
+        tmp_path,
+        queries,
+        calls=[],
+    )
+    resume_args = _args(
+        tmp_path,
+        run_manifest=None,
+        resume=str(tmp_path / "run-manifest.json"),
+        batch_concurrency=1,
+    )
+    calls: list[str] = []
+
+    exit_code = _run(resume_args, tmp_path, queries, calls=calls)
+
+    manifest = read_run_manifest(tmp_path / "run-manifest.json")
+    assert exit_code == 0
+    assert calls == []
+    assert manifest.execution_policy == {
+        "batch_concurrency": 1,
+        "continue_on_error": True,
+    }
+    assert "batch_concurrency" not in manifest.request_parameters
 
 
 def test_resume_skips_verified_output_and_appends_new_attempt_for_stale_output(

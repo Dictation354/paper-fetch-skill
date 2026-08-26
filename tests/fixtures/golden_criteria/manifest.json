@@ -1785,6 +1785,12 @@
       "origin_kind": "real_replay",
       "usage_kind": "content",
       "fixture_family": "block",
+      "negative_case_kind": "access_block",
+      "provider_route": "direct_html",
+      "source_identity": "springer_html",
+      "expected_reason": "abstract_only",
+      "expected_failure_code": "availability_rejected",
+      "expected_content_kind": "abstract_only",
       "assets": {
         "extracted.md": "tests/fixtures/block/10.1007_s00382-018-4286-0/extracted.md",
         "raw.html": "tests/fixtures/block/10.1007_s00382-018-4286-0/raw.html",
@@ -1792,8 +1798,8 @@
         "markdown-quality.json": "tests/fixtures/block/10.1007_s00382-018-4286-0/markdown-quality.json",
         "markdown-quality-prompt.md": "tests/fixtures/block/10.1007_s00382-018-4286-0/markdown-quality-prompt.md"
       },
-      "expected_outcome": "blocked",
-      "route_kind": "blocked",
+      "expected_outcome": "rejected",
+      "route_kind": "html",
       "content_type": "text/html"
     },
     "10.1007_s11430-021-9892-6__block": {
@@ -1804,6 +1810,15 @@
       "origin_kind": "real_replay",
       "usage_kind": "content",
       "fixture_family": "block",
+      "negative_case_kind": "access_block",
+      "provider_route": "direct_html",
+      "source_identity": "springer_html",
+      "expected_reason": "abstract_only",
+      "expected_failure_code": "availability_rejected",
+      "expected_content_kind": "abstract_only",
+      "expected_outcome": "rejected",
+      "route_kind": "html",
+      "content_type": "text/html",
       "assets": {
         "extracted.md": "tests/fixtures/block/10.1007_s11430-021-9892-6/extracted.md",
         "raw.html": "tests/fixtures/block/10.1007_s11430-021-9892-6/raw.html"
@@ -1817,6 +1832,15 @@
       "origin_kind": "real_replay",
       "usage_kind": "content",
       "fixture_family": "block",
+      "negative_case_kind": "access_block",
+      "provider_route": "direct_html",
+      "source_identity": "springer_html",
+      "expected_reason": "abstract_only",
+      "expected_failure_code": "availability_rejected",
+      "expected_content_kind": "abstract_only",
+      "expected_outcome": "rejected",
+      "route_kind": "html",
+      "content_type": "text/html",
       "assets": {
         "extracted.md": "tests/fixtures/block/10.1007_s12652-019-01399-8/extracted.md",
         "raw.html": "tests/fixtures/block/10.1007_s12652-019-01399-8/raw.html"
@@ -1830,6 +1854,15 @@
       "origin_kind": "real_replay",
       "usage_kind": "content",
       "fixture_family": "block",
+      "negative_case_kind": "access_block",
+      "provider_route": "direct_html",
+      "source_identity": "springer_html",
+      "expected_reason": "abstract_only",
+      "expected_failure_code": "availability_rejected",
+      "expected_content_kind": "abstract_only",
+      "expected_outcome": "rejected",
+      "route_kind": "html",
+      "content_type": "text/html",
       "assets": {
         "extracted.md": "tests/fixtures/block/10.1007_s13351-020-9829-8/extracted.md",
         "raw.html": "tests/fixtures/block/10.1007_s13351-020-9829-8/raw.html"
@@ -1843,6 +1876,12 @@
       "origin_kind": "real_replay",
       "usage_kind": "content",
       "fixture_family": "block",
+      "negative_case_kind": "access_block",
+      "provider_route": "browser_html",
+      "source_identity": "pnas",
+      "expected_reason": "abstract_only",
+      "expected_failure_code": "html_extraction_rejected",
+      "expected_content_kind": "abstract_only",
       "assets": {
         "extracted.md": "tests/fixtures/block/10.1073_pnas.2509692123/extracted.md",
         "raw.html": "tests/fixtures/block/10.1073_pnas.2509692123/raw.html",
@@ -1850,8 +1889,8 @@
         "markdown-quality.json": "tests/fixtures/block/10.1073_pnas.2509692123/markdown-quality.json",
         "markdown-quality-prompt.md": "tests/fixtures/block/10.1073_pnas.2509692123/markdown-quality-prompt.md"
       },
-      "expected_outcome": "blocked",
-      "route_kind": "blocked",
+      "expected_outcome": "rejected",
+      "route_kind": "html",
       "content_type": "text/html"
     },
     "10.1073_pnas.2523032123__block": {
@@ -1862,6 +1901,15 @@
       "origin_kind": "real_replay",
       "usage_kind": "content",
       "fixture_family": "block",
+      "negative_case_kind": "access_block",
+      "provider_route": "browser_html",
+      "source_identity": "pnas",
+      "expected_reason": "abstract_only",
+      "expected_failure_code": "html_extraction_rejected",
+      "expected_content_kind": "abstract_only",
+      "expected_outcome": "rejected",
+      "route_kind": "html",
+      "content_type": "text/html",
       "assets": {
         "extracted.md": "tests/fixtures/block/10.1073_pnas.2523032123/extracted.md",
         "raw.html": "tests/fixtures/block/10.1073_pnas.2523032123/raw.html"
@@ -1875,6 +1923,15 @@
       "origin_kind": "real_replay",
       "usage_kind": "content",
       "fixture_family": "block",
+      "negative_case_kind": "access_block",
+      "provider_route": "browser_html",
+      "source_identity": "pnas",
+      "expected_reason": "abstract_only",
+      "expected_failure_code": "html_extraction_rejected",
+      "expected_content_kind": "abstract_only",
+      "expected_outcome": "rejected",
+      "route_kind": "html",
+      "content_type": "text/html",
       "assets": {
         "extracted.md": "tests/fixtures/block/10.1073_pnas.2534432123/extracted.md",
         "raw.html": "tests/fixtures/block/10.1073_pnas.2534432123/raw.html"
@@ -1888,6 +1945,15 @@
       "origin_kind": "real_replay",
       "usage_kind": "content",
       "fixture_family": "block",
+      "negative_case_kind": "access_block",
+      "provider_route": "browser_html",
+      "source_identity": "pnas",
+      "expected_reason": "abstract_only",
+      "expected_failure_code": "html_extraction_rejected",
+      "expected_content_kind": "abstract_only",
+      "expected_outcome": "rejected",
+      "route_kind": "html",
+      "content_type": "text/html",
       "assets": {
         "extracted.md": "tests/fixtures/block/10.1073_pnas.2607267123/extracted.md",
         "raw.html": "tests/fixtures/block/10.1073_pnas.2607267123/raw.html"
@@ -1901,6 +1967,15 @@
       "origin_kind": "real_replay",
       "usage_kind": "content",
       "fixture_family": "block",
+      "negative_case_kind": "access_block",
+      "provider_route": "browser_html",
+      "source_identity": "wiley_browser",
+      "expected_reason": "abstract_only",
+      "expected_failure_code": "html_extraction_rejected",
+      "expected_content_kind": "abstract_only",
+      "expected_outcome": "rejected",
+      "route_kind": "html",
+      "content_type": "text/html",
       "assets": {
         "extracted.md": "tests/fixtures/block/10.1111_gcb.16386/extracted.md",
         "raw.html": "tests/fixtures/block/10.1111_gcb.16386/raw.html"
@@ -1914,6 +1989,15 @@
       "origin_kind": "real_replay",
       "usage_kind": "content",
       "fixture_family": "block",
+      "negative_case_kind": "access_block",
+      "provider_route": "browser_html",
+      "source_identity": "wiley_browser",
+      "expected_reason": "abstract_only",
+      "expected_failure_code": "html_extraction_rejected",
+      "expected_content_kind": "abstract_only",
+      "expected_outcome": "rejected",
+      "route_kind": "html",
+      "content_type": "text/html",
       "assets": {
         "extracted.md": "tests/fixtures/block/10.1111_gcb.16414/extracted.md",
         "raw.html": "tests/fixtures/block/10.1111_gcb.16414/raw.html"
@@ -1927,6 +2011,15 @@
       "origin_kind": "real_replay",
       "usage_kind": "content",
       "fixture_family": "block",
+      "negative_case_kind": "access_block",
+      "provider_route": "browser_html",
+      "source_identity": "wiley_browser",
+      "expected_reason": "abstract_only",
+      "expected_failure_code": "html_extraction_rejected",
+      "expected_content_kind": "abstract_only",
+      "expected_outcome": "rejected",
+      "route_kind": "html",
+      "content_type": "text/html",
       "assets": {
         "extracted.md": "tests/fixtures/block/10.1111_gcb.16758/extracted.md",
         "raw.html": "tests/fixtures/block/10.1111_gcb.16758/raw.html"
@@ -1940,6 +2033,15 @@
       "origin_kind": "real_replay",
       "usage_kind": "content",
       "fixture_family": "block",
+      "negative_case_kind": "access_block",
+      "provider_route": "browser_html",
+      "source_identity": "wiley_browser",
+      "expected_reason": "abstract_only",
+      "expected_failure_code": "html_extraction_rejected",
+      "expected_content_kind": "abstract_only",
+      "expected_outcome": "rejected",
+      "route_kind": "html",
+      "content_type": "text/html",
       "assets": {
         "extracted.md": "tests/fixtures/block/10.1111_gcb.16998/extracted.md",
         "raw.html": "tests/fixtures/block/10.1111_gcb.16998/raw.html"
@@ -1953,6 +2055,15 @@
       "origin_kind": "real_replay",
       "usage_kind": "content",
       "fixture_family": "block",
+      "negative_case_kind": "access_block",
+      "provider_route": "browser_html",
+      "source_identity": "science",
+      "expected_reason": "abstract_only",
+      "expected_failure_code": "html_extraction_rejected",
+      "expected_content_kind": "abstract_only",
+      "expected_outcome": "rejected",
+      "route_kind": "html",
+      "content_type": "text/html",
       "assets": {
         "raw.html": "tests/fixtures/block/10.1126_science.167.3914.61/raw.html"
       }
@@ -1965,6 +2076,15 @@
       "origin_kind": "real_replay",
       "usage_kind": "content",
       "fixture_family": "block",
+      "negative_case_kind": "access_block",
+      "provider_route": "browser_html",
+      "source_identity": "science",
+      "expected_reason": "abstract_only",
+      "expected_failure_code": "html_extraction_rejected",
+      "expected_content_kind": "abstract_only",
+      "expected_outcome": "rejected",
+      "route_kind": "html",
+      "content_type": "text/html",
       "assets": {
         "extracted.md": "tests/fixtures/block/10.1126_science.6985744/extracted.md",
         "raw.html": "tests/fixtures/block/10.1126_science.6985744/raw.html"
@@ -1978,6 +2098,15 @@
       "origin_kind": "real_replay",
       "usage_kind": "content",
       "fixture_family": "block",
+      "negative_case_kind": "access_block",
+      "provider_route": "browser_html",
+      "source_identity": "science",
+      "expected_reason": "abstract_only",
+      "expected_failure_code": "html_extraction_rejected",
+      "expected_content_kind": "abstract_only",
+      "expected_outcome": "rejected",
+      "route_kind": "html",
+      "content_type": "text/html",
       "assets": {
         "raw.html": "tests/fixtures/block/10.1126_science.7809609/raw.html"
       }
@@ -1990,6 +2119,15 @@
       "origin_kind": "real_replay",
       "usage_kind": "content",
       "fixture_family": "block",
+      "negative_case_kind": "access_block",
+      "provider_route": "browser_html",
+      "source_identity": "science",
+      "expected_reason": "abstract_only",
+      "expected_failure_code": "html_extraction_rejected",
+      "expected_content_kind": "abstract_only",
+      "expected_outcome": "rejected",
+      "route_kind": "html",
+      "content_type": "text/html",
       "assets": {
         "extracted.md": "tests/fixtures/block/10.1126_science.aeg3511/extracted.md",
         "raw.html": "tests/fixtures/block/10.1126_science.aeg3511/raw.html"
@@ -3288,9 +3426,15 @@
       "expected_outcome": "metadata_only",
       "fixture_family": "block",
       "content_type": "text/html;charset=UTF-8",
-      "route_kind": "block",
+      "route_kind": "html",
       "origin_kind": "real_replay",
       "usage_kind": "content",
+      "negative_case_kind": "empty_shell",
+      "provider_route": "browser_html",
+      "source_identity": "annualreviews_html",
+      "expected_reason": "insufficient_body",
+      "expected_failure_code": "html_extraction_rejected",
+      "expected_content_kind": "metadata_only",
       "assets": {
         "raw.html": "tests/fixtures/block/10.1146_annurev.pp.19.060168.001235/raw.html"
       }

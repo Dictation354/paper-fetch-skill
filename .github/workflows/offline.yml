@@ -12,7 +12,7 @@ on:
         required: false
         type: string
       windows_tooling_ref:
-        description: Trusted commit whose Windows packaging script should overlay an immutable source ref
+        description: Trusted commit whose atomic Windows installer toolchain should overlay an immutable source ref
         required: false
         type: string
       frozen_dependencies:
@@ -107,6 +107,9 @@ jobs:
           install -m 0755 \
             .posix-release-tooling/scripts/verify-offline-package.sh \
             scripts/verify-offline-package.sh
+          install -m 0755 \
+            .posix-release-tooling/scripts/generate_offline_evidence.py \
+            scripts/generate_offline_evidence.py
       - name: Check out dependency snapshot tooling
         if: ${{ inputs.frozen_dependencies }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -169,6 +172,8 @@ jobs:
             exit 1
           fi
           scripts/verify-offline-package.sh "${packages[0]}"
+          test -f "dist/paper-fetch-evidence-${{ matrix.target }}.dependency-manifest.json"
+          test -f "dist/paper-fetch-evidence-${{ matrix.target }}.sbom.cdx.json"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: offline-${{ runner.os }}-${{ matrix.python-version }}
@@ -206,6 +211,16 @@ jobs:
           git fetch --no-tags --depth=1 origin "$TOOLING_REF"
           git show "$TOOLING_REF:scripts/build-offline-package-windows.ps1" \
             > scripts/build-offline-package-windows.ps1
+          git show "$TOOLING_REF:scripts/generate_offline_evidence.py" \
+            > scripts/generate_offline_evidence.py
+          git show "$TOOLING_REF:scripts/verify-windows-installer-lifecycle.ps1" \
+            > scripts/verify-windows-installer-lifecycle.ps1
+          git show "$TOOLING_REF:scripts/windows-installer-helper.ps1" \
+            > scripts/windows-installer-helper.ps1
+          git show "$TOOLING_REF:installer/manifest.json" \
+            > installer/manifest.json
+          git show "$TOOLING_REF:installer/paper-fetch-skill.iss" \
+            > installer/paper-fetch-skill.iss
       - name: Check out dependency snapshot tooling
         if: ${{ inputs.frozen_dependencies }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -254,6 +269,24 @@ jobs:
             $env:PIP_FIND_LINKS = "$(Join-Path $snapshotRoot 'runtime-wheels') $(Join-Path $snapshotRoot 'support-wheels')"
           }
           scripts/build-offline-package-windows.ps1 -OutputDir dist -PythonBin python
+      - name: Verify final EXE install, overwrite upgrade, and uninstall serially
+        shell: pwsh
+        run: |
+          # This gate intentionally has no matrix/xdist parallelism (-n 0 equivalent):
+          # installation state, HKCU PATH, and Inno uninstall registration are shared.
+          $setup = Get-Item "dist/paper-fetch-skill-windows-x86_64-setup.exe"
+          $version = python -c "import pathlib,tomllib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8'))['project']['version'])"
+          & scripts/verify-windows-installer-lifecycle.ps1 `
+            -SetupPath $setup.FullName `
+            -ExpectedVersion $version.Trim()
+          foreach ($evidence in @(
+            "dist/paper-fetch-evidence-windows-x86_64-cp313.dependency-manifest.json",
+            "dist/paper-fetch-evidence-windows-x86_64-cp313.sbom.cdx.json"
+          )) {
+            if (-not (Test-Path -LiteralPath $evidence -PathType Leaf)) {
+              throw "Windows offline build is missing staged evidence: $evidence"
+            }
+          }
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: offline-Windows-3.13

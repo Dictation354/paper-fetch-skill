@@ -9,6 +9,7 @@ import time
 from typing import TYPE_CHECKING, Any
 from collections.abc import Mapping
 
+from ..asset_budget import use_asset_budget
 from ..artifacts import ArtifactStore
 from ..extraction.html import decode_html, render_html_markdown
 from ..failure import FailureDiagnostics
@@ -635,14 +636,15 @@ class ProviderClient:
                 try:
                     asset_started_at = time.monotonic()
                     try:
-                        asset_results = self.download_related_assets(
-                            doi,
-                            metadata,
-                            raw_payload,
-                            asset_output_dir,
-                            asset_profile=asset_profile,
-                            context=context,
-                        )
+                        with use_asset_budget(context.asset_budget):
+                            asset_results = self.download_related_assets(
+                                doi,
+                                metadata,
+                                raw_payload,
+                                asset_output_dir,
+                                asset_profile=asset_profile,
+                                context=context,
+                            )
                     finally:
                         context.accumulate_stage_timing(
                             "asset_seconds", started_at=asset_started_at

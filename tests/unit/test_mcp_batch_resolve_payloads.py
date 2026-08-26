@@ -1,10 +1,40 @@
 # ruff: noqa: F403,F405
 from __future__ import annotations
 
+from paper_fetch.runtime import RuntimeContext
+
 from ._mcp_support import *
 
 
 class McpBatchResolvePayloadTests(unittest.TestCase):
+    def test_batch_resolve_parent_runtime_is_closed_exactly_once(self) -> None:
+        parents: list[RuntimeContext] = []
+
+        class TrackingRuntimeContext(RuntimeContext):
+            close_count = 0
+
+            def __post_init__(self) -> None:
+                super().__post_init__()
+                parents.append(self)
+
+            def close(self) -> None:
+                self.close_count += 1
+                super().close()
+
+        with (
+            mock.patch.object(mcp_batch, "RuntimeContext", TrackingRuntimeContext),
+            mock.patch.object(
+                mcp_tools,
+                "service_resolve_paper",
+                return_value=sample_resolved_query("10.1000/one"),
+            ),
+        ):
+            payload = mcp_tools.batch_resolve_payload(queries=["10.1000/one"])
+
+        self.assertFalse(payload["aborted"])
+        self.assertEqual(len(parents), 1)
+        self.assertEqual(parents[0].close_count, 1)
+
     def test_fetch_paper_payload_accepts_full_text_and_asset_profile_strategy(
         self,
     ) -> None:
@@ -338,11 +368,11 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             listed = mcp_tools.list_cached_payload(download_dir=download_dir)
 
         self.assertEqual(payload["status"], "hit")
-        self.assertEqual(len(payload["entries"]), 3)
+        self.assertEqual(len(payload["entries"]), 1)
         self.assertIsNotNone(payload["preferred"]["markdown"])
-        self.assertIsNotNone(payload["preferred"]["primary_payload"])
-        self.assertEqual(len(payload["preferred"]["assets"]), 1)
-        self.assertEqual(len(listed["entries"]), 3)
+        self.assertIsNone(payload["preferred"]["primary_payload"])
+        self.assertEqual(payload["preferred"]["assets"], [])
+        self.assertEqual(len(listed["entries"]), 1)
 
     def test_batch_resolve_payload_reuses_transport_and_aborts_on_rate_limit(
         self,
@@ -377,7 +407,13 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         self.assertEqual(
             payload["abort_reason"]["source_trail"], ["fulltext:rate_limited"]
         )
-        self.assertEqual(len(payload["results"]), 2)
+        self.assertEqual(len(payload["results"]), 3)
+        self.assertEqual([item["index"] for item in payload["results"]], [1, 2, 3])
+        self.assertEqual(payload["results"][2]["status"], "not_scheduled")
+        self.assertEqual(
+            payload["progress"],
+            {"total": 3, "terminal": 3, "completed": 2, "not_scheduled": 1},
+        )
         self.assertEqual(seen_queries, ["first", "second"])
         self.assertEqual(len(set(transport_ids)), 1)
 
@@ -509,6 +545,47 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             {"abstract": 32, "body": 96, "refs": 24},
         )
 
+    def test_batch_check_article_context_trace_and_request_state_are_isolated(
+        self,
+    ) -> None:
+        barrier = threading.Barrier(2)
+        context_ids: list[int] = []
+        transport_ids: list[int] = []
+        session_ids: list[int] = []
+
+        def fake_fetch(query, *, context=None, modes=None, **_kwargs):
+            assert context is not None
+            context_ids.append(id(context))
+            transport_ids.append(id(context.transport))
+            session_ids.append(id(context.session_cache))
+            context.fetch_trace[:] = [
+                trace_event("fetch", "isolated", "ok", code=query)
+            ]
+            context.stage_timings["query_marker"] = float(len(query))
+            context.session_cache[("query",)] = query
+            context.diagnostic_artifacts.append({"query": query})
+            barrier.wait(timeout=2)
+            envelope = sample_envelope(modes=modes, doi=query)
+            envelope.trace = list(context.fetch_trace)
+            return envelope
+
+        with mock.patch.object(
+            mcp_tools, "service_fetch_paper", side_effect=fake_fetch
+        ):
+            payload = mcp_tools.batch_check_payload(
+                queries=["10.1000/one", "10.1000/two"],
+                mode="article",
+                concurrency=2,
+            )
+
+        self.assertEqual(len(set(context_ids)), 2)
+        self.assertEqual(len(set(session_ids)), 2)
+        self.assertEqual(len(set(transport_ids)), 1)
+        self.assertEqual(
+            [item["trace"][0]["code"] for item in payload["results"]],
+            ["10.1000/one", "10.1000/two"],
+        )
+
     def test_batch_check_tool_rejects_invalid_concurrency(self) -> None:
         result = asyncio.run(
             mcp_tools.batch_check_tool_async(
@@ -557,7 +634,127 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         self.assertTrue(payload["aborted"])
         self.assertEqual(payload["abort_reason"]["status"], "rate_limited")
         self.assertEqual(seen_queries, ["10.1000/one", "10.1000/two"])
-        self.assertEqual(len(payload["results"]), 2)
+        self.assertEqual(len(payload["results"]), 3)
+        self.assertEqual(payload["results"][2]["status"], "not_scheduled")
+
+    def test_batch_check_title_queries_use_resolved_provider_lanes(self) -> None:
+        providers = {
+            "title-a-first": "provider-a",
+            "title-b": "provider-b",
+            "title-a-later": "provider-a",
+        }
+        fetch_calls: list[str] = []
+
+        def fake_resolve(query, *, context=None):
+            resolved = sample_resolved_query(query)
+            resolved.doi = f"10.1000/{query}"
+            resolved.provider_hint = providers[query]
+            return resolved
+
+        def fake_fetch_paper(query, **kwargs):
+            fetch_calls.append(query)
+            if query == "title-a-first":
+                raise ProviderFailure("rate_limited", "provider A cooldown")
+            return sample_envelope(modes=kwargs["modes"], doi="10.1000/title-b")
+
+        with (
+            mock.patch.object(
+                mcp_tools, "service_resolve_paper", side_effect=fake_resolve
+            ),
+            mock.patch.object(
+                mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper
+            ),
+        ):
+            payload = mcp_tools.batch_check_payload(
+                queries=list(providers),
+                mode="article",
+                concurrency=1,
+            )
+
+        self.assertEqual(fetch_calls, ["title-a-first", "title-b"])
+        self.assertEqual(
+            [item["provider_lane"] for item in payload["results"]],
+            ["provider-a", "provider-b", "provider-a"],
+        )
+        self.assertEqual(
+            [item["status"] for item in payload["results"]],
+            ["rate_limited", "succeeded", "not_scheduled"],
+        )
+
+    def test_batch_check_async_known_dois_use_distinct_local_lanes(self) -> None:
+        queries = [
+            "10.1016/first",
+            "10.1002/other",
+            "10.1016/later",
+        ]
+        fetch_calls: list[str] = []
+
+        def fake_fetch_paper(query, **kwargs):
+            fetch_calls.append(query)
+            if query == queries[0]:
+                raise ProviderFailure("rate_limited", "Elsevier cooldown")
+            return sample_envelope(modes=kwargs["modes"], doi=query)
+
+        with (
+            mock.patch.object(mcp_tools, "service_resolve_paper") as resolver,
+            mock.patch.object(
+                mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper
+            ),
+        ):
+            result = asyncio.run(
+                mcp_tools.batch_check_tool_async(
+                    queries=queries,
+                    mode="article",
+                    concurrency=1,
+                )
+            )
+
+        payload = result.structured_content
+        self.assertFalse(result.is_error)
+        resolver.assert_not_called()
+        self.assertEqual(fetch_calls, queries[:2])
+        self.assertEqual(
+            [item["provider_lane"] for item in payload["results"]],
+            ["elsevier", "wiley", "elsevier"],
+        )
+        self.assertEqual(payload["results"][2]["status"], "not_scheduled")
+
+    def test_batch_resolve_reports_provider_resolved_during_operation(self) -> None:
+        resolved = sample_resolved_query("A title query")
+        resolved.provider_hint = "wiley"
+        with mock.patch.object(
+            mcp_tools,
+            "service_resolve_paper",
+            return_value=resolved,
+        ):
+            payload = mcp_tools.batch_resolve_payload(queries=["A title query"])
+
+        self.assertEqual(payload["results"][0]["provider_lane"], "wiley")
+
+    def test_batch_check_uses_catalog_source_when_title_lane_stays_generic(
+        self,
+    ) -> None:
+        with (
+            mock.patch.object(
+                mcp_tools,
+                "service_resolve_paper",
+                side_effect=RuntimeError("resolver unavailable"),
+            ),
+            mock.patch.object(
+                mcp_tools,
+                "service_fetch_paper",
+                return_value=sample_envelope(
+                    modes={"article"},
+                    doi="10.1000/unknown-prefix",
+                ),
+            ),
+        ):
+            payload = mcp_tools.batch_check_payload(
+                queries=["An unresolved title"],
+                mode="article",
+            )
+
+        self.assertEqual(payload["results"][0]["provider_lane"], "elsevier")
 
     def test_resolve_paper_payload_preserves_structured_query(self) -> None:
         captured: dict[str, object] = {}

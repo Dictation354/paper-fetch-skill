@@ -145,7 +145,7 @@ python3 scripts/scaffold_provider.py --name newpub --doi <real-structure-doi> --
 跑：
 
 ```bash
-PYTHONPATH=src python3 -m pytest tests/unit -q
+PYTHONPATH=src uv run python -m pytest tests/unit -q
 ```
 
 直到 `test_newpub_provider.py` 全绿，并且每个 non-null fixture purpose 都已经在 provider-local 测试中点名覆盖。然后**第一次为每篇 fixture 写四类 snapshot/review 产物**：
@@ -172,8 +172,8 @@ state machine、review artifact、recovery、worker runtime、commands、summary
 跑完整性 lint：
 
 ```bash
-PYTHONPATH=src python3 -m pytest tests/unit/test_provider_bundle_completeness.py -q
-PYTHONPATH=src python3 -m pytest tests/unit/test_provider_markdown_review_contract.py -q
+PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_bundle_completeness.py -q
+PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_markdown_review_contract.py -q
 ```
 
 全过即 Commit A。这一步固化「跑通」的状态。
@@ -238,7 +238,7 @@ python3 scripts/scaffold_provider.py --name newpub --doi <real-structure-doi> \
 # Step 4 (Commit A)
 PYTHONPATH=src python3 scripts/snapshot_expected.py --doi <real-structure-doi> --review
 PYTHONPATH=src python3 scripts/snapshot_expected.py --doi <real-structure-doi>
-PYTHONPATH=src python3 -m pytest tests/unit -q
+PYTHONPATH=src uv run python -m pytest tests/unit -q
 git commit -m "feat(newpub): prototype provider with golden replay"
 
 # Step 5 (重构, 半天)

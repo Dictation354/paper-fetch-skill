@@ -168,11 +168,37 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             diagnostic,
         )
 
+    def test_skill_integrity_contract_drift_is_rejected(self) -> None:
+        contract = validator.load_contract()
+        contract["skill_integrity"]["schema_version"] = 1
+        contract["skill_integrity"]["check_mode"] = "may-install"
+        contract["skill_integrity"]["drift_affects_readiness"] = False
+
+        diagnostic = "\n".join(validator.validate_contract(contract))
+
+        self.assertIn("skill_integrity.schema_version must be 2", diagnostic)
+        self.assertIn(
+            "skill_integrity.check_mode must be 'strictly-read-only-user-or-project'",
+            diagnostic,
+        )
+        self.assertIn(
+            "skill_integrity.drift_affects_readiness must be True",
+            diagnostic,
+        )
+
     def test_portable_ci_and_release_tooling_drift_is_rejected(self) -> None:
         contract = validator.load_contract()
         contract["portable_ci"]["runners"] = ["windows-latest"]
         contract["release_tooling"]["trusted_ref_format"] = "branch-or-tag"
         contract["release_tooling"]["source_tag_immutable"] = False
+        contract["release_tooling"]["verify_workflow"] = ".github/workflows/ci.yml"
+        contract["release_tooling"]["tag_commit_resolution"] = "tag-name-only"
+        contract["release_tooling"]["verified_sha_reused_for_all_jobs"] = False
+        contract["release_tooling"]["frozen_dependency_targets"] = []
+        contract["release_tooling"]["dependency_evidence"] = []
+        contract["release_tooling"]["release_asset_namespace"] = "nested-paths"
+        contract["release_tooling"]["stable_release_asset_count"] = 0
+        contract["release_tooling"]["windows_uninstall_allowlist"] = ["runtime/"]
         contract["release_tooling"]["source_contract_required_before_overlay"] = False
         contract["release_tooling"]["legacy_source_without_contract"] = "allow"
         contract["release_tooling"][
@@ -199,6 +225,32 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             diagnostic,
         )
         self.assertIn(
+            "release_tooling.verify_workflow must be '.github/workflows/verify.yml'",
+            diagnostic,
+        )
+        self.assertIn(
+            "release_tooling.tag_commit_resolution must be 'refs-tags-peel-commit-sha'",
+            diagnostic,
+        )
+        self.assertIn(
+            "release_tooling.verified_sha_reused_for_all_jobs must be True",
+            diagnostic,
+        )
+        self.assertIn("release_tooling.frozen_dependency_targets must be", diagnostic)
+        self.assertIn("release_tooling.dependency_evidence must be", diagnostic)
+        self.assertIn(
+            "release_tooling.release_asset_namespace must be 'flat-basename-only'",
+            diagnostic,
+        )
+        self.assertIn(
+            "release_tooling.stable_release_asset_count must be 31",
+            diagnostic,
+        )
+        self.assertIn(
+            "release_tooling.windows_uninstall_allowlist must be",
+            diagnostic,
+        )
+        self.assertIn(
             "release_tooling.source_contract_required_before_overlay must be True",
             diagnostic,
         )
@@ -220,6 +272,18 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         )
         self.assertIn(
             "release_tooling.trusted_windows_overlay_paths must be",
+            diagnostic,
+        )
+
+    def test_windows_embedded_runtime_pin_drift_is_rejected(self) -> None:
+        contract = validator.load_contract()
+        contract["components"]["windows_embedded_cpython"]["sha256"] = "0" * 64
+
+        diagnostic = "\n".join(validator.validate_contract(contract))
+
+        self.assertIn(
+            "components.windows_embedded_cpython must match the official pinned "
+            "runtime contract",
             diagnostic,
         )
 
@@ -269,6 +333,26 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract["components"]["camoufox"]["native_ci_runtime"] = "latest"
         contract["components"]["camoufox"]["native_test_addon_policy"] = "download"
         contract["components"]["camoufox"]["native_test_screen_policy"] = "host"
+        contract["components"]["camoufox"]["network_policy"] = "unrestricted"
+        contract["components"]["camoufox"]["route_allowlist_source"] = "page"
+        contract["components"]["camoufox"]["route_execution_policy"] = (
+            "declarative-only"
+        )
+        contract["components"]["camoufox"]["credentialed_context_policy"] = (
+            "cross-origin"
+        )
+        contract["components"]["camoufox"]["cross_origin_asset_policy"] = "browser"
+        contract["components"]["camoufox"]["service_worker_policy"] = "allow"
+        contract["components"]["camoufox"]["storage_state_cache_scope"] = "public"
+        contract["components"]["camoufox"]["storage_state_load_diagnostics"] = (
+            "configured-only"
+        )
+        contract["components"]["camoufox"]["binary_asset_transport"] = "browser-body"
+        contract["components"]["camoufox"]["asset_budget_defaults"] = "unbounded"
+        contract["components"]["camoufox"]["asset_worker_policy"] = "per-kind"
+        contract["components"]["camoufox"]["browser_only_binary_policy"] = (
+            "buffer-in-memory"
+        )
         contract["components"]["forbidden"] = []
 
         diagnostic = "\n".join(validator.validate_contract(contract))
@@ -365,6 +449,65 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             diagnostic,
         )
         self.assertIn(
+            "components.camoufox.network_policy must be "
+            "'safe-remote-url-policy-per-request-and-final-url'",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.route_allowlist_source must be 'provider-catalog'",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.route_execution_policy must be "
+            "'compiled-catalog-host-timeout-retry-qps-acceptance-assets'",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.credentialed_context_policy must be "
+            "'same-origin-only'",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.cross_origin_asset_policy must be "
+            "'controlled-direct-transport'",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.service_worker_policy must be "
+            "'block-before-credential-seed'",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.storage_state_cache_scope must be "
+            "'actual-use-provider-backend-path-digest'",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.storage_state_load_diagnostics must be "
+            "'path-exists-used'",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.binary_asset_transport must be "
+            "'browser-discovery-pinned-direct-stream'",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.asset_budget_defaults must be "
+            "'128-files-32mib-per-asset-256mib-total-64000000-pixels'",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.asset_worker_policy must be "
+            "'shared-runtime-max4-route-capped-as-completed'",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.browser_only_binary_policy must be "
+            "'fail-closed-browser-stream-unavailable'",
+            diagnostic,
+        )
+        self.assertIn(
             "components.forbidden must contain only flaresolverr",
             diagnostic,
         )
@@ -417,7 +560,7 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             repo_root = Path(tmpdir)
             workflows = repo_root / ".github" / "workflows"
             workflows.mkdir(parents=True)
-            (workflows / "ci.yml").write_text(
+            (workflows / "verify.yml").write_text(
                 "      - name: Set up pinned Haskell toolchain\n"
                 "        uses: example/setup@"
                 f"{validator.EXPECTED_FORMULA_SETUP_SHA} "
@@ -446,7 +589,7 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
 
         diagnostic = "\n".join(errors)
         self.assertIn(
-            ".github/workflows/ci.yml must use haskell-actions/setup exactly "
+            ".github/workflows/verify.yml must use haskell-actions/setup exactly "
             "1 times; got 0",
             diagnostic,
         )

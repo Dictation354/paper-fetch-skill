@@ -174,6 +174,7 @@ def test_from_manifest_generated_provider_modules_import(tmp_path: Path) -> None
     manifest["display_source"] = "newmanifest_html"
     manifest["routing"]["domains"] = ["newmanifest.example"]  # type: ignore[index]
     manifest["routing"]["publisher_aliases"] = ["newmanifest"]  # type: ignore[index]
+    manifest["routing"]["doi_prefixes"] = ["10.99999/"]  # type: ignore[index]
     manifest_path = tmp_path / "newmanifest.yml"
     manifest_path.write_text(yaml.safe_dump(manifest), encoding="utf-8")
     out_dir = tmp_path / "out"
@@ -199,7 +200,7 @@ importlib.import_module("paper_fetch.providers._newmanifest_html")
 client_module = importlib.import_module("paper_fetch.providers.newmanifest")
 bundle = provider_bundle("newmanifest")
 assert bundle.catalog.name == "newmanifest"
-assert bundle.catalog.doi_prefixes == ("10.48550/",)
+assert bundle.catalog.doi_prefixes == ("10.99999/",)
 assert bundle.catalog.asset_default == "body"
 assert [step.label for step in client_module.NewmanifestClient.waterfall_steps] == [
     "article_html",

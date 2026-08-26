@@ -5,6 +5,7 @@
 #   ./scripts/install-claude-skill.sh              # user-scope skill (~/.claude/skills/...)
 #   ./scripts/install-claude-skill.sh --project    # project-scope skill (./.claude/skills/...)
 #   ./scripts/install-claude-skill.sh --register-mcp [--env-file .env]
+#   ./scripts/install-claude-skill.sh --check        # read-only drift check
 #   ./scripts/install-claude-skill.sh --uninstall  # remove the installed skill entry
 
 set -euo pipefail

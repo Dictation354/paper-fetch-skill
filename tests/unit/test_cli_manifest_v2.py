@@ -745,7 +745,9 @@ def test_batch_resolution_and_queue_time_do_not_consume_fetch_deadline(
             query=query,
             provider_hint="test-provider",
             landing_url=None,
-            doi="10.1000/resolved",
+            # Keep the deadline regression independent of canonical DOI
+            # deduplication; each logical paper must own one fetch slot here.
+            doi=f"10.1000/{query.split()[0].lower()}",
         )
 
     def run_single(_args, *, query, context, **_kwargs):

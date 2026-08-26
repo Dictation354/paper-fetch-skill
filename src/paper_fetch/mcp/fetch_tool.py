@@ -9,17 +9,22 @@ from dataclasses import dataclass
 import mimetypes
 from pathlib import Path
 import threading
-from typing import Any
+from typing import Any, cast
 
 from mcp.server.mcpserver import Context
 from mcp.types import CallToolResult, ImageContent, TextContent
 
 from ..artifacts import ArtifactMode
+from ..capability_scope import (
+    capability_scope_from_runtime_context,
+    capability_scopes_for_query,
+)
 from ..config import apply_browser_auto_prepare_policy
 from ..diagnostics import provider_status_payload as _shared_provider_status_payload
 from ..http import HttpTransport
 from ..models import ArticleModel, Asset, FetchEnvelope
 from ..provider_catalog import provider_status_order
+from ..publisher_identity import normalize_doi
 from ..providers.browser_runtime.preparation import (
     browser_runtime_preparation_scope,
 )
@@ -28,6 +33,10 @@ from ..runtime import RuntimeContext
 from ..utils import extend_unique, normalize_text
 from ..workflow.pipeline import FetchPipeline, FetchPipelineCacheHooks
 from ..workflow.request_builder import build_fetch_pipeline_request
+from ..workflow.singleflight import (
+    FETCH_ENVELOPE_SINGLEFLIGHT,
+    fetch_request_singleflight_key,
+)
 from ..workflow.rendering import save_markdown_to_disk
 from ..workflow.types import effective_asset_profile
 from ..workflow.acceptance import evaluate_fetch_acceptance
@@ -41,8 +50,11 @@ from .cache_index import read_scoped_file
 from ._deps import MCPDeps, default_mcp_deps
 from .fetch_cache import (
     FetchCache,
+    FetchCacheDependencies,
     credential_scope_from_env,
+    envelope_capability_scope,
     fetch_envelope_cache_path,
+    mark_envelope_capability_scope,
     payload_from_envelope as _payload_from_envelope,
 )
 from .log_bridge import PaperFetchLogBridge
@@ -132,7 +144,7 @@ def _save_markdown_result_for_fetch_request(
         render=request.to_render_options(),
         markdown_filename=request.markdown_filename,
         overwrite=overwrite,
-        commit_guard=(context.raise_if_cancelled if context is not None else None),
+        commit_guard=(context.commit_guard if context is not None else None),
     )
     if saved_path is None:
         return None
@@ -140,14 +152,24 @@ def _save_markdown_result_for_fetch_request(
     if envelope.doi:
         if context is not None:
             context.raise_if_cancelled()
+        credential_scope = envelope_capability_scope(envelope)
+        if credential_scope is None:
+            credential_scope = (
+                capability_scope_from_runtime_context(context)
+                if context is not None
+                else credential_scope_from_env(runtime_env)
+            )
         cache_entry = FetchCache(
             saved_path.parent,
-            refresh_cache_index_for_doi_fn=deps.refresh_cache_index_for_doi,
-            register_markdown_entry_fn=deps.register_markdown_entry,
+            dependencies=FetchCacheDependencies(
+                refresh_for_doi=deps.refresh_cache_index_for_doi,
+                register_markdown=deps.register_markdown_entry,
+            ),
+            credential_scope=credential_scope,
         ).register_markdown(
             saved_path,
             envelope,
-            commit_guard=(context.raise_if_cancelled if context is not None else None),
+            commit_guard=(context.commit_guard if context is not None else None),
         )
     return SavedMarkdownResult(
         path=saved_path,
@@ -185,10 +207,14 @@ def _load_cached_fetch_envelope(
     context: RuntimeContext,
     deps: MCPDeps = default_mcp_deps(),
 ) -> FetchEnvelope | None:
+    read_scopes = capability_scopes_for_query(context.env, request.query)
     return FetchCache(
         download_dir,
-        refresh_cache_index_for_doi_fn=deps.refresh_cache_index_for_doi,
-        credential_scope=credential_scope_from_env(context.env),
+        dependencies=FetchCacheDependencies(
+            refresh_for_doi=deps.refresh_cache_index_for_doi
+        ),
+        credential_scope=read_scopes[0],
+        read_credential_scopes=read_scopes,
     ).load_fetch_envelope(
         request,
         resolve_paper_fn=deps.service_resolve_paper,
@@ -207,7 +233,9 @@ def _write_cached_fetch_envelope(
 ) -> None:
     FetchCache(
         download_dir,
-        refresh_cache_index_for_doi_fn=deps.refresh_cache_index_for_doi,
+        dependencies=FetchCacheDependencies(
+            refresh_for_doi=deps.refresh_cache_index_for_doi
+        ),
         credential_scope=credential_scope,
     ).write_fetch_envelope(
         envelope,
@@ -247,7 +275,6 @@ def _fetch_paper_envelope(
         if context is not None and context.env is not None
         else deps.build_runtime_env(env)
     )
-    cache_credential_scope = credential_scope_from_env(runtime_env)
     cache_download_dir = (
         _resolve_download_dir(runtime_env, download_dir, deps=deps)
         if _needs_download_dir_for_fetch(request)
@@ -255,7 +282,11 @@ def _fetch_paper_envelope(
     )
     service_download_dir = None if request.no_download else cache_download_dir
 
+    active_runtime_context: RuntimeContext | None = context
+
     def load_cached(runtime_context: RuntimeContext) -> FetchEnvelope | None:
+        nonlocal active_runtime_context
+        active_runtime_context = runtime_context
         return _load_cached_fetch_envelope(
             request,
             download_dir=cache_download_dir,
@@ -264,8 +295,18 @@ def _fetch_paper_envelope(
         )
 
     def write_cached(envelope: FetchEnvelope) -> None:
-        if context is not None:
-            context.raise_if_cancelled()
+        runtime_context = active_runtime_context
+        if runtime_context is not None:
+            runtime_context.raise_if_cancelled()
+        final_scope = (
+            capability_scope_from_runtime_context(runtime_context)
+            if runtime_context is not None
+            else credential_scope_from_env(runtime_env)
+        )
+        # The outer MCP adapter may save Markdown after the pipeline-owned runtime
+        # context has closed. Preserve the actual producer scope on the in-memory
+        # envelope so that later artifact registration cannot become public.
+        mark_envelope_capability_scope(envelope, final_scope)
         if (
             not request.no_download
             and service_download_dir is not None
@@ -276,9 +317,11 @@ def _fetch_paper_envelope(
                 envelope,
                 request,
                 commit_guard=(
-                    context.raise_if_cancelled if context is not None else None
+                    runtime_context.commit_guard
+                    if runtime_context is not None
+                    else None
                 ),
-                credential_scope=cache_credential_scope,
+                credential_scope=final_scope,
                 deps=deps,
             )
 
@@ -307,7 +350,7 @@ def _fetch_paper_envelope(
                     no_download=request.no_download,
                     fetch_cache=FetchCache(
                         service_download_dir,
-                        credential_scope=cache_credential_scope,
+                        credential_scope=credential_scope_from_env(runtime_env),
                     ),
                     cache_hooks=FetchPipelineCacheHooks(
                         load=load_cached, write=write_cached
@@ -493,27 +536,44 @@ def fetch_paper_payload(
         override=request.browser_auto_prepare,
         default=False,
     )
-    envelope = deps.fetch_paper_envelope(
-        request,
+    cache_download_dir = (
+        _resolve_download_dir(runtime_env, download_dir, deps=deps)
+        if _needs_download_dir_for_fetch(request)
+        else None
+    )
+    owns_context = context is None
+    runtime_context = context or RuntimeContext(
         env=runtime_env,
-        download_dir=download_dir,
         transport=transport,
-        include_article_for_assets=False,
-        context=context,
-        deps=deps,
+        download_dir=(None if request.no_download else cache_download_dir),
+        artifact_mode=("none" if request.no_download else request.artifact_mode),
     )
-    saved_markdown_path = _save_markdown_for_fetch_request(
-        envelope,
-        request,
-        env=env,
-        download_dir=download_dir,
-        context=context,
-        deps=deps,
-    )
-    payload = _response_payload_from_envelope(envelope, request)
-    if saved_markdown_path is not None:
-        payload["saved_markdown_path"] = str(saved_markdown_path)
-    return with_schema_version(payload)
+    try:
+        envelope = deps.fetch_paper_envelope(
+            request,
+            env=runtime_env,
+            download_dir=download_dir,
+            transport=transport,
+            include_article_for_assets=False,
+            context=runtime_context,
+            deps=deps,
+        )
+        runtime_context.raise_if_cancelled()
+        saved_markdown_path = _save_markdown_for_fetch_request(
+            envelope,
+            request,
+            env=runtime_env,
+            download_dir=download_dir,
+            context=runtime_context,
+            deps=deps,
+        )
+        payload = _response_payload_from_envelope(envelope, request)
+        if saved_markdown_path is not None:
+            payload["saved_markdown_path"] = str(saved_markdown_path)
+        return with_schema_version(payload)
+    finally:
+        if owns_context:
+            runtime_context.close()
 
 
 def provider_status_payload(
@@ -778,47 +838,99 @@ async def fetch_paper_tool_async(
 
     await report_progress(ctx, 1, _FETCH_PROGRESS_TOTAL, "Fetching paper content")
     cancelled = threading.Event()
+    runtime_context: RuntimeContext | None = None
     try:
         runtime_env = apply_browser_auto_prepare_policy(
             deps.build_runtime_env(env),
             override=request.browser_auto_prepare,
             default=False,
         )
-        loop = asyncio.get_running_loop()
-        bridge = PaperFetchLogBridge(ctx=ctx, loop=loop) if ctx is not None else None
-        if bridge is None:
-            envelope = await run_blocking_call(
-                deps.fetch_paper_envelope,
+        cache_download_dir = (
+            _resolve_download_dir(runtime_env, download_dir, deps=deps)
+            if _needs_download_dir_for_fetch(request)
+            else None
+        )
+        runtime_context = RuntimeContext(
+            env=runtime_env,
+            download_dir=(None if request.no_download else cache_download_dir),
+            artifact_mode=("none" if request.no_download else request.artifact_mode),
+            cancel_check=cancelled.is_set,
+        )
+        markdown_dir = (
+            _markdown_output_dir_for_fetch_request(
                 request,
-                env=runtime_env,
+                runtime_env=runtime_env,
                 download_dir=download_dir,
-                transport=None,
-                include_article_for_assets=True,
-                cancel_check=cancelled.is_set,
                 deps=deps,
-                cancel_event=cancelled,
             )
-        else:
-            with bridge:
-                envelope = await run_blocking_call(
-                    deps.fetch_paper_envelope,
+            if request.save_markdown
+            else None
+        )
+
+        def fetch_and_save() -> tuple[FetchEnvelope, Path | None]:
+            assert runtime_context is not None
+
+            def fetch_owner() -> FetchEnvelope:
+                return deps.fetch_paper_envelope(
                     request,
                     env=runtime_env,
                     download_dir=download_dir,
                     transport=None,
                     include_article_for_assets=True,
+                    context=runtime_context,
                     cancel_check=cancelled.is_set,
                     deps=deps,
+                )
+
+            canonical_doi = normalize_doi(expected_doi_from_query(request.query) or "")
+            if canonical_doi:
+                scope = capability_scopes_for_query(runtime_context.env, canonical_doi)[
+                    0
+                ]
+                singleflight_key = fetch_request_singleflight_key(
+                    canonical_doi,
+                    request=request,
+                    capability_scope=scope,
+                    cache_dir=cache_download_dir,
+                    markdown_dir=markdown_dir,
+                )
+                envelope = cast(
+                    FetchEnvelope,
+                    FETCH_ENVELOPE_SINGLEFLIGHT.run(
+                        singleflight_key,
+                        fetch_owner,
+                        cancel_check=lambda: runtime_context.cancelled,
+                    ),
+                )
+            else:
+                envelope = fetch_owner()
+            runtime_context.raise_if_cancelled()
+            saved_path = _save_markdown_for_fetch_request(
+                envelope,
+                request,
+                env=runtime_env,
+                download_dir=download_dir,
+                context=runtime_context,
+                deps=deps,
+            )
+            return envelope, saved_path
+
+        loop = asyncio.get_running_loop()
+        bridge = PaperFetchLogBridge(ctx=ctx, loop=loop) if ctx is not None else None
+        if bridge is None:
+            envelope, saved_markdown_path = await run_blocking_call(
+                fetch_and_save,
+                cancel_event=cancelled,
+                cancel_fence=runtime_context.fence_commits,
+            )
+        else:
+            with bridge:
+                envelope, saved_markdown_path = await run_blocking_call(
+                    fetch_and_save,
                     cancel_event=cancelled,
+                    cancel_fence=runtime_context.fence_commits,
                 )
         await report_progress(ctx, 3, _FETCH_PROGRESS_TOTAL, "Shaping MCP result")
-        saved_markdown_path = _save_markdown_for_fetch_request(
-            envelope,
-            request,
-            env=runtime_env,
-            download_dir=download_dir,
-            deps=deps,
-        )
         resolved_download_dir = _resolve_download_dir(
             runtime_env, download_dir, deps=deps
         )
@@ -834,9 +946,14 @@ async def fetch_paper_tool_async(
         return result
     except asyncio.CancelledError:
         cancelled.set()
+        if runtime_context is not None:
+            runtime_context.fence_commits()
         raise
     except Exception as error:
         await report_progress(
             ctx, _FETCH_PROGRESS_TOTAL, _FETCH_PROGRESS_TOTAL, "fetch_paper failed"
         )
         return _tool_result(error_payload_from_exception(error), is_error=True)
+    finally:
+        if runtime_context is not None:
+            runtime_context.close()

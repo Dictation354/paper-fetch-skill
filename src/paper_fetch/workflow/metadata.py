@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+from contextvars import copy_context
 from typing import Any, cast
 from collections.abc import Mapping
 
@@ -166,12 +167,16 @@ def fetch_metadata_for_resolved_query(
         max_workers = 1 + len(initial_probe_candidates)
         with ThreadPoolExecutor(max_workers=max(1, max_workers)) as executor:
             crossref_future = (
-                executor.submit(fetch_crossref_metadata)
+                executor.submit(copy_context().run, fetch_crossref_metadata)
                 if isinstance(crossref_client, MetadataProvider)
                 else None
             )
             probe_futures = {
-                candidate_provider: executor.submit(run_probe, candidate_provider)
+                candidate_provider: executor.submit(
+                    copy_context().run,
+                    run_probe,
+                    candidate_provider,
+                )
                 for candidate_provider, _signal in initial_probe_candidates
             }
             if crossref_future is not None:

@@ -14,6 +14,8 @@ from ..http import (
     RequestFailure,
     is_pdf_content_type,
 )
+from ..http.provider_policy import provider_request_policy
+from ..provider_catalog import compile_route_execution_policy
 from ..utils import normalize_text
 from ..xml_security import XmlParseFailure, parse_xml
 from ._arxiv_metadata import _dedupe_strings
@@ -21,7 +23,7 @@ from ._arxiv_metadata import _dedupe_strings
 ARXIV_API_URL = "https://export.arxiv.org/api/query"
 ARXIV_API_ACCEPT = "application/atom+xml,application/xml,text/xml,*/*;q=0.8"
 ARXIV_API_TIMEOUT_SECONDS = 60
-ARXIV_API_DELAY_SECONDS = 0.0
+ARXIV_API_DELAY_SECONDS = 3.0
 ARXIV_API_NUM_RETRIES = 2
 _ARXIV_ATOM_NAMESPACES = {
     "atom": "http://www.w3.org/2005/Atom",
@@ -170,6 +172,7 @@ class InternalArxivApiClient:
         if not requested_ids:
             return []
         max_results = max(1, int(getattr(search, "max_results", 1) or 1))
+        execution_policy = compile_route_execution_policy("arxiv", "atom_metadata")
         response = self.transport.request(
             "GET",
             ARXIV_API_URL,
@@ -181,9 +184,15 @@ class InternalArxivApiClient:
                 "id_list": ",".join(requested_ids),
                 "max_results": str(max_results),
             },
-            timeout=ARXIV_API_TIMEOUT_SECONDS,
-            retry_on_transient=True,
-            transient_retries=ARXIV_API_NUM_RETRIES,
+            timeout=execution_policy.timeout_seconds,
+            retry_on_rate_limit=execution_policy.retry_on_rate_limit,
+            rate_limit_retries=execution_policy.rate_limit_retries,
+            max_rate_limit_wait_seconds=int(
+                execution_policy.rate_limit_wait_budget_seconds
+            ),
+            retry_on_transient=execution_policy.retry_on_transient,
+            transient_retries=execution_policy.transient_retries,
+            request_policy=provider_request_policy("arxiv", "atom_metadata"),
         )
         status_code = int(response.get("status_code") or 0)
         if status_code >= 400:

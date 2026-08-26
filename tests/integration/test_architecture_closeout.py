@@ -284,7 +284,7 @@ class ArchitectureCloseoutTests(unittest.TestCase):
 
     def test_repo_skill_source_stays_runtime_agnostic(self) -> None:
         self.assertTrue((SKILL_DIR / "SKILL.md").exists())
-        self.assertFalse((SKILL_DIR / "agents" / "openai.yaml").exists())
+        self.assertTrue((SKILL_DIR / "agents" / "openai.yaml").exists())
 
         files = sorted(
             path.relative_to(SKILL_DIR).as_posix()
@@ -295,6 +295,7 @@ class ArchitectureCloseoutTests(unittest.TestCase):
             files,
             [
                 "SKILL.md",
+                "agents/openai.yaml",
                 "references/acceptance.md",
                 "references/cli-workflow.md",
                 "references/environment.md",

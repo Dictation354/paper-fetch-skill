@@ -18,6 +18,11 @@ class _ProviderFakePage:
 class _ProviderFakeBrowserContext:
     def __init__(self) -> None:
         self.closed = False
+        self.route_calls: list[tuple[str, object]] = []
+
+    def route(self, pattern: str, handler: object) -> None:
+        assert pattern == "**/*"
+        self.route_calls.append((pattern, handler))
 
     def add_cookies(self, _cookies) -> None:
         return None
@@ -596,6 +601,14 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
         )
         self.assertEqual(result["asset_failures"], [])
         self.assertEqual(len(private_contexts), 2)
+        self.assertTrue(
+            all(
+                len(context.route_calls) == 1
+                and context.route_calls[0][0] == "**/*"
+                and callable(context.route_calls[0][1])
+                for context in private_contexts
+            )
+        )
         self.assertTrue(all(context.closed for context in private_contexts))
 
     def test_pnas_provider_download_related_assets_uses_figure_page_and_falls_back_to_preview(

@@ -1,0 +1,53 @@
+{
+  "schema_version": 2,
+  "metric": "pure_branch_exits",
+  "evidence_command": "PYTHONPATH=src uv run python -m pytest tests/unit -q --cov=paper_fetch --cov-branch --cov-report=term-missing --cov-report=xml && uv run python scripts/report_coverage_focus.py",
+  "areas": [
+    {
+      "name": "security boundaries",
+      "include": [
+        "src/paper_fetch/asset_budget.py",
+        "src/paper_fetch/capability_scope.py",
+        "src/paper_fetch/http/browser_policy.py",
+        "src/paper_fetch/http/provider_policy.py",
+        "src/paper_fetch/http/url_policy.py"
+      ],
+      "minimum_branch_percent": 90
+    },
+    {
+      "name": "workflow",
+      "include": ["src/paper_fetch/workflow/*.py"],
+      "minimum_branch_percent": 80
+    },
+    {
+      "name": "HTTP/cache",
+      "include": [
+        "src/paper_fetch/http/*.py",
+        "src/paper_fetch/mcp/*cache*.py",
+        "src/paper_fetch/workflow/session_cache.py"
+      ],
+      "minimum_branch_percent": 77
+    },
+    {
+      "name": "PDF fallback",
+      "include": [
+        "src/paper_fetch/providers/_pdf_*.py",
+        "src/paper_fetch/providers/browser_workflow/pdf_fallback.py"
+      ],
+      "minimum_branch_percent": 64
+    },
+    {
+      "name": "browser runtime",
+      "include": ["src/paper_fetch/providers/browser_runtime/**/*.py"],
+      "minimum_branch_percent": 66
+    },
+    {
+      "name": "installer",
+      "include": [
+        "src/paper_fetch/formula/install.py",
+        "src/paper_fetch/image_tools/install.py"
+      ],
+      "minimum_branch_percent": 35
+    }
+  ]
+}

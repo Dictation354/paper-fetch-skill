@@ -81,7 +81,10 @@ class ErrorPayloadOutput(TypedDict, total=False):
 
 
 class ResolvePaperOutput(ErrorPayloadOutput, total=False):
+    index: int
     query: str
+    error: dict[str, Any] | None
+    provider_lane: str
     query_kind: str
     doi: str | None
     landing_url: str | None
@@ -384,16 +387,23 @@ class CacheAssetSummaryOutput(TypedDict, total=False):
     status: str
     requested: bool
     profile: str
+    audited: bool
+    expected: int | None
+    discovered: int
+    attempted: int
     total: int
     local: int
     full_size: int
     preview: int
+    accepted_preview: int
+    fallback_preview: int
     failed: int
     placeholder_suspected: int
     not_archived: int
     remote_link_count: int
     remote_only_count: int
     failure_codes: list[str]
+    issue_codes: list[str]
     remote_links_preserved: bool
 
 
@@ -466,14 +476,25 @@ class GetCachedOutput(ErrorPayloadOutput, total=False):
     request_satisfied: bool
 
 
+class BatchTerminalProgressOutput(TypedDict):
+    total: int
+    terminal: int
+    completed: int
+    not_scheduled: int
+
+
 class BatchResolveOutput(ErrorPayloadOutput, total=False):
     results: list[ResolvePaperOutput]
     aborted: bool
     abort_reason: ErrorPayloadOutput | None
+    progress: BatchTerminalProgressOutput
 
 
 class BatchCheckItemOutput(ErrorPayloadOutput, total=False):
+    index: int
     query: str
+    error: dict[str, Any] | None
+    provider_lane: str
     doi: str | None
     title: str | None
     source: str | None
@@ -492,11 +513,14 @@ class BatchCheckOutput(ErrorPayloadOutput, total=False):
     results: list[BatchCheckItemOutput]
     aborted: bool
     abort_reason: ErrorPayloadOutput | None
+    progress: BatchTerminalProgressOutput
 
 
 class BatchFetchArtifactOutput(TypedDict, total=False):
     path: str
     kind: str
+    route: str | None
+    failure_code: str | None
     size: int | None
     sha256: str | None
     completed_at: str
@@ -562,12 +586,17 @@ class BatchFetchSummaryOutput(TypedDict, total=False):
 class BatchFetchOutput(ErrorPayloadOutput, total=False):
     run_id: str
     request_fingerprint: str
+    semantic_fingerprint: str
+    execution_policy: dict[str, Any]
     state: str
     persisted: bool
     run_manifest_path: str | None
     events_path: str | None
     query_count: int
     attempted_count: int
+    execution_count: int
+    deduplicated_count: int
+    not_scheduled_count: int
     reused_count: int
     detail: str
     content_max_chars: int

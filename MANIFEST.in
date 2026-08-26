@@ -1,0 +1,3 @@
+prune src/paper_fetch/resources/formula/node_modules
+global-exclude *.py[cod]
+global-exclude __pycache__

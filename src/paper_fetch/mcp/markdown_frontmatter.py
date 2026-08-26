@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
+import hashlib
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +15,7 @@ from ..models import AcquisitionProvenance, coerce_acquisition_provenance
 from ..publisher_identity import normalize_doi
 
 _CONTENT_KINDS = frozenset({"fulltext", "abstract_only", "metadata_only"})
+MAX_FRONT_MATTER_BYTES = 256 * 1024
 
 
 @dataclass(frozen=True)
@@ -30,6 +32,15 @@ class MarkdownFrontMatter:
     @property
     def is_fulltext(self) -> bool:
         return self.has_fulltext and self.content_kind == "fulltext"
+
+
+@dataclass(frozen=True)
+class MarkdownFrontMatterFile:
+    """One-pass identity parse and whole-file digest for an index refresh."""
+
+    front_matter: MarkdownFrontMatter | None
+    content_sha256: str
+    front_matter_sha256: str | None
 
 
 def _front_matter_mapping(markdown: str) -> Mapping[str, Any] | None:
@@ -96,17 +107,69 @@ def parse_markdown_front_matter(markdown: str) -> MarkdownFrontMatter | None:
 
 
 def read_markdown_front_matter(path: Path) -> MarkdownFrontMatter | None:
-    """Read and parse YAML front matter without inferring identity from the filename."""
+    """Read only a bounded prefix; paper body size cannot inflate identity parsing."""
 
     try:
-        markdown = path.read_text(encoding="utf-8")
+        with path.open("rb") as handle:
+            prefix = handle.read(MAX_FRONT_MATTER_BYTES + 1)
     except (OSError, UnicodeError):
+        return None
+    if len(prefix) > MAX_FRONT_MATTER_BYTES:
+        prefix = prefix[:MAX_FRONT_MATTER_BYTES]
+    try:
+        markdown = prefix.decode("utf-8")
+    except UnicodeError:
         return None
     return parse_markdown_front_matter(markdown)
 
 
+def read_markdown_front_matter_file(path: Path) -> MarkdownFrontMatterFile | None:
+    """Parse the bounded front matter while hashing a changed file in one pass."""
+
+    digest = hashlib.sha256()
+    prefix = bytearray()
+    try:
+        with path.open("rb") as handle:
+            for block in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(block)
+                if len(prefix) < MAX_FRONT_MATTER_BYTES:
+                    remaining = MAX_FRONT_MATTER_BYTES - len(prefix)
+                    prefix.extend(block[:remaining])
+    except OSError:
+        return None
+    try:
+        markdown = bytes(prefix).decode("utf-8")
+    except UnicodeError:
+        front_matter = None
+    else:
+        front_matter = parse_markdown_front_matter(markdown)
+    front_matter_digest = None
+    if front_matter is not None:
+        lines = markdown.splitlines()
+        closing_index = next(
+            (
+                index
+                for index, line in enumerate(lines[1:], start=1)
+                if line.strip() in {"---", "..."}
+            ),
+            None,
+        )
+        if closing_index is not None:
+            front_matter_digest = hashlib.sha256(
+                "\n".join(lines[: closing_index + 1]).encode("utf-8")
+            ).hexdigest()
+    return MarkdownFrontMatterFile(
+        front_matter=front_matter,
+        content_sha256=digest.hexdigest(),
+        front_matter_sha256=front_matter_digest,
+    )
+
+
 __all__ = [
+    "MAX_FRONT_MATTER_BYTES",
     "MarkdownFrontMatter",
+    "MarkdownFrontMatterFile",
     "parse_markdown_front_matter",
     "read_markdown_front_matter",
+    "read_markdown_front_matter_file",
 ]

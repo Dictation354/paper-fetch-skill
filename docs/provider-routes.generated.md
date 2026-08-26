@@ -6,8 +6,8 @@
 | --- | ---: | --- | --- | --- | --- | --- |
 | `crossref` | 0 | `metadata` | `metadata` / `crossref_meta` / `api` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `metadata_identity` / `none` |
 | `elsevier` | 0 | `metadata_api` | `metadata` / `metadata_api` / `api` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `metadata_identity` / `none` |
-| `elsevier` | 1 | `xml_api` | `xml` / `elsevier_xml` / `api` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `structured_xml_body` / `none` |
-| `elsevier` | 2 | `pdf_api` | `pdf` / `elsevier_pdf` / `api` | `available` / `direct` | 120s; c=2; qps=provider; wait=5.0s | `validated_pdf` / `none` |
+| `elsevier` | 1 | `xml_api` | `xml` / `elsevier_xml` / `api` | `available` / `direct` | 90s; c=2; qps=provider; wait=5.0s | `structured_xml_body` / `none` |
+| `elsevier` | 2 | `pdf_api` | `pdf` / `elsevier_pdf` / `api` | `available` / `direct` | 90s; c=2; qps=provider; wait=5.0s | `validated_pdf` / `none` |
 | `elsevier` | 3 | `object_assets` | `assets` / `elsevier_xml` / `api` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `validated_asset` / `none` |
 | `springer` | 0 | `metadata` | `metadata` / `metadata` / `api` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `metadata_identity` / `body` |
 | `springer` | 1 | `direct_html` | `html` / `springer_html` / `http` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `provider_html_body` / `body` |
@@ -29,9 +29,10 @@
 | `ieee` | 4 | `browser_pdf` | `pdf` / `ieee_pdf` / `browser` | `available` / `browser-optional` | 120s; c=1; qps=provider; wait=5.0s | `validated_pdf` / `body` |
 | `ieee` | 5 | `direct_landing` | `html` / `ieee_html` / `http` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `provider_html_body` / `body` |
 | `ieee` | 6 | `browser_landing` | `html` / `ieee_html` / `browser` | `available` / `browser-optional` | 120s; c=1; qps=provider; wait=5.0s | `provider_html_body` / `body` |
-| `arxiv` | 0 | `atom_metadata` | `metadata` / `atom_metadata` / `api` | `available` / `direct` | 20s; c=2; qps=0.3333333333333333; wait=5.0s | `metadata_identity` / `body` |
+| `arxiv` | 0 | `atom_metadata` | `metadata` / `atom_metadata` / `api` | `available` / `direct` | 60s; c=2; qps=0.3333333333333333; wait=5.0s | `metadata_identity` / `body` |
 | `arxiv` | 1 | `official_html` | `html` / `arxiv_html` / `http` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `provider_html_body` / `body` |
 | `arxiv` | 2 | `direct_pdf` | `pdf` / `arxiv_pdf` / `http` | `available` / `direct` | 120s; c=2; qps=provider; wait=5.0s | `validated_pdf` / `body` |
+| `arxiv` | 3 | `source_assets` | `assets` / `arxiv_html` / `http` | `available` / `direct` | 20s; c=2; qps=0.3333333333333333; wait=5.0s | `validated_asset` / `body` |
 | `copernicus` | 0 | `metadata` | `metadata` / `metadata` / `api` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `metadata_identity` / `body` |
 | `copernicus` | 1 | `xml` | `xml` / `copernicus_xml` / `http` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `structured_xml_body` / `body` |
 | `copernicus` | 2 | `direct_pdf` | `pdf` / `copernicus_pdf` / `http` | `available` / `direct` | 120s; c=2; qps=provider; wait=5.0s | `validated_pdf` / `body` |
@@ -50,8 +51,9 @@
 | `plos` | 0 | `metadata` | `metadata` / `metadata` / `api` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `metadata_identity` / `body` |
 | `plos` | 1 | `xml` | `xml` / `plos_xml` / `http` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `structured_xml_body` / `body` |
 | `plos` | 2 | `direct_pdf` | `pdf` / `plos_pdf` / `http` | `available` / `direct` | 120s; c=2; qps=provider; wait=5.0s | `validated_pdf` / `body` |
+| `plos` | 3 | `assets` | `assets` / `plos_xml` / `http` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `validated_asset` / `body` |
 | `oxfordacademic` | 0 | `metadata` | `metadata` / `metadata` / `api` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `metadata_identity` / `body` |
-| `oxfordacademic` | 1 | `direct_html` | `html` / `oxfordacademic_html` / `http` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `provider_html_body` / `body` |
+| `oxfordacademic` | 1 | `direct_html` | `html` / `oxfordacademic_html` / `http` | `available` / `direct` | 90s; c=2; qps=provider; wait=5.0s | `provider_html_body` / `body` |
 | `oxfordacademic` | 2 | `direct_pdf` | `pdf` / `oxfordacademic_pdf` / `http` | `available` / `direct` | 120s; c=2; qps=provider; wait=5.0s | `validated_pdf` / `body` |
 | `acs` | 0 | `metadata` | `metadata` / `metadata` / `api` | `available` / `direct` | 20s; c=2; qps=provider; wait=5.0s | `metadata_identity` / `body` |
 | `acs` | 1 | `browser_html` | `html` / `acs` / `browser` | `available` / `browser-required` | 120s; c=1; qps=provider; wait=5.0s | `provider_html_body` / `body` |

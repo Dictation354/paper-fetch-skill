@@ -18,12 +18,16 @@ from ..extraction.html.signals import (
     summarize_html,
     summarize_visible_html,
 )
-from ..extraction.image_payloads import (
-    image_dimensions_from_bytes,
-    image_mime_type_from_bytes,
+from ..http import (
+    BrowserNetworkGuard,
+    RequestCancelledError,
+    SafeRemoteUrlPolicy,
+    diagnostic_url_payload,
+    hosts_from_urls,
+    provider_allowed_hosts,
 )
-from ..http import RequestCancelledError, diagnostic_url_payload
 from ..page_diagnostics import PageDiagnosticRequest, capture_page_diagnostic
+from ..provider_catalog import compile_route_execution_policy_for_kind
 from ..quality.html_availability import choose_parser, extract_page_title
 from ..quality.html_signals import looks_like_abstract_redirect
 from ..quality.reason_codes import (
@@ -68,7 +72,6 @@ from .browser_workflow.fetchers.readiness import (
     BodyDomReadinessResult,
     wait_for_atypon_body_dom_ready,
 )
-from .browser_workflow.fetchers.scripts import _LOADED_IMAGE_CANVAS_EXPORT_SCRIPT
 from .browser_workflow.shared import BROWSER_HTML_BLOCKED_RESOURCE_TYPES
 
 if TYPE_CHECKING:
@@ -87,9 +90,9 @@ logger = logging.getLogger("paper_fetch.providers.playwright")
 DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS = 120000
 DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS = 8
 DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS = 1
+MAX_BROWSER_SCREENSHOT_BYTES = 16 * 1024 * 1024
 DEFAULT_BROWSER_HTML_READINESS = BrowserHtmlReadiness()
 DEFAULT_BROWSER_HTML_FETCH_OPTIONS = BrowserHtmlFetchOptions()
-_IMAGE_PAYLOAD_MIN_IMAGE_DIMENSION = 1
 _IMAGE_RESPONSE_BLOCKED_BY_HTML_WRAPPER = "image_response_blocked_by_html_wrapper"
 _IMAGE_PAYLOAD_RESPONSE_ATTR = "_paper_fetch_top_level_response"
 _IMAGE_PAYLOAD_TIMEOUT_ATTR = "_paper_fetch_image_payload_timeout_ms"
@@ -186,50 +189,6 @@ def _normalized_content_type(value: str | None) -> str:
     return normalize_text(str(value or "")).split(";", 1)[0].lower()
 
 
-def _response_body(response: Any) -> bytes | None:
-    if response is None:
-        return None
-    try:
-        body = response.body()
-    except Exception:
-        return None
-    if not isinstance(body, (bytes, bytearray)) or not body:
-        return None
-    return bytes(body)
-
-
-def _browser_image_payload_from_bytes(
-    body: bytes | bytearray | None,
-    *,
-    content_type: str | None,
-    url: str,
-    status: int | None,
-    width: int = 0,
-    height: int = 0,
-) -> BrowserImagePayload | None:
-    if not isinstance(body, (bytes, bytearray)) or not body:
-        return None
-    payload_body = bytes(body)
-    detected_type = image_mime_type_from_bytes(payload_body)
-    if not detected_type:
-        return None
-    normalized_content_type = _normalized_content_type(content_type) or detected_type
-    if not normalized_content_type.startswith("image/"):
-        normalized_content_type = detected_type
-    dimensions = image_dimensions_from_bytes(payload_body)
-    if dimensions is not None:
-        width = width or dimensions[0]
-        height = height or dimensions[1]
-    return {
-        "bodyB64": base64.b64encode(payload_body).decode("ascii"),
-        "contentType": normalized_content_type,
-        "url": normalize_text(url),
-        "status": status or 200,
-        "width": max(0, _safe_int(width)),
-        "height": max(0, _safe_int(height)),
-    }
-
-
 def _capture_expected_response(page: Any, request_url: str) -> Any:
     response = getattr(page, _IMAGE_PAYLOAD_RESPONSE_ATTR, None)
     if response is not None:
@@ -257,63 +216,6 @@ def _capture_expected_response(page: Any, request_url: str) -> Any:
         return None
 
 
-def _image_element_has_loaded_natural_size(image_element: Any) -> bool | None:
-    try:
-        image_info = image_element.evaluate(
-            """
-            (image) => ({
-              width: image.naturalWidth || 0,
-              height: image.naturalHeight || 0,
-              complete: !!image.complete,
-            })
-            """
-        )
-    except Exception:
-        return None
-    if not isinstance(image_info, Mapping):
-        return None
-    return (
-        bool(image_info.get("complete", True))
-        and _safe_int(image_info.get("width")) > 0
-        and _safe_int(image_info.get("height")) > 0
-    )
-
-
-def _payload_from_canvas_export(
-    rendered: Any,
-    *,
-    fallback_url: str,
-    status: int | None,
-) -> BrowserImagePayload | None:
-    if not isinstance(rendered, Mapping) or not rendered.get("ok"):
-        return None
-    body_b64 = normalize_text(str(rendered.get("bodyB64") or ""))
-    content_type = (
-        _normalized_content_type(str(rendered.get("contentType") or "")) or "image/png"
-    )
-    data_url = normalize_text(
-        str(rendered.get("dataURL") or rendered.get("dataUrl") or "")
-    )
-    if data_url.startswith("data:") and "," in data_url:
-        metadata, body_b64 = data_url.split(",", 1)
-        content_type = (
-            _normalized_content_type(metadata.removeprefix("data:").split(";", 1)[0])
-            or content_type
-        )
-    try:
-        body = base64.b64decode(body_b64, validate=True)
-    except Exception:
-        return None
-    return _browser_image_payload_from_bytes(
-        body,
-        content_type=content_type,
-        url=fallback_url,
-        status=status,
-        width=_safe_int(rendered.get("width")),
-        height=_safe_int(rendered.get("height")),
-    )
-
-
 def _clear_image_payload_failure(page: Any) -> None:
     with contextlib.suppress(Exception):
         delattr(page, _IMAGE_PAYLOAD_FAILURE_ATTR)
@@ -338,60 +240,56 @@ def _capture_image_payload(
     headers = _browser_response_headers(response)
     content_type = _normalized_content_type(headers.get("content-type"))
 
-    if content_type.startswith("image/"):
-        payload = _browser_image_payload_from_bytes(
-            _response_body(response),
-            content_type=content_type,
-            url=normalized_final_url,
-            status=status,
-        )
-        if payload is not None:
-            return payload
-
     html = ""
     try:
         html = str(page.content() or "")
     except Exception:
         html = ""
-    if _normalized_content_type(content_type) in {
-        "image/svg+xml",
-        "",
-    } or normalize_text(html).startswith("<"):
-        svg_payload = _browser_image_payload_from_bytes(
-            html.encode("utf-8"),
-            content_type="image/svg+xml",
-            url=normalized_final_url,
-            status=status,
-        )
-        if svg_payload is not None and svg_payload["contentType"] == "image/svg+xml":
-            return svg_payload
-
     image_element = None
     try:
         image_element = page.query_selector("img")
     except Exception:
         image_element = None
+    width = 0
+    height = 0
+    loaded = False
+    discovered_image_url = ""
     if image_element is not None:
-        loaded = _image_element_has_loaded_natural_size(image_element)
-        if loaded is not False:
-            try:
-                rendered = page.evaluate(
-                    _LOADED_IMAGE_CANVAS_EXPORT_SCRIPT,
-                    [
-                        normalized_request_url,
-                        _IMAGE_PAYLOAD_MIN_IMAGE_DIMENSION,
-                        _IMAGE_PAYLOAD_MIN_IMAGE_DIMENSION,
-                    ],
-                )
-            except Exception:
-                rendered = None
-            payload = _payload_from_canvas_export(
-                rendered,
-                fallback_url=normalized_final_url,
-                status=status,
+        try:
+            image_info = image_element.evaluate(
+                """
+                (image) => ({
+                  width: image.naturalWidth || 0,
+                  height: image.naturalHeight || 0,
+                  complete: !!image.complete,
+                  url: image.currentSrc || image.src || '',
+                })
+                """
             )
-            if payload is not None:
-                return payload
+        except Exception:
+            image_info = None
+        if isinstance(image_info, Mapping):
+            width = max(0, _safe_int(image_info.get("width")))
+            height = max(0, _safe_int(image_info.get("height")))
+            loaded = bool(image_info.get("complete")) and width > 0 and height > 0
+            discovered_url = normalize_text(str(image_info.get("url") or ""))
+            if discovered_url.lower().startswith(("http://", "https://")):
+                discovered_image_url = discovered_url
+                normalized_final_url = discovered_url
+
+    response_is_image = content_type.startswith("image/") and status < 400
+    discovered_loaded_image = bool(discovered_image_url and loaded)
+    if normalized_final_url.lower().startswith(("http://", "https://")) and (
+        response_is_image or discovered_loaded_image
+    ):
+        return {
+            "streamOnly": True,
+            "contentType": content_type if response_is_image else "image/*",
+            "url": normalized_final_url,
+            "status": status if response_is_image else 200,
+            "width": width,
+            "height": height,
+        }
 
     try:
         title = normalize_text(str(page.title() or ""))
@@ -857,6 +755,8 @@ def _capture_page_screenshot(
     except Exception:
         return None
     if isinstance(payload, bytes):
+        if len(payload) > MAX_BROWSER_SCREENSHOT_BYTES:
+            return None
         return base64.b64encode(payload).decode("ascii")
     return payload if isinstance(payload, str) else None
 
@@ -931,8 +831,6 @@ def _open_browser_html_context(
     *,
     runtime_context: RuntimeContext | None,
     shared_page_session: Any | None,
-    browser_context_seed: Mapping[str, Any] | None,
-    candidate_url: str | None,
     trace: dict[str, Any],
 ) -> tuple[Any, Any, Any | None]:
     manager = None
@@ -969,19 +867,6 @@ def _open_browser_html_context(
                 "ignored_context_options": [],
                 "storage_state_cookie_count": None,
             }
-        if reused:
-            trace["browser_context_seed"] = {
-                "provided": browser_context_seed is not None,
-                "applied": False,
-                "reason": "reused_runtime_page_context",
-            }
-        else:
-            _seed_browser_html_context(
-                browser_context,
-                browser_context_seed=browser_context_seed,
-                candidate_url=candidate_url,
-                trace=trace,
-            )
         return manager, browser_context, page
     except PlaywrightBrowserFailure:
         if not reused:
@@ -1054,6 +939,105 @@ def _ensure_browser_html_page(
         ) from exc
 
 
+def _browser_route_timeout_ms(
+    publisher: str,
+    *,
+    configured_timeout_ms: int,
+) -> int:
+    """Cap the caller budget with the catalog-compiled browser route timeout."""
+
+    try:
+        route_timeout_ms = (
+            compile_route_execution_policy_for_kind(
+                publisher,
+                "html",
+                prefer_transport="browser",
+            ).timeout_seconds
+            * 1000
+        )
+    except ValueError:
+        # Unknown names are retained only for deterministic browser doubles;
+        # the host guard still fails closed for real network origins.
+        route_timeout_ms = configured_timeout_ms
+    return min(configured_timeout_ms, route_timeout_ms)
+
+
+def _prepare_browser_network_guard(
+    candidate_urls: list[str],
+    *,
+    publisher: str,
+    config: PlaywrightRuntimeConfig,
+    browser_context_seed: Mapping[str, Any] | None,
+    remote_url_policy: SafeRemoteUrlPolicy | None,
+    trace: dict[str, Any],
+) -> tuple[BrowserNetworkGuard, list[str]]:
+    # RFC 6761 ``.test`` origins are used by deterministic browser doubles.
+    # They can pass syntax/allowlist checks, but any real request still fails
+    # the interceptor's DNS/public-address validation.
+    reserved_test_hosts = tuple(
+        host
+        for host in hosts_from_urls(candidate_urls)
+        if host == "test" or host.endswith(".test")
+    )
+    allowed_hosts = tuple(
+        dict.fromkeys(
+            (*provider_allowed_hosts(publisher, "browser_html"), *reserved_test_hosts)
+        )
+    )
+    if not allowed_hosts:
+        raise PlaywrightBrowserFailure(
+            "browser_network_policy_missing",
+            f"No browser host allowlist is declared for provider {publisher!r}.",
+        )
+    network_guard = BrowserNetworkGuard(
+        allowed_hosts=allowed_hosts,
+        policy=remote_url_policy or SafeRemoteUrlPolicy(),
+    )
+    safe_candidate_urls: list[str] = []
+    rejected_candidate_urls: list[dict[str, Any]] = []
+    for raw_candidate_url in candidate_urls:
+        normalized_candidate_url = normalize_text(raw_candidate_url)
+        if not normalized_candidate_url:
+            continue
+        try:
+            network_guard.validate(
+                normalized_candidate_url,
+                resolve_dns=True,
+                enforce_credential_origin=False,
+            )
+        except Exception as exc:
+            rejected_candidate_urls.append(
+                {
+                    **diagnostic_url_payload(normalized_candidate_url),
+                    "error_type": exc.__class__.__name__,
+                }
+            )
+            continue
+        safe_candidate_urls.append(normalized_candidate_url)
+    trace["network_policy_rejections"] = rejected_candidate_urls
+    if not safe_candidate_urls:
+        raise PlaywrightBrowserFailure(
+            "unsafe_browser_url",
+            "All browser candidates were rejected by the network safety policy.",
+            details={"trace": trace},
+        )
+    credentialed_context = bool(
+        list((browser_context_seed or {}).get("browser_cookies") or [])
+        or config.storage_state_path
+        or config.profile_dir
+        or config.user_data_dir
+    )
+    if credentialed_context:
+        credential_origin_url = (
+            normalize_text(
+                str((browser_context_seed or {}).get("browser_final_url") or "")
+            )
+            or safe_candidate_urls[0]
+        )
+        network_guard.set_credential_origin(credential_origin_url)
+    return network_guard, safe_candidate_urls
+
+
 def fetch_html_with_playwright(
     candidate_urls: list[str],
     *,
@@ -1066,6 +1050,7 @@ def fetch_html_with_playwright(
     runtime_context: RuntimeContext | None = None,
     browser_context_seed: Mapping[str, Any] | None = None,
     options: BrowserHtmlFetchOptions = DEFAULT_BROWSER_HTML_FETCH_OPTIONS,
+    remote_url_policy: SafeRemoteUrlPolicy | None = None,
 ) -> BrowserFetchedHtml:
     return_image_payload = options.return_image_payload
     return_screenshot = options.return_screenshot
@@ -1085,7 +1070,13 @@ def fetch_html_with_playwright(
 
     last_failure: PlaywrightBrowserFailure | None = None
     latest_browser_context_seed: Mapping[str, Any] | None = None
-    timeout_ms = config.timeout_ms if max_timeout_ms is None else max(1, max_timeout_ms)
+    caller_timeout_ms = (
+        config.timeout_ms if max_timeout_ms is None else max(1, max_timeout_ms)
+    )
+    timeout_ms = _browser_route_timeout_ms(
+        publisher,
+        configured_timeout_ms=caller_timeout_ms,
+    )
     if backend_name != "camoufox":
         raise PlaywrightBrowserFailure(
             "browser_backend_invalid",
@@ -1094,6 +1085,7 @@ def fetch_html_with_playwright(
     artifact_dir = config.artifact_dir / backend_name
     configured_user_agent = normalize_text(config.user_agent)
     normalized_wait_for_selector = normalize_text(readiness.selector)
+    configured_storage_state_path = _storage_state_path(config)
     trace: dict[str, Any] = {
         "backend": backend_name,
         "candidate_count": len(candidate_urls),
@@ -1110,7 +1102,15 @@ def fetch_html_with_playwright(
         "selector_wait_enabled": bool(normalized_wait_for_selector),
         "wait_for_selector": normalized_wait_for_selector or None,
         "external_cdp": bool(config.cdp_endpoint),
-        "storage_state_path": str(_storage_state_path(config) or ""),
+        "storage_state_path": str(configured_storage_state_path or ""),
+        "storage_state_load": {
+            "path": str(configured_storage_state_path or "") or None,
+            "exists": bool(
+                configured_storage_state_path is not None
+                and configured_storage_state_path.is_file()
+            ),
+            "used": False,
+        },
         "storage_state_write_enabled": config.persist_storage_state,
         "readiness_budget_seconds": readiness_budget_seconds,
         "runtime_page_reuse_enabled": bool(reuse_runtime_page),
@@ -1125,6 +1125,14 @@ def fetch_html_with_playwright(
     trace["timeout_budget_ms"] = timeout_ms
     readiness_deadline: float | None = None
     observed_blocked_resource_types: set[str] = set()
+    network_guard, candidate_urls = _prepare_browser_network_guard(
+        candidate_urls,
+        publisher=publisher,
+        config=config,
+        browser_context_seed=browser_context_seed,
+        remote_url_policy=remote_url_policy,
+        trace=trace,
+    )
 
     def remaining_timeout_ms() -> int:
         remaining = max(0.0, local_deadline - time.monotonic())
@@ -1139,16 +1147,56 @@ def fetch_html_with_playwright(
         runtime_context,
         create=bool(reuse_runtime_page),
     )
+
+    def route_after_validation(route: Any) -> None:
+        resource_type = normalize_text(str(route.request.resource_type or "")).lower()
+        if resource_type in active_blocked_resource_types:
+            trace["blocked_request_count"] = (
+                int(trace.get("blocked_request_count") or 0) + 1
+            )
+            observed_blocked_resource_types.add(resource_type)
+            trace["blocked_request_types"] = sorted(observed_blocked_resource_types)
+            route.abort()
+            return
+        route.continue_()
+
     try:
         _raise_if_cancelled(runtime_context)
         manager, browser_context, page = _open_browser_html_context(
             config,
             runtime_context=runtime_context,
             shared_page_session=shared_page_session,
-            browser_context_seed=browser_context_seed,
-            candidate_url=candidate_urls[0] if candidate_urls else None,
             trace=trace,
         )
+        storage_state_load = trace.get("storage_state_load")
+        if isinstance(storage_state_load, dict):
+            # Reused pages belong to a context opened with the same runtime config;
+            # either way, reaching this point means the configured state was loaded.
+            storage_state_load["used"] = bool(storage_state_load.get("exists"))
+        try:
+            network_guard.install_on_context(
+                browser_context,
+                after_validation=route_after_validation,
+            )
+        except Exception as exc:
+            raise PlaywrightBrowserFailure(
+                "browser_network_guard_install_failed",
+                "Unable to install the browser network safety interceptor.",
+                details={"trace": trace, "error_type": exc.__class__.__name__},
+            ) from exc
+        if trace.get("runtime_page_reused"):
+            trace["browser_context_seed"] = {
+                "provided": browser_context_seed is not None,
+                "applied": False,
+                "reason": "reused_runtime_page_context",
+            }
+        else:
+            _seed_browser_html_context(
+                browser_context,
+                browser_context_seed=browser_context_seed,
+                candidate_url=candidate_urls[0] if candidate_urls else None,
+                trace=trace,
+            )
         page = _ensure_browser_html_page(
             browser_context,
             page,
@@ -1156,30 +1204,6 @@ def fetch_html_with_playwright(
             shared_page_session=shared_page_session,
             trace=trace,
         )
-
-        def route_handler(route: Any) -> None:
-            try:
-                resource_type = normalize_text(
-                    str(route.request.resource_type or "")
-                ).lower()
-                if resource_type in active_blocked_resource_types:
-                    trace["blocked_request_count"] = (
-                        int(trace.get("blocked_request_count") or 0) + 1
-                    )
-                    observed_blocked_resource_types.add(resource_type)
-                    trace["blocked_request_types"] = sorted(
-                        observed_blocked_resource_types
-                    )
-                    route.abort()
-                    return
-                route.continue_()
-            except Exception:
-                with contextlib.suppress(Exception):
-                    route.continue_()
-
-        if active_blocked_resource_types:
-            with contextlib.suppress(Exception):
-                page.route("**/*", route_handler)
 
         for url in candidate_urls:
             _raise_if_cancelled(runtime_context)
@@ -1202,6 +1226,10 @@ def fetch_html_with_playwright(
             trace["candidates"].append(candidate_trace)
             candidate_started = time.monotonic()
             try:
+                network_guard.validate(
+                    normalized_url,
+                    resolve_dns=True,
+                )
                 logger.debug(
                     "browser_request backend=%s provider=%s action=request wait_seconds=%s url=%s",
                     backend_name,
@@ -1228,6 +1256,11 @@ def fetch_html_with_playwright(
                     final_url = (
                         normalize_text(str(getattr(page, "url", "") or ""))
                         or normalized_url
+                    )
+                    network_guard.validate(
+                        final_url,
+                        previous_url=normalized_url,
+                        resolve_dns=True,
                     )
                     status = _browser_response_status(response, zero_as_none=False)
                     headers = _browser_response_headers(response)
@@ -1346,6 +1379,11 @@ def fetch_html_with_playwright(
                     normalize_text(str(getattr(page, "url", "") or ""))
                     or normalized_url
                 )
+                network_guard.validate(
+                    final_url,
+                    previous_url=normalized_url,
+                    resolve_dns=True,
+                )
                 html = str(page.content() or "")
                 title = normalize_text(str(page.title() or ""))
                 if not title and normalize_text(publisher).lower() != "ieee":
@@ -1387,6 +1425,12 @@ def fetch_html_with_playwright(
                             request_url=normalized_url,
                             final_url=final_url,
                         )
+                        if image_payload is not None:
+                            network_guard.validate(
+                                normalize_text(str(image_payload.get("url") or "")),
+                                previous_url=normalized_url,
+                                resolve_dns=True,
+                            )
                     except Exception:
                         image_payload = None
                     image_failure = getattr(page, _IMAGE_PAYLOAD_FAILURE_ATTR, None)

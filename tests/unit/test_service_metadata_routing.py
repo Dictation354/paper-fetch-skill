@@ -613,7 +613,9 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
             article.quality.source_trail,
         )
 
-    def test_fulltext_access_boundary_stops_ranked_provider_fallback(self) -> None:
+    def test_weak_conflicting_access_boundary_continues_to_strong_doi_provider(
+        self,
+    ) -> None:
         class CountingProvider(StubProvider):
             def __init__(self, **kwargs):
                 super().__init__(**kwargs)
@@ -636,6 +638,9 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
             provider_hint="elsevier",
             confidence=1.0,
         )
+        springer_article = sample_article()
+        springer_article.doi = doi
+        springer_article.source = "springer_html"
         second = CountingProvider(
             metadata={
                 "provider": "springer",
@@ -643,7 +648,13 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                 "doi": doi,
                 "title": "Protected Article",
             },
-            raw_error=AssertionError("second provider must not be attempted"),
+            raw_payload=RawFulltextPayload(
+                provider="springer",
+                source_url="https://link.springer.com/article/test",
+                content_type="text/html",
+                body=b"<article>full text</article>",
+            ),
+            article=springer_article,
         )
         original_resolve = paper_fetch.resolve_paper
         try:
@@ -661,6 +672,64 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                         raw_error=paper_fetch.ProviderFailure(
                             "no_access",
                             "Authentication is required.",
+                        ),
+                    ),
+                    "springer": second,
+                },
+            )
+        finally:
+            paper_fetch.resolve_paper = original_resolve
+
+        self.assertEqual(article.source, "springer_html")
+        self.assertEqual(second.raw_calls, 1)
+        self.assertIn(
+            "route:provider_candidate_elsevier_access_boundary_weak_continue",
+            article.quality.source_trail,
+        )
+        self.assertIn(
+            "route:provider_candidate_springer_identity_strong",
+            article.quality.source_trail,
+        )
+
+    def test_strong_doi_provider_access_boundary_stops_weaker_candidate(self) -> None:
+        class CountingProvider(StubProvider):
+            def __init__(self, **kwargs):
+                super().__init__(**kwargs)
+                self.raw_calls = 0
+
+            def fetch_raw_fulltext(self, doi, metadata, *, context=None):
+                self.raw_calls += 1
+                return super().fetch_raw_fulltext(doi, metadata, context=context)
+
+        doi = "10.1016/j.example.2026.1"
+        resolved = paper_fetch.ResolvedQuery(
+            query=doi,
+            query_kind="doi",
+            doi=doi,
+            landing_url="https://linkinghub.elsevier.com/retrieve/pii/test",
+            provider_hint="elsevier",
+            confidence=1.0,
+        )
+        second = CountingProvider(
+            metadata={"provider": "springer", "doi": doi},
+            raw_error=AssertionError("weak second provider must not be attempted"),
+        )
+        original_resolve = paper_fetch.resolve_paper
+        try:
+            paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
+            article = fetch_paper_model(
+                doi,
+                clients={
+                    "elsevier": StubProvider(
+                        metadata={
+                            "provider": "elsevier",
+                            "official_provider": True,
+                            "doi": doi,
+                            "title": "Protected Article",
+                            "publisher": "Springer Nature",
+                        },
+                        raw_error=paper_fetch.ProviderFailure(
+                            "no_access", "Authentication is required."
                         ),
                     ),
                     "springer": second,

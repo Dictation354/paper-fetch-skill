@@ -1,94 +1,170 @@
-schema_version: 1
+schema_version: 2
 
-# Every available full-text route family must have a golden replay or an
-# explicit, expiring review waiver. Remove a waiver as soon as its replay lands.
+# Only executable fixtures returned by tests.golden_corpus count as route replay.
+# Every waiver is independently owned, route-specific, and expires on its own date.
 route_family_waivers:
   - key: tandf:pdf
-    reviewed_at: 2026-08-06
-    expires_at: 2026-10-31
-    reason: T&F PDF fallback is exercised against the checked-in publisher PDF by provider-local tests, while the one-sample-per-DOI golden manifest records the canonical HTML route rather than a standalone PDF sample.
+    owner: provider-maintainers/tandf
+    restriction: copyright
+    reviewed_at: 2026-08-26
+    expires_at: 2026-09-15
+    reason: The checked-in T&F article records the HTML route and the publisher PDF cannot yet be redistributed as a standalone corpus asset.
+    evidence_plan: Review the sample licence, then add either an approved canonical PDF plus expected.json or a text-free controlled PDF structure replay for tandf:pdf.
   - key: aip:pdf
-    reviewed_at: 2026-07-28
-    expires_at: 2026-10-31
-    reason: AIP has provider-local validated-PDF fallback tests, but no approved reusable PDF golden replay yet.
+    owner: provider-maintainers/aip
+    restriction: copyright
+    reviewed_at: 2026-08-26
+    expires_at: 2026-09-22
+    reason: AIP PDF fallback has deterministic unit coverage but no approved redistributable canonical PDF replay.
+    evidence_plan: Obtain licence approval for the existing provider sample or record a controlled structure-only PDF replay and exact expected contract for aip:pdf.
   - key: elsevier:pdf
-    reviewed_at: 2026-07-28
-    expires_at: 2026-10-31
-    reason: Elsevier API PDF fallback is credentialed and lacks an approved redistributable PDF golden replay.
+    owner: provider-maintainers/elsevier
+    restriction: credentials
+    reviewed_at: 2026-08-26
+    expires_at: 2026-09-29
+    reason: Elsevier API PDF retrieval requires an entitled credential and the returned article PDF is not approved for repository redistribution.
+    evidence_plan: Use the controlled replay format to preserve response headers, PDF structure hashes, route identity, and acceptance facts without article text for elsevier:pdf.
   - key: frontiers:pdf
-    reviewed_at: 2026-07-28
-    expires_at: 2026-10-31
-    reason: Frontiers PDF is covered by provider-local response tests; the new corpus currently records canonical XML only.
+    owner: provider-maintainers/frontiers
+    restriction: redistribution_review
+    reviewed_at: 2026-08-26
+    expires_at: 2026-10-06
+    reason: The corpus currently records the canonical Frontiers XML response while standalone PDF redistribution review remains incomplete.
+    evidence_plan: Complete the article licence review and add an approved raw PDF with exact expected.json, otherwise add a text-free controlled replay for frontiers:pdf.
+  - key: ieee:pdf
+    owner: provider-maintainers/ieee
+    restriction: copyright
+    reviewed_at: 2026-08-26
+    expires_at: 2026-10-13
+    reason: The two manifest PDF claims are synthetic extracted Markdown without original.pdf and therefore cannot count as executable IEEE replay.
+    evidence_plan: Replace one synthetic claim with an approved canonical IEEE PDF or controlled structure-only replay and run the current PDF extractor to generate expected.json.
   - key: pnas:pdf
-    reviewed_at: 2026-07-28
-    expires_at: 2026-10-31
-    reason: PNAS PDF recovery has provider-local tests and manifest evidence, but no standalone PDF golden artifact.
+    owner: provider-maintainers/pnas
+    restriction: copyright
+    reviewed_at: 2026-08-26
+    expires_at: 2026-10-20
+    reason: PNAS PDF recovery is unit-tested but no standalone PDF artifact has completed redistribution review.
+    evidence_plan: Select an open-licence PNAS article, retain its canonical PDF and exact expected contract, and register that executable replay specifically for pnas:pdf.
   - key: science:pdf
-    reviewed_at: 2026-07-28
-    expires_at: 2026-10-31
-    reason: Science PDF recovery has provider-local tests and block evidence, but no standalone PDF golden artifact.
+    owner: provider-maintainers/science
+    restriction: copyright
+    reviewed_at: 2026-08-26
+    expires_at: 2026-10-27
+    reason: Science PDF fallback is exercised locally but the available publisher PDFs are not approved for checked-in redistribution.
+    evidence_plan: Identify an openly licensed Science-family PDF or add a controlled structure-only replay with route/source identity and extractor assertions for science:pdf.
   - key: springer:html:bmc
-    reviewed_at: 2026-07-28
-    expires_at: 2026-10-31
-    reason: BMC routing is classified and unit-tested, while an approved positive BMC HTML replay is still pending.
+    owner: provider-maintainers/springer
+    restriction: source_stability
+    reviewed_at: 2026-08-26
+    expires_at: 2026-11-03
+    reason: BMC routing is deterministic in unit tests but the corpus lacks a stable canonical positive BMC HTML response with an exact contract.
+    evidence_plan: Capture one openly licensed BMC article response, record direct_html and springer_html identity, generate expected.json, and add it to the exact corpus.
   - key: springer:pdf
-    reviewed_at: 2026-07-28
-    expires_at: 2026-10-31
-    reason: Springer validated-PDF fallback is unit-tested but has no approved reusable PDF golden replay.
+    owner: provider-maintainers/springer
+    restriction: copyright
+    reviewed_at: 2026-08-26
+    expires_at: 2026-11-10
+    reason: Springer validated-PDF fallback has unit evidence but no approved reusable canonical PDF replay.
+    evidence_plan: Complete licence review for an open Springer PDF and add its canonical bytes plus exact expected contract, or add a controlled structure-only replay.
   - key: wiley:pdf
-    reviewed_at: 2026-07-28
-    expires_at: 2026-10-31
-    reason: Wiley TDM and browser PDF lanes are tested locally, but the recorded sample is Markdown rather than a PDF replay.
+    owner: provider-maintainers/wiley
+    restriction: credentials
+    reviewed_at: 2026-08-26
+    expires_at: 2026-11-17
+    reason: Wiley TDM and browser PDF lanes require access context and the recorded positive sample is HTML rather than a redistributable PDF.
+    evidence_plan: Record a credential-sanitized controlled replay of the Wiley PDF response and pinned-stream extraction facts without retaining protected article text.
 
-# Browser providers need a real access/block replay; direct XML providers need
-# an abstract-only or empty-body replay. These expiring waivers make existing
-# evidence debt explicit instead of silently treating parser unit tests as replay.
+# Negative coverage counts only canonical raw responses that execute through the
+# current provider extractor and availability boundary with an exact rejection.
 negative_fixture_waivers:
+  - key: annualreviews:access_block
+    owner: provider-maintainers/annualreviews
+    restriction: source_stability
+    reviewed_at: 2026-08-26
+    expires_at: 2026-11-24
+    reason: The checked-in Annual Reviews negative response is a genuine empty shell, not evidence of the access-block route family required by policy.
+    evidence_plan: Capture a stable authentic Annual Reviews access gate, redact request identifiers, and assert browser_html, annualreviews_html, and the exact rejection reason.
   - key: tandf:access_block
-    reviewed_at: 2026-08-06
-    expires_at: 2026-10-31
-    reason: T&F abstract, purchase, and Cloudflare rejection boundaries are provider-locally tested, but discovery did not yield a stable authentic block replay distinct from a valid institutionally accessible article.
+    owner: provider-maintainers/tandf
+    restriction: source_stability
+    reviewed_at: 2026-08-26
+    expires_at: 2026-12-01
+    reason: T&F access and challenge boundaries are unit-tested but no stable authentic raw block response is checked in.
+    evidence_plan: Capture a genuine public purchase or challenge shell, remove transient identifiers, and replay it through the current T&F extractor and availability chain.
   - key: acs:access_block
-    reviewed_at: 2026-07-28
-    expires_at: 2026-10-31
-    reason: ACS challenge and access rejection are unit-tested, but no stable approved real block replay is checked in.
+    owner: provider-maintainers/acs
+    restriction: source_stability
+    reviewed_at: 2026-08-26
+    expires_at: 2026-12-08
+    reason: ACS challenge rejection has unit coverage but no stable approved canonical raw access-block response.
+    evidence_plan: Record a genuine ACS challenge or purchase shell, redact volatile tokens, and add exact provider route, source, reason, and failure-code assertions.
   - key: aip:access_block
-    reviewed_at: 2026-07-28
-    expires_at: 2026-10-31
-    reason: AIP access-gate rejection is unit-tested, but no stable approved real block replay is checked in.
+    owner: provider-maintainers/aip
+    restriction: source_stability
+    reviewed_at: 2026-08-26
+    expires_at: 2026-12-15
+    reason: AIP access-gate rejection is unit-tested but no authentic reusable negative HTML replay has been approved.
+    evidence_plan: Capture and sanitize a stable AIP access shell, then run the current AIP extractor and availability boundary to pin the exact rejection contract.
   - key: ams:access_block
-    reviewed_at: 2026-07-28
-    expires_at: 2026-10-31
-    reason: AMS WAF rejection is unit-tested, but no stable approved real block replay is checked in.
+    owner: provider-maintainers/ams
+    restriction: source_stability
+    reviewed_at: 2026-08-26
+    expires_at: 2026-12-22
+    reason: AMS WAF rejection is unit-tested but the corpus lacks a stable canonical raw block response.
+    evidence_plan: Capture a genuine AMS WAF or access shell without session identifiers and register its browser_html route/source and exact current-extractor rejection.
   - key: ieee:access_block
-    reviewed_at: 2026-07-28
-    expires_at: 2026-10-31
-    reason: IEEE challenge rejection is unit-tested, but no stable approved real block replay is checked in.
+    owner: provider-maintainers/ieee
+    restriction: source_stability
+    reviewed_at: 2026-08-26
+    expires_at: 2026-12-29
+    reason: IEEE challenge rejection is unit-tested but no stable approved raw block response is checked in.
+    evidence_plan: Record a genuine IEEE AWS-WAF or access shell, redact request tokens, and replay it through the current IEEE extractor/readiness chain with exact reasons.
   - key: iop:access_block
-    reviewed_at: 2026-07-28
-    expires_at: 2026-10-31
-    reason: IOP Radware and hCaptcha rejection are unit-tested, but no approved block replay is checked in.
+    owner: provider-maintainers/iop
+    restriction: source_stability
+    reviewed_at: 2026-08-26
+    expires_at: 2027-01-05
+    reason: IOP Radware and hCaptcha rejection have unit coverage but no approved authentic block replay.
+    evidence_plan: Capture a stable IOP challenge shell, remove volatile identifiers, and register its provider route/source plus exact extractor and availability rejection facts.
   - key: mdpi:access_block
-    reviewed_at: 2026-07-28
-    expires_at: 2026-10-31
-    reason: MDPI invalid-shell rejection is unit-tested, but no stable approved real block replay is checked in.
+    owner: provider-maintainers/mdpi
+    restriction: source_stability
+    reviewed_at: 2026-08-26
+    expires_at: 2027-01-12
+    reason: MDPI invalid-shell rejection is unit-tested but no stable genuine access-block response is available in the corpus.
+    evidence_plan: Capture a real MDPI invalid or access shell, sanitize transient values, and assert the current MDPI extractor rejects it with the recorded exact reason.
   - key: royalsocietypublishing:access_block
-    reviewed_at: 2026-07-28
-    expires_at: 2026-10-31
-    reason: Royal Society access rejection is unit-tested, but no stable approved block replay is checked in.
+    owner: provider-maintainers/royalsocietypublishing
+    restriction: source_stability
+    reviewed_at: 2026-08-26
+    expires_at: 2027-01-19
+    reason: Royal Society access rejection is unit-tested but lacks a stable approved canonical negative response.
+    evidence_plan: Capture and sanitize a genuine Royal Society access shell, then pin browser_html, source identity, content kind, reason, and failure code in the manifest.
   - key: copernicus:xml_empty_or_abstract
-    reviewed_at: 2026-07-28
-    expires_at: 2026-10-31
-    reason: Copernicus empty-body XML is rejected by unit contracts, but no real negative XML replay is checked in.
+    owner: provider-maintainers/copernicus
+    restriction: source_stability
+    reviewed_at: 2026-08-26
+    expires_at: 2027-01-26
+    reason: Copernicus empty-body XML rejection is unit-tested but no authentic canonical negative XML response is checked in.
+    evidence_plan: Capture a genuine empty or abstract-only Copernicus XML response and replay it through parse_copernicus_xml plus the current structured-body gate.
   - key: elsevier:xml_empty_or_abstract
-    reviewed_at: 2026-07-28
-    expires_at: 2026-10-31
-    reason: Elsevier structured-body rejection is unit-tested, but no redistributable negative API XML replay is checked in.
+    owner: provider-maintainers/elsevier
+    restriction: credentials
+    reviewed_at: 2026-08-26
+    expires_at: 2027-02-02
+    reason: Elsevier structured-body rejection requires a credentialed API response that cannot be redistributed with article content.
+    evidence_plan: Add a credential-sanitized controlled XML replay retaining schema/body-presence facts and hashes, then assert the current Elsevier structured-body reason.
   - key: frontiers:xml_empty_or_abstract
-    reviewed_at: 2026-07-28
-    expires_at: 2026-10-31
-    reason: Frontiers JATS body gating is unit-tested, but no real abstract-only XML replay is checked in.
+    owner: provider-maintainers/frontiers
+    restriction: redistribution_review
+    reviewed_at: 2026-08-26
+    expires_at: 2027-02-09
+    reason: Frontiers JATS body gating has unit coverage but no approved real abstract-only XML replay.
+    evidence_plan: Complete redistribution review for an authentic Frontiers abstract-only response and run it through the current JATS parser and body acceptance gate.
   - key: plos:xml_empty_or_abstract
-    reviewed_at: 2026-07-28
-    expires_at: 2026-10-31
-    reason: PLOS JATS body gating is unit-tested, but no real abstract-only XML replay is checked in.
+    owner: provider-maintainers/plos
+    restriction: source_stability
+    reviewed_at: 2026-08-26
+    expires_at: 2027-02-16
+    reason: PLOS JATS body gating is unit-tested but no stable authentic abstract-only XML response is checked in.
+    evidence_plan: Capture a genuine PLOS abstract-only or empty-body JATS response and assert its exact parse, content-kind, reason, and failure-code contract.

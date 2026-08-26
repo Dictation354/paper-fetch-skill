@@ -20,12 +20,14 @@ HOST_NARRATIVE_MAX_CHARS = 24_000
 
 # PF-018 snapshot for the ten-tool native contract after adding structured batch_fetch,
 # compact single-fetch acceptance, structured acquisition provenance, compacting
-# presentation-only output-schema metadata, and exposing the request-scoped Camoufox
-# preparation policy. The allowance is only for small constraint drift, not new
-# unbudgeted tools or restored schema annotations.
-NATIVE_TOOLS_LIST_BASELINE_BYTES = 73_307
+# presentation-only output-schema metadata, request-scoped Camoufox preparation,
+# and the Round 3 terminal batch fields. The latter intentionally adds stable
+# index/error/provider-lane and progress shapes plus batch execution/deduplication
+# accounting. Both serialized snapshots grew by exactly 1,261 bytes; the allowance
+# remains unchanged and is only for small constraint drift, not unbudgeted fields.
+NATIVE_TOOLS_LIST_BASELINE_BYTES = 74_568
 NATIVE_TOOLS_LIST_GROWTH_ALLOWANCE_BYTES = 1_024
-NATIVE_SCHEMA_BASELINE_BYTES = 69_378
+NATIVE_SCHEMA_BASELINE_BYTES = 70_639
 NATIVE_SCHEMA_GROWTH_ALLOWANCE_BYTES = 512
 
 
@@ -127,6 +129,16 @@ def test_native_tools_list_and_schema_size_snapshots() -> None:
     for tool in tools:
         _assert_output_schema_is_compact(tool.output_schema)
     assert any(_schema_has_property(tool.output_schema, "title") for tool in tools)
+    tools_by_name = {tool.name: tool for tool in tools}
+    assert "progress" in tools_by_name["batch_resolve"].output_schema["properties"]
+    assert "progress" in tools_by_name["batch_check"].output_schema["properties"]
+    assert {
+        "semantic_fingerprint",
+        "execution_policy",
+        "execution_count",
+        "deduplicated_count",
+        "not_scheduled_count",
+    } <= set(tools_by_name["batch_fetch"].output_schema["properties"])
 
     tools_result = mcp_types.ListToolsResult(tools=tools)
     tools_list_bytes = len(

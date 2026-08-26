@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from dataclasses import replace
+from dataclasses import asdict, replace
 from unittest import mock
 
 from paper_fetch import provider_catalog as runtime_catalog
@@ -13,6 +13,25 @@ from paper_fetch.mcp.provider_catalog import (
     provider_catalog_resource_payload,
 )
 from paper_fetch.mcp.server import build_server
+
+
+def _expected_routes(
+    spec: runtime_catalog.ProviderSpec,
+) -> list[dict[str, object]]:
+    expected: list[dict[str, object]] = []
+    for route in spec.routes:
+        route_payload = json.loads(json.dumps(asdict(route)))
+        route_payload["execution_policy"] = json.loads(
+            json.dumps(
+                asdict(
+                    runtime_catalog.compile_route_execution_policy(
+                        spec.name, route.name
+                    )
+                )
+            )
+        )
+        expected.append(route_payload)
+    return expected
 
 
 def test_provider_catalog_payload_exactly_reflects_runtime_catalog() -> None:
@@ -41,7 +60,7 @@ def test_provider_catalog_payload_exactly_reflects_runtime_catalog() -> None:
             "official": spec.official,
             "sources": sorted(sources_by_provider.get(spec.name, ())),
             "asset_default": spec.asset_default,
-            "routes": [json.loads(json.dumps(route.__dict__)) for route in spec.routes],
+            "routes": _expected_routes(spec),
             "capabilities": {
                 "html": spec.html_capable,
                 "metadata_probe": spec.probe_capability or None,

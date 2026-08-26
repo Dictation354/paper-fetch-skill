@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "routes": [
+    {
+      "provider": "arxiv",
+      "route": "official_html",
+      "doi": "10.48550/arxiv.2605.06663v1",
+      "expected_source": "arxiv_html",
+      "expected_trail_marker": "fulltext:arxiv_html_ok"
+    },
+    {
+      "provider": "copernicus",
+      "route": "xml",
+      "doi": "10.5194/acp-24-1-2024",
+      "expected_source": "copernicus_xml",
+      "expected_trail_marker": "fulltext:copernicus_xml_ok"
+    },
+    {
+      "provider": "frontiers",
+      "route": "xml",
+      "doi": "10.3389/fmars.2023.1101972",
+      "expected_source": "frontiers_xml",
+      "expected_trail_marker": "fulltext:frontiers_xml_ok"
+    },
+    {
+      "provider": "plos",
+      "route": "xml",
+      "doi": "10.1371/journal.pone.0263725",
+      "expected_source": "plos_xml",
+      "expected_trail_marker": "fulltext:plos_xml_ok"
+    }
+  ]
+}

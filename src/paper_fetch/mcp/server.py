@@ -8,7 +8,7 @@ from collections.abc import Callable, Mapping
 
 from mcp import types as mcp_types
 from mcp.server.mcpserver import Context, MCPServer
-from mcp.server.mcpserver.resources import FileResource, FunctionResource
+from mcp.server.mcpserver.resources import FunctionResource
 from mcp.server.lowlevel.server import NotificationOptions
 from mcp.server.stdio import stdio_server
 from mcp.types import CallToolResult, Icon, ToolAnnotations
@@ -28,7 +28,7 @@ from .cache_index import (
     cache_scope_id,
     cached_resource_uri,
     is_text_mime_type,
-    list_cache_entries,
+    read_scoped_file,
     scoped_cache_index_resource_uri,
     scoped_cached_resource_uri,
     scoped_cached_resource_uri_prefix,
@@ -211,13 +211,52 @@ def _resource_uri_set(
     }
 
 
+def _read_cached_entry_resource(
+    *,
+    download_dir: Path,
+    entry_id: str,
+    deps: MCPDeps,
+) -> str | bytes:
+    """Reauthorize and safely open a cached entry on every resource read."""
+
+    entry = cached_entry_payload(
+        entry_id=entry_id,
+        download_dir=download_dir,
+        deps=deps,
+    )
+    if entry is None:
+        raise FileNotFoundError(f"Unknown or unauthorized cached entry: {entry_id}")
+    opened = read_scoped_file(
+        download_dir,
+        str(entry.get("path") or ""),
+        expected_size=(
+            int(entry["size"]) if isinstance(entry.get("size"), int) else None
+        ),
+        expected_sha256=(
+            str(entry["content_sha256"])
+            if isinstance(entry.get("content_sha256"), str)
+            else None
+        ),
+    )
+    if opened is None:
+        raise FileNotFoundError(f"Cached entry changed or is unreadable: {entry_id}")
+    _path, payload = opened
+    if is_text_mime_type(str(entry.get("mime") or "")):
+        return payload.decode("utf-8")
+    return payload
+
+
 def _sync_cache_resources(
     server: MCPServer,
     *,
     download_dir: Path,
     scope_id: str | None = None,
+    deps: MCPDeps = default_mcp_deps(),
 ) -> bool:
-    entries = list_cache_entries(download_dir)
+    entries = list_cached_payload(
+        download_dir=download_dir,
+        deps=deps,
+    )["entries"]
     # mcp has no public remove_resource() API; relies on internal _resources dict (verified mcp>=2).
     # The assertion below will fire immediately if a future mcp version changes this layout.
     resources = server._resource_manager._resources
@@ -255,7 +294,7 @@ def _sync_cache_resources(
     )
 
     def index_payload_for_download_dir() -> dict[str, object]:
-        return _cache_index_resource_payload(download_dir)
+        return _cache_index_resource_payload(download_dir, deps=deps)
 
     resources[index_uri] = FunctionResource.from_function(
         index_payload_for_download_dir,
@@ -276,13 +315,25 @@ def _sync_cache_resources(
 
     for entry in entries:
         uri = entry_uri_for(entry["id"])
-        resources[uri] = FileResource(
+        entry_id = str(entry["id"])
+
+        def read_entry(
+            *,
+            _entry_id: str = entry_id,
+            _download_dir: Path = download_dir,
+        ) -> str | bytes:
+            return _read_cached_entry_resource(
+                download_dir=_download_dir,
+                entry_id=_entry_id,
+                deps=deps,
+            )
+
+        resources[uri] = FunctionResource.from_function(
+            read_entry,
             uri=uri,
             name=f"cached_{entry['id']}",
             description=f"Cached {entry['kind']} for DOI {entry['doi']}.",
-            path=Path(str(entry["path"])),
             mime_type=str(entry["mime"]),
-            encoding=("utf-8" if is_text_mime_type(str(entry["mime"])) else None),
         )
     after_uris = _resource_uri_set(
         resources,
@@ -300,10 +351,15 @@ def _sync_resources_for_download_dir(
 ) -> bool:
     if download_dir is None:
         return _sync_cache_resources(
-            server, download_dir=_default_download_dir(deps=deps)
+            server,
+            download_dir=_default_download_dir(deps=deps),
+            deps=deps,
         )
     return _sync_cache_resources(
-        server, download_dir=download_dir, scope_id=cache_scope_id(download_dir)
+        server,
+        download_dir=download_dir,
+        scope_id=cache_scope_id(download_dir),
+        deps=deps,
     )
 
 
@@ -389,13 +445,11 @@ def build_server() -> PaperFetchMCPServer:
         mime_type="application/octet-stream",
     )
     def cached_entry_resource(entry_id: str) -> str | bytes:
-        entry = cached_entry_payload(entry_id=entry_id, deps=deps)
-        if entry is None:
-            raise FileNotFoundError(f"Unknown cached entry: {entry_id}")
-        path = Path(str(entry["path"]))
-        if is_text_mime_type(str(entry["mime"])):
-            return path.read_text(encoding="utf-8")
-        return path.read_bytes()
+        return _read_cached_entry_resource(
+            download_dir=_default_download_dir(deps=deps),
+            entry_id=entry_id,
+            deps=deps,
+        )
 
     _sync_resources_for_download_dir(server, None, deps=deps)
 

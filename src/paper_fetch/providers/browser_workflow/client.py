@@ -53,6 +53,7 @@ from ..base import (
     RawFulltextPayload,
 )
 from .fetchers import (
+    BrowserDocumentFetcherOptions,
     _MemoizedFigurePageFetcher,
     _MemoizedImageDocumentFetcher,
 )
@@ -614,7 +615,9 @@ class BrowserWorkflowClient(ProviderClient):
             cdp_endpoint=request.get("cdp_endpoint"),
             profile_dir=request.get("profile_dir"),
             user_data_dir=request.get("user_data_dir"),
-            browser_config=request.get("browser_config"),
+            browser_options=BrowserDocumentFetcherOptions(
+                runtime_config=request.get("browser_config")
+            ),
         )
         # Figures fan out several candidate URLs per asset (full-size, figure
         # page, preview), so the same image URL is frequently fetched more than
@@ -642,7 +645,9 @@ class BrowserWorkflowClient(ProviderClient):
             cdp_endpoint=request.get("cdp_endpoint"),
             profile_dir=request.get("profile_dir"),
             user_data_dir=request.get("user_data_dir"),
-            browser_config=request.get("browser_config"),
+            browser_options=BrowserDocumentFetcherOptions(
+                runtime_config=request.get("browser_config")
+            ),
             thread_local=True,
         )
 

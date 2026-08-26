@@ -7,6 +7,7 @@ import time as time
 from typing import Any
 
 _EXPORTS: dict[str, tuple[str, str]] = {
+    "BrowserDocumentFetcherOptions": (".fetchers", "BrowserDocumentFetcherOptions"),
     "BrowserWorkflowBootstrapResult": (".profile", "BrowserWorkflowBootstrapResult"),
     "BrowserWorkflowPolicy": (".profile", "BrowserWorkflowPolicy"),
     "BrowserWorkflowClient": (".client", "BrowserWorkflowClient"),

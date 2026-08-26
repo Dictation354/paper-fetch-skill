@@ -6,6 +6,70 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+### 修复——技能完整性、可复现测试与复杂度债务
+
+- 基于精确排序的普通文件清单，为静态 skill bundle 生成稳定的聚合 SHA-256/版本，实现内容寻址。源码、staging、离线 manifest 与宿主机已安装副本现在使用同一 verifier 拒绝缺失、多余、已更改、符号链接及特殊条目；规范的 `agents/openai.yaml` 改为随源码分发，不再因重新生成而形成永久漂移。
+- 为 Codex/Claude/Antigravity 共用安装器新增严格只读的 `--check` 模式，并正确查找 Codex 用户/项目作用域。源码与离线 `doctor` 诊断现在会对比仓库/随包 skill 和当前启用的 Codex 副本，公开预期/实际内容版本，并在启用的 skill 缺失或漂移时令整体 readiness 失败。
+- 在仓库指引、生成的 onboarding 与 CI 中，将常规测试命令统一为 `PYTHONPATH=src uv run python -m pytest ...`。当环境中的 MCP 主版本或必需的 trafilatura API 行为不兼容时，Pytest 现在会在 collection 前失败，并给出可直接执行的冻结 `uv` 修复命令。
+- 通过归组既有 request/runtime state 并抽取保持行为不变的 browser、PDF、asset、HTTP stream、cache 与 MCP batch helper，在不放宽 threshold、ignore 或 suppression 的情况下消除全部 24 个复杂度回归。历史超预算清单从 55 个 symbol 单调降至 47 个，其中 Playwright C901 从 44 降至 41。
+
+### 修复——经验证的构建与发布供应链
+
+- 将完整质量矩阵抽取为一套可复用的 verify workflow，供常规 CI 与稳定版发布共同调用。稳定版 tag（包括 annotated tag）会 peel 到不可变 commit；验证、依赖解析、离线构建、发布 checkout、attestation 与 GitHub Release target 全部使用该精确 SHA，并在发布前执行最终 tag 漂移检查。
+- 稳定版发布现在会在同一次 run 中解析并合并全部九个目标的冻结依赖快照：Linux CPython 3.11–3.14、macOS arm64 CPython 3.11–3.14，以及 Windows CPython 3.13；随后以启用冻结依赖的方式调用 offline workflow。
+- 新增从实际 staging tree 派生的逐目标证据：已安装 Python distribution 及内容 digest、Node/Playwright package、Camoufox 交付状态、公式/图片/native 文件与嵌入式 runtime provenance。每个离线产物现在都会携带并上传实际 dependency manifest 和经验证的 CycloneDX 1.6 SBOM；release 不再用 lock export 冒充 staged evidence。
+- 在 installer manifest 与平台合约中，将 Windows CPython 3.13.13 x64 embeddable archive 固定到 python.org 官方 URL 和 SHA-256；解压前会验证，并在 offline manifest 与 SBOM 中记录预期/实际 digest。
+- 为完整 archive 新增精确 wheel/sdist inventory。它会从结构上规范化唯一合法的 distribution root/`dist-info`/`egg-info`，要求 metadata 与 wheel `RECORD` 精确覆盖，并拒绝所有未知的 top-level、`.data`、package、source 或 metadata member。两个产物分别安装到独立 venv，并运行 CLI、import、MCP、resource 与已安装 skill smoke。
+- 稳定版发布现在会验证 checksum 前精确的 31 个 asset（两个 Python distribution、对应 inventory、九个离线 installer、十八个目标 evidence 文件及 merged dependency manifest），拒绝缺失、多余和 basename collision，将它们复制到平坦且排他的 namespace，并生成只含 basename 的 `SHA256SUMS`。滚动发布复用同一 offline asset-set checker。
+- 新增原生、串行的最终 Windows EXE lifecycle gate：静默安装、已安装 doctor/provider/formula/browser smoke、原地覆盖升级、用户数据保留、静默卸载，以及精确递归 residue allowlist。只允许残留 `offline.env`、`downloads/` 和 `downloads/user-owned.txt`；任何现有或未来的 managed file 都会令 gate 失败。不可变 Windows tooling overlay 现在会把 builder、evidence/lifecycle script、helper、installer manifest 与 Inno definition 作为同一组按 revision 固定的文件移动。
+
+### 安全——网络、凭据与日志边界
+
+- 将 urllib3 direct connection 固定到 `SafeRemoteUrlPolicy` 选定的公网 IP，同时保留原始 Host、TLS SNI 与证书 hostname；每个 redirect hop 都会独立解析和验证。
+- 新增由 catalog 派生的 provider-sensitive header request policy，以及强制性的 credential route host allowlist。Elsevier、Wiley 与 Crossref 自定义凭据在同源 redirect 中保留，在跨源 301/302/303/307/308 response 中移除。
+- 将共享 remote URL 与 route-host policy 应用于 Camoufox/Playwright navigation、request-context call、redirect target、final URL 与 browser asset recovery。带凭据的 context 仅允许同源；跨源 asset 回退到受控 direct transport。
+- 在 cookie seeding/page creation 前于 BrowserContext 作用域安装 browser guard，并阻断 service worker；无法遵守这些选项的外部 CDP context 会被隔离，不再借用。
+- 以标准 cookie jar policy 替换手工 browser-cookie matching，从而保留 host-only/domain、RFC path、secure、expiry、HttpOnly 与 SameSite 作用域。
+- 集中处理 human/structured log 中 URL/query/header/text secret 的脱敏，增加防御性 MCP filtering，并用一个引用计数 router 加 context-local request ownership 取代逐请求 global handler。Bridge teardown 前会在锁内使 request target 失效，因此持有 context 副本的 worker 无法向已结束的 MCP session 或重叠请求发出消息；closed loop 会在构造 notification coroutine 前被拒绝。
+
+### 修复——能力作用域缓存的正确性与规模
+
+- 新增统一的 `CapabilityScopeBuilder`，仅纳入实际注入成功 context 的 API credential 与 browser state。Browser-backed scope 绑定 provider、backend、规范 storage-state path 与最终文件 digest；配置的空路径保持 public，而实际使用过的 state 绝不会写成 public。旧版仅基于 environment 的 digest 与既有 private sidecar 保持逐字节兼容。
+- `prefer_cache` 现在会在本地规范化已知 DOI，并在 resolver/provider enrichment 前检查精确 sidecar。Loader、`get_cached`、compact projection、cache-index listing、entry resource 与生成的 MCP resource 只允许 exact-private-to-public fallback。未变化的 DOI-local artifact 保留其独立证明的 scope，不再继承最新 canonical sidecar；缺失/旧版 provenance 与冲突的 sidecar scope 会 fail closed。每次 resource read 都会重新评估当前 API/storage-state capability 与 file/index integrity，因此撤销 capability 也会撤销已公开的 URI，无需重新同步 resource。
+- 将 cache discovery 与 hashing 移出 global index lock，限制 YAML front matter 读取量，持久化 stat/content fingerprint 以复用未变化文件，合并并发 refresh/rescan 更新，并以 incremental upsert 取代写入后的 rescan。对 50 个 DOI 执行批量或顺序刷新时，每个未变化 Markdown 文件最多打开一次。
+
+### 修复——原子提交、取消与批处理身份
+
+- 将 artifact、sidecar、Markdown、cache-index 与 run-summary 的发布统一置于 path-scoped lock、同目录唯一 staging file、flush/fsync、atomic replace 与一个可线性化 runtime commit fence 之后。非 overwrite 写入现在将相同内容视为幂等，并拒绝不同内容；显式 overwrite 允许串行化的原子替换。
+- 在每个同步/异步单篇 fetch 与 output stage 中贯穿同一个 runtime context。异步取消现在会封锁 commit、等待有界且独立的 grace period，并阻止迟到 worker 发布 artifact 或 progress；batch item 使用隔离的 child context，并关闭重复或未调度的 child。
+- Resolve/check output 现在保持与输入同序同长，包含稳定 index、terminal status/error/provider lane，以及真实的 terminal/not-scheduled progress。Title check 使用解析出的 provider lane，已知 DOI check 使用 local lane identity，避免一个 provider cooldown 阻断无关 lane。
+- 为 MCP 与 CLI batch fetch 新增 canonical DOI representative/fan-out execution，并提供跨请求共享的 DOI/request/scope/path singleflight key；waiter 的取消彼此隔离，result/error 也会安全复制。
+- 在 resume manifest 中将不可变 run semantics 与可覆盖 execution policy 分离。Concurrency 及 continue/retry/rate policy 可以安全变更，而有序输入、fetch/render/output semantics 与 tool version 保持固定；旧版内嵌 execution field 会在验证后迁移。
+
+### 修复——有界二进制资产与浏览器会话复用
+
+- 新增线程安全的逐文章 `AssetBudget`，由正文图、补充文件、direct/browser discovery、arXiv source decoding 与 image conversion 共享。默认最多保留 128 个文件、单文件 32 MiB、总计 256 MiB、6400 万像素和 4 个 worker，worker 数还会进一步受 route 限制。
+- 所有远程 binary 现在都通过 DNS-pinned direct transport 流式写入同目录排他 staging file，并执行 Content-Length preflight、逐 chunk decoded/compressed accounting、gzip EOF validation、fsync、atomic publication，且使用稳定的 `asset_*` failure reason。Browser code 现在只负责发现已授权 URL；无法流式传输的 browser-only response 会以 `browser_stream_unavailable` fail closed。
+- 按 completion order 持久化或回滚已完成 future，同时让轻量 result 保持输入顺序。触发致命 byte/file/pixel limit 时会移除全部 staging file、协作式停止 queued work 并保留第一条 diagnostic；外部 RuntimeContext cancellation 则继续传播。EPS/TIFF 与 arXiv PDF rendering 使用带输出 byte/pixel 检查的 path-to-path conversion；source archive 会在 name validation/deduplication 前统计遇到的每个 regular member，并以相同 member/aggregate limit 避免无界读取。Archive decoding 现在位于有界 `_arxiv_source_archive` module，且不放宽既有 `_arxiv_assets` complexity gate。
+- 每个 attempt worker 复用一个固定的、由 cookie jar 支持的 seeded asset session，同一 runtime 内连续的 figure 与 supplementary 阶段也会复用。一次有界 GET warm-up 会从每个已验证 redirect hop 导入多值 `Set-Cookie`，在下一 hop 前刷新 worker-local jar，并保留 candidate response cookie，但不缓存 authentication data。Asset request 继承 catalog-sensitive header，因此跨源 replay redirect 会移除自定义 provider credential。
+- Browser 触发的 PDF download 现在优先使用已验证的 `download.url`，再尝试 page/original candidate，并通过 DNS-pinned direct transport 重放；`blob:` 与 `data:` download URL 会 fail closed，不再暴露 browser-owned byte。
+
+### 修复——可执行 route、身份与 MCP 合约
+
+- 新增编译后的统一 `RouteExecutionPolicy`，作为 provider catalog 到 runtime 的边界。它组合 exact/suffix/base、API/CDN/template 与 route host，并驱动 HTTP/browser/PDF timeout、retry、QPS/rate wait、acceptance、asset scope 和 route concurrency。Oxford PDF、PLOS XML/DOI/asset 与 arXiv source archive 现在使用精确的 compiled route；provider-owned request 不再用并行常量覆盖。Catalog default 现在使用 runtime `dns_error` category，其中包括 Copernicus suffix host。
+- 对共享 transport scope 的 worker 强制执行 arXiv Atom 与 source asset 每 3 秒最多启动一次的节流。逐 scope 串行化 start gate 在排队时释放 host concurrency；确定性 fake-clock 覆盖证明，较晚到达的 `Retry-After` 会将 queued start 推迟到 10/13 秒，而不会同时放行，并继续保持 cancellation 可观察。
+- 只有 `asset_profile` 未设置时，才将 compiled route asset scope 作为默认 selector；显式 `none|body|all` 仍然优先。Route acceptance 现在评估相匹配的 identity、HTML、XML、PDF 或 audited/local-asset facet，未知 policy 会 fail closed。
+- 将 provider identity evidence 分为 strong 与 weak。过期或冲突 domain candidate 的 `no_access` 会保留用于诊断，但不再阻断 strong DOI provider；只有强确认的 access boundary 才会终止 waterfall。无 DOI acceptance 现在要求唯一且经过验证的 canonical landing identity，不再以 title 作为依据。
+- 补全已公开的 MCP v2 cache asset facet 与 batch artifact `route`/`failure_code` 字段，并增加 payload-key/schema subset contract。Provider registration 现在会检测 normalized alias、DOI prefix、exact/suffix domain 及 cross-overlap conflict；有意 overlap 必须具有不同 priority 和 reason，且绝不依赖 import order。
+
+### 修复——可执行 provider 证据与回归 gate
+
+- Provider governance 现在使用真实 corpus loader。只有同时具备 canonical raw asset、精确 expected contract 与当前可执行 adapter 的 140 个 fixture 才计为 replay；2 个 synthetic 与 15 个 manifest-only claim 仍保持可见，但不能覆盖 route。两个 synthetic IEEE PDF claim 现在各自需要有 owner 且会过期的 waiver。
+- 扩展 block manifest，新增 negative kind、精确 route/source identity、reason、failure code 与 content kind。签入的全部 17 个 negative raw HTML response 现在都通过当前 provider extractor 与 availability boundary 运行；历史 extracted Markdown 不再作为证据。
+- 在常规 CI 中新增四个确定性 provider-level shard，使全部 140 个精确 fixture 在每次 push/PR 中恰好运行一次。新增机器可读的 focus coverage baseline，聚合 coverage.py 官方 pure branch exit，对 unmatched/unmeasured/branchless area fail closed，报告 covered/total、精确百分比与向下取整百分比，并强制 security boundary 覆盖率至少为 90%。
+- 将集中的 evidence debt 替换为 10 个 route-specific 与 13 个 negative route-specific waiver；每个 waiver 都带 owner、restriction、具体 plan、review date 与独立错开的 expiry。Governance 会拒绝缺失、已过期、期限过长或共用 expiry 的条目。
+- 为四条公开、无凭据的 direct route 新增非阻塞 scheduled canary。Report 会作为 artifact 保存，连续失败次数通过 Actions cache 持久化；同一路线第三次失败时才开始 warning，成功一次即重置计数。
+
 ## 5.5.0 - 2026-08-25
 
 ### 新增——精确抓取来源

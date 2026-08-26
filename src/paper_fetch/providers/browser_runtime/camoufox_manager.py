@@ -202,6 +202,7 @@ class CamoufoxPersistentContextManager:
             launch_kwargs: dict[str, Any] = {
                 "headless": self.headless,
                 "user_data_dir": self.user_data_dir,
+                "service_workers": "block",
             }
             if executable_path is not None:
                 launch_kwargs["executable_path"] = executable_path
