@@ -552,11 +552,16 @@ copy allow-list 内；tooling 脚本仍属于显式信任边界，不能被描�
 追溯；未使用 overlay 时该字段省略而不是写入空字符串。Windows tooling ref 遵循
 相同不可变 SHA 与 provenance 规则，把 Windows packaging script、同一
 staged-evidence generator、最终 EXE lifecycle verifier、installer helper、installer
-manifest 和 Inno `.iss` 作为来自同一 commit 的完整集合。Windows embedded CPython
+manifest、Inno `.iss`，以及 UninsIS DLL、许可证和 provenance notice 作为来自同一
+commit 的完整集合。UninsIS 1.7.0 的官方 release archive 与 i386 DLL SHA-256 固定在
+机器合约；builder 在 Inno 编译前校验 DLL/许可证，并把 setup-time 组件写入 offline
+manifest、dependency manifest 与 CycloneDX SBOM。安装器通过它等待旧 Inno 卸载器的 TEMP 第二阶段删除原 EXE 后才继续，
+避免覆盖升级生成 `unins001.exe`。Windows embedded CPython
 的 version、python.org URL 与官方 SHA-256 同时固定在 installer manifest 与平台
 合约，构建器必须在解压前校验并把 expected/actual digest 写入 provenance/SBOM；
 最终安装器的 silent install→smoke→覆盖升级→卸载流程只由原生 Windows gate
-证明；卸载后安装根只能精确保留 `offline.env`、`downloads/` 和测试创建的
+证明；升级后必须只有 `unins000.exe`，最终卸载还须在 60 秒内同时观察到 Inno 成功
+日志和全部 `unins*.exe/.dat/.msg` 消失。卸载后安装根只能精确保留 `offline.env`、`downloads/` 和测试创建的
 `downloads/user-owned.txt`，README、checksum、uninstaller 或未来未知残留都会失败。
 Linux/WSL 的静态验证不能冒充这项系统状态证据。
 

@@ -216,6 +216,9 @@ def test_offline_windows_tooling_ref_is_immutable_and_provenanced() -> None:
         "scripts/windows-installer-helper.ps1",
         "installer/manifest.json",
         "installer/paper-fetch-skill.iss",
+        "installer/vendor/uninsis/i386/UninsIS.dll",
+        "installer/vendor/uninsis/LICENSE",
+        "installer/vendor/uninsis/NOTICE.md",
     )
     for path in trusted_tooling:
         assert workflow.count(f'git show "$TOOLING_REF:{path}"') == 1
@@ -503,7 +506,11 @@ def test_windows_offline_job_runs_final_exe_lifecycle_serially() -> None:
     assert '"downloads/user-owned.txt"' in verifier
     assert '"offline.env"' in verifier
     assert "Compare-Object" in verifier
-    assert "README/checksum files and a delayed uninstaller" in verifier
+    assert "Wait-ForUninstallCompletion" in verifier
+    assert "Uninstallation process succeeded." in verifier
+    assert "$uninstallFiles.Count -eq 0" in verifier
+    assert '-ne "unins000.exe"' in verifier
+    assert "/LOG=$uninstallLog" in verifier
     assert '"install-helper.log"' not in verifier
 
 

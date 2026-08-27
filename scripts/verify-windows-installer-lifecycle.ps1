@@ -7,6 +7,7 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+$UninstallSuccessLogMarker = "Uninstallation process succeeded."
 
 if (-not $IsWindows) {
     throw "The final EXE lifecycle gate must run on native Windows."
@@ -67,6 +68,51 @@ function Invoke-InstalledSmoke {
         "-InstallRoot", $InstallRoot
     )
     Invoke-NativeChecked -FilePath $cli -Arguments @("browser-preflight", "--help")
+}
+
+function Wait-ForUninstallCompletion {
+    param(
+        [string]$InstallRoot,
+        [string]$LogPath,
+        [int]$TimeoutSeconds = 60
+    )
+
+    $timer = [System.Diagnostics.Stopwatch]::StartNew()
+    $logCompleted = $false
+    while ($timer.Elapsed.TotalSeconds -lt $TimeoutSeconds) {
+        $logCompleted = $false
+        if (Test-Path -LiteralPath $LogPath -PathType Leaf) {
+            try {
+                $logCompleted = Select-String `
+                    -LiteralPath $LogPath `
+                    -SimpleMatch $UninstallSuccessLogMarker `
+                    -Quiet `
+                    -ErrorAction Stop
+            } catch [System.IO.IOException] {
+                $logCompleted = $false
+            }
+        }
+        $uninstallFiles = @(
+            Get-ChildItem -LiteralPath $InstallRoot -Filter "unins*.*" -File |
+                Where-Object { $_.Extension -in @(".exe", ".dat", ".msg") }
+        )
+        if ($logCompleted -and
+            $uninstallFiles.Count -eq 0) {
+            return
+        }
+        Start-Sleep -Milliseconds 100
+    }
+
+    $remaining = @(
+        Get-ChildItem -LiteralPath $InstallRoot -Filter "unins*.*" -File |
+            Where-Object { $_.Extension -in @(".exe", ".dat", ".msg") } |
+            ForEach-Object { $_.Name }
+    )
+    throw (
+        "Timed out waiting for the Inno uninstaller second phase. " +
+        "log_completed=$($logCompleted.ToString().ToLowerInvariant()); " +
+        "files=[$($remaining -join ', ')]"
+    )
 }
 
 function Assert-ExactPreservedInstallTree {
@@ -160,18 +206,25 @@ try {
     }
 
     $uninstallers = @(Get-ChildItem -LiteralPath $installRoot -Filter "unins*.exe" -File)
-    if ($uninstallers.Count -ne 1) {
-        throw "Expected one installed uninstaller, found $($uninstallers.Count)."
+    if ($uninstallers.Count -ne 1 -or $uninstallers[0].Name -ne "unins000.exe") {
+        throw (
+            "Expected the synchronized upgrade to install only unins000.exe; " +
+            "found [$($uninstallers.Name -join ', ')]."
+        )
     }
+    $uninstallLog = Join-Path $testRoot "final-uninstall.log"
     Write-Host "==> Silent uninstall of final EXE"
     Invoke-NativeChecked -FilePath $uninstallers[0].FullName -Arguments @(
         "/VERYSILENT",
         "/SUPPRESSMSGBOXES",
-        "/NORESTART"
+        "/NORESTART",
+        "/LOG=$uninstallLog"
     )
 
-    # Exact recursive enumeration catches known and future managed residues,
-    # including README/checksum files and a delayed uninstaller executable.
+    # The original Inno process exits before its TEMP-hosted second phase. Wait
+    # for its success marker and all uninstaller files to disappear before
+    # evaluating the exact preserved tree.
+    Wait-ForUninstallCompletion -InstallRoot $installRoot -LogPath $uninstallLog
     Assert-ExactPreservedInstallTree -InstallRoot $installRoot
     foreach ($managedSkill in @(
         (Join-Path $fakeProfile ".codex/skills/paper-fetch-skill"),

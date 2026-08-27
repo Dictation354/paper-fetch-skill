@@ -32,6 +32,11 @@ $EmbeddedPythonVersion = [string]$EmbeddedPython.version
 $EmbeddedPythonUrl = [string]$EmbeddedPython.url
 $EmbeddedPythonSha256 = ([string]$EmbeddedPython.sha256).ToLowerInvariant()
 $EmbeddedPythonArchive = [string]$EmbeddedPython.archive
+$UninsIS = $InstallerManifest.setup_components.windows_uninsis_i386
+$UninsISDllPath = Join-Path $RepoDir ([string]$UninsIS.dll_path)
+$UninsISDllSha256 = ([string]$UninsIS.dll_sha256).ToLowerInvariant()
+$UninsISLicensePath = Join-Path $RepoDir ([string]$UninsIS.license_path)
+$UninsISLicenseSha256 = ([string]$UninsIS.license_sha256).ToLowerInvariant()
 if (
     [string]::IsNullOrWhiteSpace($EmbeddedPythonVersion) -or
     [string]::IsNullOrWhiteSpace($EmbeddedPythonUrl) -or
@@ -39,6 +44,14 @@ if (
     $EmbeddedPythonSha256 -cnotmatch '\A[0-9a-f]{64}\z'
 ) {
     throw "installer/manifest.json must pin the Windows CPython version, archive, URL, and SHA-256."
+}
+if (
+    [string]::IsNullOrWhiteSpace([string]$UninsIS.version) -or
+    [string]::IsNullOrWhiteSpace([string]$UninsIS.archive_url) -or
+    $UninsISDllSha256 -cnotmatch '\A[0-9a-f]{64}\z' -or
+    $UninsISLicenseSha256 -cnotmatch '\A[0-9a-f]{64}\z'
+) {
+    throw "installer/manifest.json must pin the UninsIS version, archive URL, DLL SHA-256, and license SHA-256."
 }
 $BuildDir = if ($env:PAPER_FETCH_OFFLINE_BUILD_DIR) {
     [System.IO.Path]::GetFullPath($env:PAPER_FETCH_OFFLINE_BUILD_DIR)
@@ -52,6 +65,8 @@ $OutputDir = [System.IO.Path]::GetFullPath($OutputDir)
 $ProjectWheelPath = ""
 $DependencyWheelhouse = ""
 $EmbeddedPythonActualSha256 = ""
+$UninsISActualSha256 = ""
+$UninsISLicenseActualSha256 = ""
 
 function Write-Log {
     param([string]$Message)
@@ -129,6 +144,27 @@ function Assert-Target {
         throw "Windows setup build uses the CPython 3.13 embeddable runtime; build with CPython 3.13, detected $pythonTag."
     }
     return $pythonTag
+}
+
+function Get-VerifiedUninsISDigests {
+    if (-not (Test-Path -LiteralPath $UninsISDllPath -PathType Leaf)) {
+        throw "Pinned UninsIS DLL is missing: $UninsISDllPath"
+    }
+    if (-not (Test-Path -LiteralPath $UninsISLicensePath -PathType Leaf)) {
+        throw "Pinned UninsIS license is missing: $UninsISLicensePath"
+    }
+    $dllDigest = (Get-FileHash -LiteralPath $UninsISDllPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($dllDigest -ne $UninsISDllSha256) {
+        throw "UninsIS DLL SHA-256 mismatch: expected $UninsISDllSha256, got $dllDigest"
+    }
+    $licenseDigest = (Get-FileHash -LiteralPath $UninsISLicensePath -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($licenseDigest -ne $UninsISLicenseSha256) {
+        throw "UninsIS license SHA-256 mismatch: expected $UninsISLicenseSha256, got $licenseDigest"
+    }
+    return [pscustomobject]@{
+        Dll = $dllDigest
+        License = $licenseDigest
+    }
 }
 
 function Get-ProjectVersion {
@@ -475,6 +511,25 @@ function Write-ManifestAndChecksums {
                 actual_sha256 = $EmbeddedPythonActualSha256
             }
         }
+        setup_components = [ordered]@{
+            windows_uninsis_i386 = [ordered]@{
+                name = [string]$UninsIS.name
+                version = [string]$UninsIS.version
+                architecture = [string]$UninsIS.architecture
+                upstream = [string]$UninsIS.upstream
+                release = [string]$UninsIS.release
+                release_commit = [string]$UninsIS.release_commit
+                archive = [string]$UninsIS.archive
+                archive_url = [string]$UninsIS.archive_url
+                archive_sha256 = ([string]$UninsIS.archive_sha256).ToLowerInvariant()
+                expected_sha256 = $UninsISDllSha256
+                actual_sha256 = $UninsISActualSha256
+                license = [string]$UninsIS.license
+                license_expected_sha256 = $UninsISLicenseSha256
+                license_actual_sha256 = $UninsISLicenseActualSha256
+                usage = [string]$UninsIS.usage
+            }
+        }
         entrypoint = "$SetupBaseName.exe"
         skill_bundle = $skillBundle
         components = [ordered]@{
@@ -624,6 +679,9 @@ function Build-InnoInstaller {
 
 $toolingRevision = Get-OfflineToolingRevision
 $pythonTag = Assert-Target
+$uninsisDigests = Get-VerifiedUninsISDigests
+$UninsISActualSha256 = $uninsisDigests.Dll
+$UninsISLicenseActualSha256 = $uninsisDigests.License
 if ([string]::IsNullOrWhiteSpace($PackageName)) {
     $PackageName = $WindowsSetupBaseName
 }

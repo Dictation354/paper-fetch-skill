@@ -75,6 +75,25 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
                         "actual_sha256": expected,
                     },
                 },
+                "setup_components": {
+                    "windows_uninsis_i386": {
+                        "name": "UninsIS.dll",
+                        "version": "1.7.0",
+                        "architecture": "i386",
+                        "archive": "UninsIS-1.7.0.zip",
+                        "archive_url": (
+                            "https://github.com/Bill-Stewart/UninsIS/releases/"
+                            "download/v1.7.0/UninsIS-1.7.0.zip"
+                        ),
+                        "archive_sha256": "b" * 64,
+                        "expected_sha256": "c" * 64,
+                        "actual_sha256": "c" * 64,
+                        "license": "LGPL-3.0-or-later",
+                        "license_expected_sha256": "d" * 64,
+                        "license_actual_sha256": "d" * 64,
+                        "usage": "setup-time-uninstall-synchronization",
+                    }
+                },
             }
         ),
         encoding="utf-8",
@@ -123,6 +142,26 @@ def test_evidence_is_derived_from_actual_staged_target(tmp_path: Path) -> None:
     assert dependency["embedded_runtime"]["runtime_executable_sha256"] == _sha256(
         staging / "runtime" / "python.exe"
     )
+    assert dependency["setup_components"] == [
+        {
+            "id": "windows_uninsis_i386",
+            "name": "UninsIS.dll",
+            "version": "1.7.0",
+            "architecture": "i386",
+            "archive": "UninsIS-1.7.0.zip",
+            "archive_url": (
+                "https://github.com/Bill-Stewart/UninsIS/releases/"
+                "download/v1.7.0/UninsIS-1.7.0.zip"
+            ),
+            "archive_sha256": "b" * 64,
+            "expected_sha256": "c" * 64,
+            "actual_sha256": "c" * 64,
+            "license": "LGPL-3.0-or-later",
+            "license_expected_sha256": "d" * 64,
+            "license_actual_sha256": "d" * 64,
+            "usage": "setup-time-uninstall-synchronization",
+        }
+    ]
 
     sbom = json.loads(sbom_path.read_text(encoding="utf-8"))
     assert sbom["specVersion"] == "1.6"
@@ -135,6 +174,7 @@ def test_evidence_is_derived_from_actual_staged_target(tmp_path: Path) -> None:
         "playwright-driver-node",
         "texmath.exe",
         "CPython embedded runtime",
+        "UninsIS.dll",
     } <= component_names
     runtime_component = next(
         component
@@ -153,6 +193,23 @@ def test_evidence_is_derived_from_actual_staged_target(tmp_path: Path) -> None:
     ]
     assert runtime_properties["paper-fetch:expected-archive-sha256"] == "a" * 64
     assert runtime_properties["paper-fetch:actual-archive-sha256"] == "a" * 64
+    uninsis_component = next(
+        component
+        for component in sbom["components"]
+        if component["name"] == "UninsIS.dll"
+    )
+    uninsis_properties = {
+        item["name"]: item["value"] for item in uninsis_component["properties"]
+    }
+    assert uninsis_component["version"] == "1.7.0"
+    assert uninsis_component["hashes"] == [
+        {"alg": "SHA-256", "content": "c" * 64}
+    ]
+    assert uninsis_component["licenses"] == [
+        {"expression": "LGPL-3.0-or-later"}
+    ]
+    assert uninsis_properties["paper-fetch:component-category"] == "setup-time"
+    assert uninsis_properties["paper-fetch:archive-sha256"] == "b" * 64
 
     updated = json.loads(offline_manifest.read_text(encoding="utf-8"))
     assert updated["dependency_evidence"] == {
@@ -172,6 +229,30 @@ def test_embedded_runtime_digest_mismatch_fails_closed(tmp_path: Path) -> None:
 
     with pytest.raises(
         ValueError, match="embedded runtime expected and actual SHA-256 must match"
+    ):
+        generate_evidence(
+            staging=staging,
+            site_packages=site_packages,
+            offline_manifest_path=offline_manifest,
+            output_dir=staging,
+            target="windows-x86_64-cp313",
+            cyclonedx_python=sys.executable,
+        )
+    assert not (staging / "dependency-manifest.json").exists()
+    assert not (staging / "paper-fetch-sbom.cdx.json").exists()
+
+
+def test_setup_component_digest_mismatch_fails_closed(tmp_path: Path) -> None:
+    staging, site_packages, offline_manifest = _fixture(tmp_path)
+    payload = json.loads(offline_manifest.read_text(encoding="utf-8"))
+    payload["setup_components"]["windows_uninsis_i386"]["actual_sha256"] = (
+        "e" * 64
+    )
+    offline_manifest.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(
+        ValueError,
+        match="setup component windows_uninsis_i386 expected and actual SHA-256",
     ):
         generate_evidence(
             staging=staging,

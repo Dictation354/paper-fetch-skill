@@ -218,6 +218,7 @@ jobs:
           TOOLING_REF: ${{ inputs.windows_tooling_ref }}
         run: |
           git fetch --no-tags --depth=1 origin "$TOOLING_REF"
+          mkdir -p installer/vendor/uninsis/i386
           git show "$TOOLING_REF:scripts/build-offline-package-windows.ps1" \
             > scripts/build-offline-package-windows.ps1
           git show "$TOOLING_REF:scripts/generate_offline_evidence.py" \
@@ -230,6 +231,12 @@ jobs:
             > installer/manifest.json
           git show "$TOOLING_REF:installer/paper-fetch-skill.iss" \
             > installer/paper-fetch-skill.iss
+          git show "$TOOLING_REF:installer/vendor/uninsis/i386/UninsIS.dll" \
+            > installer/vendor/uninsis/i386/UninsIS.dll
+          git show "$TOOLING_REF:installer/vendor/uninsis/LICENSE" \
+            > installer/vendor/uninsis/LICENSE
+          git show "$TOOLING_REF:installer/vendor/uninsis/NOTICE.md" \
+            > installer/vendor/uninsis/NOTICE.md
       - name: Check out dependency snapshot tooling
         if: ${{ inputs.frozen_dependencies }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

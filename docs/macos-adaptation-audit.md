@@ -232,15 +232,22 @@
   ref 都必须是完整 40 字符 commit SHA；POSIX 只允许 builder、installer、verifier
   与 staged-evidence generator 四个同名 source/destination pair；Windows 把
   packaging script、同一 evidence generator、原生 EXE lifecycle verifier、installer
-  helper、installer manifest 和 Inno `.iss` 作为来自同一 tooling SHA 的原子集合，均不
+  helper、installer manifest、Inno `.iss`，以及固定摘要的 UninsIS DLL、许可证与
+  provenance notice 作为来自同一 tooling SHA 的原子集合，均不
   复制 Python wheel source。tooling 脚本是显式信任边界；产物 manifest 分别记录
   source `git_revision` 与可选 `tooling_revision`。Windows embedded CPython 的
   version、python.org URL 和官方 SHA-256 同时固定在 installer manifest 与平台合约，
   下载后必须先校验再解压，expected/actual digest 写入 staged provenance/SBOM。
+  UninsIS 1.7.0 的官方 archive/i386 DLL 摘要也固定在合约；升级安装只有在旧 Inno
+  卸载器的 TEMP 第二阶段删除原 EXE 后才继续；builder 还须在 Inno 编译前验证 DLL
+  与许可证摘要，并把 setup-time 组件纳入 offline manifest、dependency manifest 和
+  CycloneDX SBOM。
 - 自动证据：source 与 tooling validator 的精确 overlay pair allow-list、SHA gate 与
   `tests/unit/test_ci_release_workflow.py`；原生 Windows offline job 还对最终 Inno EXE
   串行执行 silent install、installed CLI/doctor/provider/formula/browser smoke、覆盖
-  升级、用户数据保留和 silent uninstall；卸载后递归枚举安装根并与唯一允许的
+  升级、用户数据保留和 silent uninstall。覆盖升级后必须只有 `unins000.exe`；最终
+  卸载在 60 秒内等待成功日志标记与所有 `unins*.exe/.dat/.msg` 消失后，才递归枚举
+  安装根并与唯一允许的
   `offline.env`、`downloads/`、`downloads/user-owned.txt` 精确比较，未知残留也失败。
 - 关闭条件：只有已经带当前合约的不可变适配标签可做工具链重跑；发布 fork 适配
   必须提升版本并创建新标签，不能靠 overlay 把上游 `v4.1.0` 冒充为适配发布。

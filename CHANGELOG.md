@@ -6,6 +6,14 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.6.1 - 2026-08-27
+
+### Fixed — Windows release lifecycle
+
+- Fixed the native Windows release failure caused by Inno Setup's two-phase uninstaller: the first process could return while its TEMP-hosted second phase still owned `unins000.exe`, so the overwrite upgrade created `unins001.exe` and the final residue check raced that delayed cleanup.
+- Replaced the installer-side registry/command-line parsing with the official UninsIS 1.7.0 helper pinned by release, DLL, and license digests. The Windows builder verifies those files before Inno compilation and records the setup-time component in the offline manifest, dependency evidence, and CycloneDX SBOM. Upgrade now fails closed until the old uninstaller has completed and deleted its original executable, while preserving `offline.env` and other user-owned content; the LGPL license and provenance notice ship with the installer.
+- Strengthened the native lifecycle gate to require exactly one post-upgrade `unins000.exe`, then wait up to 60 seconds for both the Inno success log marker and every `unins*.exe/.dat/.msg` file to disappear before applying the exact uninstall residue allowlist.
+
 ## 5.6.0 - 2026-08-27
 
 ### Fixed — skill integrity, reproducible tests, and complexity debt

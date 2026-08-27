@@ -12,6 +12,10 @@
 
 # Golden corpus PDFs are immutable binary replay inputs.
 *.pdf binary
+*.dll binary
+
+# Preserve the byte-for-byte upstream release license covered by its pin.
+installer/vendor/uninsis/LICENSE binary
 
 # Native Windows launchers use Windows line endings.
 *.bat text eol=crlf

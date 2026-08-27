@@ -151,6 +151,26 @@ pin_source = "installer/manifest.json"
 verification = "sha256-before-extract"
 provenance_fields = ["version", "url", "expected_sha256", "actual_sha256"]
 
+[components.windows_uninsis]
+name = "UninsIS.dll"
+version = "1.7.0"
+architecture = "i386"
+upstream = "https://github.com/Bill-Stewart/UninsIS"
+release = "https://github.com/Bill-Stewart/UninsIS/releases/tag/v1.7.0"
+release_commit = "adcaa752eb85d518ba55138e196948adc87e5a51"
+archive = "UninsIS-1.7.0.zip"
+archive_url = "https://github.com/Bill-Stewart/UninsIS/releases/download/v1.7.0/UninsIS-1.7.0.zip"
+archive_sha256 = "8004d12b1635ccb7fba0c6aa0aeeb72871f9d50aa02d7b8f3134dc10feca4994"
+dll_path = "installer/vendor/uninsis/i386/UninsIS.dll"
+dll_sha256 = "9bf8badad59783459f85a1e6203f0c8257bb9554927ca2fa6df5f74850bdcf78"
+license = "LGPL-3.0-or-later"
+license_path = "installer/vendor/uninsis/LICENSE"
+license_sha256 = "6075c8debc4c84fa9912f931834d4044743dd743ffae1ff8aeaa5fe9cbf72ac8"
+notice_path = "installer/vendor/uninsis/NOTICE.md"
+usage = "setup-time-uninstall-synchronization"
+verification = "sha256-before-inno-compile"
+evidence = "offline-manifest-dependency-manifest-cyclonedx"
+
 [shell]
 default = "zsh"
 startup_file = ".zshrc"
@@ -222,6 +242,8 @@ stable_release_asset_count = 31
 release_asset_namespace = "flat-basename-only"
 release_directory_durability = "file-fsync-plus-best-effort-directory-fsync"
 windows_uninstall_allowlist = ["offline.env", "downloads/", "downloads/user-owned.txt"]
+windows_uninstall_completion = "uninsis-upgrade-plus-log-and-file-lifecycle-gate"
+windows_uninstall_timeout_seconds = 60
 trusted_posix_overlay_paths = [
   "scripts/build-offline-package.sh",
   "install-offline.sh",
@@ -235,6 +257,9 @@ trusted_windows_overlay_paths = [
   "scripts/windows-installer-helper.ps1",
   "installer/manifest.json",
   "installer/paper-fetch-skill.iss",
+  "installer/vendor/uninsis/i386/UninsIS.dll",
+  "installer/vendor/uninsis/LICENSE",
+  "installer/vendor/uninsis/NOTICE.md",
 ]
 
 [development_surfaces.windows]
@@ -248,6 +273,7 @@ included_test_nodes = [
   "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_manifest_records_optional_tooling_revision",
   "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_windows_manifest_validates_and_records_optional_tooling_revision",
   "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_windows_embedded_runtime_is_manifest_pinned_and_verified_before_extract",
+  "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_windows_uninsis_is_manifest_pinned_verified_and_evidenced",
   "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_offline_builders_emit_actual_target_dependency_evidence",
   "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_manifest_and_readme_document_browser_backend_policy",
   "tests/unit/test_ci_release_workflow.py::test_offline_builds_full_extra_for_supported_python_matrix",
@@ -275,6 +301,7 @@ included_test_nodes = [
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_release_attestation_contract_and_workflow_drift_are_rejected",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_release_artifact_only_workflow_drift_is_rejected",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_windows_embedded_runtime_pin_drift_is_rejected",
+  "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_windows_uninsis_pin_drift_is_rejected",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_camoufox_and_removed_flaresolverr_boundaries_are_enforced",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_contract_keeps_portable_and_native_evidence_explicit",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_windows_entrypoint_rejects_unix_only_dependencies",
@@ -659,7 +686,7 @@ title = "建立 Windows/WSL 可执行但不冒充原生证据的维护契约"
 area = "cross-platform-maintenance"
 status = "implemented"
 risk = "P1"
-summary = "机器可读 TOML 映射精确 pytest node；普通 CI 在 Ubuntu 与 Windows 运行 portable gate，WSL 使用原生 Linux Python并把 /mnt checkout 降级为 validator-only。Windows embedded CPython 的官方 URL/SHA 固定在 installer manifest，下载后解压前校验；Windows tooling overlay 从同一 SHA 覆盖 builder/evidence/lifecycle/helper/manifest/Inno 定义，原生最终 EXE gate 串行执行安装、smoke、覆盖升级、用户数据保留和卸载后精确残留树检查。"
+summary = "机器可读 TOML 映射精确 pytest node；普通 CI 在 Ubuntu 与 Windows 运行 portable gate，WSL 使用原生 Linux Python并把 /mnt checkout 降级为 validator-only。Windows embedded CPython 的官方 URL/SHA 固定在 installer manifest，下载后解压前校验；Windows tooling overlay 从同一 SHA 覆盖 builder/evidence/lifecycle/helper/manifest/Inno 定义及固定摘要的 UninsIS 组件。安装器等待旧卸载器第二阶段删除原 EXE 后才继续，原生最终 EXE gate 串行执行安装、smoke、覆盖升级、用户数据保留，并在卸载成功日志与所有 uninstaller 文件消失后做精确残留树检查。"
 rationale = "主开发环境可以尽早发现契约漂移，但必须清楚保留原生 macOS 发布 gate 的证据边界，并避免工具链修复悄然改变不可变标签的业务源码。"
 implementation_paths = [
   "docs/macos-adaptation-contract.toml",
@@ -671,10 +698,14 @@ implementation_paths = [
   ".github/workflows/verify.yml",
   ".github/workflows/offline.yml",
   "scripts/build-offline-package-windows.ps1",
+  "scripts/generate_offline_evidence.py",
   "scripts/verify-windows-installer-lifecycle.ps1",
   "scripts/windows-installer-helper.ps1",
   "installer/manifest.json",
   "installer/paper-fetch-skill.iss",
+  "installer/vendor/uninsis/i386/UninsIS.dll",
+  "installer/vendor/uninsis/LICENSE",
+  "installer/vendor/uninsis/NOTICE.md",
 ]
 test_nodes = [
   "tests/unit/test_ci_release_workflow.py::test_offline_builds_full_extra_for_supported_python_matrix",
@@ -684,8 +715,10 @@ test_nodes = [
   "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_manifest_records_optional_tooling_revision",
   "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_windows_manifest_validates_and_records_optional_tooling_revision",
   "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_windows_embedded_runtime_is_manifest_pinned_and_verified_before_extract",
+  "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_windows_uninsis_is_manifest_pinned_verified_and_evidenced",
   "tests/unit/test_ci_release_workflow.py::test_windows_offline_job_runs_final_exe_lifecycle_serially",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_windows_embedded_runtime_pin_drift_is_rejected",
+  "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_windows_uninsis_pin_drift_is_rejected",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_repository_contract_is_valid",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_duplicate_change_id_is_rejected",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_missing_implementation_test_and_audit_references_are_rejected",

@@ -4,9 +4,11 @@
 The input is the installable staging tree, not ``uv.lock`` or a resolver
 snapshot.  Python distributions are inspected from the staged site-packages;
 Node, browser-driver, formula, image and native components are hashed from the
-files that will actually be packaged.  CycloneDX's maintained Python tooling
-creates and validates the base BOM before the non-Python staged components are
-added and the complete document is validated again.
+files that will actually be packaged. Setup-time inputs that live outside the
+runtime staging tree must carry matching builder-verified expected/actual
+digests in the offline manifest. CycloneDX's maintained Python tooling creates
+and validates the base BOM before those non-Python components are added and the
+complete document is validated again.
 """
 
 from __future__ import annotations
@@ -241,6 +243,72 @@ def _embedded_runtime_inventory(
     }
 
 
+def _setup_component_inventory(
+    offline_manifest: dict[str, Any],
+) -> list[dict[str, Any]]:
+    raw_components = offline_manifest.get("setup_components")
+    if raw_components is None:
+        return []
+    if not isinstance(raw_components, dict):
+        raise ValueError("setup_components must be an object")
+
+    inventory: list[dict[str, Any]] = []
+    for component_id, raw_component in raw_components.items():
+        if not isinstance(component_id, str) or not isinstance(raw_component, dict):
+            raise ValueError("setup_components entries must be named objects")
+        expected = str(raw_component.get("expected_sha256") or "").lower()
+        actual = str(raw_component.get("actual_sha256") or "").lower()
+        license_expected = str(
+            raw_component.get("license_expected_sha256") or ""
+        ).lower()
+        license_actual = str(
+            raw_component.get("license_actual_sha256") or ""
+        ).lower()
+        archive_digest = str(raw_component.get("archive_sha256") or "").lower()
+        if len(expected) != 64 or expected != actual:
+            raise ValueError(
+                f"setup component {component_id} expected and actual SHA-256 must match"
+            )
+        if len(license_expected) != 64 or license_expected != license_actual:
+            raise ValueError(
+                f"setup component {component_id} license SHA-256 must match"
+            )
+        if len(archive_digest) != 64:
+            raise ValueError(
+                f"setup component {component_id} archive SHA-256 must be pinned"
+            )
+        required = {
+            field: str(raw_component.get(field) or "")
+            for field in (
+                "name",
+                "version",
+                "architecture",
+                "archive",
+                "archive_url",
+                "license",
+                "usage",
+            )
+        }
+        missing = sorted(field for field, value in required.items() if not value)
+        if missing:
+            raise ValueError(
+                f"setup component {component_id} is missing {', '.join(missing)}"
+            )
+        inventory.append(
+            {
+                "id": component_id,
+                **required,
+                "archive_sha256": archive_digest,
+                "expected_sha256": expected,
+                "actual_sha256": actual,
+                "license_expected_sha256": license_expected,
+                "license_actual_sha256": license_actual,
+            }
+        )
+    inventory.sort(key=lambda item: item["id"])
+    return inventory
+
+
 def _component_properties(path: str, category: str) -> list[dict[str, str]]:
     return [
         {"name": "paper-fetch:staged-path", "value": path},
@@ -254,6 +322,7 @@ def _augment_sbom(
     node: list[dict[str, Any]],
     native: list[dict[str, Any]],
     embedded_runtime: dict[str, Any] | None,
+    setup_components: list[dict[str, Any]],
     python_packages: list[dict[str, Any]],
 ) -> None:
     components = sbom.setdefault("components", [])
@@ -349,6 +418,55 @@ def _augment_sbom(
             }
         )
 
+    for component in setup_components:
+        version = component["version"]
+        component_id = quote(component["id"], safe="")
+        components.append(
+            {
+                "type": "library",
+                "bom-ref": f"pkg:generic/{component_id}@{quote(version, safe='')}",
+                "name": component["name"],
+                "version": version,
+                "hashes": [
+                    {"alg": "SHA-256", "content": component["actual_sha256"]}
+                ],
+                "licenses": [{"expression": component["license"]}],
+                "externalReferences": [
+                    {"type": "distribution", "url": component["archive_url"]}
+                ],
+                "properties": [
+                    {
+                        "name": "paper-fetch:component-category",
+                        "value": "setup-time",
+                    },
+                    {
+                        "name": "paper-fetch:architecture",
+                        "value": component["architecture"],
+                    },
+                    {
+                        "name": "paper-fetch:usage",
+                        "value": component["usage"],
+                    },
+                    {
+                        "name": "paper-fetch:archive",
+                        "value": component["archive"],
+                    },
+                    {
+                        "name": "paper-fetch:archive-sha256",
+                        "value": component["archive_sha256"],
+                    },
+                    {
+                        "name": "paper-fetch:expected-sha256",
+                        "value": component["expected_sha256"],
+                    },
+                    {
+                        "name": "paper-fetch:license-sha256",
+                        "value": component["license_actual_sha256"],
+                    },
+                ],
+            }
+        )
+
     components.sort(
         key=lambda item: (
             str(item.get("type") or ""),
@@ -419,6 +537,7 @@ def generate_evidence(
     node_packages = _node_inventory(staging)
     native_components = _native_inventory(staging)
     embedded_runtime = _embedded_runtime_inventory(staging, offline_manifest)
+    setup_components = _setup_component_inventory(offline_manifest)
     camoufox = next(
         (
             package
@@ -436,6 +555,7 @@ def generate_evidence(
         "python_packages": python_packages,
         "node_packages": node_packages,
         "native_components": native_components,
+        "setup_components": setup_components,
         "browser": {
             "camoufox_python_package": (
                 {"name": camoufox["name"], "version": camoufox["version"]}
@@ -470,6 +590,7 @@ def generate_evidence(
         node=node_packages,
         native=native_components,
         embedded_runtime=embedded_runtime,
+        setup_components=setup_components,
         python_packages=python_packages,
     )
     _validate_sbom(sbom)

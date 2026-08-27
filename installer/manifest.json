@@ -78,5 +78,27 @@
       "url": "https://www.python.org/ftp/python/3.13.13/python-3.13.13-embed-amd64.zip",
       "sha256": "8766a8775746235e23cf5aee5027ab1060bb981d93110577adcf3508aa0cbd55"
     }
+  },
+  "setup_components": {
+    "windows_uninsis_i386": {
+      "name": "UninsIS.dll",
+      "version": "1.7.0",
+      "architecture": "i386",
+      "upstream": "https://github.com/Bill-Stewart/UninsIS",
+      "release": "https://github.com/Bill-Stewart/UninsIS/releases/tag/v1.7.0",
+      "release_commit": "adcaa752eb85d518ba55138e196948adc87e5a51",
+      "archive": "UninsIS-1.7.0.zip",
+      "archive_url": "https://github.com/Bill-Stewart/UninsIS/releases/download/v1.7.0/UninsIS-1.7.0.zip",
+      "archive_sha256": "8004d12b1635ccb7fba0c6aa0aeeb72871f9d50aa02d7b8f3134dc10feca4994",
+      "dll_path": "installer/vendor/uninsis/i386/UninsIS.dll",
+      "dll_sha256": "9bf8badad59783459f85a1e6203f0c8257bb9554927ca2fa6df5f74850bdcf78",
+      "license": "LGPL-3.0-or-later",
+      "license_path": "installer/vendor/uninsis/LICENSE",
+      "license_sha256": "6075c8debc4c84fa9912f931834d4044743dd743ffae1ff8aeaa5fe9cbf72ac8",
+      "notice_path": "installer/vendor/uninsis/NOTICE.md",
+      "usage": "setup-time-uninstall-synchronization",
+      "verification": "sha256-before-inno-compile",
+      "evidence": "offline-manifest-dependency-manifest-cyclonedx"
+    }
   }
 }

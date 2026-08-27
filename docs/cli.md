@@ -282,7 +282,7 @@ Identity acceptance 不再把普通 title 当作唯一论文证明。DOI-less �
 ```json
 {
   "schema_version": 2,
-  "tool_version": "5.6.0",
+  "tool_version": "5.6.1",
   "run_id": "10000000-0000-4000-8000-000000000001",
   "record_id": "20000000-0000-4000-8000-000000000002",
   "index": 2,

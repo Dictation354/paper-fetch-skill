@@ -1,12 +1,13 @@
 #define AppPublisher "paper-fetch-skill"
 #define AppURL "https://github.com/"
+#define AppGUID "{0C1D5E4F-7C6F-4B70-8F9E-8A1AC1E27C0D}"
 
 #ifndef SourceDir
 #define SourceDir "..\.offline-build\paper-fetch-standalone"
 #endif
 
 #ifndef AppVersion
-#define AppVersion "5.6.0"
+#define AppVersion "5.6.1"
 #endif
 
 #ifndef OutputDir
@@ -18,7 +19,7 @@
 #endif
 
 [Setup]
-AppId={{0C1D5E4F-7C6F-4B70-8F9E-8A1AC1E27C0D}
+AppId={{#AppGUID}
 AppName=Paper Fetch Skill
 AppVersion={#AppVersion}
 AppPublisher={#AppPublisher}
@@ -37,6 +38,9 @@ ChangesEnvironment=yes
 UninstallDisplayName=Paper Fetch Skill
 
 [Files]
+Source: "vendor\uninsis\i386\UninsIS.dll"; Flags: dontcopy
+Source: "vendor\uninsis\LICENSE"; DestDir: "{app}\licenses"; DestName: "UninsIS-LGPL-3.0.txt"; Flags: ignoreversion
+Source: "vendor\uninsis\NOTICE.md"; DestDir: "{app}\licenses"; DestName: "UninsIS-NOTICE.md"; Flags: ignoreversion
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "offline.env"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#SourceDir}\offline.env"; DestDir: "{app}"; Flags: ignoreversion onlyifdoesntexist uninsneveruninstall
 
@@ -56,60 +60,21 @@ var
   PostInstallHelperWarning: Boolean;
   UpgradePrepared: Boolean;
 
-function SplitCommandLine(CommandLine: String; var FileName: String; var Params: String): Boolean;
-var
-  I: Integer;
-begin
-  CommandLine := Trim(CommandLine);
-  FileName := '';
-  Params := '';
+function DLLIsISPackageInstalled(AppId: String; Is64BitInstallMode,
+  IsAdminInstallMode: DWORD): DWORD;
+  external 'IsISPackageInstalled@files:UninsIS.dll stdcall setuponly';
 
-  if CommandLine = '' then
-  begin
-    Result := False;
-    exit;
-  end;
-
-  if Copy(CommandLine, 1, 1) = '"' then
-  begin
-    I := 2;
-    while (I <= Length(CommandLine)) and (Copy(CommandLine, I, 1) <> '"') do
-      I := I + 1;
-    FileName := Copy(CommandLine, 2, I - 2);
-    Params := Trim(Copy(CommandLine, I + 1, Length(CommandLine)));
-  end
-  else
-  begin
-    I := Pos(' ', CommandLine);
-    if I = 0 then
-      FileName := CommandLine
-    else
-    begin
-      FileName := Copy(CommandLine, 1, I - 1);
-      Params := Trim(Copy(CommandLine, I + 1, Length(CommandLine)));
-    end;
-  end;
-
-  Result := FileName <> '';
-end;
-
-function QueryOldUninstallCommand(var CommandLine: String): Boolean;
-var
-  UninstallKey: String;
-begin
-  UninstallKey := 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{0C1D5E4F-7C6F-4B70-8F9E-8A1AC1E27C0D}_is1';
-  Result :=
-    RegQueryStringValue(HKCU, UninstallKey, 'QuietUninstallString', CommandLine) or
-    RegQueryStringValue(HKCU, UninstallKey, 'UninstallString', CommandLine) or
-    RegQueryStringValue(HKLM, UninstallKey, 'QuietUninstallString', CommandLine) or
-    RegQueryStringValue(HKLM, UninstallKey, 'UninstallString', CommandLine);
-end;
+function DLLUninstallISPackage(AppId: String; Is64BitInstallMode,
+  IsAdminInstallMode: DWORD): DWORD;
+  external 'UninstallISPackage@files:UninsIS.dll stdcall setuponly';
 
 procedure BackupOfflineEnv;
 var
   OfflineEnvPath: String;
 begin
   OfflineEnvPath := ExpandConstant('{app}\offline.env');
+  if (OfflineEnvBackupPath <> '') and FileExists(OfflineEnvBackupPath) then
+    exit;
   OfflineEnvBackupPath := '';
   if FileExists(OfflineEnvPath) then
   begin
@@ -156,30 +121,37 @@ begin
   end;
 end;
 
-procedure RunOldUninstaller;
+function RunOldUninstaller: String;
 var
-  CommandLine: String;
-  FileName: String;
-  Params: String;
-  ResultCode: Integer;
+  ResultCode: DWORD;
 begin
-  if not QueryOldUninstallCommand(CommandLine) then
+  Result := '';
+  if DLLIsISPackageInstalled(
+    '{#AppGUID}',
+    DWORD(Is64BitInstallMode()),
+    DWORD(IsAdminInstallMode())
+  ) <> 1 then
     exit;
 
-  if not SplitCommandLine(CommandLine, FileName, Params) then
+  Log('Uninstalling the existing Paper Fetch Skill package with UninsIS.dll.');
+  ResultCode := DLLUninstallISPackage(
+    '{#AppGUID}',
+    DWORD(Is64BitInstallMode()),
+    DWORD(IsAdminInstallMode())
+  );
+  if ResultCode <> 0 then
   begin
-    Log('Could not parse old uninstall command: ' + CommandLine);
-    exit;
-  end;
-
-  if Pos('/VERYSILENT', Uppercase(Params)) = 0 then
-    Params := Trim(Params + ' /VERYSILENT /SUPPRESSMSGBOXES /NORESTART');
-
-  Log('Running old Paper Fetch Skill uninstaller: ' + FileName);
-  if not Exec(FileName, Params, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
-    Log('Could not execute old uninstaller.')
-  else if ResultCode <> 0 then
-    Log('Old uninstaller exited with code ' + IntToStr(ResultCode) + '.');
+    Result :=
+      'Could not completely uninstall the existing Paper Fetch Skill package ' +
+      '(UninsIS error ' + IntToStr(Integer(ResultCode)) + '). ' +
+      'Setup will not continue while old uninstall cleanup may still be active.';
+    Log(Result);
+  end
+  else
+    Log(
+      'UninsIS.dll confirmed that the existing package uninstaller ' +
+      'completed and deleted its original executable.'
+    );
 end;
 
 procedure CleanOldInstallDirectory;
@@ -196,22 +168,28 @@ begin
   end;
 end;
 
-procedure PrepareUpgradeInstall;
+function PrepareUpgradeInstall: String;
 begin
+  Result := '';
   if UpgradePrepared then
     exit;
-  UpgradePrepared := True;
 
   BackupOfflineEnv;
-  RunOldUninstaller;
+  Result := RunOldUninstaller;
+  if Result <> '' then
+    exit;
   CleanOldInstallDirectory;
+  UpgradePrepared := True;
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  Result := PrepareUpgradeInstall;
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
-  if CurStep = ssInstall then
-    PrepareUpgradeInstall
-  else if CurStep = ssPostInstall then
+  if CurStep = ssPostInstall then
   begin
     RestoreOfflineEnv;
     RunPostInstallHelper;

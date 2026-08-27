@@ -208,6 +208,8 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         )
         contract["release_tooling"]["stable_release_asset_count"] = 0
         contract["release_tooling"]["windows_uninstall_allowlist"] = ["runtime/"]
+        contract["release_tooling"]["windows_uninstall_completion"] = "exit-code-only"
+        contract["release_tooling"]["windows_uninstall_timeout_seconds"] = 0
         contract["release_tooling"]["source_contract_required_before_overlay"] = False
         contract["release_tooling"]["legacy_source_without_contract"] = "allow"
         contract["release_tooling"][
@@ -287,6 +289,15 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             diagnostic,
         )
         self.assertIn(
+            "release_tooling.windows_uninstall_completion must be "
+            "'uninsis-upgrade-plus-log-and-file-lifecycle-gate'",
+            diagnostic,
+        )
+        self.assertIn(
+            "release_tooling.windows_uninstall_timeout_seconds must be 60",
+            diagnostic,
+        )
+        self.assertIn(
             "release_tooling.source_contract_required_before_overlay must be True",
             diagnostic,
         )
@@ -320,6 +331,22 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         self.assertIn(
             "components.windows_embedded_cpython must match the official pinned "
             "runtime contract",
+            diagnostic,
+        )
+
+    def test_windows_uninsis_pin_drift_is_rejected(self) -> None:
+        contract = validator.load_contract()
+        contract["components"]["windows_uninsis"]["dll_sha256"] = "0" * 64
+
+        diagnostic = "\n".join(validator.validate_contract(contract))
+
+        self.assertIn(
+            "components.windows_uninsis must match the pinned official "
+            "UninsIS contract",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.windows_uninsis.dll_sha256 does not match",
             diagnostic,
         )
 
@@ -402,6 +429,10 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         self.assertEqual(
             contract["release_tooling"]["trusted_windows_overlay_paths"],
             validator.EXPECTED_WINDOWS_TOOLING_PATHS,
+        )
+        self.assertEqual(
+            contract["components"]["windows_uninsis"],
+            validator.EXPECTED_WINDOWS_UNINSIS,
         )
 
     def test_camoufox_and_removed_flaresolverr_boundaries_are_enforced(

@@ -1357,6 +1357,29 @@ exit 73
         self.assertIn("expected_sha256 = $EmbeddedPythonSha256", script)
         self.assertIn("actual_sha256 = $EmbeddedPythonActualSha256", script)
 
+    def test_windows_uninsis_is_manifest_pinned_verified_and_evidenced(self) -> None:
+        script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
+        manifest = json.loads(
+            (REPO_ROOT / "installer" / "manifest.json").read_text(encoding="utf-8")
+        )
+        component = manifest["setup_components"]["windows_uninsis_i386"]
+
+        self.assertEqual(component["version"], "1.7.0")
+        self.assertEqual(component["architecture"], "i386")
+        self.assertEqual(
+            component["dll_sha256"],
+            "9bf8badad59783459f85a1e6203f0c8257bb9554927ca2fa6df5f74850bdcf78",
+        )
+        self.assertEqual(component["license"], "LGPL-3.0-or-later")
+        digest_check = script.index("UninsIS DLL SHA-256 mismatch")
+        compile_call = script.index("Build-InnoInstaller -Staging $staging")
+        self.assertLess(digest_check, compile_call)
+        self.assertIn("Get-VerifiedUninsISDigests", script)
+        self.assertIn("UninsIS license SHA-256 mismatch", script)
+        self.assertIn("setup_components = [ordered]@{", script)
+        self.assertIn("expected_sha256 = $UninsISDllSha256", script)
+        self.assertIn("actual_sha256 = $UninsISActualSha256", script)
+
     def test_offline_builders_emit_actual_target_dependency_evidence(self) -> None:
         posix = BUILD_OFFLINE_PACKAGE.read_text(encoding="utf-8")
         windows = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")

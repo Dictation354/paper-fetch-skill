@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import hashlib
 import json
 import re
 import sys
@@ -95,6 +96,9 @@ EXPECTED_WINDOWS_TOOLING_PATHS = [
     "scripts/windows-installer-helper.ps1",
     "installer/manifest.json",
     "installer/paper-fetch-skill.iss",
+    "installer/vendor/uninsis/i386/UninsIS.dll",
+    "installer/vendor/uninsis/LICENSE",
+    "installer/vendor/uninsis/NOTICE.md",
 ]
 EXPECTED_WINDOWS_EMBEDDED_RUNTIME = {
     "implementation": "CPython",
@@ -103,6 +107,35 @@ EXPECTED_WINDOWS_EMBEDDED_RUNTIME = {
     "archive": "python-3.13.13-embed-amd64.zip",
     "url": ("https://www.python.org/ftp/python/3.13.13/python-3.13.13-embed-amd64.zip"),
     "sha256": "8766a8775746235e23cf5aee5027ab1060bb981d93110577adcf3508aa0cbd55",
+}
+EXPECTED_WINDOWS_UNINSIS = {
+    "name": "UninsIS.dll",
+    "version": "1.7.0",
+    "architecture": "i386",
+    "upstream": "https://github.com/Bill-Stewart/UninsIS",
+    "release": "https://github.com/Bill-Stewart/UninsIS/releases/tag/v1.7.0",
+    "release_commit": "adcaa752eb85d518ba55138e196948adc87e5a51",
+    "archive": "UninsIS-1.7.0.zip",
+    "archive_url": (
+        "https://github.com/Bill-Stewart/UninsIS/releases/download/"
+        "v1.7.0/UninsIS-1.7.0.zip"
+    ),
+    "archive_sha256": (
+        "8004d12b1635ccb7fba0c6aa0aeeb72871f9d50aa02d7b8f3134dc10feca4994"
+    ),
+    "dll_path": "installer/vendor/uninsis/i386/UninsIS.dll",
+    "dll_sha256": (
+        "9bf8badad59783459f85a1e6203f0c8257bb9554927ca2fa6df5f74850bdcf78"
+    ),
+    "license": "LGPL-3.0-or-later",
+    "license_path": "installer/vendor/uninsis/LICENSE",
+    "license_sha256": (
+        "6075c8debc4c84fa9912f931834d4044743dd743ffae1ff8aeaa5fe9cbf72ac8"
+    ),
+    "notice_path": "installer/vendor/uninsis/NOTICE.md",
+    "usage": "setup-time-uninstall-synchronization",
+    "verification": "sha256-before-inno-compile",
+    "evidence": "offline-manifest-dependency-manifest-cyclonedx",
 }
 
 ALLOWED_RISKS = {"P0", "P1", "P2"}
@@ -233,6 +266,8 @@ REQUIRED_RELEASE_TOOLING = {
     "release_asset_namespace",
     "release_directory_durability",
     "windows_uninstall_allowlist",
+    "windows_uninstall_completion",
+    "windows_uninstall_timeout_seconds",
     "trusted_posix_overlay_paths",
     "trusted_windows_overlay_paths",
 }
@@ -1602,6 +1637,10 @@ def _validate_portable_and_release_tooling(
             "downloads/",
             "downloads/user-owned.txt",
         ],
+        "windows_uninstall_completion": (
+            "uninsis-upgrade-plus-log-and-file-lifecycle-gate"
+        ),
+        "windows_uninstall_timeout_seconds": 60,
         "trusted_posix_overlay_paths": EXPECTED_POSIX_TOOLING_PATHS,
         "trusted_windows_overlay_paths": EXPECTED_WINDOWS_TOOLING_PATHS,
     }
@@ -1830,6 +1869,194 @@ def _validate_windows_embedded_runtime(
         "Get-FileHash -LiteralPath $archive -Algorithm SHA256",
         "Expand-Archive -LiteralPath $archive",
         label="embedded runtime digest verification before extraction",
+        errors=errors,
+    )
+
+
+def _validate_windows_uninsis(
+    contract: dict[str, Any],
+    *,
+    repo_root: Path,
+    errors: list[str],
+) -> None:
+    components = contract.get("components")
+    component = (
+        components.get("windows_uninsis", {})
+        if isinstance(components, dict)
+        else {}
+    )
+    if component != EXPECTED_WINDOWS_UNINSIS:
+        errors.append(
+            "components.windows_uninsis must match the pinned official "
+            f"UninsIS contract: {EXPECTED_WINDOWS_UNINSIS!r}"
+        )
+
+    manifest_text = _read_repo_file(
+        "installer/manifest.json", repo_root=repo_root, errors=errors
+    )
+    try:
+        manifest = json.loads(manifest_text)
+    except json.JSONDecodeError as exc:
+        errors.append(f"cannot parse installer/manifest.json: {exc}")
+        manifest = {}
+    manifest_component = (
+        manifest.get("setup_components", {}).get("windows_uninsis_i386", {})
+        if isinstance(manifest, dict)
+        else {}
+    )
+    if manifest_component != EXPECTED_WINDOWS_UNINSIS:
+        errors.append(
+            "installer setup_components.windows_uninsis_i386 must match "
+            f"{EXPECTED_WINDOWS_UNINSIS!r}"
+        )
+
+    for path_field, digest_field in (
+        ("dll_path", "dll_sha256"),
+        ("license_path", "license_sha256"),
+    ):
+        path = _repo_path(
+            component.get(path_field),
+            field=f"components.windows_uninsis.{path_field}",
+            repo_root=repo_root,
+            errors=errors,
+        )
+        if path is None:
+            continue
+        if not path.is_file():
+            errors.append(
+                f"components.windows_uninsis.{path_field} does not exist: "
+                f"{component.get(path_field)!r}"
+            )
+            continue
+        try:
+            with path.open("rb") as stream:
+                actual_digest = hashlib.file_digest(stream, "sha256").hexdigest()
+        except OSError as exc:
+            errors.append(f"cannot hash {path.relative_to(repo_root)}: {exc}")
+            continue
+        expected_digest = component.get(digest_field)
+        if actual_digest != expected_digest:
+            errors.append(
+                f"components.windows_uninsis.{digest_field} does not match "
+                f"{path.relative_to(repo_root).as_posix()}: {actual_digest}"
+            )
+
+    notice = _read_repo_file(
+        "installer/vendor/uninsis/NOTICE.md",
+        repo_root=repo_root,
+        errors=errors,
+    )
+    _require_fragments(
+        notice,
+        (
+            ("UninsIS 1.7.0", "vendored UninsIS version"),
+            (EXPECTED_WINDOWS_UNINSIS["archive_sha256"], "UninsIS archive digest"),
+            (EXPECTED_WINDOWS_UNINSIS["dll_sha256"], "UninsIS DLL digest"),
+            ("LGPL", "UninsIS license notice"),
+        ),
+        errors=errors,
+    )
+
+    installer = _read_repo_file(
+        "installer/paper-fetch-skill.iss",
+        repo_root=repo_root,
+        errors=errors,
+    )
+    _require_fragments(
+        installer,
+        (
+            (
+                'Source: "vendor\\uninsis\\i386\\UninsIS.dll"; Flags: dontcopy',
+                "setup-time UninsIS DLL",
+            ),
+            ("UninsIS-LGPL-3.0.txt", "redistributed UninsIS license"),
+            ("UninsIS-NOTICE.md", "redistributed UninsIS notice"),
+            (
+                "IsISPackageInstalled@files:UninsIS.dll stdcall setuponly",
+                "UninsIS package detection import",
+            ),
+            (
+                "UninstallISPackage@files:UninsIS.dll stdcall setuponly",
+                "UninsIS synchronized uninstall import",
+            ),
+            ("function PrepareToInstall", "pre-install uninstall boundary"),
+            (
+                "completed and deleted its original executable",
+                "second-phase uninstall completion",
+            ),
+        ),
+        errors=errors,
+    )
+    for legacy_fragment in ("QueryOldUninstallCommand", "SplitCommandLine"):
+        if legacy_fragment in installer:
+            errors.append(
+                "Windows installer must use pinned UninsIS instead of legacy "
+                f"manual uninstall parsing: {legacy_fragment}"
+            )
+
+    builder = _read_repo_file(
+        "scripts/build-offline-package-windows.ps1",
+        repo_root=repo_root,
+        errors=errors,
+    )
+    _require_fragments(
+        builder,
+        (
+            (
+                "$InstallerManifest.setup_components.windows_uninsis_i386",
+                "manifest-pinned UninsIS setup component",
+            ),
+            ("Get-VerifiedUninsISDigests", "UninsIS digest verifier"),
+            ("UninsIS DLL SHA-256 mismatch", "UninsIS DLL fail-closed digest"),
+            (
+                "UninsIS license SHA-256 mismatch",
+                "UninsIS license fail-closed digest",
+            ),
+            ("setup_components = [ordered]@{", "setup component provenance"),
+            ("expected_sha256 = $UninsISDllSha256", "expected UninsIS digest"),
+            ("actual_sha256 = $UninsISActualSha256", "actual UninsIS digest"),
+        ),
+        errors=errors,
+    )
+    _require_order(
+        builder,
+        "$uninsisDigests = Get-VerifiedUninsISDigests",
+        "Build-InnoInstaller -Staging $staging",
+        label="UninsIS digest verification before Inno compilation",
+        errors=errors,
+    )
+
+    evidence_generator = _read_repo_file(
+        "scripts/generate_offline_evidence.py",
+        repo_root=repo_root,
+        errors=errors,
+    )
+    _require_fragments(
+        evidence_generator,
+        (
+            ("_setup_component_inventory", "setup component evidence inventory"),
+            ('"setup_components": setup_components', "dependency evidence field"),
+            ('"paper-fetch:component-category"', "setup component SBOM category"),
+            ('"setup-time"', "setup-time SBOM classification"),
+        ),
+        errors=errors,
+    )
+
+    lifecycle = _read_repo_file(
+        "scripts/verify-windows-installer-lifecycle.ps1",
+        repo_root=repo_root,
+        errors=errors,
+    )
+    _require_fragments(
+        lifecycle,
+        (
+            ("Wait-ForUninstallCompletion", "bounded uninstaller completion wait"),
+            ("Uninstallation process succeeded.", "Inno uninstall success marker"),
+            ("$uninstallFiles.Count -eq 0", "uninstaller file disappearance gate"),
+            ('-ne "unins000.exe"', "single synchronized upgrade uninstaller"),
+            ("/LOG=$uninstallLog", "final uninstall completion log"),
+            ("[int]$TimeoutSeconds = 60", "bounded final uninstall wait"),
+        ),
         errors=errors,
     )
 
@@ -2758,6 +2985,11 @@ def validate_contract(
         errors=errors,
     )
     _validate_windows_embedded_runtime(
+        contract,
+        repo_root=repo_root,
+        errors=errors,
+    )
+    _validate_windows_uninsis(
         contract,
         repo_root=repo_root,
         errors=errors,

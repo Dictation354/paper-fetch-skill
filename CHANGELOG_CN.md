@@ -6,6 +6,14 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.6.1 - 2026-08-27
+
+### 修复——Windows 发布 lifecycle
+
+- 修复 Inno Setup 两阶段卸载导致的原生 Windows release 失败：首阶段进程返回时，TEMP 中的第二阶段仍可能占用 `unins000.exe`，覆盖升级于是生成 `unins001.exe`，最终残留检查又与延迟清理发生竞态。
+- 用官方 UninsIS 1.7.0 替换安装器侧自行维护的注册表与命令行解析，并固定 release archive、DLL 和许可证摘要。Windows builder 会在 Inno 编译前校验这些文件，并把 setup-time 组件写入 offline manifest、依赖证据与 CycloneDX SBOM。升级现在会 fail closed，直到旧卸载器完成并删除原 EXE，同时继续保留 `offline.env` 与其它用户内容；LGPL 许可证和 provenance notice 随安装器分发。
+- 加强原生 lifecycle gate：覆盖升级后必须精确只有一个 `unins000.exe`；最终卸载后最多等待 60 秒，只有同时观察到 Inno 成功日志标记且全部 `unins*.exe/.dat/.msg` 消失，才执行精确卸载残留 allowlist 检查。
+
 ## 5.6.0 - 2026-08-27
 
 ### 修复——技能完整性、可复现测试与复杂度债务
