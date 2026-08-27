@@ -153,6 +153,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: >-
           python scripts/scan_artifacts_for_secrets.py
+          --env-var GITHUB_TOKEN
           --root "$RUNNER_TEMP/dependency-snapshot"
 
       - name: Upload target dependency snapshot
@@ -337,6 +338,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: >-
           python scripts/scan_artifacts_for_secrets.py
+          --env-var GITHUB_TOKEN
           --root dependency-manifest.json
 
       - name: Upload merged dependency manifest
@@ -407,7 +409,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           ROLLING_RELEASE_TOKEN: ${{ secrets.ROLLING_RELEASE_TOKEN }}
-        run: python scripts/scan_artifacts_for_secrets.py --root release-assets
+        run: >-
+          python scripts/scan_artifacts_for_secrets.py
+          --env-var GITHUB_TOKEN
+          --env-var ROLLING_RELEASE_TOKEN
+          --root release-assets
 
       - name: Write Chinese rolling release notes
         shell: bash

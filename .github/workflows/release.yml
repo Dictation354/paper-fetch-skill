@@ -142,6 +142,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: >-
           python scripts/scan_artifacts_for_secrets.py
+          --env-var GITHUB_TOKEN
           --root "$RUNNER_TEMP/dependency-snapshot"
       - name: Upload target dependency snapshot
         if: ${{ steps.secret_scan_dependency_snapshot.outcome == 'success' }}
@@ -191,6 +192,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: >-
           python scripts/scan_artifacts_for_secrets.py
+          --env-var GITHUB_TOKEN
           --root dependency-manifest.json
       - name: Upload merged dependency manifest
         if: ${{ steps.secret_scan_dependency_manifest.outcome == 'success' }}
@@ -266,7 +268,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GH_TOKEN: ${{ github.token }}
-        run: python scripts/scan_artifacts_for_secrets.py --root release-assets
+        run: >-
+          python scripts/scan_artifacts_for_secrets.py
+          --env-var GITHUB_TOKEN
+          --env-var GH_TOKEN
+          --root release-assets
       - name: Attest release artifacts
         if: ${{ steps.secret_scan_release_assets.outcome == 'success' }}
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2

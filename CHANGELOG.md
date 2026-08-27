@@ -6,8 +6,6 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
-- Split Python wheel/sdist construction into a reusable, immutable-SHA-only `package.yml` that retains exact inventory verification, independent wheel/sdist install smokes, secret scanning, and artifact upload. Ordinary CI still runs the complete unit/coverage/quality/integration/golden/platform gates and Dependency refresh still runs the full unit suite, while Stable release now builds only release artifacts: Python packaging runs in parallel with the nine-target frozen dependency resolver, then offline installer verification, Windows lifecycle, SBOM, checksums, attestation, and publication all consume the same tagged SHA. Release neither runs nor waits for remote unit/ordinary CI; the full local unit command remains the release-operator gate before the next version and immutable tag.
-
 ## 5.6.0 - 2026-08-27
 
 ### Fixed — skill integrity, reproducible tests, and complexity debt
@@ -19,6 +17,8 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 ### Fixed — verified build and release supply chain
 
+- Split Python wheel/sdist construction into a reusable, immutable-SHA-only `package.yml` that retains exact inventory verification, independent wheel/sdist install smokes, secret scanning, and artifact upload. Ordinary CI still runs the complete unit/coverage/quality/integration/golden/platform gates and Dependency refresh still runs the full unit suite, while Stable release now builds only release artifacts: Python packaging runs in parallel with the nine-target frozen dependency resolver, then offline installer verification, Windows lifecycle, SBOM, checksums, attestation, and publication all consume the same tagged SHA. Release neither runs nor waits for remote unit/ordinary CI; the full local unit command remains the release-operator gate before the next version and immutable tag.
+- Made every workflow artifact scan explicitly select the credentials injected into that scan step. This preserves raw and URL-encoded checks for real workflow tokens while excluding unrelated hosted-runner defaults such as `PGPASSWORD`, which could otherwise falsely match ordinary bytes inside third-party Windows wheels.
 - Extracted the complete quality matrix into one reusable verify workflow consumed by ordinary CI and stable releases. Stable tags are peeled to an immutable commit (including annotated tags); verification, dependency resolution, offline builds, release checkout, attestation, and the GitHub Release target all use that exact SHA, with a final tag-drift check before publication.
 - Made stable releases resolve and merge frozen dependency snapshots for all nine Linux CPython 3.11–3.14, macOS arm64 CPython 3.11–3.14, and Windows CPython 3.13 targets in the same run before invoking the offline workflow with frozen dependencies enabled.
 - Added per-target evidence derived from the actual staging tree: installed Python distributions and content digests, Node/Playwright packages, Camoufox delivery state, formula/image/native files, and embedded runtime provenance. Each offline artifact now carries and uploads an actual dependency manifest plus a validated CycloneDX 1.6 SBOM; release no longer substitutes a lock export for staged evidence.

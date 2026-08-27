@@ -159,7 +159,10 @@ artifact 上传设置 `if-no-files-found: error`，避免构建成功但没有�
 每次普通/offline/provider-canary artifact 上传，以及稳定/滚动 release 的 attestation
 和 publication，均以前置 secret scan 成功为条件。扫描器复用运行时脱敏规则检查
 环境中敏感变量值的 raw 与 URL-encoded 形式，只输出变量名和文件路径；命中、读取
-错误或缺失根目录都会 fail closed，不能把扫描失败隐藏在 `always()` 上传中。
+错误或缺失根目录都会 fail closed，不能把扫描失败隐藏在 `always()` 上传中。各
+workflow 扫描步骤通过既有 `--env-var` 接口精确选择自身注入的 credential，不把
+`PGPASSWORD` 等 hosted runner 的无关敏感环境默认值误当成发布凭据；对应回归同时
+证明真实 workflow token 仍会被扫描。
 普通 push / PR 由 `.github/workflows/ci.yml` 把精确 `github.sha` 传给 reusable
 `.github/workflows/verify.yml`；后者固定用 `macos-15`、CPython 3.14 执行原生
 build + verifier，并单独运行真实 `/var` ↔ `/private/var` 或

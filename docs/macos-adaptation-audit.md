@@ -52,7 +52,9 @@
   `.venv/bin/python` 与 `.venv/Scripts/python.exe`，保证 SBOM 生成器来自锁定 dev
   环境，而不是 runner 全局 Python。所有 artifact/release upload、attestation
   和 publication 还必须在对应目录通过 raw/URL-encoded sentinel 扫描；扫描只报告
-  变量名与路径，命中或扫描错误都阻断后续步骤。发布资产与 checksum 文件执行强制
+  变量名与路径，命中或扫描错误都阻断后续步骤。workflow 扫描命令显式列出步骤
+  注入的 credential，排除 `PGPASSWORD` 等无关 hosted-runner 默认值造成的第三方
+  wheel 假阳性，同时保留实际 token 的 fail-closed 检查。发布资产与 checksum 文件执行强制
   `fsync`，目录项只在平台支持 directory descriptor 时 best-effort 同步，避免 Windows
   portable gate 把不支持目录 `fsync` 误判为资产失败。
 - 平台：S / L 只能验证 YAML；D 才能提供平台证据。

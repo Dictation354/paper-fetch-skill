@@ -9,6 +9,7 @@ from urllib.parse import quote
 
 import yaml
 
+from paper_fetch.redaction import is_sensitive_configuration_name
 from scripts.scan_artifacts_for_secrets import scan_artifacts
 from tests.live._runtime_env import SecretSafeEnvironment
 
@@ -37,6 +38,25 @@ def test_artifact_scanner_reports_only_variable_name_and_path(tmp_path: Path) ->
     rendered = json.dumps(report, ensure_ascii=False)
     assert sentinel not in rendered
     assert quote(sentinel, safe="") not in rendered
+
+
+def test_explicit_secret_selection_ignores_unrelated_runner_defaults(
+    tmp_path: Path,
+) -> None:
+    artifact = tmp_path / "third-party.whl"
+    artifact.write_bytes(b"ordinary-root-package-content")
+
+    report = scan_artifacts(
+        [artifact],
+        env={
+            "GITHUB_TOKEN": "github-token-that-is-not-present",
+            "PGPASSWORD": "root",
+        },
+        env_names=["GITHUB_TOKEN"],
+    )
+
+    assert report["status"] == "clean"
+    assert report["scanned_secret_name_count"] == 1
 
 
 def test_controlled_pytest_failure_junit_cannot_render_live_secret(
@@ -142,6 +162,33 @@ def test_every_workflow_artifact_upload_is_gated_by_secret_scan() -> None:
                 )
 
     assert upload_count == 10
+
+
+def test_workflow_artifact_scans_name_injected_secrets_explicitly() -> None:
+    workflow_dir = REPO_ROOT / ".github" / "workflows"
+    scan_count = 0
+    for path in sorted(workflow_dir.glob("*.yml")):
+        workflow = yaml.safe_load(path.read_text(encoding="utf-8"))
+        for job_name, job in workflow.get("jobs", {}).items():
+            steps = job.get("steps", []) if isinstance(job, dict) else []
+            for step in steps:
+                command = str(step.get("run") or "")
+                if "scripts/scan_artifacts_for_secrets.py" not in command:
+                    continue
+                scan_count += 1
+                env = step.get("env") or {}
+                sensitive_names = {
+                    str(name)
+                    for name in env
+                    if is_sensitive_configuration_name(str(name))
+                }
+                assert sensitive_names, f"{path.name}:{job_name} scan has no secret"
+                for name in sensitive_names:
+                    assert f"--env-var {name}" in command, (
+                        f"{path.name}:{job_name} scan does not explicitly select {name}"
+                    )
+
+    assert scan_count == 12
 
 
 def test_release_publication_and_attestation_follow_secret_scan() -> None:

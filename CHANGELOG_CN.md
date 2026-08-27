@@ -6,8 +6,6 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
-- 将 Python wheel/sdist 构建拆到只接受不可变完整 SHA 的 reusable `package.yml`，保留精确 inventory、wheel/sdist 独立安装 smoke、密钥扫描和 artifact 上传。普通 CI 继续运行完整 unit/coverage/quality/integration/golden/平台门禁，Dependency refresh 继续运行完整 unit；Stable release 则只构建发布产物：Python package 与九目标冻结依赖解析并行，随后 offline installer 验证、Windows lifecycle、SBOM、checksum、attestation 和发布全部消费同一 tagged SHA。Release 不运行、也不等待远程 unit/普通 CI；下一版本和不可变新标签创建前，仍以本地完整 unit 命令作为发布操作者门禁。
-
 ## 5.6.0 - 2026-08-27
 
 ### 修复——技能完整性、可复现测试与复杂度债务
@@ -19,6 +17,8 @@
 
 ### 修复——经验证的构建与发布供应链
 
+- 将 Python wheel/sdist 构建拆到只接受不可变完整 SHA 的 reusable `package.yml`，保留精确 inventory、wheel/sdist 独立安装 smoke、密钥扫描和 artifact 上传。普通 CI 继续运行完整 unit/coverage/quality/integration/golden/平台门禁，Dependency refresh 继续运行完整 unit；Stable release 则只构建发布产物：Python package 与九目标冻结依赖解析并行，随后 offline installer 验证、Windows lifecycle、SBOM、checksum、attestation 和发布全部消费同一 tagged SHA。Release 不运行、也不等待远程 unit/普通 CI；下一版本和不可变新标签创建前，仍以本地完整 unit 命令作为发布操作者门禁。
+- 所有 workflow artifact 扫描现在都会显式选择该扫描步骤注入的凭据。真实 workflow token 的 raw 与 URL 编码检查保持不变，同时排除 `PGPASSWORD` 等无关 hosted-runner 默认值，避免其与 Windows 第三方 wheel 中的普通字节偶然匹配并误阻断发布。
 - 将完整质量矩阵抽取为一套可复用的 verify workflow，供常规 CI 与稳定版发布共同调用。稳定版 tag（包括 annotated tag）会 peel 到不可变 commit；验证、依赖解析、离线构建、发布 checkout、attestation 与 GitHub Release target 全部使用该精确 SHA，并在发布前执行最终 tag 漂移检查。
 - 稳定版发布现在会在同一次 run 中解析并合并全部九个目标的冻结依赖快照：Linux CPython 3.11–3.14、macOS arm64 CPython 3.11–3.14，以及 Windows CPython 3.13；随后以启用冻结依赖的方式调用 offline workflow。
 - 新增从实际 staging tree 派生的逐目标证据：已安装 Python distribution 及内容 digest、Node/Playwright package、Camoufox 交付状态、公式/图片/native 文件与嵌入式 runtime provenance。每个离线产物现在都会携带并上传实际 dependency manifest 和经验证的 CycloneDX 1.6 SBOM；release 不再用 lock export 冒充 staged evidence。
