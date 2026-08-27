@@ -81,6 +81,8 @@
   - 讲 Camoufox 安装、抓取、headed 认证、离线准备和 publisher live matrix。
 - [`provider-development.md`](provider-development.md)
   - 讲新增出版社 provider 的标准开发流程、typed contract、waterfall、资产语义、测试和文档验收标准。
+- [`publisher-performance-image-quality-20260826.md`](publisher-performance-image-quality-20260826.md)
+  - 归档 19 家资源链路优化、四家 strict/full-size 三轮结果、并发 benchmark、保留/撤回决策及尚未通过的 Wiley/AIP live 门槛。
 - [`onboarding/README.md`](../onboarding/README.md)
   - 普通用户入口和 authority index。AI/coordinator provider 行为事实源是 [`coordinator-spec.md`](../onboarding/coordinator-spec.md)、[`provider-manifest.md`](../onboarding/provider-manifest.md)、[`provider-manifest.schema.json`](../onboarding/provider-manifest.schema.json)、[`agent-task-brief.md`](../onboarding/agent-task-brief.md)、[`hard-constraints.md`](../onboarding/hard-constraints.md)、[`acceptance.md`](../onboarding/acceptance.md) 和 run records，不从 README 推断。
 - [`extraction-rules.md`](extraction-rules.md)
@@ -204,6 +206,7 @@
 
 ### Live review timings
 
+- 2026-08-26 的全出版社性能与图片质量 A/B 结果、证据限制和未通过项见 [`publisher-performance-image-quality-20260826.md`](publisher-performance-image-quality-20260826.md)；不得把 Wiley 访问拒绝或 AIP 补跑成功计作原计划三轮全胜。
 - golden criteria live review 的 `stage_timings` 包含 `fetch_seconds`、`materialize_seconds`、`total_seconds`、`resolve_seconds`、`metadata_seconds`、`fulltext_seconds`、`asset_seconds`、`formula_seconds`、`render_seconds`。
 - 每个 sample 的 `http_cache_stats` 表示该 sample 执行前后差值；最终汇总日志仍可查看 `HttpTransport.cache_stats_snapshot()` 的累计快照。
 - `scripts/run_parallel_live_benchmark.py` 复用 golden live acceptance/timings，对同一组直连与 browser 样本运行 `1/2/4` 并发对照；输出 wall time、吞吐、加速比、结果漂移和结构化失败点。该 runner 默认每档一轮、禁用 HTTP 缓存但复用 browser storage-state，只能解释为本次 live 对照。

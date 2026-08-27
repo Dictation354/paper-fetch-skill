@@ -15,7 +15,7 @@ from ..extraction.html.provider_rules import (
 )
 from ..extraction.html.signals import HtmlExtractionFailure
 from ..models import AssetProfile
-from ..provider_catalog import BodyTextThresholds, ProviderSpec
+from ..provider_catalog import BodyTextThresholds, ProviderRouteSpec, ProviderSpec
 from ..publisher_identity import normalize_doi
 from ..quality.html_availability import (
     HtmlQualityAssessor,
@@ -50,6 +50,17 @@ register_provider_bundle(
             requires_playwright=True,
             requires_browser_runtime=True,
             body_text_thresholds=BodyTextThresholds(min_chars=800),
+            routes=(
+                ProviderRouteSpec(
+                    name="assets",
+                    kind="assets",
+                    browser_optional=True,
+                    requires_playwright=True,
+                    timeout_seconds=20,
+                    concurrency=2,
+                    transient_retries=0,
+                ),
+            ),
         ),
         html_rules=ProviderHtmlRules(
             name="royalsocietypublishing",

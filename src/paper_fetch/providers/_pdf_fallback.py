@@ -25,7 +25,6 @@ from ..http import (
     RequestCancelledError,
     RequestFailure,
     diagnostic_url_payload,
-    provider_allowed_hosts,
     provider_request_policy,
     redact_text_for_diagnostics,
     redact_url_for_diagnostics,
@@ -33,7 +32,6 @@ from ..http import (
 from ..artifacts import ArtifactStore
 from ..http.headers import header_value
 from ..extraction.html.assets.requester import (
-    PinnedAssetSession,
     build_cookie_seeded_opener as _build_cookie_seeded_opener,
     cookie_header_for_url as _cookie_header_for_url,
     request_with_opener as _request_with_opener,
@@ -148,9 +146,6 @@ class PdfFallbackStrategy:
                 runtime=self.context,
                 provider_name=self.provider_name,
             ),
-            allowed_hosts=(
-                execution_policy.hosts if execution_policy is not None else None
-            ),
         )
 
 
@@ -187,7 +182,7 @@ class _PdfBrowserRouteRequest:
 
 @dataclass(frozen=True)
 class _PdfDirectRoutePolicy:
-    """Compiled direct route values consumed by the pinned PDF transport."""
+    """Compiled direct route values consumed by the shared PDF transport."""
 
     provider_name: str | None
     route_name: str | None
@@ -200,7 +195,7 @@ def _prepare_pdf_browser_route_request(
     browser_config: BrowserRuntimeConfig | None,
     provider_name: str | None,
 ) -> _PdfBrowserRouteRequest:
-    """Compile route timeout/hosts and bind them to the shared request context."""
+    """Compile route timeout and bind explicit host policy to the request."""
 
     active_provider_name = normalize_text(
         browser_config.provider
@@ -225,13 +220,7 @@ def _prepare_pdf_browser_route_request(
             timeout_seconds,
             float(execution_policy.timeout_seconds),
         )
-        allowed_hosts = execution_policy.hosts
-    else:
-        allowed_hosts = (
-            provider_allowed_hosts(active_provider_name, "browser_pdf")
-            if active_provider_name
-            else ()
-        )
+    allowed_hosts = tuple(request.allowed_hosts or ())
     started_monotonic = time.monotonic()
     deadline_monotonic = request.deadline_monotonic or _pdf_deadline(
         request.runtime,
@@ -287,6 +276,7 @@ def _compile_pdf_direct_route_policy(
                 prefer_transport="http",
             ).route
     generic_policy = HttpRequestPolicy(
+        allowed_hosts=request.allowed_hosts,
         max_response_bytes=maximum_pdf_bytes,
         max_compressed_response_bytes=maximum_pdf_bytes,
         timeout_seconds=max(1, int(math.ceil(request.timeout_seconds))),
@@ -636,6 +626,15 @@ def _default_port(scheme: str | None) -> int | None:
     return None
 
 
+def _response_content_length(headers: Mapping[str, Any] | None) -> int | None:
+    raw_value = header_value(headers, "content-length")
+    try:
+        parsed = int(raw_value)
+    except (TypeError, ValueError):
+        return None
+    return parsed if parsed >= 0 else None
+
+
 def _browser_navigation_pdf_headers(
     *,
     user_agent: str | None,
@@ -677,27 +676,80 @@ def _response_to_pdf_result(
     page: Any | None = None,
     request: PdfRequestContext = PdfRequestContext(),
 ) -> PdfFetchResult | None:
-    """Refuse browser-owned binary bodies.
-
-    The caller may reuse browser cookies and the browser-discovered final URL with
-    ``fetch_pdf_over_http``.  Playwright response bodies are intentionally not
-    materialized because they cannot provide the pinned, bounded streaming
-    guarantees of ``HttpTransport``.
-    """
-
-    del (
-        artifact_dir,
-        asset_profile,
-        asset_output_dir,
-        allow_pdf_only,
-        source_url,
-        final_url,
-        page,
-        request,
-    )
     if response is None:
         return None
-    return None
+    response_headers = response.headers if response is not None else {}
+    content_type = normalize_text(
+        str(response_headers.get("content-type") or "")
+    ).lower()
+    maximum_pdf_bytes = pdf_max_bytes()
+    declared_length = _response_content_length(response_headers)
+    if declared_length is not None and declared_length > maximum_pdf_bytes:
+        raise PdfFallbackFailure(
+            "pdf_too_large",
+            "Browser PDF response exceeded the configured PDF limit.",
+            details={
+                "source_url": redact_url_for_diagnostics(source_url),
+                "final_url": redact_url_for_diagnostics(final_url),
+                "declared_pdf_bytes": declared_length,
+                "max_pdf_bytes": maximum_pdf_bytes,
+            },
+        )
+    try:
+        response_body = response.body()
+    except Exception as exc:
+        raise PdfFallbackFailure(
+            "pdf_download_failed",
+            f"Failed to read PDF fallback response body: {exc}",
+            details={
+                "source_url": redact_url_for_diagnostics(source_url),
+                "final_url": redact_url_for_diagnostics(final_url),
+            },
+        ) from exc
+    if not isinstance(response_body, (bytes, bytearray)):
+        return None
+    response_body = bytes(response_body)
+    if len(response_body) > maximum_pdf_bytes:
+        raise PdfFallbackFailure(
+            "pdf_too_large",
+            "Browser PDF response exceeded the configured PDF limit.",
+            details={
+                "source_url": redact_url_for_diagnostics(source_url),
+                "final_url": redact_url_for_diagnostics(final_url),
+                "pdf_bytes": len(response_body),
+                "max_pdf_bytes": maximum_pdf_bytes,
+            },
+        )
+    if not looks_like_pdf_payload(content_type, response_body, final_url):
+        return None
+    try:
+        return pdf_fetch_result_from_bytes(
+            artifact_dir=artifact_dir,
+            asset_profile=asset_profile,
+            asset_output_dir=asset_output_dir,
+            source_url=source_url,
+            final_url=final_url,
+            pdf_bytes=response_body,
+            suggested_filename=filename_from_headers(response_headers),
+            allow_pdf_only=allow_pdf_only,
+            expected_identity=request.expected_identity,
+        )
+    except PdfFallbackFailure as exc:
+        if exc.kind != "downloaded_file_not_pdf" or page is None:
+            raise
+        refetched = _refetch_pdf_with_browser_request(
+            page,
+            artifact_dir=artifact_dir,
+            asset_profile=asset_profile,
+            asset_output_dir=asset_output_dir,
+            allow_pdf_only=allow_pdf_only,
+            source_url=source_url,
+            final_url=final_url,
+            request=request,
+        )
+        if refetched is not None:
+            return refetched
+        raise
 
 
 def _refetch_pdf_with_browser_request(
@@ -711,19 +763,83 @@ def _refetch_pdf_with_browser_request(
     final_url: str,
     request: PdfRequestContext = PdfRequestContext(),
 ) -> PdfFetchResult | None:
-    del (
-        page,
-        artifact_dir,
-        asset_profile,
-        asset_output_dir,
-        allow_pdf_only,
-        source_url,
-        final_url,
-        request,
-    )
-    raise PdfFallbackFailure(
-        "browser_stream_unavailable",
-        "Browser request-context PDF bodies are not a safe streaming source.",
+    normalized_final_url = normalize_text(final_url)
+    if not normalized_final_url:
+        return None
+    parsed = urllib.parse.urlparse(normalized_final_url)
+    normalized_path = normalize_text(parsed.path).lower()
+    if not (
+        normalized_path.endswith(".pdf")
+        or "/doi/pdf/" in normalized_path
+        or "/doi/epdf/" in normalized_path
+        or "/pdf" in normalized_path
+    ):
+        return None
+    try:
+        timeout_ms = 60000
+        if request.deadline_monotonic is not None:
+            timeout_ms = (
+                _remaining_pdf_timeout_seconds(
+                    request.runtime,
+                    request.deadline_monotonic,
+                    maximum=60,
+                )
+                * 1000
+            )
+        response = page.request.get(normalized_final_url, timeout=timeout_ms)
+        headers = {
+            str(key).lower(): str(value)
+            for key, value in (response.headers or {}).items()
+        }
+        maximum_pdf_bytes = pdf_max_bytes()
+        declared_length = _response_content_length(headers)
+        if declared_length is not None and declared_length > maximum_pdf_bytes:
+            raise PdfFallbackFailure(
+                "pdf_too_large",
+                "Browser request-context PDF exceeded the configured PDF limit.",
+                details={
+                    "source_url": redact_url_for_diagnostics(source_url),
+                    "final_url": redact_url_for_diagnostics(normalized_final_url),
+                    "declared_pdf_bytes": declared_length,
+                    "max_pdf_bytes": maximum_pdf_bytes,
+                },
+            )
+        body = response.body()
+    except PdfFallbackFailure:
+        raise
+    except Exception as exc:
+        raise PdfFallbackFailure(
+            "pdf_download_failed",
+            f"Failed to refetch PDF fallback response from browser request context: {exc}",
+            details={
+                "source_url": redact_url_for_diagnostics(source_url),
+                "final_url": redact_url_for_diagnostics(normalized_final_url),
+            },
+        ) from exc
+    content_type = normalize_text(str(headers.get("content-type") or "")).lower()
+    if len(body) > maximum_pdf_bytes:
+        raise PdfFallbackFailure(
+            "pdf_too_large",
+            "Browser request-context PDF exceeded the configured PDF limit.",
+            details={
+                "source_url": redact_url_for_diagnostics(source_url),
+                "final_url": redact_url_for_diagnostics(normalized_final_url),
+                "pdf_bytes": len(body),
+                "max_pdf_bytes": maximum_pdf_bytes,
+            },
+        )
+    if not looks_like_pdf_payload(content_type, body, normalized_final_url):
+        return None
+    return pdf_fetch_result_from_bytes(
+        artifact_dir=artifact_dir,
+        asset_profile=asset_profile,
+        asset_output_dir=asset_output_dir,
+        source_url=source_url,
+        final_url=normalized_final_url,
+        pdf_bytes=body,
+        suggested_filename=filename_from_headers(headers),
+        allow_pdf_only=allow_pdf_only,
+        expected_identity=request.expected_identity,
     )
 
 
@@ -738,21 +854,38 @@ def _download_to_pdf_result(
     final_url: str,
     expected_identity: Mapping[str, Any] | None = None,
 ) -> PdfFetchResult:
-    del (
-        artifact_dir,
-        asset_profile,
-        asset_output_dir,
-        allow_pdf_only,
-        source_url,
-        final_url,
-        expected_identity,
-    )
-    with contextlib.suppress(Exception):
-        download.cancel()
-    raise PdfFallbackFailure(
-        "browser_stream_unavailable",
-        "Browser-owned downloads cannot satisfy the pinned streaming contract.",
-    )
+    download_path = artifact_dir / f".paper-fetch-browser-pdf-{uuid.uuid4().hex}.part"
+    maximum_pdf_bytes = pdf_max_bytes()
+    try:
+        download.save_as(str(download_path))
+        try:
+            downloaded_bytes = download_path.stat().st_size
+        except OSError:
+            downloaded_bytes = 0
+        if downloaded_bytes > maximum_pdf_bytes:
+            raise PdfFallbackFailure(
+                "pdf_too_large",
+                "Browser PDF download exceeded the configured PDF limit.",
+                details={
+                    "source_url": redact_url_for_diagnostics(source_url),
+                    "final_url": redact_url_for_diagnostics(final_url),
+                    "pdf_bytes": downloaded_bytes,
+                    "max_pdf_bytes": maximum_pdf_bytes,
+                },
+            )
+        return pdf_fetch_result_from_bytes(
+            artifact_dir=artifact_dir,
+            asset_profile=asset_profile,
+            asset_output_dir=asset_output_dir,
+            source_url=source_url,
+            final_url=final_url,
+            pdf_bytes=download_path.read_bytes(),
+            suggested_filename=getattr(download, "suggested_filename", None),
+            allow_pdf_only=allow_pdf_only,
+            expected_identity=expected_identity,
+        )
+    finally:
+        download_path.unlink(missing_ok=True)
 
 
 def _running_asyncio_loop_active() -> bool:
@@ -1220,58 +1353,15 @@ def fetch_pdf_with_browser(
                 _remaining_pdf_timeout_seconds(
                     context, request_deadline, maximum=browser_budget_seconds
                 )
-                raw_download_url = getattr(download, "url", "")
-                download_url = (
-                    normalize_text(raw_download_url)
-                    if isinstance(raw_download_url, str)
-                    else ""
-                )
-                final_url = normalize_text(str(getattr(page, "url", "") or "")) or url
-                with contextlib.suppress(Exception):
-                    download.cancel()
-                try:
-                    context_cookies = browser_context.cookies(
-                        [download_url or final_url]
-                    )
-                except TypeError:
-                    context_cookies = browser_context.cookies()
-                except Exception:
-                    context_cookies = list(browser_cookies or [])
-                context_cookies = filter_browser_cookies_for_url(
-                    list(context_cookies or []),
-                    download_url or final_url,
-                )
-                replay_candidates = list(
-                    dict.fromkeys(
-                        candidate
-                        for candidate in (
-                            download_url,
-                            final_url,
-                            url,
-                        )
-                        if candidate
-                    )
-                )
-                result = fetch_pdf_over_http(
-                    context.transport
-                    if context is not None and context.transport is not None
-                    else HttpTransport(),
-                    replay_candidates,
-                    headers=_browser_navigation_pdf_headers(
-                        user_agent=active_user_agent,
-                        referer=normalize_text(referer) or url,
-                        target_url=replay_candidates[0],
-                    ),
+                result = _download_to_pdf_result(
+                    download,
                     artifact_dir=artifact_dir,
                     asset_profile=asset_profile,
                     asset_output_dir=asset_output_dir,
                     allow_pdf_only=allow_pdf_only,
-                    browser_cookies=context_cookies,
-                    request=replace(
-                        active_request,
-                        timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                    ),
-                    allowed_hosts=declared_hosts or None,
+                    source_url=url,
+                    final_url=page.url,
+                    expected_identity=request.expected_identity,
                 )
                 return replace(
                     result,
@@ -1288,21 +1378,7 @@ def fetch_pdf_with_browser(
                     },
                 )
             except PdfFallbackFailure as exc:
-                last_failure = (
-                    exc
-                    if exc.kind == "pdf_fallback_timeout"
-                    else PdfFallbackFailure(
-                        "browser_stream_unavailable",
-                        "Browser PDF could not be replayed through pinned streaming.",
-                        details={
-                            "source_url": redact_url_for_diagnostics(url),
-                            "final_url": redact_url_for_diagnostics(
-                                normalize_text(str(getattr(page, "url", "") or ""))
-                            ),
-                            "direct_failure": exc.kind,
-                        },
-                    )
-                )
+                last_failure = exc
                 if exc.kind == "pdf_fallback_timeout":
                     break
                 continue
@@ -1328,15 +1404,15 @@ fetch_pdf_with_playwright = fetch_pdf_with_browser
 
 def _stream_pdf_candidate(
     transport: HttpTransport,
-    session: PinnedAssetSession,
     url: str,
     *,
     headers: Mapping[str, str],
     timeout: int,
     artifact_dir: Path | None,
     maximum_pdf_bytes: int,
+    request_policy: HttpRequestPolicy,
 ) -> dict[str, Any]:
-    """Use the DNS-pinned transport for PDF bytes, never a browser body API."""
+    """Bound direct PDF bytes while using the shared hostname connection pool."""
 
     temporary_dir = (
         tempfile.TemporaryDirectory(prefix="paper_fetch_pdf_stream_")
@@ -1354,20 +1430,19 @@ def _stream_pdf_candidate(
             "GET",
             url,
             staging_path,
-            headers=session.request_headers_for(url, headers),
+            headers=headers,
             timeout=timeout,
             retry_on_transient=True,
-            request_policy=session.request_policy_for(
-                url,
+            request_policy=replace(
+                request_policy,
+                timeout_seconds=timeout,
                 max_response_bytes=maximum_pdf_bytes,
                 max_compressed_response_bytes=maximum_pdf_bytes,
             ),
-            on_response_headers=session.observe_response_headers,
-            request_headers_provider=session.prepare_hop_headers,
         )
         # ``PdfFetchResult`` retains a bytes compatibility field.  This is the
         # only whole-file handoff, after Content-Length/chunk enforcement has
-        # bounded the staging file to ``pdf_max_bytes()`` on pinned transport.
+        # bounded the staging file to ``pdf_max_bytes()``.
         payload = staging_path.read_bytes()
         return {
             **dict(response),
@@ -1414,33 +1489,17 @@ def fetch_pdf_over_http(
             maximum=timeout,
         )
 
-    pinned_streaming = bool(
-        getattr(transport, "_pinned_streaming_ready", False) is True
+    streaming = bool(
+        getattr(transport, "_streaming_ready", False) is True
         and callable(getattr(transport, "stream_to_file", None))
     )
     route_policy = _compile_pdf_direct_route_policy(
         request,
         maximum_pdf_bytes=maximum_pdf_bytes,
     )
-    pinned_session = (
-        PinnedAssetSession(
-            transport,
-            provider_name=route_policy.provider_name,
-            route_name=route_policy.route_name,
-            browser_cookies=browser_cookies,
-            seed_urls=seed_urls,
-            headers=request_headers,
-            allowed_hosts=request.allowed_hosts,
-            timeout=timeout_provider(),
-        )
-        if pinned_streaming
-        else None
-    )
-    if pinned_session is not None:
-        pinned_session.ensure_seeded()
     opener = (
         None
-        if pinned_session is not None
+        if streaming
         else _build_cookie_seeded_opener(
             seed_urls,
             headers=request_headers,
@@ -1465,14 +1524,14 @@ def fetch_pdf_over_http(
             response = (
                 _stream_pdf_candidate(
                     transport,
-                    pinned_session,
                     url,
                     headers=per_request_headers,
                     timeout=active_timeout,
                     artifact_dir=artifact_dir,
                     maximum_pdf_bytes=maximum_pdf_bytes,
+                    request_policy=route_policy.request_policy,
                 )
-                if pinned_session is not None
+                if streaming
                 else _request_with_opener(
                     opener,
                     url,

@@ -14,6 +14,7 @@ from ..extraction.html.inline import render_html_inline_node
 from ..extraction.html.parsing import choose_parser
 from ..models import markdown_image_fullmatch, normalize_markdown_text
 from ..publisher_identity import DOI_CORE_PATTERN
+from ..reason_codes import OFFICIAL_FULL_SIZE_NOT_EXPOSED
 from ..utils import normalize_text
 from ._html_authors import (
     AuthorExtractionPipeline,
@@ -482,10 +483,33 @@ def finalize_extraction(
     return markdown_text, finalized
 
 
-def scoped_asset_extractor(*args: Any, **kwargs: Any) -> list[dict[str, str]]:
+def scoped_asset_extractor(*args: Any, **kwargs: Any) -> list[dict[str, Any]]:
+    from ..extraction.html.assets.silverchair import (
+        promote_silverchair_srcset_originals,
+    )
     from .atypon_browser_workflow.asset_scopes import extract_scoped_html_assets
 
-    return extract_scoped_html_assets(*args, **kwargs)
+    if args:
+        args = (promote_silverchair_srcset_originals(str(args[0])), *args[1:])
+    elif "body_html_text" in kwargs:
+        kwargs = {
+            **kwargs,
+            "body_html_text": promote_silverchair_srcset_originals(
+                str(kwargs["body_html_text"])
+            ),
+        }
+    extracted = extract_scoped_html_assets(*args, **kwargs)
+    assets: list[dict[str, Any]] = []
+    for raw_asset in extracted:
+        asset: dict[str, Any] = dict(raw_asset)
+        if normalize_text(
+            str(asset.get("kind") or "")
+        ).lower() == "figure" and not normalize_text(
+            str(asset.get("full_size_url") or asset.get("download_url") or "")
+        ):
+            asset["provenance"] = [OFFICIAL_FULL_SIZE_NOT_EXPOSED]
+        assets.append(asset)
+    return assets
 
 
 __all__ = [

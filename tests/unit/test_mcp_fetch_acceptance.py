@@ -157,7 +157,9 @@ def test_successful_fetch_returns_ok_status_and_compact_acceptance() -> None:
     payload = result.structured_content
     assert payload is not None
     assert payload["status"] == "ok"
-    assert payload["acceptance"] == {
+    acceptance = dict(payload["acceptance"])
+    asset_summary = acceptance.pop("asset_summary")
+    assert acceptance == {
         "overall": "complete",
         "identity": "resolved",
         "fetch": "ok",
@@ -176,6 +178,12 @@ def test_successful_fetch_returns_ok_status_and_compact_acceptance() -> None:
         "has_abstract": True,
         "token_estimate": 128,
     }
+    assert asset_summary["status"] == "not_requested"
+    assert asset_summary["require_local_body_assets"] is False
+    assert asset_summary["require_full_size_body_assets"] is False
+    assert asset_summary["body_discovered"] == 0
+    assert asset_summary["local_body_assets_satisfied"] is True
+    assert asset_summary["full_size_body_assets_satisfied"] is True
 
     output_model = (
         build_server()._tool_manager._tools["fetch_paper"].fn_metadata.output_model
@@ -196,6 +204,32 @@ def test_fetch_acceptance_preserves_quality_degradation() -> None:
     assert payload["acceptance"]["overall"] == "degraded"
     assert payload["acceptance"]["content"] == "fulltext"
     assert payload["quality"]["semantic_losses"]["table_fallback_count"] == 1
+
+
+def test_mcp_full_size_requirement_implies_local_and_reaches_acceptance() -> None:
+    request = FetchPaperRequest.model_validate(
+        {
+            "query": "10.1000/acceptance",
+            "modes": ["article", "markdown"],
+            "strategy": {
+                "asset_profile": "body",
+                "require_full_size_body_assets": True,
+            },
+        }
+    )
+
+    result = build_fetch_tool_result(_fulltext_envelope(), request)
+
+    assert request.strategy.require_local_body_assets is True
+    assert request.strategy.to_service_strategy().require_local_body_assets is True
+    payload = result.structured_content
+    assert payload is not None
+    assert payload["status"] == "ok"
+    summary = payload["acceptance"]["asset_summary"]
+    assert summary["require_local_body_assets"] is True
+    assert summary["require_full_size_body_assets"] is True
+    assert payload["acceptance"]["fetch"] == "ok"
+    assert payload["acceptance"]["overall"] == "degraded"
 
 
 @pytest.mark.parametrize("content_kind", ["abstract_only", "metadata_only"])

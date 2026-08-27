@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from email.message import Message
 import http.cookiejar
 import http.client
 import time
@@ -13,19 +12,13 @@ import urllib.parse
 import urllib.request
 
 from ....http import (
-    DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
     DEFAULT_SAFE_REMOTE_URL_POLICY,
     DEFAULT_MAX_RESPONSE_BYTES,
-    DEFAULT_TRANSIENT_BACKOFF_BASE_SECONDS,
-    DEFAULT_TRANSIENT_RETRIES,
-    HttpRequestPolicy,
-    HttpTransport,
     RequestCancelledError,
     RequestErrorCategory,
     RequestFailure,
     SafeRemoteUrlPolicy,
     classify_network_error,
-    provider_request_policy,
 )
 from ....http.cache import redact_url_for_cache
 from ....models import normalize_text
@@ -34,7 +27,6 @@ from ....pdf_limits import DEFAULT_PDF_MAX_BYTES
 DEFAULT_PDF_MAX_RESPONSE_BYTES = DEFAULT_PDF_MAX_BYTES
 _READ_CHUNK_BYTES = 64 * 1024
 _SENSITIVE_REDIRECT_HEADERS = frozenset({"authorization", "cookie", "referer"})
-_ASSET_SEED_MAX_RESPONSE_BYTES = 8192
 
 
 def _validated_http_url(
@@ -269,231 +261,6 @@ def browser_cookie_jar(
     return cookie_jar
 
 
-class PinnedAssetSession:
-    """Per-worker CookieJar and one-shot seed state over pinned HttpTransport."""
-
-    def __init__(
-        self,
-        transport: HttpTransport,
-        *,
-        browser_cookies: list[dict[str, Any]] | None,
-        seed_urls: list[str] | None,
-        headers: Mapping[str, str] | None,
-        allowed_hosts: tuple[str, ...] | None = None,
-        provider_name: str | None = None,
-        route_name: str | None = None,
-        timeout: int = DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-    ) -> None:
-        self.transport = transport
-        self.cookie_jar = browser_cookie_jar(browser_cookies)
-        self.seed_urls = [
-            normalize_text(url) for url in seed_urls or [] if normalize_text(url)
-        ]
-        self.headers = dict(headers or {})
-        self.allowed_hosts = tuple(allowed_hosts or ()) or None
-        self.provider_name = normalize_text(provider_name).lower() or None
-        self.route_name = normalize_text(route_name).lower() or None
-        self.timeout = max(1, int(timeout))
-        self.seed_ready = False
-        self.seed_attempts = 0
-
-    def allowed_hosts_for(self, url: str) -> tuple[str, ...]:
-        del url
-        return tuple(self.allowed_hosts or ())
-
-    def request_headers_for(
-        self, url: str, headers: Mapping[str, str]
-    ) -> dict[str, str]:
-        request_headers = dict(headers)
-        cookie_header = cookie_header_from_jar(self.cookie_jar, url)
-        if cookie_header:
-            request_headers["Cookie"] = cookie_header
-        return request_headers
-
-    def prepare_hop_headers(
-        self,
-        url: str,
-        headers: Mapping[str, str],
-    ) -> dict[str, str]:
-        """Refresh only Cookie from this worker jar for a validated hop."""
-
-        explicit_cookie = next(
-            (
-                (key, value)
-                for key, value in headers.items()
-                if str(key).strip().lower() == "cookie"
-            ),
-            None,
-        )
-        without_stale_cookie = {
-            key: value
-            for key, value in headers.items()
-            if str(key).strip().lower() != "cookie"
-        }
-        refreshed = self.request_headers_for(url, without_stale_cookie)
-        # Preserve an explicit first-hop Cookie only until redirect handling
-        # strips it. A matching jar value takes precedence and cross-origin
-        # hops cannot resurrect the removed header.
-        if "Cookie" not in refreshed and explicit_cookie is not None:
-            refreshed[str(explicit_cookie[0])] = str(explicit_cookie[1])
-        return refreshed
-
-    def import_browser_cookies(
-        self,
-        browser_cookies: list[dict[str, Any]] | None,
-    ) -> None:
-        for payload in browser_cookies or []:
-            if not isinstance(payload, Mapping):
-                continue
-            cookie = _browser_cookie(payload)
-            if cookie is not None:
-                self.cookie_jar.set_cookie(cookie)
-
-    def request_policy_for(
-        self,
-        url: str,
-        *,
-        max_response_bytes: int,
-        max_compressed_response_bytes: int | None = None,
-    ) -> HttpRequestPolicy:
-        allowed_hosts = self.allowed_hosts_for(url)
-        base_policy = HttpRequestPolicy(
-            allowed_hosts=allowed_hosts or None,
-            sensitive_headers=("cookie",),
-            max_response_bytes=max_response_bytes,
-            max_compressed_response_bytes=max_compressed_response_bytes,
-            timeout_seconds=self.timeout,
-            retry_on_rate_limit=True,
-            rate_limit_retries=1,
-            max_rate_limit_wait_seconds=5,
-            retry_on_transient=True,
-            transient_retries=DEFAULT_TRANSIENT_RETRIES,
-            transient_backoff_base_seconds=DEFAULT_TRANSIENT_BACKOFF_BASE_SECONDS,
-        )
-        if self.provider_name is None:
-            return base_policy
-        return provider_request_policy(
-            self.provider_name, self.route_name, base=base_policy
-        )
-
-    def ensure_seeded(self) -> None:
-        if self.seed_ready:
-            return
-        seed_headers = {
-            key: value
-            for key, value in self.headers.items()
-            if str(key).lower() != "accept"
-        }
-        seed_headers.setdefault(
-            "Accept",
-            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        )
-        try:
-            for seed_url in self.seed_urls:
-                self.seed_attempts += 1
-                request_headers = self.request_headers_for(seed_url, seed_headers)
-                response_url = seed_url
-                try:
-                    if callable(getattr(type(self.transport), "request_preview", None)):
-                        response = self.transport.request_preview(
-                            "GET",
-                            seed_url,
-                            headers=request_headers,
-                            timeout=self.timeout,
-                            preview_bytes=_ASSET_SEED_MAX_RESPONSE_BYTES,
-                            request_policy=self.request_policy_for(
-                                seed_url,
-                                max_response_bytes=_ASSET_SEED_MAX_RESPONSE_BYTES,
-                            ),
-                            on_response_headers=self.observe_response_headers,
-                            request_headers_provider=self.prepare_hop_headers,
-                        )
-                    else:
-                        # Compatibility for injected transports. Production
-                        # HttpTransport always uses the bounded pinned preview.
-                        response = self.transport.request(
-                            "GET",
-                            seed_url,
-                            headers=request_headers,
-                            timeout=self.timeout,
-                            retry_on_rate_limit=True,
-                            retry_on_transient=True,
-                            request_policy=self.request_policy_for(
-                                seed_url,
-                                max_response_bytes=_ASSET_SEED_MAX_RESPONSE_BYTES,
-                            ),
-                        )
-                    response_url = (
-                        normalize_text(str(response.get("url") or "")) or seed_url
-                    )
-                    header_values = response.get("_paper_fetch_header_values")
-                    set_cookie_values = (
-                        list(header_values.get("set-cookie") or [])
-                        if isinstance(header_values, Mapping)
-                        else []
-                    )
-                except RequestFailure as exc:
-                    set_cookie_values = [
-                        str(value)
-                        for key, value in exc.headers.items()
-                        if str(key).lower() == "set-cookie"
-                    ]
-                except Exception:
-                    set_cookie_values = []
-                # Production already observed each hop. Re-importing only the
-                # final values is idempotent and keeps injected transports that
-                # bypass the observer compatible without assigning a redirect
-                # cookie to the original host.
-                self._store_response_cookies(response_url, set_cookie_values)
-        finally:
-            # A failed warmup is still terminal for this worker. Candidate
-            # requests retain the initial browser CookieJar and must not create
-            # an N-assets x M-seeds retry fanout.
-            self.seed_ready = True
-
-    def _store_response_cookies(
-        self,
-        request_url: str,
-        set_cookie_values: list[str],
-    ) -> None:
-        if not set_cookie_values:
-            return
-        message = Message()
-        for value in set_cookie_values:
-            message.add_header("Set-Cookie", str(value))
-
-        class _CookieResponse:
-            def info(self) -> Message:
-                return message
-
-        try:
-            self.cookie_jar.extract_cookies(
-                _CookieResponse(),  # type: ignore[arg-type]
-                urllib.request.Request(request_url),
-            )
-        except Exception:
-            return
-
-    def observe_response_headers(self, response_url: str, headers: Any) -> None:
-        """Import Set-Cookie from every validated redirect/final response."""
-
-        getter = getattr(headers, "getlist", None)
-        if callable(getter):
-            try:
-                set_cookie_values = [
-                    str(value) for value in getter("set-cookie") if str(value)
-                ]
-            except Exception:
-                set_cookie_values = []
-        else:
-            set_cookie_values = [
-                str(value)
-                for key, value in getattr(headers, "items", lambda: ())()
-                if str(key).lower() == "set-cookie" and str(value)
-            ]
-        self._store_response_cookies(response_url, set_cookie_values)
-
-
 def build_cookie_seeded_opener(
     seed_urls: list[str] | None,
     *,
@@ -638,7 +405,6 @@ def request_with_opener(
 
 __all__ = [
     "DEFAULT_PDF_MAX_RESPONSE_BYTES",
-    "PinnedAssetSession",
     "browser_cookie_jar",
     "build_cookie_seeded_opener",
     "cookie_header_for_url",

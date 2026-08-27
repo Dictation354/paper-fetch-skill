@@ -18,6 +18,7 @@
 - 文本归档使用 `artifact_mode=none`、`asset_profile=none`。用户明确要求正文图时使用 `artifact_mode=markdown-assets`、`asset_profile=body`；明确要求补充材料时使用 `artifact_mode=markdown-assets`、`asset_profile=all`。
 - 只在用户还要求原始 provider 载荷、HTTP disk cache 或调试 sidecar 时使用 `artifact_mode=all`。补充材料范围由 `asset_profile=all` 决定，不由 `artifact_mode=all` 决定。
 - `asset_profile=body|all` 始终受每篇共享预算约束（默认 128 文件、32 MiB/文件、256 MiB 累计、64 MP、最多 4 个资产 worker并受 route cap 限制）；不要通过把正文图和 supplementary 拆成两次调用来规避。超限时以 `asset_failures[*].reason` 的稳定 `asset_*` code 向用户说明未归档项。
+- 默认使用兼容的 provider-policy 资产验收。用户明确要求离线完整正文资产时，CLI 加 `--require-local-body-assets`、MCP strategy 加 `require_local_body_assets=true`；明确要求原尺寸时改用 `--require-full-size-body-assets` / `require_full_size_body_assets=true`，它会自动隐含 local。两项只适用于 `body|all`，不应加到纯文本预设。
 - MCP 的 `no_download` 控制 provider 载荷、资产和 fetch-envelope sidecar，不是 CLI `--no-download` 的同义替换。`save_markdown=true` 仍会写用户要求的 Markdown；PF-005 的 DOI 证明索引也会随显式保存更新。
 - “不保存最终 Markdown”“不建立用户归档”“不写 provider artifact”“允许 cache”和“完全不落盘”是五个独立判断，不要互换。
 

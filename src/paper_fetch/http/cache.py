@@ -7,7 +7,6 @@ import functools
 import hashlib
 import json
 import os
-import re
 import threading
 import time
 import urllib.parse
@@ -20,6 +19,7 @@ if TYPE_CHECKING:
     from cachetools import TTLCache
 
 from ..provider_catalog import provider_sensitive_header_names
+from ..redaction import redact_text_for_diagnostics as _redact_text_for_diagnostics
 import contextlib
 
 DEFAULT_CACHE_TTL_SECONDS = 30
@@ -173,61 +173,12 @@ def diagnostic_url_payload(url: str) -> dict[str, str]:
     }
 
 
-_DIAGNOSTIC_URL_IN_TEXT_RE = re.compile(
-    r"(?P<base>(?:https?://|/)[^\s\"'<>?]+)\?[^\s\"'<>]*",
-    re.IGNORECASE,
-)
-_DIAGNOSTIC_FRAGMENT_IN_TEXT_RE = re.compile(
-    r"(?P<base>(?:https?://|/)[^\s\"'<>#]+)#[^\s\"'<>]*",
-    re.IGNORECASE,
-)
-_BASE_DIAGNOSTIC_SECRET_NAMES = frozenset(
-    {
-        "x-amz-signature",
-        "signature",
-        "token",
-        "api_key",
-        "api-key",
-        "apikey",
-        "access_key",
-        "access-key",
-        "authorization",
-        "proxy-authorization",
-        "cookie",
-        "set-cookie",
-        "password",
-    }
-)
-
-
-@functools.cache
-def _diagnostic_secret_assignment_re() -> re.Pattern[str]:
-    names = _BASE_DIAGNOSTIC_SECRET_NAMES | _sensitive_cache_header_names()
-    name_pattern = "|".join(
-        re.escape(name) for name in sorted(names, key=len, reverse=True)
-    )
-    return re.compile(
-        rf"(?P<name>\b(?:{name_pattern})\b[\"']?\s*[=:]\s*[\"']?\s*)"
-        r"(?:bearer\s+)?[^\s&;,\"'<>}\]]+",
-        re.IGNORECASE,
-    )
-
-
 def redact_text_for_diagnostics(value: str) -> str:
     """Remove URL queries and credential assignments from diagnostic text."""
 
-    text = str(value or "")
-    text = _DIAGNOSTIC_URL_IN_TEXT_RE.sub(
-        lambda match: f"{match.group('base')}?[redacted]",
-        text,
-    )
-    text = _DIAGNOSTIC_FRAGMENT_IN_TEXT_RE.sub(
-        lambda match: match.group("base"),
-        text,
-    )
-    return _diagnostic_secret_assignment_re().sub(
-        lambda match: f"{match.group('name')}[redacted]",
-        text,
+    return _redact_text_for_diagnostics(
+        value,
+        additional_secret_names=_sensitive_cache_header_names(),
     )
 
 

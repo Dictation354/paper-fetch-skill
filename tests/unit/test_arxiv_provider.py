@@ -21,6 +21,7 @@ from paper_fetch.extraction.html.assets.dom import preview_dimensions_are_accept
 from paper_fetch.http import RequestErrorCategory
 from paper_fetch.models import article_from_markdown
 from paper_fetch.providers import (
+    _arxiv_asset_strategy,
     _arxiv_assets,
     _arxiv_atom,
     _arxiv_authors,
@@ -1624,6 +1625,19 @@ class ArxivProviderTests(unittest.TestCase):
         client = ArxivClient(transport, {})
 
         raw_payload = client.fetch_raw_fulltext(metadata["doi"], metadata)
+        source_url = f"https://arxiv.org/e-print/{arxiv_id}"
+        transport.responses[("GET", source_url)] = http_response(
+            source_url,
+            _source_tar(
+                {
+                    "main.tex": (
+                        rb"\documentclass{article}"
+                        rb"\begin{document}\end{document}"
+                    )
+                }
+            ),
+            "application/gzip",
+        )
         for asset in raw_payload.content.extracted_assets:
             for field in ("url", "full_size_url", "preview_url"):
                 url = str(asset.get(field) or "")
@@ -1657,6 +1671,7 @@ class ArxivProviderTests(unittest.TestCase):
             non_asset_urls = {
                 canonical_arxiv_html_url(arxiv_id),
                 _arxiv_atom.ARXIV_API_URL,
+                source_url,
             }
             asset_calls = [
                 call for call in transport.calls if call["url"] not in non_asset_urls
@@ -1738,6 +1753,22 @@ class ArxivProviderTests(unittest.TestCase):
             with (
                 tempfile.TemporaryDirectory() as tmpdir,
                 mock.patch.object(
+                    _arxiv_asset_strategy,
+                    "download_arxiv_source_figure_assets",
+                    return_value={
+                        "assets": [],
+                        "asset_failures": [
+                            {
+                                "kind": "figure",
+                                "heading": item.get("heading", "Figure"),
+                                "caption": item.get("caption", ""),
+                                "reason": "arxiv_source_figure_not_matched",
+                            }
+                            for item in extracted_assets
+                        ],
+                    },
+                ),
+                mock.patch.object(
                     html_assets,
                     "download_assets",
                     side_effect=[
@@ -1774,7 +1805,13 @@ class ArxivProviderTests(unittest.TestCase):
         self.assertEqual(
             downloader.call_args_list[1].kwargs["asset_download_concurrency"], 1
         )
-        self.assertEqual(downloader.call_args_list[1].kwargs["assets"], [retried_asset])
+        retried_request = downloader.call_args_list[1].kwargs["assets"]
+        self.assertEqual(len(retried_request), 1)
+        self.assertEqual(retried_request[0]["url"], retried_asset["url"])
+        self.assertIn(
+            "official_full_size_not_exposed",
+            retried_request[0]["provenance"],
+        )
         for call in downloader.call_args_list:
             self.assertNotIn("seed_urls", call.kwargs)
             self.assertEqual(
@@ -1887,6 +1924,64 @@ class ArxivProviderTests(unittest.TestCase):
             )
             self.assertNotIn("\n## Figures\n", markdown)
         self.assertIn(source_url, [call["url"] for call in transport.calls])
+
+    def test_html_route_upgrades_existing_preview_from_official_source_archive(
+        self,
+    ) -> None:
+        arxiv_id = "2605.06556v1"
+        metadata = _metadata(arxiv_id)
+        source_url = f"https://arxiv.org/e-print/{arxiv_id}"
+        source_archive = _source_tar(
+            {
+                "main.tex": rb"""
+                \documentclass{article}
+                \usepackage{graphicx}
+                \begin{document}
+                \begin{figure}
+                  \includegraphics{fig_1_tau_picture.png}
+                  \caption{Tau picture. Source archive figure.}
+                \end{figure}
+                \end{document}
+                """,
+                "fig_1_tau_picture.png": PNG_1X1,
+            }
+        )
+        transport = _html_transport(
+            arxiv_id,
+            extra_responses={
+                ("GET", source_url): http_response(
+                    source_url, source_archive, "application/gzip"
+                )
+            },
+        )
+        client = ArxivClient(transport, {})
+        raw_payload = client.fetch_raw_fulltext(metadata["doi"], metadata)
+        preview = next(
+            asset
+            for asset in raw_payload.content.extracted_assets
+            if "fig_1_tau_picture.png" in str(asset.get("url") or "")
+        )
+        raw_payload.content = replace(
+            raw_payload.content,
+            extracted_assets=[preview],
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = client.download_related_assets(
+                metadata["doi"],
+                metadata,
+                raw_payload,
+                Path(tmpdir),
+                asset_profile="body",
+            )
+
+        self.assertEqual(result["asset_failures"], [])
+        self.assertEqual(len(result["assets"]), 1)
+        self.assertEqual(result["assets"][0]["download_tier"], "arxiv_source")
+        self.assertEqual(result["assets"][0]["source_path"], "fig_1_tau_picture.png")
+        requested_urls = [call["url"] for call in transport.calls]
+        self.assertIn(source_url, requested_urls)
+        self.assertNotIn(preview["url"], requested_urls)
 
     def test_source_archive_shared_member_is_published_once_and_fanned_out(
         self,

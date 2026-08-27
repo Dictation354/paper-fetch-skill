@@ -146,7 +146,17 @@ jobs:
             --source-tag "${{ needs.context.outputs.source_tag }}" \
             --source-sha "${{ needs.context.outputs.source_sha }}"
 
+      - name: Scan target dependency snapshot for secret values
+        id: secret_scan_dependency_snapshot
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python scripts/scan_artifacts_for_secrets.py
+          --root "$RUNNER_TEMP/dependency-snapshot"
+
       - name: Upload target dependency snapshot
+        if: ${{ steps.secret_scan_dependency_snapshot.outcome == 'success' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: dependency-snapshot-${{ matrix.target }}
@@ -321,7 +331,16 @@ jobs:
             --github-output "$GITHUB_OUTPUT" \
             "${force_args[@]}"
 
+      - name: Scan merged dependency manifest for secret values
+        id: secret_scan_dependency_manifest
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python scripts/scan_artifacts_for_secrets.py
+          --root dependency-manifest.json
+
       - name: Upload merged dependency manifest
+        if: ${{ steps.secret_scan_dependency_manifest.outcome == 'success' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: dependency-refresh-manifest
@@ -383,6 +402,13 @@ jobs:
           find release-assets -maxdepth 1 -type f ! -name SHA256SUMS \
             -printf '%f\n' | LC_ALL=C sort > "$RUNNER_TEMP/expected-assets.txt"
 
+      - name: Scan rolling release artifacts for secret values
+        id: secret_scan_release_assets
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ROLLING_RELEASE_TOKEN: ${{ secrets.ROLLING_RELEASE_TOKEN }}
+        run: python scripts/scan_artifacts_for_secrets.py --root release-assets
+
       - name: Write Chinese rolling release notes
         shell: bash
         env:
@@ -425,6 +451,7 @@ jobs:
           fi
 
       - name: Publish rolling prerelease
+        if: ${{ steps.secret_scan_release_assets.outcome == 'success' }}
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.ROLLING_RELEASE_TOKEN }}

@@ -106,6 +106,14 @@ def test_provider_catalog_payload_automatically_includes_discovered_changes() ->
         probe_capability="metadata_api",
         requires_playwright=True,
         requires_browser_runtime=True,
+        routes=(
+            runtime_catalog.ProviderRouteSpec(
+                name="assets",
+                kind="assets",
+                timeout_seconds=20,
+                concurrency=2,
+            ),
+        ),
     )
     updated_specs = {**existing_specs, synthetic.name: synthetic}
     updated_sources = {
@@ -123,6 +131,7 @@ def test_provider_catalog_payload_automatically_includes_discovered_changes() ->
     assert synthetic_payload["provider"] == synthetic.name
     assert synthetic_payload["sources"] == ["synthetic_html"]
     assert synthetic_payload["asset_default"] == "all"
+    assert any(route["kind"] == "assets" for route in synthetic_payload["routes"])
     assert synthetic_payload["capabilities"]["supports_browser_preflight"] is True
     assert payload["source_provider_map"]["synthetic_html"] == synthetic.name
     assert payload["provider_count"] == len(existing_specs) + 1

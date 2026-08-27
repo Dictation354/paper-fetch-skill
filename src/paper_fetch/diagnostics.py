@@ -49,6 +49,7 @@ from .providers.base import (
 )
 from .providers.registry import build_clients
 from .provenance import install_provenance_payload
+from .redaction import is_sensitive_configuration_name
 from .reason_codes import ERROR, NOT_CONFIGURED, PARTIAL, READY
 from .utils import normalize_text
 
@@ -275,17 +276,7 @@ def _configuration_names(selected_names: tuple[str, ...]) -> set[str]:
 
 
 def _sensitive_configuration_names(names: set[str]) -> set[str]:
-    credential_tokens = ("KEY", "TOKEN", "SECRET", "PASSWORD", "COOKIE", "MAILTO")
-    return {
-        name
-        for name in names
-        if any(token in name.upper() for token in credential_tokens)
-        or name
-        in {
-            AMS_STORAGE_STATE_JSON_ENV_VAR,
-            WILEY_STORAGE_STATE_JSON_ENV_VAR,
-        }
-    }
+    return {name for name in names if is_sensitive_configuration_name(name)}
 
 
 def _local_capability_error(component: str) -> dict[str, object]:
@@ -451,6 +442,7 @@ __all__ = [
     "ProviderStatusDetail",
     "ProviderStatusGroup",
     "doctor_payload",
+    "is_sensitive_configuration_name",
     "normalize_provider_status_detail",
     "normalize_provider_status_group",
     "normalize_provider_status_provider",

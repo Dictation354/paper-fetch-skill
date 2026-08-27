@@ -40,6 +40,7 @@ from ..models import (
 )
 from ..provider_catalog import (
     BodyTextThresholds,
+    ProviderRouteSpec,
     ProviderSpec,
     provider_domains,
     provider_landing_path_templates,
@@ -123,6 +124,15 @@ register_provider_bundle(
             xml_root_tags=("article",),
             xml_file_tokens=("copernicus", "10.5194"),
             body_text_thresholds=BodyTextThresholds(min_chars=500),
+            routes=(
+                ProviderRouteSpec(
+                    name="assets",
+                    kind="assets",
+                    timeout_seconds=20,
+                    concurrency=2,
+                    transient_retries=2,
+                ),
+            ),
         ),
         sources=("copernicus_xml", "copernicus_pdf"),
     )

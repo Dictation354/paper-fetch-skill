@@ -600,6 +600,73 @@
             "dns_error"
           ],
           "transport": "http"
+        },
+        {
+          "acceptance_policy": "validated_asset",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "execution_policy": {
+            "acceptance_policy": "validated_asset",
+            "asset_scope": "body",
+            "concurrency": 2,
+            "hosts": [
+              "springer.com",
+              "springernature.com",
+              "nature.com",
+              "biomedcentral.com",
+              "link.springer.com"
+            ],
+            "kind": "assets",
+            "minimum_interval_seconds": 0.0,
+            "provider": "springer",
+            "qps": null,
+            "rate_limit_retries": 2,
+            "rate_limit_wait_budget_seconds": 5.0,
+            "rate_policy": "shared_host_cooldown",
+            "route": "assets",
+            "sensitive_headers": [],
+            "timeout_seconds": 20,
+            "transient_retries": 2,
+            "transient_retry_categories": [
+              "timeout",
+              "connection_reset",
+              "connection_closed",
+              "dns_error"
+            ]
+          },
+          "hosts": [
+            "springer.com",
+            "springernature.com",
+            "nature.com",
+            "biomedcentral.com"
+          ],
+          "implementation_status": "available",
+          "kind": "assets",
+          "name": "assets",
+          "notes": null,
+          "order": 3,
+          "qps": null,
+          "rate_limit_retries": 2,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "springer_html",
+          "timeout_seconds": 20,
+          "transient_retries": 2,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "dns_error"
+          ],
+          "transport": "http"
         }
       ],
       "sources": [
@@ -901,6 +968,75 @@
             "dns_error"
           ],
           "transport": "browser"
+        },
+        {
+          "acceptance_policy": "validated_asset",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": true,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "execution_policy": {
+            "acceptance_policy": "validated_asset",
+            "asset_scope": "body",
+            "concurrency": 2,
+            "hosts": [
+              "onlinelibrary.wiley.com",
+              "wiley.com",
+              "www.wiley.com",
+              "api.wiley.com"
+            ],
+            "kind": "assets",
+            "minimum_interval_seconds": 0.0,
+            "provider": "wiley",
+            "qps": null,
+            "rate_limit_retries": 2,
+            "rate_limit_wait_budget_seconds": 5.0,
+            "rate_policy": "shared_host_cooldown",
+            "route": "assets",
+            "sensitive_headers": [
+              "wiley-tdm-client-token"
+            ],
+            "timeout_seconds": 20,
+            "transient_retries": 0,
+            "transient_retry_categories": [
+              "timeout",
+              "connection_reset",
+              "connection_closed",
+              "dns_error"
+            ]
+          },
+          "hosts": [
+            "onlinelibrary.wiley.com",
+            "wiley.com",
+            "www.wiley.com"
+          ],
+          "implementation_status": "available",
+          "kind": "assets",
+          "name": "assets",
+          "notes": null,
+          "order": 4,
+          "qps": null,
+          "rate_limit_retries": 2,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "wiley_browser",
+          "timeout_seconds": 20,
+          "transient_retries": 0,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "dns_error"
+          ],
+          "transport": "browser"
         }
       ],
       "sources": [
@@ -911,7 +1047,7 @@
       "asset_default": "body",
       "capabilities": {
         "auth_supported": true,
-        "browser_optional": false,
+        "browser_optional": true,
         "browser_required": true,
         "html": true,
         "metadata_probe": "routing_signal",
@@ -1117,6 +1253,70 @@
             "dns_error"
           ],
           "transport": "browser"
+        },
+        {
+          "acceptance_policy": "validated_asset",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": true,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "execution_policy": {
+            "acceptance_policy": "validated_asset",
+            "asset_scope": "body",
+            "concurrency": 2,
+            "hosts": [
+              "www.science.org",
+              "science.org"
+            ],
+            "kind": "assets",
+            "minimum_interval_seconds": 0.0,
+            "provider": "science",
+            "qps": null,
+            "rate_limit_retries": 2,
+            "rate_limit_wait_budget_seconds": 5.0,
+            "rate_policy": "shared_host_cooldown",
+            "route": "assets",
+            "sensitive_headers": [],
+            "timeout_seconds": 20,
+            "transient_retries": 0,
+            "transient_retry_categories": [
+              "timeout",
+              "connection_reset",
+              "connection_closed",
+              "dns_error"
+            ]
+          },
+          "hosts": [
+            "www.science.org",
+            "science.org"
+          ],
+          "implementation_status": "available",
+          "kind": "assets",
+          "name": "assets",
+          "notes": null,
+          "order": 3,
+          "qps": null,
+          "rate_limit_retries": 2,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "science",
+          "timeout_seconds": 20,
+          "transient_retries": 0,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "dns_error"
+          ],
+          "transport": "browser"
         }
       ],
       "sources": [
@@ -1127,7 +1327,7 @@
       "asset_default": "body",
       "capabilities": {
         "auth_supported": true,
-        "browser_optional": false,
+        "browser_optional": true,
         "browser_required": true,
         "html": true,
         "metadata_probe": "routing_signal",
@@ -1326,6 +1526,70 @@
           "source": "pnas",
           "timeout_seconds": 120,
           "transient_retries": 2,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "dns_error"
+          ],
+          "transport": "browser"
+        },
+        {
+          "acceptance_policy": "validated_asset",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": true,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "execution_policy": {
+            "acceptance_policy": "validated_asset",
+            "asset_scope": "body",
+            "concurrency": 2,
+            "hosts": [
+              "www.pnas.org",
+              "pnas.org"
+            ],
+            "kind": "assets",
+            "minimum_interval_seconds": 0.0,
+            "provider": "pnas",
+            "qps": null,
+            "rate_limit_retries": 2,
+            "rate_limit_wait_budget_seconds": 5.0,
+            "rate_policy": "shared_host_cooldown",
+            "route": "assets",
+            "sensitive_headers": [],
+            "timeout_seconds": 20,
+            "transient_retries": 0,
+            "transient_retry_categories": [
+              "timeout",
+              "connection_reset",
+              "connection_closed",
+              "dns_error"
+            ]
+          },
+          "hosts": [
+            "www.pnas.org",
+            "pnas.org"
+          ],
+          "implementation_status": "available",
+          "kind": "assets",
+          "name": "assets",
+          "notes": null,
+          "order": 3,
+          "qps": null,
+          "rate_limit_retries": 2,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "pnas",
+          "timeout_seconds": 20,
+          "transient_retries": 0,
           "transient_retry_categories": [
             "timeout",
             "connection_reset",
@@ -1780,6 +2044,68 @@
           "source": "ieee_html",
           "timeout_seconds": 120,
           "transient_retries": 2,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "dns_error"
+          ],
+          "transport": "browser"
+        },
+        {
+          "acceptance_policy": "validated_asset",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": true,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "execution_policy": {
+            "acceptance_policy": "validated_asset",
+            "asset_scope": "body",
+            "concurrency": 2,
+            "hosts": [
+              "ieeexplore.ieee.org"
+            ],
+            "kind": "assets",
+            "minimum_interval_seconds": 0.0,
+            "provider": "ieee",
+            "qps": null,
+            "rate_limit_retries": 2,
+            "rate_limit_wait_budget_seconds": 5.0,
+            "rate_policy": "shared_host_cooldown",
+            "route": "assets",
+            "sensitive_headers": [],
+            "timeout_seconds": 20,
+            "transient_retries": 0,
+            "transient_retry_categories": [
+              "timeout",
+              "connection_reset",
+              "connection_closed",
+              "dns_error"
+            ]
+          },
+          "hosts": [
+            "ieeexplore.ieee.org"
+          ],
+          "implementation_status": "available",
+          "kind": "assets",
+          "name": "assets",
+          "notes": null,
+          "order": 7,
+          "qps": null,
+          "rate_limit_retries": 2,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "ieee_html",
+          "timeout_seconds": 20,
+          "transient_retries": 0,
           "transient_retry_categories": [
             "timeout",
             "connection_reset",
@@ -2257,6 +2583,64 @@
             "dns_error"
           ],
           "transport": "http"
+        },
+        {
+          "acceptance_policy": "validated_asset",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "execution_policy": {
+            "acceptance_policy": "validated_asset",
+            "asset_scope": "body",
+            "concurrency": 2,
+            "hosts": [
+              "copernicus.org"
+            ],
+            "kind": "assets",
+            "minimum_interval_seconds": 0.0,
+            "provider": "copernicus",
+            "qps": null,
+            "rate_limit_retries": 2,
+            "rate_limit_wait_budget_seconds": 5.0,
+            "rate_policy": "shared_host_cooldown",
+            "route": "assets",
+            "sensitive_headers": [],
+            "timeout_seconds": 20,
+            "transient_retries": 2,
+            "transient_retry_categories": [
+              "timeout",
+              "connection_reset",
+              "connection_closed",
+              "dns_error"
+            ]
+          },
+          "hosts": [],
+          "implementation_status": "available",
+          "kind": "assets",
+          "name": "assets",
+          "notes": null,
+          "order": 3,
+          "qps": null,
+          "rate_limit_retries": 2,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "copernicus_xml",
+          "timeout_seconds": 20,
+          "transient_retries": 2,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "dns_error"
+          ],
+          "transport": "http"
         }
       ],
       "sources": [
@@ -2474,6 +2858,68 @@
             "dns_error"
           ],
           "transport": "browser"
+        },
+        {
+          "acceptance_policy": "validated_asset",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "execution_policy": {
+            "acceptance_policy": "validated_asset",
+            "asset_scope": "body",
+            "concurrency": 2,
+            "hosts": [
+              "journals.ametsoc.org",
+              "ametsoc.org"
+            ],
+            "kind": "assets",
+            "minimum_interval_seconds": 0.0,
+            "provider": "ams",
+            "qps": null,
+            "rate_limit_retries": 2,
+            "rate_limit_wait_budget_seconds": 5.0,
+            "rate_policy": "shared_host_cooldown",
+            "route": "assets",
+            "sensitive_headers": [],
+            "timeout_seconds": 20,
+            "transient_retries": 2,
+            "transient_retry_categories": [
+              "timeout",
+              "connection_reset",
+              "connection_closed",
+              "dns_error"
+            ]
+          },
+          "hosts": [
+            "journals.ametsoc.org",
+            "ametsoc.org"
+          ],
+          "implementation_status": "available",
+          "kind": "assets",
+          "name": "assets",
+          "notes": null,
+          "order": 3,
+          "qps": null,
+          "rate_limit_retries": 2,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "ams_html",
+          "timeout_seconds": 20,
+          "transient_retries": 2,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "dns_error"
+          ],
+          "transport": "http"
         }
       ],
       "sources": [
@@ -2485,7 +2931,7 @@
       "asset_default": "body",
       "capabilities": {
         "auth_supported": true,
-        "browser_optional": false,
+        "browser_optional": true,
         "browser_required": true,
         "html": true,
         "metadata_probe": "routing_signal",
@@ -2691,6 +3137,70 @@
             "dns_error"
           ],
           "transport": "browser"
+        },
+        {
+          "acceptance_policy": "validated_asset",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": true,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "execution_policy": {
+            "acceptance_policy": "validated_asset",
+            "asset_scope": "body",
+            "concurrency": 2,
+            "hosts": [
+              "www.mdpi.com",
+              "mdpi.com"
+            ],
+            "kind": "assets",
+            "minimum_interval_seconds": 0.0,
+            "provider": "mdpi",
+            "qps": null,
+            "rate_limit_retries": 2,
+            "rate_limit_wait_budget_seconds": 5.0,
+            "rate_policy": "shared_host_cooldown",
+            "route": "assets",
+            "sensitive_headers": [],
+            "timeout_seconds": 20,
+            "transient_retries": 0,
+            "transient_retry_categories": [
+              "timeout",
+              "connection_reset",
+              "connection_closed",
+              "dns_error"
+            ]
+          },
+          "hosts": [
+            "www.mdpi.com",
+            "mdpi.com"
+          ],
+          "implementation_status": "available",
+          "kind": "assets",
+          "name": "assets",
+          "notes": null,
+          "order": 3,
+          "qps": null,
+          "rate_limit_retries": 2,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "mdpi_html",
+          "timeout_seconds": 20,
+          "transient_retries": 0,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "dns_error"
+          ],
+          "transport": "browser"
         }
       ],
       "sources": [
@@ -2702,7 +3212,7 @@
       "asset_default": "body",
       "capabilities": {
         "auth_supported": true,
-        "browser_optional": false,
+        "browser_optional": true,
         "browser_required": true,
         "html": true,
         "metadata_probe": "routing_signal",
@@ -2895,6 +3405,68 @@
           "source": "royalsocietypublishing_pdf",
           "timeout_seconds": 120,
           "transient_retries": 2,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "dns_error"
+          ],
+          "transport": "browser"
+        },
+        {
+          "acceptance_policy": "validated_asset",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": true,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "execution_policy": {
+            "acceptance_policy": "validated_asset",
+            "asset_scope": "body",
+            "concurrency": 2,
+            "hosts": [
+              "royalsocietypublishing.org"
+            ],
+            "kind": "assets",
+            "minimum_interval_seconds": 0.0,
+            "provider": "royalsocietypublishing",
+            "qps": null,
+            "rate_limit_retries": 2,
+            "rate_limit_wait_budget_seconds": 5.0,
+            "rate_policy": "shared_host_cooldown",
+            "route": "assets",
+            "sensitive_headers": [],
+            "timeout_seconds": 20,
+            "transient_retries": 0,
+            "transient_retry_categories": [
+              "timeout",
+              "connection_reset",
+              "connection_closed",
+              "dns_error"
+            ]
+          },
+          "hosts": [
+            "royalsocietypublishing.org"
+          ],
+          "implementation_status": "available",
+          "kind": "assets",
+          "name": "assets",
+          "notes": null,
+          "order": 3,
+          "qps": null,
+          "rate_limit_retries": 2,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "royalsocietypublishing_html",
+          "timeout_seconds": 20,
+          "transient_retries": 0,
           "transient_retry_categories": [
             "timeout",
             "connection_reset",
@@ -3119,6 +3691,68 @@
             "dns_error"
           ],
           "transport": "browser"
+        },
+        {
+          "acceptance_policy": "validated_asset",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "execution_policy": {
+            "acceptance_policy": "validated_asset",
+            "asset_scope": "body",
+            "concurrency": 2,
+            "hosts": [
+              "annualreviews.org",
+              "www.annualreviews.org"
+            ],
+            "kind": "assets",
+            "minimum_interval_seconds": 0.0,
+            "provider": "annualreviews",
+            "qps": null,
+            "rate_limit_retries": 2,
+            "rate_limit_wait_budget_seconds": 5.0,
+            "rate_policy": "shared_host_cooldown",
+            "route": "assets",
+            "sensitive_headers": [],
+            "timeout_seconds": 20,
+            "transient_retries": 2,
+            "transient_retry_categories": [
+              "timeout",
+              "connection_reset",
+              "connection_closed",
+              "dns_error"
+            ]
+          },
+          "hosts": [
+            "annualreviews.org",
+            "www.annualreviews.org"
+          ],
+          "implementation_status": "available",
+          "kind": "assets",
+          "name": "assets",
+          "notes": null,
+          "order": 3,
+          "qps": null,
+          "rate_limit_retries": 2,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "annualreviews_html",
+          "timeout_seconds": 20,
+          "transient_retries": 2,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "dns_error"
+          ],
+          "transport": "http"
         }
       ],
       "sources": [
@@ -3607,6 +4241,66 @@
             "dns_error"
           ],
           "transport": "http"
+        },
+        {
+          "acceptance_policy": "validated_asset",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "execution_policy": {
+            "acceptance_policy": "validated_asset",
+            "asset_scope": "body",
+            "concurrency": 2,
+            "hosts": [
+              "academic.oup.com"
+            ],
+            "kind": "assets",
+            "minimum_interval_seconds": 0.0,
+            "provider": "oxfordacademic",
+            "qps": null,
+            "rate_limit_retries": 2,
+            "rate_limit_wait_budget_seconds": 5.0,
+            "rate_policy": "shared_host_cooldown",
+            "route": "assets",
+            "sensitive_headers": [],
+            "timeout_seconds": 20,
+            "transient_retries": 2,
+            "transient_retry_categories": [
+              "timeout",
+              "connection_reset",
+              "connection_closed",
+              "dns_error"
+            ]
+          },
+          "hosts": [
+            "academic.oup.com"
+          ],
+          "implementation_status": "available",
+          "kind": "assets",
+          "name": "assets",
+          "notes": null,
+          "order": 3,
+          "qps": null,
+          "rate_limit_retries": 2,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "oxfordacademic_html",
+          "timeout_seconds": 20,
+          "transient_retries": 2,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "dns_error"
+          ],
+          "transport": "http"
         }
       ],
       "sources": [
@@ -3618,7 +4312,7 @@
       "asset_default": "body",
       "capabilities": {
         "auth_supported": true,
-        "browser_optional": false,
+        "browser_optional": true,
         "browser_required": true,
         "html": true,
         "metadata_probe": "routing_signal",
@@ -3830,6 +4524,72 @@
             "dns_error"
           ],
           "transport": "browser"
+        },
+        {
+          "acceptance_policy": "validated_asset",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": true,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "execution_policy": {
+            "acceptance_policy": "validated_asset",
+            "asset_scope": "body",
+            "concurrency": 2,
+            "hosts": [
+              "www.acs.org",
+              "pubs.acs.org",
+              "acs.org"
+            ],
+            "kind": "assets",
+            "minimum_interval_seconds": 0.0,
+            "provider": "acs",
+            "qps": null,
+            "rate_limit_retries": 2,
+            "rate_limit_wait_budget_seconds": 5.0,
+            "rate_policy": "shared_host_cooldown",
+            "route": "assets",
+            "sensitive_headers": [],
+            "timeout_seconds": 20,
+            "transient_retries": 0,
+            "transient_retry_categories": [
+              "timeout",
+              "connection_reset",
+              "connection_closed",
+              "dns_error"
+            ]
+          },
+          "hosts": [
+            "www.acs.org",
+            "pubs.acs.org",
+            "acs.org"
+          ],
+          "implementation_status": "available",
+          "kind": "assets",
+          "name": "assets",
+          "notes": null,
+          "order": 3,
+          "qps": null,
+          "rate_limit_retries": 2,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "acs",
+          "timeout_seconds": 20,
+          "transient_retries": 0,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "dns_error"
+          ],
+          "transport": "browser"
         }
       ],
       "sources": [
@@ -3840,7 +4600,7 @@
       "asset_default": "body",
       "capabilities": {
         "auth_supported": true,
-        "browser_optional": false,
+        "browser_optional": true,
         "browser_required": true,
         "html": true,
         "metadata_probe": "routing_signal",
@@ -4040,6 +4800,68 @@
             "dns_error"
           ],
           "transport": "browser"
+        },
+        {
+          "acceptance_policy": "validated_asset",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": true,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "execution_policy": {
+            "acceptance_policy": "validated_asset",
+            "asset_scope": "body",
+            "concurrency": 2,
+            "hosts": [
+              "iopscience.iop.org"
+            ],
+            "kind": "assets",
+            "minimum_interval_seconds": 0.0,
+            "provider": "iop",
+            "qps": null,
+            "rate_limit_retries": 2,
+            "rate_limit_wait_budget_seconds": 5.0,
+            "rate_policy": "shared_host_cooldown",
+            "route": "assets",
+            "sensitive_headers": [],
+            "timeout_seconds": 20,
+            "transient_retries": 0,
+            "transient_retry_categories": [
+              "timeout",
+              "connection_reset",
+              "connection_closed",
+              "dns_error"
+            ]
+          },
+          "hosts": [
+            "iopscience.iop.org"
+          ],
+          "implementation_status": "available",
+          "kind": "assets",
+          "name": "assets",
+          "notes": null,
+          "order": 3,
+          "qps": null,
+          "rate_limit_retries": 2,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "iop_html",
+          "timeout_seconds": 20,
+          "transient_retries": 0,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "dns_error"
+          ],
+          "transport": "browser"
         }
       ],
       "sources": [
@@ -4051,7 +4873,7 @@
       "asset_default": "body",
       "capabilities": {
         "auth_supported": true,
-        "browser_optional": false,
+        "browser_optional": true,
         "browser_required": true,
         "html": true,
         "metadata_probe": "routing_signal",
@@ -4244,6 +5066,68 @@
           "source": "aip_pdf",
           "timeout_seconds": 120,
           "transient_retries": 2,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "dns_error"
+          ],
+          "transport": "browser"
+        },
+        {
+          "acceptance_policy": "validated_asset",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": true,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "execution_policy": {
+            "acceptance_policy": "validated_asset",
+            "asset_scope": "body",
+            "concurrency": 2,
+            "hosts": [
+              "pubs.aip.org"
+            ],
+            "kind": "assets",
+            "minimum_interval_seconds": 0.0,
+            "provider": "aip",
+            "qps": null,
+            "rate_limit_retries": 2,
+            "rate_limit_wait_budget_seconds": 5.0,
+            "rate_policy": "shared_host_cooldown",
+            "route": "assets",
+            "sensitive_headers": [],
+            "timeout_seconds": 20,
+            "transient_retries": 0,
+            "transient_retry_categories": [
+              "timeout",
+              "connection_reset",
+              "connection_closed",
+              "dns_error"
+            ]
+          },
+          "hosts": [
+            "pubs.aip.org"
+          ],
+          "implementation_status": "available",
+          "kind": "assets",
+          "name": "assets",
+          "notes": null,
+          "order": 3,
+          "qps": null,
+          "rate_limit_retries": 2,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "aip_html",
+          "timeout_seconds": 20,
+          "transient_retries": 0,
           "transient_retry_categories": [
             "timeout",
             "connection_reset",
@@ -4465,6 +5349,68 @@
             "dns_error"
           ],
           "transport": "http"
+        },
+        {
+          "acceptance_policy": "validated_asset",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": false,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "execution_policy": {
+            "acceptance_policy": "validated_asset",
+            "asset_scope": "body",
+            "concurrency": 2,
+            "hosts": [
+              "www.frontiersin.org",
+              "frontiersin.org"
+            ],
+            "kind": "assets",
+            "minimum_interval_seconds": 0.0,
+            "provider": "frontiers",
+            "qps": null,
+            "rate_limit_retries": 2,
+            "rate_limit_wait_budget_seconds": 5.0,
+            "rate_policy": "shared_host_cooldown",
+            "route": "assets",
+            "sensitive_headers": [],
+            "timeout_seconds": 20,
+            "transient_retries": 2,
+            "transient_retry_categories": [
+              "timeout",
+              "connection_reset",
+              "connection_closed",
+              "dns_error"
+            ]
+          },
+          "hosts": [
+            "www.frontiersin.org",
+            "frontiersin.org"
+          ],
+          "implementation_status": "available",
+          "kind": "assets",
+          "name": "assets",
+          "notes": null,
+          "order": 3,
+          "qps": null,
+          "rate_limit_retries": 2,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": false,
+          "source": "frontiers_xml",
+          "timeout_seconds": 20,
+          "transient_retries": 2,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "dns_error"
+          ],
+          "transport": "http"
         }
       ],
       "sources": [
@@ -4476,7 +5422,7 @@
       "asset_default": "body",
       "capabilities": {
         "auth_supported": true,
-        "browser_optional": false,
+        "browser_optional": true,
         "browser_required": true,
         "html": true,
         "metadata_probe": "routing_signal",
@@ -4682,6 +5628,70 @@
             "dns_error"
           ],
           "transport": "browser"
+        },
+        {
+          "acceptance_policy": "validated_asset",
+          "asset_scope": "body",
+          "auth_supported": false,
+          "browser_optional": true,
+          "browser_preflight": false,
+          "browser_required": false,
+          "concurrency": 2,
+          "execution_policy": {
+            "acceptance_policy": "validated_asset",
+            "asset_scope": "body",
+            "concurrency": 2,
+            "hosts": [
+              "tandfonline.com",
+              "www.tandfonline.com"
+            ],
+            "kind": "assets",
+            "minimum_interval_seconds": 0.0,
+            "provider": "tandf",
+            "qps": null,
+            "rate_limit_retries": 2,
+            "rate_limit_wait_budget_seconds": 5.0,
+            "rate_policy": "shared_host_cooldown",
+            "route": "assets",
+            "sensitive_headers": [],
+            "timeout_seconds": 20,
+            "transient_retries": 0,
+            "transient_retry_categories": [
+              "timeout",
+              "connection_reset",
+              "connection_closed",
+              "dns_error"
+            ]
+          },
+          "hosts": [
+            "tandfonline.com",
+            "www.tandfonline.com"
+          ],
+          "implementation_status": "available",
+          "kind": "assets",
+          "name": "assets",
+          "notes": null,
+          "order": 3,
+          "qps": null,
+          "rate_limit_retries": 2,
+          "rate_limit_wait_budget_seconds": 5.0,
+          "rate_policy": "shared_host_cooldown",
+          "required_packages": [
+            "camoufox"
+          ],
+          "requires_formula_tools": false,
+          "requires_pdf_conversion": false,
+          "requires_playwright": true,
+          "source": "tandf_html",
+          "timeout_seconds": 20,
+          "transient_retries": 0,
+          "transient_retry_categories": [
+            "timeout",
+            "connection_reset",
+            "connection_closed",
+            "dns_error"
+          ],
+          "transport": "browser"
         }
       ],
       "sources": [
@@ -4730,5 +5740,5 @@
     "tandf_pdf": "tandf",
     "wiley_browser": "wiley"
   },
-  "tool_version": "5.5.0"
+  "tool_version": "5.6.0"
 }

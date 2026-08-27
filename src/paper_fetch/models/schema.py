@@ -167,6 +167,7 @@ class Asset:
     final_fetcher: str | None = None
     recovery_attempts: list[dict[str, Any]] = field(default_factory=list)
     provenance: list[str] = field(default_factory=list)
+    asset_timing: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass

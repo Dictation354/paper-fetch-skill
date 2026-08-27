@@ -57,7 +57,6 @@ from .retry import (
 from .url_policy import (
     DEFAULT_SAFE_REMOTE_URL_POLICY,
     SafeRemoteUrlPolicy,
-    ValidatedRemoteUrl,
 )
 
 DEFAULT_TIMEOUT_SECONDS = 20
@@ -339,10 +338,9 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
             maxsize=self.pool_maxsize,
             block=True,
         )
-        # Instance-scoped on purpose: lightweight fakes sometimes inherit this
-        # class without running the initializer.  An inherited method alone is
-        # not proof that the DNS-pinned streaming transport is usable.
-        self._pinned_streaming_ready = True
+        # Instance-scoped so lightweight injected transports that do not run
+        # this initializer are not mistaken for production streaming support.
+        self._streaming_ready = True
 
     def close(self) -> None:
         """Release pooled connections owned by this transport."""
@@ -534,13 +532,23 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         current_headers = dict(request.headers)
         visited: set[str] = set()
         redirects_followed = 0
+        timing_seconds = {
+            "dns_policy_validation": 0.0,
+            "connect_to_headers": 0.0,
+        }
         while True:
             self._check_cancelled()
-            validated_url = self.remote_url_policy.validate(
-                current_url,
-                allowed_hosts=request.allowed_hosts,
-                resolve_dns=True,
-            )
+            policy_started_at = time.monotonic()
+            try:
+                self.remote_url_policy.validate(
+                    current_url,
+                    allowed_hosts=request.allowed_hosts,
+                    resolve_dns=True,
+                )
+            finally:
+                timing_seconds["dns_policy_validation"] += max(
+                    0.0, time.monotonic() - policy_started_at
+                )
             if current_url in visited:
                 raise RequestFailure(
                     None,
@@ -553,12 +561,21 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                 current_headers = dict(
                     request.request_headers_provider(current_url, current_headers)
                 )
-            response = self._request_validated_url(
-                validated_url,
-                method=current_method,
-                headers=current_headers,
-                timeout=timeout,
-            )
+            connect_started_at = time.monotonic()
+            try:
+                response = self._pool.request(
+                    current_method,
+                    current_url,
+                    headers=current_headers,
+                    timeout=urllib3.Timeout(connect=timeout, read=timeout),
+                    preload_content=False,
+                    retries=False,
+                    redirect=False,
+                )
+            finally:
+                timing_seconds["connect_to_headers"] += max(
+                    0.0, time.monotonic() - connect_started_at
+                )
             if request.response_headers_observer is not None:
                 request.response_headers_observer(current_url, response.headers)
             status = int(getattr(response, "status", 0) or 0)
@@ -577,6 +594,7 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
             ):
                 with contextlib.suppress(Exception):
                     response._paper_fetch_final_url = current_url
+                    response._paper_fetch_timing_seconds = dict(timing_seconds)
                 return response
             if redirects_followed >= request.max_redirects:
                 self._close_response(response)
@@ -594,12 +612,18 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                     error_category=RequestErrorCategory.UNSAFE_REDIRECT,
                 )
             target_url = urllib.parse.urljoin(current_url, location)
-            self.remote_url_policy.validate(
-                target_url,
-                allowed_hosts=request.allowed_hosts,
-                previous_url=current_url,
-                resolve_dns=False,
-            )
+            redirect_policy_started_at = time.monotonic()
+            try:
+                self.remote_url_policy.validate(
+                    target_url,
+                    allowed_hosts=request.allowed_hosts,
+                    previous_url=current_url,
+                    resolve_dns=False,
+                )
+            finally:
+                timing_seconds["dns_policy_validation"] += max(
+                    0.0, time.monotonic() - redirect_policy_started_at
+                )
             old_origin = self._url_origin(current_url)
             new_origin = self._url_origin(target_url)
             if old_origin != new_origin:
@@ -623,63 +647,6 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
             self._close_response(response)
             redirects_followed += 1
             current_url = target_url
-
-    def _request_validated_url(
-        self,
-        validated: ValidatedRemoteUrl,
-        *,
-        method: str,
-        headers: Mapping[str, str],
-        timeout: int,
-    ) -> Any:
-        """Connect to a policy-validated IP while retaining HTTP/TLS identity."""
-
-        if not validated.addresses:
-            raise RequestFailure(
-                None,
-                f"Remote URL has no validated address: {redact_url_for_cache(validated.url)}",
-                url=redact_url_for_cache(validated.url),
-                error_category=RequestErrorCategory.DNS_ERROR,
-            )
-        address = validated.addresses[0]
-        pool_kwargs: dict[str, Any] = {}
-        if validated.scheme == "https":
-            # urllib3 uses server_hostname for SNI and assert_hostname for the
-            # certificate check even though the TCP endpoint is the pinned IP.
-            pool_kwargs.update(
-                server_hostname=validated.host,
-                assert_hostname=validated.host,
-            )
-        connection_pool = self._pool.connection_from_host(
-            address,
-            port=validated.port,
-            scheme=validated.scheme,
-            pool_kwargs=pool_kwargs,
-        )
-        request_headers = {
-            key: value
-            for key, value in headers.items()
-            if str(key).strip().lower() != "host"
-        }
-        host_header = f"[{validated.host}]" if ":" in validated.host else validated.host
-        default_port = 443 if validated.scheme == "https" else 80
-        if validated.port != default_port:
-            host_header = f"{host_header}:{validated.port}"
-        request_headers["Host"] = host_header
-        parsed = urllib.parse.urlsplit(validated.url)
-        request_target = urllib.parse.urlunsplit(
-            ("", "", parsed.path or "/", parsed.query, "")
-        )
-        return connection_pool.urlopen(
-            method,
-            request_target,
-            headers=request_headers,
-            timeout=urllib3.Timeout(connect=timeout, read=timeout),
-            preload_content=False,
-            retries=False,
-            redirect=False,
-            assert_same_host=False,
-        )
 
     @staticmethod
     def _url_origin(url: str) -> tuple[str, str, int]:
@@ -819,22 +786,6 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         request_headers = {
             key: value for key, value in (headers or {}).items() if value is not None
         }
-        declared_sensitive_headers = frozenset(
-            str(header).strip().lower()
-            for header in policy.sensitive_headers
-            if str(header).strip()
-        )
-        has_sensitive_header = any(
-            str(header).strip().lower() in declared_sensitive_headers
-            for header in request_headers
-        )
-        if has_sensitive_header and not policy.allowed_hosts:
-            raise RequestFailure(
-                None,
-                "Credentialed HTTP request requires a non-empty host allowlist.",
-                url=redact_url_for_cache(url),
-                error_category=RequestErrorCategory.UNSAFE_REDIRECT,
-            )
         request_headers.setdefault("Accept-Encoding", "gzip")
         prepared = _PreparedRequest(
             method=method.upper(),
@@ -941,9 +892,8 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         """Stream one policy-validated response into an already unique path.
 
         This intentionally bypasses the in-memory/disk response caches. Redirects
-        still use ``_perform_request``, so every hop is DNS validated and the TCP
-        endpoint remains pinned to the validated address with the original Host,
-        SNI, and certificate hostname.
+        still use ``_perform_request``, so every hop is policy/DNS validated before
+        the shared hostname-keyed urllib3 pool opens or reuses a connection.
         """
 
         started_at = time.monotonic()
@@ -1109,6 +1059,7 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                     if len(preview) < STREAM_PREVIEW_BYTES:
                         preview.extend(chunk[: STREAM_PREVIEW_BYTES - len(preview)])
 
+                body_stream_started_at = time.monotonic()
                 with destination.open("xb") as stream:
                     destination_created = True
                     while True:
@@ -1177,6 +1128,14 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                     "downloaded_bytes": written,
                     "body_preview": bytes(preview),
                     "compressed_bytes": compressed_read,
+                    "_paper_fetch_timing_seconds": {
+                        **dict(
+                            getattr(response, "_paper_fetch_timing_seconds", {}) or {}
+                        ),
+                        "body_stream": max(
+                            0.0, time.monotonic() - body_stream_started_at
+                        ),
+                    },
                     "_paper_fetch_header_values": {
                         "set-cookie": list(
                             _header_values(response.headers, "set-cookie")
@@ -1229,11 +1188,7 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
             Callable[[str, Mapping[str, str]], Mapping[str, str]] | None
         ) = None,
     ) -> dict[str, Any]:
-        """Read only a bounded prefix while retaining uncached raw headers.
-
-        Cookie warmups use this pinned transport path so a large HTML landing
-        page is never materialized merely to collect Set-Cookie headers.
-        """
+        """Read only a bounded prefix while retaining uncached raw headers."""
 
         policy = request_policy or HttpRequestPolicy()
         effective_timeout = int(
@@ -1244,24 +1199,6 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         request_headers = {
             key: value for key, value in (headers or {}).items() if value is not None
         }
-        declared_sensitive_headers = frozenset(
-            str(header).strip().lower()
-            for header in policy.sensitive_headers
-            if str(header).strip()
-        )
-        if (
-            any(
-                str(header).strip().lower() in declared_sensitive_headers
-                for header in request_headers
-            )
-            and not policy.allowed_hosts
-        ):
-            raise RequestFailure(
-                None,
-                "Credentialed HTTP request requires a non-empty host allowlist.",
-                url=redact_url_for_cache(url),
-                error_category=RequestErrorCategory.UNSAFE_REDIRECT,
-            )
         request_headers.setdefault("Accept-Encoding", "identity")
         prepared = _PreparedRequest(
             method=method.upper(),
@@ -1363,22 +1300,6 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         request_headers = {
             key: value for key, value in (headers or {}).items() if value is not None
         }
-        declared_sensitive_headers = frozenset(
-            str(header).strip().lower()
-            for header in policy.sensitive_headers
-            if str(header).strip()
-        )
-        sends_declared_credential = any(
-            str(header).strip().lower() in declared_sensitive_headers
-            for header in request_headers
-        )
-        if sends_declared_credential and not policy.allowed_hosts:
-            raise RequestFailure(
-                None,
-                "Credentialed HTTP request requires a non-empty host allowlist.",
-                url=redact_url_for_cache(url),
-                error_category=RequestErrorCategory.UNSAFE_REDIRECT,
-            )
         if not any(str(key).lower() == "accept-encoding" for key in request_headers):
             request_headers["Accept-Encoding"] = "gzip"
         cache_key = self._build_cache_key(method, url, request_headers)

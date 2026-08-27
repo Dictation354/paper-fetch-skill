@@ -194,7 +194,10 @@ class ProviderSpec:
             1 <= effective_batch_concurrency <= 8
         ):
             raise ValueError("batch_concurrency must be an integer from 1 to 8.")
-        if not self.routes:
+        declared_asset_routes = tuple(
+            route for route in self.routes if route.kind == "assets"
+        )
+        if not self.routes or len(declared_asset_routes) == len(self.routes):
             routes: list[ProviderRouteSpec] = [
                 ProviderRouteSpec(name="metadata", kind="metadata")
             ]
@@ -230,6 +233,7 @@ class ProviderSpec:
                         concurrency=1 if browser_backed_pdf else 2,
                     )
                 )
+            routes.extend(declared_asset_routes)
             object.__setattr__(self, "routes", tuple(routes))
         if self.requires_browser_runtime and not any(
             route.browser_required or route.browser_optional for route in self.routes
@@ -303,6 +307,13 @@ class ProviderSpec:
         if route_orders != list(range(len(self.routes))):
             raise ValueError(
                 "Provider route order must be unique and contiguous from zero."
+            )
+        if self.asset_default != "none" and not any(
+            route.kind == "assets" for route in self.routes
+        ):
+            raise ValueError(
+                "Providers that download body resources must declare an explicit "
+                "assets route."
             )
 
     def to_dict(self) -> dict[str, object]:
@@ -552,10 +563,9 @@ def _compiled_provider_hosts(
 ) -> tuple[str, ...]:
     """Return every catalog-declared network identity for a route.
 
-    Domain suffixes are deliberately retained as allowlist entries: the shared
-    URL policy interprets them with label-boundary matching.  Absolute URL
-    templates and PDF source declarations are included so API/CDN endpoints do
-    not need ad-hoc runtime exceptions.
+    These values remain useful for routing, governance, and explicit caller
+    policy construction, but compiling a provider route does not automatically
+    authorize them for HTTP requests.
     """
 
     candidates = [

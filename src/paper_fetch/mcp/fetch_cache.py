@@ -30,6 +30,7 @@ from ..models import (
     build_token_estimate_breakdown,
     coerce_asset_failure_diagnostics,
     coerce_asset_provenance,
+    coerce_asset_timing,
     coerce_asset_quality_summary,
     coerce_acquisition_provenance,
     coerce_body_quality_metrics,
@@ -430,6 +431,8 @@ def cached_envelope_satisfies_request(
                 request.strategy.asset_profile,
                 source_name=envelope.source,
             ),
+            require_local_body_assets=request.strategy.require_local_body_assets,
+            require_full_size_body_assets=request.strategy.require_full_size_body_assets,
             requested_outputs=requested_modes,
             expected_doi=normalized_expected_doi,
         )
@@ -684,6 +687,7 @@ def article_from_payload(value: Mapping[str, Any] | None) -> ArticleModel | None
                     if isinstance(attempt, Mapping)
                 ],
                 provenance=coerce_asset_provenance(entry.get("provenance")),
+                asset_timing=coerce_asset_timing(entry.get("asset_timing")),
             )
             for entry in value.get("assets") or []
             if isinstance(entry, Mapping)
@@ -1509,6 +1513,8 @@ class FetchCache:
                         request.strategy.asset_profile,
                         source_name=envelope.source,
                     ),
+                    require_local_body_assets=request.strategy.require_local_body_assets,
+                    require_full_size_body_assets=request.strategy.require_full_size_body_assets,
                     requested_outputs=request.requested_modes(),
                     expected_doi=normalized_doi,
                 )

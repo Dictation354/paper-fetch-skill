@@ -40,6 +40,8 @@ IEEE_DOWNLOAD_MERGE_FIELDS = (
     "final_fetcher",
     "recovery_attempts",
     "provenance",
+    "asset_route",
+    "asset_timing",
 )
 IEEE_ASSET_RETRY_KEY_FIELDS = (
     "download_url",

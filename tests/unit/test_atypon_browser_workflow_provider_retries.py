@@ -242,23 +242,27 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
             "url": "https://example.test/supplement.docx",
             "section": "supplementary",
         }
-        initial_body_result = {
+        probe_body_result = {
             "assets": [
-                {
-                    "kind": "figure",
-                    "heading": "Figure 2",
-                    "caption": "Second figure caption",
-                    "download_url": "https://example.test/figure2.png",
-                    "source_url": "https://example.test/figure2.png",
-                    "section": "body",
-                }
-            ],
-            "asset_failures": [
                 {
                     "kind": "figure",
                     "heading": "Figure 1",
                     "caption": "Figure caption",
+                    "download_url": "https://example.test/figure1.png",
                     "source_url": "https://example.test/figure1.png",
+                    "section": "body",
+                }
+            ],
+            "asset_failures": [],
+        }
+        initial_body_result = {
+            "assets": [],
+            "asset_failures": [
+                {
+                    "kind": "figure",
+                    "heading": "Figure 2",
+                    "caption": "Second figure caption",
+                    "source_url": "https://example.test/figure2.png",
                     "section": "body",
                     "reason": "cloudflare_challenge",
                 }
@@ -268,10 +272,10 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
             "assets": [
                 {
                     "kind": "figure",
-                    "heading": "Figure 1",
-                    "caption": "Figure caption",
-                    "download_url": "https://example.test/figure1.png",
-                    "source_url": "https://example.test/figure1.png",
+                    "heading": "Figure 2",
+                    "caption": "Second figure caption",
+                    "download_url": "https://example.test/figure2.png",
+                    "source_url": "https://example.test/figure2.png",
                     "section": "body",
                 }
             ],
@@ -294,7 +298,9 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "science", doi)
             mocked_warm = mock.Mock(return_value={"browser_final_url": article_url})
-            body_results = iter([initial_body_result, retry_body_result])
+            body_results = iter(
+                [probe_body_result, initial_body_result, retry_body_result]
+            )
             mocked_download_assets = mock.Mock(
                 side_effect=lambda kind, *_args, **_kwargs: (
                     next(body_results)
@@ -343,11 +349,10 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
             for call in mocked_download_assets.call_args_list
             if call.args[0] is html_assets.SUPPLEMENTARY_KIND
         ]
-        self.assertEqual(len(figure_calls), 2)
-        self.assertEqual(
-            figure_calls[0].kwargs["assets"], [first_figure, second_figure]
-        )
-        self.assertEqual(figure_calls[1].kwargs["assets"], [first_figure])
+        self.assertEqual(len(figure_calls), 3)
+        self.assertEqual(figure_calls[0].kwargs["assets"], [first_figure])
+        self.assertEqual(figure_calls[1].kwargs["assets"], [second_figure])
+        self.assertEqual(figure_calls[2].kwargs["assets"], [second_figure])
         self.assertEqual(len(supplementary_calls), 1)
         self.assertEqual(supplementary_calls[0].kwargs["assets"], [supplementary_asset])
         self.assertEqual(

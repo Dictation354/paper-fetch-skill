@@ -22,6 +22,12 @@ from paper_fetch.config import (
     configured_browser_backend,
 )
 from paper_fetch.formula.paths import FORMULA_TOOLS_DIR_ENV_VAR
+from paper_fetch.providers.browser_runtime import load_runtime_config
+from paper_fetch.providers.browser_workflow.reuse_cache import (
+    browser_runtime_fingerprint,
+    normalize_browser_cache_url,
+)
+from paper_fetch.publisher_identity import normalize_doi
 from paper_fetch.reason_codes import NO_ACCESS
 from tests._environment import (
     PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR,
@@ -30,11 +36,21 @@ from tests._environment import (
 )
 
 
+class SecretSafeEnvironment(dict[str, str]):
+    """Environment mapping whose representation never includes values."""
+
+    def __repr__(self) -> str:
+        names = ", ".join(sorted(self))
+        return f"SecretSafeEnvironment(keys=[{names}])"
+
+    __str__ = __repr__
+
+
 def build_isolated_live_env(
     base_env: Mapping[str, str] | None = None,
-) -> tuple[dict[str, str], tempfile.TemporaryDirectory]:
+) -> tuple[SecretSafeEnvironment, tempfile.TemporaryDirectory]:
     tempdir = tempfile.TemporaryDirectory(prefix="paper-fetch-live-xdg-")
-    env = build_runtime_env(base_env)
+    env = SecretSafeEnvironment(build_runtime_env(base_env))
     isolated_root = Path(tempdir.name)
     env["XDG_DATA_HOME"] = str(isolated_root / "data")
     env["XDG_CACHE_HOME"] = str(isolated_root / "cache")
@@ -106,8 +122,11 @@ def preflight_selected_browser_or_skip(
     *,
     provider: str,
     env: Mapping[str, str],
-    cache: dict[str, BrowserPreflightResult],
+    cache: dict[object, BrowserPreflightResult],
     artifact_root: Path | None = None,
+    doi: str | None = None,
+    target_url: str | None = None,
+    return_terminal_result: bool = False,
 ) -> BrowserPreflightResult:
     """Run one provider preflight per shared live profile before its first fetch."""
 
@@ -134,22 +153,41 @@ def preflight_selected_browser_or_skip(
             f"{provider} browser runtime is unavailable ({reason}): "
             f"{runtime_capability.get('message') or note_message or 'missing local dependency'}"
         )
-    result = cache.get(provider)
-    if result is None:
-        result = preflight_browser_provider(
+    normalized_doi = normalize_doi(doi or "")
+    normalized_target = normalize_browser_cache_url(target_url)
+    cache_key: object = provider
+    if normalized_doi and normalized_target:
+        runtime = load_runtime_config(
+            env,
+            provider=provider,
+            doi=normalized_doi,
+        )
+        cache_key = (
             provider,
-            env=env,
+            normalized_doi,
+            normalized_target,
+            browser_runtime_fingerprint(runtime),
+        )
+    result = cache.get(cache_key)
+    if result is None:
+        preflight_kwargs = {
+            "env": env,
             # AIP's anti-bot cookies are tied to Camoufox's per-process
             # fingerprint. Persisting a successful probe into the acceptance
             # profile can turn the immediately following fresh launch into an
             # empty shell; its cold-start test covers the no-state path.
-            save_storage_state=provider != "aip",
-            download_dir=(
+            "save_storage_state": provider != "aip",
+            "download_dir": (
                 artifact_root / provider if artifact_root is not None else None
             ),
-            artifact_mode="all" if artifact_root is not None else "none",
-        )
-        cache[provider] = result
+            "artifact_mode": "all" if artifact_root is not None else "none",
+        }
+        if normalized_target:
+            preflight_kwargs["target_url"] = normalized_target
+        result = preflight_browser_provider(provider, **preflight_kwargs)
+        cache[cache_key] = result
+    if return_terminal_result:
+        return result
     if result.status in {"challenge", "auth_required"}:
         testcase.skipTest(
             f"{provider} preflight requires legal access setup "

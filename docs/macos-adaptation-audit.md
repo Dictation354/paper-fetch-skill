@@ -47,7 +47,9 @@
   target 与 provenance 都绑定该 SHA。provenance 步骤还会校验
   `actions/attest-build-provenance` v4.2.2 的完整 SHA、精确一次调用和
   `release-assets/**/*` subject path；每目标实际 staging 的 dependency manifest
-  与 CycloneDX SBOM 随对应 artifact 上传。
+  与 CycloneDX SBOM 随对应 artifact 上传。所有 artifact/release upload、attestation
+  和 publication 还必须在对应目录通过 raw/URL-encoded sentinel 扫描；扫描只报告
+  变量名与路径，命中或扫描错误都阻断后续步骤。
 - 平台：S / L 只能验证 YAML；D 才能提供平台证据。
 - 关闭条件：四个 ABI job 都在固定 runner 通过，不能用 `macos-latest` 或
   Windows / WSL 结果代替。
@@ -264,20 +266,34 @@
   worker 使用浏览器原生行为，不安装 context-wide URL/DNS route，带 cookie/storage/
   profile 的 context 不再由项目绑定单一 origin，external CDP 恢复借用既有 context。
   Provider image/font/media 优化仍是 page-scope 资源类型策略；catalog compiler 继续固定
-  browser deadline 与 direct route 的 hosts、timeout、retry、QPS、acceptance 和 asset
-  cap。机器合约不再声明 browser SSRF、credential origin 或 service-worker 阻断保证；
-  direct HTTP/API 和二进制流式 transport 的 URL/redirect/凭据策略由独立回归继续锁定。
+  browser deadline、timeout、retry、QPS、acceptance、asset scope 和 cap，但 catalog
+  host/sensitive-header 不自动成为授权 allowlist。机器合约不声明 browser SSRF、
+  credential origin 或 service-worker 阻断保证；direct HTTP/API 和资产 transport 的
+  基础 URL/redirect/凭据策略由独立回归继续锁定。
   这些行为在 Darwin 与其他平台共用 Python 实现，但不替代原生浏览器启动证据。
 - Browser state/cache scope 证据：portable 回归覆盖默认 provider data 目录、profile、
   user-data 和显式 storage-state 的 canonical path/content digest；只有 context 创建成功
   且实际注入 state 才记录 use，并在 fetch 完成时按最终 digest 写 private sidecar。
   `path/exists/used` diagnostics、public→private 禁止和不同 private scope 隔离均为跨平台
   Python 契约；它不扩大原生 macOS browser launch 的证据范围。
-- 二进制资产 portable 证据：Browser 只返回 URL descriptor，pinned direct transport
-  执行逐 chunk 流式落盘；同一 runtime 的 figure/supplementary 共用文件、字节、像素
-  与最多 4 worker 的预算。gzip/未知长度/转换放大、pending future 取消、arXiv archive
-  解压和 staging 清理由小阈值 unit test 固定；这同样不宣称真实 publisher 或离线
-  Camoufox bundle 已在 macOS 上完成资产下载。
+- 主文档响应诊断证据：portable mock 同时锁定 Playwright `requestfinished` lifecycle、
+  Content-Length、捕获 DOM 字节和 Navigation Timing；HTTP 200 小空壳可据此区分“响应已
+  完整结束”与“采样时仍在传输”。诊断只保存脱敏 URL、选定数值和 transfer 布尔事实，
+  不保存 header/cookie/query/原始 HTML。该证据验证跨平台 Python 采样契约，不代表
+  原生 macOS 或真实 publisher 必然重现相同网络时序。
+- 二进制资产 portable 证据：共享 hostname transport 与 browser-owned image/file/PDF
+  bytes 都经过 MIME、Content-Length/实际字节、像素、累计预算、取消、唯一 staging 和
+  原子发布。正文资产使用显式 20 秒/route cap 2 的 assets route；每篇论文、每个 host
+  只有首资源 direct probe，browser recovery 成功后才让同源剩余资源复用 browser，
+  不跨论文持久化。同一 runtime 的 figure/supplementary 共用文件、字节、像素与最多
+  4 worker 的预算；逐资源另记 candidate resolution，browser prepare/release 单列
+  stage timing。gzip/未知长度/转换放大、pending future 取消、host 并发、论文生命周期、
+  arXiv archive 解压和 staging 清理由小阈值 unit test 固定；
+  这同样不宣称真实 publisher 或离线 Camoufox bundle 已在 macOS 上完成资产下载。
+- 图片质量 portable 证据：arXiv source archive、Copernicus JATS alternatives、AIP
+  Silverchair `srcset` 与 T&F authentic fixture 锁定官方原图优先级；官方未暴露或访问
+  受限分别进入稳定 provenance，preview 不冒充 full-size。该证据不证明远端站点三轮
+  都继续暴露相同 rendition，真实质量仍需本地显式 live 审计。
 - T&F page-preparation 证据：portable 回归验证 provider hook 在最终 HTML capture
   前执行，并且只把文章 DOM 暴露的同源官方 CSV table action（单次脚本、并发 4、
   每表 2 秒、最多 24 表、输入顺序保持）或已加载的同页 table payload 有界水合为

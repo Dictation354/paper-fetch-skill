@@ -16,6 +16,7 @@ from bs4 import BeautifulSoup, NavigableString, Tag
 
 from ..extraction.html.parsing import choose_parser
 from ..models import normalize_markdown_text
+from ..reason_codes import OFFICIAL_FULL_SIZE_NOT_EXPOSED
 from ..utils import normalize_text
 from ._html_authors import (
     AuthorExtractionPipeline,
@@ -1216,11 +1217,11 @@ def _extract_tandf_supplementary_assets(
 
 
 def _mark_tandf_accepted_figure_previews(
-    assets: list[dict[str, str]],
-) -> list[dict[str, str]]:
-    marked: list[dict[str, str]] = []
+    assets: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    marked: list[dict[str, Any]] = []
     for asset in assets:
-        item = dict(asset)
+        item: dict[str, Any] = dict(asset)
         preview_url = normalize_text(item.get("preview_url"))
         parsed = urlparse(preview_url)
         host = normalize_text(parsed.hostname).lower()
@@ -1230,6 +1231,10 @@ def _mark_tandf_accepted_figure_previews(
             and parsed.path.lower().startswith("/cms/asset/")
         ):
             item["preview_accepted"] = "true"
+            if not normalize_text(
+                str(item.get("full_size_url") or item.get("download_url") or "")
+            ):
+                item["provenance"] = [OFFICIAL_FULL_SIZE_NOT_EXPOSED]
         marked.append(item)
     return marked
 
@@ -1240,7 +1245,7 @@ def scoped_asset_extractor(
     *,
     asset_profile,
     supplementary_html_text: str | None = None,
-) -> list[dict[str, str]]:
+) -> list[dict[str, Any]]:
     from ._html_asset_engine import (
         HtmlAssetExtractionPolicy,
         extract_scoped_assets_with_policy,

@@ -425,6 +425,8 @@ def _response_payload_from_envelope(
             request.strategy.asset_profile,
             source_name=envelope.source,
         ),
+        require_local_body_assets=request.strategy.require_local_body_assets,
+        require_full_size_body_assets=request.strategy.require_full_size_body_assets,
         requested_outputs=request.requested_modes(),
         expected_doi=expected_doi_from_query(request.query),
     )

@@ -681,6 +681,12 @@ def _run_single_fetch_with_context(
                     strategy=FetchStrategy(
                         allow_metadata_only_fallback=True,
                         asset_profile=args.asset_profile,
+                        require_local_body_assets=bool(
+                            getattr(args, "require_local_body_assets", False)
+                        ),
+                        require_full_size_body_assets=bool(
+                            getattr(args, "require_full_size_body_assets", False)
+                        ),
                     ),
                     render=render_options,
                     env=dict(runtime_env),
@@ -813,6 +819,13 @@ def _manifest_request_parameters(
         "strategy": {
             "allow_metadata_only_fallback": True,
             "asset_profile": args.asset_profile,
+            "require_local_body_assets": bool(
+                getattr(args, "require_local_body_assets", False)
+                or getattr(args, "require_full_size_body_assets", False)
+            ),
+            "require_full_size_body_assets": bool(
+                getattr(args, "require_full_size_body_assets", False)
+            ),
         },
         "render": {
             "include_refs": args.include_refs,
@@ -1621,6 +1634,24 @@ def _add_fetch_arguments(
         ),
     )
     parser.add_argument(
+        "--require-local-body-assets",
+        action="store_true",
+        default=_default(False, suppress_defaults=suppress_defaults),
+        help=(
+            "Degrade acceptance unless every discovered body asset is archived "
+            "locally. Applies only to --asset-profile body or all."
+        ),
+    )
+    parser.add_argument(
+        "--require-full-size-body-assets",
+        action="store_true",
+        default=_default(False, suppress_defaults=suppress_defaults),
+        help=(
+            "Degrade acceptance unless every discovered body asset is a local "
+            "full-size file; this also implies --require-local-body-assets."
+        ),
+    )
+    parser.add_argument(
         "--max-tokens",
         type=parse_max_tokens,
         default=_default("full_text", suppress_defaults=suppress_defaults),
@@ -1835,6 +1866,9 @@ def _write_doctor_human(report: Mapping[str, Any]) -> None:
     sys.stdout.write("Live publisher or browser-page checks: not run\n")
     provenance = report.get("install_provenance")
     if isinstance(provenance, Mapping):
+        sys.stdout.write(
+            f"Provenance scope: {provenance.get('provenance_scope', 'runtime')}\n"
+        )
         sys.stdout.write(
             f"Install provenance: {provenance.get('status', 'not_applicable')}"
         )

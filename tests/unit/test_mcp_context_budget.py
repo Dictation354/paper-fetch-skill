@@ -21,13 +21,13 @@ HOST_NARRATIVE_MAX_CHARS = 24_000
 # PF-018 snapshot for the ten-tool native contract after adding structured batch_fetch,
 # compact single-fetch acceptance, structured acquisition provenance, compacting
 # presentation-only output-schema metadata, request-scoped Camoufox preparation,
-# and the Round 3 terminal batch fields. The latter intentionally adds stable
-# index/error/provider-lane and progress shapes plus batch execution/deduplication
-# accounting. Both serialized snapshots grew by exactly 1,261 bytes; the allowance
-# remains unchanged and is only for small constraint drift, not unbudgeted fields.
-NATIVE_TOOLS_LIST_BASELINE_BYTES = 74_568
+# and the Round 3 terminal batch fields. Strict body-asset acceptance then added
+# the two opt-in request constraints plus the additive acceptance-v2 counters.
+# The allowance remains unchanged and is only for small constraint drift, not
+# unbudgeted fields.
+NATIVE_TOOLS_LIST_BASELINE_BYTES = 76_454
 NATIVE_TOOLS_LIST_GROWTH_ALLOWANCE_BYTES = 1_024
-NATIVE_SCHEMA_BASELINE_BYTES = 70_639
+NATIVE_SCHEMA_BASELINE_BYTES = 72_525
 NATIVE_SCHEMA_GROWTH_ALLOWANCE_BYTES = 512
 
 

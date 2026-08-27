@@ -68,6 +68,12 @@ runtime 缺失时先按需准备，并打开页面、保存过滤后的 storage-
 `browser_preflight` 默认禁止准备，传 `browser_auto_prepare=true` 才允许。两者都不会
 自动认证、绕过 challenge/paywall，也不会调用 PDF fallback。
 
+Preflight 以 provider、规范 DOI、实际 target URL 和 runtime fingerprint 建短期 key；
+Royal Society 等允许的同一样例 HTML 可被同进程下一次 fetch 一次性消费，AIP 仍保持
+跨 `RuntimeContext` 隔离。图片、附件或 PDF 的 direct 401/403 只允许一次 browser-byte
+恢复；`response.body()`、page `arrayBuffer()`、canvas 或 download/file bytes 都会先
+进入统一 MIME、大小、像素、预算、staging 与原子发布检查。
+
 ## 4.0 迁移
 
 4.0 已删除 CloakBrowser 包、backend、环境变量、离线构建要求与自动迁移路径。

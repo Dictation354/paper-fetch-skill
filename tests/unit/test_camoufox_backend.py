@@ -219,6 +219,41 @@ def test_open_context_failure_does_not_record_storage_state_use(tmp_path) -> Non
     runtime.record_browser_state_capability_use.assert_not_called()
 
 
+def test_open_wiley_context_without_storage_state_has_no_state_capability_use(
+    tmp_path,
+) -> None:
+    config = BrowserRuntimeConfig(
+        provider="wiley",
+        doi="10.1111/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        backend="camoufox",
+        profile_dir=None,
+        user_data_dir=None,
+        storage_state_path=None,
+        persist_storage_state=False,
+    )
+    browser_context = object()
+    runtime = SimpleNamespace(
+        new_browser_context_for_runtime_config=mock.Mock(return_value=browser_context),
+        record_browser_state_capability_use=mock.Mock(),
+    )
+
+    manager, opened = browser_runtime_context.open_browser_context(
+        config, runtime_context=runtime
+    )
+
+    assert manager is None
+    assert opened is browser_context
+    runtime.new_browser_context_for_runtime_config.assert_called_once_with(
+        config,
+        accept_downloads=True,
+    )
+    runtime.record_browser_state_capability_use.assert_not_called()
+    assert not list(tmp_path.rglob("storage-state.json"))
+
+
 def test_camoufox_manager_reuses_browser_and_creates_fresh_contexts(
     monkeypatch,
 ) -> None:
@@ -787,6 +822,37 @@ class _Context:
         pass
 
 
+def _wiley_review_html(
+    identity_markup: str,
+    *,
+    body_prefix: str = "",
+    body_suffix: str = "",
+) -> str:
+    return (
+        "<html><head><title>Open access article</title>"
+        f"{identity_markup}</head><body>"
+        "<nav>Login / Register Individual login Institutional login Open Access</nav>"
+        "<section class='article-section__content en main'>"
+        "<h2>Results</h2>"
+        f"{body_prefix}<p>"
+        + ("Substantive Wiley article body text. " * 120)
+        + "</p><p>Additional discussion paragraph.</p>"
+        f"{body_suffix}</section></body></html>"
+    )
+
+
+def _stable_wiley_readiness() -> SimpleNamespace:
+    return SimpleNamespace(
+        attempted=True,
+        ready=True,
+        selector="section.article-section__content",
+        text_length=4200,
+        paragraph_count=2,
+        heading_count=1,
+        fingerprint="stable-wiley-body",
+    )
+
+
 def test_browser_candidate_uses_native_navigation_without_context_guard(
     monkeypatch, tmp_path
 ) -> None:
@@ -973,6 +1039,216 @@ def test_camoufox_html_navigation_uses_commit_and_keeps_images(
     image_route.abort.assert_not_called()
 
 
+def test_main_document_diagnostics_distinguish_finished_response_from_loading_shell(
+    monkeypatch, tmp_path
+) -> None:
+    class Request:
+        resource_type = "document"
+        failure = None
+
+        def __init__(self, url: str) -> None:
+            self.url = url
+
+    class Response:
+        status = 200
+
+        def __init__(self, request: Request, headers: dict[str, str]) -> None:
+            self.request = request
+            self.url = request.url
+            self.headers = headers
+
+        def all_headers(self):
+            return dict(self.headers)
+
+    class LifecyclePage(_Page):
+        def __init__(
+            self,
+            *,
+            html: str,
+            finished: bool,
+            headers: dict[str, str],
+            navigation_timing: dict[str, object],
+        ) -> None:
+            super().__init__()
+            self._html = html
+            self._finished = finished
+            self._headers = headers
+            self._navigation_timing = navigation_timing
+            self._listeners: dict[str, list[object]] = {}
+
+        def on(self, event: str, callback) -> None:
+            self._listeners.setdefault(event, []).append(callback)
+
+        def remove_listener(self, event: str, callback) -> None:
+            self._listeners.get(event, []).remove(callback)
+
+        def _emit(self, event: str, value: object) -> None:
+            for callback in self._listeners.get(event, []):
+                callback(value)
+
+        def goto(self, url: str, **kwargs):
+            self.url = url
+            self.goto_kwargs = dict(kwargs)
+            request = Request(url)
+            response = Response(request, self._headers)
+            self._emit("request", request)
+            self._emit("response", response)
+            if self._finished:
+                self._emit("requestfinished", request)
+            return response
+
+        def content(self) -> str:
+            return self._html
+
+        def evaluate(self, script: str, *_args):
+            if (
+                script
+                == _playwright_browser._MAIN_DOCUMENT_NAVIGATION_DIAGNOSTIC_SCRIPT
+            ):
+                return self._navigation_timing
+            return "Mozilla/5.0 Firefox/152.0"
+
+    def fetch_with_page(page: LifecyclePage, name: str):
+        context = _Context()
+        context.page = page
+        config = BrowserRuntimeConfig(
+            provider="aip",
+            doi="10.1063/example",
+            artifact_dir=tmp_path / name,
+            headless=True,
+            user_agent=None,
+            persist_storage_state=False,
+            backend="camoufox",
+        )
+        monkeypatch.setattr(
+            _playwright_browser,
+            "open_browser_context",
+            lambda *_args, **_kwargs: (None, context),
+        )
+        return _playwright_browser.fetch_html_with_playwright(
+            ["https://pubs.aip.org/doi/full/10.1063/example"],
+            publisher="aip",
+            config=config,
+            wait_seconds=0,
+        )
+
+    monkeypatch.setattr(
+        _playwright_browser,
+        "wait_for_atypon_body_dom_ready",
+        lambda *_args, **_kwargs: SimpleNamespace(
+            attempted=True,
+            ready=False,
+            selector=None,
+            text_length=0,
+            paragraph_count=0,
+            heading_count=0,
+        ),
+    )
+    complete_html = "<html><head><title>Article</title></head><body>Body</body></html>"
+    complete = fetch_with_page(
+        LifecyclePage(
+            html=complete_html,
+            finished=True,
+            headers={
+                "content-type": "text/html; charset=utf-8",
+                "content-length": "2048",
+            },
+            navigation_timing={
+                "documentReadyState": "complete",
+                "navigation": {
+                    "type": "navigate",
+                    "nextHopProtocol": "h2",
+                    "responseStart": 12.5,
+                    "responseEnd": 30.5,
+                    "domInteractive": 32.0,
+                    "domContentLoadedEventEnd": 35.0,
+                    "loadEventEnd": 40.0,
+                    "duration": 40.0,
+                    "transferSize": 2300,
+                    "encodedBodySize": 2048,
+                    "decodedBodySize": 4096,
+                },
+            },
+        ),
+        "complete",
+    )
+    loading_html = "<html><head><title>Article</title></head></html>"
+    loading = fetch_with_page(
+        LifecyclePage(
+            html=loading_html,
+            finished=False,
+            headers={
+                "content-type": "text/html",
+                "transfer-encoding": "chunked",
+                "set-cookie": "session=private-value",
+            },
+            navigation_timing={
+                "documentReadyState": "loading",
+                "navigation": {
+                    "type": "navigate",
+                    "nextHopProtocol": "h2",
+                    "responseStart": 10.0,
+                    "responseEnd": 0.0,
+                    "domInteractive": 0.0,
+                    "domContentLoadedEventEnd": 0.0,
+                    "loadEventEnd": 0.0,
+                    "duration": 0.0,
+                    "transferSize": 1056,
+                    "encodedBodySize": 1056,
+                    "decodedBodySize": 1056,
+                },
+            },
+        ),
+        "loading",
+    )
+
+    complete_trace = complete.diagnostics["browser_runtime_trace"]
+    complete_document = complete_trace["candidates"][0]["main_document_response"]
+    assert complete_document["content_length_bytes"] == 2048
+    assert complete_document["captured_html_bytes"] == len(
+        complete_html.encode("utf-8")
+    )
+    assert complete_document["request_lifecycle"]["request_finished_observed"] is True
+    assert complete_document["navigation_timing"] == {
+        "available": True,
+        "document_ready_state": "complete",
+        "navigation_entry_present": True,
+        "response_start_ms": 12.5,
+        "response_end_ms": 30.5,
+        "dom_interactive_ms": 32,
+        "dom_content_loaded_event_end_ms": 35,
+        "load_event_end_ms": 40,
+        "duration_ms": 40,
+        "transfer_size_bytes": 2300,
+        "encoded_body_size_bytes": 2048,
+        "decoded_body_size_bytes": 4096,
+        "navigation_type": "navigate",
+        "next_hop_protocol": "h2",
+        "response_completed": True,
+        "dom_content_loaded_completed": True,
+        "load_event_completed": True,
+    }
+    assert (
+        complete_trace["page_events"]["document_requests"][0][
+            "request_finished_observed"
+        ]
+        is True
+    )
+
+    loading_trace = loading.diagnostics["browser_runtime_trace"]
+    loading_document = loading_trace["candidates"][0]["main_document_response"]
+    assert loading_document["content_length_bytes"] is None
+    assert loading_document["transfer_encoding_present"] is True
+    assert loading_document["chunked_transfer_declared"] is True
+    assert loading_document["captured_html_bytes"] == len(loading_html.encode("utf-8"))
+    assert loading_document["request_lifecycle"]["request_finished_observed"] is False
+    assert loading_document["navigation_timing"]["document_ready_state"] == "loading"
+    assert loading_document["navigation_timing"]["response_end_ms"] == 0
+    assert loading_document["navigation_timing"]["encoded_body_size_bytes"] == 1056
+    assert loading_document["navigation_timing"]["response_completed"] is False
+    assert "private-value" not in str(loading_trace)
+
+
 def test_camoufox_trace_reports_storage_state_was_loaded(monkeypatch, tmp_path) -> None:
     context = _Context()
     state = tmp_path / "storage-state.json"
@@ -1043,14 +1319,7 @@ def test_wiley_body_readiness_defers_login_navigation_paywall_text(
     monkeypatch.setattr(
         _playwright_browser,
         "wait_for_atypon_body_dom_ready",
-        lambda *_args, **_kwargs: SimpleNamespace(
-            attempted=True,
-            ready=True,
-            selector="section.article-section__content",
-            text_length=4200,
-            paragraph_count=2,
-            heading_count=1,
-        ),
+        lambda *_args, **_kwargs: _stable_wiley_readiness(),
     )
 
     result = _playwright_browser.fetch_html_with_playwright(
@@ -1065,6 +1334,386 @@ def test_wiley_body_readiness_defers_login_navigation_paywall_text(
     candidate = result.diagnostics["browser_runtime_trace"]["candidates"][0]
     assert candidate["dom_readiness_ready"] is True
     assert candidate["result"] == "success"
+
+
+@pytest.mark.parametrize(
+    ("identity_markup", "expected_source"),
+    [
+        pytest.param(
+            "<meta name='citation_doi' content='10.1111/example'>",
+            "citation_meta",
+            id="citation-meta",
+        ),
+        pytest.param(
+            "<link rel='canonical' href='https://onlinelibrary.wiley.com/doi/10.1111/example'>",
+            "canonical",
+            id="canonical",
+        ),
+        pytest.param(
+            "<span class='epub-doi'>https://doi.org/10.1111/example</span>",
+            "epub_doi",
+            id="epub-doi",
+        ),
+    ],
+)
+def test_wiley_403_confirmed_body_and_identity_preserves_status(
+    monkeypatch,
+    tmp_path,
+    identity_markup,
+    expected_source,
+) -> None:
+    context = _Context()
+    context.page.content = mock.Mock(return_value=_wiley_review_html(identity_markup))
+
+    def goto(url: str, **_kwargs):
+        context.page.url = url
+        response = _Response()
+        response.status = 403
+        return response
+
+    context.page.goto = goto
+    config = BrowserRuntimeConfig(
+        provider="wiley",
+        doi="10.1111/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        profile_dir=None,
+        user_data_dir=None,
+        storage_state_path=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "wait_for_atypon_body_dom_ready",
+        lambda *_args, **_kwargs: _stable_wiley_readiness(),
+    )
+
+    result = _playwright_browser.fetch_html_with_playwright(
+        ["https://onlinelibrary.wiley.com/doi/10.1111/example"],
+        publisher="wiley",
+        config=config,
+        wait_seconds=2,
+    )
+
+    assert result.response_status == 403
+    assert "Substantive Wiley article body text" in result.html
+    trace = result.diagnostics["browser_runtime_trace"]
+    candidate = trace["candidates"][0]
+    review = candidate["http_access_status_review"]
+    assert candidate["result"] == "success"
+    assert candidate["status"] == 403
+    assert candidate["dom_readiness_ready"] is True
+    assert candidate["dom_readiness_fingerprint_present"] is True
+    assert review == {
+        "status": 403,
+        "body_ready": True,
+        "doi_evidence_present": True,
+        "doi_evidence_sources": [expected_source],
+        "doi_match": True,
+        "doi_match_sources": [expected_source],
+        "blocking_signals": [],
+        "candidate_confirmed": True,
+        "status_override_applied": True,
+        "fulltext_acceptance": "pending",
+        "accepted": False,
+        "reason": "pending_fulltext_acceptance",
+    }
+    assert trace["storage_state_load"] == {
+        "path": None,
+        "exists": False,
+        "used": False,
+    }
+    assert trace["storage_state_save"]["reason"] == "storage_state_write_disabled"
+    assert not list(tmp_path.rglob("storage-state.json"))
+
+
+@pytest.mark.parametrize(
+    ("html", "body_ready", "expected_reason", "expected_signal"),
+    [
+        pytest.param(
+            "<html><head><title>Article</title></head></html>",
+            False,
+            "body_not_ready",
+            None,
+            id="empty-shell",
+        ),
+        pytest.param(
+            _wiley_review_html("<meta name='citation_doi' content='10.1111/example'>"),
+            False,
+            "body_not_ready",
+            None,
+            id="unstable-body",
+        ),
+        pytest.param(
+            _wiley_review_html(""),
+            True,
+            "doi_evidence_missing",
+            None,
+            id="missing-doi",
+        ),
+        pytest.param(
+            _wiley_review_html(
+                "<meta name='citation_doi' content='10.1111/different'>"
+            ),
+            True,
+            "doi_mismatch",
+            None,
+            id="mismatched-doi",
+        ),
+        pytest.param(
+            _wiley_review_html(
+                "<meta name='citation_doi' content='10.1111/example'>",
+                body_prefix="<p>Checking your browser before accessing the site.</p>",
+            ),
+            True,
+            "blocking_signal",
+            "cloudflare_challenge",
+            id="challenge",
+        ),
+        pytest.param(
+            _wiley_review_html(
+                "<meta name='citation_doi' content='10.1111/example'>",
+                body_prefix="<div data-article-access='no'>No access</div>",
+            ),
+            True,
+            "blocking_signal",
+            "data_article_access_no",
+            id="explicit-no-access",
+        ),
+        pytest.param(
+            _wiley_review_html(
+                "<meta name='citation_doi' content='10.1111/example'>",
+                body_suffix=(
+                    "<script>window.adobeDataLayer.push({"
+                    '"content":{"item":{"access":"no"}}'
+                    "});</script>"
+                ),
+            ),
+            True,
+            "blocking_signal",
+            "wiley_access_no",
+            id="datalayer-no-access",
+        ),
+        pytest.param(
+            _wiley_review_html(
+                "<meta name='citation_doi' content='10.1111/example'>",
+                body_prefix="<p>Purchase access to continue reading this article.</p>",
+            ),
+            True,
+            "blocking_signal",
+            "purchase access",
+            id="paywall",
+        ),
+    ],
+)
+def test_wiley_403_review_rejects_unconfirmed_candidate(
+    monkeypatch,
+    tmp_path,
+    html,
+    body_ready,
+    expected_reason,
+    expected_signal,
+) -> None:
+    context = _Context()
+    context.page.content = mock.Mock(
+        return_value=html.replace(
+            "</head>",
+            "<meta name='authorization' content='Bearer private-secret'></head>",
+        )
+    )
+
+    def goto(url: str, **_kwargs):
+        context.page.url = url
+        response = _Response()
+        response.status = 403
+        return response
+
+    context.page.goto = goto
+    config = BrowserRuntimeConfig(
+        provider="wiley",
+        doi="10.1111/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    readiness_result = (
+        _stable_wiley_readiness()
+        if body_ready
+        else SimpleNamespace(
+            attempted=True,
+            ready=False,
+            selector="section.article-section__content",
+            text_length=4200 if "article-section__content" in html else 0,
+            paragraph_count=2 if "article-section__content" in html else 0,
+            heading_count=1 if "article-section__content" in html else 0,
+            fingerprint="unstable-wiley-body",
+        )
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "wait_for_atypon_body_dom_ready",
+        lambda *_args, **_kwargs: readiness_result,
+    )
+
+    with pytest.raises(browser_runtime.BrowserRuntimeFailure) as raised:
+        _playwright_browser.fetch_html_with_playwright(
+            ["https://onlinelibrary.wiley.com/doi/10.1111/example"],
+            publisher="wiley",
+            config=config,
+            wait_seconds=2,
+        )
+
+    trace = raised.value.details["trace"]
+    candidate = trace["candidates"][0]
+    review = candidate["http_access_status_review"]
+    assert review["accepted"] is False
+    assert review["candidate_confirmed"] is False
+    assert review["status_override_applied"] is False
+    assert review["fulltext_acceptance"] == "not_attempted"
+    assert review["reason"] == expected_reason
+    if expected_signal is not None:
+        assert expected_signal in review["blocking_signals"]
+    assert "private-secret" not in str(trace)
+
+
+def test_wiley_403_failure_advances_to_next_candidate(monkeypatch, tmp_path) -> None:
+    context = _Context()
+    navigation_count = 0
+
+    def goto(url: str, **_kwargs):
+        nonlocal navigation_count
+        navigation_count += 1
+        context.page.url = url
+        response = _Response()
+        if navigation_count == 1:
+            response.status = 403
+            response.headers = {"content-type": "text/html"}
+        return response
+
+    context.page.goto = goto
+    context.page.content = lambda: (
+        _wiley_review_html("")
+        if navigation_count == 1
+        else "<html><head><title>Article</title></head><body><main>Full text</main></body></html>"
+    )
+    config = BrowserRuntimeConfig(
+        provider="wiley",
+        doi="10.1111/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    readiness = mock.Mock(return_value=_stable_wiley_readiness())
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "wait_for_atypon_body_dom_ready",
+        readiness,
+    )
+
+    result = _playwright_browser.fetch_html_with_playwright(
+        [
+            "https://onlinelibrary.wiley.com/doi/10.1111/example",
+            "https://onlinelibrary.wiley.com/doi/full/10.1111/example",
+        ],
+        publisher="wiley",
+        config=config,
+        wait_seconds=2,
+    )
+
+    assert result.response_status == 200
+    assert readiness.call_count == 2
+    candidates = result.diagnostics["browser_runtime_trace"]["candidates"]
+    assert candidates[0]["status"] == 403
+    assert candidates[0]["dom_readiness_result"] == "ready"
+    assert candidates[0]["http_access_status_review"]["reason"] == (
+        "doi_evidence_missing"
+    )
+    assert candidates[1]["result"] == "success"
+
+
+def test_wiley_all_http_status_candidates_fail_with_reviews(
+    monkeypatch, tmp_path
+) -> None:
+    context = _Context()
+    navigation_count = 0
+
+    def goto(url: str, **_kwargs):
+        nonlocal navigation_count
+        navigation_count += 1
+        context.page.url = url
+        response = _Response()
+        response.status = 403 if navigation_count == 1 else 401
+        return response
+
+    context.page.goto = goto
+    context.page.content = mock.Mock(
+        return_value=_wiley_review_html(
+            "<meta name='citation_doi' content='10.1111/different'>"
+        )
+    )
+    config = BrowserRuntimeConfig(
+        provider="wiley",
+        doi="10.1111/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+        backend="camoufox",
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "wait_for_atypon_body_dom_ready",
+        lambda *_args, **_kwargs: _stable_wiley_readiness(),
+    )
+
+    with pytest.raises(browser_runtime.BrowserRuntimeFailure) as raised:
+        _playwright_browser.fetch_html_with_playwright(
+            [
+                "https://onlinelibrary.wiley.com/doi/10.1111/example",
+                "https://onlinelibrary.wiley.com/doi/full/10.1111/example",
+            ],
+            publisher="wiley",
+            config=config,
+            wait_seconds=2,
+        )
+
+    failure = raised.value
+    assert failure.kind == "publisher_access_denied"
+    candidates = failure.details["trace"]["candidates"]
+    assert [candidate["status"] for candidate in candidates] == [403, 401]
+    assert [
+        candidate["http_access_status_review"]["reason"] for candidate in candidates
+    ] == ["doi_mismatch", "doi_mismatch"]
+    assert all(
+        candidate["block_reason"] == "publisher_access_denied"
+        for candidate in candidates
+    )
 
 
 def test_provider_resource_policy_blocks_only_configured_heavy_types(

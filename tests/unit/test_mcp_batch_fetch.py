@@ -163,6 +163,7 @@ def test_batch_fetch_preserves_input_order_and_completion_metadata_with_bounded_
         "has_fulltext",
         "has_abstract",
         "token_estimate",
+        "asset_summary",
     }
     assert ctx.progress[0] == (0, 2, "Starting batch_fetch")
     assert ctx.progress[-1] == (
@@ -202,6 +203,34 @@ def test_single_and_batch_fetch_share_compact_acceptance_projection() -> None:
         single.structured_content["acceptance"]
         == batch.structured_content["results"][0]["acceptance"]
     )
+
+
+def test_batch_fetch_propagates_strict_asset_strategy_to_every_item() -> None:
+    observed: list[tuple[bool, bool]] = []
+
+    def fetch(request, **_kwargs):
+        observed.append(
+            (
+                request.strategy.require_local_body_assets,
+                request.strategy.require_full_size_body_assets,
+            )
+        )
+        return _successful_fetch(request)
+
+    result = asyncio.run(
+        batch_fetch_tool_async(
+            **_temporary_kwargs(
+                strategy={
+                    "asset_profile": "body",
+                    "require_full_size_body_assets": True,
+                },
+                deps=_deps(fetch),
+            )
+        )
+    )
+
+    assert result.is_error is False
+    assert observed == [(True, True), (True, True)]
 
 
 def test_batch_fetch_uses_item_local_contexts_with_one_shared_transport() -> None:

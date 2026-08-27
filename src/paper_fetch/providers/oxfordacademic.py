@@ -123,6 +123,13 @@ register_provider_bundle(
                     kind="pdf",
                     requires_pdf_conversion=True,
                 ),
+                ProviderRouteSpec(
+                    name="assets",
+                    kind="assets",
+                    timeout_seconds=20,
+                    concurrency=2,
+                    transient_retries=2,
+                ),
             ),
         ),
         html_rules=ProviderHtmlRules(

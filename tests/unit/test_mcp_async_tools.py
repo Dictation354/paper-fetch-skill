@@ -362,8 +362,10 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(captured["context"].artifact_mode, "markdown-assets")
         self.assertIsNone(captured["context"].transport.disk_cache_dir)
         self.assertEqual(result.structured_content["status"], "ok")
+        acceptance = dict(result.structured_content["acceptance"])
+        asset_summary = acceptance.pop("asset_summary")
         self.assertEqual(
-            result.structured_content["acceptance"],
+            acceptance,
             {
                 "overall": "degraded",
                 "identity": "resolved",
@@ -384,6 +386,9 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
                 "token_estimate": 128,
             },
         )
+        self.assertEqual(asset_summary["status"], "not_requested")
+        self.assertFalse(asset_summary["require_local_body_assets"])
+        self.assertFalse(asset_summary["require_full_size_body_assets"])
 
     async def test_fetch_paper_tool_async_sets_cancellation_flag_for_worker_transport(
         self,

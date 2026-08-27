@@ -8,8 +8,11 @@ from paper_fetch import publisher_identity
 from paper_fetch.provider_catalog import (
     DEFAULT_BODY_TEXT_THRESHOLDS,
     PROVIDER_CATALOG,
+    ProviderRouteSpec,
+    ProviderSpec,
     SOURCE_PROVIDER_MAP,
     api_like_hosts,
+    compile_route_execution_policy_for_kind,
     default_asset_profile_for_provider,
     default_asset_profile_for_source,
     is_official_provider,
@@ -91,6 +94,90 @@ class ProviderCatalogTests(unittest.TestCase):
                 provider_supports_metadata_api_probe(spec.name),
                 spec.probe_capability == "metadata_api",
             )
+
+    def test_body_asset_providers_declare_bounded_explicit_asset_routes(self) -> None:
+        browser_recovery_without_direct_retries = {
+            "wiley",
+            "science",
+            "pnas",
+            "ieee",
+            "mdpi",
+            "royalsocietypublishing",
+            "acs",
+            "iop",
+            "aip",
+            "tandf",
+        }
+
+        for spec in PROVIDER_CATALOG.values():
+            if spec.asset_default == "none":
+                continue
+            with self.subTest(provider=spec.name):
+                asset_routes = [
+                    route for route in spec.routes if route.kind == "assets"
+                ]
+                self.assertTrue(asset_routes)
+                policy = compile_route_execution_policy_for_kind(spec.name, "assets")
+                self.assertEqual(policy.timeout_seconds, 20)
+                self.assertEqual(policy.asset_concurrency_cap, 2)
+                if spec.name in browser_recovery_without_direct_retries:
+                    self.assertEqual(policy.transient_retries, 0)
+
+    def test_asset_only_declaration_expands_default_routes_but_is_still_explicit(
+        self,
+    ) -> None:
+        spec = ProviderSpec(
+            name="example",
+            display_name="Example",
+            official=True,
+            domains=("example.test",),
+            doi_prefixes=("10.9999/",),
+            publisher_aliases=("example",),
+            asset_default="body",
+            probe_capability="routing_signal",
+            provider_managed_abstract_only=False,
+            client_factory_path="example:Client",
+            status_order=99,
+            routes=(
+                ProviderRouteSpec(
+                    name="assets",
+                    kind="assets",
+                    timeout_seconds=20,
+                    concurrency=2,
+                ),
+            ),
+        )
+
+        self.assertEqual(
+            [(route.name, route.kind) for route in spec.routes],
+            [
+                ("metadata", "metadata"),
+                ("direct_html", "html"),
+                ("assets", "assets"),
+            ],
+        )
+
+    def test_body_asset_provider_without_explicit_asset_route_is_rejected(self) -> None:
+        with self.assertRaisesRegex(ValueError, "explicit assets route"):
+            ProviderSpec(
+                name="invalid",
+                display_name="Invalid",
+                official=True,
+                domains=("invalid.test",),
+                doi_prefixes=("10.9998/",),
+                publisher_aliases=("invalid",),
+                asset_default="body",
+                probe_capability="routing_signal",
+                provider_managed_abstract_only=False,
+                client_factory_path="invalid:Client",
+                status_order=100,
+            )
+
+    def test_wiley_tries_verified_doi_route_before_full_route(self) -> None:
+        self.assertEqual(
+            provider_html_path_templates("wiley"),
+            ("/doi/{doi}", "/doi/full/{doi}"),
+        )
 
     def test_provider_rule_constants_keep_shared_and_incremental_layers(self) -> None:
         self.assertTrue(

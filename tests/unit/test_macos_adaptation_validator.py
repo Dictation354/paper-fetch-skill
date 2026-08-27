@@ -333,7 +333,6 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract["components"]["camoufox"]["native_ci_runtime"] = "latest"
         contract["components"]["camoufox"]["native_test_addon_policy"] = "download"
         contract["components"]["camoufox"]["native_test_screen_policy"] = "host"
-        contract["components"]["camoufox"]["route_allowlist_source"] = "page"
         contract["components"]["camoufox"]["route_execution_policy"] = (
             "declarative-only"
         )
@@ -341,12 +340,16 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract["components"]["camoufox"]["storage_state_load_diagnostics"] = (
             "configured-only"
         )
+        contract["components"]["camoufox"]["main_document_response_diagnostics"] = (
+            "raw-headers"
+        )
+        contract["components"]["camoufox"]["wiley_http_access_status_review"] = (
+            "trust-status"
+        )
         contract["components"]["camoufox"]["binary_asset_transport"] = "browser-body"
         contract["components"]["camoufox"]["asset_budget_defaults"] = "unbounded"
         contract["components"]["camoufox"]["asset_worker_policy"] = "per-kind"
-        contract["components"]["camoufox"]["browser_only_binary_policy"] = (
-            "buffer-in-memory"
-        )
+        contract["components"]["camoufox"]["asset_publish_policy"] = "direct-write"
         contract["components"]["forbidden"] = []
 
         diagnostic = "\n".join(validator.validate_contract(contract))
@@ -443,12 +446,8 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             diagnostic,
         )
         self.assertIn(
-            "components.camoufox.route_allowlist_source must be 'provider-catalog'",
-            diagnostic,
-        )
-        self.assertIn(
             "components.camoufox.route_execution_policy must be "
-            "'compiled-catalog-host-timeout-retry-qps-acceptance-assets'",
+            "'compiled-catalog-timeout-retry-qps-acceptance-assets'",
             diagnostic,
         )
         self.assertIn(
@@ -462,8 +461,18 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             diagnostic,
         )
         self.assertIn(
+            "components.camoufox.main_document_response_diagnostics must be "
+            "'requestfinished-content-length-dom-bytes-navigation-timing-secret-safe'",
+            diagnostic,
+        )
+        self.assertIn(
+            "components.camoufox.wiley_http_access_status_review must be "
+            "'401-403-stable-body-exact-doi-no-block-final-fulltext-secret-safe'",
+            diagnostic,
+        )
+        self.assertIn(
             "components.camoufox.binary_asset_transport must be "
-            "'browser-discovery-pinned-direct-stream'",
+            "'shared-hostname-pool-or-browser-owned-bytes'",
             diagnostic,
         )
         self.assertIn(
@@ -477,8 +486,8 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             diagnostic,
         )
         self.assertIn(
-            "components.camoufox.browser_only_binary_policy must be "
-            "'fail-closed-browser-stream-unavailable'",
+            "components.camoufox.asset_publish_policy must be "
+            "'budgeted-unique-staging-atomic-replace'",
             diagnostic,
         )
         self.assertIn(

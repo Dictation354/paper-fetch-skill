@@ -46,7 +46,7 @@ from ..models import AssetProfile, article_from_markdown, metadata_only_article
 from ..failure import FailureDiagnostics
 from ..page_diagnostics import PageDiagnosticRequest, capture_page_diagnostic
 from ..publisher_identity import normalize_doi
-from ..provider_catalog import PdfSourcePathTemplate, ProviderSpec
+from ..provider_catalog import PdfSourcePathTemplate, ProviderRouteSpec, ProviderSpec
 from ..runtime import RuntimeContext
 from ..tracing import (
     download_marker,
@@ -175,6 +175,26 @@ register_provider_bundle(
             persist_provider_html=True,
             xml_root_tags=("article",),
             xml_file_tokens=("springer", "nature", "10.1038", "10.1007", "10.1186"),
+            routes=(
+                ProviderRouteSpec(name="metadata", kind="metadata"),
+                ProviderRouteSpec(
+                    name="direct_html",
+                    kind="html",
+                    concurrency=2,
+                ),
+                ProviderRouteSpec(
+                    name="direct_pdf",
+                    kind="pdf",
+                    requires_pdf_conversion=True,
+                    concurrency=2,
+                ),
+                ProviderRouteSpec(
+                    name="assets",
+                    kind="assets",
+                    concurrency=2,
+                    asset_scope="body",
+                ),
+            ),
         ),
         html_rules=ProviderHtmlRules(
             name="springer_nature",

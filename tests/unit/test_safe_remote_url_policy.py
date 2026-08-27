@@ -4,11 +4,8 @@ import socket
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
-from unittest import mock
 
 import pytest
-import urllib3
-import paper_fetch.http.provider_policy as provider_policy_module
 
 from paper_fetch.http import (
     HttpRequestPolicy,
@@ -20,7 +17,6 @@ from paper_fetch.http import (
     _PreparedRequest,
     provider_request_policy,
 )
-from paper_fetch.extraction.html.assets.requester import PinnedAssetSession
 
 
 def _resolver_for(mapping: dict[str, tuple[str, ...]]):
@@ -56,18 +52,7 @@ class _Pool:
         self.requests: list[tuple[str, str, dict[str, str]]] = []
         self.connections: list[dict[str, object]] = []
 
-    def connection_from_host(self, host, *, port, scheme, pool_kwargs):
-        self.connections.append(
-            {
-                "host": host,
-                "port": port,
-                "scheme": scheme,
-                "pool_kwargs": dict(pool_kwargs),
-            }
-        )
-        return self
-
-    def urlopen(self, method: str, url: str, *, headers, **_kwargs):
+    def request(self, method: str, url: str, *, headers, **_kwargs):
         self.requests.append((method, url, dict(headers)))
         return self.responses.pop(0)
 
@@ -189,30 +174,11 @@ def test_transport_validates_every_redirect_and_drops_cross_origin_secrets() -> 
     )
 
     assert response.status == 200
-    assert pool.requests[1][1] == "/article.xml"
+    assert pool.requests[1][1] == "https://cdn.example/article.xml"
     assert "Authorization" not in pool.requests[1][2]
     assert pool.requests[1][2]["Accept"] == "application/xml"
-    assert pool.requests[0][2]["Host"] == "publisher.example"
-    assert pool.connections == [
-        {
-            "host": "8.8.8.8",
-            "port": 443,
-            "scheme": "https",
-            "pool_kwargs": {
-                "server_hostname": "publisher.example",
-                "assert_hostname": "publisher.example",
-            },
-        },
-        {
-            "host": "1.1.1.1",
-            "port": 443,
-            "scheme": "https",
-            "pool_kwargs": {
-                "server_hostname": "cdn.example",
-                "assert_hostname": "cdn.example",
-            },
-        },
-    ]
+    assert "Host" not in pool.requests[0][2]
+    assert pool.connections == []
 
 
 def test_transport_rejects_public_to_private_redirect_before_second_request() -> None:
@@ -246,7 +212,7 @@ def test_transport_rejects_public_to_private_redirect_before_second_request() ->
     assert len(pool.requests) == 1
 
 
-def test_transport_pins_the_validated_address_without_second_dns_lookup() -> None:
+def test_transport_validates_dns_then_uses_the_shared_hostname_pool() -> None:
     resolver_calls = 0
 
     def rebinding_resolver(host: str, port: int, *, type: int):
@@ -276,35 +242,19 @@ def test_transport_pins_the_validated_address_without_second_dns_lookup() -> Non
 
     assert response.status == 200
     assert resolver_calls == 1
-    assert pool.connections[0]["host"] == "8.8.8.8"
-    assert pool.requests[0][2]["Host"] == "publisher.example"
+    assert pool.connections == []
+    assert pool.requests[0][1] == "https://publisher.example/article"
+    assert "Host" not in pool.requests[0][2]
 
 
 @pytest.mark.parametrize("status", (301, 302, 303, 307, 308))
-@pytest.mark.parametrize(
-    ("provider", "route", "source_host", "credential_header"),
-    (
-        ("elsevier", "xml_api", "api.elsevier.com", "X-ELS-APIKey"),
-        ("wiley", "tdm_pdf", "api.wiley.com", "Wiley-TDM-Client-Token"),
-        (
-            "crossref",
-            "metadata",
-            "api.crossref.org",
-            "CR-Clickthrough-Client-Token",
-        ),
-    ),
-)
-def test_catalog_credentials_are_removed_for_every_cross_origin_redirect_status(
+def test_standard_sensitive_headers_are_removed_on_cross_origin_redirect(
     status: int,
-    provider: str,
-    route: str,
-    source_host: str,
-    credential_header: str,
 ) -> None:
     policy = SafeRemoteUrlPolicy(
         resolver=_resolver_for(
             {
-                source_host: ("8.8.8.8",),
+                "publisher.example": ("8.8.8.8",),
                 "untrusted.example": ("1.1.1.1",),
             }
         )
@@ -316,27 +266,23 @@ def test_catalog_credentials_are_removed_for_every_cross_origin_redirect_status(
     )
     pool = _Pool([_Response(status, {"location": "https://untrusted.example/file"})])
     transport._pool = pool
-    request_policy = provider_request_policy(provider, route)
-    # Explicitly admit the test redirect host so the test can observe header
-    # stripping. Production catalog policies do not admit it.
-    request_policy = HttpRequestPolicy(
-        allowed_hosts=(*tuple(request_policy.allowed_hosts or ()), "untrusted.example"),
-        sensitive_headers=request_policy.sensitive_headers,
-    )
     pool.responses.append(_Response(200, {"content-type": "text/plain"}))
 
     transport._perform_request(
         _PreparedRequest(
             method="GET",
-            full_url=f"https://{source_host}/start",
-            headers={credential_header: "secret", "Accept": "*/*"},
-            allowed_hosts=request_policy.allowed_hosts,
-            sensitive_headers=request_policy.sensitive_headers,
+            full_url="https://publisher.example/start",
+            headers={
+                "Authorization": "Bearer secret",
+                "Cookie": "session=secret",
+                "Accept": "*/*",
+            },
         ),
         timeout=1,
     )
 
-    assert credential_header not in pool.requests[1][2]
+    assert "Authorization" not in pool.requests[1][2]
+    assert "Cookie" not in pool.requests[1][2]
     assert pool.requests[1][2]["Accept"] == "*/*"
 
 
@@ -372,7 +318,7 @@ def test_catalog_credentials_are_preserved_for_same_origin_redirect() -> None:
     assert pool.requests[1][2]["X-ELS-APIKey"] == "secret"
 
 
-def test_catalog_policy_rejects_undeclared_redirect_before_second_request() -> None:
+def test_provider_catalog_does_not_implicitly_restrict_public_redirect_hosts() -> None:
     policy = SafeRemoteUrlPolicy(
         resolver=_resolver_for(
             {
@@ -386,40 +332,56 @@ def test_catalog_policy_rejects_undeclared_redirect_before_second_request() -> N
         cache_capacity=0,
         options=HttpTransportOptions(remote_url_policy=policy),
     )
-    pool = _Pool([_Response(302, {"location": "https://untrusted.example/steal"})])
+    pool = _Pool(
+        [
+            _Response(302, {"location": "https://untrusted.example/file"}),
+            _Response(200, {"content-type": "application/xml"}),
+        ]
+    )
     transport._pool = pool
     request_policy = provider_request_policy("elsevier", "xml_api")
 
-    with pytest.raises(RequestFailure):
-        transport._perform_request(
-            _PreparedRequest(
-                method="GET",
-                full_url="https://api.elsevier.com/start",
-                headers={"X-ELS-APIKey": "secret"},
-                allowed_hosts=request_policy.allowed_hosts,
-                sensitive_headers=request_policy.sensitive_headers,
-            ),
-            timeout=1,
-        )
+    response = transport._perform_request(
+        _PreparedRequest(
+            method="GET",
+            full_url="https://api.elsevier.com/start",
+            headers={"Authorization": "Bearer secret"},
+            allowed_hosts=request_policy.allowed_hosts,
+            sensitive_headers=request_policy.sensitive_headers,
+        ),
+        timeout=1,
+    )
 
-    assert len(pool.requests) == 1
-
-
-def test_credentialed_request_policy_requires_host_allowlist() -> None:
-    transport = HttpTransport(cache_ttl=0, cache_capacity=0)
-
-    with pytest.raises(RequestFailure) as raised:
-        transport.request(
-            "GET",
-            "https://api.elsevier.com/content/article",
-            headers={"X-ELS-APIKey": "secret"},
-            request_policy=HttpRequestPolicy(sensitive_headers=("x-els-apikey",)),
-        )
-
-    assert raised.value.error_category == RequestErrorCategory.UNSAFE_REDIRECT
+    assert response.status == 200
+    assert request_policy.allowed_hosts is None
+    assert len(pool.requests) == 2
+    assert "Authorization" not in pool.requests[1][2]
 
 
-def test_provider_request_policy_merges_base_and_catalog_allowed_hosts() -> None:
+def test_credentialed_request_does_not_require_an_allowlist() -> None:
+    policy = SafeRemoteUrlPolicy(
+        resolver=_resolver_for({"api.elsevier.com": ("8.8.8.8",)})
+    )
+    transport = HttpTransport(
+        cache_ttl=0,
+        cache_capacity=0,
+        options=HttpTransportOptions(remote_url_policy=policy),
+    )
+    transport._pool = _Pool([_StreamingResponse(200, {}, b"ok")])
+
+    response = transport.request(
+        "GET",
+        "https://api.elsevier.com/content/article",
+        headers={"X-ELS-APIKey": "secret"},
+        request_policy=HttpRequestPolicy(sensitive_headers=("x-els-apikey",)),
+    )
+
+    assert response["status_code"] == 200
+
+
+def test_provider_request_policy_preserves_only_explicit_host_and_header_limits() -> (
+    None
+):
     policy = provider_request_policy(
         "elsevier",
         "xml_api",
@@ -429,32 +391,11 @@ def test_provider_request_policy_merges_base_and_catalog_allowed_hosts() -> None
         ),
     )
 
-    assert policy.allowed_hosts is not None
-    assert "proxy.example" in policy.allowed_hosts
-    assert "elsevier.com" in policy.allowed_hosts
-    assert "x-private-proxy-token" in policy.sensitive_headers
-    assert "x-els-apikey" in policy.sensitive_headers
+    assert policy.allowed_hosts == ("proxy.example",)
+    assert policy.sensitive_headers == ("x-private-proxy-token",)
 
 
-def test_provider_request_policy_rejects_sensitive_route_without_hosts(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    compiled = mock.Mock(
-        provider="example",
-        sensitive_headers=("Authorization",),
-        hosts=(),
-    )
-    monkeypatch.setattr(
-        provider_policy_module,
-        "compile_route_execution_policy",
-        lambda _provider, _route: compiled,
-    )
-
-    with pytest.raises(ValueError, match="no declared hosts"):
-        provider_policy_module.provider_request_policy("example", "api")
-
-
-def test_asset_stream_uses_catalog_sensitive_headers_on_redirect(
+def test_stream_honors_an_explicit_allowlist_and_standard_header_stripping(
     tmp_path: Path,
 ) -> None:
     policy = SafeRemoteUrlPolicy(
@@ -487,14 +428,6 @@ def test_asset_stream_uses_catalog_sensitive_headers_on_redirect(
         ]
     )
     transport._pool = pool
-    session = PinnedAssetSession(
-        transport,
-        browser_cookies=None,
-        seed_urls=None,
-        headers={},
-        allowed_hosts=("api.elsevier.com", "untrusted.example"),
-        provider_name="elsevier",
-    )
     destination = tmp_path / "asset.part"
 
     transport.stream_to_file(
@@ -502,112 +435,19 @@ def test_asset_stream_uses_catalog_sensitive_headers_on_redirect(
         "https://api.elsevier.com/start",
         destination,
         headers={
-            "X-ELS-APIKey": "secret",
+            "Authorization": "Bearer secret",
             "Cookie": "manual=source-only",
             "Accept": "*/*",
         },
-        request_policy=session.request_policy_for(
-            "https://api.elsevier.com/start",
+        request_policy=HttpRequestPolicy(
+            allowed_hosts=("api.elsevier.com", "untrusted.example"),
             max_response_bytes=16,
+            max_compressed_response_bytes=16,
         ),
-        on_response_headers=session.observe_response_headers,
-        request_headers_provider=session.prepare_hop_headers,
     )
 
     assert destination.read_bytes() == b"asset"
     assert pool.requests[0][2]["Cookie"] == "manual=source-only"
-    assert "X-ELS-APIKey" not in pool.requests[1][2]
+    assert "Authorization" not in pool.requests[1][2]
     assert "Cookie" not in pool.requests[1][2]
     assert pool.requests[1][2]["Accept"] == "*/*"
-    assert (
-        session.request_headers_for("https://untrusted.example/next/asset", {})[
-            "Cookie"
-        ]
-        == "candidate=ready"
-    )
-
-
-def test_seed_redirect_preserves_multiple_cookies_and_refreshes_next_hop() -> None:
-    policy = SafeRemoteUrlPolicy(
-        resolver=_resolver_for({"publisher.example": ("8.8.8.8",)})
-    )
-    transport = HttpTransport(
-        cache_ttl=0,
-        cache_capacity=0,
-        options=HttpTransportOptions(remote_url_policy=policy),
-    )
-    redirect_headers = urllib3._collections.HTTPHeaderDict()
-    redirect_headers.add("location", "/article/final")
-    redirect_headers.add("set-cookie", "root=one; Path=/; Secure")
-    redirect_headers.add("set-cookie", "article=two; Path=/article; Secure")
-    pool = _Pool(
-        [
-            _StreamingResponse(302, redirect_headers),
-            _StreamingResponse(200, {"content-type": "text/html"}, b"ready"),
-        ]
-    )
-    transport._pool = pool
-    session = PinnedAssetSession(
-        transport,
-        browser_cookies=None,
-        seed_urls=["https://publisher.example/start"],
-        headers={},
-        allowed_hosts=("publisher.example",),
-    )
-
-    session.ensure_seeded()
-
-    assert pool.requests[0][2].get("Cookie") is None
-    assert pool.requests[1][2]["Cookie"] == "article=two; root=one"
-    assert (
-        session.request_headers_for("https://publisher.example/article/asset", {})[
-            "Cookie"
-        ]
-        == "article=two; root=one"
-    )
-
-
-def test_seed_redirect_drops_catalog_secret_without_leaking_source_cookie() -> None:
-    policy = SafeRemoteUrlPolicy(
-        resolver=_resolver_for(
-            {
-                "api.elsevier.com": ("8.8.8.8",),
-                "untrusted.example": ("1.1.1.1",),
-            }
-        )
-    )
-    transport = HttpTransport(
-        cache_ttl=0,
-        cache_capacity=0,
-        options=HttpTransportOptions(remote_url_policy=policy),
-    )
-    pool = _Pool(
-        [
-            _StreamingResponse(
-                302,
-                {
-                    "location": "https://untrusted.example/final",
-                    "set-cookie": "source=only; Path=/; Secure",
-                },
-            ),
-            _StreamingResponse(200, {"content-type": "text/html"}, b"ready"),
-        ]
-    )
-    transport._pool = pool
-    session = PinnedAssetSession(
-        transport,
-        browser_cookies=None,
-        seed_urls=["https://api.elsevier.com/start"],
-        headers={"X-ELS-APIKey": "secret"},
-        allowed_hosts=("api.elsevier.com", "untrusted.example"),
-        provider_name="elsevier",
-    )
-
-    session.ensure_seeded()
-
-    assert "X-ELS-APIKey" not in pool.requests[1][2]
-    assert "Cookie" not in pool.requests[1][2]
-    assert (
-        session.request_headers_for("https://api.elsevier.com/next", {})["Cookie"]
-        == "source=only"
-    )

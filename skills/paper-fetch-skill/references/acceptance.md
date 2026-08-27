@@ -20,13 +20,15 @@ MCP 单篇 `fetch_paper` 成功响应直接返回紧凑 `acceptance`；`batch_fe
 
 当前 acceptance wire schema 是 v2（`schema_version=2`、`minimum_reader_schema_version=2`）。provenance 分面增量包含可空的 `acquisition={provider,route,representation,transport,fallback_used}`，兼容 `source` 保持原值；只有 acquisition 与 catalog route、source owner 和 trace fallback 事实一致时 provenance 才能 complete，缺失时必须 partial，不能从 `source` 猜测。asset 分面分别记录 `accepted_preview`、`fallback_preview` 与有序去重 `issue_codes`，同时保留 `preview` 且要求它等于前两者之和。只有 accepted preview 且无其它 issue 时可以 complete；publisher 明确接受的规范公式位图即使尺寸小或内容重复，也按结构化 `preview_accepted` 事实验收，不据此另造 placeholder issue。fallback preview 是 `asset_fidelity_degraded`，不等同于 `asset_download_failure`。
 
+正文资产严格验收是 v2 的兼容增量：`require_local_body_assets` 和 `require_full_size_body_assets` 默认都为 `false`，后者自动隐含前者，且只在 `asset_profile=body|all` 时适用。报告同时给出 `has_local_body_assets`、`all_body_assets_local`、`all_body_assets_full_size`、两项 `*_satisfied`，以及 body discovered/attempted/local/full-size/preview/failed/not-archived/remote-only 计数。严格分母只包含需要独立 binary 文件的正文逻辑资产；没有 remote/failure 且已以内联语义完成的 table/formula/figure 不算缺少文件。严格 local 要求其余全部已发现正文逻辑资产落盘且没有 failure、not-archived 或 remote-only；严格 full-size 还要求没有 accepted/fallback preview。未满足时 `asset`/`overall` 为 `degraded`，已经取得的全文仍保持 `fetch=ok`。
+
 资产验收统计 provider 合并后的逻辑资产，而不是同一远端对象的每个尺寸 URL。Springer/Nature 的 `media.springernature.com/lwNN/...` 预览别名与对应 `/full/...` 下载记录必须先按既有 full-size promotion 规则合并；全尺寸记录已有本地路径时，预览别名不能再作为第二个 `missing_path` / remote-only 资产进入 Manifest。没有对应本地记录的真实远端资产仍按原规则验收失败。
 
 ## 响应验收
 
 - 核对响应的规范 identity 与原始输入映射；歧义、DOI mismatch 或身份不足按 [`workflow.md`](workflow.md) 的 BLOCKING 白名单处理。
 - 核对 `content` 是否满足当前 [`presets.md`](presets.md) 的文本意图；任务只需摘要时可接受 limited，用户明确需要全文时不能升级结论。
-- 只有请求了资产才检查 asset 完整度。允许保留的远程链接、被接受的 preview 和 `asset_profile=none` 不是自动失败；结构化 asset failure 和 placeholder 仍需报告。
+- 只有请求了资产才检查 asset 完整度。默认 provider-policy 下，允许保留的远程链接、被接受的 preview 和 `asset_profile=none` 不是自动失败；请求严格 local/full-size 时必须按上述结构化 satisfaction 字段验收，不能只看 top-level `overall`。结构化 asset failure 和 placeholder 始终需报告。
 - 核对请求输出集合，保留 table/formula/asset 降级、fallback code 和 source trail。普通 warning 不按字符串猜测类别。
 - 同时报告兼容 `source` 与结构化 `acquisition`；若 acquisition 为 `null` 或与 catalog/trace 不一致，明确保留 provenance partial/degraded，不以 provider 名或 URL 补全。
 - envelope、acceptance 和 manifest 的完整 trace event count 必须一致；两个 retry 的同 code 是两条事实，不能按 marker 去重。`quality` 中的 source trail 只是摘要，不得回拼成第二份 trace。

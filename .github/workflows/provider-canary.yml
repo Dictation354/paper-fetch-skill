@@ -40,8 +40,16 @@ jobs:
           uv run python scripts/update_provider_canary_state.py
           --report .paper-fetch-canary/report.json
           --state .paper-fetch-canary/state.json
-      - name: Preserve canary evidence
+      - name: Scan canary evidence for secret values
+        id: secret_scan
         if: ${{ always() }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          PYTHONPATH=src uv run python scripts/scan_artifacts_for_secrets.py
+          --root .paper-fetch-canary
+      - name: Preserve canary evidence
+        if: ${{ always() && steps.secret_scan.outcome == 'success' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: public-provider-canary-${{ github.run_id }}

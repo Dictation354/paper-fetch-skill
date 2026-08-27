@@ -64,6 +64,15 @@ register_provider_bundle(
                     requires_pdf_conversion=True,
                     concurrency=1,
                 ),
+                ProviderRouteSpec(
+                    name="assets",
+                    kind="assets",
+                    browser_optional=True,
+                    requires_playwright=True,
+                    timeout_seconds=20,
+                    concurrency=2,
+                    transient_retries=0,
+                ),
             ),
         ),
         html_rules=ProviderHtmlRules(

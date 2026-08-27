@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 from collections.abc import Callable, Mapping
 
+from ....extraction.html.assets import supplementary_response_block_reason
 from ....extraction.html.shared import (
     html_text_snippet as _html_text_snippet,
     html_title_snippet as _html_title_snippet,
@@ -15,6 +16,8 @@ from .context import (
     BrowserDocumentFetcherOptions,
     _BaseBrowserDocumentFetcher,
     _ThreadLocalSharedDocumentFetcher,
+    _browser_response_headers,
+    _browser_response_status,
 )
 
 
@@ -86,22 +89,65 @@ class _SharedBrowserFileDocumentFetcher(_BaseBrowserDocumentFetcher):
         file_url: str,
         asset: Mapping[str, Any],
     ) -> dict[str, Any] | None:
-        content_type = normalize_text(str(asset.get("content_type") or ""))
-        headers = {"content-type": content_type} if content_type else {}
-        descriptor = self._stream_descriptor(
-            file_url,
-            headers=headers,
-        )
-        if descriptor is None:
+        if self._context is None:
             return None
-        referer = normalize_text(
-            str(asset.get("referer_url") or asset.get("source_page_url") or "")
-        )
-        direct_headers = {"Accept": "*/*"}
-        if referer:
-            direct_headers["Referer"] = referer
-        descriptor["_paper_fetch_direct_headers"] = direct_headers
-        return descriptor
+        request_headers = {"Accept": "*/*"}
+        referer_url = normalize_text(str(asset.get("referer_url") or ""))
+        if not referer_url:
+            referer_url = normalize_text(str(getattr(self._page, "url", "") or ""))
+        if not referer_url:
+            referer_url = normalize_text(
+                str(self._current_seed().get("browser_final_url") or "")
+            )
+        if referer_url:
+            request_headers["Referer"] = referer_url
+        try:
+            response = self._context.request.get(
+                file_url,
+                headers=request_headers,
+                timeout=60000,
+            )
+        except Exception as exc:
+            self._record_failure(
+                file_url,
+                reason=normalize_text(str(exc)) or exc.__class__.__name__,
+            )
+            return None
+
+        headers = _browser_response_headers(response)
+        content_type = headers.get("content-type", "")
+        final_url = normalize_text(str(getattr(response, "url", "") or "")) or file_url
+        status = _browser_response_status(response)
+        try:
+            body = response.body()
+        except Exception:
+            body = b""
+        if not isinstance(body, (bytes, bytearray)) or not body:
+            self._record_failure(
+                file_url,
+                status=status,
+                content_type=content_type,
+                final_url=final_url,
+                reason="empty_response_body",
+            )
+            return None
+        block_reason = supplementary_response_block_reason(content_type, body)
+        if block_reason:
+            self._record_response_failure(
+                file_url,
+                status=status,
+                content_type=content_type,
+                final_url=final_url,
+                body=body,
+                reason=block_reason,
+            )
+            return None
+        return {
+            "status_code": int(getattr(response, "status", 200) or 200),
+            "headers": headers,
+            "body": bytes(body),
+            "url": final_url,
+        }
 
 
 class _ThreadLocalSharedBrowserFileDocumentFetcher(_ThreadLocalSharedDocumentFetcher):

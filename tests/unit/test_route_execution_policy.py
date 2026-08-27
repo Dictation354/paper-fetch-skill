@@ -140,8 +140,7 @@ def test_provider_request_policy_projects_compiled_execution_fields() -> None:
         base=HttpRequestPolicy(allowed_hosts=("mirror.example",)),
     )
 
-    assert "mirror.example" in tuple(policy.allowed_hosts or ())
-    assert "arxiv.org" in tuple(policy.allowed_hosts or ())
+    assert policy.allowed_hosts == ("mirror.example",)
     assert policy.timeout_seconds == 60
     assert policy.retry_on_transient is True
     assert policy.transient_retries == 2
@@ -292,7 +291,9 @@ def test_browser_runtime_caps_deadline_from_compiled_route_policy(
     assert captured.value.details["trace"]["timeout_budget_ms"] == 7_000
 
 
-def test_pdf_strategy_uses_compiled_timeout_hosts_and_route_identity() -> None:
+def test_pdf_strategy_uses_compiled_timeout_without_catalog_host_authorization() -> (
+    None
+):
     transport = HttpTransport(cache_ttl=0, cache_capacity=0)
     expected = object()
     strategy = _pdf_fallback.PdfFallbackStrategy(
@@ -310,12 +311,13 @@ def test_pdf_strategy_uses_compiled_timeout_hosts_and_route_identity() -> None:
     kwargs = fetch.call_args.kwargs
     compiled = compile_route_execution_policy("iop", "browser_pdf")
     assert kwargs["request"].timeout_seconds == compiled.timeout_seconds
-    assert kwargs["allowed_hosts"] == compiled.hosts
+    assert kwargs["request"].allowed_hosts is None
+    assert "allowed_hosts" not in kwargs
     assert kwargs["request"].provider_name == "iop"
     assert "provider_name" not in kwargs
 
 
-def test_pdf_direct_compatibility_provider_compiles_exact_route_policy() -> None:
+def test_pdf_direct_provider_compiles_non_authorizing_route_policy() -> None:
     candidate = "https://iopscience.iop.org/article.pdf"
     transport = mock.Mock()
     transport.request.return_value = {
@@ -346,11 +348,11 @@ def test_pdf_direct_compatibility_provider_compiles_exact_route_policy() -> None
     policy = transport.request.call_args.kwargs["request_policy"]
     compiled = compile_route_execution_policy("iop", "browser_pdf")
     assert policy.timeout_seconds == compiled.timeout_seconds
-    assert policy.allowed_hosts == compiled.hosts
+    assert policy.allowed_hosts is None
     assert policy.transient_retries == compiled.transient_retries
 
 
-def test_pdf_browser_route_context_binds_compiled_timeout_hosts_and_provider(
+def test_pdf_browser_route_context_binds_timeout_and_provider_without_catalog_hosts(
     tmp_path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     compiled = compile_route_execution_policy("iop", "browser_pdf")
@@ -373,7 +375,7 @@ def test_pdf_browser_route_context_binds_compiled_timeout_hosts_and_provider(
 
     assert prepared.provider_name == "iop"
     assert prepared.timeout_seconds == compiled.timeout_seconds
-    assert prepared.allowed_hosts == compiled.hosts
+    assert prepared.allowed_hosts == ()
     assert prepared.request.provider_name == "iop"
     assert prepared.request.deadline_monotonic == 12.0 + compiled.timeout_seconds
 
@@ -395,7 +397,7 @@ def test_oxford_pdf_request_consumes_exact_compiled_policy() -> None:
     assert "timeout" not in kwargs
     assert "retry_on_transient" not in kwargs
     assert kwargs["request_policy"].timeout_seconds == compiled.timeout_seconds == 120
-    assert kwargs["request_policy"].allowed_hosts == compiled.hosts
+    assert kwargs["request_policy"].allowed_hosts is None
     assert kwargs["request_policy"].transient_retries == compiled.transient_retries
 
 
@@ -418,7 +420,7 @@ def test_oxford_html_request_consumes_exact_compiled_policy() -> None:
     assert "timeout" not in kwargs
     assert "retry_on_transient" not in kwargs
     assert kwargs["request_policy"].timeout_seconds == compiled.timeout_seconds == 90
-    assert kwargs["request_policy"].allowed_hosts == compiled.hosts
+    assert kwargs["request_policy"].allowed_hosts is None
 
 
 def test_plos_asset_redirect_request_consumes_exact_compiled_policy() -> None:
@@ -444,7 +446,7 @@ def test_plos_asset_redirect_request_consumes_exact_compiled_policy() -> None:
     assert "timeout" not in kwargs
     assert "retry_on_transient" not in kwargs
     assert kwargs["request_policy"].timeout_seconds == compiled.timeout_seconds
-    assert kwargs["request_policy"].allowed_hosts == compiled.hosts
+    assert kwargs["request_policy"].allowed_hosts is None
     assert kwargs["request_policy"].asset_scope == "body"
 
 
@@ -465,14 +467,14 @@ def test_plos_doi_resolver_consumes_xml_route_hosts_and_retries() -> None:
     compiled = compile_route_execution_policy("plos", "xml")
     assert "timeout" not in kwargs
     assert "retry_on_transient" not in kwargs
-    assert kwargs["request_policy"].allowed_hosts == compiled.hosts
+    assert kwargs["request_policy"].allowed_hosts is None
     assert "doi.org" in compiled.hosts
     assert kwargs["request_policy"].transient_retries == compiled.transient_retries
 
 
 def test_arxiv_source_stream_consumes_compiled_route_policy(tmp_path) -> None:
     transport = mock.Mock()
-    transport._pinned_streaming_ready = True
+    transport._streaming_ready = True
     source_url = "https://arxiv.org/e-print/2401.00001"
     destination = tmp_path / "source.part"
     budget = AssetBudget(
@@ -500,11 +502,10 @@ def test_arxiv_source_stream_consumes_compiled_route_policy(tmp_path) -> None:
     )
 
     kwargs = transport.stream_to_file.call_args.kwargs
-    compiled = compile_route_execution_policy("arxiv", "source_assets")
     assert "timeout" not in kwargs
     assert "retry_on_transient" not in kwargs
     assert kwargs["request_policy"].minimum_interval_seconds == 3.0
-    assert kwargs["request_policy"].allowed_hosts == compiled.hosts
+    assert kwargs["request_policy"].allowed_hosts is None
     reservation.rollback()
 
 

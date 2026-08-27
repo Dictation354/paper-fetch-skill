@@ -95,6 +95,15 @@ register_provider_bundle(
                     rate_policy="selected_browser_serial",
                     acceptance_policy="validated_pdf",
                 ),
+                ProviderRouteSpec(
+                    name="assets",
+                    kind="assets",
+                    browser_optional=True,
+                    requires_playwright=True,
+                    timeout_seconds=20,
+                    concurrency=2,
+                    transient_retries=0,
+                ),
             ),
         ),
         html_rules=ProviderHtmlRules(

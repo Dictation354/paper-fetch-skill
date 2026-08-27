@@ -15,7 +15,7 @@ from ..extraction.html.provider_rules import (
     ProviderFrontMatterRules,
     ProviderHtmlRules,
 )
-from ..provider_catalog import ProviderSpec
+from ..provider_catalog import ProviderRouteSpec, ProviderSpec
 from ..publisher_identity import normalize_doi
 from ..quality.html_signals import PNAS_SIGNAL_SET
 from . import _pnas_html, browser_workflow
@@ -48,6 +48,17 @@ register_provider_bundle(
                 "/doi/pdf/{doi}",
             ),
             requires_browser_runtime=True,
+            routes=(
+                ProviderRouteSpec(
+                    name="assets",
+                    kind="assets",
+                    browser_optional=True,
+                    requires_playwright=True,
+                    timeout_seconds=20,
+                    concurrency=2,
+                    transient_retries=0,
+                ),
+            ),
         ),
         html_rules=ProviderHtmlRules(
             name="pnas",

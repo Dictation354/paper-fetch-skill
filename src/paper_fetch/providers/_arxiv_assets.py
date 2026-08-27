@@ -512,7 +512,7 @@ def _stage_arxiv_source_archive(
         ),
     )
     if bool(
-        getattr(transport, "_pinned_streaming_ready", False) is True
+        getattr(transport, "_streaming_ready", False) is True
         and callable(getattr(transport, "stream_to_file", None))
     ):
         transport.stream_to_file(
@@ -557,13 +557,17 @@ def download_arxiv_source_figure_assets(
     output_dir: Path | None,
     user_agent: str,
     runtime_context: RuntimeContext | None = None,
+    placeholders: Sequence[Mapping[str, Any]] | None = None,
+    admit_placeholders: bool = True,
 ) -> dict[str, list[dict[str, Any]]]:
     if output_dir is None:
         return empty_asset_results()
-    placeholders = _extract_arxiv_missing_html_figure_placeholders(
-        article_html, source_url
+    active_placeholders = (
+        [dict(item) for item in placeholders]
+        if placeholders is not None
+        else _extract_arxiv_missing_html_figure_placeholders(article_html, source_url)
     )
-    if not placeholders:
+    if not active_placeholders:
         return empty_asset_results()
 
     active_budget = (
@@ -571,12 +575,15 @@ def download_arxiv_source_figure_assets(
         if runtime_context is not None and runtime_context.asset_budget is not None
         else AssetBudget()
     )
-    placeholders, rejected = _admit_arxiv_source_placeholders(
-        placeholders,
-        source_url=source_url,
-        asset_budget=active_budget,
-    )
-    if not placeholders:
+    if admit_placeholders:
+        active_placeholders, rejected = _admit_arxiv_source_placeholders(
+            active_placeholders,
+            source_url=source_url,
+            asset_budget=active_budget,
+        )
+    else:
+        rejected = []
+    if not active_placeholders:
         return {"assets": [], "asset_failures": rejected}
 
     source_archive_url = _arxiv_source_url(arxiv_id)
@@ -617,7 +624,7 @@ def download_arxiv_source_figure_assets(
                     ),
                     message=str(exc),
                 )
-                for asset in placeholders
+                for asset in active_placeholders
             ]
             + rejected,
         }
@@ -636,7 +643,7 @@ def download_arxiv_source_figure_assets(
                     source_archive_url,
                     reason="arxiv_source_figures_not_found",
                 )
-                for asset in placeholders
+                for asset in active_placeholders
             ]
             + rejected,
         }
@@ -653,7 +660,7 @@ def download_arxiv_source_figure_assets(
     published_members: dict[int, tuple[str, str, int, int | None, int | None]] = {}
     try:
         for placeholder, source_figure in _match_source_figures_to_html_placeholders(
-            placeholders, source_figures
+            active_placeholders, source_figures
         ):
             if source_figure is None:
                 asset_failures.append(

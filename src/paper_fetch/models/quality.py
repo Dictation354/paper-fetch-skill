@@ -241,6 +241,38 @@ def coerce_asset_provenance(value: Any) -> list[str]:
     return _dedupe_strings([str(item) for item in value])
 
 
+_ASSET_TIMING_FIELDS = (
+    "queue_ms",
+    "candidate_resolution_ms",
+    "dns_policy_validation_ms",
+    "connect_to_headers_ttfb_ms",
+    "body_stream_ms",
+    "browser_recovery_ms",
+    "retry_wait_ms",
+    "conversion_ms",
+    "save_ms",
+    "total_ms",
+)
+
+
+def coerce_asset_timing(value: Any) -> dict[str, Any]:
+    """Keep only bounded aggregate timing fields and the terminal status."""
+
+    if not isinstance(value, Mapping):
+        return {}
+    result: dict[str, Any] = {}
+    for field_name in _ASSET_TIMING_FIELDS:
+        try:
+            elapsed = max(float(value.get(field_name) or 0.0), 0.0)
+            result[field_name] = round(elapsed, 3)
+        except (TypeError, ValueError):
+            result[field_name] = 0.0
+    status = normalize_text(str(value.get("status") or "")).lower()
+    if status:
+        result["status"] = status[:64]
+    return result
+
+
 def _coerce_diagnostic_value(value: Any) -> Any:
     if value is None or isinstance(value, (bool, int, float)):
         return value
@@ -882,6 +914,7 @@ __all__ = [
     "coerce_asset_failure_diagnostics",
     "coerce_asset_provenance",
     "coerce_asset_quality_summary",
+    "coerce_asset_timing",
     "coerce_body_quality_metrics",
     "coerce_semantic_losses",
     "combine_abstract_text",

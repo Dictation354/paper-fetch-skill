@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from importlib.resources import files
 from pathlib import Path
-from typing import Any, Literal, Protocol
+from typing import Any, Literal, Protocol, TypedDict, Unpack
 from uuid import UUID, uuid4
 
 from pydantic import (
@@ -78,6 +78,18 @@ class ArtifactStat(Protocol):
 
 Clock = Callable[[], datetime]
 UuidFactory = Callable[[], UUID]
+
+
+class _ManifestAcceptanceOptions(TypedDict, total=False):
+    """Keyword-compatible acceptance inputs kept out of the broad builder API."""
+
+    requested_outputs: Collection[AcceptanceOutputKind | str] | None
+    asset_summary: AssetAcceptanceSummary | None
+    require_local_body_assets: bool | None
+    require_full_size_body_assets: bool | None
+
+
+_MANIFEST_ACCEPTANCE_OPTION_KEYS = frozenset(_ManifestAcceptanceOptions.__annotations__)
 ArtifactStatReader = Callable[[Path], ArtifactStat]
 ArtifactHasher = Callable[[Path], str]
 
@@ -524,8 +536,6 @@ def build_manifest_record(
     envelope: FetchEnvelope | None = None,
     error: ManifestError | Mapping[str, Any] | None = None,
     aborted: bool = False,
-    requested_outputs: Collection[AcceptanceOutputKind | str] | None = None,
-    asset_summary: AssetAcceptanceSummary | None = None,
     candidate_count: int = 0,
     expected_doi: str | None = None,
     title: str | None = None,
@@ -538,8 +548,22 @@ def build_manifest_record(
     started_at: datetime | None = None,
     completed_at: datetime | None = None,
     deps: ManifestBuilderDependencies = DEFAULT_MANIFEST_BUILDER_DEPENDENCIES,
+    **acceptance_options: Unpack[_ManifestAcceptanceOptions],
 ) -> ManifestRecord:
     """Build one immutable record without writing any file or manifest."""
+
+    unknown_acceptance_options = (
+        set(acceptance_options) - _MANIFEST_ACCEPTANCE_OPTION_KEYS
+    )
+    if unknown_acceptance_options:
+        unknown = ", ".join(sorted(unknown_acceptance_options))
+        raise TypeError(f"unexpected manifest acceptance option(s): {unknown}")
+    requested_outputs = acceptance_options.get("requested_outputs")
+    asset_summary = acceptance_options.get("asset_summary")
+    require_local_body_assets = acceptance_options.get("require_local_body_assets")
+    require_full_size_body_assets = acceptance_options.get(
+        "require_full_size_body_assets"
+    )
 
     if envelope is not None and error is not None:
         raise ValueError("envelope and error are mutually exclusive")
@@ -560,11 +584,27 @@ def build_manifest_record(
         else None
     )
     failure_code = _failure_code(manifest_error) if manifest_error is not None else None
+    strategy_parameters = request.parameters.get("strategy")
+    strategy_parameters = (
+        strategy_parameters if isinstance(strategy_parameters, Mapping) else {}
+    )
+    effective_require_local = bool(
+        strategy_parameters.get("require_local_body_assets", False)
+        if require_local_body_assets is None
+        else require_local_body_assets
+    )
+    effective_require_full_size = bool(
+        strategy_parameters.get("require_full_size_body_assets", False)
+        if require_full_size_body_assets is None
+        else require_full_size_body_assets
+    )
     acceptance = evaluate_fetch_acceptance(
         envelope,
         asset_profile=asset_profile,
         requested_outputs=requested_outputs,
         asset_summary=asset_summary,
+        require_local_body_assets=effective_require_local,
+        require_full_size_body_assets=effective_require_full_size,
         failure_code=failure_code,
         candidate_count=candidate_count,
         expected_doi=expected_doi,

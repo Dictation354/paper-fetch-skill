@@ -152,6 +152,77 @@ def test_non_all_mode_keeps_memory_summary_without_writing(tmp_path) -> None:
     assert not (tmp_path / "diagnostics").exists()
 
 
+def test_wiley_http_access_status_review_is_allowlisted_and_secret_safe(
+    tmp_path,
+) -> None:
+    context = RuntimeContext(
+        env={},
+        download_dir=tmp_path,
+        artifact_mode="markdown-assets",
+    )
+    try:
+        result = capture_page_diagnostic(
+            context,
+            PageDiagnosticRequest(
+                provider="wiley",
+                route="html",
+                attempt=1,
+                failure_code="publisher_access_denied",
+                stage="block_detection",
+                html_text="<html><body>Access denied</body></html>",
+                response_status=403,
+                details={
+                    "browser_runtime_trace": {
+                        "candidates": [
+                            {
+                                "status": 403,
+                                "http_access_status_review": {
+                                    "status": 403,
+                                    "body_ready": True,
+                                    "doi_evidence_present": True,
+                                    "doi_evidence_sources": ["citation_meta"],
+                                    "doi_match": True,
+                                    "doi_match_sources": ["citation_meta"],
+                                    "blocking_signals": ["publisher_access_denied"],
+                                    "candidate_confirmed": False,
+                                    "status_override_applied": False,
+                                    "fulltext_acceptance": "not_attempted",
+                                    "accepted": False,
+                                    "reason": "blocking_signal",
+                                    "authorization": "Bearer private-secret",
+                                    "raw_failure_html": "private-secret",
+                                    "storage_state": {"cookie": "private-secret"},
+                                },
+                            }
+                        ]
+                    }
+                },
+            ),
+        )
+    finally:
+        context.close()
+
+    review = result["page"]["browser_runtime"]["candidates"][0][
+        "http_access_status_review"
+    ]
+    assert review == {
+        "status": 403,
+        "body_ready": True,
+        "doi_evidence_present": True,
+        "doi_evidence_sources": ["citation_meta"],
+        "doi_match": True,
+        "doi_match_sources": ["citation_meta"],
+        "blocking_signals": ["publisher_access_denied"],
+        "candidate_confirmed": False,
+        "status_override_applied": False,
+        "fulltext_acceptance": "not_attempted",
+        "accepted": False,
+        "reason": "blocking_signal",
+    }
+    assert "private-secret" not in json.dumps(result, sort_keys=True)
+    assert not (tmp_path / "diagnostics").exists()
+
+
 def test_failure_before_page_load_persists_json_without_fake_html(tmp_path) -> None:
     context = RuntimeContext(
         env={},
@@ -209,3 +280,13 @@ def test_empty_article_shell_requires_small_http_200_document_without_body() -> 
         "body_element_count": 0,
         "article_container_count": 0,
     }
+
+
+def test_observed_734_byte_http_200_head_only_shell_is_classified() -> None:
+    prefix = "<html><head><title>ACS article</title>"
+    suffix = "</head></html>"
+    padding = " " * (734 - len((prefix + suffix).encode("utf-8")))
+    shell = f"{prefix}{padding}{suffix}"
+
+    assert len(shell.encode("utf-8")) == 734
+    assert is_empty_article_shell(shell, response_status=200) is True

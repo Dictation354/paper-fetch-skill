@@ -36,6 +36,7 @@ from ..models import (
 )
 from ..provider_catalog import (
     BodyTextThresholds,
+    ProviderRouteSpec,
     ProviderSpec,
     provider_body_text_thresholds,
 )
@@ -99,6 +100,15 @@ register_provider_bundle(
             xml_root_tags=("article",),
             xml_file_tokens=("10.3389", "frontiers"),
             body_text_thresholds=BodyTextThresholds(min_chars=1200),
+            routes=(
+                ProviderRouteSpec(
+                    name="assets",
+                    kind="assets",
+                    timeout_seconds=20,
+                    concurrency=2,
+                    transient_retries=2,
+                ),
+            ),
         ),
         html_rules=ProviderHtmlRules(
             name="frontiers",

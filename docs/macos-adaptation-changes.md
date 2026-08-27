@@ -152,6 +152,10 @@ Linux `.sh` 和 macOS `.tar.gz` 都进入
 - `--uninstall` 保留 runtime，显式安全 `--purge` 才删除安装目录。
 
 artifact 上传设置 `if-no-files-found: error`，避免构建成功但没有产物时继续发布。
+每次普通/offline/provider-canary artifact 上传，以及稳定/滚动 release 的 attestation
+和 publication，均以前置 secret scan 成功为条件。扫描器复用运行时脱敏规则检查
+环境中敏感变量值的 raw 与 URL-encoded 形式，只输出变量名和文件路径；命中、读取
+错误或缺失根目录都会 fail closed，不能把扫描失败隐藏在 `always()` 上传中。
 普通 push / PR 由 `.github/workflows/ci.yml` 把精确 `github.sha` 传给 reusable
 `.github/workflows/verify.yml`；后者固定用 `macos-15`、CPython 3.14 执行原生
 build + verifier，并单独运行真实 `/var` ↔ `/private/var` 或
@@ -273,19 +277,31 @@ Camoufox/Playwright 的主文导航、重定向、跨源子资源与 service wor
 网络行为；项目不安装 context-wide URL/DNS interceptor，也不把加载 cookie、storage
 state、profile 或 user-data 的 context 额外绑定到单一 origin，external CDP 可继续
 借用既有 context。Provider image/font/media 屏蔽只保留为 page-scope 性能策略。
-provider catalog 的 route 仍由唯一 `RouteExecutionPolicy` 编译 publisher/API/资产
-host、timeout、retry、QPS、acceptance 与资产并发上限，并限制 browser navigation
-deadline；direct HTTP/API 与 browser 发现后二进制 replay 仍由 `SafeRemoteUrlPolicy`
-和 catalog request policy 逐跳验证。这些规则属于 portable Python 行为契约，在
+provider catalog 的 route 仍由唯一 `RouteExecutionPolicy` 编译 timeout、retry、QPS、
+acceptance、asset scope 与并发上限，并限制 browser navigation deadline；catalog
+host/sensitive-header 数据不自动成为网络授权。Direct HTTP/API 与资产请求仍由
+`SafeRemoteUrlPolicy` 执行 HTTP(S)、标准端口、公网 DNS、userinfo、HTTPS downgrade、
+逐跳重定向及跨域标准敏感头边界；显式 caller allowlist 继续 fail closed。这些规则属于 portable Python 行为契约，在
 macOS 上使用相同实现，但仍不替代原生 prepared Camoufox bundle 启动证据。
 
-Browser 二进制资产进一步固定为“浏览器只发现 URL、verified-IP direct transport
-流式落盘”。同一 `RuntimeContext` 的 figure 与 supplementary 共用 128 文件、
+Browser 二进制资产允许共享 hostname transport 或 browser-owned body/arrayBuffer/
+bodyB64/canvas/file/PDF bytes；direct 401/403 最多进入一次真实 browser-byte recovery。
+两条路径都进入统一 MIME、Content-Length/实际字节、像素、staging、原子发布与取消门禁。
+同一 `RuntimeContext` 的 figure 与 supplementary 共用 128 文件、
 32 MiB/文件、256 MiB 累计、64 MP 和最多 4 worker（受 route cap 限制）的
-`AssetBudget`；无法转为 direct stream 的 browser-only 响应以
-`browser_stream_unavailable` fail closed。该约束是跨平台 Python 边界，portable
+`AssetBudget`。该约束是跨平台 Python 边界，portable
 测试覆盖 Content-Length/未知长度/gzip、像素、跨 kind 并发、取消和 staging 清理；
 仍不扩大原生 macOS live publisher 访问证据。
+
+正文资产 provider 现在必须声明显式 `assets` route，默认单次 direct 超时 20 秒、
+route cap 2；具有可靠 browser byte recovery 的路线不再追加 direct transient retry。
+每篇论文、每个 host 由首资源做一次 direct probe；并发同源请求等待该决定，只有
+browser recovery 已真实取得字节后才让本篇剩余同源资源复用 browser 路径。状态以
+provider/article key 限定在当前 `RuntimeContext`，不会跨论文或进程学习。逐资源
+diagnostics 增加 candidate resolution 与 route 决定，browser context prepare/release
+另记 stage timing。portable 测试覆盖同源并发、异源独立探测、论文生命周期和
+caller-thread Camoufox 路径；原生 `macos-15` gate 重跑相同纯 Python contract，但仍不
+替代真实 publisher live 性能证据。
 
 同一 portable 边界也覆盖 browser state 与 MCP cache 的授权隔离。context diagnostics
 固定报告 `storage_state_load={path,exists,used}`；只有成功创建 context 且实际传入
@@ -294,10 +310,19 @@ canonical storage-state 路径和最终 SHA-256 构建 private scope。macOS 默
 `platformdirs` provider 目录、显式 profile/user-data 和 provider state override 使用
 同一算法；只配置不存在的路径仍为 public，实际使用的 state 永不降级为 public。
 
+主文档 diagnostics 还会在页面关闭前并列采样 Playwright `requestfinished` lifecycle、
+Content-Length、`page.content()` 字节和 Navigation Timing。HTTP 200 小空壳因此可以区分
+“服务端已结束的小响应”与“响应仍在进行”；实现不调用可能无界等待的
+`response.finished()`，也不保存 header 集合、cookie、query 或原始 HTML。portable mock
+锁定完整与未完成两种状态，原生 macOS gate 重跑同一契约，但不把 mock 时序当作真实
+publisher live 证据。
+
 selected-browser provider 在抽取前等待 provider 正文 DOM 达到阈值并连续两次稳定；
 稳定实质正文已经就绪时，页头 `Institutional login` 等普通导航文本不再由前 1,000
-字符摘要提前判为 paywall，而交给正文感知的 provider availability 验收；challenge、
-HTTP 401/402/403、HTTP 404 和摘要重定向仍在浏览器边界直接阻断。
+字符摘要提前判为 paywall，而交给正文感知的 provider availability 验收。
+challenge/验证码、HTTP 402/404 和摘要重定向仍在浏览器边界直接阻断；Wiley 401/403
+只在正文指纹稳定、页面 DOI 精确匹配且无明确 no-access/datalayer 阻断时进入后续
+Markdown/全文验收，trace 仍保留真实状态。
 任一候选已确认 challenge/paywall/access boundary、而后续候选发生传输/导航失败，
 或下一候选、保守重试只因共享 deadline 耗尽而失败时，保留首个稳定 reason code，
 并在 diagnostics 中附加后续失败。live MCP 对成功 metadata fallback 只接受精确的
@@ -306,12 +331,18 @@ HTTP 401/402/403、HTTP 404 和摘要重定向仍在浏览器边界直接阻断�
 empty shell，保守重试会先使用下一个既有 provider URL，不再重复相同空壳。
 MDPI 使用该正文稳定门，避免把延迟加载的 HTTP-200 head-only shell 误认为完成页面。
 PNAS 则关闭零等待 fast attempt，以 canonical/full/resolver 顺序做一次浏览器 HTML
-attempt，并把正文长度、段落数和连续两次稳定指纹限制在 8 秒总预算内；预算结束仍
-检查最终 HTML。PNAS、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、T&F
-仅阻断 image/font/media，继续放行 stylesheet、JavaScript 和 XHR/fetch。已验收且
-提交 storage-state 的 preflight HTML 可在同一进程按 provider/DOI/URL/runtime
-指纹短期一次性复用；AIP 维持进程指纹边界，不发布跨 `RuntimeContext` 的 HTML、
-cookie 或 preflight storage-state。Royal/Annual/ACS 未解析的 figure page 使用
+attempt，并让 readiness 与解析器共同使用 `#bodymatter` 系列 selector；正文已满足
+语义提取时不再等待不存在的顶层 `.core-container`，8 秒预算结束仍检查最终 HTML。
+Wiley 优先 `/doi/{doi}`，401/403 在既有预算内完成稳定正文、精确 DOI 和阻断信号复核，
+未通过则继续下一候选；Science 在回归证明正文和资源发现不受影响后阻断
+image/font/media。PNAS、AMS、MDPI、Royal Society、Annual
+Reviews、ACS、IOP、T&F 与 Science 继续放行 stylesheet、JavaScript 和 XHR/fetch。
+共享 browser workflow 已验收的 preflight HTML 可在同一进程按
+provider/DOI/URL/runtime 指纹短期一次性复用；IEEE 自定义 route 的复用实验因三轮
+live 端到端中位数未达到保留门槛而撤回，仍执行正式导航、文章号核验与 extractor。
+AIP 维持进程指纹边界，不发布跨 `RuntimeContext` 的 HTML、cookie 或 preflight
+storage-state。
+Royal/Annual/ACS 未解析的 figure page 使用
 同一 runtime 的专用 context/page 串行复用，避免逐图重建 Camoufox context。
 CLI 和 MCP 批量入口会在预解析阶段复用 item-local context 缓存规范身份，但只有
 fetch worker 取得执行槽时才重新开始该条目的 request deadline；全批解析和 provider
@@ -327,6 +358,13 @@ DOM 中明确给出的同源 `/action/downloadTable` CSV action，或页面已�
 付费墙。portable 单测同时锁定 hook 的调用时序、并发/顺序/fallback 与 T&F CSV
 水合；常规 `macos-15` CI 在已准备的 Camoufox 原生 bundle 验证后重跑这些 contract
 node，并覆盖 preflight reuse、精确资源阻断和 runtime figure-page 复用。
+
+图片质量仍复用已有候选与下载边界：arXiv 对每个 official HTML figure 优先匹配
+e-print source 图，Copernicus 从 JATS alternatives 提升官方 `graphic`，AIP 选择最大
+Silverchair `srcset` rendition；T&F 官方只给 CMS preview 时保持现有 accepted preview。
+无法取得原图时统一输出 `official_full_size_not_exposed` 或
+`official_full_size_access_restricted`，preview 不会被误标为 full-size。该排序和原因由
+portable fixture/unit 锁定，真实分辨率与三轮稳定性仍只由显式 live 验收证明。
 这些是 Windows/WSL 可执行的 portable 行为证据，不替代原生 macOS app bundle 启动门。
 常规 CI 的 pinned 原生 runtime 在调用 Camoufox CLI 时传入 GitHub workflow
 自带的只读 `github.token`；Camoufox 复用其原生 `GITHUB_TOKEN` 支持访问 Releases

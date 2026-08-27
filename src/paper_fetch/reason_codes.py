@@ -20,6 +20,8 @@ IMAGE_CONVERSION_BACKEND_MISSING = "image_conversion_backend_missing"
 IMAGE_CONVERSION_BACKEND_READY = "image_conversion_backend_ready"
 IMAGE_CONVERSION_BACKEND_TIMEOUT = "image_conversion_backend_timeout"
 IMAGE_CONVERSION_FAILED = "image_conversion_failed"
+OFFICIAL_FULL_SIZE_ACCESS_RESTRICTED = "official_full_size_access_restricted"
+OFFICIAL_FULL_SIZE_NOT_EXPOSED = "official_full_size_not_exposed"
 IDENTITY_MISMATCH = "identity_mismatch"
 AUTH_FINAL_URL_INVALID = "auth_final_url_invalid"
 AUTH_REPLAY_FAILED = "auth_replay_failed"
@@ -96,6 +98,8 @@ __all__ = [
     "NOT_SUPPORTED",
     "NO_ACCESS",
     "NO_RESULT",
+    "OFFICIAL_FULL_SIZE_ACCESS_RESTRICTED",
+    "OFFICIAL_FULL_SIZE_NOT_EXPOSED",
     "OK",
     "PARTIAL",
     "PDF_FALLBACK",

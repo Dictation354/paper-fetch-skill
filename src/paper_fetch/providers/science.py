@@ -15,7 +15,11 @@ from ..extraction.html.provider_rules import (
     SCIENCE_POST_CONTENT_BREAK_TOKENS,
     SCIENCE_SITE_RULE_OVERRIDES,
 )
-from ..provider_catalog import ATYPON_DEFAULT_PDF_PATH_TEMPLATES, ProviderSpec
+from ..provider_catalog import (
+    ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
+    ProviderRouteSpec,
+    ProviderSpec,
+)
 from ..quality.html_signals import (
     SCIENCE_AVAILABILITY_OVERRIDES,
     SCIENCE_SIGNAL_SET,
@@ -48,6 +52,17 @@ register_provider_bundle(
                 "/doi/pdf/{doi}?download=true",
             ),
             requires_browser_runtime=True,
+            routes=(
+                ProviderRouteSpec(
+                    name="assets",
+                    kind="assets",
+                    browser_optional=True,
+                    requires_playwright=True,
+                    timeout_seconds=20,
+                    concurrency=2,
+                    transient_retries=0,
+                ),
+            ),
         ),
         html_rules=ProviderHtmlRules(
             name="science",
@@ -84,6 +99,10 @@ register_provider_bundle(
 SCIENCE_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     "science",
     fallback_author_extractor=_science_html.extract_authors,
+    policy=browser_workflow.BrowserWorkflowPolicy(
+        blocked_resource_types=("image", "font", "media"),
+        preflight_html_reuse=True,
+    ),
 )
 
 

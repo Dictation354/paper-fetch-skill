@@ -87,7 +87,7 @@ register_provider_bundle(
             client_factory_path="paper_fetch.providers.wiley:WileyClient",
             status_order=3,
             base_domains=("onlinelibrary.wiley.com",),
-            html_path_templates=("/doi/full/{doi}", "/doi/{doi}"),
+            html_path_templates=("/doi/{doi}", "/doi/full/{doi}"),
             pdf_path_templates=(
                 *ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
                 "/doi/pdfdirect/{doi}",
@@ -129,6 +129,15 @@ register_provider_bundle(
                     concurrency=1,
                     timeout_seconds=120,
                 ),
+                ProviderRouteSpec(
+                    name="assets",
+                    kind="assets",
+                    browser_optional=True,
+                    requires_playwright=True,
+                    timeout_seconds=20,
+                    concurrency=2,
+                    transient_retries=0,
+                ),
             ),
         ),
         html_rules=ProviderHtmlRules(
@@ -166,6 +175,9 @@ WILEY_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     "wiley",
     article_source_name="wiley_browser",
     fallback_author_extractor=_wiley_html.extract_authors,
+    policy=browser_workflow.BrowserWorkflowPolicy(
+        preflight_html_reuse=True,
+    ),
 )
 
 

@@ -198,6 +198,18 @@ def _resolve_install_root(
 ) -> tuple[Path | None, str]:
     if install_root is not None:
         return install_root.expanduser().resolve(), "explicit"
+    if context.source_root is not None:
+        try:
+            context.module_file.expanduser().resolve().relative_to(
+                context.source_root.expanduser().resolve()
+            )
+        except ValueError:
+            pass
+        else:
+            # A source invocation audits the checkout and active source skill.
+            # PATH, env-file, and unrelated offline installs are intentionally
+            # outside this scope unless --install-root was explicit.
+            return None, "source_development"
     candidates = [context.module_file, context.executable]
     if context.argv0:
         candidates.append(Path(context.argv0))
@@ -727,6 +739,13 @@ def install_provenance_payload(
         context=active_context,
     )
     source = _source_record(active_context)
+    provenance_scope = (
+        "source_development"
+        if root_source == "source_development"
+        else "installation"
+        if resolved_root is not None
+        else "runtime"
+    )
     source_project_environment = _source_project_environment_record(active_context)
     current_distribution = dict(active_context.current_distribution)
     active_cli = dict(active_context.active_cli)
@@ -746,14 +765,21 @@ def install_provenance_payload(
         context=active_context,
     )
 
-    version_components: list[tuple[str, Mapping[str, Any]]] = [
-        ("source", source),
-        ("current_distribution", current_distribution),
-        ("offline_manifest", manifest_record),
-        ("installed_runtime", installed_runtime),
-        ("default_user_agent", user_agent),
-        ("active_cli", active_cli),
-    ]
+    version_components: list[tuple[str, Mapping[str, Any]]] = (
+        [
+            ("source", source),
+            ("default_user_agent", user_agent),
+        ]
+        if provenance_scope == "source_development"
+        else [
+            ("source", source),
+            ("current_distribution", current_distribution),
+            ("offline_manifest", manifest_record),
+            ("installed_runtime", installed_runtime),
+            ("default_user_agent", user_agent),
+            ("active_cli", active_cli),
+        ]
+    )
     expected_version = next(
         (
             str(record["version"])
@@ -882,7 +908,11 @@ def install_provenance_payload(
     elif manifest is None:
         if bundled_skill.get("status") == "ready":
             status = "ready"
-            reason_code = "source_skill_verified_without_offline_manifest"
+            reason_code = (
+                "source_development_verified"
+                if provenance_scope == "source_development"
+                else "source_skill_verified_without_offline_manifest"
+            )
         else:
             status = "not_applicable"
             reason_code = "source_development_without_offline_manifest"
@@ -892,6 +922,7 @@ def install_provenance_payload(
 
     return {
         "schema_version": 1,
+        "provenance_scope": provenance_scope,
         "status": status,
         "reason_code": reason_code,
         "requested_install_root": str(install_root) if install_root else None,

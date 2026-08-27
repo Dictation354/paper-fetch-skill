@@ -450,6 +450,8 @@ class FetchStrategyInput(BaseModel):
     allow_metadata_only_fallback: bool = True
     preferred_providers: list[str] | None = None
     asset_profile: AssetProfileInput | None = None
+    require_local_body_assets: bool = False
+    require_full_size_body_assets: bool = False
     inline_image_budget: InlineImageBudgetToolInput | None = None
 
     @field_validator("preferred_providers", mode="before")
@@ -486,6 +488,12 @@ class FetchStrategyInput(BaseModel):
     def normalize_asset_profile(cls, value: Any) -> Any:
         return _normalize_asset_profile(value)
 
+    @model_validator(mode="after")
+    def imply_local_assets_for_full_size(self) -> FetchStrategyInput:
+        if self.require_full_size_body_assets:
+            self.require_local_body_assets = True
+        return self
+
     def to_service_strategy(self) -> FetchStrategy:
         return FetchStrategy(
             allow_metadata_only_fallback=self.allow_metadata_only_fallback,
@@ -493,6 +501,8 @@ class FetchStrategyInput(BaseModel):
             if self.preferred_providers is not None
             else None,
             asset_profile=cast(AssetProfile | None, self.asset_profile),
+            require_local_body_assets=self.require_local_body_assets,
+            require_full_size_body_assets=self.require_full_size_body_assets,
         )
 
     def resolved_inline_image_budget(self) -> InlineImageBudget:

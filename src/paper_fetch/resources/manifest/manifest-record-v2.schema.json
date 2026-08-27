@@ -177,6 +177,89 @@
           "title": "Remote Only Count",
           "type": "integer"
         },
+        "body_discovered": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Body Discovered",
+          "type": "integer"
+        },
+        "body_attempted": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Body Attempted",
+          "type": "integer"
+        },
+        "body_local": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Body Local",
+          "type": "integer"
+        },
+        "body_full_size": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Body Full Size",
+          "type": "integer"
+        },
+        "body_preview": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Body Preview",
+          "type": "integer"
+        },
+        "body_failed": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Body Failed",
+          "type": "integer"
+        },
+        "body_not_archived": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Body Not Archived",
+          "type": "integer"
+        },
+        "body_remote_only_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Body Remote Only Count",
+          "type": "integer"
+        },
+        "require_local_body_assets": {
+          "default": false,
+          "title": "Require Local Body Assets",
+          "type": "boolean"
+        },
+        "require_full_size_body_assets": {
+          "default": false,
+          "title": "Require Full Size Body Assets",
+          "type": "boolean"
+        },
+        "has_local_body_assets": {
+          "default": false,
+          "title": "Has Local Body Assets",
+          "type": "boolean"
+        },
+        "all_body_assets_local": {
+          "default": true,
+          "title": "All Body Assets Local",
+          "type": "boolean"
+        },
+        "all_body_assets_full_size": {
+          "default": true,
+          "title": "All Body Assets Full Size",
+          "type": "boolean"
+        },
+        "local_body_assets_satisfied": {
+          "default": true,
+          "title": "Local Body Assets Satisfied",
+          "type": "boolean"
+        },
+        "full_size_body_assets_satisfied": {
+          "default": true,
+          "title": "Full Size Body Assets Satisfied",
+          "type": "boolean"
+        },
         "failure_codes": {
           "default": [],
           "items": {

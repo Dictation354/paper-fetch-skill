@@ -282,7 +282,7 @@ Identity acceptance 不再把普通 title 当作唯一论文证明。DOI-less �
 ```json
 {
   "schema_version": 2,
-  "tool_version": "5.5.0",
+  "tool_version": "5.6.0",
   "run_id": "10000000-0000-4000-8000-000000000001",
   "record_id": "20000000-0000-4000-8000-000000000002",
   "index": 2,
@@ -416,6 +416,15 @@ CLI 默认：
 - `body`：默认值，保存正文图片、图表、公式图片等。
 - `all`：在正文资产之外，额外保存可识别的补充材料等相关资产。
 
+默认 acceptance 保持 provider-policy 兼容语义。需要离线归档全部正文逻辑资产时加
+`--require-local-body-assets`；需要全部本地资产均为 full-size 时加
+`--require-full-size-body-assets`，后者自动隐含前者。两项默认关闭且只适用于
+`body` / `all`；约束未满足时 asset/overall 为 `degraded`，已经取得的全文仍保持
+fetch 成功。JSON acceptance 会同时报告要求值、`has_local_body_assets`、全部本地化/
+full-size satisfaction，以及 body discovered/attempted/local/preview/remote-only 计数。
+这些 body 计数只纳入需要独立 binary 文件的逻辑资产；没有 remote/failure、已经以内联
+语义完成的 table/formula/figure 不属于本地文件义务。
+
 `body` 与 `all` 不会放宽运行时安全上限。同一篇论文的正文与补充资产共享默认预算：
 最多 128 个文件、单文件 32 MiB、累计 256 MiB、单图 64,000,000 像素，并发最多 4
 且受 provider route 限制。达到上限会删除未发布的 staging、停止剩余下载，并在
@@ -466,6 +475,7 @@ paper-fetch fetch --query "10.1016/test" \
 
 - `--include-refs none|top10|all` 控制 references 渲染范围。
 - `--asset-profile none|body|all` 控制本地内容资产范围；PDF fallback 在 `body` / `all` 下也会尝试保存 PDF 导出的正文图片。
+- `--require-local-body-assets` / `--require-full-size-body-assets` 启用严格正文资产验收；full-size 自动隐含 local，两项不改变全文 fetch 状态。
 - `--max-tokens full_text|<positive-int>` 控制 Markdown 渲染预算，默认是 `full_text`。
 - `--version` 输出当前安装版本并退出。
 

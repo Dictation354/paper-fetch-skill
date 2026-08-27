@@ -17,6 +17,7 @@ from paper_fetch.models import (
     QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION,
     ArticleModel,
     Asset,
+    AssetDiagnostic,
     AssetQualitySummary,
     FetchEnvelope,
     Metadata,
@@ -697,6 +698,242 @@ def test_audited_body_assets_ignore_remote_only_unrequested_supplements() -> Non
 
     assert report.asset.status == AssetAcceptanceStatus.COMPLETE
     assert report.asset.issue_codes == ()
+    assert report.overall == OverallAcceptanceStatus.COMPLETE
+
+
+def test_default_asset_acceptance_remains_compatible_with_audited_remote_only_rows() -> (
+    None
+):
+    summary = AssetAcceptanceSummary(
+        requested=True,
+        profile="body",
+        audited=True,
+        discovered=1,
+        attempted=1,
+        total=1,
+        not_archived=1,
+        remote_link_count=1,
+        remote_only_count=1,
+        body_discovered=1,
+        body_attempted=1,
+        body_not_archived=1,
+        body_remote_only_count=1,
+        issue_codes=(),
+    )
+
+    report = evaluate_fetch_acceptance(
+        _envelope(),
+        asset_profile="body",
+        asset_summary=summary,
+    )
+
+    assert report.asset.status == AssetAcceptanceStatus.COMPLETE
+    assert report.asset.require_local_body_assets is False
+    assert report.asset.local_body_assets_satisfied is True
+    assert report.asset.has_local_body_assets is False
+    assert report.asset.all_body_assets_local is False
+    assert report.fetch.status == FetchAcceptanceStatus.OK
+    assert report.overall == OverallAcceptanceStatus.COMPLETE
+
+
+def test_strict_local_assets_degrade_acceptance_without_failing_fulltext() -> None:
+    summary = AssetAcceptanceSummary(
+        requested=True,
+        profile="body",
+        audited=True,
+        discovered=1,
+        attempted=1,
+        total=1,
+        not_archived=1,
+        remote_link_count=1,
+        remote_only_count=1,
+        body_discovered=1,
+        body_attempted=1,
+        body_not_archived=1,
+        body_remote_only_count=1,
+        issue_codes=(),
+    )
+
+    report = evaluate_fetch_acceptance(
+        _envelope(),
+        asset_profile="body",
+        asset_summary=summary,
+        require_local_body_assets=True,
+    )
+
+    assert report.asset.status == AssetAcceptanceStatus.DEGRADED
+    assert report.asset.require_local_body_assets is True
+    assert report.asset.local_body_assets_satisfied is False
+    assert "local_body_assets_required" in report.asset.issue_codes
+    assert report.fetch.status == FetchAcceptanceStatus.OK
+    assert report.content.status == ContentAcceptanceStatus.FULLTEXT
+    assert report.overall == OverallAcceptanceStatus.DEGRADED
+
+
+def test_strict_full_size_implies_local_and_rejects_accepted_preview() -> None:
+    summary = AssetAcceptanceSummary(
+        requested=True,
+        profile="body",
+        audited=True,
+        discovered=1,
+        attempted=1,
+        total=1,
+        local=1,
+        preview=1,
+        accepted_preview=1,
+        body_discovered=1,
+        body_attempted=1,
+        body_local=1,
+        body_preview=1,
+        issue_codes=(),
+    )
+
+    report = evaluate_fetch_acceptance(
+        _envelope(),
+        asset_profile="body",
+        asset_summary=summary,
+        require_full_size_body_assets=True,
+    )
+
+    assert report.asset.require_local_body_assets is True
+    assert report.asset.require_full_size_body_assets is True
+    assert report.asset.local_body_assets_satisfied is True
+    assert report.asset.full_size_body_assets_satisfied is False
+    assert report.asset.all_body_assets_full_size is False
+    assert "full_size_body_assets_required" in report.asset.issue_codes
+    assert report.asset.status == AssetAcceptanceStatus.DEGRADED
+    assert report.fetch.status == FetchAcceptanceStatus.OK
+
+
+def test_strict_full_size_accepts_all_local_full_size_body_assets() -> None:
+    summary = AssetAcceptanceSummary(
+        requested=True,
+        profile="all",
+        audited=True,
+        discovered=2,
+        attempted=2,
+        total=2,
+        local=2,
+        full_size=2,
+        body_discovered=2,
+        body_attempted=2,
+        body_local=2,
+        body_full_size=2,
+        issue_codes=(),
+    )
+
+    report = evaluate_fetch_acceptance(
+        _envelope(),
+        asset_profile="all",
+        asset_summary=summary,
+        require_full_size_body_assets=True,
+    )
+
+    assert report.asset.status == AssetAcceptanceStatus.COMPLETE
+    assert report.asset.has_local_body_assets is True
+    assert report.asset.all_body_assets_local is True
+    assert report.asset.all_body_assets_full_size is True
+    assert report.asset.local_body_assets_satisfied is True
+    assert report.asset.full_size_body_assets_satisfied is True
+    assert report.overall == OverallAcceptanceStatus.COMPLETE
+
+
+def test_strict_local_ignores_inline_semantics_without_binary_payloads() -> None:
+    envelope = _envelope()
+    envelope.quality.asset_summary = AssetQualitySummary(
+        audited=True,
+        requested=True,
+        profile="body",
+        discovered=3,
+        attempted=3,
+        total=3,
+        local=1,
+        full_size=1,
+        diagnostics=[
+            AssetDiagnostic(
+                request_profile="body",
+                kind="table",
+                status="available",
+            ),
+            AssetDiagnostic(
+                request_profile="body",
+                kind="figure",
+                status="available",
+            ),
+            AssetDiagnostic(
+                request_profile="body",
+                kind="figure",
+                status="available",
+                path="body_assets/figure.png",
+                download_tier="full_size",
+            ),
+        ],
+    )
+
+    report = evaluate_fetch_acceptance(
+        envelope,
+        asset_profile="body",
+        require_local_body_assets=True,
+    )
+
+    assert report.asset.body_discovered == 1
+    assert report.asset.body_local == 1
+    assert report.asset.all_body_assets_local is True
+    assert report.asset.local_body_assets_satisfied is True
+    assert report.asset.status == AssetAcceptanceStatus.COMPLETE
+
+
+def test_strict_local_keeps_body_remote_only_failure_in_file_denominator() -> None:
+    envelope = _envelope()
+    envelope.quality.asset_summary = AssetQualitySummary(
+        audited=True,
+        requested=True,
+        profile="body",
+        discovered=2,
+        attempted=2,
+        total=2,
+        remote_link_count=1,
+        remote_only_count=1,
+        diagnostics=[
+            AssetDiagnostic(
+                request_profile="body",
+                kind="table",
+                status="available",
+            ),
+            AssetDiagnostic(
+                request_profile="body",
+                kind="figure",
+                status="failed",
+                failure_code="missing_path",
+            ),
+        ],
+    )
+
+    report = evaluate_fetch_acceptance(
+        envelope,
+        asset_profile="body",
+        require_local_body_assets=True,
+    )
+
+    assert report.asset.body_discovered == 1
+    assert report.asset.body_failed == 1
+    assert report.asset.body_remote_only_count == 1
+    assert report.asset.all_body_assets_local is False
+    assert report.asset.status == AssetAcceptanceStatus.DEGRADED
+
+
+def test_strict_asset_requirements_are_not_applicable_to_profile_none() -> None:
+    report = evaluate_fetch_acceptance(
+        _envelope(),
+        asset_profile="none",
+        require_local_body_assets=True,
+        require_full_size_body_assets=True,
+    )
+
+    assert report.asset.status == AssetAcceptanceStatus.NOT_REQUESTED
+    assert report.asset.local_body_assets_satisfied is True
+    assert report.asset.full_size_body_assets_satisfied is True
+    assert report.fetch.status == FetchAcceptanceStatus.OK
     assert report.overall == OverallAcceptanceStatus.COMPLETE
 
 

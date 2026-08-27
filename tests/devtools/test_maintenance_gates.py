@@ -163,7 +163,7 @@ def test_complexity_budget_update_is_monotonic(tmp_path: Path) -> None:
 
 def test_release_version_artifacts_are_synchronized() -> None:
     facts = project_version_facts()
-    assert facts.version == "5.5.0"
+    assert facts.version == "5.6.0"
     assert synchronized_version_issues(facts) == []
 
 
@@ -376,7 +376,7 @@ def test_provider_governance_keeps_routes_manifests_fixtures_docs_and_debt_synce
 
     assert report.errors == ()
     assert report.provider_count == 20
-    assert report.route_count == 66
+    assert report.route_count == 82
     assert report.route_family_count == 40
     assert report.waived_route_family_count == 10
     assert report.negative_coverage_count == 16

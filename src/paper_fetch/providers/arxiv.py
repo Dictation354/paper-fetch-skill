@@ -18,7 +18,6 @@ from ..arxiv_id import (
 )
 from ..config import build_publisher_user_agent, build_user_agent
 from ..failure import FailureDiagnostics
-from ..extraction.html import assets as html_assets
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.provider_rules import ProviderHtmlRules
 from ..http import (
@@ -39,18 +38,14 @@ from ..provider_catalog import ProviderRouteSpec, ProviderSpec
 from ..runtime import RuntimeContext
 from ..tracing import download_marker, fulltext_marker, trace_from_markers
 from ..utils import empty_asset_results, normalize_text
-from ._asset_retry import (
-    assets_for_network_retry,
-    merge_asset_failures,
-    merge_asset_retry_results,
-)
 from ._arxiv_assets import (
     ARXIV_ASSET_RETRY_POLICY,
     ARXIV_IMAGE_ACCEPT,
-    _arxiv_asset_download_concurrency,
-    _asset_has_download_candidate,
-    download_arxiv_source_figure_assets,
     inline_arxiv_source_assets_in_markdown,
+)
+from ._arxiv_asset_strategy import (
+    ArxivHtmlAssetDownloadPlan,
+    download_arxiv_html_figure_assets,
 )
 from ._arxiv_atom import (
     ARXIV_API_DELAY_SECONDS,
@@ -560,17 +555,12 @@ class ArxivClient(ProviderClient):
             str((merged_metadata or {}).get("arxiv_id") or "")
         ) or _arxiv_id_from_metadata_or_doi(doi, merged_metadata or {})
         article_id = arxiv_id or normalize_text(doi) or raw_payload.source_url
-        extracted_assets = [
-            dict(item)
-            for item in (content.extracted_assets if content is not None else [])
-            if _asset_has_download_candidate(item)
-        ]
-        if not extracted_assets:
-            article_html = bytes(
-                content.body if content is not None else raw_payload.body or b""
-            ).decode("utf-8", errors="replace")
-            return download_arxiv_source_figure_assets(
-                self.transport,
+        article_html = bytes(
+            content.body if content is not None else raw_payload.body or b""
+        ).decode("utf-8", errors="replace")
+        return download_arxiv_html_figure_assets(
+            self.transport,
+            ArxivHtmlAssetDownloadPlan(
                 arxiv_id=arxiv_id,
                 article_id=article_id,
                 article_html=article_html,
@@ -579,57 +569,16 @@ class ArxivClient(ProviderClient):
                     if content is not None
                     else raw_payload.source_url
                 ),
+                extracted_assets=(
+                    content.extracted_assets if content is not None else []
+                ),
                 output_dir=output_dir,
                 user_agent=self.user_agent,
+                asset_profile=asset_profile,
                 runtime_context=context,
-            )
-        asset_download_concurrency = _arxiv_asset_download_concurrency(context.env)
-        initial_result = html_assets.download_assets(
-            html_assets.FIGURE_KIND,
-            self.transport,
-            article_id=article_id,
-            assets=extracted_assets,
-            output_dir=output_dir,
-            user_agent=self.user_agent,
-            asset_profile=asset_profile,
-            headers=self._image_headers(),
-            asset_download_concurrency=asset_download_concurrency,
-            provider_name="arxiv",
-            runtime_context=context,
-        )
-        retry_assets = assets_for_network_retry(
-            extracted_assets,
-            initial_result.get("asset_failures") or [],
-            policy=ARXIV_ASSET_RETRY_POLICY,
-        )
-        if not retry_assets:
-            return initial_result
-        retry_result = html_assets.download_assets(
-            html_assets.FIGURE_KIND,
-            self.transport,
-            article_id=article_id,
-            assets=retry_assets,
-            output_dir=output_dir,
-            user_agent=self.user_agent,
-            asset_profile=asset_profile,
-            headers=self._image_headers(),
-            asset_download_concurrency=1,
-            provider_name="arxiv",
-            runtime_context=context,
-        )
-        return {
-            "assets": merge_asset_retry_results(
-                initial_result.get("assets") or [],
-                retry_result.get("assets") or [],
-                policy=ARXIV_ASSET_RETRY_POLICY,
+                image_headers=self._image_headers(),
             ),
-            "asset_failures": merge_asset_failures(
-                initial_result.get("asset_failures") or [],
-                retry_result.get("asset_failures") or [],
-                policy=ARXIV_ASSET_RETRY_POLICY,
-                retried_assets=retry_assets,
-            ),
-        }
+        )
 
     def to_article_model(
         self,

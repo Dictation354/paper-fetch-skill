@@ -34,7 +34,7 @@ def _install_fake_distribution(site_packages: Path, name: str, version: str) -> 
 def _fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
     staging = tmp_path / "staging"
     site_packages = staging / "runtime" / "Lib" / "site-packages"
-    _install_fake_distribution(site_packages, "paper-fetch-skill", "5.5.0")
+    _install_fake_distribution(site_packages, "paper-fetch-skill", "5.6.0")
     _install_fake_distribution(site_packages, "camoufox", "0.5.7")
 
     formula_package = staging / "formula-tools" / "node_modules" / "katex"
@@ -105,7 +105,7 @@ def test_evidence_is_derived_from_actual_staged_target(tmp_path: Path) -> None:
         (item["name"], item["version"]) for item in dependency["python_packages"]
     } == {
         ("camoufox", "0.5.7"),
-        ("paper-fetch-skill", "5.5.0"),
+        ("paper-fetch-skill", "5.6.0"),
     }
     assert {item["name"] for item in dependency["node_packages"]} == {
         "katex",
@@ -193,7 +193,7 @@ def test_python_inventory_hashes_distribution_data_outside_site_packages(
     shared = staging / "share" / "paper-fetch" / "installed.txt"
     shared.parent.mkdir(parents=True)
     shared.write_text("first", encoding="utf-8")
-    record = site_packages / "paper_fetch_skill-5.5.0.dist-info" / "RECORD"
+    record = site_packages / "paper_fetch_skill-5.6.0.dist-info" / "RECORD"
     with record.open("a", encoding="utf-8", newline="") as handle:
         csv.writer(handle).writerow(
             ["../../../share/paper-fetch/installed.txt", "", ""]

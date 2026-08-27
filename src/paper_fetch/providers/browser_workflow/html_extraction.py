@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from dataclasses import dataclass, replace
 import time
 from typing import TYPE_CHECKING, Any, cast
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 
 from ...extraction.html.assets import extract_scoped_html_assets
 from ...extraction.html.signals import (
@@ -60,6 +61,9 @@ from .reuse_cache import (
     DEFAULT_BROWSER_DOI_ROUTE_HINT_CACHE,
     DEFAULT_BROWSER_PREFLIGHT_REUSE_CACHE,
     browser_preflight_producer,
+    browser_runtime_fingerprint,
+    browser_storage_state_fingerprint,
+    normalize_browser_cache_url,
 )
 
 logger = logging.getLogger("paper_fetch.providers.browser_workflow")
@@ -103,6 +107,7 @@ _INCOMPLETE_HTML_CANDIDATE_REORDER_KINDS = {
     STRUCTURED_MISSING_BODY_SECTIONS,
     "article_container_not_found",
 }
+_HTTP_ACCESS_STATUS_REVIEW_KEY = "http_access_status_review"
 
 
 @dataclass(frozen=True)
@@ -112,6 +117,282 @@ class BrowserHtmlFetchPolicy:
     warm_wait_seconds: int = DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS
     max_timeout_ms: int | None = None
     attempt: int = 1
+
+
+@dataclass(frozen=True)
+class BrowserHtmlPriorAttemptState:
+    attempts: tuple[Mapping[str, Any], ...] = ()
+    browser_trace: Mapping[str, Any] | None = None
+
+
+def _finalize_http_access_status_review(
+    html_result: BrowserFetchedHtml,
+    *,
+    accepted: bool,
+    reason: str,
+) -> BrowserFetchedHtml:
+    """Finalize a provisional browser status review after HTML extraction."""
+
+    if html_result.response_status not in {401, 403}:
+        return html_result
+    diagnostics = dict(html_result.diagnostics or {})
+    trace_value = diagnostics.get("browser_runtime_trace")
+    if not isinstance(trace_value, Mapping):
+        return html_result
+    trace = dict(trace_value)
+    candidates_value = trace.get("candidates")
+    if not isinstance(candidates_value, list):
+        return html_result
+
+    candidates = [
+        dict(candidate) if isinstance(candidate, Mapping) else candidate
+        for candidate in candidates_value
+    ]
+    updated = False
+    source_url = normalize_browser_cache_url(html_result.source_url)
+    for candidate in reversed(candidates):
+        if not isinstance(candidate, dict):
+            continue
+        candidate_url = normalize_browser_cache_url(
+            str(candidate.get("url") or candidate.get("final_url") or "")
+        )
+        if source_url and candidate_url and candidate_url != source_url:
+            continue
+        review_value = candidate.get(_HTTP_ACCESS_STATUS_REVIEW_KEY)
+        if not isinstance(review_value, Mapping):
+            continue
+        review = dict(review_value)
+        if review.get("candidate_confirmed") is not True:
+            continue
+        review.update(
+            {
+                "fulltext_acceptance": "accepted" if accepted else "rejected",
+                "accepted": bool(accepted),
+                "reason": normalize_text(reason).lower()
+                or ("fulltext_accepted" if accepted else "fulltext_rejected"),
+            }
+        )
+        candidate[_HTTP_ACCESS_STATUS_REVIEW_KEY] = review
+        if not accepted:
+            candidate["result"] = "extraction_failure"
+            candidate["block_reason"] = review["reason"]
+        updated = True
+        break
+    if not updated:
+        return html_result
+    trace["candidates"] = candidates
+    diagnostics["browser_runtime_trace"] = trace
+    return replace(html_result, diagnostics=diagnostics)
+
+
+def _browser_runtime_trace(
+    diagnostics: Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    trace = (diagnostics or {}).get("browser_runtime_trace")
+    return dict(trace) if isinstance(trace, Mapping) else {}
+
+
+def _merge_browser_runtime_trace_history(
+    prior_trace: Mapping[str, Any] | None,
+    current_trace: Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    prior = dict(prior_trace or {})
+    current = dict(current_trace or {})
+    if not prior:
+        return current
+    if not current:
+        return prior
+
+    merged = dict(current)
+    prior_candidates = [
+        dict(item)
+        for item in list(prior.get("candidates") or [])
+        if isinstance(item, Mapping)
+    ]
+    current_candidates = [
+        dict(item)
+        for item in list(current.get("candidates") or [])
+        if isinstance(item, Mapping)
+    ]
+    merged["candidates"] = [*prior_candidates, *current_candidates]
+    merged["candidate_count"] = max(
+        int(prior.get("candidate_count") or 0),
+        int(current.get("candidate_count") or 0),
+        len(merged["candidates"]),
+    )
+    for key in ("navigation_count", "blocked_request_count"):
+        merged[key] = int(prior.get(key) or 0) + int(current.get(key) or 0)
+    prior_challenges = [
+        dict(item)
+        for item in list(prior.get("challenge_signals") or [])
+        if isinstance(item, Mapping)
+    ]
+    current_challenges = [
+        dict(item)
+        for item in list(current.get("challenge_signals") or [])
+        if isinstance(item, Mapping)
+    ]
+    if prior_challenges or current_challenges:
+        merged["challenge_signals"] = [*prior_challenges, *current_challenges]
+    return merged
+
+
+def _with_browser_runtime_trace_history(
+    html_result: BrowserFetchedHtml,
+    prior_trace: Mapping[str, Any] | None,
+) -> BrowserFetchedHtml:
+    if not prior_trace:
+        return html_result
+    diagnostics = dict(html_result.diagnostics or {})
+    diagnostics["browser_runtime_trace"] = _merge_browser_runtime_trace_history(
+        prior_trace,
+        _browser_runtime_trace(diagnostics),
+    )
+    return replace(html_result, diagnostics=diagnostics)
+
+
+def _remaining_wiley_review_candidates(
+    provider: str,
+    html_candidates: Sequence[str],
+    html_result: BrowserFetchedHtml,
+) -> list[str]:
+    if normalize_text(
+        provider
+    ).lower() != "wiley" or html_result.response_status not in {401, 403}:
+        return []
+    trace = _browser_runtime_trace(html_result.diagnostics)
+    candidates = trace.get("candidates")
+    if not isinstance(candidates, list):
+        return []
+    confirmed_review = False
+    for candidate in reversed(candidates):
+        if not isinstance(candidate, Mapping):
+            continue
+        review = candidate.get(_HTTP_ACCESS_STATUS_REVIEW_KEY)
+        if not isinstance(review, Mapping):
+            continue
+        if (
+            review.get("candidate_confirmed") is True
+            and review.get("fulltext_acceptance") == "rejected"
+        ):
+            confirmed_review = True
+            break
+    if not confirmed_review:
+        return []
+
+    failed_source = normalize_browser_cache_url(html_result.source_url)
+    if not failed_source:
+        return []
+    normalized_candidates = [
+        normalize_browser_cache_url(candidate) or normalize_text(candidate)
+        for candidate in html_candidates
+    ]
+    try:
+        failed_index = normalized_candidates.index(failed_source)
+    except ValueError:
+        return []
+    return list(html_candidates[failed_index + 1 :])
+
+
+def _browser_page_state(
+    runtime: BrowserRuntimeConfig,
+    html_result: BrowserFetchedHtml,
+    *,
+    initial_seed: Mapping[str, Any] | None,
+    policy: BrowserHtmlFetchPolicy,
+) -> dict[str, Any]:
+    page_sha256 = hashlib.sha256(html_result.html.encode("utf-8")).hexdigest()
+    runtime_fingerprint = browser_runtime_fingerprint(runtime)
+    profile_material = "\0".join(
+        (
+            "browser_html_profile",
+            runtime_fingerprint,
+            str(bool(policy.disable_media)),
+            str(max(0, int(policy.wait_seconds))),
+            str(max(0, int(policy.warm_wait_seconds))),
+            str(max(0, int(policy.max_timeout_ms or 0))),
+        )
+    )
+    profile_fingerprint = hashlib.sha256(profile_material.encode("utf-8")).hexdigest()
+    storage_before = browser_storage_state_fingerprint(runtime, initial_seed)
+    storage_after = browser_storage_state_fingerprint(
+        runtime,
+        html_result.browser_context_seed,
+    )
+    state_material = "\0".join(
+        ("browser_html", profile_fingerprint, storage_after, page_sha256)
+    )
+    return {
+        "route": "browser_html",
+        "page_sha256": page_sha256,
+        "runtime_fingerprint": runtime_fingerprint,
+        "profile_fingerprint": profile_fingerprint,
+        "storage_state_before_fingerprint": storage_before,
+        "storage_state_fingerprint": storage_after,
+        "storage_state_changed": storage_before != storage_after,
+        "state_fingerprint": hashlib.sha256(state_material.encode("utf-8")).hexdigest(),
+    }
+
+
+def _empty_shell_retry_decision(
+    *,
+    policy: BrowserHtmlFetchPolicy,
+    html_candidates: list[str],
+    html_result: BrowserFetchedHtml,
+    page_state: Mapping[str, Any],
+    prior_attempts: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    failed_source = normalize_text(html_result.source_url)
+    remaining_candidates = [
+        candidate
+        for candidate in html_candidates
+        if normalize_text(candidate) and normalize_text(candidate) != failed_source
+    ]
+    candidate_changed = bool(remaining_candidates)
+    storage_changed = bool(page_state.get("storage_state_changed"))
+    profile_changed = bool(policy.attempt == 1 and policy.disable_media)
+    previous_state = next(
+        (
+            item.get("page_state")
+            for item in reversed(prior_attempts)
+            if isinstance(item.get("page_state"), Mapping)
+        ),
+        None,
+    )
+    identical_page_state = bool(
+        isinstance(previous_state, Mapping)
+        and previous_state.get("state_fingerprint")
+        == page_state.get("state_fingerprint")
+    )
+    retry = bool(
+        policy.attempt == 1
+        and not identical_page_state
+        and (candidate_changed or profile_changed or storage_changed)
+    )
+    if identical_page_state:
+        reason = "identical_route_profile_storage_and_page"
+    elif policy.attempt != 1:
+        reason = "state_change_retry_limit_reached"
+    elif candidate_changed:
+        reason = "candidate_url_changed"
+    elif storage_changed:
+        reason = "storage_state_changed"
+    elif profile_changed:
+        reason = "browser_fetch_profile_changed"
+    else:
+        reason = "unchanged_route_profile_and_storage"
+    decision: dict[str, Any] = {
+        "retry": retry,
+        "reason": reason,
+        "attempt": policy.attempt,
+        "candidate_changed": candidate_changed,
+        "profile_changed": profile_changed,
+        "storage_state_changed": storage_changed,
+        "identical_page_state": identical_page_state,
+    }
+    if remaining_candidates:
+        decision["next_candidate"] = diagnostic_url_payload(remaining_candidates[0])
+    return decision
 
 
 def _annotate_browser_html_payload(
@@ -460,7 +741,7 @@ def _fetch_browser_html_payload(
     html_fetcher: Callable[..., BrowserFetchedHtml] = fetch_html_with_browser,
     policy: BrowserHtmlFetchPolicy = BrowserHtmlFetchPolicy(),
     browser_context_seed: Mapping[str, Any] | None = None,
-    prior_attempts: list[Mapping[str, Any]] | None = None,
+    prior_state: BrowserHtmlPriorAttemptState = BrowserHtmlPriorAttemptState(),
 ) -> tuple[BrowserFetchedHtml, RawFulltextPayload]:
     configured_timeout_ms = max(1, int(runtime.timeout_ms))
     context.initialize_deadline(configured_timeout_ms / 1000.0)
@@ -500,7 +781,7 @@ def _fetch_browser_html_payload(
         fetch_kwargs["readiness"] = profile.html_readiness
     if browser_context_seed and browser_context_seed.get("browser_cookies"):
         fetch_kwargs["browser_context_seed"] = browser_context_seed
-    attempt_history = [dict(item) for item in list(prior_attempts or [])]
+    attempt_history = [dict(item) for item in prior_state.attempts]
     try:
         html_result = html_fetcher(
             html_candidates,
@@ -508,6 +789,13 @@ def _fetch_browser_html_payload(
         )
     except BrowserRuntimeFailure as exc:
         failure_details = dict(exc.details or {})
+        if prior_state.browser_trace:
+            failure_details["trace"] = _merge_browser_runtime_trace_history(
+                prior_state.browser_trace,
+                failure_details.get("trace")
+                if isinstance(failure_details.get("trace"), Mapping)
+                else None,
+            )
         attempt_history.append(
             {
                 "attempt": policy.attempt,
@@ -526,7 +814,18 @@ def _fetch_browser_html_payload(
             if value is not None
         }
         raise
+    html_result = _with_browser_runtime_trace_history(
+        html_result,
+        prior_state.browser_trace,
+    )
     result_diagnostics = dict(html_result.diagnostics or {})
+    page_state = _browser_page_state(
+        runtime,
+        html_result,
+        initial_seed=browser_context_seed,
+        policy=policy,
+    )
+    result_diagnostics["page_state"] = page_state
     result_diagnostics["deadline"] = {
         "timeout_budget_ms": configured_timeout_ms,
         "operation_timeout_ms": operation_timeout_ms,
@@ -541,6 +840,7 @@ def _fetch_browser_html_payload(
         "result": "html_received",
         "response_status": html_result.response_status,
         "final_url": diagnostic_url_payload(html_result.final_url),
+        "page_state": page_state,
     }
     result_diagnostics["html_attempts"] = [*attempt_history, attempt_record]
     html_result = replace(html_result, diagnostics=result_diagnostics)
@@ -559,9 +859,28 @@ def _fetch_browser_html_payload(
         ):
             exc.reason = EMPTY_ARTICLE_SHELL
             exc.message = html_failure_message(EMPTY_ARTICLE_SHELL)
+        html_result = _finalize_http_access_status_review(
+            html_result,
+            accepted=False,
+            reason=exc.reason,
+        )
+        retry_decision = (
+            _empty_shell_retry_decision(
+                policy=policy,
+                html_candidates=html_candidates,
+                html_result=html_result,
+                page_state=page_state,
+                prior_attempts=attempt_history,
+            )
+            if exc.reason == EMPTY_ARTICLE_SHELL
+            else None
+        )
         attempt_record["result"] = "extraction_failure"
         attempt_record["failure_code"] = exc.reason
         page_details = dict(html_result.diagnostics or {})
+        if retry_decision is not None:
+            attempt_record["retry_decision"] = retry_decision
+            page_details["retry_decision"] = retry_decision
         page_details["html_attempts"] = [*attempt_history, attempt_record]
         page_diagnostic = capture_page_diagnostic(
             context,
@@ -587,7 +906,40 @@ def _fetch_browser_html_payload(
             page_details["diagnostic_path"] = page_diagnostic["diagnostic_path"]
         exc.details = page_details
         exc.html_result = html_result
+        remaining_candidates = _remaining_wiley_review_candidates(
+            client.name,
+            html_candidates,
+            html_result,
+        )
+        if remaining_candidates:
+            attempt_record["candidate_continuation"] = True
+            page_details["html_attempts"] = [*attempt_history, attempt_record]
+            if policy.max_timeout_ms is None:
+                return _fetch_browser_html_payload(
+                    client,
+                    remaining_candidates,
+                    runtime=runtime,
+                    metadata=metadata,
+                    context=context,
+                    warnings=warnings,
+                    html_fetcher=html_fetcher,
+                    policy=policy,
+                    browser_context_seed=merge_browser_context_seeds(
+                        browser_context_seed,
+                        html_result.browser_context_seed,
+                    ),
+                    prior_state=BrowserHtmlPriorAttemptState(
+                        attempts=tuple(page_details["html_attempts"]),
+                        browser_trace=_browser_runtime_trace(html_result.diagnostics),
+                    ),
+                )
         raise
+    html_result = _finalize_http_access_status_review(
+        html_result,
+        accepted=True,
+        reason="fulltext_accepted",
+    )
+    result_diagnostics = dict(html_result.diagnostics or {})
     attempt_record["result"] = "success"
     result_diagnostics["html_attempts"] = [*attempt_history, attempt_record]
     html_result = replace(html_result, diagnostics=result_diagnostics)
@@ -718,6 +1070,15 @@ def _retry_candidates_after_fast_failure(
     candidates = list(html_candidates)
     failure_kind = _browser_failure_kind(fast_failure) if fast_failure else ""
     retry_incomplete = client.require_profile().retry_incomplete_html_candidates
+    html_result = getattr(fast_failure, "html_result", None)
+    if isinstance(html_result, BrowserFetchedHtml):
+        remaining_wiley_candidates = _remaining_wiley_review_candidates(
+            client.name,
+            candidates,
+            html_result,
+        )
+        if remaining_wiley_candidates:
+            return remaining_wiley_candidates
     if (
         not isinstance(fast_failure, HtmlExtractionFailure)
         or (
@@ -730,7 +1091,6 @@ def _retry_candidates_after_fast_failure(
         or len(candidates) < 2
     ):
         return candidates
-    html_result = getattr(fast_failure, "html_result", None)
     failed_source = normalize_text(str(getattr(html_result, "source_url", "") or ""))
     if not failed_source:
         return candidates
@@ -764,6 +1124,7 @@ def _fetch_browser_html_payload_with_fast_path(
         )
     retry_seed: dict[str, Any] = {}
     prior_attempts: list[Mapping[str, Any]] = []
+    prior_browser_trace: dict[str, Any] = {}
     fast_failure: BrowserRuntimeFailure | HtmlExtractionFailure | None = None
     try:
         return _fetch_browser_html_payload(
@@ -789,12 +1150,19 @@ def _fetch_browser_html_payload_with_fast_path(
         if isinstance(exc, BrowserRuntimeFailure):
             retry_seed = dict(exc.browser_context_seed)
             failure_details = dict(exc.details or {})
+            trace_value = failure_details.get("trace")
+            if isinstance(trace_value, Mapping):
+                prior_browser_trace = dict(trace_value)
         else:
             extraction_html_result = getattr(exc, "html_result", None)
             retry_seed = dict(
                 getattr(extraction_html_result, "browser_context_seed", None) or {}
             )
             failure_details = dict(getattr(exc, "details", None) or {})
+            if isinstance(extraction_html_result, BrowserFetchedHtml):
+                prior_browser_trace = _browser_runtime_trace(
+                    extraction_html_result.diagnostics
+                )
         recorded_attempts = failure_details.get("html_attempts")
         if isinstance(recorded_attempts, list):
             prior_attempts = [
@@ -810,6 +1178,13 @@ def _fetch_browser_html_payload_with_fast_path(
                     or exc.__class__.__name__,
                 }
             ]
+        retry_decision = failure_details.get("retry_decision")
+        if (
+            _browser_failure_kind(exc) == EMPTY_ARTICLE_SHELL
+            and isinstance(retry_decision, Mapping)
+            and not bool(retry_decision.get("retry"))
+        ):
+            raise
         logger.debug(
             "browser_workflow_fast_browser_path provider=%s action=fallback reason=%s message=%s",
             client.name,
@@ -835,7 +1210,10 @@ def _fetch_browser_html_payload_with_fast_path(
             html_fetcher=html_fetcher,
             policy=BrowserHtmlFetchPolicy(attempt=2),
             browser_context_seed=retry_seed,
-            prior_attempts=prior_attempts,
+            prior_state=BrowserHtmlPriorAttemptState(
+                attempts=tuple(prior_attempts),
+                browser_trace=prior_browser_trace,
+            ),
         )
     except (BrowserRuntimeFailure, HtmlExtractionFailure) as retry_failure:
         if (

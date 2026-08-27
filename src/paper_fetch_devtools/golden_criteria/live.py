@@ -1161,6 +1161,8 @@ def _stage_timings(
         "retry_seconds",
         "asset_seconds",
         "formula_seconds",
+        "asset_browser_prepare_seconds",
+        "asset_browser_release_seconds",
         "render_seconds",
     ):
         try:

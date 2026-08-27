@@ -62,6 +62,17 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
                     {"stage": "preview_fallback", "reason": "recovered"},
                 ],
                 "provenance": ["ieee_browser_recovery"],
+                "asset_route": {
+                    "host": "ieeexplore.ieee.org",
+                    "route": "browser",
+                    "probe": True,
+                },
+                "asset_timing": {
+                    "candidate_resolution_ms": 1.25,
+                    "browser_recovery_ms": 12.5,
+                    "total_ms": 14.0,
+                    "status": "downloaded",
+                },
             }
         ]
 
@@ -80,6 +91,8 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
         self.assertEqual(figure["browser_backend"], "camoufox")
         self.assertEqual(figure["final_fetcher"], "camoufox")
         self.assertEqual(figure["recovery_attempts"][0]["status"], 403)
+        self.assertEqual(figure["asset_route"]["route"], "browser")
+        self.assertEqual(figure["asset_timing"]["candidate_resolution_ms"], 1.25)
         self.assertEqual(
             _ieee_asset_identity.ieee_asset_identity_key({"url": small}),
             _ieee_asset_identity.ieee_asset_identity_key({"url": large}),
@@ -423,15 +436,27 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
                 )
 
         self.assertEqual(result, {"assets": [], "asset_failures": []})
-        mocked_download.assert_called_once()
-        self.assertIs(
-            mocked_download.call_args.args[0], _ieee_supplementary.FIGURE_KIND
+        self.assertEqual(mocked_download.call_count, 2)
+        self.assertTrue(
+            all(
+                call.args[0] is _ieee_supplementary.FIGURE_KIND
+                for call in mocked_download.call_args_list
+            )
         )
-        self.assertEqual(mocked_download.call_args.kwargs["seed_urls"], [landing_url])
+        self.assertTrue(
+            all(
+                call.kwargs["seed_urls"] == [landing_url]
+                for call in mocked_download.call_args_list
+            )
+        )
         self.assertEqual(
-            mocked_download.call_args.kwargs["headers"]["Referer"], landing_url
+            mocked_download.call_args_list[0].kwargs["headers"]["Referer"], landing_url
         )
-        passed_assets = mocked_download.call_args.kwargs["assets"]
+        passed_assets = [
+            asset
+            for call in mocked_download.call_args_list
+            for asset in call.kwargs["assets"]
+        ]
         self.assertEqual(
             [item["kind"] for item in passed_assets],
             ["figure", "table", "formula"],
@@ -797,9 +822,13 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
         self.assertTrue(all(item["reason"] for item in result["asset_failures"]))
         self.assertTrue(
             all(
-                item.get("content_type") == "text/html; charset=utf-8"
+                item["reason"] == "browser_context_error"
+                and item["error_type"] == "RuntimeError"
                 for item in result["asset_failures"]
             )
+        )
+        self.assertTrue(
+            all("content_type" not in item for item in result["asset_failures"])
         )
         self.assertFalse(
             any(

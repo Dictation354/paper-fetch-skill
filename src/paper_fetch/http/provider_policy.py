@@ -1,4 +1,9 @@
-"""Compile provider-catalog network declarations into HTTP request policy."""
+"""Compile non-authorizing provider-catalog request settings.
+
+Catalog hosts and credential metadata describe provider integrations; they are
+not an implicit network allowlist. Callers that need host restrictions must opt
+in through :class:`HttpRequestPolicy`.
+"""
 
 from __future__ import annotations
 
@@ -31,26 +36,12 @@ def provider_request_policy(
     *,
     base: HttpRequestPolicy | None = None,
 ) -> HttpRequestPolicy:
-    """Build a request policy and automatically include catalog secrets."""
+    """Build a request policy without turning catalog data into authorization."""
 
     compiled = compile_route_execution_policy(provider, route_name)
-    normalized_provider = compiled.provider
-    sensitive_headers = compiled.sensitive_headers
-    allowed_hosts = compiled.hosts
-    if sensitive_headers and not allowed_hosts:
-        raise ValueError(
-            f"Credentialed provider route has no declared hosts: {normalized_provider}:{route_name or '*'}"
-        )
     active = base or HttpRequestPolicy()
-    merged_allowed_hosts = tuple(
-        dict.fromkeys((*tuple(active.allowed_hosts or ()), *allowed_hosts))
-    )
     return replace(
         active,
-        allowed_hosts=merged_allowed_hosts or None,
-        sensitive_headers=tuple(
-            dict.fromkeys((*active.sensitive_headers, *sensitive_headers))
-        ),
         timeout_seconds=compiled.timeout_seconds,
         retry_on_rate_limit=compiled.retry_on_rate_limit,
         rate_limit_retries=compiled.rate_limit_retries,

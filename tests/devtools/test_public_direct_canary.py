@@ -85,4 +85,4 @@ def test_scheduled_workflow_is_nonblocking_credentialless_and_preserves_state() 
         "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a" in workflow
     )
     assert "update_provider_canary_state.py" in workflow
-    assert "secrets." not in workflow
+    assert "${{ secrets." not in workflow

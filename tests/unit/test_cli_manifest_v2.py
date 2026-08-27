@@ -431,6 +431,47 @@ def test_cli_adapter_exposes_fulltext_limited_and_asset_acceptance(
     assert record.asset_summary.status == asset_status
 
 
+def test_cli_manifest_fingerprint_and_acceptance_include_strict_asset_flags(
+    tmp_path: Path,
+) -> None:
+    envelope = _envelope(
+        assets=[
+            Asset(
+                kind="figure",
+                heading="Figure 1",
+                url="https://example.test/figure-1.png",
+            )
+        ]
+    )
+    default = _build_record(
+        tmp_path,
+        args=_args(asset_profile="body"),
+        result=cli.SingleFetchResult(envelope),
+    )
+    strict = _build_record(
+        tmp_path,
+        args=_args(
+            asset_profile="body",
+            require_local_body_assets=False,
+            require_full_size_body_assets=True,
+        ),
+        result=cli.SingleFetchResult(envelope),
+    )
+
+    assert strict.request.parameters["strategy"] == {
+        "allow_metadata_only_fallback": True,
+        "asset_profile": "body",
+        "require_local_body_assets": True,
+        "require_full_size_body_assets": True,
+    }
+    assert strict.request_fingerprint != default.request_fingerprint
+    assert strict.asset_summary.require_local_body_assets is True
+    assert strict.asset_summary.require_full_size_body_assets is True
+    assert strict.asset_summary.local_body_assets_satisfied is False
+    assert strict.acceptance.fetch.status.value == "ok"
+    assert strict.acceptance.overall == OverallAcceptanceStatus.DEGRADED
+
+
 def test_springer_formula_rendition_aliases_produce_complete_manifest(
     tmp_path: Path,
 ) -> None:

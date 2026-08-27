@@ -370,6 +370,8 @@ class RuntimeContext:
         self.stage_timings.setdefault("http_seconds", 0.0)
         self.stage_timings.setdefault("retry_seconds", 0.0)
         self.stage_timings.setdefault("formula_seconds", 0.0)
+        self.stage_timings.setdefault("asset_browser_prepare_seconds", 0.0)
+        self.stage_timings.setdefault("asset_browser_release_seconds", 0.0)
 
     def get_clients(self) -> Mapping[str, object]:
         with self._clients_lock:
@@ -867,6 +869,23 @@ class RuntimeContext:
         with self._session_cache_lock:
             self.session_cache[key] = stored
         return copy.deepcopy(stored) if copy_value else stored
+
+    def get_or_set_session_cache(
+        self,
+        key: tuple[Hashable, ...],
+        factory: Callable[[], Any],
+        *,
+        copy_value: bool = True,
+    ) -> Any:
+        """Atomically create fetch-session state without leaking it across papers."""
+
+        with self._session_cache_lock:
+            value = self.session_cache.get(key, _SESSION_CACHE_MISSING)
+            if value is _SESSION_CACHE_MISSING:
+                created = factory()
+                value = copy.deepcopy(created) if copy_value else created
+                self.session_cache[key] = value
+            return copy.deepcopy(value) if copy_value else value
 
     def record_stage_timing(self, name: str, started_at: float) -> float:
         """Record a non-cumulative stage duration in seconds."""

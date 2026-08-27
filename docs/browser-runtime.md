@@ -43,6 +43,12 @@ browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默�
   `/doi/full/{doi}` 和 DOI resolver。它不再等待失效的 bodymatter selector，而是在
   固定 8 秒总预算内检查正文长度、段落数和连续两次稳定指纹；预算耗尽后仍对最后
   一份 HTML 做 block detection 与正文抽取。
+- Wiley 主文档返回 401/403 时不再在 `commit` 后立即结束候选，而是在既有 route
+  deadline/readiness 预算内继续检查正文。只有正文 selector 达到阈值并连续两次保持
+  同一指纹、citation meta/canonical/`.epub-doi` 中的 DOI 与请求精确匹配，且现有
+  challenge、验证码、显式 no-access 和 Wiley datalayer 检测均无阻断时，block
+  detection 才暂时不把状态本身作为拒绝理由。随后仍须通过 Markdown 和全文
+  availability；结果与 trace 始终保留真实 401/403，失败候选继续尝试下一 Wiley URL。
 - PNAS、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP 与 Taylor & Francis
   的正文导航只阻断 `image`、`font`、`media`；document、stylesheet、JavaScript、
   XHR/fetch 保持放行。Wiley、IEEE、AIP 与 Science 的既有策略不变。
@@ -60,9 +66,25 @@ browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默�
   HTML 或 cookie 复用，也不把 preflight storage-state 发布给后续独立 context。
 - PNAS 与 AMS 另有 60 秒的精确 DOI 路由提示，只把同 DOI、合法 provider host 上
   已验收的最终 URL 置顶；challenge、abstract redirect 和失败候选不会写入。
+- ACS 的 `200 + 正确文章标题 + 无 body` 继续归类为 `empty_article_shell`。诊断只保留
+  主文档状态、request lifecycle、失败 request/script、console/page error、challenge
+  signal、无 query 的 URL 摘要、页面 SHA-256 与 storage-state 指纹；相同
+  route/profile/storage/page SHA 立即停止，只有候选 URL、profile 或 storage-state
+  确实变化时才允许一次重试。
+
+主文档诊断会同时记录响应头声明的 `content_length_bytes`、`page.content()` 实际序列化的
+`captured_html_bytes`、是否声明 transfer encoding、Playwright 是否观察到
+`requestfinished`，以及页面采样时的 Navigation Timing（`document_ready_state`、
+`response_end_ms`、transfer/encoded/decoded body size 等）。这可以区分“服务端已完整结束但
+只给了小空壳”与“采样时主响应仍未结束”；实现不会等待可能无限阻塞的
+`response.finished()`。Content-Length、网络传输字节和 DOM 序列化字节含义不同，只能结合
+lifecycle/readiness 判断。诊断不保存响应头集合、cookie、query 或原始 HTML；transfer
+encoding 也只输出布尔事实。
 
 正文 diagnostics 会记录实际阻断类型/数量、导航次数、readiness 预算与结果，以及
-`preflight_reuse`、`candidate_reorder` 和 DOI hint 写入状态；source trail 以
+Wiley 的脱敏 `http_access_status_review`（状态、正文是否稳定、DOI 是否匹配、阻断
+signal、最终全文验收与原因）、`preflight_reuse`、`candidate_reorder` 和 DOI hint
+写入状态；该复核不保存 Cookie、Authorization、storage-state 或原始失败 HTML。source trail 以
 `browser:preflight_reuse_hit|miss|disabled` 与
 `browser:candidate_reorder_hit|miss` 暴露同一事实，不新增公开请求或响应字段。
 
@@ -75,9 +97,11 @@ browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默�
 - Provider 的 image/font/media 屏蔽是 page scope 的性能优化，只按 catalog/runtime
   配置处理资源类型，不承担 URL allowlist 或 SSRF 安全保证；其它跨源页面资源继续
   交给浏览器原生加载。
-- Direct HTTP/API、browser 发现后的二进制流式下载与 cookie-seeded direct fallback
-  继续使用 `SafeRemoteUrlPolicy` 和 provider catalog request policy：每个 redirect hop
-  重新验证公网地址、批准端口、HTTPS downgrade、route host 和敏感 header。
+- Direct HTTP/API、二进制流式下载与 cookie-seeded direct fallback 继续使用
+  `SafeRemoteUrlPolicy`：每个 redirect hop 重新验证 HTTP(S)、公网 DNS、标准端口、
+  userinfo 与 HTTPS downgrade，并在跨 origin 时剥离标准敏感 header。Catalog host 与
+  sensitive-header 数据不再自动成为授权 allowlist；调用方显式给出的
+  `allowed_hosts` / 额外敏感 header 仍逐跳生效。
 - Browser cookie 转 direct opener 时使用标准 `CookieJar`，保留 host-only/domain、
   RFC path boundary、secure 与 expiry，避免把 publisher cookie 扩到子域或相邻路径。
 - Browser context diagnostics 用 `storage_state_load={path,exists,used}` 明确区分“已配置”
@@ -89,10 +113,11 @@ browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默�
 
 ## 二进制资产与资源预算
 
-- Camoufox/Playwright 只解析页面、发现最终 `http(s)` 资产 URL，并传递浏览器 cookie；
-  图片、附件和 PDF 不调用 browser `response.body()`、
-  `arrayBuffer()` 或 base64 整包回传。URL 必须能交给 verified-IP pinned direct
-  transport 流式获取，否则以 `browser_stream_unavailable` fail closed。
+- 图片、附件和 PDF 默认先按 URL 走共享 hostname pool 的 direct stream。direct
+  401/403 最多进入一次真正的 browser-byte recovery；同一 URL/同一会话状态不再先经
+  cookie opener 再重复 direct。恢复可使用 browser `response.body()`、page-context
+  `arrayBuffer()`、已加载图像 canvas、`bodyB64`、download/file bytes 或 PDF viewer
+  response body。
 - 同一论文的正文图和 supplementary 共用 `RuntimeContext` 的一个 `AssetBudget`：默认
   最多 128 个文件、单文件 32 MiB、累计 256 MiB、每图 64,000,000 像素，并发最多
   4 且可被 route cap 进一步收紧。Content-Length、未知长度 chunk、gzip 压缩/解压、
@@ -102,17 +127,17 @@ browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默�
   对外保留 `asset_file_limit_exceeded`、`asset_bytes_per_asset_exceeded`、
   `asset_bytes_total_exceeded`、`asset_pixel_limit_exceeded` 或
   `asset_content_encoding_unsupported` 等稳定 reason。
-- Browser-first 的 warm-up 使用 pinned transport 的有界 GET；每个 worker 的标准
-  `CookieJar` 只 seed 一次，并在同一 runtime 的 figure/supplementary phase 间复用。
-  CookieJar 不跨线程共享；每个已验证 redirect hop 的多条 `Set-Cookie` 都先按
-  domain/path/secure 语义导入，再为下一 hop 刷新 Cookie，候选响应 cookie 也只保留在
-  当前 worker。它们不会写入 HTTP response cache，catalog 自定义凭据在跨源 hop 删除。
-- Browser 触发 PDF download 后，把 `download.url` 加入 direct replay 候选；随后由
-  direct transport 执行 DNS/host/redirect policy。`blob:`/`data:` 等无法经该 transport
-  获取的 browser-owned URL 返回 `browser_stream_unavailable`。
+- 不论字节来自 direct 还是 browser，Content-Length 和实际字节、MIME、像素、取消、
+  单文件/总预算、目标同目录排他 staging、flush/fsync 与原子发布完全相同。Browser
+  触发的 `blob:`/`data:` PDF download 直接使用 browser-owned bytes，不重放 URL。
+- HTTP 资产复用标准 hostname 连接池。AMS、Annual Reviews 与 Springer 的独立 assets
+  route 采用 cap 2；全局仍最多 4 worker，正文 HTML/PDF 的串行约束不降低资产 worker。
+- 每个资产或失败项公开 queue、DNS policy validation、connect-to-headers/TTFB、body
+  stream、browser recovery、retry wait、conversion、save 和 total 毫秒及终态。报告只
+  聚合这些时间，不保存带签名 query 的 URL。
 - 显式请求的页面 screenshot 是诊断输出而非远端 asset：普通 browser screenshot 只截
   viewport，PNG 超过 16 MiB 即丢弃；PDF failure screenshot 直接写文件，超过 16 MiB
-  即删除。两者都不作为二进制恢复 fallback，也不会绕过上述 direct-stream 边界。
+  即删除。两者不作为论文资产，也不会绕过统一资产预算与发布边界。
 
 ## 配置
 

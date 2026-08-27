@@ -75,6 +75,12 @@ register_provider_bundle(
                     requires_pdf_conversion=True,
                     concurrency=1,
                 ),
+                ProviderRouteSpec(
+                    name="assets",
+                    kind="assets",
+                    concurrency=2,
+                    asset_scope="body",
+                ),
             ),
         ),
         html_rules=ProviderHtmlRules(

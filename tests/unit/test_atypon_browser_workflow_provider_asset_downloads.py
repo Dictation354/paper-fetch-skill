@@ -456,8 +456,11 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
                     asset_profile="all",
                 )
 
-        mocked_opener.assert_called_once()
-        mocked_request.assert_called_once()
+        # A direct 403 is followed by one real browser-byte recovery. The
+        # cookie opener would repeat the same URL/session direct request and is
+        # therefore intentionally skipped.
+        mocked_opener.assert_not_called()
+        mocked_request.assert_not_called()
         mocked_image_builder.assert_called_once()
         mocked_file_builder.assert_called_once()
         self.assertTrue(

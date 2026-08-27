@@ -128,8 +128,8 @@ class BrowserRuntimeFailure(Exception):
         self.details = dict(details or {})
 
 
-class BrowserImagePayload(TypedDict):
-    streamOnly: bool
+class BrowserImagePayload(TypedDict, total=False):
+    bodyB64: str
     contentType: str
     url: str
     status: int

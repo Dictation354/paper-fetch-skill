@@ -50,7 +50,7 @@
 
 - native MCPServer schema 与 Codex/stdio host-safe schema 分开验证。native schema 保留 `FetchStrategyInput` 的结构化 Pydantic 模型和运行时对象，不把 `strategy` 退化为无约束字典；host-safe schema 由同一组 Pydantic request model 生成并内联嵌套结构，不包含宿主无法解析的 `$ref`。
 - output schema 仍由 typed Pydantic/TypedDict contract 生成；发布到 `tools/list` 时只移除展示性 `title` 注解与可选字段的 `default: null`。真实 `properties.title` / `properties.default` 字段、`required`、枚举、范围及运行时结构化输出验证均保留。
-- `src/paper_fetch/mcp/schemas.py` 是枚举、范围和规范化的事实源：`modes=article|markdown|metadata`、`include_refs=none|top10|all`、`strategy.asset_profile=none|body|all`、`artifact_mode=markdown-assets|all|none`、batch `mode=article|metadata`、cache `mode=index|refresh|rescan`，以及 cache `detail=full|compact`。工具只暴露当前已实现的字段。
+- `src/paper_fetch/mcp/schemas.py` 是枚举、范围和规范化的事实源：`modes=article|markdown|metadata`、`include_refs=none|top10|all`、`strategy.asset_profile=none|body|all`、`strategy.require_local_body_assets`、`strategy.require_full_size_body_assets`、`artifact_mode=markdown-assets|all|none`、batch `mode=article|metadata`、cache `mode=index|refresh|rescan`，以及 cache `detail=full|compact`。Full-size 自动隐含 local；两项默认关闭且只对 `body|all` 生效。工具只暴露当前已实现的字段。
 - batch `queries` 的公开 schema 和运行时验证都要求 `1..50` 项，`concurrency` 要求 `1..8`；所有公开工具输入对象及嵌套 strategy/budget 对象均拒绝未知字段（`additionalProperties=false`）。
 - 兼容请求仍可使用既有 nested `strategy={...}`，包括 `inline_image_budget`；字符串枚举在 Pydantic validator 中继续做去空白和大小写规范化。规范化不是放宽值域，未知枚举、越界数字、过长数组和额外字段会在已注册工具函数执行前失败。
 
@@ -83,6 +83,8 @@
 
 - `modes=["article", "markdown"]`
 - `strategy.asset_profile=null (provider default)`
+- `strategy.require_local_body_assets=false`
+- `strategy.require_full_size_body_assets=false`
 - `strategy.allow_metadata_only_fallback=true`
 - `include_refs=null`
 - `max_tokens="full_text"`
@@ -110,7 +112,10 @@
 - 传入 `download_dir` 时，MCP 服务器还能在当前会话里暴露这个隔离目录对应的缓存资源。
 - 支持 MCP 资源列表通知的宿主，可能在 `fetch_paper(...)`、`list_cached()` 或 `get_cached()` 改变缓存资源 URI 时收到 `resources/list_changed`。
 - `strategy.asset_profile="body"` 或 `all` 时，可能额外返回少量关键本地图像，作为 `ImageContent` 输出；但 `save_markdown=true` 时不会附带 inline `ImageContent`。
-- `body`/`all` 的正文图与 supplementary 在同一篇请求中共享固定运行时安全预算：默认 128 文件、单文件 32 MiB、累计 256 MiB、64,000,000 像素、并发最多 4 且受 route cap 限制。Browser 只发现 URL，远端二进制由 pinned direct transport 流式落盘；无法安全 stream 时返回 `browser_stream_unavailable`。预算失败读取 `asset_failures[*].reason` 的稳定 `asset_file_limit_exceeded` / `asset_bytes_per_asset_exceeded` / `asset_bytes_total_exceeded` / `asset_pixel_limit_exceeded` / `asset_content_encoding_unsupported`，不要从 warning 文案推断。
+- `body`/`all` 的正文图与 supplementary 在同一篇请求中共享固定运行时安全预算：默认 128 文件、单文件 32 MiB、累计 256 MiB、64,000,000 像素、并发最多 4 且受 route cap 限制。Direct 下载使用 hostname 共享连接池；direct 401/403 最多进入一次真正的 browser-byte recovery，browser body/arrayBuffer/bodyB64/canvas/file/PDF bytes 仍经过 MIME、实际字节、像素、累计预算、staging、原子发布和取消检查。预算失败读取 `asset_failures[*].reason` 的稳定 `asset_file_limit_exceeded` / `asset_bytes_per_asset_exceeded` / `asset_bytes_total_exceeded` / `asset_pixel_limit_exceeded` / `asset_content_encoding_unsupported`，不要从 warning 文案推断。
+- Catalog host/sensitive-header 声明只服务 routing 和非授权执行策略，不自动成为 HTTP/PDF/body/supplementary allowlist。基础策略仍逐跳检查 HTTP(S)、标准端口、公网 DNS、userinfo、HTTPS downgrade 和跨域标准敏感头剥离；只有调用方显式传入 `allowed_hosts` 时才额外 fail closed。
+- `strategy.require_local_body_assets=true` 要求全部正文逻辑资产本地化；`strategy.require_full_size_body_assets=true` 进一步拒绝 accepted/fallback preview，并隐含 local。失败只把 asset/overall acceptance 降为 `degraded`，不把已取得全文改成 fetch failure。两项进入 request/cache fingerprint、manifest、单篇与 batch acceptance。
+- 每个成功/失败资产可带不含 URL 的 `asset_timing`，分解 queue、DNS policy validation、connect-to-headers/TTFB、body stream、browser recovery、retry wait、conversion、save 和 total；聚合时间不能当作签名 URL 诊断载体。
 - 可选 `strategy.inline_image_budget={max_images,max_bytes_per_image,max_total_bytes}` 用于调节默认内联图像上限：`3` 张图、每张 `2 MiB`、总计 `8 MiB`；任一最终值为 `0` 都会禁用内联图像。
 - 如果返回了资源，判断图片缺失前先检查 `article.assets[*].render_state`、`download_tier`、`preview_accepted`、`content_type`、`downloaded_bytes`、`width` 和 `height`。发生 direct/browser 恢复时还可读取向后兼容的 `browser_backend`、`final_fetcher` 和 `recovery_attempts`；CLI JSON、MCP 与 cache sidecar 原样往返这些字段。资产摘要满足 `preview = accepted_preview + fallback_preview`；跨 adapter 机器分类只读取 `issue_codes`，不从 warning 文案重分类。
 - `article.quality.semantic_losses.table_layout_degraded_count` 表示源表 span/列定义异常导致布局无法可靠验证；合法合并单元格成功展开只属于规范化，不计为降级；`table_semantic_loss_count` 才是表格内容可能真的丢失的更强信号。

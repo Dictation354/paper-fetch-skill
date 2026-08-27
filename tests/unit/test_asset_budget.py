@@ -10,8 +10,6 @@ import zlib
 import zipfile
 
 import pytest
-import urllib3
-
 from paper_fetch.extraction.html.assets import download as asset_download_module
 from paper_fetch.asset_budget import (
     AssetBudget,
@@ -955,38 +953,6 @@ def test_stream_retries_before_body_with_one_final_budget_accounting(
     assert budget.snapshot()["retained_bytes"] == 7
 
 
-def test_cookie_seed_get_reads_only_preview_and_preserves_multiple_headers(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    headers = urllib3._collections.HTTPHeaderDict()
-    headers.add("content-type", "text/html")
-    headers.add("set-cookie", "one=first; Path=/")
-    headers.add("set-cookie", "two=second; Path=/article")
-    response = _FakeStreamResponse(b"x" * 20_000, headers=headers)  # type: ignore[arg-type]
-    transport = _transport_with_response(
-        monkeypatch, response, max_response_bytes=32_000
-    )
-    from paper_fetch.extraction.html.assets.requester import PinnedAssetSession
-
-    session = PinnedAssetSession(
-        transport,
-        browser_cookies=None,
-        seed_urls=["https://assets.example/article"],
-        headers={},
-        allowed_hosts=("assets.example",),
-    )
-
-    session.ensure_seeded()
-    session.ensure_seeded()
-
-    assert response.bytes_read == 8192
-    assert session.seed_attempts == 1
-    assert (
-        session.request_headers_for("https://assets.example/article/1", {})["Cookie"]
-        == "two=second; one=first"
-    )
-
-
 def test_download_assets_publishes_streamed_file_and_commits_budget(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -1025,6 +991,23 @@ def test_download_assets_publishes_streamed_file_and_commits_budget(
     assert len(result["assets"]) == 1
     published = Path(result["assets"][0]["path"])
     assert published.read_bytes() == png
+    timing = result["assets"][0]["asset_timing"]
+    assert set(timing) == {
+        "queue_ms",
+        "candidate_resolution_ms",
+        "dns_policy_validation_ms",
+        "connect_to_headers_ttfb_ms",
+        "body_stream_ms",
+        "browser_recovery_ms",
+        "retry_wait_ms",
+        "conversion_ms",
+        "save_ms",
+        "total_ms",
+        "status",
+    }
+    assert timing["status"] == "saved"
+    assert all(float(timing[name]) >= 0 for name in timing if name.endswith("_ms"))
+    assert "assets.example" not in str(timing)
     assert not list(published.parent.glob("*.part"))
     assert budget.snapshot()["retained_files"] == 1
     assert budget.snapshot()["retained_bytes"] == len(png)
@@ -1042,7 +1025,7 @@ _SMALL_PNG = (
 class _SessionReuseTransport:
     def __init__(self) -> None:
         self.cancelled = False
-        self._pinned_streaming_ready = True
+        self._streaming_ready = True
         self.seed_urls: list[str] = []
 
     def request(self, method: str, url: str, **_kwargs: object) -> dict[str, object]:
@@ -1088,7 +1071,7 @@ class _SessionReuseTransport:
         }
 
 
-def test_one_worker_seeds_once_instead_of_once_per_candidate(tmp_path: Path) -> None:
+def test_streaming_assets_do_not_replay_seed_urls(tmp_path: Path) -> None:
     transport = _SessionReuseTransport()
     seed_urls = ["https://publisher.example/article", "https://publisher.example/auth"]
     assets = [
@@ -1115,10 +1098,10 @@ def test_one_worker_seeds_once_instead_of_once_per_candidate(tmp_path: Path) -> 
     )
 
     assert len(result["assets"]) == 3
-    assert transport.seed_urls == seed_urls
+    assert transport.seed_urls == []
 
 
-def test_one_runtime_worker_reuses_seed_session_across_figure_and_supplementary(
+def test_runtime_streaming_does_not_replay_seed_across_asset_kinds(
     tmp_path: Path,
 ) -> None:
     transport = _SessionReuseTransport()
@@ -1163,7 +1146,7 @@ def test_one_runtime_worker_reuses_seed_session_across_figure_and_supplementary(
 
     assert len(figure["assets"]) == 1
     assert len(supplementary["assets"]) == 1
-    assert transport.seed_urls == ["https://publisher.example/article"]
+    assert transport.seed_urls == []
 
 
 def test_shared_budget_spans_figure_and_supplementary_calls(tmp_path: Path) -> None:
@@ -1355,6 +1338,7 @@ def test_empty_streamed_staging_is_rolled_back(tmp_path: Path) -> None:
 
     assert result["assets"] == []
     assert result["asset_failures"][0]["reason"] == "empty_response_body"
+    assert result["asset_failures"][0]["asset_timing"]["status"] == "failed"
     assert budget.snapshot()["retained_files"] == 0
     assert budget.snapshot()["reserved_files"] == 0
     assert not list(tmp_path.rglob("*.part"))

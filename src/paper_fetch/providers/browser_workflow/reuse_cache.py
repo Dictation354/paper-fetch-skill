@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 import hashlib
+import json
 import threading
 from typing import Any
 import urllib.parse
@@ -13,6 +14,7 @@ from cachetools import TTLCache
 
 from ...provider_catalog import provider_domains
 from ...publisher_identity import normalize_doi
+from ...skill_integrity import sha256_file
 from ...utils import normalize_text
 from ..browser_runtime import BrowserFetchedHtml, BrowserRuntimeConfig
 
@@ -95,9 +97,42 @@ def browser_runtime_fingerprint(config: BrowserRuntimeConfig) -> str:
         normalize_text(str(config.profile_dir or "")),
         normalize_text(str(config.user_data_dir or "")),
         normalize_text(str(config.storage_state_path or "")),
+        _storage_state_file_digest(config),
         "1" if config.persist_storage_state else "0",
     )
     return hashlib.sha256("\0".join(values).encode("utf-8")).hexdigest()
+
+
+def _storage_state_file_digest(config: BrowserRuntimeConfig) -> str:
+    path = config.storage_state_path
+    if path is None:
+        return "not_configured"
+    try:
+        return sha256_file(path) if path.is_file() else "missing"
+    except OSError:
+        return "unreadable"
+
+
+def browser_storage_state_fingerprint(
+    config: BrowserRuntimeConfig,
+    seed: Mapping[str, Any] | None = None,
+) -> str:
+    """Hash persisted and transient browser state without exposing its values."""
+
+    try:
+        seed_payload = json.dumps(
+            {
+                "browser_cookies": list((seed or {}).get("browser_cookies") or []),
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            default=str,
+        )
+    except (TypeError, ValueError):
+        seed_payload = repr(type(seed).__name__)
+    material = "\0".join((_storage_state_file_digest(config), seed_payload))
+    return hashlib.sha256(material.encode("utf-8")).hexdigest()
 
 
 def mark_browser_preflight_producer(
@@ -364,6 +399,7 @@ __all__ = [
     "accepted_storage_state_was_committed",
     "browser_preflight_producer",
     "browser_runtime_fingerprint",
+    "browser_storage_state_fingerprint",
     "mark_browser_preflight_producer",
     "normalize_browser_cache_url",
 ]

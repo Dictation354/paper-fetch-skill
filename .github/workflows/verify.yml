@@ -80,21 +80,59 @@ jobs:
         run: |
           PYTHONPATH=src uv run python -m pytest -q \
             tests/unit/test_browser_preflight_reuse_cache.py \
+            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_acs_and_aip_direct_asset_probe_use_twenty_second_zero_retry_policy \
+            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_browser_recovery_circuit_is_host_scoped_concurrent_and_article_local \
+            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_direct_then_browser_probes_first_and_shares_host_circuit_on_caller_thread \
             tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_direct_first_figure_policy_skips_viewer_when_download_url_exists \
             tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_silverchair_figure_page_resolution_stays_on_camoufox_owner_thread \
             tests/unit/test_camoufox_backend.py::test_provider_resource_policy_blocks_only_configured_heavy_types \
+            tests/unit/test_camoufox_backend.py::test_main_document_diagnostics_distinguish_finished_response_from_loading_shell \
             tests/unit/test_camoufox_backend.py::test_pnas_body_readiness_uses_bounded_budget_and_keeps_final_html \
+            tests/unit/test_runtime_deadline_and_readiness.py::test_wiley_body_readiness_requires_two_identical_ready_fingerprints \
+            tests/unit/test_camoufox_backend.py::test_open_wiley_context_without_storage_state_has_no_state_capability_use \
+            tests/unit/test_camoufox_backend.py::test_wiley_403_confirmed_body_and_identity_preserves_status \
+            tests/unit/test_camoufox_backend.py::test_wiley_403_review_rejects_unconfirmed_candidate \
+            tests/unit/test_camoufox_backend.py::test_wiley_403_failure_advances_to_next_candidate \
+            tests/unit/test_camoufox_backend.py::test_wiley_all_http_status_candidates_fail_with_reviews \
+            tests/unit/test_wiley_provider.py::test_wiley_confirmed_403_html_passes_markdown_and_availability \
+            tests/unit/test_wiley_provider.py::test_wiley_confirmed_403_extraction_failure_continues_next_candidate \
+            tests/unit/test_page_diagnostics.py::test_wiley_http_access_status_review_is_allowlisted_and_secret_safe \
             tests/unit/test_camoufox_backend.py::test_wiley_body_readiness_defers_login_navigation_paywall_text \
             tests/unit/test_browser_preflight.py::test_wiley_preflight_accepts_leading_login_navigation_after_body_readiness \
             tests/unit/test_camoufox_backend.py::test_figure_page_fetches_reuse_one_runtime_context_and_page \
             tests/unit/test_acs_provider.py::test_acs_asset_extraction_promotes_largest_srcset_rendition \
             tests/unit/test_annualreviews_provider.py::test_annualreviews_asset_extraction_promotes_largest_srcset_rendition \
+            tests/unit/test_aip_provider.py::test_aip_asset_extraction_prefers_largest_official_srcset_rendition \
+            tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_upgrades_existing_preview_from_official_source_archive \
+            tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_copernicus_promotes_official_original_and_audits_preview_only \
             tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_empty_intermediate_candidate_retries_next_html_before_pdf \
             tests/unit/test_iop_provider.py::test_iop_index_cache_dedupes_signed_indexes_and_attachment_signatures \
+            tests/unit/test_tandf_provider.py::test_tandf_article_assets_keep_body_figures_and_scope_supplement \
             tests/unit/test_tandf_provider.py::test_tandf_batch_results_keep_input_order_and_failed_table_fallback \
             tests/unit/test_tandf_provider.py::test_tandf_table_preparation_obeys_exhausted_total_deadline \
             tests/unit/test_ieee_provider_asset_extraction.py::IeeeProviderAssetExtractionTests::test_ieee_multimedia_discovery_memoizes_redacted_url_per_runtime
+      - name: Network rollback and strict asset acceptance regressions
+        run: |
+          PYTHONPATH=src uv run python -m pytest -q \
+            tests/unit/test_safe_remote_url_policy.py \
+            tests/unit/test_browser_image_payload.py \
+            tests/unit/test_pdf_fallback_helpers.py::PdfFallbackHelperTests::test_pdf_browser_owned_download_url_uses_saved_bytes_without_direct_replay \
+            tests/unit/test_pdf_fallback_helpers.py::PdfFallbackHelperTests::test_browser_pdf_viewer_response_uses_navigation_body_bytes \
+            tests/unit/test_provider_request_options.py::ProviderRequestOptionsTests::test_html_asset_download_uses_one_browser_recovery_after_direct_403 \
+            tests/unit/test_page_diagnostics.py::test_observed_734_byte_http_200_head_only_shell_is_classified \
+            tests/unit/test_browser_preflight_reuse_cache.py::test_empty_shell_retry_requires_changed_candidate_profile_or_storage \
+            tests/unit/test_workflow_acceptance.py::test_strict_local_assets_degrade_acceptance_without_failing_fulltext \
+            tests/unit/test_workflow_acceptance.py::test_strict_full_size_implies_local_and_rejects_accepted_preview \
+            tests/unit/test_cli_manifest_v2.py::test_cli_manifest_fingerprint_and_acceptance_include_strict_asset_flags \
+            tests/unit/test_artifact_secret_scan.py \
+            tests/unit/test_install_provenance.py::test_source_development_ignores_unrelated_distribution_and_path_cli
+      - name: Scan coverage artifact for secret values
+        id: secret_scan_coverage
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/scan_artifacts_for_secrets.py --root coverage.xml
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ steps.secret_scan_coverage.outcome == 'success' }}
         with:
           name: coverage-xml
           path: coverage.xml
@@ -241,7 +279,13 @@ jobs:
           done
           cp quality/python-distribution-inventory.json \
             dist/python-distribution-inventory.json
+      - name: Scan Python distribution artifacts for secret values
+        id: secret_scan_python_distributions
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/scan_artifacts_for_secrets.py --root dist
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ steps.secret_scan_python_distributions.outcome == 'success' }}
         with:
           name: python-distributions
           path: dist/*
@@ -305,17 +349,34 @@ jobs:
         run: |
           PYTHONPATH=src uv run python -m pytest -q \
             tests/unit/test_browser_preflight_reuse_cache.py \
+            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_acs_and_aip_direct_asset_probe_use_twenty_second_zero_retry_policy \
+            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_browser_recovery_circuit_is_host_scoped_concurrent_and_article_local \
+            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_direct_then_browser_probes_first_and_shares_host_circuit_on_caller_thread \
             tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_direct_first_figure_policy_skips_viewer_when_download_url_exists \
             tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_silverchair_figure_page_resolution_stays_on_camoufox_owner_thread \
             tests/unit/test_camoufox_backend.py::test_provider_resource_policy_blocks_only_configured_heavy_types \
+            tests/unit/test_camoufox_backend.py::test_main_document_diagnostics_distinguish_finished_response_from_loading_shell \
             tests/unit/test_camoufox_backend.py::test_pnas_body_readiness_uses_bounded_budget_and_keeps_final_html \
+            tests/unit/test_runtime_deadline_and_readiness.py::test_wiley_body_readiness_requires_two_identical_ready_fingerprints \
+            tests/unit/test_camoufox_backend.py::test_open_wiley_context_without_storage_state_has_no_state_capability_use \
+            tests/unit/test_camoufox_backend.py::test_wiley_403_confirmed_body_and_identity_preserves_status \
+            tests/unit/test_camoufox_backend.py::test_wiley_403_review_rejects_unconfirmed_candidate \
+            tests/unit/test_camoufox_backend.py::test_wiley_403_failure_advances_to_next_candidate \
+            tests/unit/test_camoufox_backend.py::test_wiley_all_http_status_candidates_fail_with_reviews \
+            tests/unit/test_wiley_provider.py::test_wiley_confirmed_403_html_passes_markdown_and_availability \
+            tests/unit/test_wiley_provider.py::test_wiley_confirmed_403_extraction_failure_continues_next_candidate \
+            tests/unit/test_page_diagnostics.py::test_wiley_http_access_status_review_is_allowlisted_and_secret_safe \
             tests/unit/test_camoufox_backend.py::test_wiley_body_readiness_defers_login_navigation_paywall_text \
             tests/unit/test_browser_preflight.py::test_wiley_preflight_accepts_leading_login_navigation_after_body_readiness \
             tests/unit/test_camoufox_backend.py::test_figure_page_fetches_reuse_one_runtime_context_and_page \
             tests/unit/test_acs_provider.py::test_acs_asset_extraction_promotes_largest_srcset_rendition \
             tests/unit/test_annualreviews_provider.py::test_annualreviews_asset_extraction_promotes_largest_srcset_rendition \
+            tests/unit/test_aip_provider.py::test_aip_asset_extraction_prefers_largest_official_srcset_rendition \
+            tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_upgrades_existing_preview_from_official_source_archive \
+            tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_copernicus_promotes_official_original_and_audits_preview_only \
             tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_empty_intermediate_candidate_retries_next_html_before_pdf \
             tests/unit/test_iop_provider.py::test_iop_index_cache_dedupes_signed_indexes_and_attachment_signatures \
+            tests/unit/test_tandf_provider.py::test_tandf_article_assets_keep_body_figures_and_scope_supplement \
             tests/unit/test_tandf_provider.py::test_tandf_batch_results_keep_input_order_and_failed_table_fallback \
             tests/unit/test_tandf_provider.py::test_tandf_table_preparation_obeys_exhausted_total_deadline \
             tests/unit/test_ieee_provider_asset_extraction.py::IeeeProviderAssetExtractionTests::test_ieee_multimedia_discovery_memoizes_redacted_url_per_runtime
@@ -348,7 +409,15 @@ jobs:
         run: |
           scripts/verify-offline-package.sh \
             dist/paper-fetch-skill-offline-macos-arm64-cp314.tar.gz
+      - name: Scan native macOS artifact for secret values
+        id: secret_scan_macos_native
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python scripts/scan_artifacts_for_secrets.py
+          --root dist/paper-fetch-skill-offline-macos-arm64-cp314.tar.gz
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ steps.secret_scan_macos_native.outcome == 'success' }}
         with:
           name: macos-offline-native-cp314
           path: dist/paper-fetch-skill-offline-macos-arm64-cp314.tar.gz

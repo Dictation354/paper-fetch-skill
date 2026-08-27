@@ -104,6 +104,8 @@ AcceptanceAssetProfile = Literal["none", "body", "all", "unknown"]
 class _AcceptanceIdentityLandingOptions(TypedDict, total=False):
     """Keyword-compatible DOI-less landing facts for acceptance evaluation."""
 
+    require_local_body_assets: bool
+    require_full_size_body_assets: bool
     title: str | None
     source: str | None
     canonical_landing_url: str | None
@@ -213,6 +215,21 @@ class AssetAcceptanceSummary(_AcceptanceModel):
     not_archived: int = Field(default=0, ge=0)
     remote_link_count: int = Field(default=0, ge=0)
     remote_only_count: int = Field(default=0, ge=0)
+    body_discovered: int = Field(default=0, ge=0)
+    body_attempted: int = Field(default=0, ge=0)
+    body_local: int = Field(default=0, ge=0)
+    body_full_size: int = Field(default=0, ge=0)
+    body_preview: int = Field(default=0, ge=0)
+    body_failed: int = Field(default=0, ge=0)
+    body_not_archived: int = Field(default=0, ge=0)
+    body_remote_only_count: int = Field(default=0, ge=0)
+    require_local_body_assets: bool = False
+    require_full_size_body_assets: bool = False
+    has_local_body_assets: bool = False
+    all_body_assets_local: bool = True
+    all_body_assets_full_size: bool = True
+    local_body_assets_satisfied: bool = True
+    full_size_body_assets_satisfied: bool = True
     failure_codes: tuple[str, ...] = ()
     issue_codes: tuple[str, ...] = ()
 
@@ -311,6 +328,19 @@ _REMOTE_ASSET_FIELDS = (
     "original_url",
     "source_url",
     "source_href",
+)
+_BODY_ASSET_KINDS = frozenset({"figure", "formula", "table"})
+_BODY_ASSET_EVIDENCE_FIELDS = frozenset(
+    {
+        "body_discovered",
+        "body_attempted",
+        "body_local",
+        "body_full_size",
+        "body_preview",
+        "body_failed",
+        "body_not_archived",
+        "body_remote_only_count",
+    }
 )
 
 
@@ -500,6 +530,60 @@ def _asset_failure_code(failure: Mapping[str, Any]) -> str | None:
     return None
 
 
+def _diagnostic_value(diagnostic: Any, field: str, default: Any = None) -> Any:
+    if isinstance(diagnostic, Mapping):
+        return diagnostic.get(field, default)
+    return getattr(diagnostic, field, default)
+
+
+def _audited_body_counts(diagnostics: Any) -> dict[str, int] | None:
+    """Count only body records that represent an independently archivable file."""
+
+    if not isinstance(diagnostics, Sequence) or isinstance(
+        diagnostics, (str, bytes, bytearray)
+    ):
+        return None
+    if not diagnostics:
+        return None
+    counts = {
+        "discovered": 0,
+        "attempted": 0,
+        "local": 0,
+        "full_size": 0,
+        "preview": 0,
+        "failed": 0,
+        "not_archived": 0,
+        "remote_only": 0,
+    }
+    for diagnostic in diagnostics:
+        kind = normalize_text(_diagnostic_value(diagnostic, "kind")).lower()
+        status = normalize_text(_diagnostic_value(diagnostic, "status")).lower()
+        path = normalize_text(_diagnostic_value(diagnostic, "path"))
+        tier = normalize_text(_diagnostic_value(diagnostic, "download_tier")).lower()
+        failure_code = normalize_text(
+            _diagnostic_value(diagnostic, "failure_code")
+        ).lower()
+        if kind not in _BODY_ASSET_KINDS or status == "not_requested":
+            continue
+        # Inline semantic tables/formulas/figures can be complete without a
+        # separate binary payload. They are not strict-local file obligations.
+        if not path and not tier and status == "available":
+            continue
+        counts["discovered"] += 1
+        counts["attempted"] += 1
+        local = bool(path) and status not in {"failed", "not_archived"}
+        if local:
+            counts["local"] += 1
+            counts["preview" if tier == "preview" else "full_size"] += 1
+        if status == "failed":
+            counts["failed"] += 1
+        if status == "not_archived":
+            counts["not_archived"] += 1
+        if status == "not_archived" or failure_code == "missing_path":
+            counts["remote_only"] += 1
+    return counts
+
+
 def _audited_asset_summary(
     quality: Quality, *, profile: AcceptanceAssetProfile
 ) -> AssetAcceptanceSummary | None:
@@ -530,6 +614,47 @@ def _audited_asset_summary(
     if accepted_preview + fallback_preview != preview:
         accepted_preview = 0
         fallback_preview = preview
+
+    by_kind = value("by_kind", {})
+
+    def kind_value(kind: str, field: str) -> int:
+        if not isinstance(by_kind, Mapping):
+            return 0
+        kind_summary = by_kind.get(kind)
+        if isinstance(kind_summary, Mapping):
+            raw = kind_summary.get(field, 0)
+        else:
+            raw = getattr(kind_summary, field, 0)
+        return max(int(raw or 0), 0)
+
+    body_counts = _audited_body_counts(value("diagnostics", ()))
+    if body_counts is None:
+        body_full_size = sum(
+            kind_value(kind, "full_size") for kind in _BODY_ASSET_KINDS
+        )
+        body_preview = sum(kind_value(kind, "preview") for kind in _BODY_ASSET_KINDS)
+        body_local = body_full_size + body_preview
+        body_failed = sum(kind_value(kind, "failed") for kind in _BODY_ASSET_KINDS)
+        body_not_archived = sum(
+            kind_value(kind, "not_archived") for kind in _BODY_ASSET_KINDS
+        )
+        body_discovered = sum(
+            kind_value(kind, "requested") for kind in _BODY_ASSET_KINDS
+        )
+        body_attempted = min(
+            body_discovered,
+            body_local + body_failed + body_not_archived,
+        )
+        body_remote_only = body_not_archived
+    else:
+        body_discovered = body_counts["discovered"]
+        body_attempted = body_counts["attempted"]
+        body_local = body_counts["local"]
+        body_full_size = body_counts["full_size"]
+        body_preview = body_counts["preview"]
+        body_failed = body_counts["failed"]
+        body_not_archived = body_counts["not_archived"]
+        body_remote_only = body_counts["remote_only"]
     return AssetAcceptanceSummary(
         requested=bool(value("requested", profile != "none")),
         profile=profile,
@@ -565,6 +690,14 @@ def _audited_asset_summary(
         not_archived=max(int(value("not_archived") or 0), 0),
         remote_link_count=max(int(value("remote_link_count") or 0), 0),
         remote_only_count=max(int(value("remote_only_count") or 0), 0),
+        body_discovered=body_discovered,
+        body_attempted=body_attempted,
+        body_local=body_local,
+        body_full_size=body_full_size,
+        body_preview=body_preview,
+        body_failed=body_failed,
+        body_not_archived=body_not_archived,
+        body_remote_only_count=body_remote_only,
         failure_codes=_normalized_codes(value("failure_codes", ())),
         issue_codes=_normalized_codes(value("issue_codes", ())),
     )
@@ -584,7 +717,11 @@ def _asset_summary_from_envelope(
     remote_link_count = sum(item[0] for item in remote_counts)
     remote_only_count = sum(item[1] for item in remote_counts)
     local = sum(bool(normalize_text(asset.path)) for asset in assets)
-    from ..quality.assets import preview_asset_is_accepted
+    from ..quality.assets import logical_asset_kind, preview_asset_is_accepted
+
+    body_assets = [
+        asset for asset in assets if logical_asset_kind(asset) in _BODY_ASSET_KINDS
+    ]
 
     preview_assets = (
         [
@@ -599,6 +736,21 @@ def _asset_summary_from_envelope(
     fallback_preview = len(preview_assets) - accepted_preview
     preview = accepted_preview + fallback_preview
     failures = list(quality.asset_failures) if requested else []
+    body_failures = [
+        failure
+        for failure in failures
+        if logical_asset_kind(failure) in _BODY_ASSET_KINDS
+    ]
+    body_local_assets = [asset for asset in body_assets if normalize_text(asset.path)]
+    body_preview = sum(
+        normalize_text(asset.download_tier).lower() == "preview"
+        for asset in body_local_assets
+    )
+    body_remote_only_count = sum(
+        _asset_remote_counts(asset)[1] for asset in body_assets
+    )
+    body_discovered = len(body_assets) + len(body_failures)
+    body_local = len(body_local_assets)
     discovered = len(assets) + len(failures)
     attempted = (
         sum(
@@ -637,8 +789,107 @@ def _asset_summary_from_envelope(
         not_archived=not_archived,
         remote_link_count=remote_link_count,
         remote_only_count=remote_only_count,
+        body_discovered=body_discovered,
+        body_attempted=min(
+            body_discovered,
+            body_local + len(body_failures) + body_remote_only_count,
+        ),
+        body_local=body_local,
+        body_full_size=max(body_local - body_preview, 0),
+        body_preview=body_preview,
+        body_failed=len(body_failures),
+        body_not_archived=body_remote_only_count if requested else 0,
+        body_remote_only_count=body_remote_only_count if requested else 0,
         failure_codes=failure_codes,
         issue_codes=tuple(issue_codes),
+    )
+
+
+def _with_asset_requirements(
+    summary: AssetAcceptanceSummary,
+    *,
+    require_local_body_assets: bool,
+    require_full_size_body_assets: bool,
+) -> AssetAcceptanceSummary:
+    require_full_size = bool(require_full_size_body_assets)
+    require_local = bool(require_local_body_assets or require_full_size)
+    applicable = summary.profile in {"body", "all"} and summary.requested
+    body_discovered = summary.body_discovered
+    body_attempted = summary.body_attempted
+    body_local = summary.body_local
+    body_full_size = summary.body_full_size
+    body_preview = summary.body_preview
+    body_failed = summary.body_failed
+    body_not_archived = summary.body_not_archived
+    body_remote_only = summary.body_remote_only_count
+    if (
+        applicable
+        and body_discovered == 0
+        and summary.discovered > 0
+        and not (_BODY_ASSET_EVIDENCE_FIELDS & summary.model_fields_set)
+        and not any(
+            (
+                body_attempted,
+                body_local,
+                body_full_size,
+                body_preview,
+                body_failed,
+                body_not_archived,
+                body_remote_only,
+            )
+        )
+    ):
+        # A legacy externally supplied summary cannot distinguish body from
+        # supplementary rows. Strict mode requires proof, so conservatively
+        # treat its requested rows as body assets.
+        body_discovered = summary.discovered
+        body_attempted = summary.attempted
+        body_local = summary.local
+        body_full_size = summary.full_size
+        body_preview = summary.preview
+        body_failed = summary.failed
+        body_not_archived = summary.not_archived
+        body_remote_only = summary.remote_only_count
+    all_local = bool(
+        body_discovered == 0
+        or (
+            body_local >= body_discovered
+            and body_failed == 0
+            and body_not_archived == 0
+            and body_remote_only == 0
+        )
+    )
+    all_full_size = bool(
+        all_local
+        and (body_discovered == 0 or body_full_size >= body_discovered)
+        and body_preview == 0
+    )
+    local_satisfied = not applicable or not require_local or all_local
+    full_size_satisfied = not applicable or not require_full_size or all_full_size
+    issue_codes = list(summary.issue_codes)
+    if not local_satisfied:
+        issue_codes.append("local_body_assets_required")
+    if not full_size_satisfied:
+        issue_codes.append("full_size_body_assets_required")
+    return summary.model_copy(
+        update={
+            "body_discovered": body_discovered,
+            "body_attempted": body_attempted,
+            "body_local": body_local,
+            "body_full_size": body_full_size,
+            "body_preview": body_preview,
+            "body_failed": body_failed,
+            "body_not_archived": body_not_archived,
+            "body_remote_only_count": body_remote_only,
+            "require_local_body_assets": require_local,
+            "require_full_size_body_assets": require_full_size,
+            "has_local_body_assets": body_local > 0,
+            "all_body_assets_local": all_local,
+            "all_body_assets_full_size": all_full_size,
+            "local_body_assets_satisfied": local_satisfied,
+            "full_size_body_assets_satisfied": full_size_satisfied,
+            "issue_codes": tuple(dict.fromkeys(issue_codes)),
+        }
     )
 
 
@@ -676,6 +927,14 @@ def _asset_facet(
         status = AssetAcceptanceStatus.NOT_APPLICABLE
     elif normalized_summary.discovered == 0:
         status = AssetAcceptanceStatus.UNKNOWN
+    elif (
+        normalized_summary.require_local_body_assets
+        and not normalized_summary.local_body_assets_satisfied
+    ) or (
+        normalized_summary.require_full_size_body_assets
+        and not normalized_summary.full_size_body_assets_satisfied
+    ):
+        status = AssetAcceptanceStatus.DEGRADED
     elif normalized_summary.failed and normalized_summary.local == 0:
         status = AssetAcceptanceStatus.FAILED
     elif normalized_summary.issue_codes:
@@ -997,6 +1256,12 @@ def evaluate_fetch_acceptance(
         raise TypeError(f"unexpected acceptance keyword argument(s): {unknown}")
     title = identity_landing.get("title")
     source = identity_landing.get("source")
+    require_local_body_assets = bool(
+        identity_landing.get("require_local_body_assets", False)
+    )
+    require_full_size_body_assets = bool(
+        identity_landing.get("require_full_size_body_assets", False)
+    )
     canonical_landing_url = identity_landing.get("canonical_landing_url")
     canonical_landing_verified = identity_landing.get(
         "canonical_landing_verified", False
@@ -1042,6 +1307,12 @@ def evaluate_fetch_acceptance(
                 issue_codes=(),
             )
         summary = asset_summary.model_copy(update=updates)
+
+    summary = _with_asset_requirements(
+        summary,
+        require_local_body_assets=require_local_body_assets,
+        require_full_size_body_assets=require_full_size_body_assets,
+    )
 
     identity = _identity_facet(
         envelope,

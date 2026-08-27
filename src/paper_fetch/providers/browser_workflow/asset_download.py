@@ -17,8 +17,9 @@ from ...extraction.html.assets import (
     extract_scoped_html_assets,
 )
 from ...extraction.html.assets.download import browser_asset_recovery_allowed
+from ...extraction.html.assets.state import AssetHostRecoveryCircuit
 from ...models import AssetProfile
-from ...http import RequestCancelledError, provider_allowed_hosts
+from ...http import RequestCancelledError
 from ...utils import dedupe_normalized, empty_asset_results, normalize_text
 from ..browser_runtime import (
     BrowserHtmlFetchOptions,
@@ -665,6 +666,7 @@ def _run_browser_asset_download_attempt(
                 or deps._browser_workflow_image_download_candidates
             )
             is_ieee_recovery = normalize_text(recovery.provider).lower() == "ieee"
+            host_recovery_circuit = AssetHostRecoveryCircuit()
             common_kwargs = {
                 "article_id": plan.article_id,
                 "output_dir": plan.output_dir,
@@ -678,9 +680,9 @@ def _run_browser_asset_download_attempt(
                 "artifact_store": getattr(
                     recovery.runtime_context, "artifact_store", None
                 ),
-                "allowed_hosts": provider_allowed_hosts(recovery.provider),
                 "provider_name": recovery.provider,
                 "runtime_context": recovery.runtime_context,
+                "host_recovery_circuit": host_recovery_circuit,
             }
             if plan.fetch_policy != "direct_then_browser" or not serial_browser_assets:
                 return deps.download_assets(
@@ -697,50 +699,126 @@ def _run_browser_asset_download_attempt(
             full_candidate_builder = _tier_candidate_builder(
                 base_candidate_builder, preview=False
             )
-            direct_result = deps.download_assets(
+            # A caller-thread browser cannot safely join the HTTP worker pool.
+            # Probe one asset synchronously first so a verified browser recovery
+            # can route the remaining same-host assets through the verified
+            # browser path without repeated direct timeouts or 403 responses.
+            # Other hosts still retain their own direct probe decision.
+            probe_result = deps.download_assets(
                 FIGURE_KIND,
                 attempt_settings.get("transport"),
-                assets=body_assets,
+                assets=body_assets[:1],
                 candidate_builder=full_candidate_builder,
-                image_document_fetcher=None,
-                asset_download_concurrency=body_asset_download_concurrency,
+                image_document_fetcher=image_document_fetcher,
+                asset_download_concurrency=1,
                 fetch_policy="direct_then_browser",
                 **common_kwargs,
             )
-            eligible_failures = [
+            probe_used_browser = any(
+                normalize_text(str(asset.get("final_fetcher") or ""))
+                not in {"", "direct_http"}
+                or normalize_text(
+                    str((asset.get("asset_route") or {}).get("route") or "")
+                )
+                == "browser"
+                for asset in list(probe_result.get("assets") or [])
+                if isinstance(asset, Mapping)
+            )
+            probe_failures = [
                 dict(failure)
-                for failure in list(direct_result.get("asset_failures") or [])
+                for failure in list(probe_result.get("asset_failures") or [])
                 if _asset_failure_allows_browser_recovery(failure)
             ]
-            browser_assets = deps._assets_matching_download_failures(
-                body_assets,
-                eligible_failures,
-                retry_scope="body",
-            )
-            merged_result = dict(direct_result)
-            if browser_assets:
-                browser_result = deps.download_assets(
-                    FIGURE_KIND,
-                    attempt_settings.get("transport"),
-                    assets=browser_assets,
-                    candidate_builder=full_candidate_builder,
-                    image_document_fetcher=image_document_fetcher,
-                    asset_download_concurrency=1,
-                    fetch_policy="browser_first",
-                    **common_kwargs,
-                )
-                browser_failures = [
-                    dict(failure)
-                    for failure in list(browser_result.get("asset_failures") or [])
-                ]
-                browser_result = _annotate_split_browser_recovery(
-                    browser_result, eligible_failures
+            remaining_body_assets = body_assets[1:]
+            if probe_used_browser:
+                routed_remainder = (
+                    deps.download_assets(
+                        FIGURE_KIND,
+                        attempt_settings.get("transport"),
+                        assets=remaining_body_assets,
+                        candidate_builder=full_candidate_builder,
+                        image_document_fetcher=image_document_fetcher,
+                        asset_download_concurrency=body_asset_download_concurrency,
+                        fetch_policy="direct_then_browser",
+                        **common_kwargs,
+                    )
+                    if remaining_body_assets
+                    else empty_asset_results()
                 )
                 merged_result = _merge_download_attempt_results(
-                    direct_result, browser_result
+                    probe_result, routed_remainder
                 )
+                eligible_failures = probe_failures
+                browser_failures = [
+                    *probe_failures,
+                    *[
+                        dict(failure)
+                        for failure in list(
+                            routed_remainder.get("asset_failures") or []
+                        )
+                    ],
+                ]
             else:
-                browser_failures = []
+                direct_remainder = (
+                    deps.download_assets(
+                        FIGURE_KIND,
+                        attempt_settings.get("transport"),
+                        assets=remaining_body_assets,
+                        candidate_builder=full_candidate_builder,
+                        image_document_fetcher=None,
+                        asset_download_concurrency=body_asset_download_concurrency,
+                        fetch_policy="direct_then_browser",
+                        **common_kwargs,
+                    )
+                    if remaining_body_assets
+                    else empty_asset_results()
+                )
+                direct_result = _merge_download_attempt_results(
+                    probe_result, direct_remainder
+                )
+                direct_remainder_failures = [
+                    dict(failure)
+                    for failure in list(direct_remainder.get("asset_failures") or [])
+                    if _asset_failure_allows_browser_recovery(failure)
+                ]
+                eligible_failures = [
+                    *probe_failures,
+                    *direct_remainder_failures,
+                ]
+                browser_assets = deps._assets_matching_download_failures(
+                    remaining_body_assets,
+                    direct_remainder_failures,
+                    retry_scope="body",
+                )
+                merged_result = dict(direct_result)
+                if browser_assets:
+                    browser_result = deps.download_assets(
+                        FIGURE_KIND,
+                        attempt_settings.get("transport"),
+                        assets=browser_assets,
+                        candidate_builder=full_candidate_builder,
+                        image_document_fetcher=image_document_fetcher,
+                        asset_download_concurrency=1,
+                        fetch_policy="browser_first",
+                        **common_kwargs,
+                    )
+                    browser_failures = [
+                        *probe_failures,
+                        *[
+                            dict(failure)
+                            for failure in list(
+                                browser_result.get("asset_failures") or []
+                            )
+                        ],
+                    ]
+                    browser_result = _annotate_split_browser_recovery(
+                        browser_result, eligible_failures
+                    )
+                    merged_result = _merge_download_attempt_results(
+                        direct_result, browser_result
+                    )
+                else:
+                    browser_failures = probe_failures
 
             preview_assets = [
                 asset
@@ -809,7 +887,6 @@ def _run_browser_asset_download_attempt(
                 "artifact_store": getattr(
                     recovery.runtime_context, "artifact_store", None
                 ),
-                "allowed_hosts": provider_allowed_hosts(recovery.provider),
                 "provider_name": recovery.provider,
                 "runtime_context": recovery.runtime_context,
                 **supplementary_kwargs,

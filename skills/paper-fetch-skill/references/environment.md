@@ -34,7 +34,7 @@
 
 静态 `paper-fetch doctor --provider <name> --detail full --json` / MCP `provider_status` 不启动或准备 Camoufox，也不访问出版社页面。需要 live 证明时再运行 CLI `paper-fetch browser-preflight --provider <name>` 或 MCP `browser_preflight(provider=...)`；CLI 默认允许缺失 runtime 的按需准备，MCP 默认禁止，需联网准备时传 `browser_auto_prepare=true`，并通过 logging notification 报告进度。它们可能更新过滤后的 storage-state，但不会运行 PDF fallback 或自动认证。MCP preflight is open-world：它会访问远端页面、非只读且可能写 storage-state。
 
-PNAS、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、T&F 的成功 preflight HTML 只在当前进程内短期、一次性复用（默认 16 项、60 秒），并同时约束 provider、规范 DOI、目标 URL 与 browser runtime 指纹。MCP server 内紧随其后的 fetch 可命中；CLI 跨进程仅复用 storage-state。Wiley、IEEE、Science 不接入该 HTML cache；AIP 不发布跨 `RuntimeContext` 的 preflight HTML/cookie/storage-state，challenge、空壳、PDF fallback 和失败结果也不进入该缓存。
+PNAS、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、T&F 的成功 preflight HTML 只在当前进程内短期、一次性复用（默认 16 项、60 秒），并同时约束 provider、规范 DOI、当前 landing target 与 browser runtime 指纹。MCP server 内紧随其后的同样例 fetch 可命中；CLI 跨进程仅复用 storage-state。Wiley、IEEE、Science 不接入该 HTML cache；AIP 不发布跨 `RuntimeContext` 的 preflight HTML/cookie/storage-state，challenge、空壳、PDF fallback 和失败结果也不进入该缓存。ACS 的 `empty_article_shell` 诊断只保留无查询参数 URL 摘要、主文档/失败请求/console/challenge signal、页面 SHA 与 storage-state 指纹；route/profile/storage/page SHA 不变时立即终止，只有候选 URL、profile 或 storage-state 确实变化时允许一次重试。
 
 ## 图片与资产工具
 
@@ -61,7 +61,7 @@ PNAS、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、T&F 的成功 p
 
 ## 诊断顺序
 
-1. 用 `paper-fetch doctor --json` 或 `provider_status(detail="full")` 做无网络静态检查；输出只包含变量名、是否存在和来源层；token, cookie, endpoint, path, and other values are never echoed。源码 checkout 中 doctor 还会比较仓库 bundle 与 active Codex project/user skill 的 aggregate content version；离线安装则比较 manifest/bundled/Codex/Claude/Antigravity 副本，缺失或漂移均使整体诊断降级。
+1. 用 `paper-fetch doctor --json` 或 `provider_status(detail="full")` 做无网络静态检查；输出只包含变量名、是否存在和来源层；token, cookie, endpoint, path, and other values are never echoed。源码 checkout 输出 `provenance_scope=source_development`，比较仓库 bundle 与 active Codex project/user skill，不从 PATH/env-file 混入旧离线根；显式 `--install-root` 或安装包运行输出 `installation`，比较 manifest/bundled/runtime/entrypoint/Codex/Claude/Antigravity 副本。真实缺失或漂移仍使整体诊断降级。
 2. 只有动态 catalog 表明目标依赖 browser runtime 且需要真实链路证明时，运行 `browser-preflight` / `browser_preflight`；MCP 若需准备缺失 runtime，显式传 `browser_auto_prepare=true`。
 3. 只有结构化结果为 `challenge` / `auth_required` 时进入人工 auth；`runtime_error` 先修 Camoufox runtime/工具链。
 4. 配置或合法访问状态没有变化时，不重复抓取；重试边界统一遵循 [`failure-handling.md`](failure-handling.md)。

@@ -57,7 +57,7 @@ canonical_agent_manifest = "skills/paper-fetch-skill/agents/openai.yaml"
 source_verifier = "src/paper_fetch/skill_integrity.py"
 shared_installer = "scripts/_skill_install_common.sh"
 check_mode = "strictly-read-only-user-or-project"
-doctor_scope = "source-or-offline-to-active-codex"
+doctor_scope = "source-development-or-explicit-installation-to-active-codex"
 drift_affects_readiness = true
 
 [components.formula_tools]
@@ -110,14 +110,18 @@ explicit_binary_auto_prepare = false
 native_ci_runtime = "official/152.0.4-beta.28"
 native_test_addon_policy = "exclude-default-addons"
 native_test_screen_policy = "fixed-synthetic-screen"
-route_allowlist_source = "provider-catalog"
-route_execution_policy = "compiled-catalog-host-timeout-retry-qps-acceptance-assets"
+route_execution_policy = "compiled-catalog-timeout-retry-qps-acceptance-assets"
 storage_state_cache_scope = "actual-use-provider-backend-path-digest"
 storage_state_load_diagnostics = "path-exists-used"
-binary_asset_transport = "browser-discovery-pinned-direct-stream"
+main_document_response_diagnostics = "requestfinished-content-length-dom-bytes-navigation-timing-secret-safe"
+wiley_http_access_status_review = "401-403-stable-body-exact-doi-no-block-final-fulltext-secret-safe"
+binary_asset_transport = "shared-hostname-pool-or-browser-owned-bytes"
 asset_budget_defaults = "128-files-32mib-per-asset-256mib-total-64000000-pixels"
 asset_worker_policy = "shared-runtime-max4-route-capped-as-completed"
-browser_only_binary_policy = "fail-closed-browser-stream-unavailable"
+asset_publish_policy = "budgeted-unique-staging-atomic-replace"
+asset_route_policy = "explicit-body-assets-20s-direct-timeout-route-cap2"
+asset_host_recovery_policy = "article-local-one-direct-probe-per-host-verified-browser-reuse"
+asset_observability = "candidate-resolution-per-resource-and-browser-prepare-release-stages"
 
 [native_verifier]
 entrypoint = "scripts/verify-offline-package.sh"
@@ -361,7 +365,7 @@ title = "明确 Camoufox 离线边界并移除 FlareSolverr"
 area = "browser-runtime"
 status = "implemented"
 risk = "P1"
-summary = "browser/full extra 允许兼容的 Camoufox 0.5.5+ 版本；开发与常规 CI 继续消费 uv.lock，离线构建则以已解析 wheelhouse 中的唯一 Camoufox wheel为版本来源，并复核 wheel metadata、installed distribution 与 manifest 一致。离线包捆绑 Python 包但不捆绑浏览器 binary，安装器不得下载；CLI live browser 路径可按策略首次准备，MCP/库默认 opt-in，进入受限网络前仍应显式预置并用 browser-preflight 验证。原生 macOS CI runtime discovery 使用只读 workflow token 避免匿名 GitHub API 限额，live 验证只保留本地显式入口。Camoufox/Playwright navigation、redirect、子资源与 service worker 使用浏览器原生网络行为，不安装 context-wide URL/DNS interceptor，也不限制 credentialed context origin；catalog route 仍统一编译 hosts、timeout、retry、QPS、acceptance 与 asset cap，并限制 browser navigation deadline，browser 发现的二进制由 SafeRemoteUrlPolicy 与 catalog host policy 约束的 direct transport 流式获取。实际注入的 storage-state 以 provider/backend/canonical path/final digest 进入 MCP private cache scope，并用 path/exists/used diagnostics 区分配置与使用，空路径不得污染 public。selected-browser 页面等待稳定正文 DOM；实质正文就绪后，Wiley 页头登录导航交给正文感知验收，challenge、HTTP 强拒绝、404 与摘要重定向仍早期阻断；provider 可在捕获 HTML 前执行有界、同源、失败不阻断的页面准备。PNAS 使用单次导航和 8 秒正文稳定预算，opt-in provider 只阻断 image/font/media；已验收 preflight HTML 按 DOI/URL/runtime 指纹在同进程一次性复用，AIP 维持跨 RuntimeContext 禁用边界，figure discovery 在同一 runtime 串行复用专用 page。Taylor & Francis 仅用该钩子有界并发读取文章页明确暴露的官方 CSV table action，失败表回退到已加载且不产生新请求的同页 payload，其文章范围内的官方 CMS figure rendition 按 accepted preview 保留。内置 auth/preflight 目标由 catalog 能力与共享测试保持一致，Taylor & Francis 使用已验证的开放文章，避免默认命令在 target_resolution 提前失败。候选循环和保守重试都不得用后续传输/导航失败或 deadline timeout 覆盖已经确认的稳定访问门槛；CLI/MCP 批量解析和 lane 排队不得提前消耗 item fetch deadline；HTTP-200 empty shell 的重试优先下一个既有 provider URL，live MCP 只按精确 access-boundary marker 跳过成功 metadata fallback；活动运行时不得包含 FlareSolverr。"
+summary = "browser/full extra 允许兼容的 Camoufox 0.5.5+ 版本；开发与常规 CI 继续消费 uv.lock，离线构建则以已解析 wheelhouse 中的唯一 Camoufox wheel 为版本来源，并复核 wheel metadata、installed distribution 与 manifest 一致。离线包捆绑 Python 包但不捆绑浏览器 binary，安装器不得下载；CLI live browser 路径可按策略首次准备，MCP/库默认 opt-in，进入受限网络前仍应显式预置并用 browser-preflight 验证。原生 macOS CI runtime discovery 使用只读 workflow token 避免匿名 GitHub API 限额，live 验证只保留本地显式入口。Camoufox/Playwright navigation、redirect、子资源与 service worker 使用浏览器原生网络行为，不安装 context-wide URL/DNS interceptor，也不限制 credentialed context origin；catalog route 只编译 timeout、retry、QPS、acceptance、asset scope/cap 与 browser deadline，host/sensitive-header 数据不自动成为授权 allowlist。Direct/asset 请求保留 HTTP(S)、标准端口、公网 DNS、userinfo、HTTPS downgrade、逐跳 redirect 和跨域标准敏感头基线；显式 caller allowlist 继续 fail closed。二进制允许 shared-hostname transport 或 browser-owned image/file/PDF bytes，两者都经过统一预算、MIME/像素、staging、原子发布与取消门禁。正文资产必须有显式 20 秒、route cap 2 的 assets route；每篇论文每个 host 只做一次 direct probe，browser byte recovery 成功后才复用该 host 路径，状态不跨论文持久化。逐资源记录 candidate resolution，browser prepare/release 另记 stage timing。实际注入的 storage-state 以 provider/backend/canonical path/final digest 进入 MCP private cache scope，并用 path/exists/used diagnostics 区分配置与使用，空路径不得污染 public。主文档空壳诊断并列记录 Playwright requestfinished、Content-Length、捕获 DOM 字节与 Navigation Timing，只保留脱敏 URL 和布尔 transfer 事实。selected-browser 页面等待稳定正文 DOM；Wiley 401/403 在有界 readiness 后仅当正文连续稳定、页面 DOI 精确匹配且无 challenge、验证码、no-access 或 datalayer 阻断时暂时豁免状态判定，后续 Markdown/availability 仍须通过且结果保留真实状态；实质正文就绪后页头登录导航交给正文感知验收，challenge、其它 HTTP 强拒绝、404 与摘要重定向仍早期阻断；provider 可在捕获 HTML 前执行有界、同源、失败不阻断的页面准备。PNAS 使用与解析器一致的 #bodymatter selector 和 8 秒正文稳定预算；已验收 preflight HTML 按 provider/DOI/target/runtime 指纹在同进程一次性复用，AIP 维持跨 RuntimeContext 禁用边界，figure discovery 在同一 runtime 串行复用专用 page。arXiv source、Copernicus JATS graphic 与 AIP srcset 优先官方原图；Taylor & Francis 仅暴露 CMS preview 时保留 accepted preview，所有合法 preview 降级都输出稳定机器原因。候选循环和保守重试不得覆盖稳定访问门槛；CLI/MCP 批量解析和 lane 排队不得提前消耗 item fetch deadline；HTTP-200 empty shell 只在候选/profile/storage-state 确实变化时重试，相同页面 SHA/状态立即停止；live MCP 只按精确 access-boundary marker 跳过成功 metadata fallback；活动运行时不得包含 FlareSolverr。"
 rationale = "Python 包可导入不等于目标浏览器可用，安装时静默联网也会破坏离线包边界；同样，远端挑战、延迟正文或批量调度等待必须与本地 browser context 启动和实际抓取预算分开诊断。"
 implementation_paths = [
   ".github/workflows/ci.yml",
@@ -389,8 +393,11 @@ implementation_paths = [
   "src/paper_fetch/mcp/batch_fetch.py",
   "src/paper_fetch/mcp/fetch_cache.py",
   "src/paper_fetch/mcp/fetch_tool.py",
+  "src/paper_fetch/page_diagnostics.py",
   "src/paper_fetch/providers/_atypon_browser_workflow_profiles.py",
   "src/paper_fetch/providers/_playwright_browser.py",
+  "src/paper_fetch/providers/_aip_html.py",
+  "src/paper_fetch/providers/_article_markdown_copernicus.py",
   "src/paper_fetch/providers/_arxiv_assets.py",
   "src/paper_fetch/providers/_arxiv_source_archive.py",
   "src/paper_fetch/providers/_ieee_browser_html.py",
@@ -410,6 +417,7 @@ implementation_paths = [
   "src/paper_fetch/providers/aip.py",
   "src/paper_fetch/providers/ams.py",
   "src/paper_fetch/providers/annualreviews.py",
+  "src/paper_fetch/providers/arxiv.py",
   "src/paper_fetch/providers/browser_workflow/asset_download.py",
   "src/paper_fetch/providers/browser_workflow/assets.py",
   "src/paper_fetch/providers/browser_workflow/bootstrap.py",
@@ -424,9 +432,13 @@ implementation_paths = [
   "src/paper_fetch/providers/iop.py",
   "src/paper_fetch/providers/mdpi.py",
   "src/paper_fetch/providers/pnas.py",
+  "src/paper_fetch/providers/copernicus.py",
   "src/paper_fetch/providers/royalsocietypublishing.py",
+  "src/paper_fetch/providers/science.py",
   "src/paper_fetch/providers/tandf.py",
+  "src/paper_fetch/providers/wiley.py",
   "src/paper_fetch/quality/html_availability.py",
+  "src/paper_fetch/reason_codes.py",
   "src/paper_fetch/runtime.py",
 ]
 test_nodes = [
@@ -444,7 +456,7 @@ test_nodes = [
   "tests/unit/test_capability_scope.py::test_fetch_writer_uses_final_digest_of_actually_loaded_state",
   "tests/unit/test_camoufox_backend.py::test_browser_candidate_uses_native_navigation_without_context_guard",
   "tests/unit/test_browser_workflow_fetchers.py::test_credentialed_browser_asset_cross_origin_uses_native_context_without_route",
-  "tests/unit/test_browser_workflow_fetchers.py::test_browser_file_descriptor_defers_redirects_to_direct_transport",
+  "tests/unit/test_browser_workflow_fetchers.py::test_browser_file_fetcher_returns_browser_owned_bytes",
   "tests/unit/test_auth.py::test_auth_context_does_not_install_context_wide_network_route",
   "tests/unit/test_ieee_provider_routes.py::IeeeProviderRouteTests::test_browser_html_accepts_native_final_url_without_context_route",
   "tests/unit/test_pdf_fallback_helpers.py::PdfFallbackHelperTests::test_credentialed_pdf_cross_origin_uses_native_browser_context",
@@ -454,17 +466,23 @@ test_nodes = [
   "tests/unit/test_asset_budget.py::test_asset_budget_defaults_and_route_concurrency_cap",
   "tests/unit/test_asset_budget.py::test_compressed_length_budget_failure_cancels_pending_asset_work",
   "tests/unit/test_asset_budget.py::test_parallel_figure_and_supplementary_calls_share_worker_slots",
-  "tests/unit/test_asset_budget.py::test_one_runtime_worker_reuses_seed_session_across_figure_and_supplementary",
+  "tests/unit/test_asset_budget.py::test_runtime_streaming_does_not_replay_seed_across_asset_kinds",
   "tests/unit/test_asset_budget.py::test_arxiv_gzip_expansion_uses_shared_budget_and_cleans_staging",
   "tests/unit/test_asset_budget.py::test_external_cancellation_propagates_from_as_completed_workers",
   "tests/unit/test_asset_budget.py::test_arxiv_archive_counts_duplicate_regular_members_before_deduplication",
-  "tests/unit/test_safe_remote_url_policy.py::test_asset_stream_uses_catalog_sensitive_headers_on_redirect",
-  "tests/unit/test_safe_remote_url_policy.py::test_seed_redirect_preserves_multiple_cookies_and_refreshes_next_hop",
-  "tests/unit/test_pdf_fallback_helpers.py::PdfFallbackHelperTests::test_pdf_browser_owned_download_url_is_rejected_by_direct_replay",
+  "tests/unit/test_safe_remote_url_policy.py::test_transport_validates_dns_then_uses_the_shared_hostname_pool",
+  "tests/unit/test_safe_remote_url_policy.py::test_provider_catalog_does_not_implicitly_restrict_public_redirect_hosts",
+  "tests/unit/test_safe_remote_url_policy.py::test_credentialed_request_does_not_require_an_allowlist",
+  "tests/unit/test_safe_remote_url_policy.py::test_stream_honors_an_explicit_allowlist_and_standard_header_stripping",
+  "tests/unit/test_browser_image_payload.py::test_capture_image_payload_returns_png_for_image_response",
+  "tests/unit/test_browser_image_payload.py::test_capture_image_payload_uses_page_array_buffer_when_response_body_fails",
+  "tests/unit/test_browser_image_payload.py::test_capture_image_payload_uses_canvas_when_response_is_challenge",
+  "tests/unit/test_provider_request_options.py::ProviderRequestOptionsTests::test_html_asset_download_uses_one_browser_recovery_after_direct_403",
+  "tests/unit/test_pdf_fallback_helpers.py::PdfFallbackHelperTests::test_pdf_browser_owned_download_url_uses_saved_bytes_without_direct_replay",
   "tests/unit/test_aip_provider.py::test_aip_cold_html_retry_reuses_transient_seed_without_persisting_state",
   "tests/unit/test_provider_request_options.py::ProviderRequestOptionsTests::test_browser_workflow_preserves_fast_access_gate_when_retry_times_out",
   "tests/unit/test_live_runtime_env.py::test_live_mcp_no_access_detection_requires_machine_readable_boundary",
-  "tests/unit/test_runtime_deadline_and_readiness.py::test_aip_science_and_mdpi_publish_current_body_readiness_selectors",
+  "tests/unit/test_runtime_deadline_and_readiness.py::test_provider_body_readiness_selectors_match_current_parser_containers",
   "tests/unit/test_runtime_deadline_and_readiness.py::test_reset_request_deadline_preserves_item_state_and_shared_transport",
   "tests/unit/test_cli_manifest_v2.py::test_batch_resolution_and_queue_time_do_not_consume_fetch_deadline",
   "tests/unit/test_mcp_batch_fetch.py::test_batch_fetch_resolution_and_queue_time_do_not_consume_fetch_deadline",
@@ -480,16 +498,32 @@ test_nodes = [
   "tests/unit/test_browser_preflight_reuse_cache.py::test_preflight_cache_is_one_shot_ttl_and_runtime_fingerprint_scoped",
   "tests/unit/test_browser_preflight_reuse_cache.py::test_pnas_preflight_then_fetch_reuses_html_without_second_navigation",
   "tests/unit/test_browser_preflight_reuse_cache.py::test_aip_preflight_html_is_not_reused_across_runtime_contexts",
-  "tests/unit/test_browser_preflight_reuse_cache.py::test_provider_resource_policies_do_not_widen_untouched_profiles",
+  "tests/unit/test_browser_preflight_reuse_cache.py::test_provider_resource_policies_keep_optimized_and_untouched_boundaries",
   "tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_direct_first_figure_policy_skips_viewer_when_download_url_exists",
   "tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_silverchair_figure_page_resolution_stays_on_camoufox_owner_thread",
+  "tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_acs_and_aip_direct_asset_probe_use_twenty_second_zero_retry_policy",
+  "tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_browser_recovery_circuit_is_host_scoped_concurrent_and_article_local",
+  "tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_direct_then_browser_probes_first_and_shares_host_circuit_on_caller_thread",
   "tests/unit/test_camoufox_backend.py::test_provider_resource_policy_blocks_only_configured_heavy_types",
+  "tests/unit/test_camoufox_backend.py::test_main_document_diagnostics_distinguish_finished_response_from_loading_shell",
   "tests/unit/test_camoufox_backend.py::test_pnas_body_readiness_uses_bounded_budget_and_keeps_final_html",
+  "tests/unit/test_runtime_deadline_and_readiness.py::test_wiley_body_readiness_requires_two_identical_ready_fingerprints",
+  "tests/unit/test_camoufox_backend.py::test_open_wiley_context_without_storage_state_has_no_state_capability_use",
+  "tests/unit/test_camoufox_backend.py::test_wiley_403_confirmed_body_and_identity_preserves_status",
+  "tests/unit/test_camoufox_backend.py::test_wiley_403_review_rejects_unconfirmed_candidate",
+  "tests/unit/test_camoufox_backend.py::test_wiley_403_failure_advances_to_next_candidate",
+  "tests/unit/test_camoufox_backend.py::test_wiley_all_http_status_candidates_fail_with_reviews",
+  "tests/unit/test_wiley_provider.py::test_wiley_confirmed_403_html_passes_markdown_and_availability",
+  "tests/unit/test_wiley_provider.py::test_wiley_confirmed_403_extraction_failure_continues_next_candidate",
+  "tests/unit/test_page_diagnostics.py::test_wiley_http_access_status_review_is_allowlisted_and_secret_safe",
   "tests/unit/test_camoufox_backend.py::test_wiley_body_readiness_defers_login_navigation_paywall_text",
   "tests/unit/test_browser_preflight.py::test_wiley_preflight_accepts_leading_login_navigation_after_body_readiness",
   "tests/unit/test_camoufox_backend.py::test_figure_page_fetches_reuse_one_runtime_context_and_page",
   "tests/unit/test_acs_provider.py::test_acs_asset_extraction_promotes_largest_srcset_rendition",
   "tests/unit/test_annualreviews_provider.py::test_annualreviews_asset_extraction_promotes_largest_srcset_rendition",
+  "tests/unit/test_aip_provider.py::test_aip_asset_extraction_prefers_largest_official_srcset_rendition",
+  "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_upgrades_existing_preview_from_official_source_archive",
+  "tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_copernicus_promotes_official_original_and_audits_preview_only",
   "tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_empty_intermediate_candidate_retries_next_html_before_pdf",
   "tests/unit/test_iop_provider.py::test_iop_index_cache_dedupes_signed_indexes_and_attachment_signatures",
   "tests/unit/test_ieee_provider_asset_extraction.py::IeeeProviderAssetExtractionTests::test_ieee_multimedia_discovery_memoizes_redacted_url_per_runtime",
@@ -568,10 +602,14 @@ implementation_paths = [
   ".github/workflows/ci.yml",
   ".github/workflows/verify.yml",
   ".github/workflows/offline.yml",
+  ".github/workflows/provider-canary.yml",
   ".github/workflows/release.yml",
+  ".github/workflows/rolling-release.yml",
   "scripts/verify-offline-package.sh",
   "scripts/generate_offline_evidence.py",
   "scripts/prepare_release_assets.py",
+  "scripts/scan_artifacts_for_secrets.py",
+  "src/paper_fetch/redaction.py",
   "quality/python-distribution-inventory.json",
   "docs/macos-adaptation-contract.toml",
   "scripts/validate_macos_adaptation.py",
@@ -587,6 +625,11 @@ test_nodes = [
   "tests/unit/test_offline_evidence.py::test_evidence_is_derived_from_actual_staged_target",
   "tests/unit/test_python_distribution_inventory.py::test_distribution_inventory_matches_source_tree",
   "tests/unit/test_release_asset_inventory.py::test_stable_assets_are_exactly_flattened_and_checksums_use_basenames",
+  "tests/unit/test_artifact_secret_scan.py::test_artifact_scanner_reports_only_variable_name_and_path",
+  "tests/unit/test_artifact_secret_scan.py::test_controlled_pytest_failure_junit_cannot_render_live_secret",
+  "tests/unit/test_artifact_secret_scan.py::test_provider_canary_upload_is_gated_by_secret_scan",
+  "tests/unit/test_artifact_secret_scan.py::test_every_workflow_artifact_upload_is_gated_by_secret_scan",
+  "tests/unit/test_artifact_secret_scan.py::test_release_publication_and_attestation_follow_secret_scan",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_release_attestation_contract_and_workflow_drift_are_rejected",
 ]
 audit_cases = ["MAC-AUD-002", "MAC-AUD-006"]
@@ -636,6 +679,8 @@ test_nodes = [
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_wsl_exclusions_must_be_unique_and_known",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_surface_node_cli_outputs_only_selected_nodes",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_wsl_entrypoint_rejects_native_or_live_dependencies",
+  "tests/unit/test_install_provenance.py::test_source_development_without_manifest_is_not_applicable",
+  "tests/unit/test_install_provenance.py::test_source_development_ignores_unrelated_distribution_and_path_cli",
 ]
 audit_cases = ["MAC-AUD-001", "MAC-AUD-011"]
 portable_validation = "static"

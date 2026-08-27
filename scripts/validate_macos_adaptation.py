@@ -618,7 +618,7 @@ def _validate_skill_integrity(
         "source_verifier": "src/paper_fetch/skill_integrity.py",
         "shared_installer": "scripts/_skill_install_common.sh",
         "check_mode": "strictly-read-only-user-or-project",
-        "doctor_scope": "source-or-offline-to-active-codex",
+        "doctor_scope": ("source-development-or-explicit-installation-to-active-codex"),
         "drift_affects_readiness": True,
     }
     for key, expected_value in expected.items():
@@ -1140,14 +1140,15 @@ def _validate_browser_boundary(
             "native_ci_runtime",
             "native_test_addon_policy",
             "native_test_screen_policy",
-            "route_allowlist_source",
             "route_execution_policy",
             "storage_state_cache_scope",
             "storage_state_load_diagnostics",
+            "main_document_response_diagnostics",
+            "wiley_http_access_status_review",
             "binary_asset_transport",
             "asset_budget_defaults",
             "asset_worker_policy",
-            "browser_only_binary_policy",
+            "asset_publish_policy",
         },
         field="components.camoufox",
         errors=errors,
@@ -1179,18 +1180,23 @@ def _validate_browser_boundary(
         "native_ci_runtime": "official/152.0.4-beta.28",
         "native_test_addon_policy": "exclude-default-addons",
         "native_test_screen_policy": "fixed-synthetic-screen",
-        "route_allowlist_source": "provider-catalog",
         "route_execution_policy": (
-            "compiled-catalog-host-timeout-retry-qps-acceptance-assets"
+            "compiled-catalog-timeout-retry-qps-acceptance-assets"
         ),
         "storage_state_cache_scope": "actual-use-provider-backend-path-digest",
         "storage_state_load_diagnostics": "path-exists-used",
-        "binary_asset_transport": "browser-discovery-pinned-direct-stream",
+        "main_document_response_diagnostics": (
+            "requestfinished-content-length-dom-bytes-navigation-timing-secret-safe"
+        ),
+        "wiley_http_access_status_review": (
+            "401-403-stable-body-exact-doi-no-block-final-fulltext-secret-safe"
+        ),
+        "binary_asset_transport": "shared-hostname-pool-or-browser-owned-bytes",
         "asset_budget_defaults": (
             "128-files-32mib-per-asset-256mib-total-64000000-pixels"
         ),
         "asset_worker_policy": "shared-runtime-max4-route-capped-as-completed",
-        "browser_only_binary_policy": ("fail-closed-browser-stream-unavailable"),
+        "asset_publish_policy": "budgeted-unique-staging-atomic-replace",
     }
     for key, expected in expected_camoufox.items():
         if camoufox.get(key) != expected:

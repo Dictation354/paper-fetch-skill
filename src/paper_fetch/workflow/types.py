@@ -150,8 +150,12 @@ class FetchStrategy:
     allow_metadata_only_fallback: bool = True
     preferred_providers: list[str] | None = None
     asset_profile: AssetProfile | None = None
+    require_local_body_assets: bool = False
+    require_full_size_body_assets: bool = False
 
     def __post_init__(self) -> None:
+        if self.require_full_size_body_assets and not self.require_local_body_assets:
+            object.__setattr__(self, "require_local_body_assets", True)
         normalized = self.normalized_preferred_providers()
         if normalized is None:
             return

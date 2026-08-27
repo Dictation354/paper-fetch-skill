@@ -155,6 +155,7 @@ class AssetOutput(TypedDict, total=False):
     height: int | None
     preview_accepted: bool
     provenance: list[str]
+    asset_timing: dict[str, Any]
 
 
 class TokenEstimateBreakdownOutput(TypedDict, total=False):
@@ -219,6 +220,7 @@ class AssetFailureOutput(TypedDict, total=False):
     body_snippet: str | None
     reason: str
     recovery_attempts: list[dict[str, Any]]
+    asset_timing: dict[str, Any]
 
 
 class AssetDiagnosticOutput(TypedDict, total=False):
@@ -321,6 +323,7 @@ class FetchAcceptanceSummaryOutput(TypedDict, total=False):
     has_fulltext: bool
     has_abstract: bool
     token_estimate: int
+    asset_summary: dict[str, Any]
 
 
 class FetchPaperOutput(ErrorPayloadOutput, total=False):
@@ -402,6 +405,21 @@ class CacheAssetSummaryOutput(TypedDict, total=False):
     not_archived: int
     remote_link_count: int
     remote_only_count: int
+    body_discovered: int
+    body_attempted: int
+    body_local: int
+    body_full_size: int
+    body_preview: int
+    body_failed: int
+    body_not_archived: int
+    body_remote_only_count: int
+    require_local_body_assets: bool
+    require_full_size_body_assets: bool
+    has_local_body_assets: bool
+    all_body_assets_local: bool
+    all_body_assets_full_size: bool
+    local_body_assets_satisfied: bool
+    full_size_body_assets_satisfied: bool
     failure_codes: list[str]
     issue_codes: list[str]
     remote_links_preserved: bool

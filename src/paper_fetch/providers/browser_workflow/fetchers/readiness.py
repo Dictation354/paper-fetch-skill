@@ -30,9 +30,10 @@ ATYPON_BODY_READY_SELECTORS: Mapping[str, tuple[str, ...]] = {
         ".article-view",
     ),
     "pnas": (
-        ".article__fulltext",
-        ".article-content",
-        ".core-container",
+        "#bodymatter [data-extent='bodymatter'][property='articleBody']",
+        "#bodymatter [property='articleBody']",
+        "#bodymatter [data-extent='bodymatter']",
+        "#bodymatter",
     ),
     "ams": (
         "#articleBody",

@@ -180,6 +180,8 @@ EXPECTED_CONSTRAINT_SNAPSHOT = {
             "allow_metadata_only_fallback",
             "preferred_providers",
             "asset_profile",
+            "require_local_body_assets",
+            "require_full_size_body_assets",
             "inline_image_budget",
         ],
     },

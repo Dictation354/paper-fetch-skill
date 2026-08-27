@@ -202,6 +202,7 @@ bundle = provider_bundle("newmanifest")
 assert bundle.catalog.name == "newmanifest"
 assert bundle.catalog.doi_prefixes == ("10.99999/",)
 assert bundle.catalog.asset_default == "body"
+assert any(route.kind == "assets" for route in bundle.catalog.routes)
 assert [step.label for step in client_module.NewmanifestClient.waterfall_steps] == [
     "article_html",
     "pdf_fallback",
@@ -297,6 +298,11 @@ def test_from_manifest_routing_and_probe_fields_enter_provider_spec(
     assert "domain_suffixes=()" in html_text
     assert 'publisher_aliases=("arxiv",)' in html_text
     assert 'asset_default="body"' in html_text
+    assert "ProviderRouteSpec(" in html_text
+    assert 'name="assets"' in html_text
+    assert 'kind="assets"' in html_text
+    assert "timeout_seconds=20" in html_text
+    assert "concurrency=2" in html_text
     assert "env_requirements=()" in html_text
     assert "requires_playwright=False" in html_text
     assert "requires_browser_runtime=False" in html_text

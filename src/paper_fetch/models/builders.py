@@ -24,6 +24,7 @@ from .quality import (
     apply_quality_assessment,
     classify_content,
     coerce_asset_provenance,
+    coerce_asset_timing,
 )
 from .render import rewrite_markdown_asset_links
 from .schema import (
@@ -146,6 +147,7 @@ def _asset_from_entry(
             if isinstance(attempt, Mapping)
         ],
         provenance=_asset_provenance(entry),
+        asset_timing=coerce_asset_timing(entry.get("asset_timing")),
     )
 
 

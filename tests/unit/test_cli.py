@@ -168,6 +168,8 @@ class CliTests(unittest.TestCase):
         self.assertIn("Reference rendering mode", help_text)
         self.assertIn("--asset-profile {none,body,all}", help_text)
         self.assertIn("Local content asset scope", help_text)
+        self.assertIn("--require-local-body-assets", help_text)
+        self.assertIn("--require-full-size-body-assets", help_text)
         self.assertIn("--max-tokens MAX_TOKENS", help_text)
         self.assertIn("Markdown rendering budget", help_text)
 
@@ -415,6 +417,7 @@ class CliTests(unittest.TestCase):
                         "none",
                         "--asset-profile",
                         "none",
+                        "--require-full-size-body-assets",
                     ]
                 )
             return exit_code, stdout.getvalue(), stderr.getvalue(), captured
@@ -429,6 +432,8 @@ class CliTests(unittest.TestCase):
         self.assertEqual(legacy[2], "")
         for key in ("modes", "render", "strategy"):
             self.assertEqual(legacy[3][key], explicit[3][key])
+        self.assertTrue(legacy[3]["strategy"].require_local_body_assets)
+        self.assertTrue(legacy[3]["strategy"].require_full_size_body_assets)
         self.assertEqual(legacy[3]["context"].artifact_mode, "none")
         self.assertEqual(explicit[3]["context"].artifact_mode, "none")
 

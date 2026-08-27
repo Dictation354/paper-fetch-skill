@@ -19,17 +19,29 @@ paywalls, entitlements, and publisher access controls will not be bypassed.
 
 ## Network and diagnostic boundaries
 
-Direct HTTP connections are pinned to the public IP addresses validated by the
-remote-URL policy while retaining the original HTTP Host and TLS identity.
-Redirects are revalidated hop by hop, and provider-declared credentials require
-a route host allowlist and are stripped on cross-origin redirects. Browser
-navigation, redirects, and subresources follow the selected browser runtime's
-native networking behavior. Browser cookies retain their standard domain, path,
-secure, and expiry scope when converted for controlled direct requests.
+Direct HTTP requests accept only HTTP(S), standard ports, no URL userinfo, no
+HTTPS-to-HTTP downgrade, and public DNS answers. Every redirect hop is validated
+again; standard sensitive headers are stripped on cross-origin redirects. After
+validation, requests use the shared hostname connection pool. Provider catalog
+domains and sensitive-header declarations describe routing and execution policy,
+but are not an implicit network authorization allowlist. A caller-supplied
+`SafeRemoteUrlPolicy.allowed_hosts` remains fail-closed and is enforced on every
+hop.
+
+Browser navigation, redirects, and subresources follow the selected browser
+runtime's native networking behavior. Browser-owned image, file, and PDF bytes
+may be used for one recovery after a direct 401/403; those bytes still pass
+Content-Length/actual-byte, MIME, pixel, per-article budget, cancellation,
+exclusive staging, and atomic-publication checks. Browser cookies retain their
+standard domain, path, secure, and expiry scope when converted for a controlled
+direct request.
 
 Structured and human-readable logging centrally removes URL query data and
 standard or provider-specific credentials. MCP requests share one routing
 handler whose request target is isolated with context-local state.
+Live-test environment mappings render names only. CI scans every artifact and
+release upload candidate for raw and URL-encoded configured secret values; a
+match reports only the variable name and file path and blocks publication.
 
 ## Dependency policy
 

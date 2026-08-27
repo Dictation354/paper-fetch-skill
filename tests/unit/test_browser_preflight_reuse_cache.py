@@ -212,6 +212,57 @@ def test_preflight_cache_accepts_exact_doi_resolver_target() -> None:
     assert hit.image_payload is None
 
 
+def test_empty_shell_retry_requires_changed_candidate_profile_or_storage() -> None:
+    current_state = {"state_fingerprint": "same", "storage_state_changed": False}
+    fast_policy = html_extraction.BrowserHtmlFetchPolicy(
+        disable_media=True,
+        wait_seconds=0,
+        warm_wait_seconds=0,
+        max_timeout_ms=15000,
+        attempt=1,
+    )
+    html_result = _accepted_html("https://pubs.acs.org/doi/10.1021/example")
+
+    profile_retry = html_extraction._empty_shell_retry_decision(
+        policy=fast_policy,
+        html_candidates=[html_result.source_url],
+        html_result=html_result,
+        page_state=current_state,
+        prior_attempts=[],
+    )
+    identical_stop = html_extraction._empty_shell_retry_decision(
+        policy=fast_policy,
+        html_candidates=[html_result.source_url],
+        html_result=html_result,
+        page_state=current_state,
+        prior_attempts=[{"page_state": dict(current_state)}],
+    )
+    candidate_retry = html_extraction._empty_shell_retry_decision(
+        policy=replace(fast_policy, disable_media=False),
+        html_candidates=[
+            html_result.source_url,
+            "https://pubs.acs.org/doi/full/10.1021/example",
+        ],
+        html_result=html_result,
+        page_state={"state_fingerprint": "changed", "storage_state_changed": False},
+        prior_attempts=[],
+    )
+
+    assert profile_retry == {
+        "retry": True,
+        "reason": "browser_fetch_profile_changed",
+        "attempt": 1,
+        "candidate_changed": False,
+        "profile_changed": True,
+        "storage_state_changed": False,
+        "identical_page_state": False,
+    }
+    assert identical_stop["retry"] is False
+    assert identical_stop["reason"] == "identical_route_profile_storage_and_page"
+    assert candidate_retry["retry"] is True
+    assert candidate_retry["reason"] == "candidate_url_changed"
+
+
 def test_pnas_preflight_then_fetch_reuses_html_without_second_navigation(
     monkeypatch,
 ) -> None:
@@ -390,7 +441,7 @@ def test_doi_route_hint_is_exact_and_rejects_non_provider_hosts() -> None:
     )
 
 
-def test_provider_resource_policies_do_not_widen_untouched_profiles() -> None:
+def test_provider_resource_policies_keep_optimized_and_untouched_boundaries() -> None:
     expected = frozenset({"image", "font", "media"})
     optimized_profiles = (
         pnas_provider.PNAS_BROWSER_PROFILE,
@@ -401,6 +452,7 @@ def test_provider_resource_policies_do_not_widen_untouched_profiles() -> None:
         acs.ACS_BROWSER_PROFILE,
         iop.IOP_BROWSER_PROFILE,
         tandf.TANDF_BROWSER_PROFILE,
+        science.SCIENCE_BROWSER_PROFILE,
     )
     assert all(
         profile.blocked_resource_types == expected for profile in optimized_profiles
@@ -418,11 +470,9 @@ def test_provider_resource_policies_do_not_widen_untouched_profiles() -> None:
     assert pnas_provider.PNAS_BROWSER_PROFILE.html_readiness_budget_seconds == 8.0
     assert pnas_provider.PNAS_BROWSER_PROFILE.doi_route_hint is True
     assert ams.AMS_BROWSER_PROFILE.doi_route_hint is True
-    assert science.SCIENCE_BROWSER_PROFILE.blocked_resource_types == frozenset()
-    assert science.SCIENCE_BROWSER_PROFILE.preflight_html_reuse is False
     assert science.SCIENCE_BROWSER_PROFILE.direct_figure_page_fallback is False
     assert wiley.WILEY_BROWSER_PROFILE.blocked_resource_types == frozenset()
-    assert wiley.WILEY_BROWSER_PROFILE.preflight_html_reuse is False
+    assert wiley.WILEY_BROWSER_PROFILE.preflight_html_reuse is True
     assert aip_provider.AIP_BROWSER_PROFILE.blocked_resource_types == frozenset()
     assert aip_provider.AIP_BROWSER_PROFILE.preflight_html_reuse is False
     assert aip_provider.AIP_BROWSER_PROFILE.persistent_storage_state is False

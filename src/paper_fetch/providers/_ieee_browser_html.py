@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import contextlib
 import time
 from typing import Any
@@ -10,17 +9,10 @@ from typing import Any
 from ..extraction.html.signals import detect_html_block, summarize_visible_html
 from ..failure import FailureDiagnostics
 from ..http import RequestCancelledError, redact_url_for_diagnostics
-from ..http.headers import header_value
-from ..quality.html_availability import (
-    HtmlQualityAssessor,
-    availability_failure_message,
-)
 from ..reason_codes import ERROR, NO_RESULT
 from ..runtime import RuntimeContext
 from ..runtime_browser import browser_page_user_agent
-from ..tracing import fulltext_marker
 from ..utils import normalize_text
-from . import _ieee_html as ieee_html
 from . import _ieee_metadata as ieee_metadata
 from . import _ieee_url as ieee_url
 from ._ieee_browser_readiness import (
@@ -35,9 +27,11 @@ from ._ieee_browser_readiness import (
     _playwright_timeout_error,
     _unready_browser_failure,
 )
-from ._payloads import (
-    build_provider_payload,
-    provider_failure_diagnostics as _provider_failure_diagnostics,
+from ._ieee_browser_payload import (
+    IeeeAssetExtractor,
+    IeeeBrowserPayloadRequest,
+    IeeeBrowserPayloadSource,
+    build_ieee_browser_payload,
 )
 from .base import ProviderFailure, RawFulltextPayload
 from .browser_workflow.shared import BROWSER_HTML_BLOCKED_RESOURCE_TYPES
@@ -102,12 +96,19 @@ def fetch_ieee_browser_html_payload(
     direct_html_failure: ProviderFailure | None,
     context: RuntimeContext,
     runtime_config: BrowserRuntimeConfig,
-    extraction_assets: Callable[
-        [ieee_html.IeeeHtmlExtraction, ieee_metadata.IeeeLandingAttempt],
-        list[dict[str, Any]],
-    ],
+    extraction_assets: IeeeAssetExtractor,
 ) -> RawFulltextPayload:
     PlaywrightTimeoutError = _playwright_timeout_error(runtime_config)
+    payload_request = IeeeBrowserPayloadRequest(
+        provider_name=provider_name,
+        landing_attempt=landing_attempt,
+        document_url=document_url,
+        rest_url=rest_url,
+        direct_html_failure=direct_html_failure,
+        context=context,
+        runtime_config=runtime_config,
+        extraction_assets=extraction_assets,
+    )
 
     article_number = landing_attempt.article_number
     browser_session_scope = None
@@ -305,56 +306,23 @@ def fetch_ieee_browser_html_payload(
                 fetcher=f"{runtime_config.backend}_ieee_html",
             ),
         )
-        extraction = ieee_html._extract_ieee_html(
-            html_text,
-            source_url,
-            metadata=landing_attempt.merged_metadata,
-            context=context,
-        )
-        diagnostics = HtmlQualityAssessor("ieee").assess(
-            extraction.markdown_text,
-            landing_attempt.merged_metadata,
-            html_text=extraction.html_text,
-            title=str(landing_attempt.merged_metadata.get("title") or ""),
-            requested_url=(
-                rest_url if payload_source == "rest_response" else document_url
-            ),
-            final_url=source_url,
-            response_status=response_status,
-            section_hints=extraction.section_hints,
-        )
-        if not diagnostics.accepted:
-            raise BrowserRuntimeFailure(
-                "browser_html_quality_failed",
-                availability_failure_message(diagnostics),
-                details={
-                    "stage": "quality",
-                    "availability_diagnostics": diagnostics.to_dict(),
-                },
-            )
-        context.raise_if_cancelled()
-        content_type = header_value(response_headers, "content-type", "text/html")
-        extracted_assets = extraction_assets(extraction, landing_attempt)
-        return build_provider_payload(
-            provider=provider_name,
-            route_kind="html",
-            route_name="browser_html",
-            source_url=source_url,
-            content_type=content_type,
-            body=extraction.html_text.encode("utf-8"),
-            markdown_text=extraction.markdown_text,
-            merged_metadata=landing_attempt.merged_metadata,
-            diagnostics={
-                "availability_diagnostics": diagnostics.to_dict(),
-                "browser_html": {
+        return build_ieee_browser_payload(
+            payload_request,
+            IeeeBrowserPayloadSource(
+                html_text=html_text,
+                source_url=source_url,
+                requested_url=(
+                    rest_url if payload_source == "rest_response" else document_url
+                ),
+                response_status=response_status,
+                response_headers=response_headers,
+                browser_context_seed=browser_context_seed,
+                browser_diagnostics={
                     "fetcher": f"{runtime_config.backend}_ieee_html",
                     "backend": runtime_config.backend,
                     "payload_source": payload_source,
-                    "document_url": redact_url_for_diagnostics(document_url),
-                    "rest_url": redact_url_for_diagnostics(rest_url),
                     "final_url": redact_url_for_diagnostics(browser_final_url),
                     "navigation_status": navigation_status,
-                    "response_status": response_status,
                     "rest_response_count": rest_selection.response_count,
                     "invalid_rest_response_count": (
                         rest_selection.invalid_response_count
@@ -365,25 +333,12 @@ def fetch_ieee_browser_html_payload(
                         0,
                         _remaining_timeout_ms(context, runtime_config.timeout_ms),
                     ),
-                    "direct_html_failure": _provider_failure_diagnostics(
-                        direct_html_failure
-                    ),
                 },
-                "extraction": {
-                    "abstract_sections": extraction.abstract_sections,
-                    "section_hints": extraction.section_hints,
-                    "marker_counts": extraction.marker_counts,
-                },
-            },
-            reason=f"Downloaded full text from the IEEE Xplore {runtime_config.backend} HTML fallback route.",
-            fetcher=f"{runtime_config.backend}_ieee_html",
-            browser_context_seed=browser_context_seed,
-            extracted_assets=extracted_assets,
-            trace_markers=[
-                fulltext_marker("ieee", "fail", route="html"),
-                fulltext_marker("ieee", "ok", route="browser_html"),
-                fulltext_marker("ieee", "ok", route="html"),
-            ],
+                reason=(
+                    "Downloaded full text from the IEEE Xplore "
+                    f"{runtime_config.backend} HTML fallback route."
+                ),
+            ),
         )
     except BrowserRuntimeFailure as exc:
         raise _browser_failure_as_provider_failure(

@@ -234,6 +234,29 @@ def is_empty_article_shell(
     )
 
 
+def _selected_http_access_status_review(value: Any) -> dict[str, Any] | None:
+    if not isinstance(value, Mapping):
+        return None
+    return {
+        key: value[key]
+        for key in (
+            "status",
+            "body_ready",
+            "doi_evidence_present",
+            "doi_evidence_sources",
+            "doi_match",
+            "doi_match_sources",
+            "blocking_signals",
+            "candidate_confirmed",
+            "status_override_applied",
+            "fulltext_acceptance",
+            "accepted",
+            "reason",
+        )
+        if key in value
+    }
+
+
 def _selected_browser_runtime_trace(value: Any) -> dict[str, Any] | None:
     if not isinstance(value, Mapping):
         return None
@@ -249,6 +272,10 @@ def _selected_browser_runtime_trace(value: Any) -> dict[str, Any] | None:
             "deadline_exhausted",
             "browser_context_seed",
             "storage_state_save",
+            "profile_fingerprint",
+            "storage_state_fingerprint",
+            "page_events",
+            "challenge_signals",
         )
         if key in value
     }
@@ -258,36 +285,43 @@ def _selected_browser_runtime_trace(value: Any) -> dict[str, Any] | None:
         for candidate in candidates:
             if not isinstance(candidate, Mapping):
                 continue
-            safe_candidates.append(
-                {
-                    key: candidate[key]
-                    for key in (
-                        "url",
-                        "url_sha256",
-                        "final_url",
-                        "final_url_sha256",
-                        "status",
-                        "navigation_seconds",
-                        "dom_readiness_seconds",
-                        "dom_readiness_attempted",
-                        "dom_readiness_ready",
-                        "dom_readiness_selector",
-                        "dom_readiness_text_length",
-                        "dom_readiness_paragraph_count",
-                        "dom_readiness_heading_count",
-                        "selector_readiness_attempted",
-                        "selector_readiness_ready",
-                        "selector_readiness_required",
-                        "selector_readiness_expected_text",
-                        "selector_readiness_seconds",
-                        "duration_seconds",
-                        "result",
-                        "block_reason",
-                        "error",
-                    )
-                    if key in candidate
-                }
+            safe_candidate = {
+                key: candidate[key]
+                for key in (
+                    "url",
+                    "url_sha256",
+                    "final_url",
+                    "final_url_sha256",
+                    "status",
+                    "main_document_response",
+                    "storage_state_fingerprint",
+                    "navigation_seconds",
+                    "dom_readiness_seconds",
+                    "dom_readiness_attempted",
+                    "dom_readiness_ready",
+                    "dom_readiness_selector",
+                    "dom_readiness_text_length",
+                    "dom_readiness_paragraph_count",
+                    "dom_readiness_heading_count",
+                    "dom_readiness_fingerprint_present",
+                    "selector_readiness_attempted",
+                    "selector_readiness_ready",
+                    "selector_readiness_required",
+                    "selector_readiness_expected_text",
+                    "selector_readiness_seconds",
+                    "duration_seconds",
+                    "result",
+                    "block_reason",
+                    "error",
+                )
+                if key in candidate
+            }
+            status_review = _selected_http_access_status_review(
+                candidate.get("http_access_status_review")
             )
+            if status_review is not None:
+                safe_candidate["http_access_status_review"] = status_review
+            safe_candidates.append(safe_candidate)
         trace["candidates"] = safe_candidates
     return trace
 
@@ -305,6 +339,8 @@ def _selected_page_details(details: Mapping[str, Any] | None) -> dict[str, Any]:
             "selector",
             "body_metrics",
             "availability_diagnostics",
+            "page_state",
+            "retry_decision",
         )
         if key in payload
     }

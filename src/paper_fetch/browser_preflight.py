@@ -43,7 +43,9 @@ from .providers.browser_workflow.shared import (
     BrowserWorkflowDeps,
     default_browser_workflow_deps,
 )
-from .providers.browser_workflow.reuse_cache import mark_browser_preflight_producer
+from .providers.browser_workflow.reuse_cache import (
+    mark_browser_preflight_producer,
+)
 from .providers.registry import build_clients
 from .reason_codes import (
     BROWSER_CONTEXT_CREATE_FAILED,
@@ -635,6 +637,12 @@ def _preflight_generic_browser_route(
                 runtime_context=context,
             )
             diagnostics["storage_state_save"] = save_result
+            runtime_trace = diagnostics.get("browser_runtime_trace")
+            runtime_trace = (
+                dict(runtime_trace) if isinstance(runtime_trace, Mapping) else {}
+            )
+            runtime_trace["storage_state_save"] = dict(save_result)
+            diagnostics["browser_runtime_trace"] = runtime_trace
             if not save_result.get("saved"):
                 return _failure_result(
                     provider_key,
@@ -650,6 +658,11 @@ def _preflight_generic_browser_route(
                     diagnostics=diagnostics,
                     diagnostic_context=context,
                 )
+            html_result = replace(
+                html_result,
+                diagnostics=diagnostics,
+                staged_storage_state=None,
+            )
         return _ready_result(
             provider_key,
             target_url=target.url,

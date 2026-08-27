@@ -14,7 +14,7 @@ from scripts.prepare_release_assets import (
 )
 
 
-VERSION = "5.5.0"
+VERSION = "5.6.0"
 
 
 def _write_stable_inputs(root: Path) -> None:

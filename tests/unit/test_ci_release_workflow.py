@@ -253,22 +253,58 @@ def test_regular_ci_includes_non_science_browser_performance_regressions() -> No
     )
     for node in (
         "tests/unit/test_browser_preflight_reuse_cache.py",
+        "test_acs_and_aip_direct_asset_probe_use_twenty_second_zero_retry_policy",
+        "test_browser_recovery_circuit_is_host_scoped_concurrent_and_article_local",
+        "test_direct_then_browser_probes_first_and_shares_host_circuit_on_caller_thread",
         "test_direct_first_figure_policy_skips_viewer_when_download_url_exists",
         "test_silverchair_figure_page_resolution_stays_on_camoufox_owner_thread",
         "test_provider_resource_policy_blocks_only_configured_heavy_types",
         "test_pnas_body_readiness_uses_bounded_budget_and_keeps_final_html",
+        "test_wiley_body_readiness_requires_two_identical_ready_fingerprints",
+        "test_open_wiley_context_without_storage_state_has_no_state_capability_use",
+        "test_wiley_403_confirmed_body_and_identity_preserves_status",
+        "test_wiley_403_review_rejects_unconfirmed_candidate",
+        "test_wiley_403_failure_advances_to_next_candidate",
+        "test_wiley_all_http_status_candidates_fail_with_reviews",
+        "test_wiley_confirmed_403_html_passes_markdown_and_availability",
+        "test_wiley_confirmed_403_extraction_failure_continues_next_candidate",
+        "test_wiley_http_access_status_review_is_allowlisted_and_secret_safe",
         "test_wiley_body_readiness_defers_login_navigation_paywall_text",
         "test_wiley_preflight_accepts_leading_login_navigation_after_body_readiness",
         "test_figure_page_fetches_reuse_one_runtime_context_and_page",
         "test_acs_asset_extraction_promotes_largest_srcset_rendition",
         "test_annualreviews_asset_extraction_promotes_largest_srcset_rendition",
+        "test_aip_asset_extraction_prefers_largest_official_srcset_rendition",
+        "test_html_route_upgrades_existing_preview_from_official_source_archive",
+        "test_copernicus_promotes_official_original_and_audits_preview_only",
         "test_mdpi_empty_intermediate_candidate_retries_next_html_before_pdf",
         "test_iop_index_cache_dedupes_signed_indexes_and_attachment_signatures",
+        "test_tandf_article_assets_keep_body_figures_and_scope_supplement",
         "test_tandf_batch_results_keep_input_order_and_failed_table_fallback",
         "test_tandf_table_preparation_obeys_exhausted_total_deadline",
         "test_ieee_multimedia_discovery_memoizes_redacted_url_per_runtime",
     ):
         assert workflow.count(node) >= 2
+
+
+def test_regular_ci_targets_network_rollback_and_strict_asset_regressions() -> None:
+    workflow = _workflow_text("verify.yml")
+
+    assert "Network rollback and strict asset acceptance regressions" in workflow
+    for node in (
+        "test_safe_remote_url_policy.py",
+        "test_browser_image_payload.py",
+        "test_pdf_browser_owned_download_url_uses_saved_bytes_without_direct_replay",
+        "test_html_asset_download_uses_one_browser_recovery_after_direct_403",
+        "test_observed_734_byte_http_200_head_only_shell_is_classified",
+        "test_empty_shell_retry_requires_changed_candidate_profile_or_storage",
+        "test_strict_local_assets_degrade_acceptance_without_failing_fulltext",
+        "test_strict_full_size_implies_local_and_rejects_accepted_preview",
+        "test_cli_manifest_fingerprint_and_acceptance_include_strict_asset_flags",
+        "test_artifact_secret_scan.py",
+        "test_source_development_ignores_unrelated_distribution_and_path_cli",
+    ):
+        assert node in workflow
 
 
 def test_release_emits_sbom_checksums_and_build_provenance() -> None:

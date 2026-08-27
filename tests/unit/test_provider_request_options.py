@@ -31,6 +31,7 @@ from paper_fetch.providers.springer import SpringerClient
 from paper_fetch.providers.wiley import WileyClient
 from paper_fetch.runtime import RuntimeContext
 from tests.unit._browser_workflow_deps import browser_workflow_deps
+from tests.unit._atypon_browser_workflow_provider_support import png_header
 from tests.unit._paper_fetch_support import RecordingTransport
 
 
@@ -68,7 +69,7 @@ class _FakeQueuedImagePage:
 
 
 def png_body(label: bytes) -> bytes:
-    return b"\x89PNG\r\n\x1a\n" + label
+    return png_header(100, 100) + label
 
 
 def elsevier_body_asset_xml(urls: list[str]) -> bytes:
@@ -811,13 +812,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(result["assets"], [])
         self.assertEqual(len(result["asset_failures"]), 1)
         self.assertEqual(result["asset_failures"][0]["reason"], "cloudflare_challenge")
-        self.assertEqual(result["asset_failures"][0]["status"], 403)
-        self.assertEqual(
-            result["asset_failures"][0]["title_snippet"], "Just a moment..."
-        )
-        self.assertIn(
-            "Checking your browser", result["asset_failures"][0]["body_snippet"]
-        )
+        self.assertNotIn("status", result["asset_failures"][0])
         self.assertNotIn("recovery_attempts", result["asset_failures"][0])
 
     def test_elsevier_all_asset_profile_maps_supplementary_download_to_unified_fields(
@@ -1127,14 +1122,12 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             page, "https://example.test/cdn/figure.jpg"
         )
 
-        self.assertIsNotNone(result)
-        assert result is not None
-        self.assertEqual(
-            result["_paper_fetch_browser_stream_url"],
-            "https://example.test/cdn/figure.jpg",
-        )
-        self.assertEqual(page.evaluate_calls, [])
-        self.assertIsNone(fetcher.failure_for("https://example.test/cdn/figure.jpg"))
+        self.assertIsNone(result)
+        self.assertEqual(len(page.evaluate_calls), 1)
+        failure = fetcher.failure_for("https://example.test/cdn/figure.jpg")
+        self.assertIsNotNone(failure)
+        assert failure is not None
+        self.assertEqual(failure["reason"], "image_fetch_timeout")
 
     def test_no_direct_sync_playwright_in_fetchers(self) -> None:
         self.assertNotIn("sync_playwright(", inspect.getsource(fetcher_context))
@@ -1238,11 +1231,12 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         result = fetcher._payload_from_page_fetch_url(page, image_url)
 
-        self.assertIsNotNone(result)
-        assert result is not None
-        self.assertEqual(result["_paper_fetch_browser_stream_url"], image_url)
-        self.assertEqual(page.evaluate_calls, [])
-        self.assertIsNone(fetcher.failure_for(image_url))
+        self.assertIsNone(result)
+        self.assertEqual(len(page.evaluate_calls), 1)
+        failure = fetcher.failure_for(image_url)
+        self.assertIsNotNone(failure)
+        assert failure is not None
+        self.assertEqual(failure["reason"], "non_image_response")
 
     def test_browser_image_fetcher_prefers_warmed_article_image_before_direct_request(
         self,
@@ -1283,10 +1277,10 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         self.assertIsNotNone(result)
         assert result is not None
-        self.assertNotIn("body", result)
-        self.assertEqual(result["headers"]["content-type"], "image/*")
-        self.assertEqual(result["_paper_fetch_browser_stream_url"], image_url)
-        self.assertEqual(page.evaluate_calls, [])
+        self.assertEqual(result["body"], image_body)
+        self.assertEqual(result["headers"]["content-type"], "image/png")
+        self.assertEqual(result["url"], image_url)
+        self.assertEqual(len(page.evaluate_calls), 1)
 
     def test_browser_image_fetcher_falls_back_when_warmed_article_lacks_target(
         self,
@@ -1332,9 +1326,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         self.assertIsNotNone(result)
         assert result is not None
-        self.assertEqual(result["_paper_fetch_browser_stream_url"], image_url)
-        mocked_page_fetch.assert_not_called()
-        mocked_direct.assert_not_called()
+        self.assertEqual(result, direct_payload)
+        mocked_page_fetch.assert_called_once_with(page, image_url)
+        mocked_direct.assert_called_once_with(image_url)
         self.assertEqual(fetcher.failure_for(image_url), None)
 
     def test_browser_image_fetcher_fetches_unloaded_article_target_from_page_context(
@@ -1372,9 +1366,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         self.assertIsNotNone(result)
         assert result is not None
-        self.assertNotIn("body", result)
-        self.assertEqual(result["_paper_fetch_browser_stream_url"], image_url)
-        self.assertEqual(page.evaluate_calls, [])
+        self.assertEqual(result["body"], image_body)
+        self.assertEqual(result["url"], image_url)
+        self.assertEqual(len(page.evaluate_calls), 2)
 
     def test_browser_image_fetcher_records_challenge_from_article_page_fetch(
         self,
@@ -1410,10 +1404,12 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         result = fetcher._payload_from_warmed_article_image(page, image_url)
 
-        self.assertIsNotNone(result)
-        assert result is not None
-        self.assertEqual(result["_paper_fetch_browser_stream_url"], image_url)
-        self.assertEqual(page.evaluate_calls, [])
+        self.assertIsNone(result)
+        self.assertEqual(len(page.evaluate_calls), 2)
+        failure = fetcher.failure_for(image_url)
+        self.assertIsNotNone(failure)
+        assert failure is not None
+        self.assertEqual(failure["reason"], "cloudflare_challenge")
 
     def test_browser_image_payload_uses_loaded_image_when_fetch_is_challenged(
         self,
@@ -1453,10 +1449,10 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         self.assertIsNotNone(result)
         assert result is not None
-        self.assertNotIn("body", result)
-        self.assertEqual(result["headers"]["content-type"], "image/*")
+        self.assertEqual(result["body"], image_body)
+        self.assertEqual(result["headers"]["content-type"], "image/png")
         self.assertEqual(result["dimensions"], {"width": 500, "height": 198})
-        self.assertEqual(page.evaluate_calls, [])
+        self.assertEqual(len(page.evaluate_calls), 2)
 
     def test_browser_loaded_image_canvas_failure_reasons_are_preserved(self) -> None:
         image_url = "blob:https://example.test/browser-only"
@@ -1487,9 +1483,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             self.assertIsNone(result)
             self.assertEqual(
                 fetcher.failure_for(image_url)["reason"],
-                "browser_stream_unavailable",
+                reason,
             )
-            self.assertEqual(page.evaluate_calls, [])
+            self.assertEqual(len(page.evaluate_calls), 1)
 
     def test_browser_loaded_image_failure_merges_existing_diagnostic(self) -> None:
         image_url = "https://example.test/cdn/figure.png"
@@ -1517,17 +1513,13 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             page, {"src": image_url, "width": 500, "height": 198}
         )
 
-        self.assertIsNotNone(result)
-        assert result is not None
-        self.assertNotIn("body", result)
-        self.assertEqual(
-            fetcher.failure_for(image_url),
-            {
-                "source_url": image_url,
-                "status": 403,
-                "reason": "cloudflare_challenge",
-            },
-        )
+        self.assertIsNone(result)
+        failure = fetcher.failure_for(image_url)
+        self.assertIsNotNone(failure)
+        assert failure is not None
+        self.assertEqual(failure["status"], 403)
+        self.assertEqual(failure["reason"], "canvas_tainted")
+        self.assertEqual(failure["canvas_error"], "SecurityError")
 
     def test_browser_image_document_payload_requires_image_payload(self) -> None:
         result = browser_runtime.BrowserFetchedHtml(
@@ -1560,10 +1552,12 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             browser_context_seed={},
             screenshot_b64=None,
             image_payload={
-                "streamOnly": True,
                 "status": 200,
                 "url": "https://example.test/figure.png",
                 "contentType": "image/png",
+                "bodyB64": base64.b64encode(png_body(b"browser-export")).decode(
+                    "ascii"
+                ),
                 "width": 40,
                 "height": 30,
             },
@@ -1573,11 +1567,8 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
         self.assertIsNotNone(payload)
         assert payload is not None
-        self.assertNotIn("body", payload)
-        self.assertEqual(
-            payload["_paper_fetch_browser_stream_url"],
-            "https://example.test/figure.png",
-        )
+        self.assertEqual(payload["body"], png_body(b"browser-export"))
+        self.assertEqual(payload["url"], "https://example.test/figure.png")
         self.assertEqual(payload["dimensions"], {"width": 40, "height": 30})
 
     def test_browser_image_document_payload_rejects_invalid_payload(self) -> None:
@@ -1592,7 +1583,6 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             browser_context_seed={},
             screenshot_b64=None,
             image_payload={
-                "streamOnly": True,
                 "status": 200,
                 "url": "https://example.test/figure.png",
                 "contentType": "text/html",
@@ -1619,10 +1609,10 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             browser_context_seed={},
             screenshot_b64=None,
             image_payload={
-                "streamOnly": True,
                 "status": 200,
                 "url": "https://example.test/figure.svg",
                 "contentType": "image/svg+xml",
+                "bodyB64": base64.b64encode(svg_body).decode("ascii"),
                 "width": 0,
                 "height": 0,
             },
@@ -1633,11 +1623,8 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertIsNotNone(payload)
         assert payload is not None
         self.assertEqual(payload["headers"]["content-type"], "image/svg+xml")
-        self.assertNotIn("body", payload)
-        self.assertEqual(
-            payload["_paper_fetch_browser_stream_url"],
-            "https://example.test/figure.svg",
-        )
+        self.assertEqual(payload["body"], svg_body)
+        self.assertEqual(payload["url"], "https://example.test/figure.svg")
 
     def test_browser_image_document_payload_rejects_svg_content_type_with_html_body(
         self,
@@ -1726,7 +1713,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                     return {
                         "status_code": 200,
                         "headers": {"content-type": "image/png"},
-                        "body": b"\x89PNG\r\n\x1a\nparallel",
+                        "body": png_body(b"parallel"),
                         "url": image_url,
                     }
                 finally:
@@ -1795,7 +1782,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             return {
                 "status_code": 200,
                 "headers": {"content-type": "image/png"},
-                "body": b"\x89PNG\r\n\x1a\nsingle-worker",
+                "body": png_body(b"single-worker"),
                 "url": current_url,
             }
 
@@ -1849,7 +1836,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 return {
                     "status_code": 200,
                     "headers": {"content-type": "image/png"},
-                    "body": b"\x89PNG\r\n\x1a\ncaller-thread",
+                    "body": png_body(b"caller-thread"),
                     "url": current_url,
                 }
 
@@ -1908,7 +1895,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 return {
                     "status_code": 200,
                     "headers": {"content-type": "image/png"},
-                    "body": b"\x89PNG\r\n\x1a\nworker-success",
+                    "body": png_body(b"worker-success"),
                     "url": current_url,
                 }
 
@@ -2124,7 +2111,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 call.kwargs["asset_download_concurrency"]
                 for call in mocked_download_assets.call_args_list
             ],
-            [6, 6],
+            [1, 6],
         )
         self.assertEqual(
             [call.args[0] for call in mocked_download_assets.call_args_list],
@@ -2204,7 +2191,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 call.kwargs["asset_download_concurrency"]
                 for call in mocked_download_assets.call_args_list
             ],
-            [6, 6],
+            [1, 6],
         )
         self.assertEqual(
             [call.args[0] for call in mocked_download_assets.call_args_list],
@@ -2396,30 +2383,31 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 png_body(b"preview-image"),
             )
 
-    def test_html_asset_download_retries_seeded_full_size_before_preview(self) -> None:
+    def test_html_asset_download_uses_one_browser_recovery_after_direct_403(
+        self,
+    ) -> None:
         large_url = "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932570/garg1-large.gif"
         preview_url = "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932570/garg1-small.gif"
         landing_url = "https://ieeexplore.ieee.org/document/10932570/"
-        opener_builder = mock.Mock(side_effect=[object(), object()])
-        requested_urls: list[str] = []
-
-        def opener_requester(opener, url, **kwargs):
-            del opener
-            requested_urls.append(url)
-            self.assertEqual(kwargs["headers"]["Referer"], landing_url)
-            if len(requested_urls) == 1:
-                raise RequestFailure(403, "Forbidden", url=url)
-            return {
+        transport = RecordingTransport(
+            {
+                ("GET", large_url): RequestFailure(403, "Forbidden", url=large_url),
+            }
+        )
+        browser_fetcher = mock.Mock(
+            return_value={
                 "status_code": 200,
                 "headers": {"content-type": "image/png"},
-                "body": png_body(b"large-after-seed-refresh"),
-                "url": url,
+                "body": png_body(b"large-from-browser"),
+                "url": large_url,
             }
+        )
+        browser_fetcher.failure_for = mock.Mock(return_value=None)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             result = html_assets.download_assets(
                 html_assets.FIGURE_KIND,
-                RecordingTransport({}),
+                transport,
                 article_id="10.1109/example",
                 assets=[
                     {
@@ -2437,20 +2425,20 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 asset_profile="body",
                 headers={"Referer": landing_url},
                 seed_urls=[landing_url],
-                cookie_opener_builder=opener_builder,
-                opener_requester=opener_requester,
+                image_document_fetcher=browser_fetcher,
                 asset_download_concurrency=1,
+                fetch_policy="direct_then_browser",
             )
             saved_bytes = Path(result["assets"][0]["path"]).read_bytes()
 
-        self.assertEqual(requested_urls, [large_url, large_url])
-        self.assertEqual(opener_builder.call_count, 2)
+        self.assertEqual([call["url"] for call in transport.calls], [large_url])
+        browser_fetcher.assert_called_once()
         self.assertEqual(len(result["assets"]), 1)
         self.assertEqual(result["assets"][0]["download_tier"], "full_size")
         self.assertEqual(result["assets"][0]["full_size_url"], large_url)
         self.assertEqual(result["assets"][0]["preview_url"], preview_url)
         self.assertEqual(result["assets"][0]["original_url"], large_url)
-        self.assertEqual(saved_bytes, png_body(b"large-after-seed-refresh"))
+        self.assertEqual(saved_bytes, png_body(b"large-from-browser"))
 
     def test_html_asset_download_preserves_mapping_when_seeded_preview_fallback_succeeds(
         self,
@@ -2458,7 +2446,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         large_url = "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932570/garg2-large.gif"
         preview_url = "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932570/garg2-small.gif"
         landing_url = "https://ieeexplore.ieee.org/document/10932570/"
-        opener_builder = mock.Mock(side_effect=[object(), object(), object()])
+        opener_builder = mock.Mock(side_effect=[object(), object()])
         requested_urls: list[str] = []
 
         def opener_requester(opener, url, **kwargs):
@@ -2467,13 +2455,6 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             self.assertEqual(kwargs["headers"]["Referer"], landing_url)
             if len(requested_urls) == 1:
                 raise RequestFailure(403, "Forbidden", url=url)
-            if len(requested_urls) == 2:
-                return {
-                    "status_code": 200,
-                    "headers": {"content-type": "text/html; charset=utf-8"},
-                    "body": b"<html><title>Access denied</title></html>",
-                    "url": url,
-                }
             return {
                 "status_code": 200,
                 "headers": {"content-type": "image/png"},
@@ -2508,8 +2489,8 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             )
             saved_bytes = Path(result["assets"][0]["path"]).read_bytes()
 
-        self.assertEqual(requested_urls, [large_url, large_url, preview_url])
-        self.assertEqual(opener_builder.call_count, 3)
+        self.assertEqual(requested_urls, [large_url, preview_url])
+        self.assertEqual(opener_builder.call_count, 2)
         self.assertEqual(result["asset_failures"], [])
         self.assertEqual(len(result["assets"]), 1)
         self.assertEqual(result["assets"][0]["download_tier"], "preview")

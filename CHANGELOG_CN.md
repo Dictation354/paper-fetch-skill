@@ -6,12 +6,14 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 5.6.0 - 2026-08-27
+
 ### 修复——技能完整性、可复现测试与复杂度债务
 
 - 基于精确排序的普通文件清单，为静态 skill bundle 生成稳定的聚合 SHA-256/版本，实现内容寻址。源码、staging、离线 manifest 与宿主机已安装副本现在使用同一 verifier 拒绝缺失、多余、已更改、符号链接及特殊条目；规范的 `agents/openai.yaml` 改为随源码分发，不再因重新生成而形成永久漂移。
 - 为 Codex/Claude/Antigravity 共用安装器新增严格只读的 `--check` 模式，并正确查找 Codex 用户/项目作用域。源码与离线 `doctor` 诊断现在会对比仓库/随包 skill 和当前启用的 Codex 副本，公开预期/实际内容版本，并在启用的 skill 缺失或漂移时令整体 readiness 失败。
 - 在仓库指引、生成的 onboarding 与 CI 中，将常规测试命令统一为 `PYTHONPATH=src uv run python -m pytest ...`。当环境中的 MCP 主版本或必需的 trafilatura API 行为不兼容时，Pytest 现在会在 collection 前失败，并给出可直接执行的冻结 `uv` 修复命令。
-- 通过归组既有 request/runtime state 并抽取保持行为不变的 browser、PDF、asset、HTTP stream、cache 与 MCP batch helper，在不放宽 threshold、ignore 或 suppression 的情况下消除全部 24 个复杂度回归。历史超预算清单从 55 个 symbol 单调降至 47 个，其中 Playwright C901 从 44 降至 41。
+- 通过归组既有 request/runtime state 并抽取保持行为不变的 browser、PDF、asset、HTTP stream、cache 与 MCP batch helper，在不放宽 threshold、ignore 或 suppression 的情况下消除全部 24 个复杂度回归。历史超预算清单从 55 个 symbol 单调降至 47 个，其中 Playwright C901 从 44 降至 40。
 
 ### 修复——经验证的构建与发布供应链
 
@@ -25,10 +27,10 @@
 
 ### 安全——网络、凭据与日志边界
 
-- 将 urllib3 direct connection 固定到 `SafeRemoteUrlPolicy` 选定的公网 IP，同时保留原始 Host、TLS SNI 与证书 hostname；每个 redirect hop 都会独立解析和验证。
-- 新增由 catalog 派生的 provider-sensitive header request policy，以及强制性的 credential route host allowlist。Elsevier、Wiley 与 Crossref 自定义凭据在同源 redirect 中保留，在跨源 301/302/303/307/308 response 中移除。
+- 恢复按 hostname 复用 urllib3 连接池，同时保留既有 `SafeRemoteUrlPolicy` 基线：每个 redirect hop 都检查 HTTP(S)、80/443、公网 DNS、无 userinfo、无 HTTPS downgrade，并在跨源重定向时剥离标准敏感 header。
+- Provider catalog 的 host 与 sensitive-header 声明不再自动成为网络授权。调用方显式给出的 `allowed_hosts` 仍按 fail-closed 执行；未请求 allowlist 时，Royal Society、IOP 与 AIP 的公网资产 CDN 使用基础 URL 策略。
 - 以标准 cookie jar policy 替换手工 browser-cookie matching，从而保留 host-only/domain、RFC path、secure、expiry、HttpOnly 与 SameSite 作用域。
-- 集中处理 human/structured log 中 URL/query/header/text secret 的脱敏，增加防御性 MCP filtering，并用一个引用计数 router 加 context-local request ownership 取代逐请求 global handler。Bridge teardown 前会在锁内使 request target 失效，因此持有 context 副本的 worker 无法向已结束的 MCP session 或重叠请求发出消息；closed loop 会在构造 notification coroutine 前被拒绝。
+- 集中处理 human/structured log 中 URL/query/header/text secret 的脱敏，增加防御性 MCP filtering，并用一个引用计数 router 加 context-local request ownership 取代逐请求 global handler。Live 环境映射现在使用不显示值的 repr；所有 CI artifact/release 上传前都必须通过扫描器，扫描原始及 URL 编码 credential sentinel，且只报告变量名和文件路径。Bridge teardown 前会在锁内使 request target 失效，因此持有 context 副本的 worker 无法向已结束的 MCP session 或重叠请求发出消息；closed loop 会在构造 notification coroutine 前被拒绝。
 
 ### 修复——能力作用域缓存的正确性与规模
 
@@ -47,10 +49,15 @@
 ### 修复——有界二进制资产与浏览器会话复用
 
 - 新增线程安全的逐文章 `AssetBudget`，由正文图、补充文件、direct/browser discovery、arXiv source decoding 与 image conversion 共享。默认最多保留 128 个文件、单文件 32 MiB、总计 256 MiB、6400 万像素和 4 个 worker，worker 数还会进一步受 route 限制。
-- 所有远程 binary 现在都通过 DNS-pinned direct transport 流式写入同目录排他 staging file，并执行 Content-Length preflight、逐 chunk decoded/compressed accounting、gzip EOF validation、fsync、atomic publication，且使用稳定的 `asset_*` failure reason。Browser code 现在只负责发现已授权 URL；无法流式传输的 browser-only response 会以 `browser_stream_unavailable` fail closed。
+- 恢复 browser-owned image/file/PDF bytes，包括 `response.body()`、`arrayBuffer()`、`bodyB64`、canvas 与浏览器 download payload，同时继续执行 Content-Length/实际字节、MIME、像素、累计预算、取消、唯一 staging、fsync 与原子发布检查。Direct 401/403 最多进入一次真正的 browser-byte recovery；同 URL、同会话状态不会再次通过 direct HTTP 重放。
 - 按 completion order 持久化或回滚已完成 future，同时让轻量 result 保持输入顺序。触发致命 byte/file/pixel limit 时会移除全部 staging file、协作式停止 queued work 并保留第一条 diagnostic；外部 RuntimeContext cancellation 则继续传播。EPS/TIFF 与 arXiv PDF rendering 使用带输出 byte/pixel 检查的 path-to-path conversion；source archive 会在 name validation/deduplication 前统计遇到的每个 regular member，并以相同 member/aggregate limit 避免无界读取。Archive decoding 现在位于有界 `_arxiv_source_archive` module，且不放宽既有 `_arxiv_assets` complexity gate。
-- 每个 attempt worker 复用一个固定的、由 cookie jar 支持的 seeded asset session，同一 runtime 内连续的 figure 与 supplementary 阶段也会复用。一次有界 GET warm-up 会从每个已验证 redirect hop 导入多值 `Set-Cookie`，在下一 hop 前刷新 worker-local jar，并保留 candidate response cookie，但不缓存 authentication data。Asset request 继承 catalog-sensitive header，因此跨源 replay redirect 会移除自定义 provider credential。
-- Browser 触发的 PDF download 现在优先使用已验证的 `download.url`，再尝试 page/original candidate，并通过 DNS-pinned direct transport 重放；`blob:` 与 `data:` download URL 会 fail closed，不再暴露 browser-owned byte。
+- 连续 figure 与 supplementary 阶段按 hostname 复用共享连接池和 cookie jar。AMS、Annual Reviews 与 Springer 新增独立 `assets` route，并发上限为 2，且仍受全局上限 4 约束。
+- 为所有下载正文资源的 provider 补齐显式 `assets` route，默认单次 direct 超时 20 秒、route cap 2；可靠 browser recovery 的路线不追加瞬时 direct retry。每篇论文、每个 host 只允许一个首资源 direct probe；browser recovery 成功后，同源剩余资源复用已验证路径，状态不跨论文持久化。ACS/AIP 不再让单个 CDN 连接占用约 120 秒，MDPI 也不再为每张同源图片重复 403 direct 尝试。
+- 新增逐资产阶段计时：queue、candidate resolution、URL/DNS policy validation、connect-to-headers/TTFB、body stream、browser recovery、retry wait、conversion、save 与 total；browser context prepare/release 另列 stage timing。IEEE 自定义恢复在合并逻辑资产时保留相同 timing/route。报告只聚合阶段、终态、download tier 和质量原因，不持久化签名 URL。
+- Wiley 优先 `/doi/{doi}`；主文档 401/403 改为有界复核，只有正文连续稳定、页面 DOI 精确匹配、无 challenge/明确 no-access 且后续 Markdown/全文验收通过时才接受，返回与 trace 保留真实状态，失败会继续下一候选。Science 可复用已验收 preflight HTML 并阻断重资源；PNAS readiness 与 `#bodymatter` 解析器 selector 对齐。IEEE preflight 复用因三轮 live 未达到端到端收益门槛而撤回，逐资源计时保留。图片候选方面，arXiv source archive、Copernicus JATS `graphic` 和 AIP 最大 `srcset` rendition 优先官方原图；T&F 仅有官方 CMS preview 时保持现有质量，并与其它合法预览一样输出 `official_full_size_not_exposed` 或 `official_full_size_access_restricted`，不冒充 full-size。
+- Python、MCP、CLI、batch、cache fingerprint 与 manifest 新增可选严格正文资产验收 `require_local_body_assets` 和 `require_full_size_body_assets`。两项默认关闭，full-size 隐含 local；未满足时只把 asset/overall 降为 degraded，不会把已取得的全文改成 fetch failure。
+- HTTP 200 空文章壳现在提供可行动诊断：ACS 的主文档、失败请求/脚本、console/challenge signal 与页面/storage 指纹均有界且脱敏；route/profile/storage/page 状态完全相同时立即停止，只有 candidate、profile 或 storage state 改变时允许一次重试。Live preflight key 绑定 provider、规范 DOI、target 与 runtime fingerprint，成功和失败都会追加 terminal record。
+- Doctor provenance 拆为 `source_development` 与 `installation` scope。源码运行只审计 checkout bundle 与 active skill，不混入无关 PATH 或旧 offline root；显式 `--install-root` 与安装包运行仍执行严格 installation audit。
 
 ### 修复——可执行 route、身份与 MCP 合约
 

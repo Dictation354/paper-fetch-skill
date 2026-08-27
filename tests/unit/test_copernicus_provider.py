@@ -685,6 +685,53 @@ class CopernicusProviderTests(unittest.TestCase):
             },
         )
 
+    def test_copernicus_promotes_official_original_and_audits_preview_only(
+        self,
+    ) -> None:
+        xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<article xmlns:xlink="http://www.w3.org/1999/xlink">
+  <front><article-meta>
+    <article-id pub-id-type="doi">{DOI}</article-id>
+    <title-group><article-title>Copernicus image renditions</article-title></title-group>
+  </article-meta></front>
+  <body><sec><title>Results</title><p>{_article_body_text()}</p>
+    <fig id="fig-original"><label>Figure 1</label><caption><p>Original.</p></caption>
+      <inline-graphic xlink:href="figure-preview.png" specific-use="preview"/>
+      <graphic xlink:href="figure-original.png" specific-use="original"/>
+    </fig>
+    <fig id="fig-preview"><label>Figure 2</label><caption><p>Preview.</p></caption>
+      <inline-graphic xlink:href="preview-only.png" specific-use="preview"/>
+    </fig>
+  </sec></body>
+</article>
+""".encode()
+
+        extraction = parse_copernicus_xml(
+            xml,
+            source_url=XML_URL,
+            base_metadata={"doi": DOI},
+        )
+
+        self.assertIsNotNone(extraction)
+        assert extraction is not None
+        original = next(
+            asset for asset in extraction.assets if asset.get("key") == "fig-original"
+        )
+        original_url = (
+            "https://acp.copernicus.org/articles/24/1/2024/figure-original.png"
+        )
+        self.assertEqual(original["full_size_url"], original_url)
+        self.assertEqual(original["download_url"], original_url)
+        self.assertNotIn(
+            "official_full_size_not_exposed", original.get("provenance", [])
+        )
+
+        preview = next(
+            asset for asset in extraction.assets if asset.get("key") == "fig-preview"
+        )
+        self.assertFalse(preview.get("full_size_url"))
+        self.assertEqual(preview["provenance"], ["official_full_size_not_exposed"])
+
 
 if __name__ == "__main__":
     unittest.main()

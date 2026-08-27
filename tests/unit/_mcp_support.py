@@ -374,6 +374,8 @@ def create_cached_fetch_envelope(
             "allow_metadata_only_fallback": True,
             "preferred_providers": None,
             "asset_profile": None,
+            "require_local_body_assets": False,
+            "require_full_size_body_assets": False,
         },
         "include_refs": None,
         "max_tokens": "full_text",

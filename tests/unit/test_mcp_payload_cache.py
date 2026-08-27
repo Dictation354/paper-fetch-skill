@@ -2,13 +2,51 @@
 from __future__ import annotations
 
 from ._mcp_support import *
-from paper_fetch.mcp.fetch_cache import PUBLIC_CREDENTIAL_SCOPE
+from paper_fetch.mcp.fetch_cache import (
+    PUBLIC_CREDENTIAL_SCOPE,
+    cache_request_fingerprint,
+    request_cache_payload,
+)
 from paper_fetch.providers.browser_runtime.backends import camoufox as camoufox_backend
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.tracing import TraceContext, trace_event
 
 
 class McpPayloadCacheTests(unittest.TestCase):
+    def test_strict_asset_strategy_is_normalized_and_changes_cache_fingerprint(
+        self,
+    ) -> None:
+        default_request = FetchPaperRequest.model_validate(
+            {
+                "query": "10.1000/strict-cache",
+                "strategy": {"asset_profile": "body"},
+            }
+        )
+        strict_request = FetchPaperRequest.model_validate(
+            {
+                "query": "10.1000/strict-cache",
+                "strategy": {
+                    "asset_profile": "body",
+                    "require_full_size_body_assets": True,
+                },
+            }
+        )
+
+        strict_payload = request_cache_payload(strict_request)
+        self.assertTrue(strict_request.strategy.require_local_body_assets)
+        self.assertTrue(strict_payload["strategy"]["require_local_body_assets"])
+        self.assertTrue(strict_payload["strategy"]["require_full_size_body_assets"])
+        self.assertNotEqual(
+            cache_request_fingerprint(
+                default_request.query,
+                request_cache_payload(default_request),
+            ),
+            cache_request_fingerprint(
+                strict_request.query,
+                strict_payload,
+            ),
+        )
+
     def test_sync_fetch_payload_owns_one_context_through_markdown_commit(
         self,
     ) -> None:
@@ -237,6 +275,7 @@ class McpPayloadCacheTests(unittest.TestCase):
                 "has_fulltext",
                 "has_abstract",
                 "token_estimate",
+                "asset_summary",
             },
         )
         self.assertEqual(

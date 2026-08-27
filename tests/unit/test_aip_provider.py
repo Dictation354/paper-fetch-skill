@@ -234,6 +234,47 @@ def test_aip_browser_client_profile_and_author_fallback() -> None:
     ]
 
 
+def test_aip_asset_extraction_prefers_largest_official_srcset_rendition() -> None:
+    preview_url = "https://pubs.aip.org/cms/asset/preview.jpg"
+    original_url = "https://pubs.aip.org/cms/asset/original.jpg"
+
+    assets = _aip_html.scoped_asset_extractor(
+        f"""
+        <figure id="fig1">
+          <img src="{preview_url}"
+               srcset="{preview_url} 500w, {original_url} 2200w">
+          <figcaption>Figure 1. AIP rendition selection.</figcaption>
+        </figure>
+        """,
+        AIP_STRUCTURE_LANDING,
+        asset_profile="body",
+    )
+
+    figure = next(asset for asset in assets if asset["kind"] == "figure")
+    assert figure["preview_url"] == preview_url
+    assert figure["full_size_url"] == original_url
+    assert "official_full_size_not_exposed" not in figure.get("provenance", [])
+
+
+def test_aip_asset_extraction_marks_preview_when_official_original_is_absent() -> None:
+    preview_url = "https://pubs.aip.org/cms/asset/preview-only.jpg"
+
+    assets = _aip_html.scoped_asset_extractor(
+        f"""
+        <figure id="fig1">
+          <img src="{preview_url}">
+          <figcaption>Figure 1. Preview only.</figcaption>
+        </figure>
+        """,
+        AIP_STRUCTURE_LANDING,
+        asset_profile="body",
+    )
+
+    figure = next(asset for asset in assets if asset["kind"] == "figure")
+    assert not figure.get("full_size_url")
+    assert figure["provenance"] == ["official_full_size_not_exposed"]
+
+
 def test_aip_profile_exposes_provider_owned_hooks_for_article_html_pdf_fallback_and_abstract_only() -> (
     None
 ):

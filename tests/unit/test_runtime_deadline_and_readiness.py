@@ -44,7 +44,7 @@ def test_reset_request_deadline_preserves_item_state_and_shared_transport(
         context.close()
 
 
-def test_aip_science_and_mdpi_publish_current_body_readiness_selectors() -> None:
+def test_provider_body_readiness_selectors_match_current_parser_containers() -> None:
     assert readiness.atypon_body_ready_selectors("aip") == (
         ".article-body .widget-ArticleFulltext",
         ".widget-ArticleFulltext",
@@ -66,6 +66,13 @@ def test_aip_science_and_mdpi_publish_current_body_readiness_selectors() -> None
         ".article-body",
         ".article-content",
     )
+    assert readiness.atypon_body_ready_selectors("pnas") == (
+        "#bodymatter [data-extent='bodymatter'][property='articleBody']",
+        "#bodymatter [property='articleBody']",
+        "#bodymatter [data-extent='bodymatter']",
+        "#bodymatter",
+    )
+    assert ".core-container" not in readiness.atypon_body_ready_selectors("pnas")
 
 
 def test_body_readiness_budget_includes_dom_evaluation_time(monkeypatch) -> None:
@@ -98,3 +105,48 @@ def test_body_readiness_budget_includes_dom_evaluation_time(monkeypatch) -> None
     assert result.ready is False
     assert result.elapsed_ms == 1100
     assert clock[0] == 1.1
+
+
+def test_wiley_body_readiness_requires_two_identical_ready_fingerprints(
+    monkeypatch,
+) -> None:
+    clock = [0.0]
+    payloads = [
+        {
+            "ready": True,
+            "selector": "section.article-section__content",
+            "textLength": 4200,
+            "paragraphCount": 4,
+            "headingCount": 1,
+            "fingerprint": "stable-body",
+        },
+        {
+            "ready": True,
+            "selector": "section.article-section__content",
+            "textLength": 4200,
+            "paragraphCount": 4,
+            "headingCount": 1,
+            "fingerprint": "stable-body",
+        },
+    ]
+
+    class Page:
+        def evaluate(self, _script, _arguments):
+            return payloads.pop(0)
+
+        def wait_for_timeout(self, milliseconds):
+            clock[0] += milliseconds / 1000.0
+
+    monkeypatch.setattr(readiness.time, "monotonic", lambda: clock[0])
+
+    result = readiness.wait_for_atypon_body_dom_ready(
+        Page(),
+        "wiley",
+        timeout_seconds=2.0,
+        poll_interval_ms=750,
+    )
+
+    assert result.ready is True
+    assert result.fingerprint == "stable-body"
+    assert payloads == []
+    assert clock[0] == 0.75

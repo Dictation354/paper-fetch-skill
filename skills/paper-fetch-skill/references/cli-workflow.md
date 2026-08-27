@@ -32,7 +32,7 @@ paper-fetch fetch --query "10.1186/1471-2105-11-421" \
   --max-tokens full_text
 ```
 
-正文图改为 `--artifact-mode markdown-assets --asset-profile body`；补充材料改为 `--artifact-mode markdown-assets --asset-profile all`。`--artifact-mode all` 只在用户还要求原始 provider/cache/debug payload 时使用。
+正文图改为 `--artifact-mode markdown-assets --asset-profile body`；补充材料改为 `--artifact-mode markdown-assets --asset-profile all`。用户还要求全部正文资产本地化时加 `--require-local-body-assets`，要求全部为 full-size 时加 `--require-full-size-body-assets`（自动隐含 local）。两项默认关闭且不适用于 `asset-profile=none`。`--artifact-mode all` 只在用户还要求原始 provider/cache/debug payload 时使用。
 
 ## 批量归档
 
@@ -105,7 +105,7 @@ paper-fetch fetch --query-file ./queries.txt \
 - Runtime fetch failure 的结构化 JSON 写 stderr；argparse 参数错误仍使用标准 stderr/exit 2。歧义、访问、限流、网络和取消的重试只遵循 [`failure-handling.md`](failure-handling.md)。
 - 实际进入 browser 的 CLI fetch 默认按需准备 managed Camoufox，并在 stderr 显示阶段；受限网络或禁止本地 runtime 写入时传 `--no-browser-auto-prepare`。该 flag 不影响静态 doctor，也不改变论文产物的 `--no-download` 语义。
 - 使用 `paper-fetch --help` 和 `paper-fetch fetch|manifest|doctor|browser-preflight --help` 读取当前安装的有效枚举和默认值，不从旧安装或外部仓库文档猜测。
-- 安装/升级排查使用 `paper-fetch doctor --install-root <安装根目录> --json`；只有 `install_provenance.status=ready` 才证明 runtime、User-Agent、offline manifest、entrypoint 和三个宿主 skill 副本同版同 aggregate content hash。源码开发态没有 offline manifest 时该安装部分为 `not_applicable`，但仓库 source bundle 与 active Codex project/user skill 仍会比较，缺失/漂移会使 doctor 降级。源码 installer 可用 `./scripts/install-codex-skill.sh [--project] --check` 做严格只读同步检查。
+- 安装/升级排查使用 `paper-fetch doctor --install-root <安装根目录> --json`；只有 `provenance_scope=installation` 且 `install_provenance.status=ready` 才证明 runtime、User-Agent、offline manifest、entrypoint 和三个宿主 skill 副本同版同 aggregate content hash。源码 checkout 默认是 `provenance_scope=source_development`，只审计 source bundle 与 active Codex project/user skill，不从 PATH 或环境文件推断旧安装根；真实 bundle/skill 漂移仍会降级。源码 installer 可用 `./scripts/install-codex-skill.sh [--project] --check` 做严格只读同步检查。
 
 ## 窄 fallback
 

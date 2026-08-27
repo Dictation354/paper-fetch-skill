@@ -14,7 +14,7 @@ from ..extraction.html.provider_rules import (
     ProviderHtmlRules,
 )
 from ..models import AssetProfile
-from ..provider_catalog import BodyTextThresholds, ProviderSpec
+from ..provider_catalog import BodyTextThresholds, ProviderRouteSpec, ProviderSpec
 from ..publisher_identity import normalize_doi
 from ..reason_codes import PDF_FALLBACK
 from ..runtime import RuntimeContext
@@ -52,6 +52,34 @@ register_provider_bundle(
             requires_playwright=True,
             requires_browser_runtime=True,
             body_text_thresholds=BodyTextThresholds(min_chars=1200),
+            routes=(
+                ProviderRouteSpec(name="metadata", kind="metadata"),
+                ProviderRouteSpec(
+                    name="browser_html",
+                    kind="html",
+                    browser_required=True,
+                    browser_preflight=True,
+                    auth_supported=True,
+                    requires_playwright=True,
+                    concurrency=1,
+                ),
+                ProviderRouteSpec(
+                    name="browser_pdf",
+                    kind="pdf",
+                    browser_required=True,
+                    browser_preflight=True,
+                    auth_supported=True,
+                    requires_playwright=True,
+                    requires_pdf_conversion=True,
+                    concurrency=1,
+                ),
+                ProviderRouteSpec(
+                    name="assets",
+                    kind="assets",
+                    concurrency=2,
+                    asset_scope="body",
+                ),
+            ),
         ),
         html_rules=ProviderHtmlRules(
             name="annualreviews",

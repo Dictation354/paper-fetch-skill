@@ -20,6 +20,7 @@ from ..extraction.html.provider_rules import (
 from ..provider_catalog import (
     ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
     BodyTextThresholds,
+    ProviderRouteSpec,
     ProviderSpec,
 )
 from ..publisher_identity import normalize_doi
@@ -55,6 +56,17 @@ register_provider_bundle(
             crossref_pdf_position=0,
             requires_browser_runtime=True,
             body_text_thresholds=BodyTextThresholds(min_chars=1200),
+            routes=(
+                ProviderRouteSpec(
+                    name="assets",
+                    kind="assets",
+                    browser_optional=True,
+                    requires_playwright=True,
+                    timeout_seconds=20,
+                    concurrency=2,
+                    transient_retries=0,
+                ),
+            ),
         ),
         html_rules=ProviderHtmlRules(
             name="tandf",

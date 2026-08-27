@@ -39,6 +39,15 @@ IEEE_ROUTES = (
         concurrency=1,
         timeout_seconds=120,
     ),
+    ProviderRouteSpec(
+        name="assets",
+        kind="assets",
+        browser_optional=True,
+        requires_playwright=True,
+        timeout_seconds=20,
+        concurrency=2,
+        transient_retries=0,
+    ),
 )
 
 

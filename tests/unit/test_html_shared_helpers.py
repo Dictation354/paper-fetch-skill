@@ -91,7 +91,7 @@ class _DelayedAssetTransport(HttpTransport):
 class _InjectedAssetRequesterTransport:
     """Exercise the explicitly injected legacy requester without real network I/O."""
 
-    _pinned_streaming_ready = False
+    _streaming_ready = False
     cancelled = False
 
     def request(self, *_args, **_kwargs):

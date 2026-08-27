@@ -423,6 +423,11 @@ def test_tandf_article_assets_keep_body_figures_and_scope_supplement() -> None:
     figures = [asset for asset in body_assets if asset["kind"] == "figure"]
     assert len(figures) == 9
     assert all(asset.get("preview_accepted") == "true" for asset in figures)
+    assert all(not asset.get("full_size_url") for asset in figures)
+    assert all(
+        asset.get("provenance") == ["official_full_size_not_exposed"]
+        for asset in figures
+    )
     assert any("_f0006_c.jpg" in asset["preview_url"] for asset in figures)
     assert not [asset for asset in body_assets if asset["kind"] == "supplementary"]
     supplementary = [asset for asset in all_assets if asset["kind"] == "supplementary"]

@@ -104,9 +104,11 @@ python3 scripts/scaffold_provider.py --name newpub --doi 10.1234/sample [--fullt
 - 正文长度阈值统一走 `body_text_thresholds`。通用 HTML 使用默认阈值；确有差异的 provider 只覆盖差异字段。
 - `client_factory_path` 指向最终 client，例如 `paper_fetch.providers.mdpi:MdpiClient`。
 - `status_order` 插入稳定顺序，避免 UI / MCP status 抖动。
-- 每条可执行路线用 `ProviderRouteSpec` 声明 hosts、timeout、retry、QPS/rate wait、acceptance 和 asset scope；runtime 只消费 `compile_route_execution_policy()` 的结果。`hosts` 会与 provider 的 exact/suffix/base domain、`api_hosts`、`cdn_hosts` 和绝对 URL template host 合并，不要在 request/browser/PDF/asset helper 内再写平行 timeout、retry 或 allowlist。
+- 每条可执行路线用 `ProviderRouteSpec` 声明 hosts、timeout、retry、QPS/rate wait、acceptance 和 asset scope；runtime 只消费 `compile_route_execution_policy()` 的非授权执行结果。`asset_default != "none"` 的 provider 必须显式声明 `kind="assets"` 路线，不能再从 HTML/PDF 路线聚合出隐式长超时策略；当前正文资产基线是单次 direct `20` 秒、route cap `2`，可靠 browser recovery 的站点把 transient retry 设为 `0`。Catalog 的 exact/suffix/base、`api_hosts`、`cdn_hosts`、template host 与 route host 仍用于 routing、诊断和生成文档，但不会自动成为 HTTP/PDF/body/supplementary allowlist 或 credential 授权；不要在 helper 内另写平行 timeout/retry，确需 host 限制时由调用方显式传 `allowed_hosts`。
 - `asset_scope` 是调用者未指定 profile 时的 route 默认值，不是绕过用户选择的隐式开关：显式 `none|body|all` 始终覆盖；`none` 必须在 resolver/网络调用前停止。`acceptance_policy` 只可使用 runtime 已实现的 `metadata_identity`、`provider_html_body`、`structured_xml_body`、`validated_pdf`、`validated_asset`；新增值在 evaluator 支持前会 fail closed。`validated_asset` 需要已发布本地资产，或经 audited 证明 `expected=0`。
 - 对已知 provider route，request spy 必须断言实际传入 policy 的 hosts、timeout、transient/rate retry、minimum interval、asset scope 与 acceptance 都来自 compiler。只有明确注入的 generic/test transport 可以保留 compatibility base policy，并须在生产 capability gate 前有注释和反例。
+- 有 browser byte recovery 的资产路线还必须覆盖单篇 fetch 内的首资源探测、同 host 并发等待、恢复成功后的 browser 路由复用，以及下一篇论文重新从 direct probe 开始。该熔断状态只能放在 `RuntimeContext.session_cache` 的 provider/article key 下，不能跨论文、provider 或进程持久化。
+- 新增候选排序或 provider 自定义恢复时，成功和失败项都必须产生统一 `asset_timing`，至少包含 `candidate_resolution_ms`、连接/响应体、browser recovery、retry、转换、保存和 total；browser context 准备/释放另累计到 stage timing，不能混入并发资源 phase 后冒充墙钟。
 - `publisher_aliases`、`doi_prefixes`、`domains` / `domain_suffixes` 会在注册阶段统一检查规范化冲突。确需有意覆盖时，冲突双方都必须声明不同的 `identity_priority` 和可审计 `identity_conflict_reason`；不允许依赖模块导入顺序。
 
 ```python
@@ -292,8 +294,9 @@ Provider-specific 代码只负责：
 
 所有 provider 必须把同一个 `RuntimeContext` 继续传入 figure 与 supplementary 下载，
 不得为 kind、候选或 fallback 新建独立预算。standalone helper 可显式创建一次 attempt
-budget，但 browser fetcher 只能返回受策略验证的 URL descriptor；二进制必须由共享
-pinned `HttpTransport` 流式写盘，不能调用 browser body/arrayBuffer/base64 API。
+budget；资产默认由共享 hostname `HttpTransport` 流式写盘，direct 401/403 最多进入
+一次 browser byte recovery。Browser body/arrayBuffer/canvas/base64/download bytes 不是
+预算旁路，必须使用同一 reservation、MIME/像素检查、staging 和原子发布。
 `AssetBudget` 的默认边界是 128 文件、单文件 32 MiB、累计 256 MiB、64 MP、并发最多
 4（可被 route cap 收紧）。新增压缩、archive 或 path conversion 路线必须让输入 staging
 和输出文件分别 reserve/rollback/commit，并传播稳定 `asset_*` reason。
@@ -330,12 +333,12 @@ Publisher 私有的 supplementary 属性或埋点必须由 provider extractor �
 - Fulltext 路线使用 `DEFAULT_FULLTEXT_TIMEOUT_SECONDS`。
 - 可重试的 publisher GET 使用 `retry_on_transient=True`。
 - API 或限流敏感路线根据现有 provider 模式启用 rate-limit retry。
-- Provider API/TDM 请求使用 `provider_request_policy(provider, route)` 编译 `HttpRequestPolicy`，不要手写或遗漏 `allowed_hosts` / `sensitive_headers`。catalog `ProviderSpec.sensitive_headers` 中实际出现于 request 的凭据会强制要求非空 route host allowlist；同 origin redirect 保留凭据，跨 origin redirect 对全部 301/302/303/307/308 删除标准和 provider 自定义敏感 header。
+- Provider API/TDM 请求使用 `provider_request_policy(provider, route, base=...)` 编译 timeout/retry/QPS/cooldown/asset cap 等执行参数。Catalog host 与 `ProviderSpec.sensitive_headers` 是 routing/诊断元数据，不自动授权或收紧网络访问；确需固定 host 或额外凭据剥离时，由调用方在 base `HttpRequestPolicy` 显式提供 `allowed_hosts` / `sensitive_headers`。所有 301/302/303/307/308 跨 origin hop 都会移除标准敏感 header，显式额外 header 同样移除。
 - API / metadata 路线用 `build_user_agent(env)` 构造稳定工具 UA；publisher-facing HTML/PDF 直连用浏览器形态 UA，例如 `build_publisher_user_agent(env)` 或 browser workflow 现有 header helper，避免把 `paper-fetch-skill/...` 发给出版社 CDN。
 - 官方 PDF fallback 优先走 `PdfFallbackStrategy`；如果直接调用 `pdf_fetch_result_from_response()` / `pdf_fetch_result_from_bytes()`，应显式允许真实 PDF 的 PDF-only 保留，避免扫描 PDF 无法转 Markdown 时降级成 Crossref metadata-only source。
 - `context.parse_cache` 用于同一次 fetch 内复用 XML root、HTML extraction payload、asset extraction payload。
 - Browser runtime 只能通过 `RuntimeContext`、browser runtime facade 或现有 browser workflow helper 管理；生产路径统一使用 Camoufox 打开 context/page。
-- Browser navigation、redirect、子资源和 service worker 使用浏览器原生网络行为；不要新增 context-wide URL/DNS interceptor 或凭据同源限制。Provider image/font/media 屏蔽只能作为 page-scope 资源优化。Browser 发现的图片、附件和 PDF URL 仍必须交给现有 pinned direct transport，由 `SafeRemoteUrlPolicy`、catalog route host、敏感 header、预算和流式写盘边界负责实际二进制读取。
+- Browser navigation、redirect、子资源和 service worker 使用浏览器原生网络行为；不要新增 context-wide URL/DNS interceptor 或凭据同源限制。Provider image/font/media 屏蔽只能作为 page-scope 资源优化。图片、附件和 PDF 可先走共享 hostname direct stream；401/403 只允许一次 browser-byte recovery。Browser `response.body()`、page `arrayBuffer()`/canvas 或 download/file bytes 必须继续经过统一 Content-Length/实际字节、MIME、像素、预算、staging、取消与原子发布边界。
 - Browser workflow 的 browser-backed HTML、PDF fallback 与资产下载必须通过 `RuntimeContext` / `BrowserContextManager` 管理的 keyed browser manager；managed Chrome 生命周期按进程共享，具体 context/page 必须在调用线程通过线程本地 CDP 连接创建。不得把主线程持有的同步 Playwright page/context 交给 worker 线程使用。
 - 普通 HTTP 资产下载仍可并发；只有显式 thread-private browser fetcher 才能在 worker 线程创建并关闭自己的 page/context/manager，且必须在同一个 worker 线程内关闭这些 sync browser 对象，否则容易残留浏览器子进程。
 

@@ -36,4 +36,5 @@ def compact_acceptance_payload(
         "has_fulltext": report.content.has_fulltext,
         "has_abstract": report.content.has_abstract,
         "token_estimate": report.content.token_estimate,
+        "asset_summary": report.asset.model_dump(mode="json"),
     }

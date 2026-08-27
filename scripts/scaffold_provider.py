@@ -493,6 +493,19 @@ def _html_module_content(
         )
     if not spec.html_capable:
         catalog_lines.append("            html_capable=False,")
+    if spec.asset_default != "none":
+        catalog_lines.extend(
+            [
+                "            routes=(",
+                "                ProviderRouteSpec(",
+                '                    name="assets",',
+                '                    kind="assets",',
+                "                    timeout_seconds=20,",
+                "                    concurrency=2,",
+                "                ),",
+                "            ),",
+            ]
+        )
     catalog_lines.append("        ),")
 
     bundle_lines = [*catalog_lines]
@@ -534,7 +547,7 @@ def _html_module_content(
         )
     imports.extend(
         [
-            "from ..provider_catalog import ProviderSpec",
+            "from ..provider_catalog import ProviderRouteSpec, ProviderSpec",
             "from ._registry import ProviderBundle, register_provider_bundle",
             "",
             "",

@@ -390,7 +390,7 @@ paper-fetch doctor --install-root ~/.local/share/paper-fetch-skill --json
 
 `doctor` 与 MCP `provider_status` 共用同一静态诊断：检查 provider 配置、配置来源、Playwright/Camoufox 和 Ghostscript/libvips，但不启动浏览器、不请求出版社页面，也不自动安装依赖。配置部分只输出变量名、来源层和是否存在，不输出 token、cookie、endpoint、文件路径或其它值；因此可以保存 JSON 供部署排查，但仍应按敏感运维日志管理。
 
-`full` 保留 provider checks 和本地能力；`compact` 只保留路由所需的状态、关键 reason 与建议动作。`install_provenance` 会分别给出 source `pyproject.toml`、当前 Python distribution metadata、`DEFAULT_USER_AGENT`、PATH 上 `paper-fetch --version`、指定或自动发现的 `offline-manifest.json`、安装 runtime metadata 与 entrypoint 的版本和绝对路径；`consistency.version_drift` 直接列出 expected/actual/path。源码开发态没有 offline manifest 时，离线安装部分返回 `not_applicable`，不会误报安装失败，但 distribution 或 PATH CLI 与源码版本不一致仍会报告 `drift`。
+`full` 保留 provider checks 和本地能力；`compact` 只保留路由所需的状态、关键 reason 与建议动作。`install_provenance.provenance_scope` 明确区分两种审计：源码 checkout 默认为 `source_development`，比较 source `pyproject.toml`、当前解释器与仓库/active Codex skill，不从 PATH 或环境文件推断并混入旧离线安装根；显式 `--install-root` 或安装包运行时为 `installation`，严格比较 `DEFAULT_USER_AGENT`、offline manifest、runtime metadata、entrypoint 及宿主 skill。PATH 上的 CLI 可作为只读事实显示，但不会在 source scope 中制造无关安装漂移；真正的 source bundle/active skill 不一致仍会降级。
 
 offline manifest schema 3 保留 `version`、`git_revision`、`built_at_utc`、`target.platform` / `arch` / `python_tag` 和 `entrypoint`，并包含 skill bundle schema 2：除 `SKILL.md`、全部 `references/`、canonical `agents/openai.yaml` 等完整 regular-file 列表和逐文件 SHA256 外，还记录路径排序、与 mtime/遍历顺序无关的 `content_sha256` / `content_version=sha256:<digest>`。macOS tarball 还写入 `target.minimum_os_version`。POSIX 与 Windows 安装器会在复制前校验 bundle，在复制后再次校验安装根目录及 Codex、Claude Code、Antigravity 三份 skill；缺文件、多文件、符号链接、special file 或 hash 不一致都会阻止完整性验收。
 
@@ -409,7 +409,7 @@ offline manifest schema 3 保留 `version`、`git_revision`、`built_at_utc`、`
 - wheel/sdist 的完整 archive 必须与结构化预期一一对应：wheel 只允许源码 `paper_fetch`、唯一规范化 `dist-info` 的必需 metadata/`RECORD` 和声明的 static data-files；sdist 只允许唯一规范化 root、明确顶层构建/许可/README/PKG-INFO、源码、`egg-info` 和 skill。任何未知 top-level、`.data`、package/source/metadata member 都失败；两者分别安装到独立 venv，执行 CLI/import/MCP/resource/skill smoke。
 - Ubuntu / Windows portable Mac contract gate，以及固定 `macos-15` arm64、CPython 3.14 的原生 cache-alias test + build + verifier gate；Windows / WSL 静态结果不能替代该 gate。
 
-`dependency-refresh.yml` 每周和手动运行 `uv lock --upgrade`，用于发现兼容范围内的新依赖问题，但不回写分支。Live publisher/MCP、provider drift 与完整 golden corpus 不再配置 GitHub Actions workflow、schedule 或 dispatch，只保留下文记录的本地显式入口；依赖共享外部状态的 live 测试按设计使用 `-n 0` 串行运行，完整 golden corpus 继续复用项目并行配置。常规 CI 的原生 macOS Camoufox 准备会把 workflow 自带的只读 `github.token` 作为上游 CLI 已支持的 `GITHUB_TOKEN` 传入，避免 GitHub Releases 匿名 API 限额阻断 pinned runtime discovery；token 不写入 cache、artifact 或命令参数。`ci.yml` 与稳定发布都调用 reusable `verify.yml`；`offline.yml` 独立构建 Linux、macOS、Windows full 离线包，macOS 四个 ABI 固定在 `macos-15` 构建并运行原生 tar verifier。`release.yml` 只在稳定版本标签或显式手动发布时运行，在同一 run 冻结九目标依赖，消费 verify 已安装验证的 Python distributions 和每目标实际 staging SBOM；`prepare_release_assets.py` 对 31 个输入执行 exact-set/collision 检查、扁平化和 basename-only checksum，然后发布绑定已验证 SHA 的不可变资产。所有第三方 actions 固定到完整 commit SHA。
+`dependency-refresh.yml` 每周和手动运行 `uv lock --upgrade`，用于发现兼容范围内的新依赖问题，但不回写分支。Live publisher/MCP、provider drift 与完整 golden corpus 不再配置 GitHub Actions workflow、schedule 或 dispatch，只保留下文记录的本地显式入口；依赖共享外部状态的 live 测试按设计使用 `-n 0` 串行运行，完整 golden corpus 继续复用项目并行配置。常规 CI 的原生 macOS Camoufox 准备会把 workflow 自带的只读 `github.token` 作为上游 CLI 已支持的 `GITHUB_TOKEN` 传入，避免 GitHub Releases 匿名 API 限额阻断 pinned runtime discovery；token 不写入 cache、artifact 或命令参数。`ci.yml` 与稳定发布都调用 reusable `verify.yml`；`offline.yml` 独立构建 Linux、macOS、Windows full 离线包，macOS 四个 ABI 固定在 `macos-15` 构建并运行原生 tar verifier。`release.yml` 只在稳定版本标签或显式手动发布时运行，在同一 run 冻结九目标依赖，消费 verify 已安装验证的 Python distributions 和每目标实际 staging SBOM；`prepare_release_assets.py` 对 31 个输入执行 exact-set/collision 检查、扁平化和 basename-only checksum，然后发布绑定已验证 SHA 的不可变资产。Provider canary、普通 artifact、稳定/滚动 release asset 与 attestation/publication 都以 `scan_artifacts_for_secrets.py` 成功为前置条件；扫描覆盖 raw 与 URL-encoded sentinel，只报告变量名和路径。所有第三方 actions 固定到完整 commit SHA。
 
 在 Windows / WSL 修改 Mac 相关范围时，先运行
 `uv run python scripts/validate_macos_adaptation.py`，再运行
@@ -445,6 +445,15 @@ paper-fetch auth wiley --url "https://onlinelibrary.wiley.com/doi/full/10.1111/e
 `provider` 来自 browser runtime catalog，例如 `wiley` / `science` / `pnas` / `ams` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip` / `tandf`。未传 `--url` 时打开内置样例文章；传入 `--url` 时打开具体失败文章页。命令强制 headed 模式，打印所选后端的 profile 和 storage-state 路径，终端按 Enter 后保存过滤后的本地 storage-state 并退出，不写 `.env`。AMS 无状态抓取仍会启动浏览器；只有静默 AWS WAF 验证失败时，才需要 `paper-fetch auth ams` 保存人工验证状态。
 
 这些浏览器 HTML route 会在 challenge/paywall 判定前先等待正文 DOM 稳定；如果正文已经可抽取，页面残留的 Cloudflare/challenge 文案不会提前中断 HTML route，最终全文/摘要/降级结论仍由 Markdown 抽取后的 availability 判定负责。
+
+Wiley 的主文档 401/403 需要结合 `browser_runtime_trace.candidates[*].http_access_status_review`
+排查。`accepted=true` 只会出现在正文连续稳定、页面 DOI 精确匹配、无 challenge/no-access/
+datalayer 阻断并且后续 Markdown/availability 已通过之后；`response_status` 和候选
+`status` 仍为真实 401/403。`body_not_ready`、`doi_evidence_missing`、`doi_mismatch`、
+`blocking_signal` 或全文抽取失败都会保持 fail closed，并继续下一个 Wiley URL。该
+diagnostic 只含脱敏枚举、布尔值和状态，不含 Cookie、Authorization、storage-state 或
+原始失败 HTML；无状态复现可显式将 profile/user-data/storage-state 设为空并关闭
+`persist_storage_state`，此时 `storage_state_load.used=false` 且不得产生 capability use。
 
 browser workflow 的通用配置：
 
@@ -628,7 +637,7 @@ PAPER_FETCH_RUN_FULL_GOLDEN=1 PYTHONPATH=src uv run python -m pytest tests/integ
 
 未设置 `PAPER_FETCH_RUN_LIVE=1` 时，`tests/live/test_live_publishers.py` 和 `tests/live/test_live_mcp.py` 应稳定 skip。额外验证 live 时，`arxiv` 不需要 browser runtime；包括 `ams` 在内的 browser-backed provider 先按静态报告中的 `browser_runtime.available` 检查本地能力，再启动 Camoufox 做真实页面预检。pytest 隔离 XDG data/runtime、通用 profile 和所有 provider storage-state；Camoufox 的 browser bundle、版本元数据、字体和默认 addon 则复用隔离前由官方包管理器确认的 dependency cache，避免 live/MCP 子进程重复下载 runtime。每家 provider 的状态仍写入临时 `<provider>-camoufox/storage-state.json`，不会进入该共享 dependency cache。
 
-publisher catalog 不是宽松的全文 smoke：每个已执行样本都请求 `asset_profile=body` 并硬性要求 `acceptance.overall=complete`，同时写出 `live-acceptance.json`。JSON 会区分 catalog 总数、已记录 provider、未记录 provider、已记录结果是否全 complete，以及全 catalog 是否全部执行并 complete；每个 provider 还记录 preflight/fetch wall time、browser/DOM readiness/HTTP/asset/retry 分段、导航数、preflight reuse 和资产数，同样写入 JUnit properties。PNAS 在同一进程内执行 preflight 后正式 fetch，硬性要求 reuse hit、总 HTML 导航一次、HTML source 成功且 body 资产验收 complete；preflight+fetch 的 45 秒目标仅产生性能告警，不因一次外网抖动失败。MCP live 另在同一 server session 内覆盖相同链路，并写 `pnas-mcp-preflight-reuse.json`。challenge/no-access skip 不会被伪装为全量完成。只有机器可读的 preflight `challenge` / `auth_required`、fetch/MCP `status=no_access`，或成功 metadata fallback 中仅由 `ProviderFailure(NO_ACCESS)` 产生的 `route:provider_candidate_*_access_boundary_stop` 精确 marker，才按合法访问边界 skip；解析失败、空壳、正文不足和其它未知错误仍是 hard failure。AIP 五次 fresh-profile 冷启动在进入重复试验前复用同一 provider preflight 结果，但 AIP HTML/cookie 不跨 `RuntimeContext` 复用；托管 runner 已被站点挑战时不会制造五个重复失败。非 challenge/auth/cancelled 的 preflight 失败必须保留可读取的隐私安全诊断 artifact，否则测试本身失败。live 测试依赖共享外部状态和 Camoufox 线程边界，必须串行运行；JUnit 使用与 `record_property` 兼容的 legacy family：
+publisher catalog 不是宽松的全文 smoke：每个已执行样本都请求 `asset_profile=body` 并按默认 provider-policy 要求 `acceptance.overall=complete`，同时写出 `live-acceptance.json`。无论 preflight/fetch 成功或失败，每个 provider 都先追加 terminal record，因此 ACS 等失败不会从 19 家主报告消失；JSON 会区分 catalog 总数、已记录 provider、未记录 provider、已记录结果是否全 complete，以及全 catalog 是否全部执行并 complete。每个 provider 还记录 preflight/fetch wall time、browser/DOM readiness/HTTP/asset/retry 分段、导航数、preflight reuse，以及不含 URL 的逐资产 phase/status 聚合。需要离线或 full-size 验收时，另以公开的两个严格布尔约束运行并读取同一 v2 acceptance。PNAS 在同一进程内执行当前 benchmark DOI/landing target 的 preflight 后正式 fetch，硬性要求 reuse hit、总 HTML 导航一次、HTML source 成功且 body 资产验收 complete；preflight+fetch 的 45 秒目标仅产生性能告警，不因一次外网抖动失败。MCP live 另在同一 server session 内覆盖相同链路，并写 `pnas-mcp-preflight-reuse.json`。challenge/no-access skip 不会被伪装为全量完成。只有机器可读的 preflight `challenge` / `auth_required`、fetch/MCP `status=no_access`，或成功 metadata fallback 中仅由 `ProviderFailure(NO_ACCESS)` 产生的 `route:provider_candidate_*_access_boundary_stop` 精确 marker，才按合法访问边界 skip；解析失败、空壳、正文不足和其它未知错误仍是 hard failure。AIP 五次 fresh-profile 冷启动在进入重复试验前复用同一 provider preflight 结果，但 AIP HTML/cookie 不跨 `RuntimeContext` 复用；托管 runner 已被站点挑战时不会制造五个重复失败。非 challenge/auth/cancelled 的 preflight 失败必须保留可读取的隐私安全诊断 artifact，否则测试本身失败。Live fixture 的环境 mapping repr 不显示值；JUnit、acceptance、diagnostics 和待上传目录必须先通过 sentinel 扫描。live 测试依赖共享外部状态和 Camoufox 线程边界，必须串行运行；JUnit 使用与 `record_property` 兼容的 legacy family：
 
 ```bash
 PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_LIVE_ARTIFACT_DIR=artifacts/live-publishers \
@@ -649,6 +658,13 @@ PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_BROWSER_BACKEND=camoufox \
 ```
 
 默认样本混合四条直连和四条 browser 路径；也可用 `--providers` 或 `--sample-ids` 缩小范围。runner 在计时前逐个检查 browser provider，challenge/auth/runtime failure 会阻止对应 provider 的论文调度但不会阻止其它 provider 或后续并发档位。每档创建独立无缓存 HTTP transport，同时复用已确认的 browser storage-state；产物默认位于 `live-downloads/parallel-live-benchmark/<timestamp>/`，显式 `--output-dir` 必须不存在或为空，避免混入旧轮次。单轮结果只用于本次对照，不作为统计显著性结论。任一非预期 acceptance、catalog route 不匹配、preflight 未就绪或跨并发结果漂移都会保留完整报告并返回非零退出码。
+
+排查 HTTP 200 空壳时，`artifact_mode=all` 的页面诊断会把主文档
+`requestfinished` 观察结果、Content-Length、实际捕获 HTML 字节与 Navigation Timing
+并列保存。`request_finished_observed=false`、`document_ready_state=loading` 且
+`response_end_ms=0` 说明采样时响应仍在进行；若 lifecycle 和 response end 均已完成而
+DOM 仍很小，则更接近服务端完整返回的小空壳。字段均为页面关闭前的采样事实，不把
+transfer size、Content-Length 与 DOM 序列化字节当作可互换的长度。
 
 Wiley 同-provider 探测使用固定矩阵，不能同时传入 `--providers`、`--sample-ids`、`--concurrencies` 或 `--repetitions`：
 

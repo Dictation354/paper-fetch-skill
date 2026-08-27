@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 from dataclasses import dataclass
 from typing import Any
 from collections.abc import Callable, Mapping
@@ -338,8 +339,6 @@ def _resolve_browser_env(
 
 
 class _BaseBrowserDocumentFetcher:
-    browser_stream_discovery = True
-
     def __init__(
         self,
         *,
@@ -386,19 +385,25 @@ class _BaseBrowserDocumentFetcher:
         diagnostic = self._last_failure_by_url.get(normalize_text(source_url))
         return dict(diagnostic) if diagnostic else None
 
-    def record_stream_failure(self, source_url: str, **values: Any) -> None:
-        self._record_failure(source_url, **values)
-
     def __call__(
         self, source_url: str, asset: Mapping[str, Any]
     ) -> dict[str, Any] | None:
         raise NotImplementedError
 
     def close(self) -> None:
+        release_started_at = time.monotonic()
+        had_browser_state = any(
+            value is not None
+            for value in (self._page, self._context, self._browser_manager)
+        )
         if self._shared_page_session is not None:
             self._page = None
             self._context = None
             self._browser_manager = None
+            if had_browser_state:
+                self._record_asset_browser_stage(
+                    "asset_browser_release_seconds", release_started_at
+                )
             return
         if self._page is not None:
             with contextlib.suppress(Exception):
@@ -412,44 +417,19 @@ class _BaseBrowserDocumentFetcher:
             with contextlib.suppress(Exception):
                 self._browser_manager.close()
             self._browser_manager = None
+        if had_browser_state:
+            self._record_asset_browser_stage(
+                "asset_browser_release_seconds", release_started_at
+            )
+
+    def _record_asset_browser_stage(self, name: str, started_at: float) -> None:
+        recorder = getattr(self._runtime_context, "accumulate_stage_timing", None)
+        if callable(recorder):
+            recorder(name, started_at=started_at)
 
     def _current_seed(self) -> Mapping[str, Any]:
         seed = self._browser_context_seed_getter()
         return seed if isinstance(seed, Mapping) else {}
-
-    def _stream_descriptor(
-        self,
-        source_url: str,
-        *,
-        status: int = 200,
-        headers: Mapping[str, str] | None = None,
-        dimensions: Mapping[str, Any] | None = None,
-    ) -> dict[str, Any] | None:
-        """Describe a browser-discovered URL for pinned direct streaming."""
-
-        normalized_url = normalize_text(source_url)
-        if not normalized_url:
-            return None
-        cookies: list[dict[str, Any]] = []
-        if self._context is not None:
-            with contextlib.suppress(Exception):
-                raw_cookies = self._context.cookies()
-                if isinstance(raw_cookies, list):
-                    cookies = [
-                        dict(cookie)
-                        for cookie in raw_cookies
-                        if isinstance(cookie, Mapping)
-                    ]
-        descriptor: dict[str, Any] = {
-            "status_code": int(status),
-            "headers": dict(headers or {}),
-            "url": normalized_url,
-            "_paper_fetch_browser_stream_url": normalized_url,
-            "_paper_fetch_browser_cookies": cookies,
-        }
-        if isinstance(dimensions, Mapping):
-            descriptor["dimensions"] = dict(dimensions)
-        return descriptor
 
     def _ensure_context(self, source_url: str | None = None):
         if self._context is not None:
@@ -464,6 +444,7 @@ class _BaseBrowserDocumentFetcher:
         active_user_agent = normalize_text(
             self._current_seed().get("browser_user_agent")
         ) or normalize_text(self._browser_user_agent)
+        prepare_started_at = time.monotonic()
         try:
             browser_config_kwargs = (
                 {"browser_config": self._browser_config}
@@ -517,6 +498,10 @@ class _BaseBrowserDocumentFetcher:
             else:
                 self.close()
             return None
+        finally:
+            self._record_asset_browser_stage(
+                "asset_browser_prepare_seconds", prepare_started_at
+            )
         return self._context
 
     def _ensure_page(self, source_url: str | None = None):
