@@ -173,6 +173,23 @@ def _copy_exclusive(source: Path, destination: Path) -> None:
         raise
 
 
+def _fsync_directory_best_effort(directory: Path) -> bool:
+    """Persist directory entries where the host exposes POSIX directory fsync."""
+
+    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+    try:
+        directory_fd = os.open(directory, flags)
+    except OSError:
+        return False
+    try:
+        os.fsync(directory_fd)
+    except OSError:
+        return False
+    finally:
+        os.close(directory_fd)
+    return True
+
+
 def _sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -237,11 +254,7 @@ def prepare_stable_release(
             _copy_exclusive(source_files[relative], output_dir / basename)
         expected_names = stable_asset_names(version)
         write_checksums(output_dir, expected_names)
-        directory_fd = os.open(output_dir, os.O_RDONLY)
-        try:
-            os.fsync(directory_fd)
-        finally:
-            os.close(directory_fd)
+        _fsync_directory_best_effort(output_dir)
     except BaseException:
         shutil.rmtree(output_dir, ignore_errors=True)
         raise

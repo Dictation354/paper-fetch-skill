@@ -197,6 +197,9 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract["release_tooling"]["frozen_dependency_targets"] = []
         contract["release_tooling"]["dependency_evidence"] = []
         contract["release_tooling"]["release_asset_namespace"] = "nested-paths"
+        contract["release_tooling"]["release_directory_durability"] = (
+            "required-directory-fsync"
+        )
         contract["release_tooling"]["stable_release_asset_count"] = 0
         contract["release_tooling"]["windows_uninstall_allowlist"] = ["runtime/"]
         contract["release_tooling"]["source_contract_required_before_overlay"] = False
@@ -240,6 +243,11 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         self.assertIn("release_tooling.dependency_evidence must be", diagnostic)
         self.assertIn(
             "release_tooling.release_asset_namespace must be 'flat-basename-only'",
+            diagnostic,
+        )
+        self.assertIn(
+            "release_tooling.release_directory_durability must be "
+            "'file-fsync-plus-best-effort-directory-fsync'",
             diagnostic,
         )
         self.assertIn(

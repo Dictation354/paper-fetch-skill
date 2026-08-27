@@ -12,7 +12,7 @@
 
 - 基于精确排序的普通文件清单，为静态 skill bundle 生成稳定的聚合 SHA-256/版本，实现内容寻址。源码、staging、离线 manifest 与宿主机已安装副本现在使用同一 verifier 拒绝缺失、多余、已更改、符号链接及特殊条目；规范的 `agents/openai.yaml` 改为随源码分发，不再因重新生成而形成永久漂移。
 - 为 Codex/Claude/Antigravity 共用安装器新增严格只读的 `--check` 模式，并正确查找 Codex 用户/项目作用域。源码与离线 `doctor` 诊断现在会对比仓库/随包 skill 和当前启用的 Codex 副本，公开预期/实际内容版本，并在启用的 skill 缺失或漂移时令整体 readiness 失败。
-- 在仓库指引、生成的 onboarding 与 CI 中，将常规测试命令统一为 `PYTHONPATH=src uv run python -m pytest ...`。当环境中的 MCP 主版本或必需的 trafilatura API 行为不兼容时，Pytest 现在会在 collection 前失败，并给出可直接执行的冻结 `uv` 修复命令。
+- 在仓库指引、生成的 onboarding 与 CI 中，将常规测试命令统一为 `PYTHONPATH=src uv run python -m pytest ...`。当环境中的 MCP 主版本或必需的 trafilatura API 行为不兼容时，Pytest 现在会在 collection 前失败，并给出可直接执行的冻结 `uv` 修复命令；Python boundary controller 安装这套完整测试契约，而全新隔离 venv 仍分别证明 core 与 full wheel。
 - 通过归组既有 request/runtime state 并抽取保持行为不变的 browser、PDF、asset、HTTP stream、cache 与 MCP batch helper，在不放宽 threshold、ignore 或 suppression 的情况下消除全部 24 个复杂度回归。历史超预算清单从 55 个 symbol 单调降至 47 个，其中 Playwright C901 从 44 降至 40。
 
 ### 修复——经验证的构建与发布供应链
@@ -22,7 +22,7 @@
 - 新增从实际 staging tree 派生的逐目标证据：已安装 Python distribution 及内容 digest、Node/Playwright package、Camoufox 交付状态、公式/图片/native 文件与嵌入式 runtime provenance。每个离线产物现在都会携带并上传实际 dependency manifest 和经验证的 CycloneDX 1.6 SBOM；release 不再用 lock export 冒充 staged evidence。
 - 在 installer manifest 与平台合约中，将 Windows CPython 3.13.13 x64 embeddable archive 固定到 python.org 官方 URL 和 SHA-256；解压前会验证，并在 offline manifest 与 SBOM 中记录预期/实际 digest。
 - 为完整 archive 新增精确 wheel/sdist inventory。它会从结构上规范化唯一合法的 distribution root/`dist-info`/`egg-info`，要求 metadata 与 wheel `RECORD` 精确覆盖，并拒绝所有未知的 top-level、`.data`、package、source 或 metadata member。两个产物分别安装到独立 venv，并运行 CLI、import、MCP、resource 与已安装 skill smoke。
-- 稳定版发布现在会验证 checksum 前精确的 31 个 asset（两个 Python distribution、对应 inventory、九个离线 installer、十八个目标 evidence 文件及 merged dependency manifest），拒绝缺失、多余和 basename collision，将它们复制到平坦且排他的 namespace，并生成只含 basename 的 `SHA256SUMS`。滚动发布复用同一 offline asset-set checker。
+- 稳定版发布现在会验证 checksum 前精确的 31 个 asset（两个 Python distribution、对应 inventory、九个离线 installer、十八个目标 evidence 文件及 merged dependency manifest），拒绝缺失、多余和 basename collision，将它们复制到平坦且排他的 namespace，并生成只含 basename 的 `SHA256SUMS`。资产与 checksum 文件执行 fsync，而 Windows 等不提供 POSIX directory descriptor 的平台只对目录 fsync 做 best-effort；滚动发布复用同一 offline asset-set checker。
 - 新增原生、串行的最终 Windows EXE lifecycle gate：静默安装、已安装 doctor/provider/formula/browser smoke、原地覆盖升级、用户数据保留、静默卸载，以及精确递归 residue allowlist。只允许残留 `offline.env`、`downloads/` 和 `downloads/user-owned.txt`；任何现有或未来的 managed file 都会令 gate 失败。不可变 Windows tooling overlay 现在会把 builder、evidence/lifecycle script、helper、installer manifest 与 Inno definition 作为同一组按 revision 固定的文件移动。
 
 ### 安全——网络、凭据与日志边界

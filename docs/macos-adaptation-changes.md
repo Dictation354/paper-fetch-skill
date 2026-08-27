@@ -178,7 +178,9 @@ distribution、一个 distribution inventory、九个离线安装器、十八个
 sidecar 和一个 merged dependency manifest。任何 missing/extra 或 basename collision 都
 fail closed；合法文件通过排他创建复制到 flat `release-assets/`，随后生成只含 basename
 的 `SHA256SUMS`，所以 GitHub 把资产扁平上传后校验路径仍成立。rolling release 复用同一
-offline asset-set checker。
+offline asset-set checker。每个资产和 checksum 文件都先完成强制 `fsync`；最终目录项
+在支持 POSIX directory descriptor 的主机上再做 best-effort `fsync`，Windows 不支持
+目录 descriptor 时不会误判发布内容失败。
 
 release workflow 的 build provenance 生成步骤固定到
 `actions/attest-build-provenance` v4.2.2 的完整 commit SHA，并保持一次调用和

@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from scripts.prepare_release_assets import (
+    _fsync_directory_best_effort,
     offline_asset_names,
     prepare_stable_release,
     stable_asset_names,
@@ -59,6 +60,18 @@ def test_stable_assets_are_exactly_flattened_and_checksums_use_basenames(
     assert all("/" not in name and "\\" not in name for name in checksums)
     for name, digest in checksums.items():
         assert digest == hashlib.sha256((output_dir / name).read_bytes()).hexdigest()
+
+
+def test_directory_fsync_is_best_effort_when_platform_rejects_directory_open(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def reject_directory_open(*_args: object, **_kwargs: object) -> int:
+        raise PermissionError("directory descriptors are unavailable")
+
+    monkeypatch.setattr("scripts.prepare_release_assets.os.open", reject_directory_open)
+
+    assert _fsync_directory_best_effort(tmp_path) is False
 
 
 @pytest.mark.parametrize(

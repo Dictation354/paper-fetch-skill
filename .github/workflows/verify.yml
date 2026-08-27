@@ -190,6 +190,7 @@ jobs:
       - uses: ./.github/actions/setup-python-deps
         with:
           python-version: ${{ matrix.python-version }}
+          full: "true"
       - name: Run core unit boundary
         if: ${{ matrix.install == 'core' }}
         run: |

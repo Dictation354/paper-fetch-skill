@@ -214,6 +214,7 @@ REQUIRED_RELEASE_TOOLING = {
     "release_asset_preparer",
     "stable_release_asset_count",
     "release_asset_namespace",
+    "release_directory_durability",
     "windows_uninstall_allowlist",
     "trusted_posix_overlay_paths",
     "trusted_windows_overlay_paths",
@@ -1569,6 +1570,7 @@ def _validate_portable_and_release_tooling(
         "release_asset_preparer": EXPECTED_RELEASE_ASSET_PREPARER,
         "stable_release_asset_count": EXPECTED_STABLE_RELEASE_ASSET_COUNT,
         "release_asset_namespace": "flat-basename-only",
+        "release_directory_durability": ("file-fsync-plus-best-effort-directory-fsync"),
         "windows_uninstall_allowlist": [
             "offline.env",
             "downloads/",

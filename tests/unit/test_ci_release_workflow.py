@@ -65,12 +65,19 @@ def test_reusable_verify_checks_out_only_the_requested_immutable_ref() -> None:
 
 
 def test_ci_protects_minimum_and_maximum_python_core_and_full_installs() -> None:
-    workflow = _workflow_text("verify.yml")
-    assert 'python-version: ["3.11", "3.14"]' in workflow
-    assert 'install: ["core", "full"]' in workflow
-    assert "tests/unit/test_provider_catalog.py" in workflow
-    assert '"$wheel[full]"' in workflow
-    assert '"$wheel"' in workflow
+    workflow_text = _workflow_text("verify.yml")
+    workflow = _workflow("verify.yml")
+    assert 'python-version: ["3.11", "3.14"]' in workflow_text
+    assert 'install: ["core", "full"]' in workflow_text
+    assert "tests/unit/test_provider_catalog.py" in workflow_text
+    assert '"$wheel[full]"' in workflow_text
+    assert '"$wheel"' in workflow_text
+    setup = next(
+        step
+        for step in workflow["jobs"]["python-boundaries"]["steps"]
+        if str(step.get("uses") or "").startswith("./.github/actions/setup-python-deps")
+    )
+    assert setup["with"]["full"] == "true"
 
 
 def test_quality_gate_uses_whole_package_typing_complexity_and_locked_audit() -> None:

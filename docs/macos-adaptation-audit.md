@@ -49,7 +49,9 @@
   `release-assets/**/*` subject path；每目标实际 staging 的 dependency manifest
   与 CycloneDX SBOM 随对应 artifact 上传。所有 artifact/release upload、attestation
   和 publication 还必须在对应目录通过 raw/URL-encoded sentinel 扫描；扫描只报告
-  变量名与路径，命中或扫描错误都阻断后续步骤。
+  变量名与路径，命中或扫描错误都阻断后续步骤。发布资产与 checksum 文件执行强制
+  `fsync`，目录项只在平台支持 directory descriptor 时 best-effort 同步，避免 Windows
+  portable gate 把不支持目录 `fsync` 误判为资产失败。
 - 平台：S / L 只能验证 YAML；D 才能提供平台证据。
 - 关闭条件：四个 ABI job 都在固定 runner 通过，不能用 `macos-latest` 或
   Windows / WSL 结果代替。

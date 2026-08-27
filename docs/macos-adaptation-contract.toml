@@ -212,6 +212,7 @@ python_distribution_inventory = "quality/python-distribution-inventory.json"
 release_asset_preparer = "scripts/prepare_release_assets.py"
 stable_release_asset_count = 31
 release_asset_namespace = "flat-basename-only"
+release_directory_durability = "file-fsync-plus-best-effort-directory-fsync"
 windows_uninstall_allowlist = ["offline.env", "downloads/", "downloads/user-owned.txt"]
 trusted_posix_overlay_paths = [
   "scripts/build-offline-package.sh",
@@ -253,6 +254,7 @@ included_test_nodes = [
   "tests/unit/test_offline_evidence.py::test_evidence_is_derived_from_actual_staged_target",
   "tests/unit/test_python_distribution_inventory.py::test_distribution_inventory_matches_source_tree",
   "tests/unit/test_release_asset_inventory.py::test_stable_assets_are_exactly_flattened_and_checksums_use_basenames",
+  "tests/unit/test_release_asset_inventory.py::test_directory_fsync_is_best_effort_when_platform_rejects_directory_open",
   "tests/unit/test_formula_package_sync.py::test_formula_node_package_dependencies_stay_in_sync",
   "tests/unit/test_formula_package_sync.py::test_formula_lockfiles_pin_same_formula_dependency_versions",
   "tests/unit/test_macos_adaptation_validator.py::MacosAdaptationValidatorTests::test_repository_contract_is_valid",
@@ -625,6 +627,7 @@ test_nodes = [
   "tests/unit/test_offline_evidence.py::test_evidence_is_derived_from_actual_staged_target",
   "tests/unit/test_python_distribution_inventory.py::test_distribution_inventory_matches_source_tree",
   "tests/unit/test_release_asset_inventory.py::test_stable_assets_are_exactly_flattened_and_checksums_use_basenames",
+  "tests/unit/test_release_asset_inventory.py::test_directory_fsync_is_best_effort_when_platform_rejects_directory_open",
   "tests/unit/test_artifact_secret_scan.py::test_artifact_scanner_reports_only_variable_name_and_path",
   "tests/unit/test_artifact_secret_scan.py::test_controlled_pytest_failure_junit_cannot_render_live_secret",
   "tests/unit/test_artifact_secret_scan.py::test_provider_canary_upload_is_gated_by_secret_scan",
