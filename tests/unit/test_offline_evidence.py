@@ -202,12 +202,8 @@ def test_evidence_is_derived_from_actual_staged_target(tmp_path: Path) -> None:
         item["name"]: item["value"] for item in uninsis_component["properties"]
     }
     assert uninsis_component["version"] == "1.7.0"
-    assert uninsis_component["hashes"] == [
-        {"alg": "SHA-256", "content": "c" * 64}
-    ]
-    assert uninsis_component["licenses"] == [
-        {"expression": "LGPL-3.0-or-later"}
-    ]
+    assert uninsis_component["hashes"] == [{"alg": "SHA-256", "content": "c" * 64}]
+    assert uninsis_component["licenses"] == [{"expression": "LGPL-3.0-or-later"}]
     assert uninsis_properties["paper-fetch:component-category"] == "setup-time"
     assert uninsis_properties["paper-fetch:archive-sha256"] == "b" * 64
 
@@ -245,9 +241,7 @@ def test_embedded_runtime_digest_mismatch_fails_closed(tmp_path: Path) -> None:
 def test_setup_component_digest_mismatch_fails_closed(tmp_path: Path) -> None:
     staging, site_packages, offline_manifest = _fixture(tmp_path)
     payload = json.loads(offline_manifest.read_text(encoding="utf-8"))
-    payload["setup_components"]["windows_uninsis_i386"]["actual_sha256"] = (
-        "e" * 64
-    )
+    payload["setup_components"]["windows_uninsis_i386"]["actual_sha256"] = "e" * 64
     offline_manifest.write_text(json.dumps(payload), encoding="utf-8")
 
     with pytest.raises(

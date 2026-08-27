@@ -124,9 +124,7 @@ EXPECTED_WINDOWS_UNINSIS = {
         "8004d12b1635ccb7fba0c6aa0aeeb72871f9d50aa02d7b8f3134dc10feca4994"
     ),
     "dll_path": "installer/vendor/uninsis/i386/UninsIS.dll",
-    "dll_sha256": (
-        "9bf8badad59783459f85a1e6203f0c8257bb9554927ca2fa6df5f74850bdcf78"
-    ),
+    "dll_sha256": ("9bf8badad59783459f85a1e6203f0c8257bb9554927ca2fa6df5f74850bdcf78"),
     "license": "LGPL-3.0-or-later",
     "license_path": "installer/vendor/uninsis/LICENSE",
     "license_sha256": (
@@ -1881,9 +1879,7 @@ def _validate_windows_uninsis(
 ) -> None:
     components = contract.get("components")
     component = (
-        components.get("windows_uninsis", {})
-        if isinstance(components, dict)
-        else {}
+        components.get("windows_uninsis", {}) if isinstance(components, dict) else {}
     )
     if component != EXPECTED_WINDOWS_UNINSIS:
         errors.append(

@@ -261,9 +261,7 @@ def _setup_component_inventory(
         license_expected = str(
             raw_component.get("license_expected_sha256") or ""
         ).lower()
-        license_actual = str(
-            raw_component.get("license_actual_sha256") or ""
-        ).lower()
+        license_actual = str(raw_component.get("license_actual_sha256") or "").lower()
         archive_digest = str(raw_component.get("archive_sha256") or "").lower()
         if len(expected) != 64 or expected != actual:
             raise ValueError(
@@ -427,9 +425,7 @@ def _augment_sbom(
                 "bom-ref": f"pkg:generic/{component_id}@{quote(version, safe='')}",
                 "name": component["name"],
                 "version": version,
-                "hashes": [
-                    {"alg": "SHA-256", "content": component["actual_sha256"]}
-                ],
+                "hashes": [{"alg": "SHA-256", "content": component["actual_sha256"]}],
                 "licenses": [{"expression": component["license"]}],
                 "externalReferences": [
                     {"type": "distribution", "url": component["archive_url"]}
