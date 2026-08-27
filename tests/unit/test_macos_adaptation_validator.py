@@ -191,9 +191,11 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract["portable_ci"]["runners"] = ["windows-latest"]
         contract["release_tooling"]["trusted_ref_format"] = "branch-or-tag"
         contract["release_tooling"]["source_tag_immutable"] = False
-        contract["release_tooling"]["verify_workflow"] = ".github/workflows/ci.yml"
+        contract["release_tooling"]["package_workflow"] = ".github/workflows/ci.yml"
         contract["release_tooling"]["tag_commit_resolution"] = "tag-name-only"
-        contract["release_tooling"]["verified_sha_reused_for_all_jobs"] = False
+        contract["release_tooling"]["source_sha_reused_for_all_jobs"] = False
+        contract["release_tooling"]["release_runs_unit"] = True
+        contract["release_tooling"]["local_full_unit_operator_gate"] = "pytest"
         contract["release_tooling"]["frozen_dependency_targets"] = []
         contract["release_tooling"]["dependency_evidence"] = []
         contract["release_tooling"]["resolver_pip_specifier"] = "==26.1.2"
@@ -232,7 +234,7 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             diagnostic,
         )
         self.assertIn(
-            "release_tooling.verify_workflow must be '.github/workflows/verify.yml'",
+            "release_tooling.package_workflow must be '.github/workflows/package.yml'",
             diagnostic,
         )
         self.assertIn(
@@ -240,7 +242,13 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             diagnostic,
         )
         self.assertIn(
-            "release_tooling.verified_sha_reused_for_all_jobs must be True",
+            "release_tooling.source_sha_reused_for_all_jobs must be True",
+            diagnostic,
+        )
+        self.assertIn("release_tooling.release_runs_unit must be False", diagnostic)
+        self.assertIn(
+            "release_tooling.local_full_unit_operator_gate must be "
+            f"{validator.EXPECTED_LOCAL_FULL_UNIT_OPERATOR_GATE!r}",
             diagnostic,
         )
         self.assertIn("release_tooling.frozen_dependency_targets must be", diagnostic)
@@ -314,6 +322,67 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             "runtime contract",
             diagnostic,
         )
+
+    def test_release_artifact_only_workflow_drift_is_rejected(self) -> None:
+        copied_paths = (
+            ".github/workflows/ci.yml",
+            ".github/workflows/verify.yml",
+            ".github/workflows/package.yml",
+            ".github/workflows/release.yml",
+            ".github/workflows/rolling-release.yml",
+            ".github/workflows/offline.yml",
+            "quality/python-distribution-inventory.json",
+            "scripts/prepare_release_assets.py",
+            "scripts/verify-windows-installer-lifecycle.ps1",
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            for relative_path in copied_paths:
+                source = validator.REPO_ROOT / relative_path
+                destination = repo_root / relative_path
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_text(
+                    source.read_text(encoding="utf-8"),
+                    encoding="utf-8",
+                )
+
+            package_path = repo_root / ".github/workflows/package.yml"
+            package_path.write_text(
+                package_path.read_text(encoding="utf-8")
+                + "\n# python -m pytest tests/unit --cov\n",
+                encoding="utf-8",
+            )
+            release_path = repo_root / ".github/workflows/release.yml"
+            release_text = release_path.read_text(encoding="utf-8").replace(
+                "ref: ${{ needs.verify-tag.outputs.source_sha }}",
+                "ref: ${{ github.sha }}",
+                1,
+            )
+            release_path.write_text(
+                release_text
+                + "\n# uses: ./.github/workflows/verify.yml\n"
+                + "# python -m pytest tests/unit --cov coverage\n"
+                + "#   golden-exact:\n",
+                encoding="utf-8",
+            )
+            errors: list[str] = []
+
+            validator._validate_release_verification_chain(
+                repo_root=repo_root,
+                errors=errors,
+            )
+
+        diagnostic = "\n".join(errors)
+        self.assertIn("tagged SHA Python distribution build drifted", diagnostic)
+        self.assertIn("reusable package workflow must not run unit tests", diagnostic)
+        self.assertIn(
+            "stable release must not run the full reusable verify gate",
+            diagnostic,
+        )
+        self.assertIn("stable release must not run unit tests", diagnostic)
+        self.assertIn("stable release must not run pytest", diagnostic)
+        self.assertIn("stable release must not run coverage collection", diagnostic)
+        self.assertIn("stable release must not run the golden test matrix", diagnostic)
 
     def test_upstream_sync_constants_are_explicit(self) -> None:
         contract = validator.load_contract()

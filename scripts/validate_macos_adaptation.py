@@ -25,7 +25,7 @@ PINNED_ACTION_USE_RE = re.compile(
     r"(?:\s+#\s*(?P<version>\S+))?\s*$"
 )
 
-EXPECTED_CHANGE_IDS = {f"MAC-V4-{index:03d}" for index in range(1, 10)}
+EXPECTED_CHANGE_IDS = {f"MAC-V4-{index:03d}" for index in range(1, 11)}
 EXPECTED_AUDIT_IDS = {f"MAC-AUD-{index:03d}" for index in range(1, 14)}
 EXPECTED_PYTHON_VERSIONS = ["3.11", "3.12", "3.13", "3.14"]
 EXPECTED_PYTHON_TAGS = ["cp311", "cp312", "cp313", "cp314"]
@@ -75,6 +75,9 @@ EXPECTED_RELEASE_ATTESTATION_USES = 1
 EXPECTED_RELEASE_ATTESTATION_SUBJECT_PATH = "release-assets/**/*"
 EXPECTED_RELEASE_ASSET_PREPARER = "scripts/prepare_release_assets.py"
 EXPECTED_STABLE_RELEASE_ASSET_COUNT = 31
+EXPECTED_LOCAL_FULL_UNIT_OPERATOR_GATE = (
+    "PYTHONPATH=src uv run python -m pytest tests/unit -q"
+)
 EXPECTED_RESOLVER_TOOLING_SPECIFIERS = {
     "pip": ">=26.1.2,<27",
     "packaging": ">=26.2,<27",
@@ -205,11 +208,13 @@ REQUIRED_PORTABLE_CI = {
 }
 REQUIRED_RELEASE_TOOLING = {
     "workflow",
-    "verify_workflow",
+    "package_workflow",
     "trusted_ref_format",
     "source_tag_immutable",
     "tag_commit_resolution",
-    "verified_sha_reused_for_all_jobs",
+    "source_sha_reused_for_all_jobs",
+    "release_runs_unit",
+    "local_full_unit_operator_gate",
     "adapted_release_requires_version_bump",
     "adapted_release_requires_new_tag",
     "source_contract_required_before_overlay",
@@ -1563,11 +1568,13 @@ def _validate_portable_and_release_tooling(
     )
     expected_release = {
         "workflow": ".github/workflows/offline.yml",
-        "verify_workflow": ".github/workflows/verify.yml",
+        "package_workflow": ".github/workflows/package.yml",
         "trusted_ref_format": "full-commit-sha",
         "source_tag_immutable": True,
         "tag_commit_resolution": "refs-tags-peel-commit-sha",
-        "verified_sha_reused_for_all_jobs": True,
+        "source_sha_reused_for_all_jobs": True,
+        "release_runs_unit": False,
+        "local_full_unit_operator_gate": EXPECTED_LOCAL_FULL_UNIT_OPERATOR_GATE,
         "adapted_release_requires_version_bump": True,
         "adapted_release_requires_new_tag": True,
         "source_contract_required_before_overlay": True,
@@ -1601,6 +1608,9 @@ def _validate_portable_and_release_tooling(
     for key, expected in expected_release.items():
         if release_tooling.get(key) != expected:
             errors.append(f"release_tooling.{key} must be {expected!r}")
+    for legacy_key in ("verify_workflow", "verified_sha_reused_for_all_jobs"):
+        if legacy_key in release_tooling:
+            errors.append(f"release_tooling.{legacy_key} must be replaced")
 
     verify_workflow = _read_repo_file(
         ".github/workflows/verify.yml",
@@ -1835,6 +1845,9 @@ def _validate_release_verification_chain(
     verify_workflow = _read_repo_file(
         ".github/workflows/verify.yml", repo_root=repo_root, errors=errors
     )
+    package_workflow = _read_repo_file(
+        ".github/workflows/package.yml", repo_root=repo_root, errors=errors
+    )
     release_workflow = _read_repo_file(
         ".github/workflows/release.yml", repo_root=repo_root, errors=errors
     )
@@ -1856,13 +1869,66 @@ def _validate_release_verification_chain(
         (
             ("workflow_call", "reusable verify trigger"),
             ("ref: ${{ inputs.ref }}", "exact verify source checkout"),
-            ("scripts/verify_python_distribution.py", "exact distribution inventory"),
+            ("pytest tests/unit -q", "ordinary full unit gate"),
+            ("--cov-branch", "ordinary branch coverage gate"),
+            (
+                "uses: ./.github/workflows/package.yml",
+                "ordinary reusable package gate",
+            ),
         ),
         errors=errors,
     )
+    _require_fragments(
+        package_workflow,
+        (
+            ("workflow_call", "reusable package trigger"),
+            ("Immutable source commit to package", "immutable package input"),
+            (
+                '[[ ! "$SOURCE_REF" =~ ^[0-9a-f]{40}$ ]]',
+                "immutable package SHA validation",
+            ),
+            ("ref: ${{ inputs.ref }}", "exact package source checkout"),
+            (
+                'test "$(git rev-parse HEAD)" = "$SOURCE_REF"',
+                "checked-out package SHA validation",
+            ),
+            ("scripts/verify_python_distribution.py", "exact distribution inventory"),
+            ("name: python-distributions", "Python distribution artifact upload"),
+        ),
+        errors=errors,
+    )
+    for forbidden, label in (
+        ("tests/unit", "unit tests"),
+        ("python -m pytest", "pytest"),
+        ("--cov", "coverage collection"),
+    ):
+        if forbidden in package_workflow:
+            errors.append(
+                f"reusable package workflow must not run {label}; found `{forbidden}`"
+            )
     release_fragments = [
         ('git rev-parse "refs/tags/$tag^{commit}"', "annotated tag commit peel"),
-        ("uses: ./.github/workflows/verify.yml", "stable reusable verify gate"),
+        ("uses: ./.github/workflows/package.yml", "stable reusable package gate"),
+        (
+            "  package:\n"
+            "    needs: verify-tag\n"
+            "    uses: ./.github/workflows/package.yml\n"
+            "    with:\n"
+            "      ref: ${{ needs.verify-tag.outputs.source_sha }}",
+            "tagged SHA Python distribution build",
+        ),
+        (
+            "  resolve-dependencies:\n    needs: verify-tag",
+            "dependency resolution parallel with Python packaging",
+        ),
+        (
+            "  offline:\n    needs: [verify-tag, merge-dependencies]",
+            "offline artifact dependency graph",
+        ),
+        (
+            "  publish:\n    needs: [verify-tag, package, merge-dependencies, offline]",
+            "artifact-only publication dependency graph",
+        ),
         ("frozen_dependencies: true", "stable frozen dependencies"),
         (
             "dependency_tooling_ref: ${{ needs.verify-tag.outputs.source_sha }}",
@@ -1889,6 +1955,19 @@ def _validate_release_verification_chain(
         for target in EXPECTED_OFFLINE_TARGETS
     )
     _require_fragments(release_workflow, tuple(release_fragments), errors=errors)
+    for forbidden, label in (
+        ("uses: ./.github/workflows/verify.yml", "the full reusable verify gate"),
+        ("tests/unit", "unit tests"),
+        ("python -m pytest", "pytest"),
+        ("--cov", "coverage collection"),
+        ("coverage", "coverage jobs or artifacts"),
+        ("  golden-exact:", "the golden test matrix"),
+        ("  python-boundaries:", "the Python test matrix"),
+        ("  macos-contract-portable:", "the portable contract test matrix"),
+        ("  macos-native:", "the ordinary native test gate"),
+    ):
+        if forbidden in release_workflow:
+            errors.append(f"stable release must not run {label}; found `{forbidden}`")
     _require_fragments(
         rolling_release_workflow,
         (
@@ -2128,7 +2207,7 @@ def _validate_native_gates(
                 "release reusable offline workflow",
             ),
             (
-                "needs: [verify-tag, verify, merge-dependencies, offline]",
+                "needs: [verify-tag, package, merge-dependencies, offline]",
                 "release offline publish gate",
             ),
         ),
@@ -2602,7 +2681,7 @@ def _validate_changes(
         missing = sorted(EXPECTED_CHANGE_IDS - seen_change_ids)
         unexpected = sorted(seen_change_ids - EXPECTED_CHANGE_IDS)
         errors.append(
-            "changes must contain exactly MAC-V4-001 through MAC-V4-009; "
+            "changes must contain exactly MAC-V4-001 through MAC-V4-010; "
             f"missing={missing}, unexpected={unexpected}"
         )
     return all_test_nodes

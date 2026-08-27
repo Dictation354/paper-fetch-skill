@@ -72,14 +72,14 @@ jobs:
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
 
-  verify:
+  package:
     needs: verify-tag
-    uses: ./.github/workflows/verify.yml
+    uses: ./.github/workflows/package.yml
     with:
       ref: ${{ needs.verify-tag.outputs.source_sha }}
 
   resolve-dependencies:
-    needs: [verify-tag, verify]
+    needs: verify-tag
     strategy:
       fail-fast: false
       matrix:
@@ -202,7 +202,7 @@ jobs:
           retention-days: 1
 
   offline:
-    needs: [verify-tag, verify, merge-dependencies]
+    needs: [verify-tag, merge-dependencies]
     uses: ./.github/workflows/offline.yml
     with:
       ref: ${{ needs.verify-tag.outputs.source_sha }}
@@ -212,7 +212,7 @@ jobs:
       dependency_tooling_ref: ${{ needs.verify-tag.outputs.source_sha }}
 
   publish:
-    needs: [verify-tag, verify, merge-dependencies, offline]
+    needs: [verify-tag, package, merge-dependencies, offline]
     runs-on: ubuntu-latest
     permissions:
       contents: write

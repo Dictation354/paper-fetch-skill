@@ -67,6 +67,7 @@ schema 从 v4 的实际文件和风险出发，不继承过时路径或旧浏览
 | `MAC-V4-007` | Windows / WSL 可执行维护合约 | `MAC-AUD-001`、`MAC-AUD-011` |
 | `MAC-V4-008` | Camoufox 官方 Mac app bundle 解析 | `MAC-AUD-013` |
 | `MAC-V4-009` | managed Camoufox 首次按需准备策略 | `MAC-AUD-013` |
+| `MAC-V4-010` | Stable release 仅构建和验证发布产物 | `MAC-AUD-002`、`MAC-AUD-006` |
 
 表中的 ID 与
 [`macos-adaptation-contract.toml`](macos-adaptation-contract.toml) 一一对应；
@@ -171,11 +172,13 @@ CI，而不是 tarball verifier。
 `cyclonedx_py`。
 
 稳定发布先把 lightweight 或 annotated tag peel 到完整 40 字符 commit SHA，
-然后将该 SHA 传给同一个 reusable verify gate。只有完整 gate 通过后，才在同一
-workflow run 为 Linux cp311–cp314、macOS arm64 cp311–cp314 和 Windows cp313
-九目标生成并合并 frozen dependency snapshot，并以
-`frozen_dependencies=true` 构建。source/tooling checkout、构建、attestation 和
-GitHub Release target 始终绑定该已验证 SHA；发布前再次核对 tag 没有漂移。
+然后把该 SHA 同时交给 reusable `package.yml` 和 Linux cp311–cp314、macOS arm64
+cp311–cp314、Windows cp313 九目标 frozen dependency resolver。二者并行运行；
+依赖合并完成后才以 `frozen_dependencies=true` 构建 offline 资产，publish 只依赖
+tag 校验、Python distributions、merged dependencies 和 offline build。Release
+不调用 `verify.yml`，不运行 unit、coverage、quality、integration、golden 或普通
+CI，也不等待这些远程结果。source/tooling checkout、构建、attestation 和 GitHub
+Release target 始终绑定同一 tagged SHA；发布前再次核对 tag 没有漂移。
 每个实际 staging 生成自己的 Python、Node/Playwright、Camoufox、formula/image/
 native 与 embedded runtime dependency manifest 和 CycloneDX SBOM，证据 sidecar
 随对应离线产物上传，不能用 lock export 代替实际产物盘点。
@@ -194,6 +197,28 @@ release workflow 的 build provenance 生成步骤固定到
 `release-assets/**/*` subject path。机器合约、validator、unit test 与部署说明
 共同校验 action 名称、版本注释、SHA、调用次数和输入接口，避免发布证据链在依赖
 更新时静默漂移。
+
+### MAC-V4-010：Stable release 只承担产物职责
+
+wheel/sdist 的既有构建、精确 archive inventory、两个独立 venv 安装 smoke、secret
+scan 和 `python-distributions` 上传集中在 `.github/workflows/package.yml`。该
+reusable workflow 只接受必填的 40 字符 commit SHA，checkout 后再次确认 `HEAD`
+完全一致。普通 `verify.yml` 继续保留完整 unit/branch coverage、quality、integration、
+golden、Python boundary、portable contract 与原生 macOS gate，并调用 `package.yml`
+产出普通 CI 的 Python distributions；`dependency-refresh.yml` 也继续执行完整 unit。
+
+Stable `release.yml` 只保留标签/版本/不可变 SHA、九目标 frozen dependency、Python
+distributions、九个平台 offline installer 的 inventory/smoke/verifier、Windows 原生
+lifecycle、逐目标 SBOM、secret scan、checksum、attestation 和发布。发布操作者必须在
+创建下一正式版本及新标签前，以项目默认并行配置在本地运行：
+
+```bash
+PYTHONPATH=src uv run python -m pytest tests/unit -q
+```
+
+这个本地完整 unit 是发布操作门禁，不会让 Release workflow 重新运行或等待普通 CI。
+release CI 的改动仍须进入 `Unreleased`；只有下一次正式发布时才提升版本并创建新
+标签，既有不可变标签不移动、不删除，也不用于发布标签之后才合入的工作流改造。
 
 ### MAC-V4-005：quarantine、safe purge 和 symlink 安全
 
@@ -466,6 +491,7 @@ contract gate；这些结果用于早期发现漂移，不会提升为原生 Mac
    如果新版本确实增加或删除 change/audit case，必须同步机器合约与两份人类
    文档，不能只放宽 validator。审查 upstream
    对 `.github/workflows/ci.yml`、`.github/workflows/verify.yml`、
+   `.github/workflows/package.yml`、
    `.github/workflows/offline.yml`、
    `scripts/build-offline-package.sh`、`install-offline.sh`、
    `scripts/verify-offline-package.sh`、`installer/manifest.json` 和相关测试的
@@ -499,7 +525,7 @@ contract gate；这些结果用于早期发现漂移，不会提升为原生 Mac
    绿灯不能豁免该 gate。
 8. 涉及离线包时，再手动运行 `Offline packages` workflow，并核对四个 arm64
    Python ABI tarball 均经过原生 verifier。
-9. 发布适配结果前提升 fork 版本并创建新的不可变标签。不得移动或复用上游
+9. 发布适配结果前先运行下文完整 unit 操作门禁，再提升 fork 版本并创建新的不可变标签。不得移动或复用上游
    `v4.1.0`；validator 会要求 `pyproject.toml` 的发布版本严格高于
    `source_baseline.version`，标签、Python metadata、changelog 与 release notes
    必须指向 fork 的新版本。
@@ -531,7 +557,7 @@ manifest 和 Inno `.iss` 作为来自同一 commit 的完整集合。Windows emb
 `downloads/user-owned.txt`，README、checksum、uninstaller 或未来未知残留都会失败。
 Linux/WSL 的静态验证不能冒充这项系统状态证据。
 
-完整 unit 验证继续复用项目 pytest 并行配置：
+完整 unit 验证继续复用项目 pytest 并行配置，并作为创建正式标签前的发布操作者门禁：
 
 ```bash
 PYTHONPATH=src uv run python -m pytest tests/unit -q
@@ -551,6 +577,8 @@ Playwright 边界、release CI 时，同一提交应同步：
 - 本文和 [`deployment.md`](deployment.md) 中对用户可见的行为；
 - `.github/workflows/ci.yml` / `.github/workflows/verify.yml` 的 CPython 3.14
   原生 macOS gate，以及 release / offline workflow 的 CPython 3.11–3.14 矩阵。
+- `.github/workflows/package.yml` 的不可变 SHA、wheel/sdist inventory、独立安装 smoke
+  与 secret-scan 上传边界。
 
 合约 validator 负责检查静态引用、关键字面事实和受信任 tooling overlay 的精确
 路径；Ubuntu / Windows portable job 确保两个维护入口持续可执行；原生 runner

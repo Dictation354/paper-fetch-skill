@@ -1,0 +1,98 @@
+name: Python distributions
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Immutable source commit to package
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require immutable source commit
+        shell: bash
+        env:
+          SOURCE_REF: ${{ inputs.ref }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$SOURCE_REF" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "ref must be an immutable 40-character commit SHA." >&2
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - name: Confirm checked-out source commit
+        shell: bash
+        env:
+          SOURCE_REF: ${{ inputs.ref }}
+        run: test "$(git rev-parse HEAD)" = "$SOURCE_REF"
+      - uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: "3.11"
+      - name: Build wheel and sdist
+        run: uv build
+      - name: Verify exact distribution inventory
+        run: |
+          uv run python scripts/verify_python_distribution.py \
+            --inventory quality/python-distribution-inventory.json \
+            --wheel dist/*.whl \
+            --sdist dist/*.tar.gz \
+            --repo-root .
+      - name: Install and smoke wheel and sdist independently
+        shell: bash
+        run: |
+          set -euo pipefail
+          wheel="$(find dist -maxdepth 1 -name '*.whl' -print -quit)"
+          sdist="$(find dist -maxdepth 1 -name '*.tar.gz' -print -quit)"
+          for kind in wheel sdist; do
+            if [ "$kind" = "wheel" ]; then
+              artifact="$wheel"
+            else
+              artifact="$sdist"
+            fi
+            venv="$RUNNER_TEMP/python-distribution-$kind"
+            python -m venv "$venv"
+            smoke_python="$venv/bin/python"
+            "$smoke_python" -m pip install "$artifact"
+            "$venv/bin/paper-fetch" --version
+            "$venv/bin/paper-fetch-install-formula-tools" --help >/dev/null
+            "$venv/bin/paper-fetch-install-image-tools" --help >/dev/null
+            "$smoke_python" - <<'PY'
+          from importlib import resources
+          from pathlib import Path
+          import sys
+
+          import paper_fetch
+          from paper_fetch.mcp.server import build_server
+
+          assert paper_fetch.__version__
+          assert build_server().name == "paper-fetch"
+          formula = resources.files("paper_fetch.resources.formula")
+          manifest = resources.files("paper_fetch.resources.manifest")
+          assert formula.joinpath("mathml_to_latex_cli.mjs").is_file()
+          assert manifest.joinpath("manifest-record-v2.schema.json").is_file()
+          skill = Path(sys.prefix) / "share/paper-fetch-skill/skills/paper-fetch-skill"
+          assert skill.joinpath("SKILL.md").is_file()
+          assert skill.joinpath("references/tool-contract.md").is_file()
+          PY
+          done
+          cp quality/python-distribution-inventory.json \
+            dist/python-distribution-inventory.json
+      - name: Scan Python distribution artifacts for secret values
+        id: secret_scan_python_distributions
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/scan_artifacts_for_secrets.py --root dist
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ steps.secret_scan_python_distributions.outcome == 'success' }}
+        with:
+          name: python-distributions
+          path: dist/*

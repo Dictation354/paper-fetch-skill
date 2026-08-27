@@ -42,9 +42,10 @@
   `.github/workflows/verify.yml`，后者在 CPython 3.14 执行原生 build + verifier；
   release / offline workflow 实际执行四个 `macos-15` ABI job；普通 CI 还在
   Ubuntu 与 Windows 分别执行 portable contract entrypoint。release workflow
-  对 lightweight/annotated tag peel 到完整 commit SHA，并在同一 SHA 通过 reusable
-  verify 后解析九目标 frozen snapshot；source/tooling checkout、离线构建、发布
-  target 与 provenance 都绑定该 SHA。provenance 步骤还会校验
+  对 lightweight/annotated tag peel 到完整 commit SHA；同一 SHA 的 reusable
+  `package.yml` 与九目标 frozen snapshot resolver 并行运行，随后 offline matrix
+  构建，Release 不运行或等待 unit/普通 CI；source/tooling checkout、Python
+  distributions、离线构建、发布 target 与 provenance 都绑定该 SHA。provenance 步骤还会校验
   `actions/attest-build-provenance` v4.2.2 的完整 SHA、精确一次调用和
   `release-assets/**/*` subject path；每目标实际 staging 的 dependency manifest
   与 CycloneDX SBOM 随对应 artifact 上传。POSIX/Windows builder 分别固定使用
@@ -371,7 +372,8 @@
 2. Windows / WSL 先跑可用 contract gate；
 3. 原生 `macos-15` gate 必须通过；
 4. 影响 tarball 时四个 ABI 产物必须经过原生 verifier；
-5. 发布 fork 适配前提升版本并创建新不可变标签；不移动/复用上游 `v4.1.0`；
+5. 发布 fork 适配前本地运行完整并行 unit，再提升版本并创建新不可变标签；Release
+   只构建发布产物，不运行或等待远程 unit/普通 CI；不移动/复用上游 `v4.1.0`；
 6. `MAC-AUD-012` 保持开放不会阻止非浏览器离线安装发布，但 Release Notes 和
    文档必须继续披露该限制。
 7. `MAC-AUD-013` 的 portable mock 不能替代原生 prepared-bundle 双 context

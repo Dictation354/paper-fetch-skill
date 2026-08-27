@@ -6,6 +6,8 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+- 将 Python wheel/sdist 构建拆到只接受不可变完整 SHA 的 reusable `package.yml`，保留精确 inventory、wheel/sdist 独立安装 smoke、密钥扫描和 artifact 上传。普通 CI 继续运行完整 unit/coverage/quality/integration/golden/平台门禁，Dependency refresh 继续运行完整 unit；Stable release 则只构建发布产物：Python package 与九目标冻结依赖解析并行，随后 offline installer 验证、Windows lifecycle、SBOM、checksum、attestation 和发布全部消费同一 tagged SHA。Release 不运行、也不等待远程 unit/普通 CI；下一版本和不可变新标签创建前，仍以本地完整 unit 命令作为发布操作者门禁。
+
 ## 5.6.0 - 2026-08-27
 
 ### 修复——技能完整性、可复现测试与复杂度债务

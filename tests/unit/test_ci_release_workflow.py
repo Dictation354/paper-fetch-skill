@@ -23,15 +23,19 @@ def test_workflows_are_split_by_operational_boundary() -> None:
         "ci.yml",
         "dependency-refresh.yml",
         "offline.yml",
+        "package.yml",
         "provider-canary.yml",
         "release.yml",
         "rolling-release.yml",
         "verify.yml",
     }
     assert "workflow_call" in _workflow_text("offline.yml")
+    assert "workflow_call" in _workflow_text("package.yml")
     assert "workflow_call" in _workflow_text("verify.yml")
     assert "uses: ./.github/workflows/verify.yml" in _workflow_text("ci.yml")
-    assert "uses: ./.github/workflows/verify.yml" in _workflow_text("release.yml")
+    assert "uses: ./.github/workflows/package.yml" in _workflow_text("verify.yml")
+    assert "uses: ./.github/workflows/package.yml" in _workflow_text("release.yml")
+    assert "uses: ./.github/workflows/verify.yml" not in _workflow_text("release.yml")
     assert "uses: ./.github/workflows/offline.yml" in _workflow_text("release.yml")
 
 
@@ -53,6 +57,11 @@ def test_reusable_verify_checks_out_only_the_requested_immutable_ref() -> None:
     workflow = _workflow("verify.yml")
 
     for job_name, job in workflow["jobs"].items():
+        if "uses" in job:
+            assert job_name == "package"
+            assert job["uses"] == "./.github/workflows/package.yml"
+            assert job["with"]["ref"] == "${{ inputs.ref }}"
+            continue
         checkouts = [
             step
             for step in job["steps"]
@@ -62,6 +71,24 @@ def test_reusable_verify_checks_out_only_the_requested_immutable_ref() -> None:
         for checkout in checkouts:
             assert checkout.get("with", {}).get("ref") == "${{ inputs.ref }}"
             assert checkout.get("with", {}).get("persist-credentials") is False
+
+
+def test_reusable_package_requires_and_checks_out_an_immutable_commit() -> None:
+    workflow_text = _workflow_text("package.yml")
+    workflow = _workflow("package.yml")
+    steps = workflow["jobs"]["package"]["steps"]
+    checkout = next(
+        step
+        for step in steps
+        if str(step.get("uses") or "").startswith("actions/checkout@")
+    )
+
+    assert "Immutable source commit to package" in workflow_text
+    assert "required: true" in workflow_text
+    assert '[[ ! "$SOURCE_REF" =~ ^[0-9a-f]{40}$ ]]' in workflow_text
+    assert 'test "$(git rev-parse HEAD)" = "$SOURCE_REF"' in workflow_text
+    assert checkout["with"]["ref"] == "${{ inputs.ref }}"
+    assert checkout["with"]["persist-credentials"] is False
 
 
 def test_ci_protects_minimum_and_maximum_python_core_and_full_installs() -> None:
@@ -323,7 +350,8 @@ def test_release_emits_sbom_checksums_and_build_provenance() -> None:
     assert 'git rev-parse "refs/tags/$tag^{commit}"' in workflow
     assert "source_sha: ${{ steps.source.outputs.source_sha }}" in workflow
     assert "ref: ${{ needs.verify-tag.outputs.source_sha }}" in workflow
-    assert "uses: ./.github/workflows/verify.yml" in workflow
+    assert "uses: ./.github/workflows/package.yml" in workflow
+    assert "uses: ./.github/workflows/verify.yml" not in workflow
     assert "paper-fetch-evidence-" in _workflow_text("offline.yml")
     assert "actual-staged-target" not in workflow
     assert "uv export" not in workflow
@@ -382,6 +410,37 @@ def test_release_build_jobs_check_out_the_verified_tag_commit() -> None:
     assert offline_inputs["posix_tooling_ref"] == expected_ref
     assert offline_inputs["windows_tooling_ref"] == expected_ref
     assert offline_inputs["dependency_tooling_ref"] == expected_ref
+    package_job = workflow["jobs"]["package"]
+    assert package_job["uses"] == "./.github/workflows/package.yml"
+    assert package_job["with"]["ref"] == expected_ref
+
+
+def test_stable_release_builds_only_artifacts_without_test_gates() -> None:
+    workflow_text = _workflow_text("release.yml")
+    jobs = _workflow("release.yml")["jobs"]
+
+    assert "verify" not in jobs
+    assert jobs["package"]["needs"] == "verify-tag"
+    assert jobs["resolve-dependencies"]["needs"] == "verify-tag"
+    assert jobs["offline"]["needs"] == ["verify-tag", "merge-dependencies"]
+    assert jobs["publish"]["needs"] == [
+        "verify-tag",
+        "package",
+        "merge-dependencies",
+        "offline",
+    ]
+    for forbidden in (
+        "uses: ./.github/workflows/verify.yml",
+        "tests/unit",
+        "python -m pytest",
+        "--cov",
+        "coverage",
+        "golden-exact:",
+        "python-boundaries:",
+        "macos-contract-portable:",
+        "macos-native:",
+    ):
+        assert forbidden not in workflow_text
 
 
 def test_stable_release_freezes_all_nine_target_dependency_graphs() -> None:
@@ -408,7 +467,7 @@ def test_stable_release_freezes_all_nine_target_dependency_graphs() -> None:
 
 
 def test_python_distributions_get_exact_inventory_and_independent_smokes() -> None:
-    workflow = _workflow_text("verify.yml")
+    workflow = _workflow_text("package.yml")
 
     assert "scripts/verify_python_distribution.py" in workflow
     assert "quality/python-distribution-inventory.json" in workflow

@@ -6,6 +6,8 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+- Split Python wheel/sdist construction into a reusable, immutable-SHA-only `package.yml` that retains exact inventory verification, independent wheel/sdist install smokes, secret scanning, and artifact upload. Ordinary CI still runs the complete unit/coverage/quality/integration/golden/platform gates and Dependency refresh still runs the full unit suite, while Stable release now builds only release artifacts: Python packaging runs in parallel with the nine-target frozen dependency resolver, then offline installer verification, Windows lifecycle, SBOM, checksums, attestation, and publication all consume the same tagged SHA. Release neither runs nor waits for remote unit/ordinary CI; the full local unit command remains the release-operator gate before the next version and immutable tag.
+
 ## 5.6.0 - 2026-08-27
 
 ### Fixed — skill integrity, reproducible tests, and complexity debt
