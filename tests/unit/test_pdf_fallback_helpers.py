@@ -2037,6 +2037,180 @@ class PdfFallbackHelperTests(unittest.TestCase):
         self.assertEqual(result.source_url, pdf_url)
         self.assertEqual(open_calls[0]["headers"].get("Cookie"), "cf_clearance=token")
 
+    def test_pdf_request_compatibility_validates_and_binds_route_scope(self) -> None:
+        request = _pdf_fallback.PdfRequestContext()
+
+        active_request = _pdf_fallback._pdf_request_from_compatibility(
+            request,
+            {
+                "provider_name": " Example ",
+                "allowed_hosts": ["example.org", "cdn.example.org"],
+            },
+        )
+
+        self.assertEqual(active_request.provider_name, "example")
+        self.assertEqual(
+            active_request.allowed_hosts,
+            ("example.org", "cdn.example.org"),
+        )
+        with self.assertRaisesRegex(TypeError, "unexpected keyword argument 'extra'"):
+            _pdf_fallback._pdf_request_from_compatibility(request, {"extra": True})
+
+    def test_pdf_navigation_helpers_cover_empty_and_protocol_edges(self) -> None:
+        self.assertFalse(_pdf_fallback._same_origin(None, "https://example.org/a"))
+        self.assertTrue(
+            _pdf_fallback._same_origin(
+                "http://example.org/a",
+                "http://example.org:80/b",
+            )
+        )
+        self.assertTrue(
+            _pdf_fallback._same_origin(
+                "ftp://example.org/a",
+                "ftp://example.org/b",
+            )
+        )
+        self.assertIsNone(
+            _pdf_fallback._response_content_length({"content-length": "-1"})
+        )
+        self.assertEqual(
+            _pdf_fallback._browser_navigation_pdf_headers(
+                user_agent=None,
+                referer=None,
+                target_url="https://example.org/article.pdf",
+            )["Sec-Fetch-Site"],
+            "none",
+        )
+        self.assertEqual(_pdf_fallback._browser_response_metadata(None), (None, {}))
+        self.assertEqual(
+            _pdf_fallback._browser_response_metadata(
+                types.SimpleNamespace(status="invalid", headers=None)
+            ),
+            (None, {}),
+        )
+
+    def test_browser_response_pdf_guards_fail_before_conversion(self) -> None:
+        class FakeResponse:
+            def __init__(self, headers, body) -> None:
+                self.headers = headers
+                self._body = body
+
+            def body(self):
+                if isinstance(self._body, Exception):
+                    raise self._body
+                return self._body
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            artifact_dir = Path(tmpdir)
+            self.assertIsNone(
+                _pdf_fallback._response_to_pdf_result(
+                    None,
+                    artifact_dir=artifact_dir,
+                    source_url="https://example.org/article.pdf",
+                    final_url="https://example.org/article.pdf",
+                )
+            )
+            with (
+                mock.patch.object(_pdf_fallback, "pdf_max_bytes", return_value=4),
+                self.assertRaisesRegex(
+                    _pdf_fallback.PdfFallbackFailure, "configured PDF limit"
+                ),
+            ):
+                _pdf_fallback._response_to_pdf_result(
+                    FakeResponse({"content-length": "5"}, b"unused"),
+                    artifact_dir=artifact_dir,
+                    source_url="https://example.org/article.pdf",
+                    final_url="https://example.org/article.pdf",
+                )
+            with self.assertRaisesRegex(
+                _pdf_fallback.PdfFallbackFailure, "Failed to read PDF"
+            ):
+                _pdf_fallback._response_to_pdf_result(
+                    FakeResponse({}, RuntimeError("read failed")),
+                    artifact_dir=artifact_dir,
+                    source_url="https://example.org/article.pdf",
+                    final_url="https://example.org/article.pdf",
+                )
+            self.assertIsNone(
+                _pdf_fallback._response_to_pdf_result(
+                    FakeResponse({}, "not bytes"),
+                    artifact_dir=artifact_dir,
+                    source_url="https://example.org/article.pdf",
+                    final_url="https://example.org/article.pdf",
+                )
+            )
+            with (
+                mock.patch.object(_pdf_fallback, "pdf_max_bytes", return_value=4),
+                self.assertRaisesRegex(
+                    _pdf_fallback.PdfFallbackFailure, "configured PDF limit"
+                ),
+            ):
+                _pdf_fallback._response_to_pdf_result(
+                    FakeResponse({}, b"12345"),
+                    artifact_dir=artifact_dir,
+                    source_url="https://example.org/article.pdf",
+                    final_url="https://example.org/article.pdf",
+                )
+            self.assertIsNone(
+                _pdf_fallback._response_to_pdf_result(
+                    FakeResponse({"content-type": "text/html"}, b"<html></html>"),
+                    artifact_dir=artifact_dir,
+                    source_url="https://example.org/article.pdf",
+                    final_url="https://example.org/article",
+                )
+            )
+
+    def test_browser_request_refetch_validates_candidate_and_returns_pdf(self) -> None:
+        pdf_url = "https://example.org/article.pdf"
+        expected = _pdf_common.PdfFetchResult(
+            source_url=pdf_url,
+            final_url=pdf_url,
+            pdf_bytes=b"%PDF-1.7 refetched",
+            markdown_text="# Example\n\n## Results\n\nBody text",
+            suggested_filename="article.pdf",
+        )
+        response = types.SimpleNamespace(
+            headers={"content-type": "application/pdf"},
+            body=lambda: b"%PDF-1.7 refetched",
+        )
+        request_api = mock.Mock()
+        request_api.get.return_value = response
+        page = types.SimpleNamespace(request=request_api)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            artifact_dir = Path(tmpdir)
+            self.assertIsNone(
+                _pdf_fallback._refetch_pdf_with_browser_request(
+                    page,
+                    artifact_dir=artifact_dir,
+                    source_url=pdf_url,
+                    final_url="",
+                )
+            )
+            self.assertIsNone(
+                _pdf_fallback._refetch_pdf_with_browser_request(
+                    page,
+                    artifact_dir=artifact_dir,
+                    source_url=pdf_url,
+                    final_url="https://example.org/article",
+                )
+            )
+            with mock.patch.object(
+                _pdf_fallback,
+                "pdf_fetch_result_from_bytes",
+                return_value=expected,
+            ) as convert:
+                result = _pdf_fallback._refetch_pdf_with_browser_request(
+                    page,
+                    artifact_dir=artifact_dir,
+                    source_url=pdf_url,
+                    final_url=pdf_url,
+                )
+
+        self.assertEqual(result, expected)
+        request_api.get.assert_called_once_with(pdf_url, timeout=60000)
+        convert.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

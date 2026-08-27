@@ -74,6 +74,7 @@
 - Provider governance 现在使用真实 corpus loader。只有同时具备 canonical raw asset、精确 expected contract 与当前可执行 adapter 的 140 个 fixture 才计为 replay；2 个 synthetic 与 15 个 manifest-only claim 仍保持可见，但不能覆盖 route。两个 synthetic IEEE PDF claim 现在各自需要有 owner 且会过期的 waiver。
 - 扩展 block manifest，新增 negative kind、精确 route/source identity、reason、failure code 与 content kind。签入的全部 17 个 negative raw HTML response 现在都通过当前 provider extractor 与 availability boundary 运行；历史 extracted Markdown 不再作为证据。
 - 在常规 CI 中新增四个确定性 provider-level shard，使全部 140 个精确 fixture 在每次 push/PR 中恰好运行一次。新增机器可读的 focus coverage baseline，聚合 coverage.py 官方 pure branch exit，对 unmatched/unmeasured/branchless area fail closed，报告 covered/total、精确百分比与向下取整百分比，并强制 security boundary 覆盖率至少为 90%。
+- 补齐 PDF fallback 的兼容参数作用域、浏览器导航同源与响应保护，以及 request-context PDF 二次取回边界覆盖，使 64% PDF 风险分支门禁在刷新后的 PyMuPDF4LLM 1.28.2 依赖图上继续可执行，而不是放宽基线。
 - 将集中的 evidence debt 替换为 10 个 route-specific 与 13 个 negative route-specific waiver；每个 waiver 都带 owner、restriction、具体 plan、review date 与独立错开的 expiry。Governance 会拒绝缺失、已过期、期限过长或共用 expiry 的条目。
 - 为四条公开、无凭据的 direct route 新增非阻塞 scheduled canary。Report 会作为 artifact 保存，连续失败次数通过 Actions cache 持久化；同一路线第三次失败时才开始 warning，成功一次即重置计数。
 
