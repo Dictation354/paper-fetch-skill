@@ -34,9 +34,13 @@ def test_formula_node_package_dependencies_stay_in_sync() -> None:
     assert _locked_dependencies(ROOT_LOCK) == root_dependencies
     assert root_dependencies == macos_contract.EXPECTED_FORMULA_NODE_DEPENDENCIES
     assert {
-        "katex": contract["katex_version"],
-        "mathml-to-latex": contract["mathml_to_latex_version"],
+        "katex": contract["katex_specifier"],
+        "mathml-to-latex": contract["mathml_to_latex_specifier"],
     } == root_dependencies
+    assert all(
+        specifier.startswith(">=") and " <" in specifier
+        for specifier in root_dependencies.values()
+    )
     assert contract["node_package_manifests"] == [
         path.relative_to(REPO_ROOT).as_posix()
         for path in (ROOT_PACKAGE, FORMULA_PACKAGE)
@@ -46,9 +50,14 @@ def test_formula_node_package_dependencies_stay_in_sync() -> None:
     ]
 
 
-def test_formula_lockfiles_pin_same_formula_dependency_versions() -> None:
-    root_dependencies = _load_json(ROOT_PACKAGE)["dependencies"]
+def test_formula_lockfiles_resolve_same_compatible_dependency_versions() -> None:
+    contract = macos_contract.load_contract()["components"]["formula_tools"]
+    expected_versions = {
+        "katex": contract["katex_version"],
+        "mathml-to-latex": contract["mathml_to_latex_version"],
+    }
 
-    for package_name, expected_version in root_dependencies.items():
+    assert expected_versions == macos_contract.EXPECTED_FORMULA_NODE_RESOLUTIONS
+    for package_name, expected_version in expected_versions.items():
         assert _locked_package_version(ROOT_LOCK, package_name) == expected_version
         assert _locked_package_version(FORMULA_LOCK, package_name) == expected_version

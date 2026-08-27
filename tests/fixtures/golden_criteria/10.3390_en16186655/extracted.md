@@ -5,20 +5,18 @@ source: "mdpi_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 22805
+token_estimate: 22187
 ---
 
 # 10.3390/en16186655
 
-_**energies**_
+**_energies_**
 
-**==> picture [35 x 35] intentionally omitted <==**
+_Article_
 
-**==> picture [43 x 28] intentionally omitted <==**
+## **LESS Spark Ignition Engine: An Innovative Alternative to the Crankshaft Mechanism**
 
-## _Article_ **LESS Spark Ignition Engine: An Innovative Alternative to the Crankshaft Mechanism**
-
-**Vasileios Georgitzikis[1], Dionisis Pettas[2], Konstantinos Loukas[2] and Georgios Mavropoulos[3,] ***
+**Vasileios Georgitzikis**<sup>**1**</sup> **, Dionisis Pettas**<sup>**2**</sup> **, Konstantinos Loukas**<sup>**2**</sup> **and Georgios Mavropoulos**<sup>**3,**</sup> *****
 
 - 1 G-Drill/LESS Engineering, Thessalonikis 30, Agios Ioannis Rentis, GR-18233 Pireaus, Greece; tzikis@gmail.com
 
@@ -28,15 +26,13 @@ _**energies**_
 
 - Correspondence: mavrop@otenet.gr; Tel.: +30-210-2896-956
 
-> **Abstract:** In recent years, the internal combustion engine has been the subject of debate mainly concerning its environmental impact. Despite all the discussion it becomes clear day by day that combustion engines will continue to occupy their dominant role over the following decades, especially in the mid- and large-size power spectrum ranges and retain a large share of the market in the smallersize segment of their application. In this context, in the present paper, a novel engine kinematic mechanism is introduced, which converts rotary to reciprocating motion, and aims to become a potential replacement for the traditional crankshaft mechanism of piston engines. Following a description of the fundamental principles of the new design, we detail the main problems with the application of the new design in the first prototype SI engine and the actions and improvements implemented to overcome them. The actual measurement data from basic engine performance parameters are provided and evaluated, leading to conclusions and decisions for further action which should be implemented in the next improvement steps. Overall, the new SI engine, implementing the novel kinematic mechanism, seems to be quite promising especially in hybrid automotive applications, a fact that encourages the implementation of further improvement plans.
+**Abstract:** In recent years, the internal combustion engine has been the subject of debate mainly concerning its environmental impact. Despite all the discussion it becomes clear day by day that combustion engines will continue to occupy their dominant role over the following decades, especially in the mid- and large-size power spectrum ranges and retain a large share of the market in the smallersize segment of their application. In this context, in the present paper, a novel engine kinematic mechanism is introduced, which converts rotary to reciprocating motion, and aims to become a potential replacement for the traditional crankshaft mechanism of piston engines. Following a description of the fundamental principles of the new design, we detail the main problems with the application of the new design in the first prototype SI engine and the actions and improvements implemented to overcome them. The actual measurement data from basic engine performance parameters are provided and evaluated, leading to conclusions and decisions for further action which should be implemented in the next improvement steps. Overall, the new SI engine, implementing the novel kinematic mechanism, seems to be quite promising especially in hybrid automotive applications, a fact that encourages the implementation of further improvement plans.
 
 **Citation:** Georgitzikis, V.; Pettas, D.; Loukas, K.; Mavropoulos, G. LESS Spark Ignition Engine: An Innovative Alternative to the Crankshaft Mechanism. _Energies_ **2023**, _16_, 6655. https://doi.org/10.3390/en16186655
 
 Academic Editor: Anastassios M. Stamatelos
 
 Received: 26 July 2023 Revised: 2 September 2023 Accepted: 11 September 2023 Published: 16 September 2023
-
-**==> picture [58 x 21] intentionally omitted <==**
 
 **Copyright:** © 2023 by the authors. Licensee MDPI, Basel, Switzerland. This article is an open access article distributed under the terms and conditions of the Creative Commons Attribution (CC BY) license (https:// creativecommons.org/licenses/by/ 4.0/).
 
@@ -86,12 +82,8 @@ Fuel is supplied via a common 30 mm diameter carburetor, which is mounted at the
 
 Finally, the ignition system uses a common ignition coil for the 2 cylinders and a distributor for the corresponding spark plug. In Figure 1a,b the external overview of the first prototype LESS-1 engine is displayed.
 
-**==> picture [273 x 111] intentionally omitted <==**
-
-**==> picture [278 x 148] intentionally omitted <==**
-
-**----- Start of picture text -----**<br>
-(a)<br>(b)<br>**----- End of picture text -----**<br>
+<!-- Start of picture text -->
+(a)<br>(b)<br><!-- End of picture text -->
 
 **Figure 1.** The side (**a**) and front (**b**) view of the prototype LESS-1 SI engine.
 
@@ -107,21 +99,15 @@ In order to understand the operating principle of the LESS mechanism, one should
 
 _Energies_ **2023**, _16_, 6655
 
-**==> picture [253 x 90] intentionally omitted <==**
-
 **Figure 2.** A 2D sinusoidal cam profile (blue) with a roller (green) following a sinusoidal trajectory (black) as it moves across the cam profile.
 
 Suppose the roller is somehow forced to be kept in continuous contact with the sinusoidal cam and it is forced to move along the x-axis. Then, the roller will necessarily reciprocate on the y-axis, and its resulting trajectory will follow the sinusoidal equation of the cam, as shown via the black line in Figure 2.
 
 Instead of using a roller, it is possible to have two 2D cams that slide on each other. However, if one were to simply use two sinusoidal cams, then the resulting trajectory would be a rectified sine, as shown in Figure 3.
 
-**==> picture [254 x 107] intentionally omitted <==**
-
 **Figure 3.** Two 2D sinusoidal cam profiles, and the trajectory that the top (blue) part will follow as it slides across the bottom (red) cam profile.
 
 In order to achieve a true sinusoidal trajectory using 2 sliding cams, the cam profiles require a very specific, mathematically defined geometry, which is a unique patented aspect of the LESS mechanism. More specifically, the cams need to be designed such that the valleys of the cam profile and the peaks of the cam profile have a size ratio of 3:1. With careful selection of the geometry, it is possible to create a sliding cam pair with a harmonic sinusoidal trajectory, as seen in Figure 4.
-
-**==> picture [254 x 107] intentionally omitted <==**
 
 **Figure 4.** Two 2D LESS cam profiles, and the sinusoidal trajectory that the top (blue) part will follow as it slides across the bottom (red) cam profile.
 
@@ -131,15 +117,11 @@ This design still suffers from a major drawback, which is the aforementioned nee
 
 _Energies_ **2023**, _16_, 6655
 
-**==> picture [269 x 147] intentionally omitted <==**
-
 **Figure 5.** A complete reciprocating LESS mechanism on a 2D plane, where the middle (blue) part reciprocates and rotates between the two external parts.
 
 In this case, as the middle (blue) part moves on the x-axis, it is forced by the top LESS cam to move downwards, following the same aforementioned sinusoidal trajectory. It cannot be detached from the top part, because the bottom (red) part is also in constant contact with its bottom side. After the middle part reaches the lowest point of the sinusoidal trajectory, the roles are reversed, and the bottom part pushes it upwards, whereas the top part keeps it in place. Therefore, the middle part can only follow the common trajectory, as it is restrained by the two LESS cams on its top and bottom surfaces, and the opposing LESS cam surfaces of the top and bottom parts.
 
 The final step will be to convert these theoretical 2D planar cams into a real mechanism. By taking the aforementioned 2D cam profiles and wrapping them around a cylinder, and extruding them into annular cam geometries, the mechanism of Figure 6 is created.
-
-**==> picture [254 x 150] intentionally omitted <==**
 
 **Figure 6.** A real-world, annular implementation of the LESS mechanism, where the middle part (white) can rotate and reciprocate between the two external (red) stators.
 
@@ -151,13 +133,9 @@ Furthermore, it is possible to constrain the movement of the components, so that
 
 _Energies_ **2023**, _16_, 6655
 
-**==> picture [254 x 145] intentionally omitted <==**
-
 **Figure 7.** A 3-piece LESS mechanism where the reciprocating and rotating components of the complex movement are isolated.
 
 Finally, by connecting a piston (green) to the reciprocating white part, as shown in the half-section view in Figure 8, one arrives at a complete alternative to the crankshaft mechanism, the basis of a reciprocating ICE.
-
-**==> picture [188 x 148] intentionally omitted <==**
 
 **Figure 8.** A complete mechanism for converting the reciprocating movement of a piston into rotational movement of the shaft.
 
@@ -175,17 +153,8 @@ One additional advantage compared to the traditional slider-crank mechanism is i
 
 _Energies_ **2023**, _16_, 6655
 
-**==> picture [253 x 123] intentionally omitted <==**
-
-**==> picture [253 x 132] intentionally omitted <==**
-
-**----- Start of picture text -----**<br>
-(a)<br>**----- End of picture text -----**<br>
-
-**==> picture [253 x 144] intentionally omitted <==**
-
-**----- Start of picture text -----**<br>
-(b)<br>(c)<br>**----- End of picture text -----**<br>
+<!-- Start of picture text -->
+(a)<br>(b)<br>(c)<br><!-- End of picture text -->
 
 **Figure 9.** Piston displacement (**a**), velocity (**b**), and acceleration (**c**) of the conventional crankshaft and LESS mechanisms.
 
@@ -211,19 +180,17 @@ The geometry and design of the LESS mechanism presents a challenge in terms of t
 
 The main characteristics of the engine geometry are shown in Figure 10. As mentioned above, the engine under discussion does not occupy a conventional crankshaft, as it is replaced by the LESS main mechanism, as displayed in Figure 10, component (6).
 
-**==> picture [361 x 138] intentionally omitted <==**
-
 **Figure 10.** Representation of the geometry, showing the most important parts of the engine: overview of the whole engine geometry (**a**) and details of engine cylinder area (**b**).
 
 Unlike a conventional crankshaft mechanism, the rotary movement of the gear, combined with the geometry of the LESS sliding surfaces, imposes a particular movement to the piston, as shown in Figure 10, part (5), as the gear, during its rotation process, does not perform a relatively sinusoidal motion, but there is an upper and lower limit, where its position (and with it, the position of the piston) remains constant for about 12 degrees.
 
 This kinematic behavior in the piston is a significant difference in the LESS configuration in contrast to the classic piston–rod–crankshaft mechanism. This characteristic provides new possibilities for the improvement of engine combustion and, consequently, the engine performance, and it appears both in the top dead center (TDC) and the bottom dead center (BDC) of the piston movement.
 
-Another important feature is that the LESS four-stroke engine concludes a complete four-stroke engine cycle in one rotation of the gear (360 _[◦]_), in contrast to the conventional kinetics achieved with the crankshaft mechanism, which needs two full rotations (720 _[◦]_ CA). This difference is due to the special design of the mechanism used for transferring the movement of the piston to the output engine shaft.
+Another important feature is that the LESS four-stroke engine concludes a complete four-stroke engine cycle in one rotation of the gear (360<sup>_◦_</sup>), in contrast to the conventional kinetics achieved with the crankshaft mechanism, which needs two full rotations (720<sup>_◦_</sup> CA). This difference is due to the special design of the mechanism used for transferring the movement of the piston to the output engine shaft.
 
-Nevertheless, in order for the results of the present prototype engine to be compatible with the rest of the literature on internal combustion engines, a convention was set that one engine cycle of the LESS engine corresponds to a 720 _[◦]_ rotation angle, taking into account all the necessary conversions, as the speed of rotation is calculated to be twice the actual, while the torque is calculated to be half the actual, as the work produced during a complete engine cycle corresponds to two shaft revolutions, while it is actually produced in one. Additionally, the clearance volume of the combustion chamber is defined as the volume between the inner wall of the engine head (2) and the upper surface of the piston (5).
+Nevertheless, in order for the results of the present prototype engine to be compatible with the rest of the literature on internal combustion engines, a convention was set that one engine cycle of the LESS engine corresponds to a 720<sup>_◦_</sup> rotation angle, taking into account all the necessary conversions, as the speed of rotation is calculated to be twice the actual, while the torque is calculated to be half the actual, as the work produced during a complete engine cycle corresponds to two shaft revolutions, while it is actually produced in one. Additionally, the clearance volume of the combustion chamber is defined as the volume between the inner wall of the engine head (2) and the upper surface of the piston (5).
 
-In the case of the prototype LESS-1 engine, the clearance volume of the cylinder equals 25.0 cm[3], and its displacement volume is 216.52 cm[3], which results in a total cylinder volume of 241.52 cm[3]. The compression ratio of the engine derived from the above figures, is CR = 9.66. A list of the basic engine geometric characteristics is provided in Table 1.
+In the case of the prototype LESS-1 engine, the clearance volume of the cylinder equals 25.0 cm<sup>3</sup>, and its displacement volume is 216.52 cm<sup>3</sup>, which results in a total cylinder volume of 241.52 cm<sup>3</sup>. The compression ratio of the engine derived from the above figures, is CR = 9.66. A list of the basic engine geometric characteristics is provided in Table 1.
 
 9 of 36
 
@@ -233,37 +200,33 @@ _Energies_ **2023**, _16_, 6655
 
 |Axial clearance of combustion chamber|5.24 mm|
 |---|---|
-|Clearance volume|25 cm3|
+|Clearance volume|25 cm<sup>3</sup>|
 |Cylinder bore|82 mm|
 |Piston stroke|41 mm|
-|Cylinder displacement volume|216.52 cm3|
+|Cylinder displacement volume|216.52 cm<sup>3</sup>|
 |~~Compression ratio~~|~~9.66~~|
 |~~Inlet valve diameter~~|~~38 mm~~|
-|~~Inlet valve seat angle~~|~~45~~~~_◦_~~|
+|~~Inlet valve seat angle~~|~~45~~<sup>_~~◦~~_</sup>|
 |Inlet valve lift|7.719 mm|
 |Exhaust valve diameter|31 mm|
-|Exhaust valve seat angle|45_◦_|
+|Exhaust valve seat angle|45<sup>_◦_</sup>|
 |Exhaust valve lift|7.719 mm|
 
 ## _2.4. Piston Kinematics_
 
 Figure 11a shows the kinematics of the piston as a function of the rotation angle of the LESS mechanism, respectively. The top dead center (TDC) corresponds to the position 0, while the bottom dead center (BDC) corresponds to the position _−_ 41 mm. In addition, Figure 11b presents the LESS mechanism with a geometry corresponding to the specific piston movement.
 
-**==> picture [360 x 130] intentionally omitted <==**
-
 **Figure 11.** Piston motion (mm) vs. angle (deg) during a full cycle of the LESS-1 engine. The upper and lower dotted lines represent the positions of the TDC and BDC, respectively (**a**), and the LESS mechanism corresponding to the same kinematics (**b**).
 
-Figure 12 displays the path of the inlet and exhaust valves during an engine cycle as a function of the angle of rotation of the LESS mechanism. As for the inlet valve, the kinematics dictates its opening at 692 _[◦]_ of the previous cycle, which corresponds to _−_ 28 _[◦]_ of the completed cycle, and its closing at 208 _[◦]_ of the cycle, respectively.
+Figure 12 displays the path of the inlet and exhaust valves during an engine cycle as a function of the angle of rotation of the LESS mechanism. As for the inlet valve, the kinematics dictates its opening at 692<sup>_◦_</sup> of the previous cycle, which corresponds to _−_ 28<sup>_◦_</sup> of the completed cycle, and its closing at 208<sup>_◦_</sup> of the cycle, respectively.
 
-In total the inlet valve remains open for 236 _[◦]_ while its maximum lift is 7718 mm at 90 _[◦]_. Accordingly, the exhaust valve also remains open for 236 _[◦]_, opens at 512 _[◦]_, and closes at 28 _[◦]_ in the next cycle, while its maximum lift is 7719 mm at 630 _[◦]_.
+In total the inlet valve remains open for 236<sup>_◦_</sup> while its maximum lift is 7718 mm at 90<sup>_◦_</sup>. Accordingly, the exhaust valve also remains open for 236<sup>_◦_</sup>, opens at 512<sup>_◦_</sup>, and closes at 28<sup>_◦_</sup> in the next cycle, while its maximum lift is 7719 mm at 630<sup>_◦_</sup>.
 
-Here, it is worth noting that, for both the inlet and exhaust valves, the duration in which both valves are open (valve overlapping) is based on the common standards of the ICE industry, as applied to the cases of valve lift greater than 0.050 _[′′]_, i.e., 1.27 mm. In our case, according to the previous definition, the inlet valve is considered open from 714.26 _[◦]_ in the previous engine cycle, to 186.08 _[◦]_ in the current cycle. Consequently, for the exhaust valve, these values are from 534.61 _[◦]_ in the current cycle, to 6.70 _[◦]_ in the next engine cycle. Both valves, therefore, have an “actual” opening duration of ~192 _[◦]_.
+Here, it is worth noting that, for both the inlet and exhaust valves, the duration in which both valves are open (valve overlapping) is based on the common standards of the ICE industry, as applied to the cases of valve lift greater than 0.050<sup>_′′_</sup>, i.e., 1.27 mm. In our case, according to the previous definition, the inlet valve is considered open from 714.26<sup>_◦_</sup> in the previous engine cycle, to 186.08<sup>_◦_</sup> in the current cycle. Consequently, for the exhaust valve, these values are from 534.61<sup>_◦_</sup> in the current cycle, to 6.70<sup>_◦_</sup> in the next engine cycle. Both valves, therefore, have an “actual” opening duration of ~192<sup>_◦_</sup>.
 
 10 of 36
 
 _Energies_ **2023**, _16_, 6655
-
-**==> picture [329 x 170] intentionally omitted <==**
 
 **Figure 12.** The valve motion (mm) during one cycle of the LESS-1 engine. The blue line corresponds to the inlet valve while the red line corresponds to the exhaust valve displacement.
 
@@ -271,11 +234,7 @@ _Energies_ **2023**, _16_, 6655
 
 In the LESS prototype, the valves are controlled by a disc-type camshaft, which is attached to the engine’s central shaft, as shown below in Figures 13 and 14.
 
-**==> picture [298 x 219] intentionally omitted <==**
-
 **Figure 13.** The LESS-1 engine and its drive system for the main shaft.
-
-**==> picture [277 x 143] intentionally omitted <==**
 
 **Figure 14.** A detail of the camshaft and the valve drive and control system of the LESS-1 prototype.
 
@@ -284,8 +243,6 @@ In the LESS prototype, the valves are controlled by a disc-type camshaft, which 
 _Energies_ **2023**, _16_, 6655
 
 As shown in the next Figure 15, the disk consists of two rings (in yellow and green color), each with a different diameter. Each ring has a protrusion, which acts as a cam. On top of the disc, 4 levers/cocks are located (1 for each valve), and they stay continuously in contact with it, and control the 4 valves (2 in each cylinder). The 2 rocker arms on the left-hand side of Figure 14 above are in contact with the inner (green) ring, and the 2 on the right-hand side are in contact on the outer (yellow) ring.
-
-**==> picture [222 x 202] intentionally omitted <==**
 
 **Figure 15.** A detail of the disk-type camshaft of the LESS-1 prototype. The driving profiles for the two valves of each cylinder are distinguished on each disk.
 
@@ -307,8 +264,6 @@ _Energies_ **2023**, _16_, 6655
 
 In the second stage of development, a commercial fluid dynamics software was used to achieve a detailed 3D simulation of the physical and chemical complex engine processes. The results of this second stage will be presented in a second stage of the work, due to space limitations. In Figure 16, we present the layout of different processes, as applied in the Amesim 2022.1 simulation software.
 
-**==> picture [347 x 316] intentionally omitted <==**
-
 **Figure 16.** The layout of different processes as applied in the simulation software.
 
 For a better understanding of the whole engine system, objects from the software library are assigned the same color. Thus, objects of one-dimensional engineering models are indicated in green, objects of the “signals and control” library in red, and the internal combustion engine library objects are marked in blue.
@@ -321,7 +276,7 @@ Particular attention was paid to the simulation of piston kinematics. In the cas
 
 _Energies_ **2023**, _16_, 6655
 
-2D table, where the second column of the table is the position of the piston relative to the angle (0–720 _[◦]_).
+2D table, where the second column of the table is the position of the piston relative to the angle (0–720<sup>_◦_</sup>).
 
 ## 2.6.2. Basic Principles and Description of CFM-1D Combustion Model
 
@@ -331,19 +286,17 @@ In order to simulate engine combustion, the CFM-1D model distinguishes two zones
 
 - The gaseous mixture consists of 15 species, and is considered as perfect gas;
 
-- The mixture composition is considered homogeneous in each zone (fresh and burnt gases);
+- _•_ The mixture composition is considered homogeneous in each zone (fresh and burnt gases);
 
 - Fuel can be found in both liquid and gaseous phases inside the combustion chamber;
 
-- The cylinder pressure is assumed to be the same in both the burned and unburned zones;
+- _•_ The cylinder pressure is assumed to be the same in both the burned and unburned zones;
 
 - Each zone is characterized by its mass, volume, composition, and temperature;
 
-- The turbulent kinetic energy field is assumed to be uniform inside the cylinder volume.
+- The turbulent kinetic energy field is assumed to be uniform inside the cylinder volume. The calculation of heat release [27,28] is based on the enthalpy balance inside the
 
-The calculation of heat release [27,28] is based on the enthalpy balance inside the combustion chamber:
-
-**==> picture [300 x 29] intentionally omitted <==**
+- combustion chamber:
 
 where _V_ is the cylinder volume, _h_ is the mass enthalpy, _m_ is the enclosed mass and _p_ is the pressure which is linked to the mean temperature _T_ via the perfect gas law. The last term of Equation (1) refers to enthalpy exchanges at the inlets and outlets (valves, the injector). _Qwall_ corresponds to heat losses at the walls, which are described with the Woschni model or another similar heat-loss model. _Qcomb_ is the heat released through combustion processes.
 
@@ -353,25 +306,19 @@ The fuel consumption rate throughout the flame front mainly depends on the fresh
 
 - The mean surface Sm changes with the centered hemisphere expansion between the spark plug and the cylinder walls. In order to account for different engine geometries, Sm may be tabulated as a function of the burned gas volume and the piston position;
 
-- The flame wrinkling factor _Ki_ may be estimated either via a physical 0D equation, or via an empirical algebraic correlation, depending on the rest of the parameters chosen.
+- The flame wrinkling factor _Ki_ may be estimated either via a physical 0D equation, or via an empirical algebraic correlation, depending on the rest of the parameters chosen. A simple way to compute the flame wrinkling is through the use of a classical Damköh-
 
-A simple way to compute the flame wrinkling is through the use of a classical Damköhler’s formulation based on an equilibrium assumption for _Ki_ [26]:
+- ler’s formulation based on an equilibrium assumption for _Ki_ [26]:
 
-**==> picture [294 x 31] intentionally omitted <==**
-
-where _u[′]_ is the instantaneous velocity fluctuation, Γ is the efficiency function of the turbulent flow on the flame strain, _C_ is a modelling constant, _Sc_ is the Schmidt number, _rbg_ is
+where _u_<sup>_′_</sup> is the instantaneous velocity fluctuation, Γ is the efficiency function of the turbulent flow on the flame strain, _C_ is a modelling constant, _Sc_ is the Schmidt number, _rbg_ is
 
 14 of 36
 
 _Energies_ **2023**, _16_, 6655
 
-the current mean flame radius and _g_ is a function accounting for the laminar-turbulent
+the current mean flame radius and _g_ is a function accounting for the laminar-turbulent transition of the flame front.
 
-The turbulence was computed via a simple phenomenological model approach during the closed valve part of the engine cycle; this approach requires a reduced CPU time, and allowed for a better calibration of the combustion heat release. The evolution of the kinetic energy is obtained through assuming a linear decrease in the tumble motion from the intake valve closure (IVC) to the top dead center, using the following expression:
-
-**==> picture [298 x 25] intentionally omitted <==**
-
-where _L_ is the distance between the piston and the cylinder head, and _ωeng_ is the engine speed in rad.s _[−]_[1]. _Ntumble_ is the tumble number at IVC, which corresponds to an initial condition for the compression stroke.
+where _L_ is the distance between the piston and the cylinder head, and _ωeng_ is the engine speed in rad.s<sup>_−_1</sup>. _Ntumble_ is the tumble number at IVC, which corresponds to an initial condition for the compression stroke.
 
 Using this turbulence approach, the model was able to account for the combustion cycle variability (CCV) at the given engine operating conditions. The sources of CCV accounted for are related to the stochastic properties of turbulence, as well as to the thermochemical properties of the mixture.
 
@@ -389,17 +336,11 @@ The CFM model accounts for the mixing of three gases inside the combustion chamb
 
 The combustion chamber considered includes 11 ports which may communicate with various Simcenter Amesim submodels. These ports are the following:
 
-Port 1: Gas losses due to blow-by (mass, enthalpy transfer);
-
-Port 2: Mechanical transmission towards crank (piston force, speed. displacement); Port 3: Heat transfer over piston top;
-
-Port 4 Heat transfer through cylinder walls; Port 5: Heat transfer through cylinder head; Port 6: Gas exchange through the exhaust valve (mass, enthalpy transfer); Port 7: Direct fuel injection (mass, enthalpy transfer);
-
-Port 8: Gas exchange through the inlet valve (mass, enthalpy transfer); Port 9: Engine spark (spark advance); Port 10: Port for co-simulation purposes (variables used in engine control); Port 11: Communication of the current crank angle and engine speed.
+Port 1: Gas losses due to blow-by (mass, enthalpy transfer); Port 2: Mechanical transmission towards crank (piston force, speed. displacement); Port 3: Heat transfer over piston top; Port 4 Heat transfer through cylinder walls; Port 5: Heat transfer through cylinder head; Port 6: Gas exchange through the exhaust valve (mass, enthalpy transfer); Port 7: Direct fuel injection (mass, enthalpy transfer); Port 8: Gas exchange through the inlet valve (mass, enthalpy transfer); Port 9: Engine spark (spark advance); Port 10: Port for co-simulation purposes (variables used in engine control); Port 11: Communication of the current crank angle and engine speed.
 
 This combustion chamber is defined for spark ignition engines. It could be used either for a port fuel injection or a direct injection engine.
 
-## 2.6.3. Engine Dynamics, Friction, and Lubrication
+2.6.3. Engine Dynamics, Friction, and Lubrication
 
 A detailed model of the friction losses that develop between the contact surfaces of the novel LESS mechanism was developed during the R&D phase of the prototype mechanism. Due to the extent and significance of this subject, a detailed reference guide to the model and its results will be presented in a future paper. A brief reference to the main findings and the challenges that lie ahead, in an effort to improve the prototype mechanism, is given hereafter.
 
@@ -421,14 +362,10 @@ The model requires two main inputs: the pressure distribution on engine piston (
 
 - Calculation of the pressure profiles and the friction forces between the LESS profiles.
 
-An example result for the model output is presented in Figure 17a–c. It displays the distribution of forces and torque between the components of the LESS mechanism for a specifc case study.
+An example result for the model output is presented in Figure 17a–c. It displays the distribution of forces and torque between the components of the LESS mechanism for a <u>specific case study.</u>
 
-**==> picture [214 x 108] intentionally omitted <==**
-
-**==> picture [214 x 242] intentionally omitted <==**
-
-**----- Start of picture text -----**<br>
-(a)<br>(b)<br>(c)<br>**----- End of picture text -----**<br>
+<!-- Start of picture text -->
+(a)<br>(b)<br>(c)<br><!-- End of picture text -->
 
 **Figure 17.** The distribution of forces acting at different directions on the LESS profile. The vertical force in the direction of the cylinder axis (**a**), the horizontal force (**b**), and the total torque (**c**) due to the horizontal force acting on the LESS profiles.
 
@@ -440,33 +377,23 @@ Based on the normal forces developed at the contact points of the LESS profiles,
 
 This is precisely the problem that was identified as the main issue for the engine, and as the point of focus for the near-future R&D. It seems as if, under the given operating conditions, the load on the LESS profiles (as a result of the force acting on the piston that is then propagated to the LESS mechanism, and distributed to the contact area) becomes too high, and results in a loss of hydrodynamic lubrication and, therefore, increased friction and wear.
 
-In particular, the sliding LESS profiles operate under a hydrodynamic regime during _−_ most of the engine cycle, but there is an area +/ 50 degrees around the TDC where the contact pressure becomes high enough, and the velocity low enough, that the lubricant film is reduced to lower than the height of the asperities, and we have mixed lubrication, high friction, and wear.
+In particular, the sliding LESS profiles operate under a hydrodynamic regime during most of the engine cycle, but there is an area +/ _−_ 50 degrees around the TDC where the contact pressure becomes high enough, and the velocity low enough, that the lubricant film is reduced to lower than the height of the asperities, and we have mixed lubrication, high friction, and wear.
 
 In order to obtain an accurate model of the lubrication phenomena of the novel LESS mechanism, it was deemed necessary to develop a 2-D lubrication model in polar coordinates. The governing equations are the Navier-Stokes equations. Through the use of certain assumptions, the Navier-Stokes equations are reduced to:
 
-**==> picture [272 x 24] intentionally omitted <==**
-
-**==> picture [277 x 23] intentionally omitted <==**
-
 The developed model was generalized for any given topology of the two surfaces as a function _g_ (_θ_) and _f_ (_θ_) for the fixed and moving part of the LESS, respectively. For the calculation of the required film thickness at each contact point, a convergence process was applied. After the calculation of the radial and tangential velocity, and the integration of the continuity equation, a modified Reynolds equation can be derived:
-
-**==> picture [335 x 25] intentionally omitted <==**
 
 where _h_. is the squeeze velocity of the film thickness at each contact point, and
 
-**==> picture [315 x 30] intentionally omitted <==**
-
 Equation (7) is a partial differential equation that can be solved with the implementation of the finite element method. Further details of the developed model and its results will be presented in a separate publication by the LESS development project team.
 
-The following Figure 18 presents the initial results from this tribological R&D work to _−_ solve the lubrication issues in the design. It is confirmed that, in the area +/ 50 degrees around the TDC, the lubricant film is reduced to lower than the height of the asperities, and we have mixed lubrication, a high friction coefficient, and wear.
+The following Figure 18 presents the initial results from this tribological R&D work to solve the lubrication issues in the design. It is confirmed that, in the area +/ _−_ 50 degrees around the TDC, the lubricant film is reduced to lower than the height of the asperities, and we have mixed lubrication, a high friction coefficient, and wear.
 
 A further analysis of modifications to the LESS profiles is needed in the upcoming steps of development, to ensure that the contacting surfaces operate under hydrodynamic lubrication regime across the whole angle of rotation, and solve the issue.
 
 17 of 36
 
 _Energies_ **2023**, _16_, 6655
-
-**==> picture [303 x 239] intentionally omitted <==**
 
 **Figure 18.** The distribution friction coefficient for two different surface geometries of LESS profiles.
 
@@ -484,11 +411,7 @@ Figures 19 and 20 present two key screens, which, among others, were used in the
 
 _Energies_ **2023**, _16_, 6655
 
-**==> picture [378 x 294] intentionally omitted <==**
-
 **Figure 19.** PC Link G4X configuration screen.
-
-**==> picture [381 x 228] intentionally omitted <==**
 
 **Figure 20.** PC Link G4X configuration screen.
 
@@ -502,10 +425,6 @@ _Energies_ **2023**, _16_, 6655
 
 findings in conventional SI engines. As the ignition timing is advanced away from the TDC, there is time available for the oxidation to take place, resulting in an increase in the maximum pressure inside the cylinder.
 
-**==> picture [368 x 365] intentionally omitted <==**
-
-**==> picture [368 x 124] intentionally omitted <==**
-
 **Figure 21.** The effect of the ignition timing on the cylinder pressure for an engine speed of 1000 rpm (**a**), 3600 rpm (**b**), and 7200 rpm (**c**).
 
 On the other hand, the ignition timing for a specific engine speed should be controlled and regulated at an optimal value, in order for the engine to reach maximum power and efficiency. Therefore, the optimal ignition timing for each operating condition of an engine is the one where the maximum brake torque (MBT) is achieved.
@@ -518,30 +437,26 @@ _Energies_ **2023**, _16_, 6655
 
 ## 3.1.2. Gas Exchange Process
 
-Figure 22 presents the variation in the cylinder pressure and the temperature at the engine inlet pipe (a, d), cylinder (b, e), and exhaust pipe (c, f) during an engine cycle for an ignition advance 45 _[◦]_, and an engine speed of 3600 rpm.
+Figure 22 presents the variation in the cylinder pressure and the temperature at the engine inlet pipe (a, d), cylinder (b, e), and exhaust pipe (c, f) during an engine cycle for an ignition advance 45<sup>_◦_</sup>, and an engine speed of 3600 rpm.
 
-**==> picture [433 x 336] intentionally omitted <==**
+**Figure 22.** The variation in pressure and temperature at the engine inlet pipe (**a**, **d**), cylinder (**b**, **e**), and exhaust pipe (**c**, **f**) during an engine cycle for an ignition advance of 45<sup>_◦_</sup>, and an engine speed of 3600 rpm.
 
-**Figure 22.** The variation in pressure and temperature at the engine inlet pipe (**a**, **d**), cylinder (**b**, **e**), and exhaust pipe (**c**, **f**) during an engine cycle for an ignition advance of 45 _[◦]_, and an engine speed of 3600 rpm.
-
-It can be observed that the pressure in the engine inlet and exhaust pipe is varied by 1.017 bar and 1.04 bar, respectively, which is reasonable, given that the engine is a naturally aspirated one. In Figure 22a,d, the largest pressure fluctuations in the inlet pipe are observed in the interval (0 _[◦]_ < θ < 180 _[◦]_), where the air-fuel mixture is introduced into the cylinder, while, for θ > 180 _[◦]_, small pressure oscillations are created that decay exponentially in time, due to pressure dynamic effects.
+It can be observed that the pressure in the engine inlet and exhaust pipe is varied by 1.017 bar and 1.04 bar, respectively, which is reasonable, given that the engine is a naturally aspirated one. In Figure 22a,d, the largest pressure fluctuations in the inlet pipe are observed in the interval (0<sup>_◦_</sup> < θ < 180<sup>_◦_</sup>), where the air-fuel mixture is introduced into the cylinder, while, for θ > 180<sup>_◦_</sup>, small pressure oscillations are created that decay exponentially in time, due to pressure dynamic effects.
 
 Likewise, in the case of the exhaust pipe, in Figure 22c,f, the largest fluctuations are observed after the moment of the EVO (exhaust valve opening), where the gases are blown and displaced towards the engine exhaust. However, due to the low rotation speed, the pressure oscillations in the exhaust gas are damped, and the pressure stabilizes quickly at 1.015 bar. Corresponding phenomena are also observed in the respective temperature diagrams.
 
-In the case of in-cylinder pressure variation, its peak value appears a few degrees after the TDC (~190 _[◦]_), while the calculated peak pressure reaches almost 50 bar. At this period of engine operation, the combustion products combined with the small available cylinder volume, result in a rapid increase in cylinder pressure.
+In the case of in-cylinder pressure variation, its peak value appears a few degrees after the TDC (~190<sup>_◦_</sup>), while the calculated peak pressure reaches almost 50 bar. At this period of engine operation, the combustion products combined with the small available cylinder volume, result in a rapid increase in cylinder pressure.
 
 21 of 36
 
 _Energies_ **2023**, _16_, 6655
 
-## 3.1.3. Variation in Ignition Timing, Imep, Torque, and Power with Engine Speed
+3.1.3. Variation in Ignition Timing, Imep, Torque, and Power with Engine Speed
 
-In Figure 23, we can observe the variation in ignition timing in order to reach the MBT as a function of the engine speed. As expected, the ignition timing needed to achieve the maximum brake torque increases significantly as the engine speed increases, and we ~~even notice that, at high-speed values, the optimal ignition advance reaches values close t~~ o 90 deg before the TDC.
+In Figure 23, we can observe the variation in ignition timing in order to reach the MBT as a function of the engine speed. As expected, the ignition timing needed to achieve the maximum brake torque increases significantly as the engine speed increases, and we ~~even notice that, at high-speed values, the optimal ignition advance reaches values close t~~ o <u>90 deg before the TDC.</u>
 
-**==> picture [323 x 195] intentionally omitted <==**
-
-**----- Start of picture text -----**<br>
-100<br>90<br>80<br>70<br>60<br>50<br>40<br>0 2,000 4,000 6,000 8,000 10,0 00<br>Rotational Speed (rpm)<br>Ignition Point (deg)<br>**----- End of picture text -----**<br>
+<!-- Start of picture text -->
+100<br>90<br>80<br>70<br>60<br>50<br>40<br>0 2,000 4,000 6,000 8,000 10,0 00<br>Rotational Speed (rpm)<br>Ignition Point (deg)<br><!-- End of picture text -->
 
 **Figure 23.** The variation in ignition timing in order to reach the MBT as a function of the engine speed.
 
@@ -551,10 +466,8 @@ It is worth mentioning that it is questionable whether these ignition timing val
 
 Figure 24 presents the variation in the IMEP with the engine speed, which provides a significant indication of the engine performance. The IMEP/RPM curve indicates that the engine performance is maximized when the shaft speed is at 3000 rpm, where the IMEP is calculated at 9.72 bar, but it is generally quite high, up to 4000 rpm, where the IMEP presents a value of 8.96 bar.
 
-**==> picture [322 x 192] intentionally omitted <==**
-
-**----- Start of picture text -----**<br>
-14<br>12<br>10<br>8<br>6<br>4<br>2<br>0<br>0 2,000 4,000 6,000 8,000 10,000<br>Rotational Speed (rpm)<br>IMEP (bar)<br>**----- End of picture text -----**<br>
+<!-- Start of picture text -->
+14<br>12<br>10<br>8<br>6<br>4<br>2<br>0<br>0 2,000 4,000 6,000 8,000 10,000<br>Rotational Speed (rpm)<br>IMEP (bar)<br><!-- End of picture text -->
 
 **Figure 24.** The variation in the IMEP as a function of the crankshaft rotation speed. The scintillation timings are optimal, as calculated from the 1D simulations.
 
@@ -564,14 +477,12 @@ _Energies_ **2023**, _16_, 6655
 
 It is worth mentioning that a modern engine, e.g., a naturally aspirated motorcycle or automobile engine, is expected to develop an optimum IMEP of 13–14.5 bar [1–3].
 
-Therefore, we already see that our engine, which produces an optimal IMEP of 9.72 bar, - ~~lags behind, but not signifcantly, if we take into account that, for today’s data, the com~~ pression ratio CR = 9.66 is considered relatively low, compared to high-performance car engines [1–3].
+Therefore, we already see that our engine, which produces an optimal IMEP of 9.72 bar, ~~lags behind, but not signif~~ i ~~cantly, if we take into account that, for today’s data, the com~~ - pression ratio CR = 9.66 is considered relatively low, compared to high-performance car engines [1–3].
 
 We must also take into account that the present engine is at its initial stages of development, where a limited level of resources and research activities is feasible. Finally, Figure 25 presents the engine torque and power as a function of the speed.
 
-**==> picture [320 x 195] intentionally omitted <==**
-
-**----- Start of picture text -----**<br>
-30 20.0<br>Torque<br>17.5<br>25 Power<br>15.0<br>20<br>12.5<br>15 10.0<br>7.5<br>10<br>5.0<br>5<br>2.5<br>0 0.0<br>0 2,000 4,000 6,000 8,000 10,000<br>Rotational Speed (rpm)<br>Torque (Nm) Power (kW)<br>**----- End of picture text -----**<br>
+<!-- Start of picture text -->
+30 20.0<br>Torque<br>17.5<br>25 Power<br>15.0<br>20<br>12.5<br>15 10.0<br>7.5<br>10<br>5.0<br>5<br>2.5<br>0 0.0<br>0 2,000 4,000 6,000 8,000 10,000<br>Rotational Speed (rpm)<br>Torque (Nm) Power (kW)<br><!-- End of picture text -->
 
 **Figure 25.** The variation in the engine torque and power as a function of the speed.
 
@@ -594,8 +505,6 @@ Figure 26 presents the variation in the cylinder pressure versus the crankshaft 
 23 of 36
 
 _Energies_ **2023**, _16_, 6655
-
-**==> picture [347 x 191] intentionally omitted <==**
 
 **Figure 26.** The variation in cylinder pressure during an engine cycle, as a function of the throttle valve relative opening for 1000 rpm speed.
 
@@ -670,7 +579,7 @@ _Energies_ **2023**, _16_, 6655
 |Brake torque (crank<br>equivalent)|4.96|Nm|
 |~~Indicated power~~|~~5.65~~|~~kW~~|
 |~~Brake power~~|~~0.99~~|~~kW~~|
-|~~Mechanical effciency~~|~~17.52~~|~~%~~|
+|~~Mechanical eff~~i~~ciency~~|~~17.52~~|~~%~~|
 
 The indicated torque corresponding to the combustion of the two chambers is 28.3 Nm, while the corresponding indicated power produced through the combustion is 5.65 kW. It is noted that, although an indicated torque of 28.3 Nm is produced, the brake torque is only 4.96 Nm, and the corresponding brake power is only 0.99 kW (from the indicated power of 5.65 kW). These figures lead to a value of mechanical efficiency of 17.5%, which is quite low compared with the mechanical efficiency of a modern high-performance engine, which stands in the range of 80–90%.
 
@@ -679,8 +588,6 @@ It should be mentioned that the torque measured at the output of the engine is r
 Therefore, the low performance of the engine mechanical efficiency reveals that the engine’s tribological losses, and the resulting component wear, are significantly increased, and strongly contribute to the engine’s poor performance. As a result, in the subsequent stages, special care should definitely be taken to solve this problem, and a thorough analysis of the various subsystems and, especially, of the LESS mechanism, is necessary to perform. Based on the results of this analysis, engine design optimization is necessary, in order to reduce the problem, and improve the mechanical efficiency.
 
 Figure 27 presents the variation in the cylinder pressure during an engine cycle for a carburetor nozzle of 0.8 mm, and WOT engine operation.
-
-**==> picture [414 x 150] intentionally omitted <==**
 
 **Figure 27.** The variation in the cylinder pressure during an engine cycle for a carburetor nozzle of 0.8 mm, and WOT engine operation.
 
@@ -694,7 +601,7 @@ In the present and also in the succeeding figures of cylinder pressure variation
 
 It is noted that there is a significant difference between the pressure curves of cylinders A and B. This result is a confirmation that the engine in its present stage of development is undergoing problematic combustion, which is due to problems in the ignition control and ignition timing system, as well as in the fuel delivery and injection system.
 
-## b. Carburetor nozzle of 1.1 mm and idle engine operation
+- b. Carburetor nozzle of 1.1 mm and idle engine operation
 
 In a second series of measurements, the initial carburetor nozzle was replaced with one of 1.1 mm, with the aim of providing more fuel to the mixture, as cylinder B, in particular, was running lean and, due to the variation, there were cycles where its combustion was significantly unstable, or even where there was no combustion at all.
 
@@ -711,7 +618,7 @@ In the following Table 4, we present the results from the most important perform
 |Brake torque (crank<br>equivalent)|4.8|Nm|
 |Indicated power|2.60|kW|
 |Brake power|0.66|kW|
-|Mechanical effciency|25.13|%|
+|Mechanical efficiency|25.13|%|
 
 It is observed that, with the new configuration, the results are improved; however, the mechanical efficiency, despite its improvement, still remains very low, as should be expected. It should be noted that, in this case, the engine operation is in idle; therefore, its performance is expected to deteriorate in comparison with its WOT operation.
 
@@ -727,26 +634,22 @@ Table 5, below presents the results from the most important performance variable
 
 _Energies_ **2023**, _16_, 6655
 
-**==> picture [429 x 154] intentionally omitted <==**
-
 **Figure 28.** The variation in the cylinder pressure during an engine cycle for a carburetor nozzle of 1.1 mm, and idle engine operation.
 
 **Table 5.** The results for the performance variables of the LESS-1 prototype engine for a carburetor nozzle of 1.1 mm at a WOT operation.
 
-|~~**Engine Variable**~~|~~**Value**~~|~~**Unit**~~|
+|**~~Engine Variable~~**|**~~Value~~**|**~~Unit~~**|
 |---|---|---|
 |~~Speed~~|~~2000~~|~~rpm~~|
 |~~Indicated torque~~|~~29.9~~|~~Nm~~|
 |Brake torque (crank equivalent)|4.9|Nm|
 |Indicated power|6.28|kW|
 |Brakepower|1.03|kW|
-|Mechanical effciency|16.39%|%|
+|Mechanical efficiency|16.39%|%|
 
 We observe that the indicated torque increases at 29.9 Nm compared with the case with the 0.8 mm nozzle, where a value of 28.3 Nm was accomplished. However, as in the two previous cases, the friction losses remain high, as was expected, due to the limitations of the proposed new kinematic system. As a result, the engine’s mechanical efficiency continues to hover at a low value of 16.39%.
 
 The cylinder pressure variation inside both cylinders for the present operating condition is presented in Figure 29.
-
-**==> picture [416 x 151] intentionally omitted <==**
 
 **Figure 29.** The variation in the cylinder pressure during an engine cycle for a carburetor nozzle of 1.1 mm and WOT engine operation.
 
@@ -762,30 +665,28 @@ In the final stage of measurements for the LESS-1 prototype, the carburetor nozz
 
 Additionally, in the present case, multiple changes were made to the nozzle control and its needle adjustment, as well as at the air bypass and idle air-fuel ratio adjustment, in an effort to achieve an optimum engine performance.
 
-In Table 6, we present the results from the most important performance variables of the LESS-1 prototype engine for the case of a carburetor nozzle of 1.25 mm, and idle engine operation.
+In Table 6, we present the results from the most important performance variables of the LESS-1 prototype engine for the case of a carburetor nozzle of 1.25 mm, and idle <u>engine operation.</u>
 
 **Table 6.** The results for the performance variables of the LESS-1 prototype engine for a carburetor nozzle of 1.25 mm and idle engine operation.
 
-|~~**Engine Variable**~~|~~**Value**~~|~~**Unit**~~|
+|**~~Engine Variable~~**|**~~Value~~**|**~~Unit~~**|
 |---|---|---|
 |~~Speed~~|~~1200~~|~~rpm~~|
 |Indicated torque|21.2|Nm|
 |Brake torque (crank equivalent)|4.2|Nm|
 |Indicatedpower|2.67|kW|
 |Brake power|0.53|kW|
-|Mechanical effciency|19.81|%|
+|Mechanical efficiency|19.81|%|
 
 Again, it is observed that, with the new configuration, the results are improved; however, the mechanical efficiency, despite its improvement, still remains very low, as should be expected.
 
 The cylinder pressure variation inside both cylinders for the present operating condition is presented in Figure 30. Again, a reduced and delayed combustion is observed in cylinder B, which is present more intensively in the present case.
 
-**==> picture [416 x 150] intentionally omitted <==**
-
 **Figure 30.** The variation in the cylinder pressure during an engine cycle for a carburetor nozzle of 1.25 mm, and idle engine operation.
 
 In this case, cylinder B works—in general—even in areas where its air-fuel ratio exceeds 1; therefore, the combustion takes place with a lean mixture. This is also a reasonable explanation as to why the work is less in this cylinder, compared with cylinder A.
 
-## 3.2.2. Most Important Findings from the LESS-1 Prototype Measurements
+3.2.2. Most Important Findings from the LESS-1 Prototype Measurements
 
 From the measurement campaign performed with the LESS-1 prototype, the following main results were concluded:
 
@@ -837,20 +738,18 @@ _Energies_ **2023**, _16_, 6655
 |Brake torque (crank equivalent)|4.35|Nm|
 |Indicated power|2.967|kW|
 |Brake power|0.639|kW|
-|Mechanical effciency|21.54|%|
+|Mechanical efficiency|21.54|%|
 |Engine coolant temperature|91.2|_◦_C|
 
-It is observed that the mechanical efficiency remains quite low, as in the case of the LESS-1 prototype, and this is expected, as it is mainly due to frictional losses in the new kinematic system. An improved design is necessary in the next stage of engine development in order to overcome this defciency, and increase engine performance.
+It is observed that the mechanical efficiency remains quite low, as in the case of the LESS-1 prototype, and this is expected, as it is mainly due to frictional losses in the new kinematic system. An improved design is necessary in the next stage of engine development <u>in order to overcome this deficiency, and increase engine performance.</u>
 
 The cylinder pressure variation inside both cylinders for the present operating condition is presented in Figure 31. We observe the relatively low maximum pressure in the cylinder is actually reached relatively late, as a result of the incomplete filling of the engine cylinder with the air-fuel mixture, even after the improvements applied in the present engine version.
-
-**==> picture [428 x 153] intentionally omitted <==**
 
 **Figure 31.** The variation in the cylinder pressure during an engine cycle for 1400 rpm speed, and idle engine operation.
 
 On the other hand, it should be mentioned that, with the improved version of the LESS-2, the differences between cylinders A and B are significantly reduced in the present operating condition, and we have the possibility of achieving the stoichiometric ratio in both cylinders. Table 8 presents the results from the experimental measurements for the most important engine-out emissions.
 
-It is observed that the figures for the LESS-2 engine emissions are comparable with those of an SI engine with the current technology and, in the case of HC, the value is even below that emitted from a modern SI combustion engine. The last observation allows the flexibility to achieve a better fuel consumption and increase the engine efficiency, through optimizing the values of the engine parameters, and mainly those of the fuel ~~injection system.~~
+It is observed that the figures for the LESS-2 engine emissions are comparable with those of an SI engine with the current technology and, in the case of HC, the value is even below that emitted from a modern SI combustion engine. The last observation allows the flexibility to achieve a better fuel consumption and increase the engine efficiency, <u>through optimizing the values of the engine parameters, and mainly those of the fuel</u> ~~injection system.~~
 
 31 of 36
 
@@ -867,7 +766,7 @@ _Energies_ **2023**, _16_, 6655
 |O2|9.89|%|
 |NOx|1609.89|ppm|
 
-## b. 1500 rpm–WOT engine operation
+- b. 1500 rpm–WOT engine operation
 
 Initially, it was observed that, under the present engine operating condition, speed variation almost vanished during the experimental measurements.
 
@@ -883,7 +782,7 @@ Table 9 presents the results for the most important performance variables of the
 |Brake torque (crank<br>equivalent)|4.01|Nm|
 |Indicated power|4.09|kW|
 |Brake power|0.65|kW|
-|Mechanical effciency|15.8|%|
+|Mechanical efficiency|15.8|%|
 |Engine coolant temperature|97.8|_◦_C|
 
 The cylinder pressure variation inside both cylinders for the present operating condition is presented in Figure 32. The maximum combustion pressure is increased in comparison with the results for the LESS-1 under WOT operation. However, there is a significant difference in the pressure variation between cylinders A and B. this difference could be explained via a corresponding difference in the cylinder mass flow and volumetric efficiency, which, despite the improvements still exists under WOT operation in the LESS-2 prototype.
@@ -895,8 +794,6 @@ It is, again, observed that the figures for the LESS-2 engine emissions and, esp
 32 of 36
 
 _Energies_ **2023**, _16_, 6655
-
-**==> picture [421 x 168] intentionally omitted <==**
 
 **Figure 32.** The variation in cylinder pressure during an engine cycle for 1500 rpm speed and WOT engine operation.
 
@@ -911,7 +808,7 @@ _Energies_ **2023**, _16_, 6655
 |~~O~~2|~~9.696~~|~~%~~|
 |NOx|1129.25|ppm|
 
-- c. 2000 rpm–WOT engine operation
+## c. 2000 rpm–WOT engine operation
 
 Table 11 presents the results from the most important performance variables of the LESS-2 engine for the present case of 2000 rpm speed, and WOT engine operation.
 
@@ -925,7 +822,7 @@ Table 11 presents the results from the most important performance variables of t
 |Brake torque (crank<br>equivalent)|3.9|Nm|
 |Indicated power|6.0|kW|
 |Brake power|0.83|kW|
-|Mechanical effciency|13.7|%|
+|Mechanical efficiency|13.7|%|
 |Engine coolant temperature|94.7|_◦_C|
 
 The cylinder pressure variation inside both cylinders for the present operating condition is presented in Figure 33. It is observed that, in the present operating condition, the pressure variation presents only a slight difference between the two cylinders. Both the maximum combustion pressure, and the phasing of pressure variation between the two cylinders, are largely improved. It is evident that, in the current operating condition,
@@ -936,11 +833,11 @@ _Energies_ **2023**, _16_, 6655
 
 the mass flow and volumetric efficiency are almost identical between the two cylinders. As a result, the air—fuel ratio is almost stoichiometric at 1.0, and the speed variation is almost at zero level.
 
-**==> picture [434 x 159] intentionally omitted <==**
-
 **Figure 33.** The variation in the cylinder pressure during an engine cycle for 2000 rpm speed and WOT engine operation.
 
-The improvement in cylinder charge filling under 2000 rpm and WOT operation, in comparison to the result under 1500 rpm, is explained through consideration of the dynamic flow phenomena existing during the gas-exchange process in combustion engines. It is obvious that the inlet and exhaust engine manifold have to be redesigned in a future stage in the improvement of the engine, in order to secure a uniform cylinder filling and emptying process in the whole engine speed operating range. Table 12 presents the results from the experimental measurements for the most impor- ~~tant engine-out emissions.~~
+The improvement in cylinder charge filling under 2000 rpm and WOT operation, in comparison to the result under 1500 rpm, is explained through consideration of the dynamic flow phenomena existing during the gas-exchange process in combustion engines. It is obvious that the inlet and exhaust engine manifold have to be redesigned in a future stage in the improvement of the engine, in order to secure a uniform cylinder filling and emptying process in the whole engine speed operating range.
+
+<u>Table 12 presents the results from the experimental measurements for the most impor-</u> ~~tant engine-out emissions.~~
 
 **Table 12.** The results from the emissions of the LESS-2 prototype engine at 2000 rpm speed and WOT engine operation.
 
@@ -955,7 +852,7 @@ The improvement in cylinder charge filling under 2000 rpm and WOT operation, in 
 
 It is, again, observed that the figures of the LESS-2 engine emissions and, especially, that of HC are comparable with, or well below, those of an SI combustion engine with the current technology. This result is confirmed via the findings of the theoretical simulation, which revealed that the engine combustion with the specific parameter settings is optimum under higher values of engine speed and, as a result, lower values of emitted HC are expected.
 
-## 3.2.4. Most Important Findings from LESS-2 Prototype Measurements
+- 3.2.4. Most Important Findings from LESS-2 Prototype Measurements
 
 From the measurement campaign performed for the LESS-2 prototype, the following main results were concluded:
 

@@ -53,6 +53,10 @@ EXPECTED_OFFLINE_TARGETS = [
     "windows-x86_64-cp313",
 ]
 EXPECTED_FORMULA_NODE_DEPENDENCIES = {
+    "katex": ">=0.18.4 <0.19.0",
+    "mathml-to-latex": ">=1.8.0 <2.0.0",
+}
+EXPECTED_FORMULA_NODE_RESOLUTIONS = {
     "katex": "0.18.4",
     "mathml-to-latex": "1.8.0",
 }
@@ -71,6 +75,10 @@ EXPECTED_RELEASE_ATTESTATION_USES = 1
 EXPECTED_RELEASE_ATTESTATION_SUBJECT_PATH = "release-assets/**/*"
 EXPECTED_RELEASE_ASSET_PREPARER = "scripts/prepare_release_assets.py"
 EXPECTED_STABLE_RELEASE_ASSET_COUNT = 31
+EXPECTED_RESOLVER_TOOLING_SPECIFIERS = {
+    "pip": ">=26.1.2,<27",
+    "packaging": ">=26.2,<27",
+}
 EXPECTED_POSIX_TOOLING_PATHS = [
     "scripts/build-offline-package.sh",
     "install-offline.sh",
@@ -210,6 +218,8 @@ REQUIRED_RELEASE_TOOLING = {
     "manifest_records_tooling_revision",
     "frozen_dependency_targets",
     "dependency_evidence",
+    "resolver_pip_specifier",
+    "resolver_packaging_specifier",
     "posix_builder_python",
     "windows_builder_python",
     "python_distribution_inventory",
@@ -1225,6 +1235,8 @@ def _validate_browser_boundary(
             "offline_workflow_uses",
             "node_package_manifests",
             "node_package_locks",
+            "katex_specifier",
+            "mathml_to_latex_specifier",
             "katex_version",
             "mathml_to_latex_version",
         },
@@ -1251,10 +1263,12 @@ def _validate_browser_boundary(
         ],
         "node_package_manifests": EXPECTED_FORMULA_PACKAGE_MANIFESTS,
         "node_package_locks": EXPECTED_FORMULA_PACKAGE_LOCKS,
-        "katex_version": EXPECTED_FORMULA_NODE_DEPENDENCIES["katex"],
-        "mathml_to_latex_version": EXPECTED_FORMULA_NODE_DEPENDENCIES[
+        "katex_specifier": EXPECTED_FORMULA_NODE_DEPENDENCIES["katex"],
+        "mathml_to_latex_specifier": EXPECTED_FORMULA_NODE_DEPENDENCIES[
             "mathml-to-latex"
         ],
+        "katex_version": EXPECTED_FORMULA_NODE_RESOLUTIONS["katex"],
+        "mathml_to_latex_version": EXPECTED_FORMULA_NODE_RESOLUTIONS["mathml-to-latex"],
     }
     for key, expected in expected_formula.items():
         if formula_tools.get(key) != expected:
@@ -1508,10 +1522,7 @@ def _validate_formula_node_packages(
                 f"{relative_path} root dependencies must be "
                 f"{EXPECTED_FORMULA_NODE_DEPENDENCIES!r}; got {root_dependencies!r}"
             )
-        for (
-            package_name,
-            expected_version,
-        ) in EXPECTED_FORMULA_NODE_DEPENDENCIES.items():
+        for package_name, expected_version in EXPECTED_FORMULA_NODE_RESOLUTIONS.items():
             locked = packages.get(f"node_modules/{package_name}", {}).get("version")
             if locked != expected_version:
                 errors.append(
@@ -1567,6 +1578,10 @@ def _validate_portable_and_release_tooling(
         "dependency_evidence": [
             "dependency-manifest.json",
             "paper-fetch-sbom.cdx.json",
+        ],
+        "resolver_pip_specifier": EXPECTED_RESOLVER_TOOLING_SPECIFIERS["pip"],
+        "resolver_packaging_specifier": EXPECTED_RESOLVER_TOOLING_SPECIFIERS[
+            "packaging"
         ],
         "posix_builder_python": ".venv/bin/python",
         "windows_builder_python": ".venv/Scripts/python.exe",
@@ -1823,6 +1838,11 @@ def _validate_release_verification_chain(
     release_workflow = _read_repo_file(
         ".github/workflows/release.yml", repo_root=repo_root, errors=errors
     )
+    rolling_release_workflow = _read_repo_file(
+        ".github/workflows/rolling-release.yml",
+        repo_root=repo_root,
+        errors=errors,
+    )
     offline_workflow = _read_repo_file(
         ".github/workflows/offline.yml", repo_root=repo_root, errors=errors
     )
@@ -1859,12 +1879,26 @@ def _validate_release_verification_chain(
             "find release-assets -maxdepth 1 -type f -print0",
             "flat publication enumeration",
         ),
+        (
+            'python -m pip install "pip>=26.1.2,<27" "packaging>=26.2,<27"',
+            "compatible stable resolver tooling",
+        ),
     ]
     release_fragments.extend(
         (target, f"stable dependency target {target}")
         for target in EXPECTED_OFFLINE_TARGETS
     )
     _require_fragments(release_workflow, tuple(release_fragments), errors=errors)
+    _require_fragments(
+        rolling_release_workflow,
+        (
+            (
+                'python -m pip install "pip>=26.1.2,<27" "packaging>=26.2,<27"',
+                "compatible rolling resolver tooling",
+            ),
+        ),
+        errors=errors,
+    )
     if "uv export" in release_workflow:
         errors.append("stable release must not use uv export as an artifact SBOM")
     if "find release-assets -type f ! -name SHA256SUMS" in release_workflow:

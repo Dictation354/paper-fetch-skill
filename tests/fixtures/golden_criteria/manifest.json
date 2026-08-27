@@ -2221,7 +2221,10 @@
         "expected.json": "tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/expected.json",
         "landing.html": "tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/landing.html",
         "original.pdf": "tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/original.pdf",
-        "original.xml": "tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/original.xml"
+        "original.xml": "tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/original.xml",
+        "extracted.md": "tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/extracted.md",
+        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/markdown-quality-prompt.md",
+        "markdown-quality.json": "tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/markdown-quality.json"
       },
       "fixture_family": "golden",
       "title": "Correlations between total cell concentration, total adenosine tri-phosphate concentration and heterotrophic plate counts during microbial monitoring of drinking water",
@@ -2231,7 +2234,8 @@
       "expected_source": "copernicus_pdf",
       "expected_content_kind": "fulltext",
       "content_type": "application/pdf",
-      "expected_live_status": "fulltext"
+      "expected_live_status": "fulltext",
+      "expected_outcome": "fulltext"
     },
     "10.5194_acp-24-1-2024": {
       "doi": "10.5194/acp-24-1-2024",

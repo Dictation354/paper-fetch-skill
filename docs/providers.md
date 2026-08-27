@@ -660,7 +660,7 @@ CLI、Python API、MCP 当前默认值如下：
 - `asset_profile=body|all` 且 artifact mode 允许资产落盘时，PDF / ePDF fallback 会把 `pymupdf4llm` 导出的图片保存到 `<doi>_assets/` 并作为正文 inline asset 进入最终 article；`asset_profile=none` 或 `artifact_mode=none` 不保存本地图片。
 - PDF fallback 无法稳定区分 supplementary，导出的图片统一按正文资产处理。
 - 共享 PDF Markdown 转换会拒绝明显过短或主要由 IEEE 授权页脚组成的结果。
-- 共享转换会在渲染后统一修复 `pymupdf4llm` 1.28.0 的确定性标题漂移，包括同级字母小节漏标、空的封面导航标题、重复 title/running header；规则只调整 Markdown 结构，不按 provider/DOI 分支，也不删除正文文本。
+- 共享转换使用 `pymupdf4llm>=1.28.2,<2` 兼容线，并在渲染后统一修复确定性标题漂移，包括同级字母小节漏标、空的封面导航标题、重复 title/running header；规则只调整 Markdown 结构，不按 provider/DOI 分支，也不删除正文文本。依赖在该范围内滚动更新，当前 exact golden 快照以 1.28.2 的结构化提取结果为基线；后续升级必须先通过四个 exact golden shards，并针对真实不兼容修复代码或更新有意变化的快照，不通过回锁旧版本规避失败。
 - PDF 内有大量透明文本层时，会用 PyMuPDF transparent-text 路径二次转换。
 - Windows 上 PyMuPDF 探测 Tesseract 时可能产生本地编码的 stdout/stderr；PDF Markdown 转换会对这类第三方文本子进程输出使用 replacement 解码，避免非 UTF-8 字节让 reader thread 抛出 `UnicodeDecodeError`。
 - 二次转换仍不足时，继续走候选重试或 provider 降级。

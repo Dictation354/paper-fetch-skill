@@ -132,8 +132,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install pinned resolver tooling
-        run: python -m pip install "pip==26.1.2" "packaging==26.2"
+      - name: Install compatible resolver tooling
+        run: python -m pip install "pip>=26.1.2,<27" "packaging>=26.2,<27"
 
       - name: Resolve full target dependency snapshot
         shell: bash

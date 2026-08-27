@@ -18,8 +18,9 @@ Windows / WSL 开发时同步上游 `main` 的重放流程。它不是一次性�
 - 公式构建工具链固定为 `haskell-actions/setup` v2.12.0（完整 commit SHA）、
   GHC 9.10.3 与 Cabal 3.12.1.0；普通 CI 使用一次，offline workflow 的 Linux / macOS
   job 共使用两次
-- 公式 Node 工具在根目录与随包资源的两套 manifest / lock 中共同固定 KaTeX
-  0.18.4 和 `mathml-to-latex` 1.8.0；机器合约和 unit test 同时拒绝版本漂移
+- 公式 Node 工具在根目录与随包资源的两套 manifest 中共同声明 KaTeX
+  `>=0.18.4 <0.19.0` 和 `mathml-to-latex>=1.8.0 <2.0.0`；两套 lockfile
+  记录当前解析结果，机器合约和 unit test 同时拒绝范围、解析结果或双份资源漂移
 - 稳定发布的 build provenance 固定使用 `actions/attest-build-provenance` v4.2.2
   完整 SHA、一次调用和 `release-assets/**/*` subject path
 - browser/full extra 接受 `camoufox>=0.5.5,<0.6`；`uv.lock` 固定开发与原生
@@ -112,9 +113,11 @@ Mach-O 处理或产物接口。机器合约同时锁定 action 名称、版本�
 工具版本和 workflow 使用次数，contract version 因此继续保持 4.1.0。
 
 公式 Node 依赖也进入同一机器合约：根目录和
-`src/paper_fetch/resources/formula` 的 manifest / lock 必须共同固定 KaTeX 0.18.4
-与 `mathml-to-latex` 1.8.0。KaTeX 更新纳入设置对象原型污染防护和后续解析修复；
-validator 与 unit test 会拒绝只更新开发依赖或只更新随包资源的单边漂移。
+`src/paper_fetch/resources/formula` 的 manifest 必须共同声明 KaTeX
+`>=0.18.4 <0.19.0` 与 `mathml-to-latex>=1.8.0 <2.0.0`；lockfile 当前解析为
+KaTeX 0.18.4 与 `mathml-to-latex` 1.8.0。KaTeX 更新纳入设置对象原型污染防护和
+后续解析修复；validator 与 unit test 会拒绝只更新开发依赖或只更新随包资源的
+单边漂移。
 
 构建阶段不再假定 runner 上编译出的 texmath 可以原样移动。构建脚本会：
 

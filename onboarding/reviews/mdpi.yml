@@ -1,7 +1,7 @@
 schema_version: 2
 provider: mdpi
-reviewed_at: '2026-05-20T00:00:00Z'
-reviewed_by: operator
+reviewed_at: '2026-08-27T06:50:11Z'
+reviewed_by: codex
 fixtures:
 - fixture: tests/fixtures/golden_criteria/10.3390_membranes15030093
   purpose: structure
@@ -107,10 +107,10 @@ fixtures:
   - must not include Access Denied
   fixes: []
   baseline_markdown_path: tests/fixtures/golden_criteria/10.3390_en16186655/extracted.md
-  baseline_markdown_sha256: e56843907f0c3c57078db992c78ef826f0e01de046b16b223d5bf8d057267c89
-  review_notes: Semantic review completed against committed fixture evidence.
+  baseline_markdown_sha256: 0040be16732db821586fb246d6ea851a2039e4e8b4294ad26b929ff53de6bf2f
+  review_notes: PyMuPDF4LLM 1.28.2 semantic review completed against committed fixture evidence.
   markdown_quality_path: tests/fixtures/golden_criteria/10.3390_en16186655/markdown-quality.json
-  markdown_quality_sha256: 4c4f9f91f978c8c0c57e4c489563df8dadf4757d6e72b33cea669e8b582b6066
+  markdown_quality_sha256: 4f754211af1600b58461202bbc5b1ec0f1f791c72c3f0582ae59f7d4f09494ad
 - fixture: tests/fixtures/golden_criteria/10.3390_foods10081757
   purpose: structure
   doi: 10.3390/foods10081757

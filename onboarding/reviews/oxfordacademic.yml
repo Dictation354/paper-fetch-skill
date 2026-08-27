@@ -1,7 +1,7 @@
 schema_version: 2
 provider: oxfordacademic
-reviewed_at: '2026-05-25T12:57:27Z'
-reviewed_by: operator
+reviewed_at: '2026-08-27T06:50:11Z'
+reviewed_by: codex
 fixtures:
 - fixture: tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa161
   purpose: structure
@@ -112,10 +112,10 @@ fixtures:
   purpose: pdf_fallback
   doi: 10.1093/bioinformatics/btaa153
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa153/extracted.md
-  baseline_markdown_sha256: 13fcbeac200937d208ceeaf175c5d5f9e3a222f531e558f4d919a50cd15bcdea
+  baseline_markdown_sha256: 8b500d9726aafd088c831af188cefa281b4e7ee88117216445d2dae629525b3e
   markdown_quality_path: tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa153/markdown-quality.json
-  markdown_quality_sha256: af14fbf3cfd2278dc80e93079e292b8e4b88fb5904b2bb294beb34e51a2dfef6
-  review_notes: Operator semantic review completed; no blocking issues found.
+  markdown_quality_sha256: accadfaa8dc186643593c4964ae962344f75cbea6c0f362275f4d7899a9177ed
+  review_notes: PyMuPDF4LLM 1.28.2 semantic review completed; no blocking issues found.
   sample_representative: true
   markdown_semantic_reviewed: true
   issues: []

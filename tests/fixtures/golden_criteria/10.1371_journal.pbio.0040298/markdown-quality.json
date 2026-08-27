@@ -1,16 +1,14 @@
 {
   "blocking_issue_count": 0,
   "doi": "10.1371/journal.pbio.0040298",
-  "fresh_review": true,
   "issues": [],
   "markdown_path": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/extracted.md",
   "prompt_path": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/markdown-quality-prompt.md",
   "provider": "plos",
   "review_method": "agent_prompt",
-  "reviewed_at": "2026-05-25T05:13:48Z",
-  "reviewed_by": "codex-agent",
+  "reviewed_at": "2026-08-27T06:50:11Z",
+  "reviewed_by": "codex",
   "sample_id": "10.1371_journal.pbio.0040298",
   "schema_version": 2,
-  "source_markdown_sha256": "5112800ac3f57dd0195ff7c7bcba1a02a29459e59f19c4b561f000a501fda03b",
   "status": "pass"
 }

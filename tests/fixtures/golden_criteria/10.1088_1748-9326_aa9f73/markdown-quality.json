@@ -6,8 +6,8 @@
   "prompt_path": "tests/fixtures/golden_criteria/10.1088_1748-9326_aa9f73/markdown-quality-prompt.md",
   "provider": "iop",
   "review_method": "agent_prompt",
-  "reviewed_at": "2026-07-26T11:36:22.704449Z",
-  "reviewed_by": "codex-agent",
+  "reviewed_at": "2026-08-27T06:50:11Z",
+  "reviewed_by": "codex",
   "sample_id": "10.1088_1748-9326_aa9f73",
   "schema_version": 2,
   "status": "pass"

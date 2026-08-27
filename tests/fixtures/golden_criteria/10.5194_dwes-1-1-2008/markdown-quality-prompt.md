@@ -4,13 +4,12 @@ You are reviewing the committed Markdown baseline for provider onboarding.
 
 ## Inputs
 
-- Provider: `mdpi`
-- DOI: `10.3390/en16186655`
-- Sample ID: `10.3390_en16186655`
-- Fixture purpose: `pdf_fallback`
-- Markdown to review: `tests/fixtures/golden_criteria/10.3390_en16186655/extracted.md`
-- Prompt path: `tests/fixtures/golden_criteria/10.3390_en16186655/markdown-quality-prompt.md`
-- Report to write: `tests/fixtures/golden_criteria/10.3390_en16186655/markdown-quality.json`
+- Provider: `copernicus`
+- DOI: `10.5194/dwes-1-1-2008`
+- Sample ID: `10.5194_dwes-1-1-2008`
+- Markdown to review: `tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/extracted.md`
+- Prompt path: `tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/markdown-quality-prompt.md`
+- Report to write: `tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/markdown-quality.json`
 
 ## Task
 
@@ -36,15 +35,15 @@ Write JSON to the report path using this schema. Use `status: "pass"` only when 
 ```json
 {
   "blocking_issue_count": 0,
-  "doi": "10.3390/en16186655",
+  "doi": "10.5194/dwes-1-1-2008",
   "issues": [],
-  "markdown_path": "tests/fixtures/golden_criteria/10.3390_en16186655/extracted.md",
-  "prompt_path": "tests/fixtures/golden_criteria/10.3390_en16186655/markdown-quality-prompt.md",
-  "provider": "mdpi",
+  "markdown_path": "tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/extracted.md",
+  "prompt_path": "tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/markdown-quality-prompt.md",
+  "provider": "copernicus",
   "review_method": "agent_prompt",
   "reviewed_at": "<UTC ISO-8601 timestamp>",
   "reviewed_by": "<agent-or-operator-id>",
-  "sample_id": "10.3390_en16186655",
+  "sample_id": "10.5194_dwes-1-1-2008",
   "schema_version": 2,
   "status": "pass"
 }

@@ -1,7 +1,7 @@
 schema_version: 2
 provider: ams
-reviewed_at: '2026-05-20T00:00:00Z'
-reviewed_by: operator
+reviewed_at: '2026-08-27T06:50:11Z'
+reviewed_by: codex
 fixtures:
 - fixture: tests/fixtures/golden_criteria/10.1175_bams-d-24-0223.1
   purpose: structure
@@ -92,7 +92,7 @@ fixtures:
   - must not include Access Denied
   fixes: []
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1175_bams-d-24-0270.1/extracted.md
-  baseline_markdown_sha256: e2c4a9a8675bd69d9545e75dfec5b89d7a0858b32c6fd606d2f776bcae492ce8
-  review_notes: Semantic review completed against committed fixture evidence.
+  baseline_markdown_sha256: 66e3c61321863cf2d525e1b72afd64f82ada9061129b3665db7048b825739a7f
+  review_notes: PyMuPDF4LLM 1.28.2 semantic review completed against committed fixture evidence.
   markdown_quality_path: tests/fixtures/golden_criteria/10.1175_bams-d-24-0270.1/markdown-quality.json
-  markdown_quality_sha256: 39cf5ae19403cd6bbc75f4cb5fce060ccdbb996ec1fe316c42f887f52dd98b49
+  markdown_quality_sha256: ce5d7adf57fc4018d5cc44ae6812c8b6a4d607819f4edb6223b4d385ce5aaf29

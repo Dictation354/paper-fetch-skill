@@ -1,7 +1,7 @@
 schema_version: 2
 provider: royalsocietypublishing
-reviewed_at: '2026-07-28T03:58:17Z'
-reviewed_by: codex-agent
+reviewed_at: '2026-08-27T06:50:11Z'
+reviewed_by: codex
 fixtures:
 - fixture: tests/fixtures/golden_criteria/10.1098_rsta.2019.0558
   purpose: structure
@@ -122,10 +122,10 @@ fixtures:
   purpose: pdf_fallback
   doi: 10.1098/rsta.2020.0108
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1098_rsta.2020.0108/extracted.md
-  baseline_markdown_sha256: 39cac044fc543ed1709bdf8fe70e68f856278e47cd0641deaa737eaa095aef6c
+  baseline_markdown_sha256: 471d3ba43a39ddea591f9ff336f0fa23cb361712937c789cd7c101dc5cec012f
   markdown_quality_path: tests/fixtures/golden_criteria/10.1098_rsta.2020.0108/markdown-quality.json
-  markdown_quality_sha256: 68975c6bad2c4c814e0badf03a1dfc0d0ec899bb9e5152e431368f489a7b8040
-  review_notes: Final batch Markdown quality review confirmed by codex-agent; persistent
+  markdown_quality_sha256: 834938423580680a2a0922fe070b7e58760fe7d90c1fa94d5589dd808b79c835
+  review_notes: PyMuPDF4LLM 1.28.2 Markdown quality review confirmed by codex; persistent
     quality status=pass.
   sample_representative: true
   markdown_semantic_reviewed: true
@@ -140,8 +140,8 @@ fixtures:
   fixes: []
 final_markdown_quality_review:
   confirmed: true
-  confirmed_by: codex-agent
-  confirmed_at: '2026-07-28T03:58:17Z'
+  confirmed_by: codex
+  confirmed_at: '2026-08-27T06:50:11Z'
   method: final-markdown-quality-review
   fixture_count: 7
   fresh_markdown_quality_reports: []

@@ -5,16 +5,14 @@ source: "iop_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 13231
+token_estimate: 13221
 ---
 
 # 10.1088/1748-9326/aa9f73
 
 **LETTER • OPEN ACCESS**
 
-Interactions between urban heat islands and heat
-
-waves
+Interactions between urban heat islands and heat waves
 
 To cite this article: Lei Zhao et al 2018 Environ. Res. Lett. 13 034003
 
@@ -24,11 +22,13 @@ You may also like
 
 - <u>Urban climate effects on extreme temperatures in Madison, Wisconsin, USA</u> Jason Schatz and Christopher J Kucharik
 
-- <u>Reduced Urban Heat Island intensity under warmer conditions</u> Anna A Scott, Darryn W Waugh and Ben F Zaitchik
+- <u>Reduced Urban Heat Island intensity</u>
 
-- <u>Interaction of urban heat islands and heat waves under current and future climate conditions and their mitigation using green and cool roofs in New York City and Phoenix, Arizona</u>
+- <u>under warmer conditions</u>
 
-- Mukul Tewari, Jiachuan Yang, Hiroyuki Kusaka et al.
+- Anna A Scott, Darryn W Waugh and Ben F Zaitchik
+
+- <u>Interaction of urban heat islands and heat waves under current and future climate conditions and their mitigation using green and cool roofs in New York City and Phoenix, Arizona</u> Mukul Tewari, Jiachuan Yang, Hiroyuki Kusaka et al.
 
 This content was downloaded from IP address 162.105.199.211 on 27/05/2026 at 07:19
 
@@ -37,12 +37,6 @@ _Environ. Res. Lett._ **13** (2018) 034003
 https://doi.org/10.1088/1748-9326/aa9f73
 
 LETTER
-
-###### **E-mail: lei.zhao@princeton.edu**
-
-**Keywords:** heat wave, urban heat island, surface evaporation, surface biophysical processes, climate change
-
-Supplementary material for this article is available online
 
 #### **Abstract**
 
@@ -87,7 +81,7 @@ We used thirty years of modeled outputs in the current-climate run (1975−2004)
 _Environ. Res. Lett._ **13** (2018) 034003
 
 <!-- Start of picture text -->
-50<br>45<br>40<br>35<br>Local Background Climate<br>Temperate<br>30 Continental<br>Dry<br>25<br>120 110 100 90 80 70<br>Longitude (o)<br>o)<br>Latitude (<br><!-- End of picture text -->
+50<br>45<br>40<br>35<br>Local Background Climate<br>Temperate<br>30 Continental<br>Dry<br>25<br>120 110 100 90 80 70<br>Longitude (o)<br>o)Latitude (<br><!-- End of picture text -->
 
 **Figure 1.** Map of selected cities in the United States. Blue: cities in the Köppen–Geiger temperate climate region; green: cities in the Köppen–Geiger continental region; red: cities in the Köppen–Geiger dry climate region.
 
@@ -114,7 +108,7 @@ _Environ. Res. Lett._ **13** (2018) 034003
 
 **Figure 2.** Maps of mean differences between UHI2m _,_ HW and UHI2m _,_ NM (UHI2m _,_ HW–UHI2m _,_ NM) during 1975−2004 and 2071−2100 under RCP 8.5 scenario for all selected cities. (_a_), (_b_): current climate (1975−2004); (_c_), (_d_): 2071−2100 RCP 8.5. (_a_), (_c_): daytime; (_b_), (_d_): nighttime. Blue, green and red symbols denote cities in the temperate, continental and dry climate zones, respectively. Solid and open symbols denote positive and negative values, respectively.
 
-**Table 1.** The mean differences between UHIHW and UHINM (UHIHW–UHINM) for the selected cities in the three climate zones in current − − climate (1975 2004) and future RCP 8.5 scenario (2071 2100). (Units: K)
+**Table 1.** The mean differences between UHIHW and UHINM (UHIHW–UHINM) for the selected cities in the three climate zones in current climate (1975−2004) and future RCP 8.5 scenario (2071−2100). (Units: K)
 
 |||Def-N|WS|||Def-|95Q|||Def-|2Day||
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -144,21 +138,19 @@ temperate climate zone (humid eastern United States) under current climate (figu
 _Environ. Res. Lett._ **13** (2018) 034003
 
 <!-- Start of picture text -->
-Daytime Nighttime<br>(a) 5 (c) 5<br>4 4<br>3 3<br>2 2<br>1 1<br>0 0<br>(b) 8 (d) 8<br>7 7<br>6 6<br>5 5<br>4 4<br>3 3<br>2 2<br>1 1<br>0 0<br>-1 -1<br>1975-2004 2071-2100 2071-2100 1975-2004 2071-2100 2071-2100<br>RCP 4.5 RCP 8.5 RCP 4.5 RCP 8.5<br>(K) (K)<br>2m 2m<br>T T<br>(K)Ts (K)Ts<br><!-- End of picture text -->
+Daytime Nighttime<br>(a) 5 (c) 5<br>4 4<br>3 3<br>2 2<br>1 1<br>0 0<br>(b) 8 (d) 8<br>7 7<br>6 6<br>5 5<br>4 4<br>3 3<br>2 2<br>1 1<br>0 0<br>-1 -1<br>1975-2004 2071-2100 2071-2100 1975-2004 2071-2100 2071-2100<br>RCP 4.5 RCP 8.5 RCP 4.5 RCP 8.5<br>(K)T2m (K)T2m<br>(K)Ts (K)Ts<br><!-- End of picture text -->
 
 **Figure 3.** Air (ΔT2m) and surface UHI (Δ _T_ s) in summer during heat wave and normal days in current climate and future RCP scenarios. Open bars denote temperate region; solid bars denote dry region. Blue bars denote UHI in normal days; red bars denote UHI in heat wave days. (_a_), (_b_): daytime; (_c_), (_d_): nighttime. The error bar denotes ± 1 standard error.
 
 (Oleson 2012, Zhao _et al_ 2017) have shown that different RCP scenarios have different impacts on the UHI, we find only slight difference in UHI2m–HW interactions between the two climate scenarios (figure 3(_a_)). The reason might lie in the calculation of the synergistic effects of HW and UHI. A warming scenario affects the UHI intensity in both normal and HW days, and thus part of the impacts are cancelled whenthedifferencebetweenUHI2m _,_ HW andUHI2m _,_ NM is calculated for a given warming scenario.
 
-An opposite pattern occurs in the dry region. We ∼ find only a slight (0.06 K) higher UHI2m during HWs compared to normal days in the present-day climate during daytime (figure 2(_a_) and 3(_a_)). This difference is statistically insignificant (_p_ value _>_ 0.38), indicating anindiscerniblesynergisticeffectforcitiesinthisregion under current conditions. However, unlike those in the temperate region, the cities in the dry group show a stronger synergistic effect in future scenarios (figure 3(_a_) and 2(_c_)). Near the end of this century, the average HW exacerbation of UHI2m is projected to increase to 0.2 ± 0.06 K and 0.3 ± 0.05 K under RCP 4.5 and RCP 8.5, respectively. These numbers are statistically significant (_p_ value _<_ 0.01).
+An opposite pattern occurs in the dry region. We find only a slight (∼0.06 K) higher UHI2m during HWs compared to normal days in the present-day climate during daytime (figure 2(_a_) and 3(_a_)). This difference is statistically insignificant (_p_ value _>_ 0.38), indicating anindiscerniblesynergisticeffectforcitiesinthisregion under current conditions. However, unlike those in the temperate region, the cities in the dry group show a stronger synergistic effect in future scenarios (figure 3(_a_) and 2(_c_)). Near the end of this century, the average HW exacerbation of UHI2m is projected to increase to 0.2 ± 0.06 K and 0.3 ± 0.05 K under RCP 4.5 and RCP 8.5, respectively. These numbers are statistically significant (_p_ value _<_ 0.01).
 
 The diurnal pattern is asymmetric as well. At night, despite significant UHI2m–HW synergistic effects across climate zones and scenarios, demonstrated by solid circles in figures 2(_b_) and (_d_) and consistent higher red bars than blue bars in figure 3(_c_), there are no discernible impacts of local background climate on the effects. In the present-day climate, the nighttime UHI2m are intensified during HWs compared to normal conditions in temperate as well as dry region. Specifically, the average nighttime UHI2m
 
 is 0.6 ± 0.2 K and 0.4 ± 0.1 K larger during HWs than during normal conditions in the temperate and dry region, respectively. These numbers are projected to increase to 1.1 ± 0.1 K (temperate) and 1.0 ± 0.0 K (dry) under RCP 4.5, and 1.2 ± 0.2 K (temperate) and 1.2 ± 0.1 K (dry) under RCP 8.5. These results indicate that the GHG warming scenarios exacerbate the nighttime UHI2m—HW synergistic effects and that these effects remain minimally impacted by the background local climate in future scenarios.
 
-##### **3.2. Interactions between surface UHI** s **and HWs**
-
-We also analyzed the interactions between UHIs and HWs. This indicator is important since the radiant temperature is a key component of thermal comfort to urban residents. Moreover, it is closely related to the surface energy balance and hence quite informative as a metric of the city-scale microclimate for the purposeofcomparingdifferentcitiesacrossdiverseclimate conditions.
+**3.2. Interactions between surface UHI** s **and HWs** We also analyzed the interactions between UHIs and HWs. This indicator is important since the radiant temperature is a key component of thermal comfort to urban residents. Moreover, it is closely related to the surface energy balance and hence quite informative as a metric of the city-scale microclimate for the purposeofcomparingdifferentcitiesacrossdiverseclimate conditions.
 
 We find that UHIs and UHI2m generally show consistent spatiotemporal patterns in their interaction with HWs, despite differing in magnitude. Figures 3(_b_) and (_d_) demonstrate the UHIs—HW interactions for cities in the two regions during daytime and nighttime under current and future climates. In the daytime, the average UHIs for temperate cities is 2.8 ± 0.8 K or 78% higher during HWs than during normal days in the present-day climate (figure 3(_b_)), indicating a significant synergistic effect. The magnitude of the effect is much larger than that estimated using UHI2m. This is as expected because UHIs is generally by nature larger than UHI2m (Nichol _et al_ 2009, Roth _et al_ 1989). Consistent with the UHI2m-HW interaction, the daytime
 
@@ -190,13 +182,13 @@ synergistic effect in this region is projected to reverse in future warmer clima
 
 Cities in the dry region do not show any daytime synergistic effects under current climate. The average daytime UHIs is marginally lower during HWs than during normal days for the period 1975–2004 (figure 3(_b_)). Similar with the UHI2m-HW interaction in this region,thesynergisticeffectdevelopsinfuturewarming scenarios. The UHIs is 0.7 ± 0.2 K larger during HWs than during normal days near the end of this century under RCP 8.5 (figure 3(_b_)). At night, the synergistic effect is spatially consistent across climate regions. Undercurrentclimate,thedifferencebetweenUHIs _,_ HW and UHIs _,_ NM is 1.8 ± 0.3 K and 1.0 ± 0.2 K for cities in the temperate and dry region respectively. These numbers are projected to be 1.4 ± 0.2 K and 1.7 ± 0.1 K near the end of this century under RCP 8.5.
 
-##### **3.3.**
+##### **3.3. Robustness to variation in heat wave definitions**
 
 Our analysis demonstrates that the spatiotemporal patterns of UHI-HW interactions are robust to different HW definitions (table 1). Although defining HW in the other two ways (Def-95Q and Def-2Day) affects the magnitude of the HW-UHI interactions, the spatiotemporal patterns agree well with results using Def-NWS. The consistency is confirmed for UHI2m and UHIs (table 1), strongly supporting the robustness of the aforementioned spatiotemporal patterns of the UHI-HW interactions.
 
 ##### **3.4. Biophysical drivers**
 
-Although UHIs and UHI2m are fundamentally distinct concepts (Arnfield 2003), they demonstrate consistent spatiotemporal patterns in terms of their interactions with HWs (figure 3). An important advantage of UHIs is that it has a theoretical basis derived from
+Although UHIs and UHI2m are fundamentally distinct concepts (Arnfield 2003), they demonstrate consistent spatiotemporal patterns in terms of their interactions with HWs (figure 3). An important advantage of UHIs is that it has a firm theoretical basis derived from
 
 the surface energy balance principle that explains the contributions of the biophysical properties of urban surfaces (Zhao _et al_ 2014). Therefore, utilizing this biophysical factorization method, we can disentangle the relative importance of processes that contribute to the UHIs–HW interactions. Because of the consistency between UHIs and UHI2m, and the physical links between surface and air temperature, the physical mechanism behind the UHI2m–HW interactions can be inferred from this analysis of UHIs, but not necessarily in a direct way. For example, a large contribution of convection to the cooling of the surface (reduced UHIs–HW) would imply increased heating of the air (increased UHI2m–HW).
 
@@ -266,7 +258,7 @@ _Environ. Res. Lett._ **13** (2018) 034003
 
 ### **Acknowledgments**
 
-This research was supported by the Carbon Mitigation Initiative and a High Meadows Foundation Fellowship in the Program in Science, Technology and Environmental Policy at Princeton University (to L Z). Q Z is supported by the Director, Office of Science, Office of Biological and Environmental Research of the US Department of Energy under Contract No. DE-AC02-05CH11231 as part of their Regional and Global Climate Modeling program RUBISCO SFA project. E B Z is supported by the US National Science Foundation’s Sustainability Research Network Cooperative Agreement # 1444758 and grant # ICER 1664091. We acknowledge high-performance computing support from Yellowstone (ark:/85065/d7wd3xhc) provided by NCAR’s Computational and Information Systems Laboratory, sponsored by the US National Science Foundation. The authors declare that they have no
+This research was supported by the Carbon Mitigation Initiative and a High Meadows Foundation Fellowship in the Program in Science, Technology and Environmental Policy at Princeton University (to L Z). Q Z is supported by the Director, Office of Science, Office of Biological and Environmental Research of the US Department of Energy under Contract No. DE-AC02-05CH11231 as part of their Regional and Global Climate Modeling program RUBISCO SFA project. E B Z is supported by the US National Science Foundation’s Sustainability Research Network Cooperative Agreement # 1444758 and grant # ICER 1664091. We acknowledge high-performance computing support from Yellowstone (ark:/85065/d7wd3xhc) provided by NCAR’s Computational and Information Systems Laboratory, sponsored by the US National Science Foundation. The authors declare that they have no conflict of interest.
 
 ### **ORCID iDs**
 
@@ -276,13 +268,21 @@ Lei Zhao https://orcid.org/0000-0002-6481-3786 Kristie L Ebi https://orcid.org/0
 
 - Anderson G B and Bell M L 2011 Heat waves in the United States: mortality risk during heat waves and effect modification by heat wave characteristics in 43 US communities _Environ. Health Persp._ **119** 210
 
-- Arnfield A J 2003 Two decades of urban climate research: a review of turbulence, exchanges of energy and water, and the urban heat Island _Int. J. Climatol._ **23** 1–26
+Arnfield A J 2003 Two decades of urban climate research: a review of turbulence, exchanges of energy and water, and the urban heat Island _Int. J. Climatol._ **23** 1–26
 
-- Barriopedro D, Fischer E M, Luterbacher J, Trigo R M and Garc´ıa-Herrera R 2011 The hot summer of 2010: redrawing the temperature record map of Europe _Science_ **332** 220–4
+- Barriopedro D, Fischer E M, Luterbacher J, Trigo R M and
 
-- Bateni S and Entekhabi D 2012 Relative efficiency of land surface energy balance components _Water Resour. Res._ **48** W04510
+   - Garc´ıa-Herrera R 2011 The hot summer of 2010: redrawing
 
-- Battisti D S and Naylor R L 2009 Historical warnings of future food insecurity with unprecedented seasonal heat _Science_ **323** 240–4
+   - the temperature record map of Europe _Science_ **332** 220–4
+
+- Bateni S and Entekhabi D 2012 Relative efficiency of land surface
+
+   - energy balance components _Water Resour. Res._ **48** W04510
+
+- Battisti D S and Naylor R L 2009 Historical warnings of future food
+
+   - insecurity with unprecedented seasonal heat _Science_ **323** 240–4
 
 - Bobb J F, Peng R D, Bell M L and Dominici F 2014 Heat-related mortality and adaptation to heat in the United States _Environ. Health Persp._ **122** 811–6
 
@@ -290,7 +290,9 @@ Lei Zhao https://orcid.org/0000-0002-6481-3786 Kristie L Ebi https://orcid.org/0
 
 - Coumou D and Robinson A 2013 Historic and future increase in the global land area affected by monthly heat extremes _Environ. Res. Lett._ **8** 034018
 
-- Diffenbaugh N S and Ashfaq M 2010 Intensification of hot extremes in the United States _Geophys. Res. Lett._ **37** L15701
+- Diffenbaugh N S and Ashfaq M 2010 Intensification of hot
+
+extremes in the United States _Geophys. Res. Lett._ **37** L15701
 
 - Fischer E M and Schar C 2010 Consistent geographical patterns of changes in high-impact European heatwaves _Nat. Geosci._ **3** 398–403
 
@@ -298,27 +300,27 @@ Lei Zhao https://orcid.org/0000-0002-6481-3786 Kristie L Ebi https://orcid.org/0
 
 - Fuquay J W 1981 Heat-stress as it affects animal production _J. Anim. Sci._ **52** 164–74
 
-- Gao Y, Fu J S, Drake J B, Liu Y and Lamarque J F 2012 Projected changes of extreme weather events in the eastern United States based on a high resolution climate modeling system _Environ. Res. Lett._ **7** 044025
+Gao Y, Fu J S, Drake J B, Liu Y and Lamarque J F 2012 Projected changes of extreme weather events in the eastern United States based on a high resolution climate modeling system _Environ. Res. Lett._ **7** 044025
 
-- Georgescu M, Morefield P E, Bierwagen B G and Weaver C P 2014 Urban adaptation can roll back warming of emerging megapolitan regions _Proc. Natl Acad. Sci. USA_ **111** 2909–14
+Georgescu M, Morefield P E, Bierwagen B G and Weaver C P 2014 Urban adaptation can roll back warming of emerging megapolitan regions _Proc. Natl Acad. Sci. USA_ **111** 2909–14
 
-- Gutowski J _et al_ 2008 Causes of observed changes in extremes and projections of future changes _Weather and Climate Extremes in a Changing Climate, CCSP Synthesis and Assessment Product 3.3_ vol 3 (Washington, DC: US Climate Change Science Program) pp 81–116
+Gutowski J _et al_ 2008 Causes of observed changes in extremes and projections of future changes _Weather and Climate Extremes in a Changing Climate, CCSP Synthesis and Assessment Product 3.3_ vol 3 (Washington, DC: US Climate Change Science Program) pp 81–116
 
-- Heilig G K 2012 _World Urbanization Prospects: The 2011 Revision_ (New York: United Nations, Department of Economic and Social Affairs (DESA), Population Division, Population Estimates and Projections Section)
+Heilig G K 2012 _World Urbanization Prospects: The 2011 Revision_ (New York: United Nations, Department of Economic and Social Affairs (DESA), Population Division, Population Estimates and Projections Section)
 
-- Horton D E, Johnson N C, Singh D, Swain D L, Rajaratnam B and Diffenbaugh N S 2015 Contribution of changes in atmospheric circulation patterns to extreme temperature trends _Nature_ **522** 465
+Horton D E, Johnson N C, Singh D, Swain D L, Rajaratnam B and Diffenbaugh N S 2015 Contribution of changes in atmospheric circulation patterns to extreme temperature trends _Nature_ **522** 465
 
 - Horton R M, Mankin J S, Lesk C, Coffel E and Raymond C 2016 A review of recent advances in research on extreme heat events _Curr. Clim. Change Rep._ **2** 242–59
 
-- Houser T, Hsiang S, Kopp R and Larsen K 2015 _Economic Risks of Climate Change: An American Prospectus_ (New York: Columbia University Press)
+Houser T, Hsiang S, Kopp R and Larsen K 2015 _Economic Risks of Climate Change: An American Prospectus_ (New York: Columbia University Press)
 
-- Hsiang S M, Meng K C and Cane M A 2011 Civil conflicts are associated with the global climate _Nature_ **476** 438–41
+Hsiang S M, Meng K C and Cane M A 2011 Civil conflicts are associated with the global climate _Nature_ **476** 438–41
 
-- Huang C R, Barnett A G, Wang X M, Vaneckova P, FitzGerald G and Tong S L 2011 Projecting future heat-related mortality under climate change scenarios: a systematic review _Environ. Health Persp._ **119** 1681–90
+Huang C R, Barnett A G, Wang X M, Vaneckova P, FitzGerald G and Tong S L 2011 Projecting future heat-related mortality under climate change scenarios: a systematic review _Environ. Health Persp._ **119** 1681–90
 
-- Hurrell J W _et al_ 2013 The community earth system model a framework for collaborative research _Bull. Am. Meteorol. Soc._ **94** 1339–60
+Hurrell J W _et al_ 2013 The community earth system model a framework for collaborative research _Bull. Am. Meteorol. Soc._ **94** 1339–60
 
-- Isaac M and van Vuuren D P 2009 Modeling global residential sector energy demand for heating and air conditioning in the context of climate change _Energ. Policy_ **37** 507–21
+Isaac M and van Vuuren D P 2009 Modeling global residential sector energy demand for heating and air conditioning in the context of climate change _Energ. Policy_ **37** 507–21
 
 - Klinenberg E 2015 _Heat Wave: A Social Autopsy of Disaster in Chicago_ (Chicago, IL: University of Chicago Press)
 
@@ -350,76 +352,36 @@ Lei Zhao https://orcid.org/0000-0002-6481-3786 Kristie L Ebi https://orcid.org/0
 
 _Environ. Res. Lett._ **13** (2018) 034003
 
-Nichol J E, Fung W Y, Lam K S and Wong M S 2009 Urban heat island diagnosis using ASTER satellite images and ‘ _in situ_ ’ air temperature _Atmos. Res._ **94** 276–84
-
-- O’Neill M S and Ebi K L 2009 Temperature extremes and health: impacts of climate variability and change in the United States _J. Occup. Environ. Med._ **51** 13–25
-
-- Oke T R 1982 The energetic basis of the Urban heat-island _Q. J. R. Meteorolog. Soc._ **108** 1–24
-
-- Oke T R, Johnson G T, Steyn D G and Watson I D 1991 Simulation of surface Urban heat islands under Ideal conditions at night. 2. Diagnosis of causation. _Bound. Lay. Meteorol._ **56** 339–58
-
-- Oleson K 2012 Contrasts between Urban and rural climate in
-
-   - CCSM4 CMIP5 climate change scenarios _J. Clim._ **25** 1390–412
-
-- Oleson K, Bonan G B, Feddema J and Vertenstein M 2008 An urban parameterization for a global climate model. Part II: sensitivity to input parameters and the simulated urban heat island in offline simulations _J. Appl. Meteorol. Climatol._ **47** 1061–76
-
-- Oleson K _et al_ 2010 _Technical description of version 4.0 of the Community Land Model (CLM)_ NCAR Tech. Note NCAR/TN-478+STR p 257
-
-- Oleson K W, Anderson G B, Jones B, McGinnis S A and Sanderson B 2015a Avoided climate impacts of urban and rural heat and cold waves over the US using large climate model ensembles for RCP8.5 and RCP4.5 _Clim. Change_ (https://doi.org/ 10.1007/s10584-015-1504-1)
-
-- Oleson K W _et al_ 2015b Interactions between urbanization, heat stress, and climate change _Clim. Change_ **129** 525–41
-
-- Orlowsky B and Seneviratne S I 2012 Global changes in extreme events: regional and seasonal dimension _Clim. Change_ **110** 669–96
-
-- Pachauri R K _et al_ 2014 _Climate Change 2014: Synthesis Report. Contribution of Working Groups I, II and III to the Fifth Assessment Report of the Intergovernmental Panel on Climate Change_ (Geneva: IPCC)
-
-- Patz J A, Campbell-Lendrum D, Holloway T and Foley J A 2005 Impact of regional climate change on human health _Nature_ **438** 310–7
-
-- Perkins S E 2015 A review on the scientific understanding of heatwaves-their measurement, driving mechanisms, and changes at the global scale _Atmos. Res._ **164** 242–67
-
-- Perkins S E and Alexander L V 2013 On the measurement of heat waves _J. Clim._ **26** 4500–17
-
-- Ramamurthy P and Bou-Zeid E 2017 Heatwaves and urban heat islands: a comparative analysis of multiple cities _J. Geophys. Res.-Atmos._ **122** 168–78
-
-- Ramamurthy P, Li D and Bou-Zeid E 2017 High-resolution simulation of heatwave events in New York City _Theor. Appl. Climatol._ **128** 89–102
-
-- Ramamurthy P _et al_ 2014 Influence of subfacet heterogeneity and material properties on the Urban surface energy budget _J. Appl. Meteorol. Climatol._ **53** 2114–29
-
-- Robinson P J 2001 On the definition of a heat wave _J. Appl. Meteorol._ **40** 762–75
-
-- Rosenzweig C _et al_ 2009 Mitigating New York city’s heat island—integrating stakeholder perspectives and scientific evaluation _Bull. Am. Meteorol. Soc._ **90** 1297–312
-
-- Roth M, Oke T R and Emery W J 1989 Satellite-derived urban heat islands from 3 coastal cities and the utilization of such data in urban climatology _Int. J. Remote Sens._ **10** 1699–720
-
-- Runnalls K E and Oke T R 2000 Dynamics and controls of the near-surface heat island of Vancouver, British Columbia _Phys. Geogr._ **21** 283–304
-
-- Sailor D J and Pavlova A 2003 Air conditioning market saturation and long-term response of residential cooling energy demand to climate change _Energy_ **28** 941–51
-
-- Schwartz J 2005 Who is sensitive to extremes of temperature? A case-only analysis _Epidemiology_ **16** 67–72
-
-- Semenza J C, Rubin C H, Falter K H, Selanikio J D, Flanders W D, Howe H L and Wilhelm J L 1996 Heat-related deaths during the July 1995 heat wave in Chicago _N. Engl. J. Med._ **335** 84–90
-
-- Seneviratne S I, Luthi D, Litschi M and Schar C 2006
-
-   - Land-atmosphere coupling and climate change in Europe _Nature_ **443** 205–9
-
-- Sillmann J, Kharin V V, Zwiers F W, Zhang X and Bronaugh D 2013 Climate extremes indices in the CMIP5 multimodel ensemble: Part 2. Future climate projections _J. Geophys. Res.: Atmos._ **118** 2473–93
-
-- Smith T T, Zaitchik B F and Gohlke J M 2013 Heat waves in the United States: definitions, patterns and trends _Clim. Change_ **118** 811–25
-
-- Tan J _et al_ 2010 The urban heat island and its impact on heat waves and human health in Shanghai _Int. J. Biometeorol._ **54** 75–84
-
-- Vandentorren S, Suzan F, Medina S, Pascal M, Maulpoix A, Cohen J C and Ledrans M 2004 Mortality in 13 French cities during the August 2003 heat wave _Am. J. Public Health_ **94** 1518–20
-
-- Whitman S, Good G, Donoghue E R, Benbow N, Shou W and Mou S 1997 Mortality in Chicago attributed to the July 1995 heat wave _Am. J. Public Health_ **87** 1515–8
-
-- Wu J Y _et al_ 2014 Estimation and uncertainty analysis of impacts of future heat waves on mortality in the Eastern United States _Environ. Health Persp._ **122** 10–6
-
-- Zanobetti A, O’Neill M S, Gronlund C J and Schwartz J D 2012 Summer temperature variability and long-term survival among elderly people with chronic disease _Proc. Natl Acad. Sci. USA_ **109** 6608–13
-
-- Zhao L, Lee X, Smith R B and Oleson K 2014 Strong contributions of local background climate to urban heat islands _Nature_ **511** 216–9
-
-- Zhao L, Lee X, Schultz N M and Oppenheimer M 2017 A wedge strategy for mitigation of urban warming in future climate scenarios _Atmos. Chem. Phys._ **17** 9067–80
+|Nichol J E, Fung W Y, Lam K S and Wong M S 2009 Urban heat|Robinson P J 2001 On the definition of a heat wave_J. Appl._|
+|---|---|
+|island diagnosis using ASTER satellite images and‘_in situ_’air<br>|_Meteorol._**40**762–75<br>|
+|temperature_Atmos. Res._**94**276–84|Rosenzweig C _et al_2009 Mitigating New York city’s heat|
+|O’Neill M S and Ebi K L 2009 Temperature extremes and health:<br>impacts of climate variability and change in the United States<br>_J. Occup. Environ. Med._**51**13–25<br>|island—integrating stakeholder perspectives and scientific<br>evaluation_Bull. Am. Meteorol. Soc._**90**1297–312<br>Roth M, Oke T R and Emery W J 1989 Satellite-derived urban heat<br>|
+|Oke T R 1982 The energetic basis of the Urban heat-island_Q. J. R._<br>_Meteorolog. Soc._**108**1–24|islands from 3 coastal cities and the utilization of such data in<br>urban climatology_Int. J. Remote Sens._**10**1699–720|
+|<br>Oke T R, Johnson G T, Steyn D G and Watson I D 1991 Simulation<br>of surface Urban heat islands under Ideal conditions at night.<br>2. Diagnosis of causation._Bound. Lay. Meteorol._**56**339–58|<br>Runnalls K E and Oke T R 2000 Dynamics and controls of the<br>near-surface heat island of Vancouver, British Columbia_Phys._<br>_Geogr._**21**283–304|
+|Oleson K 2012 Contrasts between Urban and rural climate in<br>CCSM4 CMIP5 climate change scenarios_J. Clim._**25**1390–412|Sailor D J and Pavlova A 2003 Air conditioning market saturation<br>and long-term response of residential cooling energy demand|
+|Oleson K, Bonan G B, Feddema J and Vertenstein M 2008 An urban|to climate change_Energy_**28**941–51|
+|parameterization for a global climate model. Part II: sensitivity<br>to input parameters and the simulated urban heat island in|Schwartz J 2005 Who is sensitive to extremes of temperature? A<br>case-only analysis_Epidemiology_**16**67–72|
+|offline simulations_J. Appl. Meteorol. Climatol._**47**1061–76|Semenza J C, Rubin C H, Falter K H, Selanikio J D, Flanders W D,|
+|Oleson K _et al_2010 _Technical description of version 4.0 of the_<br>_Community Land Model (CLM)_NCAR Tech. Note<br>NCAR/TN-478+STR p 257|Howe H L and Wilhelm J L 1996 Heat-related deaths during<br>the July 1995 heat wave in Chicago_N. Engl. J. Med._**335**84–90<br>Seneviratne S I, Luthi D, Litschi M and Schar C 2006|
+|Oleson K W, Anderson G B, Jones B, McGinnis S A and Sanderson<br>B 2015a Avoided climate impacts of urban and rural heat and<br>cold waves over the US using large climate model ensembles<br>for RCP8.5 and RCP4.5_Clim. Change_(https://doi.org/<br>|Land-atmosphere coupling and climate change in Europe<br>_Nature_**443**205–9<br>Sillmann J, Kharin V V, Zwiers F W, Zhang X and Bronaugh D<br>2013 Climate extremes indices in the CMIP5 multimodel<br>|
+|10.1007/s10584-015-1504-1)|ensemble: Part 2. Future climate projections_J. Geophys. Res.:_|
+|Oleson K W _et al_2015b Interactions between urbanization, heat<br>stress, and climate change_Clim. Change_**129**525–41|<br>_Atmos._**118**2473–93<br>Smith T T, Zaitchik B F and Gohlke J M 2013 Heat waves in the|
+|Orlowsky B and Seneviratne S I 2012 Global changes in extreme<br>events: regional and seasonal dimension_Clim. Change_**110**<br>669–96|United States: definitions, patterns and trends_Clim. Change_<br>**118**811–25<br>Tan J _et al_2010 The urban heat island and its impact on heat|
+|Pachauri R K _et al_2014 _Climate Change 2014: Synthesis Report._<br>_Contribution of Working Groups I, II and III to the Fifth_|waves and human health in Shanghai_Int. J. Biometeorol._**54**<br>75–84|
+|_Assessment Report of the Intergovernmental Panel on Climate_|Vandentorren S, Suzan F, Medina S, Pascal M, Maulpoix A, Cohen|
+|_Change_(Geneva: IPCC)|J C and Ledrans M 2004 Mortality in 13 French cities during|
+|Patz J A, Campbell-Lendrum D, Holloway T and Foley J A 2005|the August 2003 heat wave_Am. J. Public Health_**94**1518–20|
+|Impact of regional climate change on human health_Nature_<br>**438**310–7|Whitman S, Good G, Donoghue E R, Benbow N, Shou W and Mou<br>S 1997 Mortality in Chicago attributed to the July 1995 heat|
+|Perkins S E 2015 A review on the scientific understanding of|wave_Am. J. Public Health_**87**1515–8|
+|heatwaves-their measurement, driving mechanisms, and|Wu J Y _et al_2014 Estimation and uncertainty analysis of impacts of|
+|changes at the global scale_Atmos. Res._**164**242–67|future heat waves on mortality in the Eastern United States|
+|Perkins S E and Alexander L V 2013 On the measurement of heat<br>waves_J. Clim._**26**4500–17|_Environ. Health Persp._**122**10–6<br>Zanobetti A, O’Neill M S, Gronlund C J and Schwartz J D 2012|
+|Ramamurthy P and Bou-Zeid E 2017 Heatwaves and urban heat|Summer temperature variability and long-term survival|
+|<br>islands: a comparative analysis of multiple cities_J. Geophys._<br>_Res.-Atmos._**122**168–78|<br>among elderly people with chronic disease_Proc. Natl Acad._<br>_Sci. USA_**109**6608–13|
+|Ramamurthy P, Li D and Bou-Zeid E 2017 High-resolution|Zhao L, Lee X, Smith R B and Oleson K 2014 Strong contributions|
+|<br>simulation of heatwave events in New York City_Theor. Appl._<br>_Climatol._**128**89–102|<br>of local background climate to urban heat islands_Nature_**511**<br>216–9|
+|Ramamurthy P _et al_2014 Influence of subfacet heterogeneity and<br>material properties on the Urban surface energy budget|Zhao L, Lee X, Schultz N M and Oppenheimer M 2017 A wedge<br>strategy for mitigation of urban warming in future climate|
+|_J. Appl. Meteorol. Climatol._**53**2114–29|scenarios_Atmos. Chem. Phys._**17**9067–80|
 
 11

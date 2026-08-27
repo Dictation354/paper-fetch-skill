@@ -6,8 +6,8 @@
   "prompt_path": "tests/fixtures/golden_criteria/10.5194_acp-1-1-2001/markdown-quality-prompt.md",
   "provider": "copernicus",
   "review_method": "agent_prompt",
-  "reviewed_at": "2026-05-23T00:00:00Z",
-  "reviewed_by": "codex-agent",
+  "reviewed_at": "2026-08-27T06:50:11Z",
+  "reviewed_by": "codex",
   "sample_id": "10.5194_acp-1-1-2001",
   "schema_version": 2,
   "status": "pass"

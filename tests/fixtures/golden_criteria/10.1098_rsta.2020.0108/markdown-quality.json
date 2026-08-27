@@ -6,10 +6,9 @@
   "prompt_path": "tests/fixtures/golden_criteria/10.1098_rsta.2020.0108/markdown-quality-prompt.md",
   "provider": "royalsocietypublishing",
   "review_method": "agent_prompt",
-  "reviewed_at": "2026-05-24T11:35:33Z",
-  "reviewed_by": "codex-agent",
+  "reviewed_at": "2026-08-27T06:50:11Z",
+  "reviewed_by": "codex",
   "sample_id": "10.1098_rsta.2020.0108",
   "schema_version": 2,
-  "source_markdown_sha256": "39cac044fc543ed1709bdf8fe70e68f856278e47cd0641deaa737eaa095aef6c",
   "status": "pass"
 }

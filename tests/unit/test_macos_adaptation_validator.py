@@ -196,6 +196,8 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract["release_tooling"]["verified_sha_reused_for_all_jobs"] = False
         contract["release_tooling"]["frozen_dependency_targets"] = []
         contract["release_tooling"]["dependency_evidence"] = []
+        contract["release_tooling"]["resolver_pip_specifier"] = "==26.1.2"
+        contract["release_tooling"]["resolver_packaging_specifier"] = "==26.2"
         contract["release_tooling"]["posix_builder_python"] = "python"
         contract["release_tooling"]["windows_builder_python"] = "python"
         contract["release_tooling"]["release_asset_namespace"] = "nested-paths"
@@ -243,6 +245,14 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         )
         self.assertIn("release_tooling.frozen_dependency_targets must be", diagnostic)
         self.assertIn("release_tooling.dependency_evidence must be", diagnostic)
+        self.assertIn(
+            "release_tooling.resolver_pip_specifier must be '>=26.1.2,<27'",
+            diagnostic,
+        )
+        self.assertIn(
+            "release_tooling.resolver_packaging_specifier must be '>=26.2,<27'",
+            diagnostic,
+        )
         self.assertIn(
             "release_tooling.posix_builder_python must be '.venv/bin/python'",
             diagnostic,
@@ -533,6 +543,8 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         formula_tools["offline_workflow_uses"] = 1
         formula_tools["node_package_manifests"] = ["package.json"]
         formula_tools["node_package_locks"] = ["package-lock.json"]
+        formula_tools["katex_specifier"] = ">=0.18.1 <0.19.0"
+        formula_tools["mathml_to_latex_specifier"] = ">=1.7.0 <2.0.0"
         formula_tools["katex_version"] = "0.18.1"
         formula_tools["mathml_to_latex_version"] = "1.7.0"
 
@@ -548,6 +560,8 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             "offline_workflow_uses",
             "node_package_manifests",
             "node_package_locks",
+            "katex_specifier",
+            "mathml_to_latex_specifier",
             "katex_version",
             "mathml_to_latex_version",
         ):
@@ -606,13 +620,14 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
 
     def test_formula_node_package_drift_is_rejected(self) -> None:
         expected = validator.EXPECTED_FORMULA_NODE_DEPENDENCIES
+        resolutions = validator.EXPECTED_FORMULA_NODE_RESOLUTIONS
         package = {"dependencies": expected}
         lock = {
             "packages": {
                 "": {"dependencies": expected},
                 **{
                     f"node_modules/{name}": {"version": version}
-                    for name, version in expected.items()
+                    for name, version in resolutions.items()
                 },
             }
         }

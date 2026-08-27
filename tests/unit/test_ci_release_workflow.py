@@ -484,6 +484,16 @@ def test_dependency_refresh_resolves_latest_compatible_graph_without_commit() ->
     assert "git push" not in workflow
 
 
+def test_release_resolver_tooling_uses_rolling_compatible_ranges() -> None:
+    expected_install = 'python -m pip install "pip>=26.1.2,<27" "packaging>=26.2,<27"'
+
+    for workflow_name in ("release.yml", "rolling-release.yml"):
+        workflow = _workflow_text(workflow_name)
+        assert expected_install in workflow
+        assert '"pip==' not in workflow
+        assert '"packaging==' not in workflow
+
+
 def test_rolling_release_restores_frozen_full_dependency_updates() -> None:
     workflow = _workflow_text("rolling-release.yml")
     assert 'cron: "17 19 * * *"' in workflow

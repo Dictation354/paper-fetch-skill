@@ -5,28 +5,27 @@ source: "acs"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 10893
+token_estimate: 11064
 ---
 
 # 10.1021/acsomega.2c02828
 
-http://pubs.acs.org/journal/acsodf
-
-<mark>Article</mark>
+http://pubs.acs.org/journal/acsodf <mark>Article</mark>
 
 ## **General Equation to Express Changes in the Physicochemical Properties of Organic Homologues**
 
 Chao-Tun Cao and Chenzhong Cao*
 
-**Cite This:** _ACS Omega_ 2022, 7, 26670−26679
-
-**Read Online**
+**Cite This:** _ACS Omega_ 2022, 7, 26670−26679 **Read Online**
 
 ### ACCESS
 
-Metrics & More Article Recommendations * **sı** Supporting Information
+<!-- Start of picture text -->
+Metrics & More Article Recommendations * sı Supporting Information<br><!-- End of picture text -->
 
-ABSTRACT: Changes in various physicochemical properties (_P_ (_n_)) of organic compounds with the number of carbon atoms (_n_) can be roughly divided into linear and nonlinear changes. To date, there has been no general equation to express nonlinear changes in the properties of organic homologues. This study proposes a general equation expressing nonlinear changes in the physicochemical properties of organic homologues, including boiling point, viscosity, ionization potential, and vapor pressure, named the “NPOH equation”, as follows: _P_ (n) = _P_ (1) _α_<sup>_n_−</sup><sup>_1_</sup> _e_<sup>∑</sup> d<sup>ni=2</sup> (_β_ /(_i_ − 1)) where _α_ and _β_ are adjustable parameters, and _P_ (1) represents the property of the starting compound (pseudo-value at _n_ = 1) of each homologue. The results show that various nonlinear changes in the properties of homologues can be expressed by the NPOH equation. Linear and nonlinear changes in the properties of homologues can all be correlated with _n_ and the “sum of carbon number effects”, ∑ni=2(1/i − 1). Using these two
+ABSTRACT: Changes in various physicochemical properties (_P_ (_n_)) of organic compounds with the number of carbon atoms (_n_) can be roughly divided into linear and nonlinear changes. To date, there has been no general equation to express nonlinear changes in the properties of organic homologues. This study proposes a general equation expressing nonlinear changes in the physicochemical properties of organic homologues, including boiling point, viscosity, ionization potential, and vapor pressure, named the “NPOH equation”, as
+
+follows: _P_ (n) = _P_ (1) _α_<sup>_n_−</sup><sup>_1_</sup> _e_<sup>∑</sup> d<sup>ni=2</sup> (_β_ /(_i_ − 1)) where _α_ and _β_ are adjustable parameters, and _P_ (1) represents the property of the starting compound (pseudo-value at _n_ = 1) of each homologue. The results show that various nonlinear changes in the properties of homologues can be expressed by the NPOH equation. Linear and nonlinear changes in the properties of homologues can all be correlated with _n_ and the “sum of carbon number effects”, ∑ni=2(1/i − 1). Using these two
 
 parameters, a quantitative correlation equation can be established between any two properties of each homologue, providing convenient mutual estimation of the properties of a homologue series. The NPOH equation can also be used in property correlation for structures with functionality located elsewhere along a linear alkyl chain as well as for branched organic compounds. This work can provide new perspectives for studying quantitative structure−property relationships.
 
@@ -42,15 +41,15 @@ where _u_ and _w_ are characteristics of the equation (_u_ = 1 and _w_ = 0 or _u
 
 Received: May 13, 2022 Accepted: July 12, 2022 Published: July 25, 2022
 
-© 2022 The Authors. Published by American Chemical Society **26670**
+© 2022 The Authors. Published by American Chemical Society
 
 https://doi.org/10.1021/acsomega.2c02828 _ACS Omega_ 2022, 7, 26670−26679
 
-**http://pubs.acs.org/journal/acsodf**
+**26670**
+
+**<u>ACS Omega</u>** **<mark>http://pubs.acs.org/journal/acsodf</mark>**
 
 <mark>Article</mark>
-
-##### **ACS Omega**
 
 Figure 1. (a) Relationship of boiling point (_T_ b), (b) viscosity (_μ_), and (c) ionization potential (_I_ p) with the carbon atom number (_n_) of _n_ -paraffins.
 
@@ -72,9 +71,14 @@ where variables _Y_, _Y_ ∞, and _Y_ 0 are property values at carbon number _n_
 
 https://doi.org/10.1021/acsomega.2c02828 _ACS Omega_ 2022, 7, 26670−26679
 
-|Table 1.<br>**ACS Om**|Number o<br><br>**ega**|f Repeating<br>|Structur|al Units, _n_<br><br>|, and _S_CNE<br><br>**http://pubs.ac**|Values<br>**s.org/journ**|**al/acsodf**||||Article|
-|---|---|---|---|---|---|---|---|---|---|---|---|
+**<u>ACS Omega</u>**
+
+**<mark>http://pubs.acs.org/journal/acsodf</mark>** <mark>Article</mark>
+
+Table 1. Number of Repeating Structural Units, _n_, and _S_ CNE Values
+
 |_n_|_n_ −1|_S_CNE|_n_|_n_ −1|_S_CNE|_n_|_n_ −1|_S_CNE|_n_|_n_ −1|_S_CNE|
+|---|---|---|---|---|---|---|---|---|---|---|---|
 |1|0||26|25|3.8160|51|50|4.4992|76|75|4.9014|
 |2|1|1.0000|27|26|3.8544|52|51|4.5188|77|76|4.9145|
 |3|2|1.5000|28|27|3.8915|53|52|4.5380|78|77|4.9275|
@@ -101,7 +105,11 @@ https://doi.org/10.1021/acsomega.2c02828 _ACS Omega_ 2022, 7, 26670−26679
 |24|23|3.7343|49|48|4.4588|74|73|4.8745|99|98|5.1673|
 |25|24|3.7760|50|49|4.4792|75|74|4.8880|100|99|5.1774|
 
-and the property pseudo-value at _n_ = 1, respectively, and _β_ and _α_ are adjustable parameters. In 1997, Marano and Holder<sup>15</sup> proposed eq 6 to correlate the thermodynamic and transport properties of _n_ -paraffins and other homologous series, which can be used for a wide range of different thermophysical properties
+and the property pseudo-value at _n_ = 1, respectively, and _β_ and _α_ are adjustable parameters.
+
+In 1997, Marano and Holder<sup>15</sup> proposed eq 6 to correlate the thermodynamic and transport properties of _n_ -paraffins and other homologous series, which can be used for a wide range of different thermophysical properties
+
+where five adjustable parameters, _n_ 0, _Y_ 0, _Y_ ∞, _β_, and _γ_, are employed.
 
 In 2009, Zenkevich<sup>16</sup> employed a recurrent function to correlate the properties of homologous series, as shown in eq 7
 
@@ -121,11 +129,9 @@ where _α_ is the proportional coefficient of the property change and _β_ is an
 
 https://doi.org/10.1021/acsomega.2c02828 _ACS Omega_ 2022, 7, 26670−26679
 
-**ACS Omega**
+**<u>ACS Omega</u>**
 
-**http://pubs.acs.org/journal/acsodf**
-
-<mark>Article</mark>
+**<mark>http://pubs.acs.org/journal/acsodf</mark>** <mark>Article</mark>
 
 Table 2. Correlation Equations of Properties for _n_ -Paraffins H−(CH2) _n_ −H (Model Equation: ln(_P_ (_n_)) = _a_ + _b_ (_n_ − 1) + _cS_ CNE)
 
@@ -145,16 +151,20 @@ Table 2. Correlation Equations of Properties for _n_ -Paraffins H−(CH2) _n_ �
 |12|_D_|5−16|19|−1.0445|−0.016174|0.30966|0.9994|0.0025|12|3850.05|
 |13|_T_F|3−16|24 and 25|4.4783|0.000031|0.45456|0.9970|0.0213|14|915.62|
 |14|_P_w|2−8|26|1.1261|0.536478|0.12495|0.9990|0.0716|6|736.35|
-|_aT_b, boil<br>|ing point (K<br>|); _T_c, critical<br>|temperature (K)<br>|; _P_c, critical pr<br>|essure (MPa); _C_<br>|p, heat capacity<br>|(J·mol−1·K−<br>|1); _λ_, therm<br>|al conduct<br>|ivity (W·m−1<br>|
-|K<sup>−1</sup>);_S_T<br>_ω_, acent<br>of log_P_w|, surface ten<br>ric factor;_I_p,<br>). These pr|sion (mN·m<sup>−1</sup>)<br>ionization po<br>operties data a|;_μ_, liquid viscos<br>tential (eV);_D_, l<br>re listed in the|ity [_μ_m Pa·s(3<br>iquid density (<br>Supporting Inf|00 K)];_n_D, refra<br>g·cm<sup>3</sup>);_T_F, fash<br>ormation. <sup>_b_</sup>Carb|ctive Index;_P_v, v<br>point (K); and<br>on atom numbe|apor pressur<br>_P_w, partition<br>r range. <sup>_c_</sup>Nu|e (regressio<br>coefcient<br>mber of da|n in the fo<br>(regressio<br>ta points.|rm of log_P_v);<br>n in the form|
+|_aT_b, boil|ing point (K|); _T_c, critical|temperature (K)|; _P_c, critical pr|essure (MPa); _C_|p, heat capacity|(J·mol−1·K−|1); _λ_, therm|al conduct|ivity (W·m−1|
+|<br>K<sup>−1</sup>);_S_T<br>_ω_, acent<br>of log_P_w|<br>, surface tens<br>ric factor;_I_p,<br>). These pr|<br>ion (mN·m<sup>−1</sup><br>ionization po<br>operties data a|<br>);_μ_, liquid viscos<br>tential (eV);_D_,<br>re listed in the|<br>ity [_μ_m Pa·s(3<br>liquid density (<br>Supporting Inf|<br>00 K)];_n_D, refra<br>g·cm<sup>3</sup>);_T_F, flash<br>ormation. <sup>_b_</sup>Carb|<br>ctive Index;_P_v, v<br>l point (K); and<br>on atom numbe|apor pressur<br>_P_w, partition fi<br>r range. <sup>_c_</sup>Nu|<br>e (regressio<br>coefficient<br>mber of da|<br>n in the fo<br>fi (regressio<br>ta points.|<br>rm of log_P_v);<br>fi n in the form|
 
 Based on eq 8, expressions for _P_ (2), _P_ (3), _P_ (4),..., can be deduced as follows
 
-From eqs 9−11, eq 8 can also be expressed as eq 12
+_P_ (2) = _P_ (_n_ 1) exp(/(2 1)) (9)
+
+From eqs 9−11, eq 8 can also be expressed as eq 12 _P_ (_n_) = _P_ (1) _n_ 1 _e ni_ =2(/(_i_ 1))
 
 Equation 12 expresses the relationship between the property of organic homologues X−(A) _n_ −Y and the number of repeating structural units, _n_. If the logarithm is taken, eq 12 can be expressed as eq 13
 
-where _a_ = ln(_P_ (1)), _b_ = ln(_α_), and _c_ = _β_. These are characteristic coefficients related to the properties of each homologue and can be obtained by regression analysis. For convenience, term _in_ =2 (_i_ 1 1) in eqs 12 and 13 is subsequently denoted as _S_ CNE (abbreviation of “sum of carbon number effects”). Accordingly, eqs 12 and 13 can be written in compact forms of eqs 14 and 15, respectively, named the “NPOH equation” (that is, the abbreviation of “Nonlinear Properties of Organic Homologues equation”) _P_ (_n_) = _P_ (1) _n_ 1e _S_ CNE (14)
+where _a_ = ln(_P_ (1)), _b_ = ln(_α_), and _c_ = _β_. These are characteristic coefficients related to the properties of each homologue and can be obtained by regression analysis. For convenience, term _in_ =2 (_i_ 1 1) in eqs 12 and 13 is
+
+subsequently denoted as _S_ CNE (abbreviation of “sum of carbon number effects”). Accordingly, eqs 12 and 13 can be written in compact forms of eqs 14 and 15, respectively, named the “NPOH equation” (that is, the abbreviation of “Nonlinear Properties of Organic Homologues equation”)
 
 In contrast to eqs 4−7, eqs 12 and 14 show that property _P_ (_n_) of homologue X−(A) _n_ −Y is related to the starting compound property _P_ (1) (property pseudo-value at _n_ = 1) of each homologue, as well as the number of repeating structural units, _n_, and the cumulative perturbation effect, _S_ CNE, of repeating structural units.
 
@@ -172,9 +182,9 @@ For example, for the critical volume<sup>21</sup> (_V_ c) of _n_ -paraffins (_n_
 
 https://doi.org/10.1021/acsomega.2c02828 _ACS Omega_ 2022, 7, 26670−26679
 
-**ACS Omega**
+**<u>ACS Omega</u>**
 
-**http://pubs.acs.org/journal/acsodf**
+**<mark>http://pubs.acs.org/journal/acsodf</mark>**
 
 <mark>Article</mark>
 
@@ -188,9 +198,7 @@ The above regression analysis results show that eq 16 is more suitable for expre
 
 _2.2.2. Correlation with the Properties of Other Homologues._ Regarding whether eq 15 was applicable to other homologues, cycloalkanes, terminal alkenes, terminal alkynes, linear alcohols, 2-methylparaffins, 2,2-dimethylparaffins, 2,3dimethylparaffins, and 1-cyclopentylparaffins were selected as model compounds for testing. Using the boiling points _T_ b of cycloalkanes, terminal alkenes, terminal alkynes, linear alcohols, 2-methylparaffins, 2,2-dimethylparaffins, 2,3-dimethylparaffins, and 1-cyclopentylparaffins and the partition coefficient _P_ w of alcohols as verification examples, quantitative
 
-correlation analysis was conducted using model equation15. The results are listed in Table 3, showing that the property correlation was very good for each homologue, and that the correlation coefficients (_R_) of the nine equations were all greater than 0.999. These results showed that eq 15 is a general equation that can be used to express the change regularity of properties _P_ of various homologues using carbon atom number
-
-_n_.
+correlation analysis was conducted using model equation15. The results are listed in Table 3, showing that the property correlation was very good for each homologue, and that the correlation coefficients (_R_) of the nine equations were all greater than 0.999. These results showed that eq 15 is a general equation that can be used to express the change regularity of properties _P_ of various homologues using carbon atom number _n_.
 
 The results obtained in Sections 2.2.1 and 2.2.2 show that, regardless of whether the properties of homologues vary linearly or nonlinearly with carbon atom number _n_, they can be related using variables (_n_ − 1) and _S_ CNE.
 
@@ -200,13 +208,13 @@ _2.2.3. Relationship between Nonlinear Properties of Homologues._ Equation 15 no
 
 https://doi.org/10.1021/acsomega.2c02828 _ACS Omega_ 2022, 7, 26670−26679
 
-**ACS Omega**
+**<u>ACS Omega</u>**
 
-**http://pubs.acs.org/journal/acsodf**
+**<mark>http://pubs.acs.org/journal/acsodf</mark>**
 
 <mark>Article</mark>
 
-Table 4. Experimental and Calculated Critical Temperature, _T_ c (K), for _n_ -Paraffins H−(CH2) _n_ −H
+##### Table 4. Experimental and Calculated Critical Temperature, _T_ c (K), for _n_ -Paraffins H−(CH2) _n_ −H
 
 |_n_<sup>_a_</sup>|_T_b,exp.<sup>_b_</sup>|_T_c,exp.<sup>_c_</sup>|_T_c,cal.<sup>_d_</sup>|_n_<sup>_a_</sup>|_T_b,exp.<sup>_b_</sup>|_T_c,exp.<sup>_c_</sup>|_T_c,cal.<sup>_d_</sup>|_n_<sup>_a_</sup>|_T_b,exp.<sup>_b_</sup>|_T_c,exp.<sup>_c_</sup>|_T_c,cal.<sup>_d_</sup>|
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -222,7 +230,7 @@ Table 4. Experimental and Calculated Critical Temperature, _T_ c (K), for _n_ -P
 |11|468.79|639.1|641.24|22|641.59||780.77|||||
 |12|489.29|658.2|660.90|23|653.19||787.67|||||
 
-> _a_ Number of carbon atoms. _b_ Experimental boiling point (K), from ref 17. _c_ Experimental critical temperature (K), from ref 20. _d_ Critical temperature calculated using eq 25.
+_a_ Number of carbon atoms. _b_ Experimental boiling point (K), from ref 17. _c_ Experimental critical temperature (K), from ref 20. _d_ Critical temperature calculated using eq 25.
 
 Figure 2. Plot of calculated (solid line) and experimental (open circle) critical temperature (_T_ c) values versus experimental boiling point (_T_ b) of _n_ - paraffins (_n_ = 2−32).
 
@@ -243,10 +251,9 @@ Table 5. Correlation Equations between the Boiling Point, _T_ b, and Other Prope
 |11|_D_|5−16|−5.686163|−0.0099647|−0.226592|0.9998|0.0026|12|12752.15|
 |12|_T_F<sup>_b_</sup>|3−16|(9.143340)|(−0.0048236)|(0.977959)|0.9993|0.0206|14|4213.98|
 |13|_P_w|2−8|−3.631401|0.5256402|−0.321655|0.9985|0.0686|6|487.63|
+|_a_Symbol|s are defined i|n Table 1, obta|ined using mod|el equation 23 excep|t when noted oth|erwise. _b_Obta|ined using m|odel equ|ation 24.|
 
-> _a_ Symbols are defined in Table 1, obtained using model equation 23 except when noted otherwise. _b_ Obtained using model equation 24.
-
-′ ′ In eq 21, _a_ r = ln(_P_ (1)) − ln(_P_ (1)), _b_ r = ln(_α_) − ln(_α_), and _c_ r = _β_ − _β_ ′, while in eq 22, _a_ s = ln(_P_ (1)) + ln(_P_ ′(1)), _b_ s = ln(_α_) + ln(_α_ ′), and _c_ s = _β_ + _β_ ′. For the two specific physicochemical properties, _P_ (_n_) and _P_ ′(_n_), of the same series of compounds, parameters _a_ r, _b_ r, _c_ r, _a_ s, _b_ s, and _c_ s can be obtained using the regression method.
+In eq 21, _a_ r = ln(_P_ (1)) − ln(_P_ ′(1)), _b_ r = ln(_α_) − ln(_α_ ′), and _c_ r = _β_ − _β_ ′, while in eq 22, _a_ s = ln(_P_ (1)) + ln(_P_ ′(1)), _b_ s = ln(_α_) + ln(_α_ ′), and _c_ s = _β_ + _β_ ′. For the two specific physicochemical properties, _P_ (_n_) and _P_ ′(_n_), of the same series of compounds, parameters _a_ r, _b_ r, _c_ r, _a_ s, _b_ s, and _c_ s can be obtained using the regression method.
 
 When the logarithms of eqs 21 and 22 are removed, they return to eqs 23 and 24
 
@@ -256,9 +263,9 @@ Equations 23 and 24 express the relationship between two properties of a homolog
 
 https://doi.org/10.1021/acsomega.2c02828 _ACS Omega_ 2022, 7, 26670−26679
 
-**ACS Omega**
+**<u>ACS Omega</u>**
 
-**http://pubs.acs.org/journal/acsodf**
+**<mark>http://pubs.acs.org/journal/acsodf</mark>**
 
 <mark>Article</mark>
 
@@ -267,6 +274,8 @@ Figure 3. Plot of calculated (−) and experimental (<sup>△</sup>) liquid visc
 correlated with another using eqs 23 and 24, providing convenient correlation of the homologue properties.
 
 For example, the relationship between the critical temperature (_T_ c) and boiling point (_T_ b) of _n_ -paraffins is shown in eq 25
+
+_T_ c(_n_) = _T_ b(_n_) × 1.810869 × 0.994369(_n_ 1) × _e_ 0.0765054 _S_ CNE (25)
 
 Equation 25 expresses the quantitative relationship between _T_ b and _T_ c for _n_ -paraffins. Using eq 25, the critical temperatures of _n_ -paraffins can be calculated from their boiling points. Table 4 shows the results of critical temperature calculations for _n_ - paraffins with _n_ = 2−32, where the average absolute error between the experimental value (_T_ c,exp.) and the calculated value (_T_ c,cal.) was 1.84 K for the 19 compounds (_n_ = 2−20). Figure 2 shows a plot of the calculated and experimental values of critical temperature versus the boiling point of _n_ -paraffins.
 
@@ -278,6 +287,10 @@ where, for the two specific physicochemical properties, _P_ (_n_) and _P_ LC(_n_
 
 Using the boiling point (_T_ b) and critical volume (_V_ c) of _n_ - paraffins as an example
 
+ln(_T_ b) _V_ c = _a_ + _b_ (_n_ 1) + _c S_ CNE (27) Therefore ln(_T_ b) = _a_ + _V_ c + _b_ (_n_ 1) + _c S_ CNE (28) Here, taking _V_ c, (_n_ − 1), and _S_ CNE as variables, regression equation 29 can be obtained for ln(_T_ b)
+
+ln(_T_ b) = 4.825708 0.00079288 _V_ c + 0.05614184(_n_ 1) + 0.4465892476 _S_ CNE _R_ = 1.0000, _S_ = 0.003466, _N_ = 17, _F_ = 51117.71 (29)
+
 Equation 29 can be rewritten as eq 30
 
 Using eq 30 and employing parameters _V_ c, (_n_ − 1), and _S_ CNE of _n_ -paraffins, the _T_ b values of _n_ -paraffins can be calculated. The average absolute error between the experimental and calculated _T_ b values was 0.94 K for the 17 _n_ -paraffins with _n_ = 2−18.
@@ -286,17 +299,13 @@ _2.2.5. Simplification of Equation._ Equations 12 and 13 contain the term _in_ =
 
 Equation 31 can also be approximately expressed as eq 32
 
-Therefore, eqs 12 and 13 can be simplified to eqs 34 and 35
-
-_P_ (_n_) = _P_ (1) _n_ 1e ln(_n_ 1) (34)
+Therefore, eqs 12 and 13 can be simplified to eqs 34 and 35 _P_ (_n_) = _P_ (1) _n_ 1e ln(_n_ 1) (34) https://doi.org/10.1021/acsomega.2c02828 _ACS Omega_ 2022, 7, 26670−26679
 
 **26676**
 
-https://doi.org/10.1021/acsomega.2c02828 _ACS Omega_ 2022, 7, 26670−26679
+**<u>ACS Omega</u>**
 
-**ACS Omega**
-
-**http://pubs.acs.org/journal/acsodf**
+**<mark>http://pubs.acs.org/journal/acsodf</mark>**
 
 <mark>Article</mark>
 
@@ -328,11 +337,11 @@ _2.2.7.2. Example 2, Boiling Point of Alcohols._ The molecular structure of alco
 
 https://doi.org/10.1021/acsomega.2c02828 _ACS Omega_ 2022, 7, 26670−26679
 
-**ACS Omega**
-
-**http://pubs.acs.org/journal/acsodf**
+**<mark>http://pubs.acs.org/journal/acsodf</mark>**
 
 <mark>Article</mark>
+
+##### **<u>ACS Omega</u>**
 
 CH3CH2CH2OH (PrOH), for example, the PEIOH values of _i_ - Pr and Pr are 1.2811 and 1.1887, respectively. Hence, the difference in PEIOH of _i_ -PrOH is ΔPEIOH(_i_ -PrOH) = 1.2811 − 1.1887 = 0.0924, and the difference in PEIOH of PrOH is ΔPEIOH(PrOH) = 1.1887 − 1.1887 = 0. It means that ΔPEIOH = 0 for any normal alcohol. For the detailed calculation method of PEIOH, one can refer to Cao’s report.<sup>28</sup> Thus, we employed (_n_ − 1), _S_ CNE, and (ΔPEIOH/ _n_) as variables to perform regression analysis of boiling points _T_ b(_n_) of alcohols and obtained eq 39 in which the boiling points for all alcohols were taken from a listing by Cao et al.<sup>28</sup> These data are listed in the Supporting Information
 
@@ -366,7 +375,7 @@ The Supporting Information is available free of charge at https://pubs.acs.org/d
 
 ##### **Author**
 
-- Chao-Tun Cao − _Key Laboratory of Theoretical Organic Chemistry and Function Molecule, Ministry of Education, School of Chemistry and Chemical Engineering, Hunan University of Science and Technology, Xiangtan 411201, China_
+Chao-Tun Cao − _Key Laboratory of Theoretical Organic Chemistry and Function Molecule, Ministry of Education, School of Chemistry and Chemical Engineering, Hunan University of Science and Technology, Xiangtan 411201, China_
 
 Complete contact information is available at: https://pubs.acs.org/10.1021/acsomega.2c02828
 
@@ -380,17 +389,17 @@ The project was supported by the Hunan Natural Science Foundation (2020JJ5155), 
 
 ## ■<sup>**REFERENCES**</sup>
 
-(1) Kontogeorgis, G. M.; Dohrn, R.; Economou, I. G.; Hemptinne, J.-C.; Kate, A.; Kuitunen, S.; Mooijer, M.; Zilnik, L. F.; Vesovic, V. Industrial Requirements for Thermodynamic and Transport Properties: 2020. _Ind. Eng. Chem. Res._ 2021, _60_, 4987−5013.
+> (1) Kontogeorgis, G. M.; Dohrn, R.; Economou, I. G.; Hemptinne, J.-C.; Kate, A.; Kuitunen, S.; Mooijer, M.; Žilnik, L. F.; Vesovic, V. Industrial Requirements for Thermodynamic and Transport Properties: 2020. _Ind. Eng. Chem. Res._ 2021, _60_, 4987−5013.
 
-(2) Nieto-Draghi, C.; Fayet, G.; Creton, B.; Rozanska, X.; Rotureau, P.; Hemptinne, J.-C.; Ungerer, P.; Rousseau, B.; Adamo, C. A General Guidebook for the Theoretical Prediction of Physicochemical
+> (2) Nieto-Draghi, C.; Fayet, G.; Creton, B.; Rozanska, X.; Rotureau, P.; Hemptinne, J.-C.; Ungerer, P.; Rousseau, B.; Adamo, C. A General Guidebook for the Theoretical Prediction of Physicochemical
 
 **26678**
 
 https://doi.org/10.1021/acsomega.2c02828 _ACS Omega_ 2022, 7, 26670−26679
 
-**ACS Omega**
+**<u>ACS Omega</u>**
 
-**http://pubs.acs.org/journal/acsodf**
+**<mark>http://pubs.acs.org/journal/acsodf</mark>**
 
 <mark>Article</mark>
 
@@ -398,41 +407,37 @@ Properties of Chemicals for Regulatory Purposes. _Chem. Rev._ 2015, _115_, 13093
 
 (3) Katritzky, A. R.; Kuanar, M.; Slavov, S.; Hall, C. D.; Karelson, M.; Kahn, I.; Dobchev, D. A. Quantitative Correlation of Physical and Chemical Properties with Chemical Structure: Utility for Prediction. _Chem. Rev._ 2010, _110_, 5714−5789.
 
-(4) Leidner, F.; Yilmaz, N. K.; Schiffer, C. A. Deciphering Antifungal Drug Resistance in Pneumocystis Jirovecii DHFR with Molecular Dynamics and Machine Learning. _J. Chem. Inf. Model._ 2021, _61_, 2537−2541.
+(4) Leidner, F.; Yilmaz, N. K.; Schiffer, C. A. Deciphering Antifungal Drug Resistance in Pneumocystis Jirovecii DHFR with Molecular Dynamics and Machine Learning. _J. Chem. Inf. Model._ 2021, _61_, 2537−2541. (5) Zhang, Y.; Wei, S. C.; Dong, C. F.; Wang, B.; Liang, Y.; Wang, Y. J.; Chen, Q. Progress in QSPR Modelling Methods. _Chin. Sci. Bull._ 2021, _66_, 2832−2844. (6) Needbam, D. E.; Wei, I.-C.; Seybold, P. G. Molecular Modeling of the Physical Properties of the Alkanes. _J. Am. Chem. Soc._ 1988, _110_, 4186−4194. (7) Cao, C.-T.; Chen, M.; Fang, Z.; Au, C.; Cao, C. Relationship investigation between C(sp<sup>2</sup>)-X and C(sp<sup>3</sup>)-X bond energies based on substituted benzene and methane. _ACS Omega_ 2020, _5_, 19304− 19311.
 
-(5) Zhang, Y.; Wei, S. C.; Dong, C. F.; Wang, B.; Liang, Y.; Wang, Y. J.; Chen, Q. Progress in QSPR Modelling Methods. _Chin. Sci. Bull._ 2021, _66_, 2832−2844.
+- (8) Cao, C.-T.; Yan, L.; Cao, C.; Qu, J. Influence of substituent and
 
-(6) Needbam, D. E.; Wei, I.-C.; Seybold, P. G. Molecular Modeling of the Physical Properties of the Alkanes. _J. Am. Chem. Soc._ 1988, _110_, 4186−4194.
-
-(7) Cao, C.-T.; Chen, M.; Fang, Z.; Au, C.; Cao, C. Relationship investigation between C(sp<sup>2</sup>)-X and C(sp<sup>3</sup>)-X bond energies based on substituted benzene and methane. _ACS Omega_ 2020, _5_, 19304− 19311.
-
-(8) Cao, C.-T.; Yan, L.; Cao, C.; Qu, J. Influence of substituent and push-pull effect on the chemical shifts of the carbon in bridging bond of 1-furyl/thienyl-2-arylethylene. _J. Phys. Org. Chem._ 2021, _34_, No. e4160.
+- push-pull effect on the chemical shifts of the carbon in bridging bond of 1-furyl/thienyl-2-arylethylene. _J. Phys. Org. Chem._ 2021, _34_, No. e4160.
 
 (9) Cao, C. T.; Cao, C.; Qu, J. Quantifying and Fine Adjusting the Solid-state Fluorescence Wavelength of 1-Thienyl-2-arylethylene. _J. Lumin._ 2021, _233_, No. 117895.
 
-(10) Redlich, O.; Kwong, J. On the Thermodynamics of Solutions. V. An Equation of State. Fugacities of Gaseous Solutions. _Chem. Rev._ 1949, _44_, 233−244.
+(10) Redlich, O.; Kwong, J. On the Thermodynamics of Solutions. V. An Equation of State. Fugacities of Gaseous Solutions. _Chem. Rev._ 1949, _44_, 233−244. (11) Peng, D.-Y.; Robinson, D. A New Two-Constant Equation of State. _Ind. Eng. Chem. Fundam._ 1976, _15_, 59−64.
 
 (23) Yaws, C. L. _Chemical Properties Handbook_; Beijing World Publishing Corporation/McGraw-Hill: Beijing, 1999; pp 1−29.
 
 (24) Atabati, M.; Emamalizadeh, R. A Quantitative Structure Property Relationship for Prediction of Flash Point of Alkanes Using Molecular Connectivity Indices. _Chin. J. Chem. Eng._ 2013, _21_, 420−426.
 
-(25) Mathieu, D. Inductive Modeling of Physico-chemical Properties: Flash Point of Alkanes. _J. Hazard. Mater._ 2010, _179_, 1161−1164.
+(25) Mathieu, D. Inductive Modeling of Physico-chemical Properties: Flash Point of Alkanes. _J. Hazard. Mater._ 2010, _179_, 1161−1164. (26) Klopman, G.; Li, J.-Y.; Wang, S.; Dimayuga, M. Computer Automated logP Calculations Based on an Extended Group Contribution Approach. _J. Chem. Inf. Comput. Sci._ 1994, _34_, 752−781.
 
-(26) Klopman, G.; Li, J.-Y.; Wang, S.; Dimayuga, M. Computer Automated logP Calculations Based on an Extended Group Contribution Approach. _J. Chem. Inf. Comput. Sci._ 1994, _34_, 752−781. (27) Mukwembi, S.; Nyabadza, F. A New Model for Predicting Boiling Points of Alkanes. _Sci. Rep._ 2021, _11_, No. 24261.
+(27) Mukwembi, S.; Nyabadza, F. A New Model for Predicting Boiling Points of Alkanes. _Sci. Rep._ 2021, _11_, No. 24261.
 
 (28) Cao, C.; Liu, S.; Li, Z. On Molecular Polarizability: 2. Relationship to the Boiling Point of Alkanes and Alcohols. _J. Chem. Inf. Comput. Sci._ 1999, _39_, 1105−1111.
 
-(29) Qu, C.; Kearsley, A. J.; Schneider, B. I.; Keyrouz, W.; Allison, T. C. Graph Convolutional Neural Network Applied to the Prediction of Normal Boiling Point. _J. Mol. Graphics Model._ 2022, _112_, No. 108149. (30) Cordes, W.; Rarey, J. A New Method for the Estimation of the Normal Boiling Point of Nonelectrolyte Organic Compounds. _Fluid Phase Equilib._ 2002, _201_, 409−433.
+(29) Qu, C.; Kearsley, A. J.; Schneider, B. I.; Keyrouz, W.; Allison, T. C. Graph Convolutional Neural Network Applied to the Prediction of Normal Boiling Point. _J. Mol. Graphics Model._ 2022, _112_, No. 108149.
+
+(30) Cordes, W.; Rarey, J. A New Method for the Estimation of the Normal Boiling Point of Nonelectrolyte Organic Compounds. _Fluid Phase Equilib._ 2002, _201_, 409−433.
 
 (31) Palatinus, J. A.; Sams, C. M.; Beeston, C. M.; Carroll, F. A.; Argenton, A. B.; Quina, F. H. Kinney Revisited: An Improved Group Contribution Method for the Prediction of Boiling Points of Acyclic Alkanes. _Ind. Eng. Chem. Res._ 2006, _45_, 6860−6863.
 
 (32) Liu, W.; Cao, C. Quantitative Structure-property Relationship of Normal Boiling Point of Aliphatic Oxygen-containing Organic Compounds. _CIESC J._ 2012, _63_, 3739−3746.
 
-(11) Peng, D.-Y.; Robinson, D. A New Two-Constant Equation of State. _Ind. Eng. Chem. Fundam._ 1976, _15_, 59−64.
-
 (12) Kreglewsky, A.; Zwolinsky, B. J. A New Relation for Physical Properties of _n_ -Alkanes and _n_ -Alkyl Compounds. _J. Phys. Chem. A_ 1961, _65_, 1050−1052.
 
-(13) Gasem, K. A. M.; Robinson, R. L., Jr. In _Prediction of Phase Behavior for CO2 + Heavy Normal Paraffins Using Generalized-_ − _Parameter Soave and Peng Robinson Equations of State_, AIChE Annual Meeting, Houston, TX, March 26, 1985.
+(13) Gasem, K. A. M.; Robinson, R. L., Jr. In _Prediction of Phase Behavior for CO2 + Heavy Normal Paraffins Using GeneralizedParameter Soave and Peng_ − _Robinson Equations of State_, AIChE Annual Meeting, Houston, TX, March 26, 1985.
 
 (14) Gasem, K. A. M.; Ross, C. H.; Robinson, R. L., Jr. Prediction of Ethane and CO2 Solubilities in Heavy Normal Paraffins Using Generalized-Parameter Soave and Peng-Robinson Equations of State. _Can. J. Chem. Eng._ 1993, _77_, 805−816.
 

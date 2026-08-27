@@ -1,7 +1,7 @@
 schema_version: 2
 provider: copernicus
-reviewed_at: '2026-05-20T00:00:00Z'
-reviewed_by: operator
+reviewed_at: '2026-08-27T06:50:11Z'
+reviewed_by: codex
 fixtures:
 - fixture: tests/fixtures/golden_criteria/10.5194_acp-24-1-2024
   purpose: structure
@@ -60,7 +60,8 @@ fixtures:
   - must not include Access Denied
   fixes: []
   baseline_markdown_path: tests/fixtures/golden_criteria/10.5194_acp-1-1-2001/extracted.md
-  baseline_markdown_sha256: 5afd650bb830a066f470665d669517a2c966652511ed41830a0782dafb672348
-  review_notes: Semantic review completed against committed fixture evidence.
+  baseline_markdown_sha256: 25c6283ef38ba5e3da46c4e3adb4cb7445caaf1945984c9876c203613c3f591d
+  review_notes: PyMuPDF4LLM 1.28.2 baseline reviewed; the article body and reference
+    list remain usable with no blocking Markdown issue.
   markdown_quality_path: tests/fixtures/golden_criteria/10.5194_acp-1-1-2001/markdown-quality.json
-  markdown_quality_sha256: 5d894dc103ddfa03804747af5be5cf1014c6e6fd38f014e0d4fbbe3289f016c1
+  markdown_quality_sha256: b6a50ac89b69cb997cf4e8b1407b2ea4d498560feb64562ce9e9cc7cdb782f83

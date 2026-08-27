@@ -1,7 +1,7 @@
 schema_version: 2
 provider: plos
-reviewed_at: '2026-05-25T05:56:05Z'
-reviewed_by: operator
+reviewed_at: '2026-08-27T06:50:11Z'
+reviewed_by: codex
 fixtures:
 - fixture: tests/fixtures/golden_criteria/10.1371_journal.pone.0263725
   purpose: structure
@@ -133,11 +133,11 @@ fixtures:
   purpose: pdf_fallback
   doi: 10.1371/journal.pbio.0040298
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/extracted.md
-  baseline_markdown_sha256: 5112800ac3f57dd0195ff7c7bcba1a02a29459e59f19c4b561f000a501fda03b
+  baseline_markdown_sha256: d7fe7aa65d09316acaa9486dee767d1a8a67cbd68e55d3e5685818b7128d5a5e
   markdown_quality_path: tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/markdown-quality.json
-  markdown_quality_sha256: c8b0f5c4c0fa7a6f655bbaff571ba2e86e0aab9a5542b8841c829b79851f920a
-  review_notes: Automated fresh Markdown quality review passed for the current extracted.md;
-    operator semantic signoff completed after human review.
+  markdown_quality_sha256: bc862929ac79893cb905a9516f624972da5cbdccdba40dcf7505f26bf98e4c6f
+  review_notes: PyMuPDF4LLM 1.28.2 Markdown quality review passed for the current extracted.md;
+    codex semantic signoff completed after review.
   sample_representative: true
   markdown_semantic_reviewed: true
   issues: []

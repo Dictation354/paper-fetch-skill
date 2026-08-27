@@ -113,6 +113,50 @@ class FetchCommonTests(unittest.TestCase):
                 ">=0.5.5,<0.6",
             )
 
+    def test_pdf_extras_require_current_pymupdf4llm_compatibility_line(self) -> None:
+        with (REPO_ROOT / "pyproject.toml").open("rb") as handle:
+            pyproject = tomllib.load(handle)
+        with (REPO_ROOT / "uv.lock").open("rb") as handle:
+            uv_lock = tomllib.load(handle)
+
+        optional_dependencies = pyproject["project"]["optional-dependencies"]
+        for extra_name in ("pdf", "full"):
+            requirements = [
+                dependency
+                for dependency in optional_dependencies[extra_name]
+                if Requirement(dependency).name.casefold() == "pymupdf4llm"
+            ]
+            self.assertEqual(requirements, ["pymupdf4llm>=1.28.2,<2"])
+
+        locked = [
+            package
+            for package in uv_lock["package"]
+            if package["name"].casefold() == "pymupdf4llm"
+        ]
+        self.assertEqual(len(locked), 1)
+        self.assertIn(
+            Version(locked[0]["version"]),
+            Requirement("pymupdf4llm>=1.28.2,<2").specifier,
+        )
+
+    def test_all_declared_python_dependencies_use_non_exact_constraints(self) -> None:
+        with (REPO_ROOT / "pyproject.toml").open("rb") as handle:
+            pyproject = tomllib.load(handle)
+
+        project = pyproject["project"]
+        dependencies = list(project["dependencies"])
+        dependencies.extend(
+            dependency
+            for extra in project["optional-dependencies"].values()
+            for dependency in extra
+        )
+
+        for dependency in dependencies:
+            requirement = Requirement(dependency)
+            operators = {specifier.operator for specifier in requirement.specifier}
+            self.assertTrue(requirement.specifier, dependency)
+            self.assertTrue(operators.isdisjoint({"==", "==="}), dependency)
+
     def test_article_markdown_common_reexports_shared_normalize_text(self) -> None:
         self.assertIs(markdown_common.normalize_text, utils.normalize_text)
 

@@ -14,7 +14,7 @@
   "prompt_path": "tests/fixtures/golden_criteria/10.1021_acsomega.2c02828/markdown-quality-prompt.md",
   "provider": "acs",
   "review_method": "agent_prompt",
-  "reviewed_at": "2026-07-27T08:53:50Z",
+  "reviewed_at": "2026-08-27T06:50:11Z",
   "reviewed_by": "codex",
   "sample_id": "10.1021_acsomega.2c02828",
   "schema_version": 2,

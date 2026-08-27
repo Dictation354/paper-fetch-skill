@@ -1,6 +1,6 @@
 schema_version: 2
 provider: acs
-reviewed_at: '2026-07-27T09:36:00Z'
+reviewed_at: '2026-08-27T06:50:11Z'
 reviewed_by: codex
 fixtures:
 - fixture: tests/fixtures/golden_criteria/10.1021_acsomega.4c03987
@@ -113,10 +113,10 @@ fixtures:
   purpose: pdf_fallback
   doi: 10.1021/acsomega.2c02828
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1021_acsomega.2c02828/extracted.md
-  baseline_markdown_sha256: 138c12400f6378f1757ab63cd303666b4ce913e8804aa86cc217b4da830ed66a
+  baseline_markdown_sha256: cd344c52f5eaf3b2f83fde250bebbd22d7c5112df7f58ab8241d5310fa49ae43
   markdown_quality_path: tests/fixtures/golden_criteria/10.1021_acsomega.2c02828/markdown-quality.json
-  markdown_quality_sha256: 556135b9d38705db08909533e3931576dd18243e2db720ed8dc6366049247b19
-  review_notes: Current article-pdf replay was manually reviewed; the full body is
+  markdown_quality_sha256: 6bb441e3943cb5447eebc4854bdc38085af610da34db44ccd47b57e80ff8d5cf
+  review_notes: PyMuPDF4LLM 1.28.2 article-pdf replay was manually reviewed; the full body is
     usable, with only nonblocking repeated page chrome and two-column reference
     ordering artifacts.
   sample_representative: true
@@ -135,7 +135,7 @@ fixtures:
 final_markdown_quality_review:
   confirmed: true
   confirmed_by: codex
-  confirmed_at: '2026-07-27T09:36:00Z'
+  confirmed_at: '2026-08-27T06:50:11Z'
   method: final-markdown-quality-review
   fixture_count: 7
   fresh_markdown_quality_reports:

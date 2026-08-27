@@ -1,7 +1,7 @@
 schema_version: 2
 provider: iop
-reviewed_at: '2026-05-27T08:21:27Z'
-reviewed_by: codex-agent
+reviewed_at: '2026-08-27T06:50:11Z'
+reviewed_by: codex
 fixtures:
 - fixture: tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02
   purpose: structure
@@ -119,10 +119,10 @@ fixtures:
   purpose: pdf_fallback
   doi: 10.1088/1748-9326/aa9f73
   baseline_markdown_path: tests/fixtures/golden_criteria/10.1088_1748-9326_aa9f73/extracted.md
-  baseline_markdown_sha256: b5e318042e264c3d5c9c150e73d338449ab62bff357d950dbed89885707e733d
+  baseline_markdown_sha256: bd11f117821e89b62bca29e8b42dc9cee96af9bafa096c7e9518306233bf296f
   markdown_quality_path: tests/fixtures/golden_criteria/10.1088_1748-9326_aa9f73/markdown-quality.json
-  markdown_quality_sha256: f34241a1846d766fb0a58b8a41e5bcd848bef97b3abe90fa5d04c65e5ed3c07a
-  review_notes: Agent review confirmed the seeded-browser IOP PDF replay is a real
+  markdown_quality_sha256: be0e64994e2769327d4bb3e313100a47889b5f7a4166899316524a2602cdf4bc
+  review_notes: PyMuPDF4LLM 1.28.2 review confirmed the seeded-browser IOP PDF replay is a real
     application/pdf fallback baseline with source iop_pdf and article body text;
     the retained PDF cover-page recommendation text is tracked as a low-severity
     nonblocking issue.
@@ -141,8 +141,8 @@ fixtures:
   fixes: []
 final_markdown_quality_review:
   confirmed: true
-  confirmed_by: codex-agent
-  confirmed_at: '2026-05-27T07:55:20Z'
+  confirmed_by: codex
+  confirmed_at: '2026-08-27T06:50:11Z'
   method: final-markdown-quality-review
   fixture_count: 7
   fresh_markdown_quality_reports: []
