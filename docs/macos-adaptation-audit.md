@@ -47,7 +47,9 @@
   target 与 provenance 都绑定该 SHA。provenance 步骤还会校验
   `actions/attest-build-provenance` v4.2.2 的完整 SHA、精确一次调用和
   `release-assets/**/*` subject path；每目标实际 staging 的 dependency manifest
-  与 CycloneDX SBOM 随对应 artifact 上传。所有 artifact/release upload、attestation
+  与 CycloneDX SBOM 随对应 artifact 上传。POSIX/Windows builder 分别固定使用
+  `.venv/bin/python` 与 `.venv/Scripts/python.exe`，保证 SBOM 生成器来自锁定 dev
+  环境，而不是 runner 全局 Python。所有 artifact/release upload、attestation
   和 publication 还必须在对应目录通过 raw/URL-encoded sentinel 扫描；扫描只报告
   变量名与路径，命中或扫描错误都阻断后续步骤。发布资产与 checksum 文件执行强制
   `fsync`，目录项只在平台支持 directory descriptor 时 best-effort 同步，避免 Windows

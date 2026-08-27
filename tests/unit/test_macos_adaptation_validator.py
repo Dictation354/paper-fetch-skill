@@ -196,6 +196,8 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract["release_tooling"]["verified_sha_reused_for_all_jobs"] = False
         contract["release_tooling"]["frozen_dependency_targets"] = []
         contract["release_tooling"]["dependency_evidence"] = []
+        contract["release_tooling"]["posix_builder_python"] = "python"
+        contract["release_tooling"]["windows_builder_python"] = "python"
         contract["release_tooling"]["release_asset_namespace"] = "nested-paths"
         contract["release_tooling"]["release_directory_durability"] = (
             "required-directory-fsync"
@@ -241,6 +243,14 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         )
         self.assertIn("release_tooling.frozen_dependency_targets must be", diagnostic)
         self.assertIn("release_tooling.dependency_evidence must be", diagnostic)
+        self.assertIn(
+            "release_tooling.posix_builder_python must be '.venv/bin/python'",
+            diagnostic,
+        )
+        self.assertIn(
+            "release_tooling.windows_builder_python must be '.venv/Scripts/python.exe'",
+            diagnostic,
+        )
         self.assertIn(
             "release_tooling.release_asset_namespace must be 'flat-basename-only'",
             diagnostic,

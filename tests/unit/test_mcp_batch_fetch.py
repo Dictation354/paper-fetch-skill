@@ -34,7 +34,7 @@ from paper_fetch.runtime import RuntimeContext
 from paper_fetch.tracing import trace_event
 from tests.paths import REPO_ROOT, SKILL_DIR
 
-from ._mcp_support import sample_envelope
+from ._mcp_support import sample_envelope, validate_mcp_tool_output_schema
 
 
 class RecordingContext:
@@ -172,11 +172,7 @@ def test_batch_fetch_preserves_input_order_and_completion_metadata_with_bounded_
         "batch_fetch terminalized (terminal=2, not_scheduled=0)",
     )
     assert {update[0] for update in ctx.progress[1:-1]} == {1, 2}
-    output_model = (
-        build_server()._tool_manager._tools["batch_fetch"].fn_metadata.output_model
-    )
-    assert output_model is not None
-    output_model.model_validate(payload)
+    validate_mcp_tool_output_schema(build_server(), "batch_fetch", payload)
 
 
 def test_single_and_batch_fetch_share_compact_acceptance_projection() -> None:

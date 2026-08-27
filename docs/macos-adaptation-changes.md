@@ -162,6 +162,10 @@ build + verifier，并单独运行真实 `/var` ↔ `/private/var` 或
 `/tmp` ↔ `/private/tmp` cache scope alias pytest node；该 alias 证据来自原生
 CI，而不是 tarball verifier。
 `offline.yml` 和 release gate 则覆盖 CPython 3.11–3.14 四个 ABI。
+原生 gate 与 offline matrix 的 POSIX builder 均用 `.venv/bin/python`，Windows builder
+用 `.venv/Scripts/python.exe`；这让 staging evidence 与 CycloneDX SBOM 复用
+`setup-python-deps` 已锁定的 dev 工具链，不再假定 runner 全局 Python 含有
+`cyclonedx_py`。
 
 稳定发布先把 lightweight 或 annotated tag peel 到完整 40 字符 commit SHA，
 然后将该 SHA 传给同一个 reusable verify gate。只有完整 gate 通过后，才在同一

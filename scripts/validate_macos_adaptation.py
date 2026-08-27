@@ -210,6 +210,8 @@ REQUIRED_RELEASE_TOOLING = {
     "manifest_records_tooling_revision",
     "frozen_dependency_targets",
     "dependency_evidence",
+    "posix_builder_python",
+    "windows_builder_python",
     "python_distribution_inventory",
     "release_asset_preparer",
     "stable_release_asset_count",
@@ -1566,6 +1568,8 @@ def _validate_portable_and_release_tooling(
             "dependency-manifest.json",
             "paper-fetch-sbom.cdx.json",
         ],
+        "posix_builder_python": ".venv/bin/python",
+        "windows_builder_python": ".venv/Scripts/python.exe",
         "python_distribution_inventory": ("quality/python-distribution-inventory.json"),
         "release_asset_preparer": EXPECTED_RELEASE_ASSET_PREPARER,
         "stable_release_asset_count": EXPECTED_STABLE_RELEASE_ASSET_COUNT,
@@ -1870,6 +1874,14 @@ def _validate_release_verification_chain(
         (
             ("generate_offline_evidence.py", "actual staged dependency evidence"),
             ("paper-fetch-evidence-", "per-target evidence sidecars"),
+            (
+                "PYTHON_BIN: .venv/bin/python",
+                "locked POSIX offline builder control interpreter",
+            ),
+            (
+                "-PythonBin .venv/Scripts/python.exe",
+                "locked Windows offline builder control interpreter",
+            ),
             ("verify-windows-installer-lifecycle.ps1", "final Windows EXE lifecycle"),
         ),
         errors=errors,
@@ -2007,6 +2019,10 @@ def _validate_native_gates(
             (
                 'MACOSX_DEPLOYMENT_TARGET: "15.0"',
                 "regular CI deployment target",
+            ),
+            (
+                "PYTHON_BIN: .venv/bin/python",
+                "regular CI locked offline builder control interpreter",
             ),
             (
                 "paper-fetch-skill-offline-macos-arm64-cp314.tar.gz",

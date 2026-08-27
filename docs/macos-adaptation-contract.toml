@@ -208,6 +208,8 @@ frozen_dependency_targets = [
   "windows-x86_64-cp313",
 ]
 dependency_evidence = ["dependency-manifest.json", "paper-fetch-sbom.cdx.json"]
+posix_builder_python = ".venv/bin/python"
+windows_builder_python = ".venv/Scripts/python.exe"
 python_distribution_inventory = "quality/python-distribution-inventory.json"
 release_asset_preparer = "scripts/prepare_release_assets.py"
 stable_release_asset_count = 31
@@ -598,8 +600,8 @@ title = "把原生 macOS 证据纳入 split offline 发布门禁"
 area = "ci-release"
 status = "implemented"
 risk = "P0"
-summary = "常规 CI 与稳定发布共用 verify workflow；标签先 peel 到不可变 commit SHA，同一 SHA 通过完整 verify 后才解析九目标冻结依赖、构建 offline 资产并发布。固定 macos-15 arm64 runner 验证 cp311-cp314，每个 staged target 同附实际 dependency manifest、CycloneDX SBOM 与固定 SHA 的 provenance。"
-rationale = "每次变更需要快速原生 cp314 回归，发布还需要完整 ABI 矩阵；Linux、WSL 和 Windows 的静态或模拟测试无法证明 Mach-O、codesign、xattr、Zsh 和原生安装行为。"
+summary = "常规 CI 与稳定发布共用 verify workflow；标签先 peel 到不可变 commit SHA，同一 SHA 通过完整 verify 后才解析九目标冻结依赖、构建 offline 资产并发布。固定 macos-15 arm64 runner 验证 cp311-cp314，每个 staged target 同附实际 dependency manifest、CycloneDX SBOM 与固定 SHA 的 provenance；POSIX/Windows builder 分别固定使用 repo-local 锁定 venv 的 Python 生成证据。"
+rationale = "每次变更需要快速原生 cp314 回归，发布还需要完整 ABI 矩阵；Linux、WSL 和 Windows 的静态或模拟测试无法证明 Mach-O、codesign、xattr、Zsh 和原生安装行为。证据生成器必须复用已安装 dev 工具的锁定解释器，不能依赖 runner 全局 Python 偶然安装 CycloneDX CLI。"
 implementation_paths = [
   ".github/workflows/ci.yml",
   ".github/workflows/verify.yml",

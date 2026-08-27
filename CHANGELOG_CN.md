@@ -20,9 +20,11 @@
 - 将完整质量矩阵抽取为一套可复用的 verify workflow，供常规 CI 与稳定版发布共同调用。稳定版 tag（包括 annotated tag）会 peel 到不可变 commit；验证、依赖解析、离线构建、发布 checkout、attestation 与 GitHub Release target 全部使用该精确 SHA，并在发布前执行最终 tag 漂移检查。
 - 稳定版发布现在会在同一次 run 中解析并合并全部九个目标的冻结依赖快照：Linux CPython 3.11–3.14、macOS arm64 CPython 3.11–3.14，以及 Windows CPython 3.13；随后以启用冻结依赖的方式调用 offline workflow。
 - 新增从实际 staging tree 派生的逐目标证据：已安装 Python distribution 及内容 digest、Node/Playwright package、Camoufox 交付状态、公式/图片/native 文件与嵌入式 runtime provenance。每个离线产物现在都会携带并上传实际 dependency manifest 和经验证的 CycloneDX 1.6 SBOM；release 不再用 lock export 冒充 staged evidence。
+- 将原生与发布离线 builder 绑定到仓库锁定虚拟环境（POSIX 使用 `.venv/bin/python`，Windows 使用 `.venv/Scripts/python.exe`），确保 CycloneDX 证据生成器始终复用已验证的开发工具链，不再依赖 runner 全局包。
 - 在 installer manifest 与平台合约中，将 Windows CPython 3.13.13 x64 embeddable archive 固定到 python.org 官方 URL 和 SHA-256；解压前会验证，并在 offline manifest 与 SBOM 中记录预期/实际 digest。
 - 为完整 archive 新增精确 wheel/sdist inventory。它会从结构上规范化唯一合法的 distribution root/`dist-info`/`egg-info`，要求 metadata 与 wheel `RECORD` 精确覆盖，并拒绝所有未知的 top-level、`.data`、package、source 或 metadata member。两个产物分别安装到独立 venv，并运行 CLI、import、MCP、resource 与已安装 skill smoke。
 - 稳定版发布现在会验证 checksum 前精确的 31 个 asset（两个 Python distribution、对应 inventory、九个离线 installer、十八个目标 evidence 文件及 merged dependency manifest），拒绝缺失、多余和 basename collision，将它们复制到平坦且排他的 namespace，并生成只含 basename 的 `SHA256SUMS`。资产与 checksum 文件执行 fsync，而 Windows 等不提供 POSIX directory descriptor 的平台只对目录 fsync 做 best-effort；滚动发布复用同一 offline asset-set checker。
+- 正式采用刷新后的兼容依赖锁（包括 MCP 2.1.1 与 imagesize 2.0.1），并修复对应门禁：tool payload 测试改为验证实际对外发布的 Draft 2020-12 JSON Schema，不再绑定 SDK 内部生成的 model；cache 授权测试兼容 SDK 包装或直接传播异常，同时继续 fail-closed；合成 PNG fixture 补齐解析器要求的 IHDR 字段。
 - 新增原生、串行的最终 Windows EXE lifecycle gate：静默安装、已安装 doctor/provider/formula/browser smoke、原地覆盖升级、用户数据保留、静默卸载，以及精确递归 residue allowlist。只允许残留 `offline.env`、`downloads/` 和 `downloads/user-owned.txt`；任何现有或未来的 managed file 都会令 gate 失败。不可变 Windows tooling overlay 现在会把 builder、evidence/lifecycle script、helper、installer manifest 与 Inno definition 作为同一组按 revision 固定的文件移动。
 
 ### 安全——网络、凭据与日志边界

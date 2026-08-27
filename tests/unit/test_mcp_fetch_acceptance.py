@@ -17,6 +17,7 @@ from paper_fetch.models import (
     SemanticLosses,
 )
 from paper_fetch.tracing import source_trail_from_trace, trace_event
+from tests.unit._mcp_support import validate_mcp_tool_output_schema
 
 
 def _successful_trace():
@@ -185,11 +186,7 @@ def test_successful_fetch_returns_ok_status_and_compact_acceptance() -> None:
     assert asset_summary["local_body_assets_satisfied"] is True
     assert asset_summary["full_size_body_assets_satisfied"] is True
 
-    output_model = (
-        build_server()._tool_manager._tools["fetch_paper"].fn_metadata.output_model
-    )
-    assert output_model is not None
-    output_model.model_validate(payload)
+    validate_mcp_tool_output_schema(build_server(), "fetch_paper", payload)
 
 
 def test_fetch_acceptance_preserves_quality_degradation() -> None:

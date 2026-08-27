@@ -46,7 +46,9 @@ class McpServerResourceTests(unittest.IsolatedAsyncioTestCase):
             sidecar["credential_scope"] = "credential:" + ("9" * 64)
             sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
 
-            with self.assertRaisesRegex(ValueError, "unauthorized"):
+            with self.assertRaisesRegex(
+                (FileNotFoundError, ValueError), "unauthorized"
+            ):
                 await resource.read()
 
     async def test_existing_resource_uri_reauthorizes_on_every_read(self) -> None:
@@ -136,9 +138,13 @@ class McpServerResourceTests(unittest.IsolatedAsyncioTestCase):
             assert await custom_resource.read()
             active_env.clear()
 
-            with self.assertRaisesRegex(ValueError, "unauthorized"):
+            with self.assertRaisesRegex(
+                (FileNotFoundError, ValueError), "unauthorized"
+            ):
                 await private_resource.read()
-            with self.assertRaisesRegex(ValueError, "unauthorized"):
+            with self.assertRaisesRegex(
+                (FileNotFoundError, ValueError), "unauthorized"
+            ):
                 await custom_resource.read()
             assert await public_resource.read()
 

@@ -399,7 +399,7 @@ jobs:
           key: cabal-macOS-ARM64-ghc-9.10.3-texmath-0.13.2
       - name: Build native macOS arm64 offline package
         env:
-          PYTHON_BIN: python
+          PYTHON_BIN: .venv/bin/python
           MACOSX_DEPLOYMENT_TARGET: "15.0"
         run: |
           scripts/build-offline-package.sh --output-dir dist

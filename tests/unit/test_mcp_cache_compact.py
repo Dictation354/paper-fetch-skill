@@ -14,6 +14,7 @@ from tests.unit._mcp_support import (
     create_cached_downloads,
     create_cached_fetch_envelope,
     mcp_tools,
+    validate_mcp_tool_output_schema,
 )
 
 
@@ -431,12 +432,7 @@ def test_get_cached_compact_payload_matches_registered_output_schema(
     payload = mcp_tools.get_cached_payload(
         doi=DOI, download_dir=tmp_path, detail="compact"
     )
-    output_model = (
-        build_server()._tool_manager._tools["get_cached"].fn_metadata.output_model
-    )
-
-    assert output_model is not None
-    output_model.model_validate(payload)
+    validate_mcp_tool_output_schema(build_server(), "get_cached", payload)
     schema = build_server()._tool_manager._tools["get_cached"].output_schema or {}
     advertised_asset_keys = set(
         schema["$defs"]["CacheAssetSummaryOutput"]["properties"]

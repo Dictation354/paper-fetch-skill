@@ -150,6 +150,8 @@ def test_offline_builds_full_extra_for_supported_python_matrix() -> None:
     assert "scripts/resolve_offline_dependencies.py verify" in workflow
     assert "PIP_NO_INDEX" in workflow
     assert "PIP_FIND_LINKS" in workflow
+    assert "PYTHON_BIN: .venv/bin/python" in workflow
+    assert "-PythonBin .venv/Scripts/python.exe" in workflow
 
 
 def test_offline_windows_tooling_ref_is_immutable_and_provenanced() -> None:
@@ -245,6 +247,7 @@ def test_regular_ci_includes_native_macos_offline_gate() -> None:
     assert "test_cache_scope_accepts_equivalent_filesystem_alias_for_root" in workflow
     assert "haskell-actions/setup@6037f33647c3f17758a2356c80fc4a53d7e0685d" in workflow
     assert 'MACOSX_DEPLOYMENT_TARGET: "15.0"' in workflow
+    assert "PYTHON_BIN: .venv/bin/python" in workflow
     assert "scripts/build-offline-package.sh --output-dir dist" in workflow
     assert "scripts/verify-offline-package.sh" in workflow
     assert "paper-fetch-skill-offline-macos-arm64-cp314.tar.gz" in workflow

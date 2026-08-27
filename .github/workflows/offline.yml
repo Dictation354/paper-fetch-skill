@@ -141,7 +141,7 @@ jobs:
           path: ${{ runner.temp }}/dependency-manifest
       - name: Build full offline package
         env:
-          PYTHON_BIN: python
+          PYTHON_BIN: .venv/bin/python
           MACOSX_DEPLOYMENT_TARGET: "15.0"
           PAPER_FETCH_OFFLINE_TOOLING_REVISION: ${{ inputs.posix_tooling_ref }}
         run: |
@@ -274,7 +274,9 @@ jobs:
             $env:PIP_DISABLE_PIP_VERSION_CHECK = "1"
             $env:PIP_FIND_LINKS = "$(Join-Path $snapshotRoot 'runtime-wheels') $(Join-Path $snapshotRoot 'support-wheels')"
           }
-          scripts/build-offline-package-windows.ps1 -OutputDir dist -PythonBin python
+          scripts/build-offline-package-windows.ps1 `
+            -OutputDir dist `
+            -PythonBin .venv/Scripts/python.exe
       - name: Verify final EXE install, overwrite upgrade, and uninstall serially
         shell: pwsh
         run: |

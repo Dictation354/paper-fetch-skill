@@ -293,10 +293,6 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
 
     def test_fetch_paper_tool_missing_env_payload_matches_output_schema(self) -> None:
         server = build_server()
-        tool_schema = server._tool_manager._tools[
-            "fetch_paper"
-        ].fn_metadata.output_model
-        assert tool_schema is not None
 
         with mock.patch.object(
             mcp_tools,
@@ -315,7 +311,9 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         self.assertEqual(result.structured_content["status"], "no_access")
         self.assertNotIn("acceptance", result.structured_content)
         self.assertEqual(result.structured_content["missing_env"], ["ELSEVIER_API_KEY"])
-        tool_schema.model_validate(result.structured_content)
+        validate_mcp_tool_output_schema(
+            server, "fetch_paper", result.structured_content
+        )
 
     def test_fetch_paper_payload_updates_cache_index_for_saved_files(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -802,10 +800,6 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
 
     def test_has_fulltext_tool_serializes_probe_result(self) -> None:
         server = build_server()
-        tool_schema = server._tool_manager._tools[
-            "has_fulltext"
-        ].fn_metadata.output_model
-        assert tool_schema is not None
         with mock.patch.object(
             mcp_tools,
             "service_probe_has_fulltext",
@@ -822,7 +816,9 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             result.structured_content["evidence"], ["crossref_fulltext_link"]
         )
         self.assertNotIn("title", result.structured_content)
-        tool_schema.model_validate(result.structured_content)
+        validate_mcp_tool_output_schema(
+            server, "has_fulltext", result.structured_content
+        )
 
     def test_has_fulltext_tool_keeps_ambiguous_error_payload(self) -> None:
         error = PaperFetchFailure(
@@ -831,10 +827,6 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             candidates=[{"doi": "10.1000/one"}],
         )
         server = build_server()
-        tool_schema = server._tool_manager._tools[
-            "has_fulltext"
-        ].fn_metadata.output_model
-        assert tool_schema is not None
         with mock.patch.object(
             mcp_tools, "service_probe_has_fulltext", side_effect=error
         ):
@@ -845,14 +837,12 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         self.assertEqual(
             result.structured_content["candidates"], [{"doi": "10.1000/one"}]
         )
-        tool_schema.model_validate(result.structured_content)
+        validate_mcp_tool_output_schema(
+            server, "has_fulltext", result.structured_content
+        )
 
     def test_fetch_paper_tool_error_payload_matches_output_schema(self) -> None:
         server = build_server()
-        tool_schema = server._tool_manager._tools[
-            "fetch_paper"
-        ].fn_metadata.output_model
-        assert tool_schema is not None
 
         result = asyncio.run(
             mcp_tools.fetch_paper_tool_async(query="10.1000/example", modes=["pdf"])
@@ -861,7 +851,9 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         self.assertTrue(result.is_error)
         self.assertEqual(result.structured_content["status"], "error")
         self.assertNotIn("acceptance", result.structured_content)
-        tool_schema.model_validate(result.structured_content)
+        validate_mcp_tool_output_schema(
+            server, "fetch_paper", result.structured_content
+        )
 
     def test_fetch_paper_tool_rejects_negative_inline_image_budget_before_service_call(
         self,
