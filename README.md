@@ -31,7 +31,7 @@
 
 - 支持 DOI、URL 和标题查询。
 - 输出结构化论文元数据、正文 Markdown、引用信息和本地缓存资源。
-- 支持 18 个出版社/平台全文 provider，包括 arXiv、Elsevier、Springer、Wiley、Science、PNAS、IEEE、Copernicus、AMS、MDPI、Royal Society Publishing、Annual Reviews、PLOS、Frontiers、Oxford Academic、ACS、IOP 和 AIP。
+- 支持多家出版社与平台的官方全文 provider；当前清单和逐 route 能力从 runtime provider catalog 动态生成。
 - 在无法取得全文时返回带警告的仅摘要或仅元数据结果。
 
 项目边界：
@@ -79,7 +79,7 @@ agent 安装 skill 后，可以识别 `paper-fetch-skill` 的适用边界，并�
 - macOS：在 macOS 15+ Apple Silicon 上下载匹配 Python ABI 的
   `paper-fetch-skill-offline-macos-arm64-cp*.tar.gz`。
 
-每个 `v*` Release 同时提供 `SHA256SUMS`、CycloneDX SBOM 和 GitHub build-provenance attestation。
+每个 `v*` Release 公开九个离线安装包和 `SHA256SUMS`；CycloneDX SBOM、Python distributions、inventory 与 target evidence 在发布流程内验证，不作为公开下载资产。
 
 源码安装按能力分层：
 
@@ -237,8 +237,7 @@ tarball 不能被描述为完整离线浏览器包。
 - [`docs/browser-backends.md`](docs/browser-backends.md)：后端选择、Camoufox runtime、headed 认证、离线准备和 live 验收。
 - [`docs/cli.md`](docs/cli.md)：CLI 输出、artifact、批量抓取和错误码。
 - [`docs/providers.md`](docs/providers.md)：provider 能力、环境变量和运行时配置。
-- [`docs/macos-adaptation-changes.md`](docs/macos-adaptation-changes.md)：v4 Mac 适配变更、边界和从 Windows / WSL 同步上游的流程。
-- [`docs/macos-adaptation-audit.md`](docs/macos-adaptation-audit.md)：Windows、WSL、原生 Mac 的证据矩阵与开放审计项。
+- [`docs/macos-adaptation-audit.md`](docs/macos-adaptation-audit.md)：macOS 支持、安全不变量以及 portable/原生证据边界。
 - [`docs/README.md`](docs/README.md)：完整文档导航。
 - [`docs/architecture/overview.md`](docs/architecture/overview.md)：架构边界和维护者视角。
 - [`onboarding/README.md`](onboarding/README.md)：自助添加新 provider。

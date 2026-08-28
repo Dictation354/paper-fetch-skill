@@ -7,7 +7,8 @@ attempt numbering, overwrite protection, checkpointing, and terminalization.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
+from contextlib import ExitStack, contextmanager, nullcontext, suppress
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -355,11 +356,156 @@ class BatchManifestJournal:
         return self.manifest
 
 
+@dataclass(slots=True)
+class BatchRunLifecycle(Generic[ItemT]):
+    """Own the shared prepare, persistence, terminalization, and cleanup order."""
+
+    preparation: BatchRunPreparation[ItemT]
+    journal: BatchManifestJournal
+    query_count: int
+    clock: Callable[[], datetime]
+    _cleanup: ExitStack = field(default_factory=ExitStack, repr=False)
+
+    @property
+    def items(self) -> list[ItemT]:
+        return self.preparation.items
+
+    @property
+    def run_id(self) -> UUID:
+        return self.preparation.run_id
+
+    @property
+    def append_events(self) -> bool:
+        return self.preparation.append_events
+
+    @property
+    def reused_count(self) -> int:
+        return self.preparation.reused_count
+
+    def track_closable(self, resource: Any) -> Any:
+        """Close registered resources in reverse construction order."""
+
+        self._cleanup.callback(resource.close)
+        return resource
+
+    @contextmanager
+    def event_writer(
+        self,
+        *,
+        overwrite: bool,
+    ) -> Iterator[ManifestJsonlWriter | None]:
+        """Open the durable event stream, or yield no writer for memory runs."""
+
+        store = self.journal.store
+        if store is None:
+            yield None
+            return
+        with ManifestJsonlWriter(
+            store.events_path,
+            append=self.append_events,
+            overwrite=overwrite,
+        ) as writer:
+            yield writer
+
+    def persist(
+        self,
+        record: ManifestRecord,
+        *,
+        writer: ManifestJsonlWriter | None = None,
+    ) -> None:
+        self.journal.persist(record, writer=writer)
+
+    def complete(
+        self,
+        *,
+        state: RunManifestState,
+    ) -> tuple[RunManifest, dict[int, ManifestRecord]]:
+        """Require one terminal per input before writing the terminal manifest."""
+
+        latest = self.journal.require_complete(self.query_count)
+        manifest = self.journal.finish(state=state, completed_at=self.clock())
+        return manifest, latest
+
+    def abort(
+        self,
+        *,
+        state: RunManifestState,
+        items: Sequence[ItemT] = (),
+        record_factory: Callable[[ItemT], ManifestRecord] | None = None,
+    ) -> RunManifest:
+        """Optionally terminalize missing attempts, then close the run manifest."""
+
+        if record_factory is not None:
+            self.journal.terminalize_missing(items, record_factory)
+        return self.journal.finish(state=state, completed_at=self.clock())
+
+    def best_effort_abort(
+        self,
+        *,
+        state: RunManifestState,
+        items: Sequence[ItemT] = (),
+        record_factory: Callable[[ItemT], ManifestRecord] | None = None,
+    ) -> None:
+        with suppress(Exception):
+            self.abort(state=state, items=items, record_factory=record_factory)
+
+    def close(self) -> None:
+        self._cleanup.close()
+
+
+@contextmanager
+def batch_run_lifecycle(
+    *,
+    store: RunManifestStore | None,
+    queries: Sequence[str],
+    request_parameters: Mapping[str, Any],
+    execution_policy: Mapping[str, Any] | None = None,
+    tool_version: str,
+    requested_run_id: UUID | None,
+    mode: BatchLifecycleMode,
+    clock: Callable[[], datetime],
+    uuid_factory: Callable[[], UUID],
+    item_factory: Callable[[int, str, int], ItemT],
+) -> Iterator[BatchRunLifecycle[ItemT]]:
+    """Hold the durable lock for the complete shared batch lifecycle."""
+
+    lock = store.run_lock() if store is not None else nullcontext()
+    with lock:
+        preparation = prepare_batch_run(
+            store=store,
+            queries=queries,
+            request_parameters=request_parameters,
+            execution_policy=execution_policy,
+            tool_version=tool_version,
+            requested_run_id=requested_run_id,
+            mode=mode,
+            clock=clock,
+            uuid_factory=uuid_factory,
+            item_factory=item_factory,
+        )
+        lifecycle = BatchRunLifecycle(
+            preparation=preparation,
+            journal=BatchManifestJournal(
+                manifest=preparation.manifest,
+                records=preparation.records,
+                store=store,
+            ),
+            query_count=len(queries),
+            clock=clock,
+        )
+        try:
+            yield lifecycle
+        finally:
+            lifecycle.close()
+
+
 __all__ = [
     "BatchLifecycleOverwriteError",
     "BatchLifecycleResumeError",
     "BatchManifestJournal",
+    "BatchRunLifecycle",
     "BatchRunPreparation",
+    "batch_run_lifecycle",
     "prepare_batch_run",
     "recorded_output_path",
 ]

@@ -108,8 +108,6 @@ register_provider_bundle(
                 "/doi/pdf/{doi}",
                 "/doi/epdf/{doi}",
             ),
-            requires_playwright=False,
-            requires_browser_runtime=False,
             body_text_thresholds=BodyTextThresholds(min_chars=1200),
             routes=(
                 ProviderRouteSpec(name="metadata", kind="metadata"),

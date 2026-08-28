@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from paper_fetch.markdown_quality import (
+from paper_fetch_devtools.markdown_quality import (
     build_agent_markdown_quality_report,
     build_fresh_markdown_quality_prompt,
     build_markdown_quality_prompt,

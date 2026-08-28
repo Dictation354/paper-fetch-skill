@@ -48,7 +48,7 @@ from paper_fetch.extraction.html.provider_rules import (
     SPRINGER_NATURE_FORMULA_CONTAINER_TOKENS,
 )
 from paper_fetch.quality.html_profiles import site_rule_for_publisher
-from paper_fetch.quality.issues import EXPECTED_FULLTEXT_SOURCES_BY_PROVIDER
+from paper_fetch_devtools.quality_issues import EXPECTED_FULLTEXT_SOURCES_BY_PROVIDER
 from paper_fetch.models.schema import SourceKind
 from paper_fetch.providers import _pdf_candidates, html_springer_nature
 from paper_fetch import utils
@@ -123,9 +123,7 @@ class ProviderCatalogTests(unittest.TestCase):
                 if spec.name in browser_recovery_without_direct_retries:
                     self.assertEqual(policy.transient_retries, 0)
 
-    def test_asset_only_declaration_expands_default_routes_but_is_still_explicit(
-        self,
-    ) -> None:
+    def test_explicit_routes_are_not_augmented(self) -> None:
         spec = ProviderSpec(
             name="example",
             display_name="Example",
@@ -150,11 +148,7 @@ class ProviderCatalogTests(unittest.TestCase):
 
         self.assertEqual(
             [(route.name, route.kind) for route in spec.routes],
-            [
-                ("metadata", "metadata"),
-                ("direct_html", "html"),
-                ("assets", "assets"),
-            ],
+            [("assets", "assets")],
         )
 
     def test_body_asset_provider_without_explicit_asset_route_is_rejected(self) -> None:
@@ -171,6 +165,7 @@ class ProviderCatalogTests(unittest.TestCase):
                 provider_managed_abstract_only=False,
                 client_factory_path="invalid:Client",
                 status_order=100,
+                routes=(ProviderRouteSpec(name="direct_html", kind="html"),),
             )
 
     def test_wiley_tries_verified_doi_route_before_full_route(self) -> None:

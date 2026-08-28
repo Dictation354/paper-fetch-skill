@@ -105,6 +105,22 @@ def normalize_lookup_url(value: str | None, source_url: str) -> str | None:
     return urllib.parse.urljoin(source_url, unquoted)
 
 
+def raw_html_meta_values(metadata: Mapping[str, Any], key: str) -> list[str]:
+    raw_meta = metadata.get("raw_meta")
+    if not isinstance(raw_meta, Mapping):
+        return []
+    values = raw_meta.get(key) or raw_meta.get(key.lower()) or []
+    if isinstance(values, str):
+        values = [values]
+    if not isinstance(values, list):
+        return []
+    return [
+        normalize_text(str(item or ""))
+        for item in values
+        if normalize_text(str(item or ""))
+    ]
+
+
 def extract_refresh_redirect_url(refresh_value: str, source_url: str) -> str | None:
     match = HTML_REFRESH_URL_PATTERN.search(refresh_value or "")
     if not match:

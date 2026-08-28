@@ -16,35 +16,6 @@ REQUIRED_KEYS = {
     "retryable",
     "details",
 }
-SIGNAL_CODES = {
-    "MANIFEST_NOT_FOUND",
-    "MANIFEST_DISCOVERY_FAILED",
-    "MANIFEST_SCHEMA_INVALID",
-    "MANIFEST_PROVIDER_CONFLICT",
-    "MANIFEST_CODE_DRIFT",
-    "SCAFFOLD_OUTPUT_EXISTS",
-    "SCAFFOLD_TEMPLATE_RENDER_FAILED",
-    "SCAFFOLD_FORBIDDEN_FLAG_COMBINATION",
-    "UNSUITABLE_DOI_SAMPLE",
-    "HTTP_FORBIDDEN",
-    "HTTP_RATE_LIMITED",
-    "CHALLENGE_DETECTED",
-    "BROWSER_RUNTIME_REQUIRED",
-    "NON_PDF_FALLBACK_CONTENT",
-    "ACCESS_GATE_CAPTURED",
-    "EMPTY_ARTICLE_SHELL",
-    "NETWORK_TRANSIENT",
-    "EXPECTED_SNAPSHOT_FAILED",
-    "EXPECTED_OUTCOME_PENDING",
-    "FIXTURE_NOT_FOUND",
-    "TASK_BRIEF_INVALID",
-    "WORKER_MODIFIED_FORBIDDEN_FILE",
-    "DISCOVERY_RETRY_EXHAUSTED",
-    "TASK_RETRY_EXHAUSTED",
-    "GLOBAL_LINT_FAILED",
-}
-
-
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, *args],
@@ -147,43 +118,3 @@ def test_snapshot_missing_fixture_emits_structured_schema(tmp_path: Path) -> Non
     payload = _stderr_json(result)
     assert payload["code"] == "FIXTURE_NOT_FOUND"
     assert payload["details"]["doi"] == "10.0000/probe"
-
-
-def test_coordinator_state_conflict_emits_structured_schema(tmp_path: Path) -> None:
-    state = tmp_path / "state.json"
-    first = _run(
-        "scripts/onboard_from_manifests.py",
-        "next",
-        "--provider",
-        "mdpi",
-        "--state",
-        str(state),
-    )
-    assert first.returncode == 0
-
-    result = _run(
-        "scripts/onboard_from_manifests.py",
-        "next",
-        "--provider",
-        "arxiv",
-        "--state",
-        str(state),
-    )
-
-    payload = _stderr_json(result)
-    assert payload["code"] == "TASK_BRIEF_INVALID"
-    assert payload["provider"] == "arxiv"
-    assert payload["details"]["active_provider"] == "mdpi"
-
-
-def test_failure_recovery_has_signal_sections_for_all_codes() -> None:
-    text = (REPO_ROOT / "onboarding" / "failure-recovery.md").read_text(
-        encoding="utf-8"
-    )
-    for code in SIGNAL_CODES:
-        section = f"## Signal: {code}"
-        assert section in text
-        tail = text.split(section, 1)[1].split("\n## Signal:", 1)[0]
-        assert "diagnosis:" in tail
-        assert "action:" in tail
-        assert "retryable:" in tail

@@ -13,7 +13,6 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
-from jsonschema import Draft202012Validator
 from mcp.types.version import LATEST_HANDSHAKE_VERSION
 
 from paper_fetch.browser_preflight import (
@@ -229,13 +228,14 @@ def mcp_test_deps(**overrides) -> MCPDeps:
 build_server = _support_build_server
 
 
-def validate_mcp_tool_output_schema(server, tool_name: str, payload: object) -> None:
-    """Validate a payload against the JSON Schema advertised by MCPServer."""
+def assert_mcp_tool_omits_output_schema(
+    server, tool_name: str, payload: object
+) -> None:
+    """Assert the v6 tools/list contract while callers inspect the payload itself."""
 
+    assert payload is not None
     schema = server._tool_manager._tools[tool_name].fn_metadata.output_schema
-    assert schema is not None
-    Draft202012Validator.check_schema(schema)
-    Draft202012Validator(schema).validate(payload)
+    assert schema is None
 
 
 def sample_article() -> ArticleModel:

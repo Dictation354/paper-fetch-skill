@@ -2,7 +2,6 @@ schema_version: 2
 provider: royalsocietypublishing
 manifest: onboarding/manifests/royalsocietypublishing.yml
 artifact: onboarding/cleaning-chain-proposals/royalsocietypublishing.yml
-evidence_artifact: onboarding/cleaning-chain-proposals/royalsocietypublishing.evidence.yml
 fixtures_digest:
 - purpose: structure
   doi: 10.1098/rsta.2019.0558
@@ -344,5 +343,5 @@ token_conflict_summary:
   - Metrics
   - Share
 notes:
-- Compact proposal for implementation worker; full evidence is in evidence_artifact.
+- Compact fixture-derived cleaning proposal.
 - sentinel and cross_route_guard contract deltas are warnings, not blockers.

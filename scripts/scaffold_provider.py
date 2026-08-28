@@ -139,6 +139,16 @@ def _step_function_name(name: str, step: str) -> str:
     return f"{name}_fetch_{step}_step"
 
 
+def _route_kind_for_step(step: str) -> str:
+    if step in {"abstract_only", "metadata_only"}:
+        return "metadata"
+    if "pdf" in step:
+        return "pdf"
+    if "xml" in step:
+        return "xml"
+    return "html"
+
+
 def _write_new(path: Path, content: str = "") -> None:
     if path.exists():
         raise FileExistsError(f"refusing to overwrite existing path: {path}")
@@ -483,29 +493,72 @@ def _html_module_content(
         catalog_lines.append(
             f"            env_requirements={_format_py_tuple(spec.env_requirements)},"
         )
-    if spec.requires_playwright or spec.manifest_path is not None:
-        catalog_lines.append(
-            f"            requires_playwright={spec.requires_playwright},"
-        )
-    if spec.requires_browser_runtime or spec.manifest_path is not None:
-        catalog_lines.append(
-            f"            requires_browser_runtime={spec.requires_browser_runtime},"
-        )
     if not spec.html_capable:
         catalog_lines.append("            html_capable=False,")
+
+    route_steps = (
+        spec.waterfall_steps
+        if spec.fulltext_client
+        else (("html",) if spec.html_capable else ("metadata",))
+    )
+    route_kinds = tuple(_route_kind_for_step(step) for step in route_steps)
+    browser_route_indexes = {
+        index
+        for index, kind in enumerate(route_kinds)
+        if spec.requires_browser_runtime and kind in {"html", "pdf"}
+    }
+    if spec.requires_browser_runtime and not browser_route_indexes:
+        browser_route_indexes = {
+            next(
+                (
+                    index
+                    for index, kind in enumerate(route_kinds)
+                    if kind != "metadata"
+                ),
+                0,
+            )
+        }
+
+    catalog_lines.append("            routes=(")
+    for index, (step, kind) in enumerate(zip(route_steps, route_kinds, strict=True)):
+        catalog_lines.extend(
+            [
+                "                ProviderRouteSpec(",
+                f'                    name="{step}",',
+                f'                    kind="{kind}",',
+            ]
+        )
+        if index in browser_route_indexes:
+            catalog_lines.append("                    browser_required=True,")
+            if spec.requires_playwright:
+                catalog_lines.append("                    requires_playwright=True,")
+        if kind == "pdf":
+            catalog_lines.append("                    requires_pdf_conversion=True,")
+        catalog_lines.append("                ),")
     if spec.asset_default != "none":
         catalog_lines.extend(
             [
-                "            routes=(",
                 "                ProviderRouteSpec(",
                 '                    name="assets",',
                 '                    kind="assets",',
+                *(
+                    [
+                        "                    browser_optional=True,",
+                        *(
+                            ["                    requires_playwright=True,"]
+                            if spec.requires_playwright
+                            else []
+                        ),
+                    ]
+                    if spec.requires_browser_runtime
+                    else []
+                ),
                 "                    timeout_seconds=20,",
                 "                    concurrency=2,",
                 "                ),",
-                "            ),",
             ]
         )
+    catalog_lines.append("            ),")
     catalog_lines.append("        ),")
 
     bundle_lines = [*catalog_lines]

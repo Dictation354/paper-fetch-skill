@@ -52,7 +52,6 @@ from .manifest import (
     build_manifest_record,
 )
 from .manifest_writer import (
-    ManifestJsonlWriter,
     ManifestPersistenceError,
     RunManifestState,
     RunManifestStore,
@@ -97,8 +96,7 @@ from .workflow.batch_lifecycle import (
     BatchLifecycleMode,
     BatchLifecycleOverwriteError,
     BatchLifecycleResumeError,
-    BatchManifestJournal,
-    prepare_batch_run,
+    batch_run_lifecycle,
 )
 from .workflow.batch_routing import (
     initial_provider_lane,
@@ -1254,6 +1252,16 @@ def run_batch_fetch(
             store = RunManifestStore.from_manifest(Path(resume_value))
         except ManifestPersistenceError as exc:
             raise ManifestResumeError(str(exc)) from exc
+        if args.batch_results and (
+            requested_results_path.resolve(strict=False)
+            != store.events_path.resolve(strict=False)
+        ):
+            raise ManifestResumeError(
+                "--batch-results differs from the event path recorded by --resume; "
+                "create a new run instead"
+            )
+        if getattr(args, "run_manifest", None):
+            raise ManifestResumeError("--run-manifest cannot be combined with --resume")
     else:
         results_path = requested_results_path
         manifest_value = getattr(args, "run_manifest", None)
@@ -1271,225 +1279,186 @@ def run_batch_fetch(
             events_path=results_path,
         )
 
-    with store.run_lock():
-        run_started = False
-        journal: BatchManifestJournal | None = None
-        batch_context: RuntimeContext | None = None
-        item_contexts: dict[int, RuntimeContext] = {}
-        try:
-            if resume_value:
-                try:
-                    recorded_manifest = store.read()
-                except ManifestPersistenceError as exc:
-                    raise ManifestResumeError(str(exc)) from exc
-                if args.batch_results and (
-                    requested_results_path.resolve(strict=False)
-                    != store.events_path.resolve(strict=False)
-                ):
-                    raise ManifestResumeError(
-                        "--batch-results differs from the event path recorded by --resume; create a new run instead"
-                    )
-                if getattr(args, "run_manifest", None):
-                    raise ManifestResumeError(
-                        "--run-manifest cannot be combined with --resume"
-                    )
-                del recorded_manifest
-
+    try:
+        with batch_run_lifecycle(
+            store=store,
+            queries=queries,
+            request_parameters=request_parameters,
+            execution_policy=_manifest_execution_policy(args),
+            tool_version=effective_tool_version,
+            requested_run_id=run_id,
+            mode=BatchLifecycleMode(
+                resume=bool(resume_value),
+                overwrite=overwrite,
+            ),
+            clock=deps.clock,
+            uuid_factory=deps.uuid_factory,
+            item_factory=lambda index, query, attempt: CliBatchItem(
+                index=index,
+                query=query,
+                lane_key=_batch_lane_for_query(query),
+                attempt=attempt,
+                canonical_doi=_expected_doi_for_query(query),
+            ),
+        ) as lifecycle:
             try:
-                prepared = prepare_batch_run(
-                    store=store,
-                    queries=queries,
-                    request_parameters=request_parameters,
-                    execution_policy=_manifest_execution_policy(args),
-                    tool_version=effective_tool_version,
-                    requested_run_id=run_id,
-                    mode=BatchLifecycleMode(
-                        resume=bool(resume_value), overwrite=overwrite
-                    ),
-                    clock=deps.clock,
-                    uuid_factory=deps.uuid_factory,
-                    item_factory=lambda index, query, attempt: CliBatchItem(
-                        index=index,
-                        query=query,
-                        lane_key=_batch_lane_for_query(query),
-                        attempt=attempt,
-                        canonical_doi=_expected_doi_for_query(query),
-                    ),
-                )
-            except BatchLifecycleResumeError as exc:
-                raise ManifestResumeError(str(exc)) from exc
-            except BatchLifecycleOverwriteError as exc:
-                message = str(exc).replace(
-                    "enable overwrite",
-                    "rerun with --overwrite",
-                )
-                raise OutputOverwriteRequired(message) from exc
-            except ManifestPersistenceError as exc:
-                if resume_value:
-                    raise ManifestResumeError(str(exc)) from exc
-                raise
-
-            journal = BatchManifestJournal(
-                manifest=prepared.manifest,
-                records=prepared.records,
-                store=store,
-            )
-            items = prepared.items
-            effective_run_id = prepared.run_id
-            append_events = prepared.append_events
-            run_started = True
-
-            run_cancelled = False
-            if items:
-                cancel_event = threading.Event()
-                shared_transport = build_http_transport_for_context(
-                    runtime_env,
-                    download_dir=output_dir,
-                    cancel_check=cancel_event.is_set,
-                    artifact_mode=artifact_mode,
-                )
-                batch_context = RuntimeContext(
-                    env=runtime_env,
-                    transport=shared_transport,
-                    download_dir=output_dir,
-                    artifact_mode=artifact_mode,
-                    cancel_check=cancel_event.is_set,
-                )
-                item_contexts = {
-                    item.index: batch_context.new_request_context(
-                        asset_profile=args.asset_profile,
+                items = lifecycle.items
+                run_cancelled = False
+                if items:
+                    cancel_event = threading.Event()
+                    shared_transport = build_http_transport_for_context(
+                        runtime_env,
+                        download_dir=output_dir,
+                        cancel_check=cancel_event.is_set,
+                        artifact_mode=artifact_mode,
                     )
-                    for item in items
-                }
-                with ManifestJsonlWriter(
-                    store.events_path,
-                    append=append_events,
-                    overwrite=overwrite,
-                ) as writer:
-                    with _cooperative_batch_cancel(cancel_event):
-                        prepared_lanes = run_batch(
-                            items,
-                            lambda item: _resolve_cli_batch_item_lane(
-                                item,
-                                context=item_contexts[item.index],
-                            ),
-                            max_workers=args.batch_concurrency,
-                            lane_key=lambda item: f"resolve:{item.index}",
-                            cancel_event=cancel_event,
+                    batch_context = lifecycle.track_closable(
+                        RuntimeContext(
+                            env=runtime_env,
+                            transport=shared_transport,
+                            download_dir=output_dir,
+                            artifact_mode=artifact_mode,
+                            cancel_check=cancel_event.is_set,
                         )
-                        items = [
-                            result.value if result.value is not None else result.item
-                            for result in prepared_lanes.results
-                        ]
-                        logical_items = list(items)
-                        items, duplicates_by_owner = _deduplicate_cli_batch_items(
-                            logical_items
-                        )
-                        representative_indices = {item.index for item in items}
-                        for duplicate in logical_items:
-                            if duplicate.index not in representative_indices:
-                                item_contexts[duplicate.index].close()
-
-                        def on_completion(
-                            event: BatchCompletionEvent[CliBatchItem, CliFetchOutcome],
-                        ) -> None:
-                            fanout_items = (
-                                event.result.item,
-                                *duplicates_by_owner.get(event.result.item.index, ()),
+                    )
+                    item_contexts = {
+                        item.index: lifecycle.track_closable(
+                            batch_context.new_request_context(
+                                asset_profile=args.asset_profile,
                             )
-                            for position, fanout_item in enumerate(fanout_items):
-                                outcome = event.result.value
-                                if position and outcome is not None:
-                                    with contextlib.suppress(Exception):
-                                        outcome = copy.deepcopy(outcome)
-                                fanout_result = replace(
-                                    event.result,
-                                    item=fanout_item,
-                                    lane_key=fanout_item.lane_key,
-                                    value=outcome,
-                                )
-                                record = _record_from_batch_result(
-                                    args,
-                                    fanout_result,
-                                    output_dir=output_dir,
-                                    artifact_mode=artifact_mode,
-                                    run_id=effective_run_id,
-                                    tool_version=effective_tool_version,
-                                    deps=deps,
-                                )
-                                assert journal is not None
-                                journal.persist(record, writer=writer)
-
-                        run_result = run_batch(
-                            items,
-                            lambda item: _run_batch_item(
-                                item,
-                                args=args,
-                                output_dir=output_dir,
-                                runtime_env=runtime_env,
-                                artifact_mode=artifact_mode,
-                                context=item_contexts[item.index],
-                                deps=deps,
-                            ),
-                            max_workers=args.batch_concurrency,
-                            lane_key=lambda item: item.lane_key,
-                            lane_limits=lambda lane: provider_lane_limit(
-                                lane,
-                                global_limit=args.batch_concurrency,
-                            ),
-                            completion_callback=on_completion,
-                            result_classifier=_classify_batch_outcome,
-                            cancel_event=cancel_event,
-                            cancel_escalation_callback=(close_shared_browser_managers),
                         )
-                if run_result.callback_failures:
-                    details = "; ".join(
-                        f"index {items[failure.source_index].index}: {failure.message}"
-                        for failure in run_result.callback_failures
-                    )
-                    raise OutputDirectoryError(
-                        f"could not persist complete batch events: {details}"
-                    )
-                run_cancelled = run_result.cancelled
+                        for item in items
+                    }
+                    with lifecycle.event_writer(overwrite=overwrite) as writer:
+                        with _cooperative_batch_cancel(cancel_event):
+                            prepared_lanes = run_batch(
+                                items,
+                                lambda item: _resolve_cli_batch_item_lane(
+                                    item,
+                                    context=item_contexts[item.index],
+                                ),
+                                max_workers=args.batch_concurrency,
+                                lane_key=lambda item: f"resolve:{item.index}",
+                                cancel_event=cancel_event,
+                            )
+                            logical_items = [
+                                result.value
+                                if result.value is not None
+                                else result.item
+                                for result in prepared_lanes.results
+                            ]
+                            items, duplicates_by_owner = _deduplicate_cli_batch_items(
+                                logical_items
+                            )
 
-            assert journal is not None
-            latest_records = journal.require_complete(len(queries))
-            run_cancelled = run_cancelled or any(
-                record.record_status == ManifestRecordStatus.ABORTED
-                and record.error is not None
-                and (record.error.model_extra or {}).get("code") == "request_cancelled"
-                for record in latest_records.values()
-            )
-            journal.finish(
-                state=(
-                    RunManifestState.CANCELLED
-                    if run_cancelled
-                    else RunManifestState.COMPLETED
-                ),
-                completed_at=deps.clock(),
-            )
-            return exit_code_for_batch_results(
-                [latest_records[index] for index in sorted(latest_records)]
-            )
-        except BaseException as exc:
-            if run_started and journal is not None:
-                with contextlib.suppress(Exception):
-                    journal.finish(
-                        state=(
-                            RunManifestState.INTERRUPTED
-                            if isinstance(exc, KeyboardInterrupt)
-                            else RunManifestState.CANCELLED
-                            if isinstance(exc, RequestCancelledError)
-                            else RunManifestState.FAILED
-                        ),
-                        completed_at=deps.clock(),
+                            def on_completion(
+                                event: BatchCompletionEvent[
+                                    CliBatchItem, CliFetchOutcome
+                                ],
+                            ) -> None:
+                                fanout_items = (
+                                    event.result.item,
+                                    *duplicates_by_owner.get(
+                                        event.result.item.index, ()
+                                    ),
+                                )
+                                for position, fanout_item in enumerate(fanout_items):
+                                    outcome = event.result.value
+                                    if position and outcome is not None:
+                                        with contextlib.suppress(Exception):
+                                            outcome = copy.deepcopy(outcome)
+                                    fanout_result = replace(
+                                        event.result,
+                                        item=fanout_item,
+                                        lane_key=fanout_item.lane_key,
+                                        value=outcome,
+                                    )
+                                    lifecycle.persist(
+                                        _record_from_batch_result(
+                                            args,
+                                            fanout_result,
+                                            output_dir=output_dir,
+                                            artifact_mode=artifact_mode,
+                                            run_id=lifecycle.run_id,
+                                            tool_version=effective_tool_version,
+                                            deps=deps,
+                                        ),
+                                        writer=writer,
+                                    )
+
+                            run_result = run_batch(
+                                items,
+                                lambda item: _run_batch_item(
+                                    item,
+                                    args=args,
+                                    output_dir=output_dir,
+                                    runtime_env=runtime_env,
+                                    artifact_mode=artifact_mode,
+                                    context=item_contexts[item.index],
+                                    deps=deps,
+                                ),
+                                max_workers=args.batch_concurrency,
+                                lane_key=lambda item: item.lane_key,
+                                lane_limits=lambda lane: provider_lane_limit(
+                                    lane,
+                                    global_limit=args.batch_concurrency,
+                                ),
+                                completion_callback=on_completion,
+                                result_classifier=_classify_batch_outcome,
+                                cancel_event=cancel_event,
+                                cancel_escalation_callback=(
+                                    close_shared_browser_managers
+                                ),
+                            )
+                    if run_result.callback_failures:
+                        details = "; ".join(
+                            f"index {items[failure.source_index].index}: "
+                            f"{failure.message}"
+                            for failure in run_result.callback_failures
+                        )
+                        raise OutputDirectoryError(
+                            f"could not persist complete batch events: {details}"
+                        )
+                    run_cancelled = run_result.cancelled
+
+                latest_records = lifecycle.journal.require_complete(len(queries))
+                run_cancelled = run_cancelled or any(
+                    record.record_status == ManifestRecordStatus.ABORTED
+                    and record.error is not None
+                    and (record.error.model_extra or {}).get("code")
+                    == "request_cancelled"
+                    for record in latest_records.values()
+                )
+                _manifest, latest_records = lifecycle.complete(
+                    state=(
+                        RunManifestState.CANCELLED
+                        if run_cancelled
+                        else RunManifestState.COMPLETED
                     )
-            raise
-        finally:
-            for item_context in item_contexts.values():
-                item_context.close()
-            if batch_context is not None:
-                batch_context.close()
+                )
+                return exit_code_for_batch_results(
+                    [latest_records[index] for index in sorted(latest_records)]
+                )
+            except BaseException as exc:
+                lifecycle.best_effort_abort(
+                    state=(
+                        RunManifestState.INTERRUPTED
+                        if isinstance(exc, KeyboardInterrupt)
+                        else RunManifestState.CANCELLED
+                        if isinstance(exc, RequestCancelledError)
+                        else RunManifestState.FAILED
+                    )
+                )
+                raise
+    except BatchLifecycleResumeError as exc:
+        raise ManifestResumeError(str(exc)) from exc
+    except BatchLifecycleOverwriteError as exc:
+        message = str(exc).replace("enable overwrite", "rerun with --overwrite")
+        raise OutputOverwriteRequired(message) from exc
+    except ManifestPersistenceError as exc:
+        if resume_value:
+            raise ManifestResumeError(str(exc)) from exc
+        raise
 
 
 def _default(value: Any, *, suppress_defaults: bool) -> Any:

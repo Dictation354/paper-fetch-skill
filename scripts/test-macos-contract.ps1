@@ -17,20 +17,12 @@ try {
         return
     }
 
-    $testNodes = @(
-        & $Python scripts/validate_macos_adaptation.py --print-test-nodes windows
-    )
-    if ($LASTEXITCODE -ne 0) {
-        throw "Could not select portable Windows contract tests."
-    }
-    if ($testNodes.Count -eq 0) {
-        throw "No portable Windows contract tests were selected."
-    }
-
     $previousPythonPath = $env:PYTHONPATH
     try {
         $env:PYTHONPATH = Join-Path $repoRoot "src"
-        & $Python -m pytest @testNodes -q
+        & $Python -m pytest `
+            tests/unit/test_macos_adaptation_validator.py `
+            tests/integration/test_macos_adaptation_contract.py -q
         if ($LASTEXITCODE -ne 0) {
             throw "Portable Windows macOS contract tests failed with exit code $LASTEXITCODE"
         }

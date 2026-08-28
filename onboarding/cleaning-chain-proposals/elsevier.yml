@@ -2,7 +2,6 @@ schema_version: 2
 provider: elsevier
 manifest: onboarding/manifests/elsevier.yml
 artifact: onboarding/cleaning-chain-proposals/elsevier.yml
-evidence_artifact: onboarding/cleaning-chain-proposals/elsevier.evidence.yml
 fixtures_digest:
 - purpose: structure
   doi: 10.1016/j.rse.2025.114648
@@ -152,5 +151,5 @@ token_conflict_summary:
   - Uncertainties in terrestrial carbon budgets related to spring phenology
   - http://www.glass.umd.edu/Download.html
 notes:
-- Compact proposal for implementation worker; full evidence is in evidence_artifact.
+- Compact fixture-derived cleaning proposal.
 - sentinel and cross_route_guard contract deltas are warnings, not blockers.

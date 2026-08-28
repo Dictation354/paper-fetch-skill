@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Any
 from collections.abc import Callable, Mapping
 
 from mcp import types as mcp_types
@@ -44,19 +44,6 @@ from .fetch_tool import (
     has_fulltext_tool,
     provider_status_tool,
     resolve_paper_tool,
-)
-from .output_schemas import (
-    BatchCheckOutput,
-    BatchFetchOutput,
-    BatchResolveOutput,
-    BrowserPreflightOutput,
-    FetchPaperOutput,
-    GetCachedOutput,
-    HasFulltextOutput,
-    ListCachedOutput,
-    ProviderStatusOutput,
-    ResolvePaperOutput,
-    compact_tool_output_schema,
 )
 from .prompts import summarize_paper_prompt, verify_citation_list_prompt
 from .provider_catalog import (
@@ -117,10 +104,6 @@ class PaperFetchMCPServer(MCPServer):
         arg_model.model_config = ConfigDict(**strict_config)
         arg_model.model_rebuild(force=True)
         tool.parameters = arg_model.model_json_schema(by_alias=True)
-        tool.fn_metadata.output_schema = compact_tool_output_schema(
-            tool.fn_metadata.output_schema
-        )
-        tool.__dict__.pop("output_schema", None)
 
     async def list_native_tools(self) -> list[mcp_types.Tool]:
         """Expose the MCPServer-generated schemas for native contract tests."""
@@ -471,14 +454,14 @@ def build_server() -> PaperFetchMCPServer:
         name="resolve_paper",
         description="Resolve a DOI, URL, or title query into a normalized paper candidate.",
         annotations=_read_only_annotations(open_world=True),
-        structured_output=True,
+        structured_output=False,
     )
     def resolve_paper(
         query: str | None = None,
         title: str | None = None,
         authors: list[str] | str | None = None,
         year: int | None = None,
-    ) -> Annotated[CallToolResult, ResolvePaperOutput]:
+    ) -> CallToolResult:
         return resolve_paper_tool(
             query=query,
             title=title,
@@ -491,16 +474,16 @@ def build_server() -> PaperFetchMCPServer:
         name="has_fulltext",
         description="Probe whether a paper likely has accessible full text using cheap metadata and landing-page signals.",
         annotations=_read_only_annotations(open_world=True),
-        structured_output=True,
+        structured_output=False,
     )
-    def has_fulltext(query: str) -> Annotated[CallToolResult, HasFulltextOutput]:
+    def has_fulltext(query: str) -> CallToolResult:
         return has_fulltext_tool(query=query, deps=deps)
 
     @server.tool(
         name="fetch_paper",
         description=fetch_tool_description(),
         annotations=_fetch_annotations(),
-        structured_output=True,
+        structured_output=False,
     )
     async def fetch_paper(
         query: str,
@@ -517,7 +500,7 @@ def build_server() -> PaperFetchMCPServer:
         browser_auto_prepare: bool | None = None,
         download_dir: str | None = None,
         ctx: Context | None = None,
-    ) -> Annotated[CallToolResult, FetchPaperOutput]:
+    ) -> CallToolResult:
         parsed_download_dir = _parse_download_dir(download_dir)
         parsed_markdown_output_dir = _parse_download_dir(markdown_output_dir)
         tool_kwargs: dict[str, Any] = {}
@@ -572,13 +555,13 @@ def build_server() -> PaperFetchMCPServer:
             "front matter within the selected download_dir."
         ),
         annotations=_read_only_annotations(open_world=False),
-        structured_output=True,
+        structured_output=False,
     )
     async def list_cached(
         download_dir: str | None = None,
         cache_mode: CacheModeInput = "index",
         ctx: Context | None = None,
-    ) -> Annotated[CallToolResult, ListCachedOutput]:
+    ) -> CallToolResult:
         parsed_download_dir = _parse_download_dir(download_dir)
         tool_kwargs: dict[str, Any] = {}
         if parsed_download_dir is not None:
@@ -600,7 +583,7 @@ def build_server() -> PaperFetchMCPServer:
             "acceptance/asset summaries; preferred_only omits non-preferred entry arrays."
         ),
         annotations=_read_only_annotations(open_world=False),
-        structured_output=True,
+        structured_output=False,
     )
     async def get_cached(
         doi: str,
@@ -612,7 +595,7 @@ def build_server() -> PaperFetchMCPServer:
         include_refs: IncludeRefsInput | None = None,
         max_tokens: MaxTokensInput = "full_text",
         ctx: Context | None = None,
-    ) -> Annotated[CallToolResult, GetCachedOutput]:
+    ) -> CallToolResult:
         parsed_download_dir = _parse_download_dir(download_dir)
         tool_kwargs: dict[str, Any] = {}
         if parsed_download_dir is not None:
@@ -640,13 +623,13 @@ def build_server() -> PaperFetchMCPServer:
         name="batch_resolve",
         description="Resolve multiple DOI, URL, or title queries with shared transport reuse and optional cross-host concurrency.",
         annotations=_read_only_annotations(open_world=True),
-        structured_output=True,
+        structured_output=False,
     )
     async def batch_resolve(
         queries: BatchQueriesInput,
         concurrency: ConcurrencyInput = 1,
         ctx: Context | None = None,
-    ) -> Annotated[CallToolResult, BatchResolveOutput]:
+    ) -> CallToolResult:
         return await batch_resolve_tool_async(
             queries=queries, concurrency=concurrency, ctx=ctx, deps=deps
         )
@@ -663,7 +646,7 @@ def build_server() -> PaperFetchMCPServer:
             "explicitly enables it."
         ),
         annotations=_fetch_annotations(),
-        structured_output=True,
+        structured_output=False,
     )
     async def batch_fetch(
         queries: BatchQueriesInput,
@@ -688,7 +671,7 @@ def build_server() -> PaperFetchMCPServer:
         overwrite: bool = False,
         browser_auto_prepare: bool | None = None,
         ctx: Context | None = None,
-    ) -> Annotated[CallToolResult, BatchFetchOutput]:
+    ) -> CallToolResult:
         parsed_download_dir = _parse_download_dir(download_dir)
         parsed_markdown_output_dir = _parse_download_dir(markdown_output_dir)
         tool_kwargs: dict[str, Any] = {}
@@ -751,7 +734,7 @@ def build_server() -> PaperFetchMCPServer:
             "defaults off; article mode can opt in with browser_auto_prepare=true."
         ),
         annotations=_read_only_annotations(open_world=True),
-        structured_output=True,
+        structured_output=False,
     )
     async def batch_check(
         queries: BatchQueriesInput,
@@ -759,7 +742,7 @@ def build_server() -> PaperFetchMCPServer:
         concurrency: ConcurrencyInput = 1,
         browser_auto_prepare: bool | None = None,
         ctx: Context | None = None,
-    ) -> Annotated[CallToolResult, BatchCheckOutput]:
+    ) -> CallToolResult:
         return await batch_check_tool_async(
             queries=queries,
             mode=mode,
@@ -779,7 +762,7 @@ def build_server() -> PaperFetchMCPServer:
             "explicitly enables it."
         ),
         annotations=_browser_preflight_annotations(),
-        structured_output=True,
+        structured_output=False,
     )
     async def browser_preflight(
         provider: BrowserPreflightProviderInput | None = None,
@@ -791,7 +774,7 @@ def build_server() -> PaperFetchMCPServer:
         detail: BrowserPreflightDetailInput = "full",
         browser_auto_prepare: bool | None = None,
         ctx: Context | None = None,
-    ) -> Annotated[CallToolResult, BrowserPreflightOutput]:
+    ) -> CallToolResult:
         return await browser_preflight_tool_async(
             provider=provider,
             test_url=test_url,
@@ -812,13 +795,13 @@ def build_server() -> PaperFetchMCPServer:
             "This never opens Chrome/CDP or publisher pages; use browser_preflight for live health."
         ),
         annotations=_read_only_annotations(open_world=False),
-        structured_output=True,
+        structured_output=False,
     )
     def provider_status(
         provider: ProviderNameInput | None = None,
         group: ProviderStatusGroupInput | None = None,
         detail: ProviderStatusDetailInput = "full",
-    ) -> Annotated[CallToolResult, ProviderStatusOutput]:
+    ) -> CallToolResult:
         return provider_status_tool(
             provider=provider,
             group=group,

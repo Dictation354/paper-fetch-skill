@@ -1131,7 +1131,6 @@ def build_cleaning_chain_proposal(
         "provider": provider,
         "manifest": manifest_path,
         "artifact": f"{DEFAULT_OUTPUT_DIR}/{provider}.yml",
-        "evidence_artifact": f"{DEFAULT_OUTPUT_DIR}/{provider}.evidence.yml",
         "fixtures_digest": fixtures_digest,
         "raw_fixture_inventory": inventory,
         "skipped_cleaning_inventory": skipped_inventory_items,
@@ -1186,7 +1185,6 @@ def build_compact_proposal(proposal: dict[str, Any]) -> dict[str, Any]:
         "provider": proposal["provider"],
         "manifest": proposal["manifest"],
         "artifact": proposal["artifact"],
-        "evidence_artifact": proposal["evidence_artifact"],
         "fixtures_digest": proposal["fixtures_digest"],
         "proposed_markdown_contract_delta": proposal[
             "proposed_markdown_contract_delta"
@@ -1203,7 +1201,7 @@ def build_compact_proposal(proposal: dict[str, Any]) -> dict[str, Any]:
             "possible_body_conflict_tokens": conflict_tokens,
         },
         "notes": [
-            "Compact proposal for implementation worker; full evidence is in evidence_artifact.",
+            "Compact fixture-derived cleaning proposal.",
             "sentinel and cross_route_guard contract deltas are warnings, not blockers.",
         ],
     }
@@ -1250,10 +1248,6 @@ def contract_check_result(proposal: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _evidence_output_path(compact_output_path: Path) -> Path:
-    return compact_output_path.with_suffix(".evidence.yml")
-
-
 def _manifest_from_args(args: argparse.Namespace) -> tuple[Path, str]:
     if args.manifest:
         path = Path(args.manifest)
@@ -1298,19 +1292,11 @@ def main(argv: list[str] | None = None) -> int:
         output_path = REPO_ROOT / output_path
     if args.write:
         compact = build_compact_proposal(proposal)
-        evidence_output_path = _evidence_output_path(output_path)
         compact["artifact"] = _repo_rel(output_path)
-        compact["evidence_artifact"] = _repo_rel(evidence_output_path)
         proposal["artifact"] = _repo_rel(output_path)
-        proposal["evidence_artifact"] = _repo_rel(evidence_output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        evidence_output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(
             yaml.safe_dump(compact, sort_keys=False, allow_unicode=False),
-            encoding="utf-8",
-        )
-        evidence_output_path.write_text(
-            yaml.safe_dump(proposal, sort_keys=False, allow_unicode=False),
             encoding="utf-8",
         )
         print(
@@ -1318,7 +1304,6 @@ def main(argv: list[str] | None = None) -> int:
                 {
                     "provider": proposal["provider"],
                     "output": _repo_rel(output_path),
-                    "evidence_output": _repo_rel(evidence_output_path),
                 },
                 indent=2,
                 sort_keys=True,

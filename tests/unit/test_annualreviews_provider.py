@@ -91,7 +91,10 @@ def test_provider_bundle_round_trip() -> None:
 
 def test_provider_catalog_is_readable() -> None:
     assert PROVIDER_CATALOG["annualreviews"].name == "annualreviews"
-    assert PROVIDER_CATALOG["annualreviews"].requires_browser_runtime is True
+    assert any(
+        route.browser_required or route.browser_optional
+        for route in PROVIDER_CATALOG["annualreviews"].routes
+    )
 
 
 def test_landing_html_and_article_html_candidates_cover_manifest_route() -> None:

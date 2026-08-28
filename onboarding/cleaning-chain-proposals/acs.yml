@@ -2,7 +2,6 @@ schema_version: 2
 provider: acs
 manifest: onboarding/manifests/acs.yml
 artifact: onboarding/cleaning-chain-proposals/acs.yml
-evidence_artifact: onboarding/cleaning-chain-proposals/acs.evidence.yml
 fixtures_digest:
 - purpose: structure
   doi: 10.1021/acsomega.4c03987
@@ -349,5 +348,5 @@ token_conflict_summary:
   possible_body_conflict_tokens:
   - Metrics
 notes:
-- Compact proposal for implementation worker; full evidence is in evidence_artifact.
+- Compact fixture-derived cleaning proposal.
 - sentinel and cross_route_guard contract deltas are warnings, not blockers.

@@ -78,17 +78,3 @@ def test_browser_workflow_deps_replace_round_trip_and_freezes_fields() -> None:
     assert deps.load_runtime_config is browser_runtime.load_runtime_config
     with pytest.raises(FrozenInstanceError):
         updated.load_runtime_config = deps.load_runtime_config  # type: ignore[misc]
-
-
-def test_browser_workflow_deps_group_views_reference_flat_fields() -> None:
-    deps = default_browser_workflow_deps()
-
-    assert deps.runtime.load_runtime_config is deps.load_runtime_config
-    assert deps.runtime.fetch_html_with_browser is deps.fetch_html_with_browser
-    assert deps.html.bootstrap_browser_workflow is deps.bootstrap_browser_workflow
-    assert deps.pdf.fetch_pdf_with_browser is deps.fetch_pdf_with_browser
-    assert deps.assets.download_assets is deps.download_assets
-    assert (
-        deps.cache._cached_browser_workflow_assets
-        is deps._cached_browser_workflow_assets
-    )

@@ -1,62 +1,37 @@
-# AI Onboarding Hard Constraints
+# Provider Onboarding Hard Constraints
 
-Worker 和 coordinator 必须满足下列机器可判约束。
+## 范围与访问
 
-## Worker Scope
+- Provider-specific 实现只放在 `src/paper_fetch/providers/`，对应测试放在 provider-local unit test。
+- 不自动登录，不解决 CAPTCHA，不绕过 challenge/paywall，不伪造 access review 或最终 Markdown signoff。
+- 不把 API key、token、browser endpoint、storage state 或本地秘密路径写入 manifest、文档、测试和 artifact。
+- 只修改当前 provider 及其验收所需文件；不借 onboarding 重构无关 provider 或全局 workflow。
 
-- `runtime` must be `coding-agent-subagent`.
-- Worker must not commit.
-- Worker may only modify paths listed in `files_allowed_to_modify`.
-- Worker must not modify paths listed in `files_must_not_modify`.
-- The current provider manifest may be listed in `files_allowed_to_modify` only for the `MARKDOWN_CONTRACT_DRIFT` exception: worker may adjust related `markdown_contract.<purpose>` entries, and must not edit routing, route contracts, fixtures, access policy, probe requirements, docs facts, or unrelated purposes.
-- Worker must not edit `onboarding/known-providers.yml`.
-- Worker must not edit shared docs: `docs/providers.md`, `docs/extraction-rules.md`, `CHANGELOG.md`.
-- Worker must not write API keys, tokens, browser endpoint URLs, or local secret file paths into manifest, docs, tests, or task brief output.
-- Worker must follow the approved access review. It must not automatically log in, solve CAPTCHA, bypass challenge/paywall controls, or invent temporary site policy.
+## 运行时契约
 
-## Provider Logic
+- Provider 必须在 `paper_fetch.providers._BUILTIN_PROVIDER_ENTRY_MODULES` 显式登记；不得恢复源码 AST discovery、fingerprint cache 或 discovery lock。
+- `ProviderSpec.routes` 是 browser、Playwright、transport、timeout、concurrency、retry、acceptance 与 asset capability 的唯一运行时事实源。
+- 每个成功 payload 的 `ProviderContent.route_name` 必须对应 catalog route；公开 source 与 trace marker 不能替代结构化 route。
+- Provider payload 使用 typed content/artifacts/trace/warnings/merged metadata；不得恢复 `RawFulltextPayload.metadata` 兼容视图。
+- Publisher 差异留在 provider-owned 模块；不得向通用 provider rules、HTML signals 或 availability owner 添加按 provider 名分支。
+- 资产失败不得覆盖已成功正文，必须进入 warnings、quality 或 download trace。
 
-- Provider-specific implementation belongs under `src/paper_fetch/providers/`.
-- Provider-specific tests belong under `tests/unit/test_<provider>_provider.py`.
-- Provider tests must not keep scaffold skipped placeholders or Markdown review-loop placeholders.
-- Every non-null `fixtures.doi_samples.<purpose>` from the provider manifest must be named or asserted in `tests/unit/test_<provider>_provider.py`.
-- Every non-null fixture and `extra_fixtures` item must be recorded in `onboarding/reviews/<provider>.yml` with `sample_representative: true` and `markdown_semantic_reviewed: true`; the preferred path is final batch signoff through `scripts/onboard_from_manifests.py finalize-review-artifact --confirmed-final-quality`, not manual per-fixture YAML editing.
-- Every non-null `markdown_contract.<purpose>` from the provider manifest must be represented by provider-local Markdown assertions before extraction cleanup is changed.
-- Every `main_path` step must have `route_contract.<step>` and provider-local success / rejection coverage before that route is accepted as implemented.
-- Every runtime catalog route must expose `ProviderRouteSpec.transport` as `api`, `browser`, or `http`, and every successful provider payload must stamp `ProviderContent.route_name` with that exact catalog route; compatibility source labels and trace aliases do not replace either structured fact.
-- Provider-local route coverage is checked by `tests/unit/test_provider_route_contract.py`; exact markers should use `route-contract: step=<step> condition=<condition>` when a route condition cannot be proven by an existing step/source/DOI assertion.
-- The main success path must include both positive Markdown assertions and negative assertions for site chrome, access noise, or duplicate boilerplate.
-- Markdown cleanup fixes discovered during review must land only in provider-owned implementation files and provider-local tests.
-- Provider-specific functions must not be added to `src/paper_fetch/extraction/html/provider_rules.py`.
-- Provider-specific functions must not be added to `src/paper_fetch/quality/html_signals.py`.
-- Provider-specific functions must not be added to `src/paper_fetch/quality/html_availability.py`.
-- Provider routing, asset profile, probe requirements, fixture purposes, and docs source name must come from the provider manifest.
-- Golden corpus adapters, MCP provider status order, benchmark coverage, and live review support must stay synchronized with `ProviderBundle + manifest`; workers must not add a second provider constant table.
-- Worker must not infer provider behavior from `docs/provider-development.md`, `docs/adding-a-provider.md`, README files, audit files, or chat history.
+## Fixture 与 review
 
-## Acceptance
+- 每个 non-null fixture purpose 必须有 route/Markdown contract 和 provider-local 覆盖；不得保留 scaffold skip 或 review placeholder。
+- 主成功路径至少有一个 Markdown 正断言和一个 site chrome/access noise/boilerplate 负断言。
+- Cleaning proposal 必须通过当前 fixture digest 校验；不生成 `.evidence.yml` sidecar。
+- 每个 non-null fixture 与 extra fixture 必须进入 `onboarding/reviews/<provider>.yml`，最终 `sample_representative` 与 `markdown_semantic_reviewed` 均为 true。
+- 最终签核使用 `scripts/bootstrap_review_artifact.py --finalize --confirmed-final-quality`；不得手工伪造审核状态或 hash。
 
-- Provider-local pytest listed in the task brief must pass.
-- `python3 scripts/onboard_from_manifests.py check-cleaning-proposal --provider <provider>` must pass.
-- `python3 scripts/propose_cleaning_chain.py --provider <provider> --check-contract` must pass; warning-only sentinel/cross-route findings are allowed, while missing include, truly vacuous guard, or stale digest is `MARKDOWN_CONTRACT_DRIFT`.
-- `PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_markdown_review_contract.py -q` must pass.
-- `PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_route_contract.py -q` must pass.
-- `onboarding/access-reviews/<provider>.yml` and `onboarding/reviews/<provider>.yml` must pass their schemas.
-- `python3 scripts/validate_extraction_rules.py` must pass before merge-ready.
-- `PYTHONPATH=src uv run python -m pytest tests/unit/test_manifest_bundle_sync.py -q` must pass before merge-ready.
-- `PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_bundle_completeness.py tests/unit/test_provider_owner_reuse.py -q` must pass before merge-ready.
-- `PYTHONPATH=src uv run python -m pytest tests/unit/test_golden_corpus_adapters.py tests/unit/test_provider_benchmark_samples.py tests/devtools/test_golden_criteria_live.py -q` must pass before merge-ready.
-- `PYTHONPATH=src uv run python -m pytest tests/unit/test_human_docs_drift.py -q` must pass before merge-ready.
-- `manifest_sync_back.py` is the only allowed writer for sync-back fields in `extraction_hints` and `success_criteria`.
-
-## Grep Must Be Empty
-
-Implementation acceptance must run these forbidden-central-logic checks with the provider slug substituted for `<provider>`. Return code `0` means forbidden drift exists; return code `1` means no matches.
+## 必需验证
 
 ```bash
-git grep -nE "<provider>" -- src/paper_fetch/extraction/html/provider_rules.py
-git grep -nE "<provider>" -- src/paper_fetch/quality/html_signals.py
-git grep -nE "<provider>" -- src/paper_fetch/quality/html_availability.py
-git grep -nE "raw_payload\\.metadata\\[" -- src/paper_fetch/providers/
-git grep -nE "BeautifulSoup is None|Tag is None" -- src/paper_fetch/providers/
+python scripts/propose_cleaning_chain.py --provider <provider> --check-contract
+python scripts/check_provider_governance.py
+python scripts/validate_extraction_rules.py
+PYTHONPATH=src uv run python -m pytest tests/unit/test_<provider>_provider.py -q
+PYTHONPATH=src uv run python -m pytest tests/unit/test_manifest_bundle_sync.py tests/unit/test_provider_markdown_review_contract.py tests/unit/test_provider_route_contract.py tests/unit/test_provider_bundle_completeness.py tests/unit/test_provider_owner_reuse.py -q
 ```
+
+默认复用项目并行 pytest 配置。Live 测试只在明确授权且依赖真实外部状态时串行运行，并说明原因。

@@ -13,7 +13,7 @@
 - Wiley / Science / PNAS / AMS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI / Taylor & Francis Online 的浏览器运行时细节
 - 架构实现细节
 
-provider 运行时细节见 [`providers.md`](providers.md)，架构说明见 [`architecture/overview.md`](architecture/overview.md)。安装 skill 内部的自包含环境/离线 wrapper 说明见 [`environment.md`](../skills/paper-fetch-skill/references/environment.md)，正常 CLI 主路径见 [`cli-workflow.md`](../skills/paper-fetch-skill/references/cli-workflow.md)；这些 reference 不依赖安装包外的仓库 `docs/`。Mac 适配差异、维护流程和跨平台证据边界另见 [`macos-adaptation-changes.md`](macos-adaptation-changes.md) 与 [`macos-adaptation-audit.md`](macos-adaptation-audit.md)。
+provider 运行时细节见 [`providers.md`](providers.md)，架构说明见 [`architecture/overview.md`](architecture/overview.md)。安装 skill 内部的自包含环境/离线 wrapper 说明见 [`environment.md`](../skills/paper-fetch-skill/references/environment.md)，正常 CLI 主路径见 [`cli-workflow.md`](../skills/paper-fetch-skill/references/cli-workflow.md)；这些 reference 不依赖安装包外的仓库 `docs/`。macOS 支持与跨平台证据边界另见 [`macos-adaptation-audit.md`](macos-adaptation-audit.md)。
 
 ## 1. 安装 Python 包
 
@@ -71,7 +71,7 @@ paper-fetch-skill-windows-x86_64-setup.exe
 CI 自动发布规则：
 
 - 普通 `push` / `pull_request` 运行完整 unit、branch coverage、focus coverage
-  失败门禁、integration、devtools、140 个 exact replay 的四个 provider shard、完整包
+  失败门禁、integration、devtools、全部可执行 exact replay 的四个 provider shard、完整包
   mypy、Ruff、复杂度预算、锁定依赖漏洞审计，以及 Python 3.11/3.14 的
   core/full wheel smoke。
 - `provider-canary.yml` 每周两次只运行 `quality/public-direct-canary.json`
@@ -79,7 +79,7 @@ CI 自动发布规则：
   保留；前两次失败不告警，第三次及以后输出 workflow warning，成功清零。这个 job
   `continue-on-error`，不替代普通 CI 的确定性 replay，也不运行 browser/auth route。
 - `offline.yml` 是可复用且可手动运行的 full 离线构建 workflow；Linux 使用 CPython 3.11–3.14，macOS 在固定 `macos-15` arm64 runner 使用 CPython 3.11–3.14，Windows 使用 CPython 3.13。
-- 推送与 `pyproject.toml` 版本一致的 `v*` tag 时，`release.yml` 把 tag peel 到完整 commit SHA，并以该 SHA 并行调用只构建 wheel/sdist 的 `package.yml` 和九目标冻结依赖 resolver；随后构建每目标 staged dependency manifest/CycloneDX SBOM、`SHA256SUMS` 和 GitHub build-provenance attestation，再创建 target 绑定同一 SHA 的稳定 Release。Release 不调用 `verify.yml`，不运行或等待 unit、coverage、quality、integration、golden 或普通 CI；发布操作者须在创建正式标签前本地运行完整并行 unit。发布前精确要求 31 个输入（2 个 Python 分发物、inventory、9 个安装器、18 个目标证据、merged manifest），拒绝 missing/extra/basename collision，并排他复制到 flat asset 目录；`SHA256SUMS` 只写 basename，用户下载到同一目录后可直接执行校验。attestation 固定使用 `actions/attest-build-provenance` v4.2.2 的完整 SHA；该兼容 wrapper 内部使用 `actions/attest` v4.2.1，现有 `subject-path` 接口保持不变。稳定版只截取 `CHANGELOG_CN.md` 中与项目版本匹配的章节作为中文 Release Notes，不使用 GitHub 自动生成说明。
+- 推送与 `pyproject.toml` 版本一致的 `v*` tag 时，`release.yml` 把 tag peel 到完整 commit SHA，并以该 SHA 并行构建 wheel/sdist 和九目标冻结依赖；随后在构建期验证 inventory、merged dependency manifest、每目标 staged dependency manifest/CycloneDX SBOM、target evidence 与 attestation 输入。Release 不运行或等待普通 CI，发布操作者须在创建正式标签前本地运行完整并行 unit。发布前从构建清单与 release asset owner 读取 exact set，拒绝 missing/extra/basename collision；稳定版只把九个安装包和含九条记录的 `SHA256SUMS` 复制到公开目录。wheel、sdist、inventory、merged manifest、SBOM 与 target evidence 不进入公开下载接口。稳定版只截取 `CHANGELOG_CN.md` 中与项目版本匹配的章节作为中文 Release Notes，不使用 GitHub 自动生成说明。
 - `rolling-release.yml` 每日解析最新稳定版的九目标 full 依赖矩阵；源码或运行时 wheel 集合变化时，复用 `offline.yml` 的冻结 wheelhouse 构建并覆盖 `dependency-latest` prerelease。
 - `offline.yml` 会在固定 `macos-15` 上使用 CPython 3.11、3.12、3.13、3.14 矩阵构建 arm64 macOS tarball；四个包都先运行原生 verifier，再上传逐 Python 版本 artifact，缺少产物会直接令 job 失败。
 - 所有第三方 GitHub Actions 固定到完整 commit SHA；发布 job 才单独提升 `contents`、`id-token` 与 `attestations` 权限。
@@ -409,14 +409,14 @@ offline manifest schema 3 保留 `version`、`git_revision`、`built_at_utc`、`
 - reusable `package.yml` 从同一不可变 SHA 构建 wheel/sdist；完整 archive 必须与结构化预期一一对应：wheel 只允许源码 `paper_fetch`、唯一规范化 `dist-info` 的必需 metadata/`RECORD` 和声明的 static data-files；sdist 只允许唯一规范化 root、明确顶层构建/许可/README/PKG-INFO、源码、`egg-info` 和 skill。任何未知 top-level、`.data`、package/source/metadata member 都失败；两者分别安装到独立 venv，执行 CLI/import/MCP/resource/skill smoke。普通 CI 的 `verify.yml` 调用该 workflow 生成 Python distributions。
 - Ubuntu / Windows portable Mac contract gate，以及固定 `macos-15` arm64、CPython 3.14 的原生 cache-alias test + build + verifier gate；Windows / WSL 静态结果不能替代该 gate。
 
-`dependency-refresh.yml` 每周和手动运行 `uv lock --upgrade`、完整 unit 和漏洞审计，用于发现兼容范围内的新依赖问题，但不回写分支。稳定与滚动发布的临时解析工具同样使用 `pip>=26.1.2,<27`、`packaging>=26.2,<27`，允许兼容更新而不把工作流绑死在单个补丁版本。该门禁以 MCP 对外发布的 Draft 2020-12 output schema 验证 tool payload，不绑定 SDK 内部 model 表示；图片回归使用包含必需 IHDR 字段的 PNG fixture，避免宽松旧解析器掩盖无效测试输入。Live publisher/MCP、provider drift 与完整 golden corpus 不再配置 GitHub Actions workflow、schedule 或 dispatch，只保留下文记录的本地显式入口；依赖共享外部状态的 live 测试按设计使用 `-n 0` 串行运行，完整 golden corpus 继续复用项目并行配置。常规 CI 的原生 macOS Camoufox 准备会把 workflow 自带的只读 `github.token` 作为上游 CLI 已支持的 `GITHUB_TOKEN` 传入，避免 GitHub Releases 匿名 API 限额阻断 pinned runtime discovery；token 不写入 cache、artifact 或命令参数。`ci.yml` 只调用 reusable `verify.yml`，而普通 CI 与稳定发布各自通过它或直接调用 reusable `package.yml`；`offline.yml` 独立构建 Linux、macOS、Windows full 离线包，macOS 四个 ABI 固定在 `macos-15` 构建并运行原生 tar verifier。`release.yml` 只在稳定版本标签或显式手动发布时运行，在同一 run 并行构建 tagged SHA 的 Python distributions 与冻结九目标依赖，随后消费每目标实际 staging SBOM；它不调用或等待普通 CI。`prepare_release_assets.py` 对 31 个输入执行 exact-set/collision 检查、扁平化和 basename-only checksum，对文件强制同步并对受支持平台的目录项做 best-effort 同步，然后发布绑定同一 SHA 的不可变资产。Provider canary、普通 artifact、稳定/滚动 release asset 与 attestation/publication 都以 `scan_artifacts_for_secrets.py` 成功为前置条件；扫描覆盖 raw 与 URL-encoded sentinel，只报告变量名和路径。每个 workflow 扫描步骤通过 `--env-var` 精确列出自身注入的凭据，不会把 `PGPASSWORD` 等无关 hosted-runner 默认环境值自动纳入 artifact 匹配。所有第三方 actions 固定到完整 commit SHA，作为供应链身份锚点而不是包版本声明。
+`dependency-refresh.yml` 每周和手动运行 `uv lock --upgrade`、完整 unit 和漏洞审计，用于发现兼容范围内的新依赖问题，但不回写分支。稳定与滚动发布的临时解析工具同样使用 `pip>=26.1.2,<27`、`packaging>=26.2,<27`，允许兼容更新而不把工作流绑死在单个补丁版本。MCP 调用结果继续校验 structured_content，tools/list 不再发布 outputSchema；图片回归使用包含必需 IHDR 字段的 PNG fixture，避免宽松旧解析器掩盖无效测试输入。Live publisher/MCP、provider drift 与完整 golden corpus 不再配置 GitHub Actions workflow、schedule 或 dispatch，只保留下文记录的本地显式入口；依赖共享外部状态的 live 测试按设计使用 `-n 0` 串行运行，完整 golden corpus 继续复用项目并行配置。常规 CI 的原生 macOS Camoufox 准备会把 workflow 自带的只读 `github.token` 作为上游 CLI 已支持的 `GITHUB_TOKEN` 传入，避免 GitHub Releases 匿名 API 限额阻断 pinned runtime discovery；token 不写入 cache、artifact 或命令参数。`ci.yml` 只调用 reusable `verify.yml`，而普通 CI 与稳定发布各自通过它或直接调用 reusable `package.yml`；`offline.yml` 独立构建 Linux、macOS、Windows full 离线包，macOS 四个 ABI 固定在 `macos-15` 构建并运行原生 tar verifier。`release.yml` 只在稳定版本标签或显式手动发布时运行，在同一 run 并行构建 tagged SHA 的 Python distributions 与冻结九目标依赖，随后消费每目标实际 staging SBOM；它不调用或等待普通 CI。`prepare_release_assets.py` 对构建输入执行 exact-set/collision 检查；稳定发布只公开九个安装包与 `SHA256SUMS`，滚动预发布额外公开 `dependency-manifest.json`，wheel、sdist、inventory、SBOM 与 target evidence 仅在构建期验证。Provider canary、普通 artifact、稳定/滚动 release asset 与 attestation/publication 都以 `scan_artifacts_for_secrets.py` 成功为前置条件；扫描覆盖 raw 与 URL-encoded sentinel，只报告变量名和路径。每个 workflow 扫描步骤通过 `--env-var` 精确列出自身注入的凭据，不会把 `PGPASSWORD` 等无关 hosted-runner 默认环境值自动纳入 artifact 匹配。所有第三方 actions 固定到完整 commit SHA，作为供应链身份锚点而不是包版本声明。
 
 在 Windows / WSL 修改 Mac 相关范围时，先运行
 `uv run python scripts/validate_macos_adaptation.py`，再运行
 `scripts/test-macos-contract.ps1` 或 `scripts/test-macos-contract.sh`。
 `/mnt/*` 下的 WSL checkout 只提供 validator-only 证据；Mach-O、原生 Zsh、
-`xattr` 和 Gatekeeper 只能由原生 Mac gate 验证。完整同步上游流程见
-[`macos-adaptation-changes.md`](macos-adaptation-changes.md)。
+`xattr` 和 Gatekeeper 只能由原生 Mac gate 验证。证据边界见
+[`macos-adaptation-audit.md`](macos-adaptation-audit.md)。
 
 本地清理构建、测试缓存和 rollout 日志时可以用：
 
@@ -637,7 +637,7 @@ PAPER_FETCH_RUN_FULL_GOLDEN=1 PYTHONPATH=src uv run python -m pytest tests/integ
 
 未设置 `PAPER_FETCH_RUN_LIVE=1` 时，`tests/live/test_live_publishers.py` 和 `tests/live/test_live_mcp.py` 应稳定 skip。额外验证 live 时，`arxiv` 不需要 browser runtime；包括 `ams` 在内的 browser-backed provider 先按静态报告中的 `browser_runtime.available` 检查本地能力，再启动 Camoufox 做真实页面预检。pytest 隔离 XDG data/runtime、通用 profile 和所有 provider storage-state；Camoufox 的 browser bundle、版本元数据、字体和默认 addon 则复用隔离前由官方包管理器确认的 dependency cache，避免 live/MCP 子进程重复下载 runtime。每家 provider 的状态仍写入临时 `<provider>-camoufox/storage-state.json`，不会进入该共享 dependency cache。
 
-publisher catalog 不是宽松的全文 smoke：每个已执行样本都请求 `asset_profile=body` 并按默认 provider-policy 要求 `acceptance.overall=complete`，同时写出 `live-acceptance.json`。无论 preflight/fetch 成功或失败，每个 provider 都先追加 terminal record，因此 ACS 等失败不会从 19 家主报告消失；JSON 会区分 catalog 总数、已记录 provider、未记录 provider、已记录结果是否全 complete，以及全 catalog 是否全部执行并 complete。每个 provider 还记录 preflight/fetch wall time、browser/DOM readiness/HTTP/asset/retry 分段、导航数、preflight reuse，以及不含 URL 的逐资产 phase/status 聚合。需要离线或 full-size 验收时，另以公开的两个严格布尔约束运行并读取同一 v2 acceptance。PNAS 在同一进程内执行当前 benchmark DOI/landing target 的 preflight 后正式 fetch，硬性要求 reuse hit、总 HTML 导航一次、HTML source 成功且 body 资产验收 complete；preflight+fetch 的 45 秒目标仅产生性能告警，不因一次外网抖动失败。MCP live 另在同一 server session 内覆盖相同链路，并写 `pnas-mcp-preflight-reuse.json`。challenge/no-access skip 不会被伪装为全量完成。只有机器可读的 preflight `challenge` / `auth_required`、fetch/MCP `status=no_access`，或成功 metadata fallback 中仅由 `ProviderFailure(NO_ACCESS)` 产生的 `route:provider_candidate_*_access_boundary_stop` 精确 marker，才按合法访问边界 skip；解析失败、空壳、正文不足和其它未知错误仍是 hard failure。AIP 五次 fresh-profile 冷启动在进入重复试验前复用同一 provider preflight 结果，但 AIP HTML/cookie 不跨 `RuntimeContext` 复用；托管 runner 已被站点挑战时不会制造五个重复失败。非 challenge/auth/cancelled 的 preflight 失败必须保留可读取的隐私安全诊断 artifact，否则测试本身失败。Live fixture 的环境 mapping repr 不显示值；JUnit、acceptance、diagnostics 和待上传目录必须先通过 sentinel 扫描。live 测试依赖共享外部状态和 Camoufox 线程边界，必须串行运行；JUnit 使用与 `record_property` 兼容的 legacy family：
+publisher catalog 不是宽松的全文 smoke：每个已执行样本都请求 `asset_profile=body` 并按默认 provider policy 要求 `acceptance.overall=complete`，同时写出 `live-acceptance.json`。无论 preflight/fetch 成功或失败，每个 provider 都先追加 terminal record；JSON 从动态 catalog 计算总数、已记录/未记录 provider、已记录结果是否全 complete，以及全 catalog 是否全部执行并 complete。每个 provider 还记录 preflight/fetch wall time、browser/DOM readiness/HTTP/asset/retry 分段、导航数、preflight reuse，以及不含 URL 的逐资产 phase/status 聚合。需要离线或 full-size 验收时，另以公开的两个严格布尔约束运行并读取同一 v2 acceptance。PNAS 在同一进程内执行当前 benchmark DOI/landing target 的 preflight 后正式 fetch，硬性要求 reuse hit、总 HTML 导航一次、HTML source 成功且 body 资产验收 complete；preflight+fetch 的性能目标只产生告警，不因一次外网抖动失败。MCP live 在同一 server session 内覆盖相同链路。challenge/no-access skip 不会被伪装为全量完成；只有机器可读的 preflight `challenge` / `auth_required`、fetch/MCP `status=no_access`，或成功 metadata fallback 中仅由 `ProviderFailure(NO_ACCESS)` 产生的精确 access-boundary marker，才按合法访问边界 skip。解析失败、空壳、正文不足和其它未知错误仍是 hard failure。非 challenge/auth/cancelled 的 preflight 失败必须保留可读取的隐私安全诊断 artifact。Live fixture 的环境 mapping repr 不显示值；JUnit、acceptance、diagnostics 和待上传目录必须先通过 sentinel 扫描。live 测试依赖共享外部状态和 Camoufox 线程边界，必须串行运行；JUnit 使用与 `record_property` 兼容的 legacy family：
 
 ```bash
 PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_LIVE_ARTIFACT_DIR=artifacts/live-publishers \

@@ -20,7 +20,7 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from _structured_errors import ToolError, emit_error, error_payload  # noqa: E402
-from paper_fetch.markdown_quality import (  # noqa: E402
+from paper_fetch_devtools.markdown_quality import (  # noqa: E402
     PENDING_STATUS,
     blocking_markdown_quality_issues,
     validate_markdown_quality_report,
@@ -408,6 +408,67 @@ def build_review(
     }
 
 
+def finalize_review(
+    *,
+    root: Path,
+    provider: str,
+    manifest_path: Path,
+    reviewed_by: str,
+    confirmed_final_quality: bool,
+) -> dict[str, Any]:
+    """Mechanically validate current fixture artifacts and write final signoff data."""
+
+    if not confirmed_final_quality:
+        raise ToolError(
+            "FINAL_MARKDOWN_REVIEW_NOT_CONFIRMED",
+            "Final Markdown review requires explicit --confirmed-final-quality.",
+            retryable=False,
+            provider=provider,
+            manifest=manifest_path.as_posix(),
+            task_id=f"{provider}-finalize-review-artifact",
+            details={"required_flag": "--confirmed-final-quality"},
+        )
+    review = build_review(
+        root=root,
+        provider=provider,
+        manifest_path=manifest_path,
+    )
+    blocking = [
+        {
+            "doi": fixture["doi"],
+            "issues": fixture["issues"],
+        }
+        for fixture in review["fixtures"]
+        if fixture["issues"]
+    ]
+    if blocking:
+        raise ToolError(
+            "MARKDOWN_QUALITY_FAILED",
+            "Final review cannot be signed while fixture contract or quality issues remain.",
+            retryable=True,
+            provider=provider,
+            manifest=manifest_path.as_posix(),
+            task_id=f"{provider}-finalize-review-artifact",
+            details={"fixtures": blocking},
+        )
+    now = review["reviewed_at"]
+    review["reviewed_by"] = reviewed_by
+    for fixture in review["fixtures"]:
+        fixture["review_notes"] = (
+            f"Final Markdown quality review confirmed by {reviewed_by}; "
+            "current contract, quality report, and artifact digests verified."
+        )
+        fixture["markdown_semantic_reviewed"] = True
+    review["final_markdown_quality_review"] = {
+        "confirmed": True,
+        "confirmed_by": reviewed_by,
+        "confirmed_at": now,
+        "method": "bootstrap-review-artifact",
+        "fixture_count": len(review["fixtures"]),
+    }
+    return review
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Bootstrap a provider Markdown review artifact from manifest fixtures."
@@ -422,6 +483,21 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--force", action="store_true", help="overwrite an existing review artifact"
     )
+    parser.add_argument(
+        "--finalize",
+        action="store_true",
+        help="validate current fixture quality and write final review signoff",
+    )
+    parser.add_argument(
+        "--confirmed-final-quality",
+        action="store_true",
+        help="required with --finalize after the operator completes semantic review",
+    )
+    parser.add_argument(
+        "--reviewed-by",
+        default="operator",
+        help="reviewer recorded by --finalize (default: operator)",
+    )
     return parser
 
 
@@ -435,7 +511,7 @@ def main(argv: list[str] | None = None) -> int:
         manifest_path = root / manifest_path
     output_path = root / "onboarding" / "reviews" / f"{provider}.yml"
     try:
-        if output_path.exists() and not args.force:
+        if output_path.exists() and not args.force and not args.finalize:
             print(
                 json.dumps(
                     {
@@ -448,7 +524,21 @@ def main(argv: list[str] | None = None) -> int:
                 )
             )
             return 0
-        review = build_review(root=root, provider=provider, manifest_path=manifest_path)
+        review = (
+            finalize_review(
+                root=root,
+                provider=provider,
+                manifest_path=manifest_path,
+                reviewed_by=str(args.reviewed_by),
+                confirmed_final_quality=bool(args.confirmed_final_quality),
+            )
+            if args.finalize
+            else build_review(
+                root=root,
+                provider=provider,
+                manifest_path=manifest_path,
+            )
+        )
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(
             yaml.safe_dump(review, allow_unicode=True, sort_keys=False),
@@ -483,7 +573,7 @@ def main(argv: list[str] | None = None) -> int:
     print(
         json.dumps(
             {
-                "status": "OK",
+                "status": "FINALIZED" if args.finalize else "OK",
                 "provider": provider,
                 "review_path": output_path.relative_to(root).as_posix(),
                 "fixture_count": len(review["fixtures"]),

@@ -2,7 +2,6 @@ schema_version: 2
 provider: aip
 manifest: onboarding/manifests/aip.yml
 artifact: onboarding/cleaning-chain-proposals/aip.yml
-evidence_artifact: onboarding/cleaning-chain-proposals/aip.evidence.yml
 fixtures_digest:
 - purpose: structure
   doi: 10.1063/5.0129134
@@ -320,5 +319,5 @@ token_conflict_summary:
   - Share
   - excitation
 notes:
-- Compact proposal for implementation worker; full evidence is in evidence_artifact.
+- Compact fixture-derived cleaning proposal.
 - sentinel and cross_route_guard contract deltas are warnings, not blockers.

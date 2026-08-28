@@ -2,7 +2,6 @@ schema_version: 2
 provider: arxiv
 manifest: onboarding/manifests/arxiv.yml
 artifact: onboarding/cleaning-chain-proposals/arxiv.yml
-evidence_artifact: onboarding/cleaning-chain-proposals/arxiv.evidence.yml
 fixtures_digest:
 - purpose: structure
   doi: 10.48550/arxiv.2605.06663v1
@@ -281,5 +280,5 @@ token_conflict_summary:
   - shared experts (
   - shared), with
 notes:
-- Compact proposal for implementation worker; full evidence is in evidence_artifact.
+- Compact fixture-derived cleaning proposal.
 - sentinel and cross_route_guard contract deltas are warnings, not blockers.

@@ -57,9 +57,8 @@
 主要在 Windows / WSL 开发、但会改 Unix 安装器、离线发布、平台目录、公式工具
 或 Camoufox / Playwright 边界的维护者，还应继续阅读：
 
-7. [`macos-adaptation-changes.md`](macos-adaptation-changes.md)
-8. [`macos-adaptation-audit.md`](macos-adaptation-audit.md)
-9. [`macos-adaptation-contract.toml`](macos-adaptation-contract.toml)
+7. [`macos-adaptation-audit.md`](macos-adaptation-audit.md)
+8. [`macos-adaptation-contract.toml`](macos-adaptation-contract.toml)
 
 ## 文档分工
 
@@ -69,6 +68,8 @@
   - 英文公共变更历史。记录对用户可见的新能力、限制和迁移提示。
 - [`../CHANGELOG_CN.md`](../CHANGELOG_CN.md)
   - 中文公共变更历史对照版。
+- [`migration-v6.md`](migration-v6.md)
+  - 6.0 的 provider capability、MCP schema、兼容入口与 devtool 破坏性迁移说明。
 - [`../AGENTS.md`](../AGENTS.md)
   - 贡献者与 agent 协作约定。描述本仓库默认语言、测试和开发边界。
 - [`cli.md`](cli.md)
@@ -84,25 +85,21 @@
 - [`publisher-performance-image-quality-20260826.md`](publisher-performance-image-quality-20260826.md)
   - 归档 19 家资源链路优化、四家 strict/full-size 三轮结果、并发 benchmark、保留/撤回决策及尚未通过的 Wiley/AIP live 门槛。
 - [`onboarding/README.md`](../onboarding/README.md)
-  - 普通用户入口和 authority index。AI/coordinator provider 行为事实源是 [`coordinator-spec.md`](../onboarding/coordinator-spec.md)、[`provider-manifest.md`](../onboarding/provider-manifest.md)、[`provider-manifest.schema.json`](../onboarding/provider-manifest.schema.json)、[`agent-task-brief.md`](../onboarding/agent-task-brief.md)、[`hard-constraints.md`](../onboarding/hard-constraints.md)、[`acceptance.md`](../onboarding/acceptance.md) 和 run records，不从 README 推断。
+  - Provider manifest、访问审核、fixture、scaffold、review、sync-back 与确定性本地验收入口。
 - [`extraction-rules.md`](extraction-rules.md)
   - 讲当前提取 / 组装 / 渲染规则、真实样本证据和对应测试，不负责运行时路由和部署说明。
   - 修改后运行 `python3 scripts/validate_extraction_rules.py` 校验 anchor、Owner、fixture、测试名、manifest 引用和未挂规则 fixture 清单。
 - [`deployment.md`](deployment.md)
   - 讲安装、配置入口、MCP 注册、更新和最小验证。
   - 讲 Wiley / Science / PNAS / AMS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI / Taylor & Francis Online 的 repo-local 浏览器工作流、本地 `scripts/dev-preflight.sh` 门禁和 CI 测试耗时信号。
-- [`macos-adaptation-changes.md`](macos-adaptation-changes.md)
-  - 记录基于上游 v4.1.0 的 Mac 差异、用户可见边界、不可变标签与受信任 tooling overlay 策略，以及以后从 Windows / WSL 在最新 `upstream/main` 上重放独立适配提交的流程。
 - [`macos-adaptation-audit.md`](macos-adaptation-audit.md)
-  - 用稳定 case ID 区分 Ubuntu / Windows portable gate、WSL 和原生 macOS 证据，明确 Mach-O、原生 Zsh、xattr、Gatekeeper、cache alias 与真正断网 Camoufox launch 的边界。
+  - 说明 macOS 支持矩阵、安全不变量，以及 Windows / Linux / WSL portable 证据与原生 macOS 证据的区别。
 - [`macos-adaptation-contract.toml`](macos-adaptation-contract.toml)
   - Mac 适配的机器可读事实源；修改 Unix 安装、离线构建/验证、平台目录、公式工具、Camoufox / Playwright 边界或 release CI 时必须同步 validator、测试和人类文档。
 - [`architecture/overview.md`](architecture/overview.md)
   - 讲当前系统分层、端到端业务流程、数据契约和扩展点。
 - [`architecture/probe-semantics.md`](architecture/probe-semantics.md)
   - 讲 `has_fulltext()` 的 probe 语义与边界。
-- [`architecture/fixture-size-baseline.md`](architecture/fixture-size-baseline.md)
-  - 记录 tracked fixture 体积治理基线，并区分本地 ignored 杂物和需要评估的 fixture 体积问题。
 
 ## 术语表
 

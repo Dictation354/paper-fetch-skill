@@ -10,7 +10,7 @@ from collections.abc import Mapping
 from unittest import mock
 
 from paper_fetch.http import RequestFailure
-from paper_fetch.quality.issues import collect_issue_flags
+from paper_fetch_devtools.quality_issues import collect_issue_flags
 from paper_fetch.extraction.html import assets as html_assets
 from paper_fetch.extraction.image_payloads import image_mime_type_from_bytes
 from paper_fetch.providers import (

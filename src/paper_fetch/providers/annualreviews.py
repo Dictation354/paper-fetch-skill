@@ -20,6 +20,7 @@ from ..reason_codes import PDF_FALLBACK
 from ..runtime import RuntimeContext
 from ..utils import empty_asset_results, normalize_text
 from . import _annualreviews_html, browser_workflow
+from ._pdf_candidates import build_direct_pdf_candidates
 from ._registry import ProviderBundle, register_provider_bundle
 from .base import RawFulltextPayload
 
@@ -49,8 +50,6 @@ register_provider_bundle(
             ),
             pdf_path_templates=("/doi/pdf/{doi}",),
             crossref_pdf_position=0,
-            requires_playwright=True,
-            requires_browser_runtime=True,
             body_text_thresholds=BodyTextThresholds(min_chars=1200),
             routes=(
                 ProviderRouteSpec(name="metadata", kind="metadata"),
@@ -167,10 +166,10 @@ class AnnualreviewsClient(browser_workflow.BrowserWorkflowClient):
         source_url = normalize_text(
             str(metadata.get("landing_page_url") or "")
         ) or _annualreviews_html.direct_article_url(normalized_doi)
-        return _annualreviews_html.pdf_candidate_urls(
+        return build_direct_pdf_candidates(
             metadata,
             source_url=source_url,
-            doi=normalized_doi,
+            direct_pdf_url=_annualreviews_html.direct_pdf_url(normalized_doi),
         )
 
     def extract_markdown(

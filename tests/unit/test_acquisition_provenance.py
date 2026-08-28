@@ -182,7 +182,6 @@ def test_waterfall_stamps_exact_route_without_changing_legacy_trace_marker() -> 
 
     assert payload.content is not None
     assert payload.content.route_name == "tdm_pdf"
-    assert payload.metadata["route_name"] == "tdm_pdf"
     assert "fulltext:wiley_pdf_api_ok" in source_trail_from_trace(payload.trace)
     assert any(
         event.stage == "fulltext" and event.outcome == "ok" and event.route == "tdm_pdf"

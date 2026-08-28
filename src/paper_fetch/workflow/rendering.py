@@ -10,6 +10,7 @@ from typing import Any
 from collections.abc import Callable, Mapping
 
 from ..artifacts import ArtifactStore
+from ..extraction.html.asset_fields import MARKDOWN_ASSET_REFERENCE_FIELDS
 from ..markdown.images import render_markdown_image
 from ..models import ArticleModel, FetchEnvelope, OutputMode, RenderOptions
 from ..models.markdown import (
@@ -141,18 +142,7 @@ def _local_asset_lookups(
         if relative_path is None:
             continue
         candidates: set[str] = set()
-        for field in (
-            "path",
-            "url",
-            "original_url",
-            "download_url",
-            "source_url",
-            "source_path",
-            "source_href",
-            "preview_url",
-            "full_size_url",
-            "link",
-        ):
+        for field in MARKDOWN_ASSET_REFERENCE_FIELDS:
             candidates |= image_reference_candidates(_asset_field(asset, field))
         for candidate in candidates:
             value = (relative_path, asset)

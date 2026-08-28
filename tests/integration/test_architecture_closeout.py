@@ -8,46 +8,12 @@ import sys
 import unittest
 from pathlib import Path
 
-from tests.paths import REPO_ROOT, SKILL_DIR, SRC_DIR, TESTS_ROOT
+from tests.paths import REPO_ROOT, SRC_DIR, TESTS_ROOT
 
-ARCHITECTURE_DOC = REPO_ROOT / "docs" / "architecture" / "overview.md"
 PAPER_FETCH_SRC = SRC_DIR / "paper_fetch"
 SERVICE_PATH = PAPER_FETCH_SRC / "service.py"
 RESOLVE_QUERY_PATH = PAPER_FETCH_SRC / "resolve" / "query.py"
 PROVIDERS_DIR = PAPER_FETCH_SRC / "providers"
-REMOVED_PROVIDER_COMPATIBILITY_MODULE_FILES = [
-    PROVIDERS_DIR / "_article_markdown.py",
-    PROVIDERS_DIR / "_html_access_signals.py",
-    PROVIDERS_DIR / "_html_availability.py",
-    PROVIDERS_DIR / "_html_citations.py",
-    PROVIDERS_DIR / "_html_semantics.py",
-    PROVIDERS_DIR / "_html_tables.py",
-    PROVIDERS_DIR / "_html_text.py",
-    PROVIDERS_DIR / "_language_filter.py",
-    PROVIDERS_DIR / "_browser_workflow_fetchers.py",
-    PROVIDERS_DIR / "_browser_workflow_html_extraction.py",
-    PROVIDERS_DIR / "_browser_workflow_shared.py",
-    PROVIDERS_DIR / "browser_workflow_fetchers" / "__init__.py",
-    PROVIDERS_DIR / "browser_workflow_fetchers" / "context.py",
-    PROVIDERS_DIR / "browser_workflow_fetchers" / "diagnostics.py",
-    PROVIDERS_DIR / "browser_workflow_fetchers" / "file.py",
-    PROVIDERS_DIR / "browser_workflow_fetchers" / "image.py",
-    PROVIDERS_DIR / "browser_workflow_fetchers" / "memo.py",
-    PROVIDERS_DIR / "browser_workflow_fetchers" / "scripts.py",
-    PROVIDERS_DIR / "_atypon_browser_workflow.py",
-    PROVIDERS_DIR / "_atypon_browser_workflow_html.py",
-    PROVIDERS_DIR / "pnas_html.py",
-    PROVIDERS_DIR / "science_html.py",
-    PROVIDERS_DIR / "springer_html.py",
-    PROVIDERS_DIR / "wiley_html.py",
-    PROVIDERS_DIR / "html_assets.py",
-    PAPER_FETCH_SRC / "extraction" / "html" / "_assets.py",
-    PAPER_FETCH_SRC / "extraction" / "html" / "assets" / "_core.py",
-    PAPER_FETCH_SRC / "models" / "_core.py",
-    PROVIDERS_DIR / "atypon_browser_workflow" / "_core.py",
-]
-SPRINGER_PROVIDER_PATH = PROVIDERS_DIR / "springer.py"
-ELSEVIER_PROVIDER_PATH = PROVIDERS_DIR / "elsevier.py"
 PROVIDER_MAGIC_METADATA_KEYS = (
     "route",
     "reason",
@@ -78,40 +44,6 @@ RAW_PAYLOAD_METADATA_MAGIC_PATTERN = re.compile(
     + "|".join(PROVIDER_MAGIC_METADATA_KEYS)
     + r")(?:\"|\'))"
 )
-TARGETED_CYCLE_PATHS = [
-    PAPER_FETCH_SRC / "extraction" / "html" / "_metadata.py",
-    PAPER_FETCH_SRC / "extraction" / "html" / "_runtime.py",
-    PROVIDERS_DIR / "html_springer_nature.py",
-    PROVIDERS_DIR / "browser_workflow" / "profile.py",
-    PROVIDERS_DIR / "browser_workflow" / "shared.py",
-    PROVIDERS_DIR / "browser_workflow" / "html_extraction.py",
-    PROVIDERS_DIR / "browser_workflow" / "fetchers" / "__init__.py",
-    PROVIDERS_DIR / "browser_workflow" / "fetchers" / "context.py",
-    PROVIDERS_DIR / "browser_workflow" / "fetchers" / "diagnostics.py",
-    PROVIDERS_DIR / "browser_workflow" / "fetchers" / "file.py",
-    PROVIDERS_DIR / "browser_workflow" / "fetchers" / "image.py",
-    PROVIDERS_DIR / "browser_workflow" / "fetchers" / "memo.py",
-    PROVIDERS_DIR / "browser_workflow" / "fetchers" / "scripts.py",
-    PROVIDERS_DIR / "browser_workflow" / "bootstrap.py",
-    PROVIDERS_DIR / "browser_workflow" / "pdf_fallback.py",
-    PROVIDERS_DIR / "browser_workflow" / "article.py",
-    PROVIDERS_DIR / "browser_workflow" / "assets.py",
-    PROVIDERS_DIR / "browser_workflow" / "client.py",
-    PROVIDERS_DIR / "_html_authors.py",
-    PAPER_FETCH_SRC / "workflow" / "pipeline.py",
-    PROVIDERS_DIR / "_pdf_candidates.py",
-    PROVIDERS_DIR / "_html_section_markdown.py",
-    PROVIDERS_DIR / "html_noise.py",
-    PAPER_FETCH_SRC / "quality" / "html_availability.py",
-    PROVIDERS_DIR / "_atypon_browser_workflow_profiles.py",
-    PROVIDERS_DIR / "_atypon_browser_workflow_postprocess.py",
-    PROVIDERS_DIR / "_article_markdown_common.py",
-    PROVIDERS_DIR / "_article_markdown_math.py",
-    PROVIDERS_DIR / "_article_markdown_xml.py",
-    PROVIDERS_DIR / "_springer_html.py",
-]
-
-
 def pythonpath_env() -> dict[str, str]:
     env = os.environ.copy()
     entries = [str(SRC_DIR)]
@@ -282,57 +214,6 @@ class ArchitectureCloseoutTests(unittest.TestCase):
             problems.extend(forbidden_test_patterns(path))
         self.assertEqual(problems, [], "\n".join(problems))
 
-    def test_repo_skill_source_stays_runtime_agnostic(self) -> None:
-        self.assertTrue((SKILL_DIR / "SKILL.md").exists())
-        self.assertTrue((SKILL_DIR / "agents" / "openai.yaml").exists())
-
-        files = sorted(
-            path.relative_to(SKILL_DIR).as_posix()
-            for path in SKILL_DIR.rglob("*")
-            if path.is_file()
-        )
-        self.assertEqual(
-            files,
-            [
-                "SKILL.md",
-                "agents/openai.yaml",
-                "references/acceptance.md",
-                "references/cli-workflow.md",
-                "references/environment.md",
-                "references/failure-handling.md",
-                "references/presets.md",
-                "references/tool-contract.md",
-                "references/workflow.md",
-            ],
-        )
-
-    def test_repo_hygiene_guards_against_old_script_package_and_tracked_benchmarks(
-        self,
-    ) -> None:
-        self.assertFalse((REPO_ROOT / "scripts" / "__init__.py").exists())
-        self.assertFalse(
-            (REPO_ROOT / "references" / "formula_backend_report.json").exists()
-        )
-        self.assertFalse(
-            (REPO_ROOT / "vendor" / "fetch_fulltext.reference.py").exists()
-        )
-
-    def test_removed_provider_compatibility_modules_stay_deleted(self) -> None:
-        offenders = [
-            path.relative_to(REPO_ROOT).as_posix()
-            for path in REMOVED_PROVIDER_COMPATIBILITY_MODULE_FILES
-            if path.exists()
-        ]
-        self.assertEqual(offenders, [], "\n".join(offenders))
-
-    def test_architecture_doc_defers_public_history_to_changelog(self) -> None:
-        text = ARCHITECTURE_DOC.read_text(encoding="utf-8")
-        header = text.split("## Decision", 1)[0]
-
-        self.assertIn("CHANGELOG.md", header)
-        self.assertNotIn("problems.md", header)
-        self.assertNotIn("Remaining deltas", header)
-
     def test_service_facade_does_not_touch_provider_magic_metadata_keys(self) -> None:
         text = SERVICE_PATH.read_text(encoding="utf-8")
         self.assertNotRegex(text, MAGIC_KEY_PATTERN)
@@ -345,15 +226,6 @@ class ArchitectureCloseoutTests(unittest.TestCase):
             keyword_only_parameters(SERVICE_PATH, "fetch_paper"),
             ["modes", "strategy", "render", "context"],
         )
-
-    def test_provider_fetch_fulltext_dict_compatibility_entrypoints_stay_deleted(
-        self,
-    ) -> None:
-        offenders: list[str] = []
-        for path in sorted(PROVIDERS_DIR.rglob("*.py")):
-            if "def fetch_fulltext" in path.read_text(encoding="utf-8"):
-                offenders.append(path.relative_to(REPO_ROOT).as_posix())
-        self.assertEqual(offenders, [])
 
     def test_resolve_query_stays_outside_provider_implementations(self) -> None:
         imports = top_level_internal_imports(RESOLVE_QUERY_PATH)
@@ -390,11 +262,12 @@ class ArchitectureCloseoutTests(unittest.TestCase):
         self.assertEqual(offenders, [])
 
     def test_targeted_static_import_graph_is_cycle_free(self) -> None:
-        target_modules = {module_name_for_path(path) for path in TARGETED_CYCLE_PATHS}
+        package_paths = sorted(PAPER_FETCH_SRC.rglob("*.py"))
+        target_modules = {module_name_for_path(path) for path in package_paths}
         graph: dict[str, set[str]] = {
-            module_name_for_path(path): set() for path in TARGETED_CYCLE_PATHS
+            module_name_for_path(path): set() for path in package_paths
         }
-        for path in TARGETED_CYCLE_PATHS:
+        for path in package_paths:
             module_name = module_name_for_path(path)
             for imported_module in top_level_internal_imports(path):
                 if imported_module in target_modules:

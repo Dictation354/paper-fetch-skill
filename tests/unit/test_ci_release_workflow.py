@@ -391,7 +391,7 @@ def test_stable_release_validates_and_flattens_the_exact_asset_set() -> None:
     assert "find release-assets -type f ! -name SHA256SUMS" not in workflow
 
     rolling = _workflow_text("rolling-release.yml")
-    assert "scripts/prepare_release_assets.py checksum-offline" in rolling
+    assert "scripts/prepare_release_assets.py prepare-rolling" in rolling
 
 
 def test_release_build_jobs_check_out_the_verified_tag_commit() -> None:

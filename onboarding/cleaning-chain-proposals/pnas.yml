@@ -2,7 +2,6 @@ schema_version: 2
 provider: pnas
 manifest: onboarding/manifests/pnas.yml
 artifact: onboarding/cleaning-chain-proposals/pnas.yml
-evidence_artifact: onboarding/cleaning-chain-proposals/pnas.evidence.yml
 fixtures_digest:
 - purpose: structure
   doi: 10.1073/pnas.2309123120
@@ -329,5 +328,5 @@ token_conflict_summary:
   - neurons in mice with noise-induced tinnitus-related behaviors. Importantly, chemogenetic
     inhibition of 5-HT
 notes:
-- Compact proposal for implementation worker; full evidence is in evidence_artifact.
+- Compact fixture-derived cleaning proposal.
 - sentinel and cross_route_guard contract deltas are warnings, not blockers.

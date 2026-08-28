@@ -1,4 +1,5 @@
 {
+  "$schema": "../../../quality/fixture-manifest.schema.json",
   "samples": {
     "10.48550_arxiv.1406.2661v1": {
       "doi": "10.48550/arxiv.1406.2661v1",

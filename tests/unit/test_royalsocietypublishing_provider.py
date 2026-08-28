@@ -109,7 +109,10 @@ def test_provider_bundle_round_trip() -> None:
 
 def test_provider_catalog_is_readable() -> None:
     assert PROVIDER_CATALOG["royalsocietypublishing"].name == "royalsocietypublishing"
-    assert PROVIDER_CATALOG["royalsocietypublishing"].requires_browser_runtime is True
+    assert any(
+        route.browser_required or route.browser_optional
+        for route in PROVIDER_CATALOG["royalsocietypublishing"].routes
+    )
 
 
 def test_article_html_route_uses_browser_doi_candidate_without_xml_route() -> None:

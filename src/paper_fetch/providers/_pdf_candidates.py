@@ -9,6 +9,7 @@ from typing import Any
 from collections.abc import Mapping
 
 from ..extraction.html.parsing import choose_parser
+from ..extraction.html._metadata import raw_html_meta_values
 from ..extraction.html.ui_tokens import DOWNLOAD_PDF_LABEL
 from ..http import is_pdf_content_type
 from ..provider_catalog import (
@@ -95,6 +96,26 @@ def extract_pdf_url_from_metadata_links(metadata: Mapping[str, Any]) -> str | No
         ) or is_pdf_content_type(content_type):
             return url
     return None
+
+
+def build_direct_pdf_candidates(
+    metadata: Mapping[str, Any],
+    *,
+    source_url: str,
+    direct_pdf_url: str,
+) -> list[str]:
+    candidates: list[str] = []
+    for value in raw_html_meta_values(metadata, "citation_pdf_url"):
+        candidates.append(urllib.parse.urljoin(source_url, value))
+    for item in metadata.get("fulltext_links") or ():
+        if not isinstance(item, Mapping):
+            continue
+        url = normalize_text(str(item.get("url") or ""))
+        content_type = normalize_text(str(item.get("content_type") or "")).lower()
+        if url and ("pdf" in content_type or "pdf" in url.lower()):
+            candidates.append(urllib.parse.urljoin(source_url, url))
+    candidates.append(direct_pdf_url)
+    return list(dict.fromkeys(candidate for candidate in candidates if candidate))
 
 
 def looks_like_browser_workflow_pdf_url(url: str | None) -> bool:

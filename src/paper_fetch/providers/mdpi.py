@@ -41,8 +41,6 @@ register_provider_bundle(
             client_factory_path="paper_fetch.providers.mdpi:MdpiClient",
             status_order=10,
             base_domains=("www.mdpi.com",),
-            requires_playwright=True,
-            requires_browser_runtime=True,
             routes=(
                 ProviderRouteSpec(name="metadata", kind="metadata"),
                 ProviderRouteSpec(

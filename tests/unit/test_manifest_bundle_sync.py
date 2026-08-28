@@ -93,19 +93,6 @@ def test_manifest_routing_probe_asset_and_source_match_provider_bundle(
         tuple(probe["env_requirements"]),
         catalog.env_requirements,
     )
-    assert_synced(
-        case,
-        "probe.requires_playwright",
-        probe["requires_playwright"],
-        catalog.requires_playwright,
-    )
-    assert_synced(
-        case,
-        "probe.requires_browser_runtime",
-        probe["requires_browser_runtime"],
-        catalog.requires_browser_runtime,
-    )
-
     display_source = str(manifest["display_source"])
     assert source_is_registered_or_placeholder(display_source, case.bundle), (
         drift_message(

@@ -34,7 +34,7 @@ from paper_fetch.runtime import RuntimeContext
 from paper_fetch.tracing import trace_event
 from tests.paths import REPO_ROOT, SKILL_DIR
 
-from ._mcp_support import sample_envelope, validate_mcp_tool_output_schema
+from ._mcp_support import sample_envelope, assert_mcp_tool_omits_output_schema
 
 
 class RecordingContext:
@@ -172,7 +172,7 @@ def test_batch_fetch_preserves_input_order_and_completion_metadata_with_bounded_
         "batch_fetch terminalized (terminal=2, not_scheduled=0)",
     )
     assert {update[0] for update in ctx.progress[1:-1]} == {1, 2}
-    validate_mcp_tool_output_schema(build_server(), "batch_fetch", payload)
+    assert_mcp_tool_omits_output_schema(build_server(), "batch_fetch", payload)
 
 
 def test_single_and_batch_fetch_share_compact_acceptance_projection() -> None:
@@ -855,9 +855,6 @@ def test_batch_fetch_archive_returns_hash_path_and_scoped_resource_uri(
         assert len(artifact["sha256"]) == 64
         assert artifact["verification_status"] == "verified"
         assert {"route", "failure_code"} <= set(artifact)
-        schema = build_server()._tool_manager._tools["batch_fetch"].output_schema or {}
-        advertised = set(schema["$defs"]["BatchFetchArtifactOutput"]["properties"])
-        assert set(artifact) <= advertised
         assert item["resource_uri"].startswith("resource://paper-fetch/cached-dir/")
         assert artifact["resource_uri"] == item["resource_uri"]
     names = {path.name for path in tmp_path.iterdir()}

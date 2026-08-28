@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-import re
 import urllib.parse
 from typing import Any
 from collections.abc import Mapping
 
-from ..asset_fields import FULL_SIZE_IMAGE_ATTRS, PREVIEW_IMAGE_ATTRS
+from ..asset_fields import (
+    FULL_SIZE_IMAGE_ATTRS,
+    PREVIEW_IMAGE_ATTRS,
+    best_url_from_srcset,
+)
 from ..ui_tokens import SPRINGER_FULL_SIZE_IMAGE_LABEL
 from ....models import normalize_text
 from ....quality.reason_codes import CLOUDFLARE_CHALLENGE
@@ -123,33 +126,6 @@ def preview_dimensions_are_acceptable(width: int | None, height: int | None) -> 
     )
 
 
-def _first_url_from_srcset(value: str | None) -> str:
-    srcset = normalize_text(value)
-    if not srcset:
-        return ""
-    best_url = ""
-    best_score = -1.0
-    for raw_part in srcset.split(","):
-        part = raw_part.strip()
-        if not part:
-            continue
-        pieces = part.split()
-        url = pieces[0].strip()
-        score = 0.0
-        for descriptor in pieces[1:]:
-            match = re.match(
-                r"^([0-9]+(?:\.[0-9]+)?)(w|x)$", descriptor.strip().lower()
-            )
-            if not match:
-                continue
-            multiplier = 1000.0 if match.group(2) == "x" else 1.0
-            score = max(score, float(match.group(1)) * multiplier)
-        if score >= best_score:
-            best_url = url
-            best_score = score
-    return best_url
-
-
 def _soup_attr_url(tag: Any, *attrs: str) -> str:
     if not isinstance(tag, Tag):
         return ""
@@ -158,7 +134,7 @@ def _soup_attr_url(tag: Any, *attrs: str) -> str:
         if not raw:
             continue
         if attr.endswith("srcset"):
-            candidate = _first_url_from_srcset(attr_text(raw))
+            candidate = best_url_from_srcset(attr_text(raw))
         else:
             candidate = attr_text(raw)
         if candidate:
@@ -186,7 +162,7 @@ def _collect_tag_attr_urls(tag: Any, source_url: str, *attrs: str) -> list[str]:
         values = [raw] if not isinstance(raw, list) else raw
         for value in values:
             candidate = (
-                _first_url_from_srcset(attr_text(value))
+                best_url_from_srcset(attr_text(value))
                 if attr.endswith("srcset")
                 else attr_text(value)
             )
@@ -210,7 +186,6 @@ __all__ = [
     "PREVIEW_IMAGE_ATTRS",
     "PREVIEW_URL_TOKENS",
     "_collect_tag_attr_urls",
-    "_first_url_from_srcset",
     "_response_dimensions",
     "_soup_attr_url",
     "looks_like_full_size_asset_url",

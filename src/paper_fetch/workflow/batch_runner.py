@@ -259,6 +259,71 @@ async def _settle_pending_after_task_cancellation(
     return False
 
 
+def _effective_lane_limit(
+    configured: LaneLimit | None,
+    key: LaneKey,
+    *,
+    max_workers: int,
+) -> int:
+    if configured is None:
+        return max_workers
+    if isinstance(configured, int):
+        return configured
+    value = configured(key) if callable(configured) else configured.get(key, max_workers)
+    return _validate_worker_limit(value, name=f"lane limit for {key!r}")
+
+
+def _status_for_failure(failure: BatchFailure) -> BatchItemStatus:
+    if failure.cancelled:
+        return BatchItemStatus.CANCELLED
+    if failure.rate_limited:
+        return BatchItemStatus.RATE_LIMITED
+    return BatchItemStatus.FAILED
+
+
+def _classify_result(
+    value: ResultT,
+    classifier: ResultClassifier[ResultT] | None,
+) -> tuple[BatchItemStatus, BatchFailure | None]:
+    if classifier is None:
+        return BatchItemStatus.SUCCEEDED, None
+    failure = classifier(value)
+    if failure is None:
+        return BatchItemStatus.SUCCEEDED, None
+    return _status_for_failure(failure), failure
+
+
+def _cooldown_duration(failure: BatchFailure, *, default_seconds: float) -> float:
+    retry_after = failure.retry_after_seconds
+    if retry_after is None or not math.isfinite(retry_after) or retry_after < 0:
+        return default_seconds
+    return retry_after
+
+
+def _record_lane_cooldown(
+    lane_cooldowns: dict[LaneKey, BatchLaneCooldown],
+    result: BatchItemResult[ItemT, ResultT],
+    *,
+    default_seconds: float,
+) -> None:
+    failure = result.failure
+    if failure is None or not failure.rate_limited:
+        return
+    duration = _cooldown_duration(failure, default_seconds=default_seconds)
+    candidate = BatchLaneCooldown(
+        lane_key=result.lane_key,
+        reason_code=failure.reason_code,
+        source_index=result.index,
+        retry_after_seconds=failure.retry_after_seconds,
+        cooldown_seconds=duration,
+        limited_at=result.finished_at,
+        cooldown_until=result.finished_at + duration,
+    )
+    existing = lane_cooldowns.get(result.lane_key)
+    if existing is None or candidate.cooldown_until > existing.cooldown_until:
+        lane_cooldowns[result.lane_key] = candidate
+
+
 class BatchRunner(Generic[ItemT, ResultT]):
     """Run a bounded batch with one incremental scheduling state machine."""
 
@@ -360,18 +425,6 @@ class BatchRunner(Generic[ItemT, ResultT]):
         )
         shutdown_wait = True
 
-        def lane_limit(key: LaneKey) -> int:
-            configured = self._lane_limits
-            if configured is None:
-                return self._max_workers
-            if isinstance(configured, int):
-                return configured
-            if callable(configured):
-                value = configured(key)
-            else:
-                value = configured.get(key, self._max_workers)
-            return _validate_worker_limit(value, name=f"lane limit for {key!r}")
-
         async def invoke_callback(
             callback_name: str,
             callback: Callable[[object], Awaitable[None] | None] | None,
@@ -439,46 +492,6 @@ class BatchRunner(Generic[ItemT, ResultT]):
                 source_index=result.index,
             )
 
-        def classify_worker_result(
-            value: ResultT,
-        ) -> tuple[BatchItemStatus, BatchFailure | None]:
-            if self._result_classifier is None:
-                return BatchItemStatus.SUCCEEDED, None
-            failure = self._result_classifier(value)
-            if failure is None:
-                return BatchItemStatus.SUCCEEDED, None
-            if failure.cancelled:
-                return BatchItemStatus.CANCELLED, failure
-            if failure.rate_limited:
-                return BatchItemStatus.RATE_LIMITED, failure
-            return BatchItemStatus.FAILED, failure
-
-        def cooldown_seconds(failure: BatchFailure) -> float:
-            retry_after = failure.retry_after_seconds
-            if retry_after is None or not math.isfinite(retry_after) or retry_after < 0:
-                return self._default_rate_limit_cooldown_seconds
-            return retry_after
-
-        def record_lane_cooldown(
-            result: BatchItemResult[ItemT, ResultT],
-        ) -> None:
-            failure = result.failure
-            if failure is None or not failure.rate_limited:
-                return
-            duration = cooldown_seconds(failure)
-            candidate = BatchLaneCooldown(
-                lane_key=result.lane_key,
-                reason_code=failure.reason_code,
-                source_index=result.index,
-                retry_after_seconds=failure.retry_after_seconds,
-                cooldown_seconds=duration,
-                limited_at=result.finished_at,
-                cooldown_until=result.finished_at + duration,
-            )
-            existing = lane_cooldowns.get(result.lane_key)
-            if existing is None or candidate.cooldown_until > existing.cooldown_until:
-                lane_cooldowns[result.lane_key] = candidate
-
         def cancellation_requested() -> bool:
             nonlocal cancellation_observed, cancellation_started_at
             if self._cancel_event.is_set():
@@ -521,7 +534,11 @@ class BatchRunner(Generic[ItemT, ResultT]):
                 key = lane_keys[index]
                 if key in lane_cooldowns:
                     continue
-                if lane_in_flight[key] < lane_limit(key):
+                if lane_in_flight[key] < _effective_lane_limit(
+                    self._lane_limits,
+                    key,
+                    max_workers=self._max_workers,
+                ):
                     return position
             return None
 
@@ -579,7 +596,10 @@ class BatchRunner(Generic[ItemT, ResultT]):
                     error: Exception | None = None
                     try:
                         value = future.result()
-                        status, failure = classify_worker_result(value)
+                        status, failure = _classify_result(
+                            value,
+                            self._result_classifier,
+                        )
                     except asyncio.CancelledError:
                         status = BatchItemStatus.CANCELLED
                         failure = BatchFailure(
@@ -590,12 +610,7 @@ class BatchRunner(Generic[ItemT, ResultT]):
                     except Exception as worker_error:
                         error = worker_error
                         failure = self._failure_classifier(worker_error)
-                        if failure.cancelled:
-                            status = BatchItemStatus.CANCELLED
-                        elif failure.rate_limited:
-                            status = BatchItemStatus.RATE_LIMITED
-                        else:
-                            status = BatchItemStatus.FAILED
+                        status = _status_for_failure(failure)
 
                     result = BatchItemResult(
                         index=index,
@@ -611,7 +626,13 @@ class BatchRunner(Generic[ItemT, ResultT]):
                     if status is BatchItemStatus.CANCELLED:
                         cancellation_observed = True
                         self._cancel_event.set()
-                    record_lane_cooldown(result)
+                    _record_lane_cooldown(
+                        lane_cooldowns,
+                        result,
+                        default_seconds=(
+                            self._default_rate_limit_cooldown_seconds
+                        ),
+                    )
                     await record_result(result)
 
                     if self._stop_predicate is not None and stopped_by is None:

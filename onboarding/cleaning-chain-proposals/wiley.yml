@@ -2,7 +2,6 @@ schema_version: 2
 provider: wiley
 manifest: onboarding/manifests/wiley.yml
 artifact: onboarding/cleaning-chain-proposals/wiley.yml
-evidence_artifact: onboarding/cleaning-chain-proposals/wiley.evidence.yml
 fixtures_digest:
 - purpose: structure
   doi: 10.1111/gcb.16414
@@ -446,5 +445,5 @@ token_conflict_summary:
   - Uncovering prognosis-related genes and pathways by multi-omics analysis in lung
     cancer
 notes:
-- Compact proposal for implementation worker; full evidence is in evidence_artifact.
+- Compact fixture-derived cleaning proposal.
 - sentinel and cross_route_guard contract deltas are warnings, not blockers.

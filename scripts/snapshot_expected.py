@@ -16,7 +16,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from _structured_errors import ToolError, emit_error, error_payload  # noqa: E402
-from paper_fetch.markdown_quality import (  # noqa: E402
+from paper_fetch_devtools.markdown_quality import (  # noqa: E402
     build_markdown_quality_prompt,
     build_pending_markdown_quality_report,
     write_markdown_quality_prompt,

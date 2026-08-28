@@ -74,14 +74,18 @@ def test_provider_catalog_payload_exactly_reflects_runtime_catalog() -> None:
                         else "direct"
                     )
                 ),
-                "requires_browser_runtime": spec.requires_browser_runtime,
+                "browser_available": runtime_catalog.provider_has_browser_route(
+                    spec.name
+                ),
                 "browser_required": runtime_catalog.provider_requires_browser(
                     spec.name
                 ),
-                "browser_optional": any(
-                    route.browser_optional for route in spec.routes
+                "browser_optional": (
+                    runtime_catalog.provider_has_optional_browser_route(spec.name)
                 ),
-                "requires_playwright": spec.requires_playwright,
+                "requires_playwright": runtime_catalog.provider_requires_playwright(
+                    spec.name
+                ),
                 "supports_static_status": True,
                 "supports_browser_preflight": (
                     runtime_catalog.provider_supports_browser_preflight(spec.name)
@@ -104,9 +108,14 @@ def test_provider_catalog_payload_automatically_includes_discovered_changes() ->
         status_order=max(spec.status_order for spec in existing_specs.values()) + 1,
         asset_default="all",
         probe_capability="metadata_api",
-        requires_playwright=True,
-        requires_browser_runtime=True,
         routes=(
+            runtime_catalog.ProviderRouteSpec(
+                name="browser_html",
+                kind="html",
+                browser_required=True,
+                browser_preflight=True,
+                requires_playwright=True,
+            ),
             runtime_catalog.ProviderRouteSpec(
                 name="assets",
                 kind="assets",

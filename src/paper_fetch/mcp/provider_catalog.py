@@ -65,14 +65,18 @@ def provider_catalog_resource_payload() -> dict[str, Any]:
                         else "direct"
                     )
                 ),
-                "requires_browser_runtime": spec.requires_browser_runtime,
+                "browser_available": runtime_catalog.provider_has_browser_route(
+                    spec.name
+                ),
                 "browser_required": runtime_catalog.provider_requires_browser(
                     spec.name
                 ),
-                "browser_optional": any(
-                    route.browser_optional for route in spec.routes
+                "browser_optional": (
+                    runtime_catalog.provider_has_optional_browser_route(spec.name)
                 ),
-                "requires_playwright": spec.requires_playwright,
+                "requires_playwright": (
+                    runtime_catalog.provider_requires_playwright(spec.name)
+                ),
                 "supports_static_status": True,
                 "supports_browser_preflight": (
                     runtime_catalog.provider_supports_browser_preflight(spec.name)

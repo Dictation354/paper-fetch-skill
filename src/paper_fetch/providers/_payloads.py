@@ -71,7 +71,7 @@ def build_provider_payload(  # noqa: PLR0913 - explicit typed payload boundary
         content_type=content_type,
         body=body,
         content=content,
-        warnings=warnings,
+        warnings=list(warnings or []),
         trace=trace_from_markers(list(trace_markers or [])),
         merged_metadata=merged_metadata,
         needs_local_copy=needs_local_copy,

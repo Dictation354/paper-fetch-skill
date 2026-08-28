@@ -1,8 +1,6 @@
 # 添加一个 Provider：快速上手
 
-> Human reference only. AI/coordinator provider onboarding must use [`onboarding/coordinator-spec.md`](../onboarding/coordinator-spec.md) and related authority docs.
-
-这是为第一次给 paper_fetch 接入新出版社的人类开发者写的快速教程。下面用假想 provider `newpub` 作占位；MDPI、PLOS、Frontiers 等已实现 provider 只能作为历史先例参考，不应按本文命令从零 scaffold。它不作为 AI/coordinator worker 输入；AI/coordinator 的入口索引是 [`onboarding/README.md`](../onboarding/README.md)，行为事实源分别见 [`coordinator-spec.md`](../onboarding/coordinator-spec.md)、[`provider-manifest.md`](../onboarding/provider-manifest.md)、[`provider-manifest.schema.json`](../onboarding/provider-manifest.schema.json)、[`agent-task-brief.md`](../onboarding/agent-task-brief.md)、[`hard-constraints.md`](../onboarding/hard-constraints.md) 和 [`acceptance.md`](../onboarding/acceptance.md)。完整人工规约见 [`provider-development.md`](provider-development.md)，本文只讲流程。
+这是为第一次给 paper_fetch 接入新出版社的开发者写的快速教程。下面用假想 provider `newpub` 作占位；MDPI、PLOS、Frontiers 等已实现 provider 只能作为历史先例参考，不应按本文命令从零 scaffold。确定性机器流程见 [`onboarding/README.md`](../onboarding/README.md)、[`provider-manifest.md`](../onboarding/provider-manifest.md)、[`provider-manifest.schema.json`](../onboarding/provider-manifest.schema.json)、[`hard-constraints.md`](../onboarding/hard-constraints.md) 和 [`acceptance.md`](../onboarding/acceptance.md)。完整人工规约见 [`provider-development.md`](provider-development.md)，本文只讲流程。
 
 ## 你要做什么
 
@@ -87,7 +85,7 @@ python3 scripts/scaffold_provider.py --name newpub --doi <real-structure-doi> --
 ```
 
 会生成：
-- `src/paper_fetch/providers/_newpub_html.py`（provider HTML starter；provider 变大后应降为 compatibility facade，并按 authors / references / assets / markdown / dom 拆到 `_newpub_*` helper）
+- `src/paper_fetch/providers/_newpub_html.py`（provider HTML starter；只有职责已实际分离时才按 authors / references / assets / markdown / dom 拆到 `_newpub_*` helper）
 - `src/paper_fetch/providers/newpub.py`（ProviderClient 子类骨架）
 - `tests/unit/test_newpub_provider.py`（测试骨架）
 - `tests/fixtures/golden_criteria/<doi_slug>/.gitkeep`
@@ -100,7 +98,7 @@ python3 scripts/scaffold_provider.py --name newpub --doi <real-structure-doi> --
 
 ### 3.1 填 `ProviderBundle`
 
-打开 provider entry module（例如 `newpub.py`）把 `register_provider_bundle(ProviderBundle(...))` 填完整；scaffold 生成的 HTML starter 只作为 provider-owned helper / compatibility facade：
+打开 provider entry module（例如 `newpub.py`）把 `register_provider_bundle(ProviderBundle(...))` 填完整；scaffold 生成的 HTML starter 是 provider-owned helper：
 
 - `catalog=ProviderSpec(...)`：hosts / 路径模板 / asset_default / probe_capability（见 [§2](provider-development.md#provider-bundle)）
 - `html_rules=ProviderHtmlRules(cleanup=..., front_matter=..., availability=..., dom_hooks=..., markdown_hooks=...)`（见 [§5](provider-development.md#extraction-owner-reuse)）
@@ -108,7 +106,7 @@ python3 scripts/scaffold_provider.py --name newpub --doi <real-structure-doi> --
 
 ### 3.2 写 hook 函数
 
-`newpub_before_block_normalization(container)` / `newpub_normalize_markdown(text)` 等先按职责放到 provider-owned helper。小型 provider 可暂存在 `_newpub_html.py` starter；一旦出现 authors / references / assets / markdown / dom 多类职责，应让 `_newpub_html.py` 保持 compatibility facade，并拆到 `_newpub_authors.py`、`_newpub_references.py`、`_newpub_assets.py`、`_newpub_markdown.py`、`_newpub_dom.py`。**不要**在 `extraction/html/provider_rules.py` 写 wrapper——直接函数引用即可。
+`newpub_before_block_normalization(container)` / `newpub_normalize_markdown(text)` 等先按职责放到 provider-owned helper。只有 authors / references / assets / markdown / dom 职责已实际分离时才拆到对应 `_newpub_*` 模块；不要为了兼容或形式对称保留 facade。**不要**在 `extraction/html/provider_rules.py` 写 wrapper——直接函数引用即可。
 
 ### 3.3 写客户端 `NewpubClient`
 
@@ -128,7 +126,7 @@ python3 scripts/scaffold_provider.py --name newpub --doi <real-structure-doi> --
 
 ### 3.5 Markdown Review Loop
 
-对 manifest 中每个 non-null `fixtures.doi_samples.<purpose>` 固定执行；AI/coordinator manifest 字段定义以 [`onboarding/provider-manifest.md`](../onboarding/provider-manifest.md) 和 [`provider-manifest.schema.json`](../onboarding/provider-manifest.schema.json) 为准：
+对 manifest 中每个 non-null `fixtures.doi_samples.<purpose>` 固定执行；manifest 字段定义以 [`onboarding/provider-manifest.md`](../onboarding/provider-manifest.md) 和 [`provider-manifest.schema.json`](../onboarding/provider-manifest.schema.json) 为准：
 
 1. 生成 baseline Markdown。
 2. 逐篇阅读，记录 `fixture/purpose -> issue -> assertion -> fix`。
@@ -157,15 +155,9 @@ PYTHONPATH=src python3 scripts/snapshot_expected.py --doi <real-structure-doi>
 
 写入命令会同时更新 `expected.json`、`extracted.md`、`markdown-quality-prompt.md`、pending 状态的 `markdown-quality.json` 和 manifest assets。`expected.json` 只锁 `has` / `counts` / `expected_content_kind` 摘要；Markdown quality 需要 agent 按 `markdown-quality-prompt.md` 阅读 `extracted.md` 后，把 `markdown-quality.json` 写成 `status: pass` 且没有 blocking issue。
 
-如果 quality report 已经是 agent-authored fail，可运行 `python3 scripts/onboard_from_manifests.py repair-markdown-quality --provider <provider> --doi <doi>`。该命令只通过 `PROVIDER_ONBOARDING_AGENT_CLI` 派发实现和复审 agent，最多 3 轮；pending report 会被拒绝，需要先完成初次 quality review。
+如果 quality report 为 fail，先把 blocking issue 固化为 provider-local 断言，再修改 provider-owned 实现并重新生成 snapshot/quality；项目不提供递归 agent repair loop。
 
-`scripts/onboard_from_manifests.py` 是稳定的兼容 CLI 入口；实现归
-`src/paper_fetch_devtools/onboarding/` 所有，不进入生产 wheel。兼容 loader
-按固定顺序在原脚本 namespace 中执行 `parts/` 下的 discovery、coordinator、
-state machine、review artifact、recovery、worker runtime、commands、summary
-和 parser 模块，因此既保留现有 monkeypatch/退出码/stdout 契约，也不再由单个
-超大实现文件承担全部职责。新规则应进入对应职责模块，不再向根脚本或 loader
-增加业务逻辑。
+完成所有 fixture 的人工语义审核后，使用 `scripts/bootstrap_review_artifact.py --finalize --confirmed-final-quality` 校验当前 digest、quality 与 Markdown contract，并写入最终 review signoff。
 
 之后每次改 extraction 都用 provider-local 断言和 `pytest` diff 来审；新增 correction 时继续先写断言再修 provider。
 

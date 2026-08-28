@@ -20,7 +20,8 @@ from paper_fetch.providers._atypon_browser_workflow_profiles import (
 )
 from paper_fetch.providers._pdf_candidates import extract_pdf_candidate_urls_from_html
 from paper_fetch.provider_catalog import PROVIDER_CATALOG
-from paper_fetch.providers.base import RawFulltextPayload
+from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
+from paper_fetch.tracing import trace_from_markers
 from paper_fetch.providers.acs import AcsClient
 from paper_fetch.providers.aip import AipClient
 from paper_fetch.providers.ams import AmsClient
@@ -542,11 +543,14 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
             source_url="https://www.science.org/doi/full/10.1126/example",
             content_type="text/html",
             body=html.encode("utf-8"),
-            metadata={
-                "route": "html",
-                "markdown_text": "# Example\n\n## Results\n\n" + ("Body text " * 120),
-                "source_trail": ["fulltext:science_html_ok"],
-            },
+            content=ProviderContent(
+                route_kind="html",
+                source_url="https://www.science.org/doi/full/10.1126/example",
+                content_type="text/html",
+                body=html.encode("utf-8"),
+                markdown_text="# Example\n\n## Results\n\n" + ("Body text " * 120),
+            ),
+            trace=trace_from_markers(["fulltext:science_html_ok"]),
         )
 
         article = client.to_article_model(

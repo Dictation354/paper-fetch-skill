@@ -57,10 +57,6 @@ Browser HTML/PDF fallback、HTTP streaming 和 HTML assets 的高参数入口内
 - publisher 差异通过各 provider 模块 callback 下沉；browser-PDF executor 继续共享 `_pdf_fallback`，公开入口使用 `browser_workflow` 包。
 - browser-workflow 的 HTML bootstrap 通过 `RuntimeContext` 复用所选 backend manager；每次操作使用隔离 context，Camoufox 同步对象保持 caller-thread 绑定。
 - 2020+ live / regression 基准样本集中维护在 [`../tests/provider_benchmark_samples.py`](../tests/provider_benchmark_samples.py)。
-- 自然地理学 live-only 候选集中维护在 [`../tests/live/geography_samples.py`](../tests/live/geography_samples.py)，默认每家尝试前 `10` 条，并通过 [`../scripts/run_geography_live_report.py`](../scripts/run_geography_live_report.py) 产出 JSON/Markdown 报告。
-- `geography` live runner 默认按 provider 轮转执行，保持单家样本顺序不变。
-- `run_geography_live_report.py`、`export_geography_issue_artifacts.py`、`group_geography_issue_artifacts.py` 都属于 repo-local internal tooling：不新增 console script，不作为 MCP surface，对外产品面不变。
-- geography live/report/export/group 仍受 `PAPER_FETCH_RUN_LIVE=1` 的 opt-in 边界保护；未启用 live 环境时，对应测试应稳定 skip。
 - golden criteria live review 产物写入 `live-downloads/golden-criteria-review/`，由 [`../scripts/run_golden_criteria_live_review.py`](../scripts/run_golden_criteria_live_review.py) 生成；每条结果包含 `elapsed_seconds`、`stage_timings.fetch_seconds` / `materialize_seconds` / `total_seconds` / `resolve_seconds` / `metadata_seconds` / `fulltext_seconds` / `asset_seconds` / `formula_seconds` / `render_seconds`，同时在 `http_cache_stats` 中记录该 sample 相对执行前的 cache delta。golden criteria live review 的 supported provider 从 runtime `official_provider_names()` 派生，覆盖 `elsevier`、`springer`、`wiley`、`science`、`pnas`、`ieee`、`arxiv`、`copernicus`、`ams`、`mdpi`、`royalsocietypublishing`、`annualreviews`、`plos`、`oxfordacademic`、`acs`、`iop`、`aip`、`tandf` 和 `frontiers`；`provider-status.json` 会包含这些 provider 的本地诊断。`10.1016/S1575-1813(18)30261-4` 这类预期 metadata-only 样本，以及不受支持的 Sage 样本，应通过 manifest 的 expected outcome 标记为 `skipped`，不进入 provider bug 修复队列。IEEE golden live 样本面向具备合法 IEEE Xplore 授权上下文的机器，预期为 `fulltext`；降级成 metadata-only、blocked fetch 或非 PDF payload 应作为 `live_fetch_blocked` 问题进入修复队列。
 - 多篇并行 live benchmark 由 [`../scripts/run_parallel_live_benchmark.py`](../scripts/run_parallel_live_benchmark.py) 本地显式运行。默认从同一 benchmark catalog/golden manifest 选择 Elsevier、Springer、arXiv、Copernicus 四条直连路径及 Wiley、Science、PNAS、MDPI 四条 browser 路径，按全局并发 `1/2/4` 各跑一轮；调度复用生产 `BatchRunner` 与 catalog provider lane 上限。每轮使用新的无 HTTP memory/disk cache transport，browser preflight 在计时前只执行一次并复用合法 storage-state。顶层 `benchmark.json` / `benchmark.md` 报告 wall time、吞吐、相对加速比、跨档 route/acceptance 漂移，以及 provider/route/stage/HTTP/trace/diagnostic artifact 失败点。
 - Wiley 同-provider 能力探测必须显式传入 `--same-provider-probe wiley`。它固定使用三篇 Wiley golden 样本，以并发 `1/2` 各执行两轮；只有这个 devtools 模式会通过 `lane_limit_overrides` 把 Wiley 的实际 lane 从对照轮的 `1` 提升到并行轮的 `2`，browser-provider override 不能超过 `2`。每个 worker 使用并在所属线程关闭独立 `RuntimeContext` / Camoufox manager，报告记录起止时间、实际 lane 和 Wiley 峰值 in-flight。并发 `1` 每轮峰值为 `1`、并发 `2` 每轮峰值为 `2` 且 acceptance/route 稳定即可判定本次环境具备重叠能力；吞吐或加速比不参与判定。preflight、授权、challenge、限流、browser runtime 或线程所有权失败会形成结构化 blocker，不会被解释成“不支持并行”。生产 catalog 中 Wiley `batch_concurrency=1` 保持不变。
@@ -404,11 +400,11 @@ resolve
 - `royalsocietypublishing`
   - 固定顺序是 `selected-browser DOI HTML -> browser-seeded PDF fallback -> metadata-only`。
   - HTML 成功公开 `source="royalsocietypublishing_html"`；PDF fallback 成功公开 `source="royalsocietypublishing_pdf"`。
-  - 需要 `ProviderSpec.requires_browser_runtime=True` 的本地 browser runtime；`citation_xml_url` 不作为 XML/JATS 路线；PDF fallback 在 `body/all` 且允许 artifact 落盘时会保存 PDF 导出的正文图片。
+  - 需要 `capabilities.browser_available=true`（由 provider routes 派生） 的本地 browser runtime；`citation_xml_url` 不作为 XML/JATS 路线；PDF fallback 在 `body/all` 且允许 artifact 落盘时会保存 PDF 导出的正文图片。
   - Silverchair `DownloadImage.aspx` 的嵌套签名 CDN 图片作为 `full_size_url`，`/view-large/figure/...` 只作为 `figure_page_url`，`m_*` 图片作为 `preview_url`；三者按 DOM id 和规范化 figure basename 合并。嵌套原图必须来自 Silverchair CDN 且 basename 与当前 figure 一致，避免分组 slide 串图；无直接原图时，查看页最多等待 5 秒直至 `img.content-image` 就绪，再降级 preview。
 - `annualreviews`
   - 固定顺序是 `selected-browser landing/full-text HTML -> browser-seeded PDF -> provider-managed abstract_only -> metadata-only`。
-  - 需要 `ProviderSpec.requires_browser_runtime=True` 的本地 browser runtime；HTML 成功公开 `source="annualreviews_html"`，PDF fallback 成功公开 `source="annualreviews_pdf"`。
+  - 需要 `capabilities.browser_available=true`（由 provider routes 派生） 的本地 browser runtime；HTML 成功公开 `source="annualreviews_html"`，PDF fallback 成功公开 `source="annualreviews_pdf"`。
   - HTML 正文表格复用共享 table renderer，支持多层表头、rowspan/colspan 展开、统一 pipe escaping 和不规则网格列表降级；provider 只保留 table container 与 footnote 适配。
 - `oxfordacademic`
   - 固定顺序是 `direct HTTP article HTML -> direct HTTP PDF fallback -> metadata-only`。
@@ -742,7 +738,7 @@ CLI、Python API、MCP 当前默认值如下：
 - fetch 阶段命中 landing probe 时，会把 citation PDF URL 合并到 metadata `fulltext_links`。
 - `BrowserContextManager` 会在进程内按 browser 配置 lazy 复用 managed Chrome 生命周期；`RuntimeContext` 关闭时释放引用，最后一个引用释放后关闭自动启动的 Chrome，进程退出时还有 `atexit` 兜底清理。外部 endpoint 的每个 context 会断开本次 CDP 连接，不关闭操作者的浏览器。
 - PNAS 正文 HTML、正文图片/文件 fetcher 与 PDF/ePDF fallback 仍按阶段创建独立 browser context/page。
-- `RawFulltextPayload.metadata` 只是 read-only compatibility view。
+- `RawFulltextPayload` 不提供 `metadata` 兼容视图；route、正文、diagnostics、assets、warnings 与 trace 使用对应 typed 字段。
 - provider 新逻辑应读写 `ProviderContent.route_kind`、`markdown_text`、`diagnostics`、`fetcher`、`browser_context_seed`、`warnings`、`trace` 和 `merged_metadata`。
 
 ### 资产去重与诊断
@@ -938,7 +934,7 @@ export PAPER_FETCH_BROWSER_USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64)
 - `legacy` 不是可用后端；配置该值会返回 backend 不可用错误，不应在新配置中使用。
 - 默认是 `texmath`；未显式指定时，如果 `texmath` 失败，会尝试 `mathml-to-latex` fallback。
 - 显式指定某个 backend 时，失败会按该 backend 返回，不会自动隐藏错误。
-- 内部后端清单由 registry 声明，`auto` 与 benchmark 顺序仍保持 `texmath` → `mathml-to-latex` → `mml2tex` 的既有约定。
+- 内部后端清单由 registry 声明；`auto` 的运行时 fallback 顺序是 `texmath` → `mathml-to-latex`。`mml2tex` 只在显式选择时使用，benchmark 矩阵由 repo-local benchmark 脚本维护。
 
 #### `TEXMATH_BIN`
 
@@ -1237,7 +1233,7 @@ IEEE direct landing/REST HTML/PDF/资产与 selected-browser recovery 路线当�
 
 `provider_status()` 只检查本地条件，不主动探测远端 publisher API 连通性。需要真实打开 browser-backed provider 样例、刷新 `publisher-browser-profiles/<provider>/storage-state.json` 并识别 Cloudflare/Radware/hCaptcha 等 challenge 时，使用 CLI `paper-fetch browser-preflight` 或 MCP `browser_preflight`；两个入口直接共用同一个 preflight 核心，用内置样例 DOI/URL 构造正常 HTML candidates，复用 provider HTML bootstrap、同一 browser context 重试和 availability 判定，但不触发 PDF fallback。它们是 live 预检，不改变 `provider_status()` 的本地诊断语义。
 
-MCP 入口为 `provider_status(provider=None, group=None, detail="full")`。无参数调用仍按 runtime catalog 顺序返回全部 provider，保持原契约；已知单篇目标应传 `provider`，避免把全部 provider checks 放入上下文。`group` 从 catalog 动态派生：`all` 为全部，`official` 为 official provider，`browser` 为 `requires_browser_runtime=True`，`direct` 为不需要 browser runtime，`metadata` 为非 official provider。provider 与 group 同时给出时必须相容。`detail="compact"` 的每项严格只包含 `provider`、`status`、`reason_code`、`reason` 和 `suggested_action`；`detail="full"` 保留既有 `checks`、`missing_env` 和 notes，并附加配置来源与本地能力。
+MCP 入口为 `provider_status(provider=None, group=None, detail="full")`。无参数调用仍按 runtime catalog 顺序返回全部 provider，保持原契约；已知单篇目标应传 `provider`，避免把全部 provider checks 放入上下文。`group` 从 catalog 动态派生：`all` 为全部，`official` 为 official provider，`browser` 为 `capabilities.browser_available=true`（由 provider routes 派生），`direct` 为不需要 browser runtime，`metadata` 为非 official provider。provider 与 group 同时给出时必须相容。`detail="compact"` 的每项严格只包含 `provider`、`status`、`reason_code`、`reason` 和 `suggested_action`；`detail="full"` 保留既有 `checks`、`missing_env` 和 notes，并附加配置来源与本地能力。
 
 所有结果都显式带有 `diagnostic_scope="static_configuration_and_local_dependencies"`、`live_network_checked=false` 和 `remote_publisher_health="not_checked"`。其中：
 
@@ -1268,5 +1264,5 @@ MCP `browser_preflight(provider=None, detail="full")` 无 provider 时按 browse
   - browser runtime ready 时，即使 `WILEY_TDM_CLIENT_TOKEN` 缺失，也应表现为 `ready`。
   - browser runtime 未配置但 `WILEY_TDM_CLIENT_TOKEN` 已配置时，通常表现为 `partial`，仍可尝试官方 TDM API PDF lane；如果 browser 检查本身报 `error`，provider 状态仍会反映该错误。
 - `science` / `pnas` / `ams` / `mdpi` / `annualreviews` / `royalsocietypublishing` / `acs` / `iop` / `aip` / `tandf`
-  - 这些 provider 以 `ProviderSpec.requires_browser_runtime=True` 为准，统一检查 selected backend 的 `runtime_env`、Playwright 与对应 Python 包。
+  - 这些 provider 以 `capabilities.browser_available=true`（由 provider routes 派生） 为准，统一检查 selected backend 的 `runtime_env`、Playwright 与对应 Python 包。
   - 本地 runtime 未就绪时，HTML 主路径、图片资产恢复和 seeded-browser PDF/ePDF fallback 会表现为 `not_configured` 或 `error`；远端 access gate、paywall 或 challenge 仍由实际抓取路线判定，不属于 `provider_status()` 的本地探测范围。

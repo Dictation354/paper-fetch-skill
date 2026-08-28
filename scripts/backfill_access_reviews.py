@@ -65,6 +65,18 @@ def _provider_bundle(provider: str) -> Any | None:
         return None
 
 
+def _catalog_runtime_requirements(catalog: Any) -> tuple[bool, bool]:
+    routes = tuple(getattr(catalog, "routes", ()) or ())
+    return (
+        any(
+            bool(getattr(route, "browser_required", False))
+            or bool(getattr(route, "browser_optional", False))
+            for route in routes
+        ),
+        any(bool(getattr(route, "requires_playwright", False)) for route in routes),
+    )
+
+
 def _runtime_suggestions(manifest: dict[str, Any], bundle: Any | None) -> list[str]:
     runtimes: set[str] = {"http"}
     probe = manifest.get("probe") if isinstance(manifest.get("probe"), dict) else {}
@@ -72,12 +84,7 @@ def _runtime_suggestions(manifest: dict[str, Any], bundle: Any | None) -> list[s
     requires_playwright = bool(probe.get("requires_playwright"))
     catalog = getattr(bundle, "catalog", None)
     if catalog is not None:
-        requires_browser = requires_browser or bool(
-            getattr(catalog, "requires_browser_runtime", False)
-        )
-        requires_playwright = requires_playwright or bool(
-            getattr(catalog, "requires_playwright", False)
-        )
+        requires_browser, requires_playwright = _catalog_runtime_requirements(catalog)
     if requires_browser:
         runtimes.add("browser")
     if requires_playwright:
@@ -146,11 +153,14 @@ def _legal_access_evidence(
         catalog = getattr(bundle, "catalog", None)
         runtime_bits: list[str] = []
         if catalog is not None:
-            runtime_bits.append(
-                f"requires_browser_runtime={bool(getattr(catalog, 'requires_browser_runtime', False))}"
+            requires_browser, requires_playwright = _catalog_runtime_requirements(
+                catalog
             )
             runtime_bits.append(
-                f"requires_playwright={bool(getattr(catalog, 'requires_playwright', False))}"
+                f"requires_browser_runtime={requires_browser}"
+            )
+            runtime_bits.append(
+                f"requires_playwright={requires_playwright}"
             )
         evidence.append(
             "registered provider bundle "

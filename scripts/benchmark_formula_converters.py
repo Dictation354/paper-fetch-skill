@@ -8,19 +8,78 @@ import json
 import os
 import subprocess
 from collections import defaultdict
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from paper_fetch.formula.convert import (
-    BENCHMARK_BACKENDS,
     BACKEND_MATHML_TO_LATEX,
     clear_conversion_cache,
-    collect_formula_samples,
     convert_mathml_string,
+    stringify_mathml,
 )
+from paper_fetch.provider_catalog import provider_for_xml_source
+from paper_fetch.xml_security import XmlParseFailure, parse_trusted_xml_file
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT_DIR = SCRIPT_DIR.parent
+BENCHMARK_BACKENDS = ("texmath", "mathml-to-latex", "mml2tex")
+
+
+@dataclass(slots=True)
+class FormulaSample:
+    sample_id: str
+    source_path: str
+    source_provider: str
+    display_mode: bool
+    raw_mathml: str
+
+
+def extract_formula_samples_from_xml(
+    xml_path: Path, *, limit: int | None = None
+) -> list[FormulaSample]:
+    try:
+        root = parse_trusted_xml_file(xml_path)
+    except XmlParseFailure:
+        return []
+    root_name = root.tag.rsplit("}", 1)[-1] if isinstance(root.tag, str) else ""
+    source_provider = provider_for_xml_source(
+        root_name, str(xml_path), xml_root=root
+    )
+    samples: list[FormulaSample] = []
+    seen: set[str] = set()
+    for node in root.iter():
+        tag = node.tag if isinstance(node.tag, str) else ""
+        if tag.rsplit("}", 1)[-1] != "math":
+            continue
+        raw_mathml = stringify_mathml(node)
+        if not raw_mathml or raw_mathml in seen:
+            continue
+        seen.add(raw_mathml)
+        samples.append(
+            FormulaSample(
+                sample_id=f"{xml_path.stem}:{len(samples)}",
+                source_path=str(xml_path),
+                source_provider=source_provider,
+                display_mode=(node.get("display") or "").strip().lower() == "block",
+                raw_mathml=raw_mathml,
+            )
+        )
+        if limit is not None and len(samples) >= limit:
+            break
+    return samples
+
+
+def collect_formula_samples(
+    xml_paths: list[Path], *, per_file_limit: int | None = None
+) -> list[FormulaSample]:
+    return [
+        sample
+        for xml_path in xml_paths
+        for sample in extract_formula_samples_from_xml(
+            xml_path, limit=per_file_limit
+        )
+    ]
 
 
 def validate_latex(

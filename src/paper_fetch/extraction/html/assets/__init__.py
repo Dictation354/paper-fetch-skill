@@ -28,8 +28,10 @@ from .dom import (
 )
 from .formulas import extract_formula_assets as extract_formula_assets
 from .identity import (
+    filter_assets_for_profile as filter_assets_for_profile,
     html_asset_identity_key as html_asset_identity_key,
     html_asset_is_supplementary as html_asset_is_supplementary,
+    merge_extracted_and_downloaded_assets as merge_extracted_and_downloaded_assets,
     split_body_and_supplementary_assets as split_body_and_supplementary_assets,
 )
 from .supplementary import (

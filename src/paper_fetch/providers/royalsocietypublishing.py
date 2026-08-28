@@ -26,6 +26,7 @@ from ..runtime import RuntimeContext
 from ..utils import empty_asset_results, normalize_text
 from . import _royalsocietypublishing_html as royal_html
 from . import browser_workflow
+from ._pdf_candidates import build_direct_pdf_candidates
 from ._registry import ProviderBundle, register_provider_bundle
 from .base import RawFulltextPayload
 
@@ -47,10 +48,28 @@ register_provider_bundle(
             base_domains=("royalsocietypublishing.org",),
             html_path_templates=("/doi/{doi}",),
             pdf_path_templates=("/doi/pdf/{doi}",),
-            requires_playwright=True,
-            requires_browser_runtime=True,
             body_text_thresholds=BodyTextThresholds(min_chars=800),
             routes=(
+                ProviderRouteSpec(name="metadata", kind="metadata"),
+                ProviderRouteSpec(
+                    name="browser_html",
+                    kind="html",
+                    browser_required=True,
+                    browser_preflight=True,
+                    auth_supported=True,
+                    requires_playwright=True,
+                    concurrency=1,
+                ),
+                ProviderRouteSpec(
+                    name="browser_pdf",
+                    kind="pdf",
+                    browser_required=True,
+                    browser_preflight=True,
+                    auth_supported=True,
+                    requires_playwright=True,
+                    requires_pdf_conversion=True,
+                    concurrency=1,
+                ),
                 ProviderRouteSpec(
                     name="assets",
                     kind="assets",
@@ -164,10 +183,10 @@ class RoyalsocietypublishingClient(browser_workflow.BrowserWorkflowClient):
             if _is_royal_society_url(landing)
             else royal_html.direct_article_url(normalized_doi)
         )
-        return royal_html.pdf_candidate_urls(
+        return build_direct_pdf_candidates(
             metadata,
             source_url=source_url,
-            doi=normalized_doi,
+            direct_pdf_url=royal_html.direct_pdf_url(normalized_doi),
         )
 
     def extract_markdown(

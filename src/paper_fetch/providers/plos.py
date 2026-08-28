@@ -16,7 +16,8 @@ from ..extraction.html.assets import (
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
     download_assets,
-    html_asset_identity_key,
+    filter_assets_for_profile,
+    merge_extracted_and_downloaded_assets,
     split_body_and_supplementary_assets,
 )
 from ..extraction.html.availability_policy import AvailabilityPolicy
@@ -181,14 +182,6 @@ def _candidate_url(
     )
 
 
-def _xml_candidate_url(doi: str) -> str:
-    return _candidate_url(doi, templates=provider_xml_path_templates("plos"))
-
-
-def _pdf_candidate_url(doi: str) -> str:
-    return _candidate_url(doi, templates=provider_pdf_path_templates("plos"))
-
-
 def _plos_journal_path_from_url(value: str | None) -> str | None:
     parsed = urllib.parse.urlsplit(normalize_text(value))
     host = normalize_text(parsed.hostname or "").lower()
@@ -242,53 +235,6 @@ def _looks_like_html(body: bytes, content_type: str) -> bool:
         or prefix.startswith(b"<html")
         or b"<html" in prefix
     )
-
-
-def _merge_assets(
-    extracted_assets: Sequence[Mapping[str, Any]] | None,
-    downloaded_assets: Sequence[Mapping[str, Any]] | None,
-) -> list[dict[str, Any]]:
-    merged: list[dict[str, Any]] = []
-    by_identity: dict[str, dict[str, Any]] = {}
-    for item in extracted_assets or []:
-        asset = dict(item)
-        merged.append(asset)
-        identity = html_asset_identity_key(asset)
-        if identity:
-            by_identity[identity] = asset
-    for item in downloaded_assets or []:
-        asset = dict(item)
-        identity = html_asset_identity_key(asset)
-        existing = by_identity.get(identity) if identity else None
-        if existing is not None:
-            existing.update(asset)
-            continue
-        merged.append(asset)
-        if identity:
-            by_identity[identity] = asset
-    return merged
-
-
-def _filter_assets_for_profile(
-    assets: Sequence[Mapping[str, Any]] | None,
-    *,
-    asset_profile: AssetProfile,
-) -> list[dict[str, Any]]:
-    if asset_profile == "none":
-        return []
-    filtered: list[dict[str, Any]] = []
-    for item in assets or []:
-        asset = dict(item)
-        kind = normalize_text(
-            str(asset.get("kind") or asset.get("asset_type") or "")
-        ).lower()
-        section = normalize_text(str(asset.get("section") or "")).lower()
-        if asset_profile != "all" and (
-            kind == "supplementary" or section == "supplementary"
-        ):
-            continue
-        filtered.append(asset)
-    return filtered
 
 
 def _doi_asset_id(value: str) -> str:
@@ -760,7 +706,7 @@ class PlosClient(ProviderClient):
         ).lower()
         if route == PDF_FALLBACK:
             return empty_asset_results()
-        extracted_assets = _filter_assets_for_profile(
+        extracted_assets = filter_assets_for_profile(
             list(content.extracted_assets if content is not None else []),
             asset_profile=asset_profile,
         )
@@ -906,7 +852,7 @@ class PlosClient(ProviderClient):
             ]
         abstract_sections = diagnostics.get("abstract_sections")
         semantic_losses = diagnostics.get("semantic_losses")
-        assets = _merge_assets(
+        assets = merge_extracted_and_downloaded_assets(
             list(content.extracted_assets if content is not None else []),
             list(downloaded_assets or []),
         )

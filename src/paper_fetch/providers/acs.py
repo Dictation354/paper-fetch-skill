@@ -87,8 +87,27 @@ register_provider_bundle(
                 *ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
                 "/doi/pdf/{doi}?download=true",
             ),
-            requires_browser_runtime=True,
             routes=(
+                ProviderRouteSpec(name="metadata", kind="metadata"),
+                ProviderRouteSpec(
+                    name="browser_html",
+                    kind="html",
+                    browser_required=True,
+                    browser_preflight=True,
+                    auth_supported=True,
+                    requires_playwright=True,
+                    concurrency=1,
+                ),
+                ProviderRouteSpec(
+                    name="browser_pdf",
+                    kind="pdf",
+                    browser_required=True,
+                    browser_preflight=True,
+                    auth_supported=True,
+                    requires_playwright=True,
+                    requires_pdf_conversion=True,
+                    concurrency=1,
+                ),
                 ProviderRouteSpec(
                     name="assets",
                     kind="assets",

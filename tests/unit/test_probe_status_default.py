@@ -3,7 +3,7 @@ from __future__ import annotations
 import importlib.machinery
 from typing import Any
 
-from paper_fetch.provider_catalog import ProviderSpec
+from paper_fetch.provider_catalog import ProviderRouteSpec, ProviderSpec
 from paper_fetch.providers._registry import ProviderBundle
 from paper_fetch.providers.base import ProviderClient
 from paper_fetch.providers.browser_runtime.backends import camoufox as camoufox_backend
@@ -30,8 +30,16 @@ def _catalog(
         client_factory_path="",
         status_order=999,
         env_requirements=env_requirements,
-        requires_playwright=requires_playwright,
-        requires_browser_runtime=requires_browser_runtime,
+        routes=(
+            ProviderRouteSpec(
+                name="browser_html",
+                kind="html",
+                browser_required=True,
+                requires_playwright=requires_playwright,
+            ),
+        )
+        if requires_browser_runtime or requires_playwright
+        else (ProviderRouteSpec(name="metadata", kind="metadata"),),
     )
 
 

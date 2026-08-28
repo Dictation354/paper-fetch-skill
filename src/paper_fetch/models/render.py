@@ -386,19 +386,10 @@ def _asset_link_field(asset: Asset | Mapping[str, Any], field: str) -> str | Non
 
 
 def _asset_markdown_reference_candidates(asset: Asset | Mapping[str, Any]) -> set[str]:
+    from ..extraction.html.asset_fields import MARKDOWN_ASSET_REFERENCE_FIELDS
+
     candidates: set[str] = set()
-    for asset_field in (
-        "path",
-        "url",
-        "original_url",
-        "download_url",
-        "source_url",
-        "source_path",
-        "source_href",
-        "preview_url",
-        "full_size_url",
-        "link",
-    ):
+    for asset_field in MARKDOWN_ASSET_REFERENCE_FIELDS:
         candidates |= image_reference_candidates(_asset_link_field(asset, asset_field))
     return candidates
 

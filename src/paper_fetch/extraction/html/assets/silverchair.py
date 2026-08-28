@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup, Tag
 
 from ....utils import normalize_text
 from ..parsing import choose_parser
-from .dom import _first_url_from_srcset
+from ..asset_fields import best_url_from_srcset
 
 
 def promote_silverchair_srcset_originals(html_text: str) -> str:
@@ -24,7 +24,7 @@ def promote_silverchair_srcset_originals(html_text: str) -> str:
         if not isinstance(tag, Tag) or tag.get("data-hi-res-src"):
             continue
         for attr in ("data-srcset", "srcset"):
-            candidate = _first_url_from_srcset(normalize_text(str(tag.get(attr) or "")))
+            candidate = best_url_from_srcset(normalize_text(str(tag.get(attr) or "")))
             if candidate:
                 tag["data-hi-res-src"] = candidate
                 changed = True

@@ -2,7 +2,6 @@ schema_version: 2
 provider: ams
 manifest: onboarding/manifests/ams.yml
 artifact: onboarding/cleaning-chain-proposals/ams.yml
-evidence_artifact: onboarding/cleaning-chain-proposals/ams.evidence.yml
 fixtures_digest:
 - purpose: structure
   doi: 10.1175/bams-d-24-0223.1
@@ -338,5 +337,5 @@ token_conflict_summary:
   - A climatology of dryline-related convection on the western plateau of subtropical
     southern Africa
 notes:
-- Compact proposal for implementation worker; full evidence is in evidence_artifact.
+- Compact fixture-derived cleaning proposal.
 - sentinel and cross_route_guard contract deltas are warnings, not blockers.

@@ -189,25 +189,10 @@ class McpPayloadCacheTests(unittest.TestCase):
             ["html-1", "html-2"],
         )
 
-    def test_build_server_exposes_output_schemas_for_all_tools(self) -> None:
+    def test_build_server_omits_output_schemas_for_all_tools(self) -> None:
         server = build_server()
-        expected_contract_fields = {
-            "schema_version",
-            "code",
-            "http_status",
-            "error_category",
-            "retry_after_seconds",
-            "provider",
-            "warnings",
-            "source_trail",
-        }
         for name, tool in server._tool_manager._tools.items():
-            self.assertIsNotNone(tool.output_schema, name)
-            properties = (tool.output_schema or {}).get("properties", {})
-            self.assertTrue(
-                expected_contract_fields <= set(properties),
-                f"{name} output schema missing MCP contract fields",
-            )
+            self.assertIsNone(tool.output_schema, name)
 
     def test_build_server_exposes_expected_tool_annotations(self) -> None:
         server = build_server()
@@ -249,66 +234,6 @@ class McpPayloadCacheTests(unittest.TestCase):
                 self.assertEqual(
                     getattr(tool.annotations, field_name), value, f"{name}.{field_name}"
                 )
-
-    def test_fetch_output_schema_exposes_asset_audit_and_provenance(self) -> None:
-        schema = build_server()._tool_manager._tools["fetch_paper"].output_schema or {}
-        definitions = schema.get("$defs", {})
-
-        self.assertIn("provenance", definitions["AssetOutput"]["properties"])
-        self.assertIn("asset_summary", definitions["QualityOutput"]["properties"])
-        self.assertEqual(
-            definitions["AssetQualitySummaryOutput"]["properties"]["by_kind"],
-            {"$ref": "#/$defs/AssetByKindOutput"},
-        )
-        acceptance = definitions["FetchAcceptanceSummaryOutput"]["properties"]
-        self.assertEqual(
-            set(acceptance),
-            {
-                "overall",
-                "identity",
-                "fetch",
-                "content",
-                "asset",
-                "output",
-                "provenance",
-                "acquisition",
-                "has_fulltext",
-                "has_abstract",
-                "token_estimate",
-                "asset_summary",
-            },
-        )
-        self.assertEqual(
-            schema["properties"]["acceptance"],
-            {"$ref": "#/$defs/FetchAcceptanceSummaryOutput"},
-        )
-
-        get_cached_schema = (
-            build_server()._tool_manager._tools["get_cached"].output_schema or {}
-        )
-        cache_asset = get_cached_schema["$defs"]["CacheAssetSummaryOutput"][
-            "properties"
-        ]
-        self.assertTrue(
-            {
-                "audited",
-                "expected",
-                "discovered",
-                "attempted",
-                "accepted_preview",
-                "fallback_preview",
-                "issue_codes",
-                "remote_links_preserved",
-            }
-            <= set(cache_asset)
-        )
-
-        batch_schema = (
-            build_server()._tool_manager._tools["batch_fetch"].output_schema or {}
-        )
-        batch_artifact = batch_schema["$defs"]["BatchFetchArtifactOutput"]["properties"]
-        self.assertIn("route", batch_artifact)
-        self.assertIn("failure_code", batch_artifact)
 
     def test_provider_status_tool_returns_success_when_providers_are_unconfigured(
         self,

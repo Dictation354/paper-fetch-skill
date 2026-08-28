@@ -19,7 +19,7 @@ Usage:
   scripts/test-macos-contract.sh [--python <path>] [--validator-only]
 
 Runs the machine-readable contract validator and, unless validator-only mode
-is active, deterministic fake-Darwin/shell pytest nodes. It never replaces the
+is active, the portable contract tests. It never replaces the
 native macos-15 release gate. A WSL checkout below /mnt is automatically
 degraded to validator-only because DrvFS cannot prove Unix filesystem semantics.
 EOF
@@ -109,11 +109,8 @@ if [ "$VALIDATOR_ONLY" = "1" ]; then
   exit 0
 fi
 
-log "Running deterministic WSL/Linux macOS contract pytest nodes"
-TEST_NODE_OUTPUT="$(
-  "$PYTHON_BIN" scripts/validate_macos_adaptation.py --print-test-nodes wsl
-)" || die "Failed to select WSL/Linux macOS contract tests."
-[ -n "$TEST_NODE_OUTPUT" ] || die "No WSL/Linux macOS contract tests were selected."
-mapfile -t TEST_NODES <<< "$TEST_NODE_OUTPUT"
+log "Running portable WSL/Linux macOS contract tests"
 PYTHONPATH="$REPO_DIR/src${PYTHONPATH:+:$PYTHONPATH}" \
-  "$PYTHON_BIN" -m pytest "${TEST_NODES[@]}" -q
+  "$PYTHON_BIN" -m pytest \
+    tests/unit/test_macos_adaptation_validator.py \
+    tests/integration/test_macos_adaptation_contract.py -q

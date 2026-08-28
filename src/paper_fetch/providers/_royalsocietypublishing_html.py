@@ -12,7 +12,11 @@ from urllib.parse import quote, urljoin, urlparse
 
 from bs4 import BeautifulSoup, Tag
 
-from ..extraction.html._metadata import merge_html_metadata, parse_html_metadata
+from ..extraction.html._metadata import (
+    merge_html_metadata,
+    parse_html_metadata,
+    raw_html_meta_values,
+)
 from ..extraction.html.assets import extract_scoped_html_assets
 from ..extraction.html.assets.silverchair import (
     promote_silverchair_srcset_originals,
@@ -352,11 +356,6 @@ def _repair_royal_math_text(line: str) -> str:
     return line.replace("εinot", "εi not")
 
 
-def _clean_article_body(html_text: str) -> tuple[str, int]:
-    soup = BeautifulSoup(html_text, choose_parser())
-    return _clean_article_body_from_soup(soup)
-
-
 def _clean_article_body_from_soup(soup: BeautifulSoup) -> tuple[str, int]:
     body = _first_article_body(soup)
     if body is None:
@@ -373,22 +372,6 @@ def _markdown_render_html(cleaned_html: str) -> str:
         for node in list(soup.select(selector)):
             node.decompose()
     return str(soup)
-
-
-def _raw_meta_values(metadata: Mapping[str, Any], key: str) -> list[str]:
-    raw_meta = metadata.get("raw_meta")
-    if not isinstance(raw_meta, Mapping):
-        return []
-    values = raw_meta.get(key) or raw_meta.get(key.lower()) or []
-    if isinstance(values, str):
-        values = [values]
-    if not isinstance(values, list):
-        return []
-    return [
-        normalize_text(str(item or ""))
-        for item in values
-        if normalize_text(str(item or ""))
-    ]
 
 
 def _parse_citation_reference(value: str) -> dict[str, Any] | None:
@@ -446,7 +429,7 @@ def citation_references_from_metadata(
 ) -> list[dict[str, Any]]:
     references: list[dict[str, Any]] = []
     seen: set[str] = set()
-    for value in _raw_meta_values(metadata, "citation_reference"):
+    for value in raw_html_meta_values(metadata, "citation_reference"):
         reference = _parse_citation_reference(value)
         if reference is None:
             continue
@@ -541,26 +524,6 @@ def _merge_metadata_with_parsed_html(
         merged_payload["references"] = references
         return merged_payload
     return dict(merged)
-
-
-def pdf_candidate_urls(
-    metadata: Mapping[str, Any],
-    *,
-    source_url: str,
-    doi: str,
-) -> list[str]:
-    candidates: list[str] = []
-    for value in _raw_meta_values(metadata, "citation_pdf_url"):
-        candidates.append(urljoin(source_url, value))
-    for item in metadata.get("fulltext_links") or ():
-        if not isinstance(item, Mapping):
-            continue
-        url = normalize_text(str(item.get("url") or ""))
-        content_type = normalize_text(str(item.get("content_type") or "")).lower()
-        if url and ("pdf" in content_type or "pdf" in url.lower()):
-            candidates.append(urljoin(source_url, url))
-    candidates.append(direct_pdf_url(doi))
-    return list(dict.fromkeys(candidate for candidate in candidates if candidate))
 
 
 def extract_authors(html_text: str) -> list[str]:
@@ -1083,6 +1046,5 @@ __all__ = [
     "extract_markdown",
     "html_references_from_ref_list",
     "merge_metadata_with_html",
-    "pdf_candidate_urls",
     "royalsocietypublishing_normalize_markdown",
 ]

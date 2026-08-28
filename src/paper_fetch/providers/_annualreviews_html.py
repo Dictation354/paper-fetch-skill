@@ -11,7 +11,10 @@ from urllib.parse import quote, urljoin
 
 from bs4 import BeautifulSoup, Comment, Tag
 
-from ..extraction.html._metadata import merge_html_metadata, parse_html_metadata
+from ..extraction.html._metadata import (
+    merge_html_metadata,
+    parse_html_metadata,
+)
 from ..extraction.html.assets import (
     extract_scoped_html_assets as extract_provider_neutral_scoped_assets,
 )
@@ -164,42 +167,6 @@ def direct_article_url(doi: str) -> str:
 def direct_pdf_url(doi: str) -> str:
     normalized_doi = normalize_doi(doi)
     return f"https://www.annualreviews.org/doi/pdf/{quote(normalized_doi, safe='/')}"
-
-
-def _raw_meta_values(metadata: Mapping[str, Any], key: str) -> list[str]:
-    raw_meta = metadata.get("raw_meta")
-    if not isinstance(raw_meta, Mapping):
-        return []
-    values = raw_meta.get(key) or raw_meta.get(key.lower()) or []
-    if isinstance(values, str):
-        values = [values]
-    if not isinstance(values, list):
-        return []
-    return [
-        normalize_text(str(item or ""))
-        for item in values
-        if normalize_text(str(item or ""))
-    ]
-
-
-def pdf_candidate_urls(
-    metadata: Mapping[str, Any],
-    *,
-    source_url: str,
-    doi: str,
-) -> list[str]:
-    candidates: list[str] = []
-    for value in _raw_meta_values(metadata, "citation_pdf_url"):
-        candidates.append(urljoin(source_url, value))
-    for item in metadata.get("fulltext_links") or ():
-        if not isinstance(item, Mapping):
-            continue
-        url = normalize_text(str(item.get("url") or ""))
-        content_type = normalize_text(str(item.get("content_type") or "")).lower()
-        if url and ("pdf" in content_type or "pdf" in url.lower()):
-            candidates.append(urljoin(source_url, url))
-    candidates.append(direct_pdf_url(doi))
-    return list(dict.fromkeys(candidate for candidate in candidates if candidate))
 
 
 def merge_metadata_with_html(
@@ -943,5 +910,4 @@ __all__ = [
     "extract_references",
     "extract_scoped_html_assets",
     "merge_metadata_with_html",
-    "pdf_candidate_urls",
 ]

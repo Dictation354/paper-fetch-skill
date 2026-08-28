@@ -34,19 +34,9 @@ from ...extraction.html.shared import (
     soup_root as _soup_root,
 )
 from ...extraction.html.tables import (
-    escape_markdown_table_cell,
-    expanded_table_matrix,
-    flatten_table_header_rows,
-    normalize_table_inline_text,
-    render_aligned_markdown_table,
-    render_table_inline_node,
     render_table_inline_text,
     render_table_markdown,
-    table_cell_data,
-    table_header_row_count,
-    table_headers_and_data,
     table_placeholder,
-    table_rows,
     wrap_table_text_fragment,
 )
 from ...markdown.citations import numeric_citation_payload_from_html_node
@@ -86,10 +76,6 @@ from .profile import (
 from bs4 import NavigableString, Tag
 
 
-def _normalize_table_inline_text(value: str) -> str:
-    return normalize_table_inline_text(value)
-
-
 def _numeric_citation_payload_from_inline_node(node: Any) -> str | None:
     return numeric_citation_payload_from_html_node(
         node,
@@ -99,10 +85,6 @@ def _numeric_citation_payload_from_inline_node(node: Any) -> str | None:
 
 def _wrap_table_text_fragment(text: str, marker: str | None) -> str:
     return wrap_table_text_fragment(text, marker)
-
-
-def _render_table_inline_node(node: Any, *, text_style: str | None = None) -> str:
-    return render_table_inline_node(node, text_style=text_style)
 
 
 def _render_table_inline_text(node: Any) -> str:
@@ -569,42 +551,6 @@ def _normalize_boxed_text_blocks(container: Tag) -> None:
         target.replace_with(replacement)
 
 
-def _table_cell_data(cell: Tag) -> dict[str, Any]:
-    return table_cell_data(cell, render_inline_text=_render_table_inline_text)
-
-
-def _table_rows(table: Tag) -> list[list[dict[str, Any]]]:
-    return table_rows(table, render_inline_text=_render_table_inline_text)
-
-
-def _table_header_row_count(table: Tag, rows: list[list[dict[str, Any]]]) -> int:
-    return table_header_row_count(table, rows)
-
-
-def _expanded_table_matrix(
-    rows: list[list[dict[str, Any]]],
-) -> list[list[dict[str, Any]]] | None:
-    return expanded_table_matrix(rows)
-
-
-def _flatten_table_header_rows(rows: list[list[dict[str, Any]]]) -> list[str]:
-    return flatten_table_header_rows(rows)
-
-
-def _table_headers_and_data(
-    table: Tag,
-) -> tuple[list[str], list[list[dict[str, Any]]], bool]:
-    return table_headers_and_data(table, render_inline_text=_render_table_inline_text)
-
-
-def _escape_markdown_table_cell(text: str) -> str:
-    return escape_markdown_table_cell(text)
-
-
-def _render_aligned_markdown_table(matrix: list[list[str]]) -> list[str]:
-    return render_aligned_markdown_table(matrix)
-
-
 def _render_table_markdown(table_node: Tag, *, label: str, caption: str) -> str:
     return render_table_markdown(
         table_node,
@@ -747,11 +693,8 @@ __all__ = [
     "_drop_front_matter_teaser_figures",
     "_drop_table_blocks",
     "_equation_label",
-    "_escape_markdown_table_cell",
-    "_expanded_table_matrix",
     "_figure_like_nodes",
     "_first_abstract_node",
-    "_flatten_table_header_rows",
     "_formula_image_markdown",
     "_formula_image_url_from_node",
     "_inline_math_replacement_target",
@@ -775,24 +718,17 @@ __all__ = [
     "_normalize_non_table_inline_text",
     "_normalize_special_blocks",
     "_normalize_table_blocks",
-    "_normalize_table_inline_text",
     "_numeric_citation_payload_from_inline_node",
-    "_render_aligned_markdown_table",
     "_render_caption_text",
     "_render_non_table_inline_fragment",
     "_render_non_table_inline_node",
     "_render_non_table_inline_text",
-    "_render_table_inline_node",
     "_render_table_inline_text",
     "_render_table_markdown",
     "_split_paragraph_display_formula_blocks",
     "_strip_caption_label",
     "_table_caption_text",
-    "_table_cell_data",
-    "_table_header_row_count",
-    "_table_headers_and_data",
     "_table_like_nodes",
     "_table_placeholder",
-    "_table_rows",
     "_wrap_table_text_fragment",
 ]

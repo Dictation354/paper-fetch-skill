@@ -104,10 +104,6 @@ class ProviderRouteSpec:
             effective_transport != "browser"
         ):
             raise ValueError("Browser-backed routes must use browser transport.")
-        if (self.browser_required or self.browser_optional) and not (
-            self.requires_playwright
-        ):
-            object.__setattr__(self, "requires_playwright", True)
         if self.auth_supported and not self.browser_preflight:
             object.__setattr__(self, "browser_preflight", True)
         if self.browser_preflight and not (
@@ -167,8 +163,6 @@ class ProviderSpec:
     html_capable: bool = True
     body_text_thresholds: BodyTextThresholds = DEFAULT_BODY_TEXT_THRESHOLDS
     env_requirements: tuple[str, ...] = ()
-    requires_playwright: bool = False
-    requires_browser_runtime: bool = False
     batch_concurrency: int | None = None
     routes: tuple[ProviderRouteSpec, ...] = ()
     cdn_hosts: tuple[str, ...] = ()
@@ -184,76 +178,18 @@ class ProviderSpec:
             )
         if isinstance(self.identity_priority, bool):
             raise ValueError("identity_priority must be an integer")
-        if self.requires_playwright and not self.requires_browser_runtime:
-            object.__setattr__(self, "requires_browser_runtime", True)
+        if not self.routes:
+            raise ValueError("Provider routes must be declared explicitly.")
         effective_batch_concurrency = self.batch_concurrency
         if effective_batch_concurrency is None:
-            effective_batch_concurrency = 1 if self.requires_browser_runtime else 2
+            effective_batch_concurrency = (
+                1 if any(route.browser_required for route in self.routes) else 2
+            )
             object.__setattr__(self, "batch_concurrency", effective_batch_concurrency)
         if isinstance(effective_batch_concurrency, bool) or not (
             1 <= effective_batch_concurrency <= 8
         ):
             raise ValueError("batch_concurrency must be an integer from 1 to 8.")
-        declared_asset_routes = tuple(
-            route for route in self.routes if route.kind == "assets"
-        )
-        if not self.routes or len(declared_asset_routes) == len(self.routes):
-            routes: list[ProviderRouteSpec] = [
-                ProviderRouteSpec(name="metadata", kind="metadata")
-            ]
-            if self.html_capable:
-                routes.append(
-                    ProviderRouteSpec(
-                        name=(
-                            "browser_html"
-                            if self.requires_browser_runtime
-                            else "direct_html"
-                        ),
-                        kind="html",
-                        browser_required=self.requires_browser_runtime,
-                        browser_preflight=self.requires_browser_runtime,
-                        auth_supported=self.requires_browser_runtime,
-                        requires_playwright=self.requires_playwright,
-                        concurrency=1 if self.requires_browser_runtime else 2,
-                    )
-                )
-            if self.xml_path_templates:
-                routes.append(ProviderRouteSpec(name="xml", kind="xml"))
-            if self.pdf_path_templates or self.pdf_source_path_templates:
-                browser_backed_pdf = self.requires_browser_runtime
-                routes.append(
-                    ProviderRouteSpec(
-                        name="browser_pdf" if browser_backed_pdf else "direct_pdf",
-                        kind="pdf",
-                        browser_required=browser_backed_pdf,
-                        browser_preflight=browser_backed_pdf,
-                        auth_supported=browser_backed_pdf,
-                        requires_playwright=browser_backed_pdf,
-                        requires_pdf_conversion=True,
-                        concurrency=1 if browser_backed_pdf else 2,
-                    )
-                )
-            routes.extend(declared_asset_routes)
-            object.__setattr__(self, "routes", tuple(routes))
-        if self.requires_browser_runtime and not any(
-            route.browser_required or route.browser_optional for route in self.routes
-        ):
-            object.__setattr__(
-                self,
-                "routes",
-                (
-                    *self.routes,
-                    ProviderRouteSpec(
-                        name="browser_html",
-                        kind="html",
-                        browser_required=True,
-                        browser_preflight=True,
-                        auth_supported=True,
-                        requires_playwright=True,
-                        concurrency=1,
-                    ),
-                ),
-            )
         route_names = [route.name for route in self.routes]
         if len(route_names) != len(set(route_names)):
             raise ValueError("Provider route names must be unique.")
@@ -778,6 +714,14 @@ def provider_has_browser_route(provider_name: str | None) -> bool:
 
 def provider_requires_browser(provider_name: str | None) -> bool:
     return any(route.browser_required for route in provider_routes(provider_name))
+
+
+def provider_has_optional_browser_route(provider_name: str | None) -> bool:
+    return any(route.browser_optional for route in provider_routes(provider_name))
+
+
+def provider_requires_playwright(provider_name: str | None) -> bool:
+    return any(route.requires_playwright for route in provider_routes(provider_name))
 
 
 def provider_supports_browser_preflight(provider_name: str | None) -> bool:

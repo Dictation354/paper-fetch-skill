@@ -284,7 +284,7 @@ def test_from_manifest_reuses_existing_fixture_samples_without_merge_plan(
     assert (tmp_path / "src/paper_fetch/providers/_arxiv_html.py").is_file()
 
 
-def test_from_manifest_routing_and_probe_fields_enter_provider_spec(
+def test_from_manifest_routing_and_probe_fields_enter_provider_routes(
     tmp_path: Path,
 ) -> None:
     _run_from_manifest(tmp_path)
@@ -304,12 +304,17 @@ def test_from_manifest_routing_and_probe_fields_enter_provider_spec(
     assert "timeout_seconds=20" in html_text
     assert "concurrency=2" in html_text
     assert "env_requirements=()" in html_text
-    assert "requires_playwright=False" in html_text
-    assert "requires_browser_runtime=False" in html_text
+    assert "requires_playwright=False" not in html_text
+    assert "requires_browser_runtime=" not in html_text
+    assert 'name="article_html"' in html_text
+    assert 'kind="html"' in html_text
+    assert 'name="pdf_fallback"' in html_text
+    assert 'kind="pdf"' in html_text
+    assert "requires_pdf_conversion=True" in html_text
     assert "status_order=999" in html_text
 
 
-def test_from_manifest_probe_requirements_enter_provider_spec(tmp_path: Path) -> None:
+def test_from_manifest_probe_requirements_enter_provider_routes(tmp_path: Path) -> None:
     _run_from_manifest(tmp_path, WILEY_MANIFEST)
 
     html_text = (tmp_path / "src/paper_fetch/providers/_wiley_html.py").read_text(
@@ -317,8 +322,10 @@ def test_from_manifest_probe_requirements_enter_provider_spec(tmp_path: Path) ->
     )
 
     assert "env_requirements=()" in html_text
+    assert "requires_browser_runtime=" not in html_text
+    assert "browser_required=True" in html_text
+    assert "browser_optional=True" in html_text
     assert "requires_playwright=True" in html_text
-    assert "requires_browser_runtime=True" in html_text
     assert '# body=("figures", "body_tables", "formula_images")' in html_text
     assert '# all=("figures", "body_tables", "formula_images", "supplementary")' in (
         html_text

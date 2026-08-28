@@ -66,14 +66,20 @@ TARGET_ARTIFACTS = (
 )
 
 
-def offline_asset_names() -> frozenset[str]:
-    installers = {installer for _target, _artifact, installer in TARGET_ARTIFACTS}
-    evidence = {
+def installer_asset_names() -> frozenset[str]:
+    return frozenset(
+        installer for _target, _artifact, installer in TARGET_ARTIFACTS
+    )
+
+
+def target_evidence_names() -> frozenset[str]:
+    return frozenset(
+        {
         f"paper-fetch-evidence-{target}.{suffix}"
         for target, _artifact, _installer in TARGET_ARTIFACTS
         for suffix in ("dependency-manifest.json", "sbom.cdx.json")
-    }
-    return frozenset({"dependency-manifest.json", *installers, *evidence})
+        }
+    )
 
 
 def stable_asset_names(version: str) -> frozenset[str]:
@@ -84,12 +90,28 @@ def stable_asset_names(version: str) -> frozenset[str]:
         or "\\" in normalized_version
     ):
         raise ValueError(f"Invalid project version: {version!r}")
+    return installer_asset_names()
+
+
+def stable_input_names(version: str) -> frozenset[str]:
+    normalized_version = version.strip()
     python_assets = {
         f"paper_fetch_skill-{normalized_version}-py3-none-any.whl",
         f"paper_fetch_skill-{normalized_version}.tar.gz",
         "python-distribution-inventory.json",
     }
-    return frozenset({*offline_asset_names(), *python_assets})
+    return frozenset(
+        {
+            "dependency-manifest.json",
+            *installer_asset_names(),
+            *target_evidence_names(),
+            *python_assets,
+        }
+    )
+
+
+def rolling_asset_names() -> frozenset[str]:
+    return frozenset({"dependency-manifest.json", *installer_asset_names()})
 
 
 def stable_input_mapping(version: str) -> dict[Path, str]:
@@ -111,11 +133,20 @@ def stable_input_mapping(version: str) -> dict[Path, str]:
         for suffix in ("dependency-manifest.json", "sbom.cdx.json"):
             evidence = f"paper-fetch-evidence-{target}.{suffix}"
             mapping[Path("offline", artifact, evidence)] = evidence
-    expected = stable_asset_names(version)
+    expected = stable_input_names(version)
     if set(mapping.values()) != set(expected):
         raise AssertionError(
             "Stable release source mapping drifted from asset inventory"
         )
+    return mapping
+
+
+def rolling_input_mapping() -> dict[Path, str]:
+    mapping = {
+        Path("dependencies", "dependency-manifest.json"): "dependency-manifest.json"
+    }
+    for name in sorted({*installer_asset_names(), *target_evidence_names()}):
+        mapping[Path("offline", name)] = name
     return mapping
 
 
@@ -248,17 +279,51 @@ def prepare_stable_release(
 
     output_dir.mkdir(parents=True, mode=0o755)
     try:
+        public_names = stable_asset_names(version)
         for relative, basename in sorted(
             expected_mapping.items(), key=lambda item: item[1]
         ):
-            _copy_exclusive(source_files[relative], output_dir / basename)
-        expected_names = stable_asset_names(version)
+            if basename in public_names:
+                _copy_exclusive(source_files[relative], output_dir / basename)
+        expected_names = public_names
         write_checksums(output_dir, expected_names)
         _fsync_directory_best_effort(output_dir)
     except BaseException:
         shutil.rmtree(output_dir, ignore_errors=True)
         raise
     return expected_names
+
+
+def prepare_rolling_release(
+    *, input_root: Path, output_dir: Path
+) -> frozenset[str]:
+    source_files = _regular_files(input_root)
+    _assert_unique_basenames(source_files)
+    expected_mapping = rolling_input_mapping()
+    actual = {str(relative) for relative in source_files}
+    expected = {str(relative) for relative in expected_mapping}
+    if actual != expected:
+        raise ValueError(
+            "Rolling release inputs are not the exact expected nested set: "
+            + _format_set_difference(expected, actual)
+        )
+    if output_dir.exists():
+        raise ValueError(f"Release output directory already exists: {output_dir}")
+
+    output_dir.mkdir(parents=True, mode=0o755)
+    try:
+        public_names = rolling_asset_names()
+        for relative, basename in sorted(
+            expected_mapping.items(), key=lambda item: item[1]
+        ):
+            if basename in public_names:
+                _copy_exclusive(source_files[relative], output_dir / basename)
+        write_checksums(output_dir, public_names)
+        _fsync_directory_best_effort(output_dir)
+    except BaseException:
+        shutil.rmtree(output_dir, ignore_errors=True)
+        raise
+    return public_names
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -273,10 +338,11 @@ def _parser() -> argparse.ArgumentParser:
     stable.add_argument("--version", required=True)
 
     rolling = subparsers.add_parser(
-        "checksum-offline",
-        help="validate a flat rolling/offline set and write SHA256SUMS",
+        "prepare-rolling",
+        help="validate rolling inputs and publish installers plus dependency manifest",
     )
-    rolling.add_argument("--asset-dir", type=Path, required=True)
+    rolling.add_argument("--input-root", type=Path, required=True)
+    rolling.add_argument("--output-dir", type=Path, required=True)
     return parser
 
 
@@ -289,8 +355,10 @@ def main() -> int:
             version=args.version,
         )
     else:
-        expected = offline_asset_names()
-        write_checksums(args.asset_dir, expected)
+        expected = prepare_rolling_release(
+            input_root=args.input_root,
+            output_dir=args.output_dir,
+        )
     print(f"Validated {len(expected)} release assets and wrote SHA256SUMS.")
     return 0
 

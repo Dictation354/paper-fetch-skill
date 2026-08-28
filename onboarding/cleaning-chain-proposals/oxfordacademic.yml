@@ -2,7 +2,6 @@ schema_version: 2
 provider: oxfordacademic
 manifest: onboarding/manifests/oxfordacademic.yml
 artifact: onboarding/cleaning-chain-proposals/oxfordacademic.yml
-evidence_artifact: onboarding/cleaning-chain-proposals/oxfordacademic.evidence.yml
 fixtures_digest:
 - purpose: structure
   doi: 10.1093/bioinformatics/btaa161
@@ -354,5 +353,5 @@ token_conflict_summary:
   - Metrics
   - Biometrics
 notes:
-- Compact proposal for implementation worker; full evidence is in evidence_artifact.
+- Compact fixture-derived cleaning proposal.
 - sentinel and cross_route_guard contract deltas are warnings, not blockers.

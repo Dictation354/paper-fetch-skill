@@ -1,16 +1,14 @@
 # 新增 Provider 开发标准
 
-> Human reference only. AI/coordinator provider onboarding must use [`onboarding/coordinator-spec.md`](../onboarding/coordinator-spec.md) and related authority docs.
-
 这份文档是后续接入新出版社 provider 的人工教程和解释性参考。目标是让人类维护者理解当前架构边界，减少后续因为路由、typed payload、资产语义、测试夹具或文档事实来源不一致造成的返工。
 
-本文不作为 AI/coordinator worker 的行为输入，也不定义机器编排事实源。AI/coordinator onboarding 的入口索引是 [`onboarding/README.md`](../onboarding/README.md)；行为事实源分别见 [`coordinator-spec.md`](../onboarding/coordinator-spec.md)、[`provider-manifest.md`](../onboarding/provider-manifest.md)、[`provider-manifest.schema.json`](../onboarding/provider-manifest.schema.json)、[`agent-task-brief.md`](../onboarding/agent-task-brief.md)、[`hard-constraints.md`](../onboarding/hard-constraints.md) 和 [`acceptance.md`](../onboarding/acceptance.md)。
+确定性 onboarding 入口见 [`onboarding/README.md`](../onboarding/README.md)；机器输入与验收事实源分别是 [`provider-manifest.md`](../onboarding/provider-manifest.md)、[`provider-manifest.schema.json`](../onboarding/provider-manifest.schema.json)、[`hard-constraints.md`](../onboarding/hard-constraints.md) 和 [`acceptance.md`](../onboarding/acceptance.md)。
 
 当前已支持 provider 的能力矩阵、运行时行为和环境变量仍以 [`providers.md`](providers.md) 为准；系统分层、typed contract 和 owner 边界仍以 [`architecture/overview.md`](architecture/overview.md) 为准；用户可见提取 / 渲染规则仍以 [`extraction-rules.md`](extraction-rules.md) 为准。
 
 ## 端到端流程速览
 
-新增 provider 的人工开发流程通常是 **Step 0 → Step 6**。AI/coordinator 的固定 task DAG 不以本节为准，必须使用 [`onboarding/coordinator-spec.md`](../onboarding/coordinator-spec.md)。
+新增 provider 的开发流程通常是 **Step 0 → Step 6**；对应的直接脚本顺序见 [`onboarding/instruction.md`](../onboarding/instruction.md)。
 
 | Step | 任务 | 详细规约 | 预估 |
 |---|---|---|---|
@@ -46,9 +44,9 @@ resolve
 
 必须遵守这些原则：
 
-- Provider 身份、路由信号、默认资产策略、status 顺序和 registry factory 统一来自 provider entry module 顶部注册的 `ProviderBundle`；`PROVIDER_CATALOG` 和 source map 由 bundle discovery 懒加载派生。内置 entry module 由显式清单管理；新增动态 entry 必须包含真实 `register_provider_bundle(...)` 调用，注释、docstring 或普通字符串不会触发 discovery。
+- Provider 身份、路由信号、默认资产策略、status 顺序和 registry factory 统一来自 provider entry module 顶部注册的 `ProviderBundle`；`PROVIDER_CATALOG` 和 source map 由显式模块清单懒加载派生。新增内置 provider 必须在该清单登记一次；运行时不扫描源码发现 provider。
 - Provider 主链必须返回 typed payload：`ProviderContent`、`ProviderFetchResult`、`ProviderArtifacts`、`warnings`、`trace` 和 `merged_metadata`。
-- 不允许通过 `raw_payload.metadata[...]` 读写结构化状态；它只是 read-only compatibility view。
+- `RawFulltextPayload` 不提供 `metadata` 兼容视图；结构化状态必须写入对应 typed 字段。
 - Provider 层只做 publisher adapter；通用 HTML、表格、公式、引用、资产验证、availability 判定优先挂到已有 canonical owner。
 - HTML / XML / PDF / browser fallback 的顺序由 provider 自己明确声明，并用 `source_trail` 和 warnings 暴露可观测行为。
 - 资产失败不能覆盖已成功的正文 Markdown；资产问题应进入 warnings、`article.quality.asset_failures` 和 download trace。
@@ -87,9 +85,9 @@ python3 scripts/scaffold_provider.py --name newpub --doi 10.1234/sample [--fullt
 <a id="provider-bundle"></a>
 ## 2. 填完整 ProviderBundle
 
-新增 provider 的第一批代码改动应该集中在 provider entry module，例如 `src/paper_fetch/providers/newpub.py` 顶部；scaffold 初期的 `_newpub_html.py` 只作为 provider-owned helper / compatibility facade：
+新增 provider 的第一批代码改动应该集中在 provider entry module，例如 `src/paper_fetch/providers/newpub.py` 顶部；scaffold 初期的 `_newpub_html.py` 是 provider-owned helper，只有职责已经实际分离时才拆成更小模块，不保留无消费者兼容 facade：
 
-- 调用 `register_provider_bundle(ProviderBundle(...))`，一次性声明 `catalog=ProviderSpec(...)`、`html_rules=ProviderHtmlRules(...)`、`sources=(...)`，以及需要的 asset retry / metadata merge 配置；AI/coordinator 的字段事实源仍是 [`onboarding/provider-manifest.md`](../onboarding/provider-manifest.md)。
+- 调用 `register_provider_bundle(ProviderBundle(...))`，一次性声明 `catalog=ProviderSpec(...)`、`html_rules=ProviderHtmlRules(...)`、`sources=(...)`，以及需要的 asset retry / metadata merge 配置；onboarding 字段事实源见 [`onboarding/provider-manifest.md`](../onboarding/provider-manifest.md)。
 - `sources` 只登记实际写入 `ArticleModel.source` / envelope `source` 的公开来源；provider 内部 route marker 不单独登记。例如 Springer HTML / PDF fallback 分别公开 `springer_html` / `springer_pdf`，二者都映射到 `springer` provider。
 - `domains` 只登记明确 host；需要覆盖同一注册域下持续新增子域时，用 `domain_suffixes`，例如 Copernicus 使用 `("copernicus.org",)` 而不是穷举 journal 子域。
 - `probe_capability` 必须描述 routing 能力：有可提前调用的官方 metadata API 时设为 `metadata_api`；只可作为 DOI/domain/publisher 路由信号时设为 `routing_signal`。通用 routing 会按该字段决定是否发起早期 metadata probe。
@@ -132,7 +130,7 @@ register_provider_bundle(
 )
 ```
 
-不要手写新的 provider 常量列表，也不要修改中心模块的 provider 字典或规则表。`preferred_providers`、MCP provider status、registry clients、默认 asset profile 和 provider identity 都应该继续从 bundle discovery 派生。新增后至少补 provider 相关 unit test 的 DOI、domain、publisher 推断样例，并让 `tests/unit/test_provider_bundle_completeness.py` 通过。
+除 `paper_fetch.providers._BUILTIN_PROVIDER_ENTRY_MODULES` 的单次模块登记外，不要手写新的 provider 常量列表，也不要修改中心模块的 provider 字典或规则表。`preferred_providers`、MCP provider status、registry clients、默认 asset profile 和 provider identity 都从已登记 bundle 派生。新增后至少补 provider 相关 unit test 的 DOI、domain、publisher 推断样例，并让 `tests/unit/test_provider_bundle_completeness.py` 通过。
 
 <a id="client-contract"></a>
 ## 3. Client Contract + Markdown Review Loop
@@ -208,7 +206,7 @@ PYTHONPATH=src python3 -m mypy src/paper_fetch/providers/arxiv.py src/paper_fetc
 
 实现过程中必须把 Markdown Review Loop 当作主循环：
 
-1. 对 manifest 中每个 non-null `fixtures.doi_samples.<purpose>` 生成 baseline Markdown；AI/coordinator manifest 字段定义以 [`onboarding/provider-manifest.md`](../onboarding/provider-manifest.md) 和 [`provider-manifest.schema.json`](../onboarding/provider-manifest.schema.json) 为准。
+1. 对 manifest 中每个 non-null `fixtures.doi_samples.<purpose>` 生成 baseline Markdown；manifest 字段定义以 [`onboarding/provider-manifest.md`](../onboarding/provider-manifest.md) 和 [`provider-manifest.schema.json`](../onboarding/provider-manifest.schema.json) 为准。
 2. 逐篇阅读 Markdown，记录 `fixture/purpose -> issue -> assertion -> fix`。
 3. 每个 issue 先落到 `tests/unit/test_<provider>_provider.py` 的 provider-local 断言，再修改 provider-owned 清洗 / 转换代码。
 4. 主成功路径至少保留一个正向 Markdown 内容断言和一个负向站点 chrome / access noise / boilerplate 断言。
@@ -275,12 +273,12 @@ Provider-specific 代码只负责：
 
 - 找到 publisher 的 article container 或 XML root。
 - 把 publisher DOM/XML 映射成已有中间结构。
-- 在自己的 provider entry module 顶部 `register_provider_bundle(ProviderBundle(...))` 声明 `ProviderSpec`、`ProviderHtmlRules` 和 availability data。bundle 内的 HTML rules 持有 publisher cleanup profile、Markdown promo tokens、availability site rule、access-block tokens、availability policy、公式 container/selector、supplementary 文本扩展和必要 alias；运行时通过 bundle discovery 合成 DOM / Markdown 清洗规则。不要在 `_runtime.py`、`formula_rules.py`、`assets/supplementary.py`、`quality/issues.py`、`quality/html_signals.py` 或 `quality/html_availability.py` 直接追加 publisher 私有 token。
+- 在自己的 provider entry module 顶部 `register_provider_bundle(ProviderBundle(...))` 声明 `ProviderSpec`、`ProviderHtmlRules` 和 availability data。bundle 内的 HTML rules 持有 publisher cleanup profile、Markdown promo tokens、availability site rule、access-block tokens、availability policy、公式 container/selector、supplementary 文本扩展和必要 alias；运行时从显式登记的 bundle 合成 DOM / Markdown 清洗规则。不要在 `_runtime.py`、`formula_rules.py`、`assets/supplementary.py`、`quality/issues.py`、`quality/html_signals.py` 或 `quality/html_availability.py` 直接追加 publisher 私有 token。
 - Provider-specific figure/table caption regex 可以保留行首锚定、caption remainder、Extended Data 变体或 ar5iv 兼容分支，但应复用 `common_patterns` 的 label core / prefix helper 或在旁边说明差异。
 - Provider HTML availability signal 也通过 bundle 内 `ProviderHtmlRules.availability` 声明；必须提供 `signal_set` 或显式 `no_signals=True`。
 - 新 access-gate 文案先登记到共享 `ACCESS_GATE_LABELS` 或 `ACCESS_GATE_PATTERNS`；只有会阻断全文访问的文案进入 `ACCESS_GATE_PATTERNS`，机构访问确认等非阻断提示只保留在 `MARKDOWN_ACCESS_NOISE_LABELS` 等降噪词表中。provider markdown/postprocess break tokens 只放非访问门的站点 chrome。
 - 定义 asset scope 和 fallback 候选。
-- 把提取结果写入 `ProviderContent.diagnostics`，而不是塞进 raw metadata compatibility view。
+- 把提取结果写入 `ProviderContent.diagnostics`，而不是另建 raw metadata 通道。
 
 如果确实需要新增共享能力，应优先放到 canonical owner 模块，并同步 `docs/architecture/overview.md` 的阶段映射和 `docs/extraction-rules.md` 的规则说明。
 
@@ -405,7 +403,7 @@ PYTHONPATH=src uv run python -m pytest tests/integration -q
 PYTHONPATH=src python3 scripts/check_provider_governance.py
 ```
 
-这两条常规 unit / integration 命令默认复用 `pyproject.toml` 中的 `pytest-xdist` 配置，不要额外加 `-n 0`。140 个 exact fixture 按 provider 整体分到四个稳定 shard，普通 CI 对每个 `push` / `pull_request` 都运行四个 shard；本地可逐 shard复现：
+这两条常规 unit / integration 命令默认复用 `pyproject.toml` 中的 `pytest-xdist` 配置，不要额外加 `-n 0`。全部可执行 exact fixture 按 provider 整体分到四个稳定 shard，普通 CI 对每个 `push` / `pull_request` 都运行四个 shard；本地可逐 shard 复现：
 
 pytest 会在 fixture/corpus 收集前检查项目锁定环境的 MCP major 和 trafilatura `extract()` 行为契约。若误用 ambient Python，会在运行测试代码前给出 `uv sync --frozen --extra dev --extra full` 与精确 `uv run` 重试命令；不要通过跳过 bootstrap 让不可执行 fixture 被误计为 replay。
 
@@ -467,7 +465,7 @@ profile、docs matrix 与复杂度预算全部一致。生成文件不得手工�
 
 新增 provider 只有同时满足以下条件，才算接入完成：
 
-- Provider 已在入口模块顶部注册完整 `ProviderBundle`，bundle discovery 能派生 catalog/source map，registry 能构建 client。
+- Provider 已在显式模块清单登记，并在入口模块顶部注册完整 `ProviderBundle`；catalog/source map 可由 bundle 派生，registry 能构建 client。
 - `preferred_providers=["<provider>"]` 可限制进入该 provider 主链。
 - 主路径、fallback、warnings、`source_trail` 和公开 `source` 稳定。
 - `fetch_paper()` 成功时返回 `ArticleModel`，失败时按策略返回 provider-managed abstract-only 或 metadata-only。
@@ -639,7 +637,7 @@ Fixtures（按附录 A 11 维清单）
 
 | 文件 | 为什么不动 | 怎么补充 provider 行为 |
 |---|---|---|
-| `src/paper_fetch/provider_catalog.py` | 不维护 provider 行为 | 在 provider entry module 顶部 `register_provider_bundle(ProviderBundle(catalog=ProviderSpec(...)))`；scaffold 初期 `_X_html.py` 只可作为兼容 facade |
+| `src/paper_fetch/provider_catalog.py` | 不维护 provider 行为 | 在 provider entry module 顶部 `register_provider_bundle(ProviderBundle(catalog=ProviderSpec(...)))`；scaffold 初期 `_X_html.py` 是 provider-owned helper |
 | `src/paper_fetch/extraction/html/provider_rules.py` | 不维护 provider-owned helper 字典 | 同上，bundle 内 `html_rules=ProviderHtmlRules(...)` 直接持 provider-owned helper 引用 |
 | `src/paper_fetch/quality/html_signals.py` | 不维护 provider 专属 signal 函数 | 在 bundle 的 `availability.datalayer_signal_set` / `text_marker_signal_set` 填数据 |
 | `src/paper_fetch/quality/html_availability.py` | 不维护 provider 名分支 | 在 bundle 的 `availability.overrides` 填数据 |

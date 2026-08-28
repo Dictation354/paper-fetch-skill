@@ -6,6 +6,22 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.0.0 - 2026-08-28
+
+### Changed — explicit capabilities and smaller public surfaces
+
+- Provider routes are now the sole capability source. Provider-level browser flags, automatic route synthesis, source-tree discovery, and dynamic registry monkeypatching were removed; built-in providers use one explicit lazy module list.
+- MCP tools keep their existing `CallToolResult.structured_content` success and error payloads, but `tools/list` no longer publishes `outputSchema`. Browser capability and preflight status are derived from runtime owners, and unknown preflight states now fail closed.
+- Removed private compatibility entry points, including `RawFulltextPayload.metadata`, `build_provider_registry`, unused provider wrappers, and the unconnected direct-HTTP/browser link helpers. These removals are intentionally not fronted by deprecation facades.
+
+### Changed — repository tooling and releases
+
+- Removed recursive onboarding agent orchestration, private DAG/state/retry machinery, evidence sidecars, geography-only live/report tooling, and production-wheel Markdown review/quality diagnostics. Deterministic review bootstrap/finalization and golden fixture manifests remain the repository-owned workflow.
+- Stable releases now publish exactly nine installers plus `SHA256SUMS`. Rolling prereleases publish those installers, `dependency-manifest.json`, and `SHA256SUMS`; wheel, sdist, inventory, SBOM, and per-target evidence remain build-time verification inputs.
+- Replaced the historical macOS ledger with a compact support, safety, and evidence contract derived from project metadata, workflows, the installer manifest, and the release asset owner.
+
+See [docs/migration-v6.md](docs/migration-v6.md) for incompatible import and protocol changes.
+
 ## 5.6.1 - 2026-08-27
 
 ### Fixed — Windows release lifecycle

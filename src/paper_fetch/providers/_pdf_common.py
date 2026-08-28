@@ -154,12 +154,6 @@ def _positive_int_env(name: str, default: int) -> int:
     return parsed if parsed > 0 else default
 
 
-def _pdf_max_bytes() -> int:
-    """Compatibility alias for older internal callers."""
-
-    return pdf_max_bytes()
-
-
 def _pdf_max_pages() -> int:
     return _positive_int_env(PDF_MAX_PAGES_ENV_VAR, DEFAULT_PDF_MAX_PAGES)
 

@@ -1030,8 +1030,7 @@ class SharedHtmlHelperTests(unittest.TestCase):
     def test_wiley_body_figures_are_not_promoted_to_supplementary_without_supporting_information(
         self,
     ) -> None:
-        """rule: rule-wiley-supporting-information-assets
-        rule: rule-supplementary-discovery-explicit-scope"""
+        """rule: rule-wiley-supporting-information-assets"""
         body_html = """
 <section class="article-section__content">
   <figure class="figure" id="example-fig-0001">
@@ -1088,8 +1087,7 @@ class SharedHtmlHelperTests(unittest.TestCase):
     def test_extract_scoped_html_assets_empty_supplementary_scope_does_not_scan_body(
         self,
     ) -> None:
-        """rule: rule-atypon-browser-workflow-supplementary-sections
-        rule: rule-supplementary-discovery-explicit-scope"""
+        """rule: rule-atypon-browser-workflow-supplementary-sections"""
         body_html = """
 <html>
   <body>

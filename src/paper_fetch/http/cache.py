@@ -83,11 +83,6 @@ def _sensitive_cache_header_names() -> frozenset[str]:
     return frozenset(SENSITIVE_CACHE_HEADER_NAMES) | provider_sensitive_header_names()
 
 
-@functools.cache
-def _cache_key_header_names() -> frozenset[str]:
-    return frozenset(CACHE_KEY_HEADER_NAMES) | _sensitive_cache_header_names()
-
-
 @dataclass(frozen=True)
 class _DiskCacheEntry:
     path: Path

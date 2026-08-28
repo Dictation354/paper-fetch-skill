@@ -1,4 +1,4 @@
-"""Shared article issue-flag diagnostics."""
+"""Repository-only article issue-flag diagnostics."""
 
 from __future__ import annotations
 
@@ -6,20 +6,20 @@ import re
 from typing import Any
 from collections.abc import Sequence
 
-from ..models import (
+from paper_fetch.models import (
     LEADING_ABSTRACT_CONTEXT_HEADINGS,
     FetchEnvelope,
     estimate_tokens,
     filtered_body_sections,
     strip_markdown_images,
 )
-from ..extraction.html.semantics import normalize_heading
-from ..provider_catalog import provider_for_source, sources_by_provider
-from ..publisher_identity import ASCII_DOI_CORE_PATTERN
-from ..section_vocab import PRIMARY_ABSTRACT_HEADINGS
-from ..utils import normalize_text
-from .html_signals import authorless_heading_signatures_for_provider
-from .reason_codes import FULLTEXT
+from paper_fetch.extraction.html.semantics import normalize_heading
+from paper_fetch.provider_catalog import provider_for_source, sources_by_provider
+from paper_fetch.publisher_identity import ASCII_DOI_CORE_PATTERN
+from paper_fetch.quality.html_signals import authorless_heading_signatures_for_provider
+from paper_fetch.reason_codes import FULLTEXT
+from paper_fetch.section_vocab import PRIMARY_ABSTRACT_HEADINGS
+from paper_fetch.utils import normalize_text
 
 EXPECTED_FULLTEXT_SOURCES_BY_PROVIDER = sources_by_provider()
 ASCII_DOI_PATTERN = re.compile(rf"^{ASCII_DOI_CORE_PATTERN}$")

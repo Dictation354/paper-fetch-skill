@@ -14,6 +14,7 @@ from mcp.types import CallToolResult
 from ..provider_catalog import browser_preflight_provider_names
 from ..config import apply_browser_auto_prepare_policy
 from ..browser_preflight import (
+    BROWSER_PREFLIGHT_STATUSES,
     BrowserPreflightResult,
     BrowserPreflightRuntimeOptions,
     browser_preflight_next_action,
@@ -24,17 +25,6 @@ from .batch import report_progress, run_blocking_call
 from .log_bridge import PaperFetchLogBridge
 from .results import _tool_result, error_payload_from_exception, with_schema_version
 from .schemas import BrowserPreflightRequest
-
-_PREFLIGHT_STATUSES = (
-    "ready",
-    "challenge",
-    "auth_required",
-    "network_timeout",
-    "extraction_error",
-    "runtime_error",
-    "cancelled",
-)
-
 
 def _storage_state_payload(
     result: BrowserPreflightResult,
@@ -96,6 +86,17 @@ def _response_payload(
     *,
     request: BrowserPreflightRequest,
 ) -> dict[str, Any]:
+    unknown_statuses = sorted(
+        {
+            str(result.status)
+            for result in results
+            if result.status not in BROWSER_PREFLIGHT_STATUSES
+        }
+    )
+    if unknown_statuses:
+        raise ValueError(
+            "Unknown browser preflight status: " + ", ".join(unknown_statuses)
+        )
     result_payloads = [
         _result_payload(
             result,
@@ -106,7 +107,7 @@ def _response_payload(
     ]
     counts = {
         status: sum(item["status"] == status for item in result_payloads)
-        for status in _PREFLIGHT_STATUSES
+        for status in BROWSER_PREFLIGHT_STATUSES
     }
     if counts["cancelled"]:
         overall_status = "cancelled"

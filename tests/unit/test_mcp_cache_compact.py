@@ -14,7 +14,7 @@ from tests.unit._mcp_support import (
     create_cached_downloads,
     create_cached_fetch_envelope,
     mcp_tools,
-    validate_mcp_tool_output_schema,
+    assert_mcp_tool_omits_output_schema,
 )
 
 
@@ -425,16 +425,12 @@ def test_cache_request_fingerprint_is_stable_across_json_key_order(
     assert first["cached_request_fingerprint"] == second["cached_request_fingerprint"]
 
 
-def test_get_cached_compact_payload_matches_registered_output_schema(
+def test_get_cached_compact_payload_keeps_asset_summary_without_output_schema(
     tmp_path: Path,
 ) -> None:
     _prepared_cache(tmp_path)
     payload = mcp_tools.get_cached_payload(
         doi=DOI, download_dir=tmp_path, detail="compact"
     )
-    validate_mcp_tool_output_schema(build_server(), "get_cached", payload)
-    schema = build_server()._tool_manager._tools["get_cached"].output_schema or {}
-    advertised_asset_keys = set(
-        schema["$defs"]["CacheAssetSummaryOutput"]["properties"]
-    )
-    assert set(payload["asset_summary"]) <= advertised_asset_keys
+    assert_mcp_tool_omits_output_schema(build_server(), "get_cached", payload)
+    assert isinstance(payload["asset_summary"], dict)

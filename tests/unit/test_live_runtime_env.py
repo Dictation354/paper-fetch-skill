@@ -28,6 +28,7 @@ from tests._environment import (
 )
 from tests.live import _runtime_env
 from tests.live.test_live_publishers import _catalog_acceptance_report
+from tests.provider_benchmark_samples import iter_provider_benchmark_samples
 
 
 def _ready_preflight(provider: str = "wiley") -> BrowserPreflightResult:
@@ -114,6 +115,9 @@ def test_isolated_live_env_reuses_only_prepared_camoufox_dependency_cache(
 
 
 def test_catalog_acceptance_report_does_not_hide_unrecorded_provider() -> None:
+    catalog_providers = [
+        sample.provider for sample in iter_provider_benchmark_samples()
+    ]
     report = _catalog_acceptance_report(
         [
             {
@@ -125,31 +129,11 @@ def test_catalog_acceptance_report_does_not_hide_unrecorded_provider() -> None:
 
     assert report["schema_version"] == 2
     assert report["summary"] == {
-        "catalog_provider_count": 19,
+        "catalog_provider_count": len(catalog_providers),
         "recorded_provider_count": 1,
-        "unrecorded_provider_count": 18,
+        "unrecorded_provider_count": len(catalog_providers) - 1,
         "unrecorded_providers": [
-            provider
-            for provider in (
-                "springer",
-                "wiley",
-                "science",
-                "pnas",
-                "ieee",
-                "arxiv",
-                "copernicus",
-                "ams",
-                "mdpi",
-                "royalsocietypublishing",
-                "annualreviews",
-                "plos",
-                "oxfordacademic",
-                "acs",
-                "iop",
-                "aip",
-                "frontiers",
-                "tandf",
-            )
+            provider for provider in catalog_providers if provider != "elsevier"
         ],
         "overall": {"complete": 1},
         "all_recorded_complete": True,

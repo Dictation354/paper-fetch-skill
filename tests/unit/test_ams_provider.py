@@ -698,8 +698,6 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
 
     def test_ams_bams_fixture_keeps_late_body_sections(self) -> None:
         """
-        rule: rule-ams-html-body-assets-formulas
-        rule: rule-ams-footnotes-stay-linked-to-body-markers
         """
         doi = "10.1175/bams-d-24-0223.1"
         markdown, extraction = _extract_fixture_markdown(doi)
@@ -1023,8 +1021,6 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
 
     def test_ams_inline_spacing_repairs_prose_parentheses_conservatively(self) -> None:
         """
-        rule: rule-ams-html-body-assets-formulas
-        rule: rule-preserve-inline-semantics-in-body-and-tables
         """
         jpo_markdown, jpo_extraction = _extract_fixture_markdown(
             "10.1175/jpo-d-23-0234.1"

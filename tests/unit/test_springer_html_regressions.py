@@ -506,8 +506,7 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
     def test_extract_asset_html_scopes_leave_empty_supplementary_scope_without_supplementary_sections(
         self,
     ) -> None:
-        """rule: rule-springer-supplementary-scope
-        rule: rule-supplementary-discovery-explicit-scope"""
+        """rule: rule-springer-supplementary-scope"""
         source_url = "https://www.nature.com/articles/no-supplementary"
         html_text = """
 <html>

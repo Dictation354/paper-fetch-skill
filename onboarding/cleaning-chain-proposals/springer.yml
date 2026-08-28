@@ -2,7 +2,6 @@ schema_version: 2
 provider: springer
 manifest: onboarding/manifests/springer.yml
 artifact: onboarding/cleaning-chain-proposals/springer.yml
-evidence_artifact: onboarding/cleaning-chain-proposals/springer.evidence.yml
 fixtures_digest:
 - purpose: structure
   doi: 10.1038/s43247-024-01885-8
@@ -423,5 +422,5 @@ token_conflict_summary:
   - The FLEXPART model can be downloaded via
   - across all propagation steps is calculated and related to
 notes:
-- Compact proposal for implementation worker; full evidence is in evidence_artifact.
+- Compact fixture-derived cleaning proposal.
 - sentinel and cross_route_guard contract deltas are warnings, not blockers.

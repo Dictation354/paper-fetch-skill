@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import ast
+import json
 import re
 from pathlib import Path
 import unittest
+
+from jsonschema import Draft202012Validator
 
 from tests.fixture_catalog import fixture_catalog
 from tests.golden_criteria import GOLDEN_CRITERIA_ROOT, golden_criteria_manifest
@@ -35,6 +38,16 @@ def _module_test_names(module_path: Path) -> set[str]:
 
 
 class FixtureProvenanceTests(unittest.TestCase):
+    def test_golden_manifest_matches_its_schema(self) -> None:
+        manifest = golden_criteria_manifest()
+        schema = json.loads(
+            (REPO_ROOT / "quality" / "fixture-manifest.schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        Draft202012Validator.check_schema(schema)
+        self.assertEqual(list(Draft202012Validator(schema).iter_errors(manifest)), [])
+
     def test_manifest_sample_assets_are_cataloged_and_canonical(self) -> None:
         manifest = golden_criteria_manifest()
         catalog = fixture_catalog()
@@ -85,14 +98,16 @@ class FixtureProvenanceTests(unittest.TestCase):
             missing, [], "Unregistered body_assets files:\n" + "\n".join(missing)
         )
 
-    def test_registered_rule_tests_exist_and_are_documented(self) -> None:
+    def test_manifest_test_mappings_are_complete_and_resolve(self) -> None:
         manifest = golden_criteria_manifest()
         docs = DOC_PATH.read_text(encoding="utf-8")
         anchors = set(re.findall(r'<a id="([^"]+)">', docs))
-        mentioned_tests = set(re.findall(r"test_[A-Za-z0-9_]+", docs))
         missing: list[str] = []
 
         for entry in manifest["tests"]:
+            if not all(key in entry for key in ("test", "anchors", "samples")):
+                missing.append(f"incomplete mapping: {entry!r}")
+                continue
             module_name, test_name = entry["test"].split("::", 1)
             module_path = REPO_ROOT / module_name
             if not module_path.is_file():
@@ -100,12 +115,12 @@ class FixtureProvenanceTests(unittest.TestCase):
                 continue
             if test_name not in _module_test_names(module_path):
                 missing.append(f"{entry['test']} (missing test)")
-            if test_name not in mentioned_tests:
-                missing.append(f"{entry['test']} (not mentioned in docs)")
-            for anchor in entry.get("anchors", []):
+            if not entry["anchors"]:
+                missing.append(f"{entry['test']} (empty anchors)")
+            for anchor in entry["anchors"]:
                 if anchor not in anchors:
                     missing.append(f"{entry['test']} (missing anchor #{anchor})")
-            for sample_id in entry.get("samples", []):
+            for sample_id in entry["samples"]:
                 if sample_id not in manifest["samples"]:
                     missing.append(f"{entry['test']} (missing sample {sample_id})")
 

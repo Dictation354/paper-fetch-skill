@@ -6,6 +6,22 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.0.0 - 2026-08-28
+
+### 变更——显式 capability 与更小的公开面
+
+- Provider route 现在是 capability 唯一事实源。删除 provider 顶层 browser flag、自动 route 合成、源码树发现和动态 registry monkeypatch；内置 provider 由一份显式且保持 lazy import 的模块清单加载。
+- MCP 工具继续返回既有 `CallToolResult.structured_content` 成功/错误 payload，但 `tools/list` 不再发布 `outputSchema`。Browser capability 与 preflight 状态直接从运行时 owner 派生，未知 preflight 状态 fail closed。
+- 删除 `RawFulltextPayload.metadata`、`build_provider_registry`、无消费者 provider wrapper，以及未接线的 direct-HTTP/browser link helper；这些破坏性删除不提供弃用 facade。
+
+### 变更——仓库工具与发布
+
+- 删除递归 onboarding agent 编排、私有 DAG/state/retry 机制、evidence sidecar、geography 专用 live/report 工具，以及生产 wheel 中的 Markdown review/quality 诊断。仓库继续保留确定性的 review bootstrap/finalize 和 golden fixture manifest 流程。
+- Stable Release 精确公开九个安装包与 `SHA256SUMS`；Rolling prerelease 额外公开 `dependency-manifest.json`。Wheel、sdist、inventory、SBOM 与逐目标 evidence 仍作为构建期验证输入。
+- 用从项目元数据、workflow、installer manifest 和 release asset owner 派生事实的精简合同，替换历史 macOS ledger。
+
+不兼容 import 与协议变化见 [docs/migration-v6.md](docs/migration-v6.md)。
+
 ## 5.6.1 - 2026-08-27
 
 ### 修复——Windows 发布 lifecycle

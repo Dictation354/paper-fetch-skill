@@ -508,7 +508,7 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             ],
                         )
                         self.assertTrue(
-                            all(tool.output_schema is not None for tool in listed.tools)
+                            all(tool.output_schema is None for tool in listed.tools)
                         )
                         self.assertTrue(
                             all(tool.annotations is not None for tool in listed.tools)

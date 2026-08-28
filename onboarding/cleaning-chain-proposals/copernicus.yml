@@ -2,7 +2,6 @@ schema_version: 2
 provider: copernicus
 manifest: onboarding/manifests/copernicus.yml
 artifact: onboarding/cleaning-chain-proposals/copernicus.yml
-evidence_artifact: onboarding/cleaning-chain-proposals/copernicus.evidence.yml
 fixtures_digest:
 - purpose: structure
   doi: 10.5194/acp-24-1-2024
@@ -133,5 +132,5 @@ token_conflict_summary:
   - is positively correlated with
   - samples (Fig. S10 in the Supplement) and correlated well with the ambient
 notes:
-- Compact proposal for implementation worker; full evidence is in evidence_artifact.
+- Compact fixture-derived cleaning proposal.
 - sentinel and cross_route_guard contract deltas are warnings, not blockers.

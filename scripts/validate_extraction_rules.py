@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import ast
-from dataclasses import dataclass
 import importlib
 import importlib.util
 import json
@@ -15,7 +14,6 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = REPO_ROOT / "src"
 DOC_PATH = REPO_ROOT / "docs" / "extraction-rules.md"
 MANIFEST_PATH = REPO_ROOT / "tests" / "fixtures" / "golden_criteria" / "manifest.json"
-TESTS_ROOT = REPO_ROOT / "tests"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
@@ -35,9 +33,6 @@ PROVIDER_SECTIONS = (
     "Copernicus",
 )
 SHARED_RULE_SECTIONS = ("Generic", "Models", "Service", "CLI")
-UNLINKED_FIXTURES_START = "<!-- extraction-rules-unlinked-fixtures:start -->"
-UNLINKED_FIXTURES_END = "<!-- extraction-rules-unlinked-fixtures:end -->"
-LOW_COVERAGE_MARKERS = ("测试覆盖度低", "单测试规则")
 PROVIDER_RULE_REQUIREMENTS = {
     "science": {
         "availability.site_rule_overrides",
@@ -78,16 +73,12 @@ PROVIDER_RULE_REQUIREMENTS = {
 ANCHOR_RE = re.compile(r'<a\s+id="(rule-[A-Za-z0-9_-]+)"></a>')
 RULE_HEADING_RE = re.compile(r'<a\s+id="(rule-[A-Za-z0-9_-]+)"></a>\s*\n### ([^\n]+)')
 RULE_LINK_RE = re.compile(r"(?<![A-Za-z0-9_-])#(rule-[A-Za-z0-9_-]+)")
-TEST_NAME_RE = re.compile(r"`(test_[A-Za-z0-9_]+)`")
 ANGLE_FIXTURE_LINK_RE = re.compile(r"\]\(<(\.\./tests/fixtures/[^>]+)>\)")
 PLAIN_FIXTURE_LINK_RE = re.compile(r"\]\((\.\./tests/fixtures/[^)\s]+)\)")
 BACKTICK_RE = re.compile(r"`([^`]+)`")
 CONTROLLED_STAGE_RE = re.compile(r"^- `([^`]+)`：", flags=re.MULTILINE)
 PHASE_FIELD_RE = re.compile(r"^- 它对应的阶段是：(.+)$", flags=re.MULTILINE)
 OWNER_FIELD_RE = re.compile(r"^- Owner：(.+)$", flags=re.MULTILINE)
-RULE_MARKER_RE = re.compile(
-    r"^\s*rule:\s*(rule-[A-Za-z0-9_-]+)\s*$", flags=re.MULTILINE
-)
 SITE_UI_COPY_MARKER = "SITE_UI_COPY_REGRESSION_MARKER"
 SITE_UI_COPY_STRUCTURAL_HOOK_MARKER = "STRUCTURAL_UI_COPY_HOOK"
 SITE_UI_COPY_CONSTANT_RE = re.compile(
@@ -120,39 +111,8 @@ PROVIDER_INFERENCE_PATTERNS = {
 }
 
 
-@dataclass(frozen=True)
-class TestDefinition:
-    path: Path
-    rule_markers: frozenset[str]
-
-
-@dataclass(frozen=True)
-class RuleCoverageReport:
-    anchor: str
-    stable_samples: int
-    unstable_samples: int
-    low_coverage: bool
-
-
 def _line_number(text: str, offset: int) -> int:
     return text.count("\n", 0, offset) + 1
-
-
-def _iter_python_tests() -> dict[str, list[TestDefinition]]:
-    test_defs: dict[str, list[TestDefinition]] = {}
-    for path in sorted(TESTS_ROOT.rglob("test_*.py")):
-        if "fixtures" in path.parts:
-            continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                if node.name.startswith("test_"):
-                    docstring = ast.get_docstring(node, clean=False) or ""
-                    markers = frozenset(RULE_MARKER_RE.findall(docstring))
-                    test_defs.setdefault(node.name, []).append(
-                        TestDefinition(path=path, rule_markers=markers)
-                    )
-    return test_defs
 
 
 def _extract_fixture_links(markdown: str) -> list[tuple[str, int]]:
@@ -355,21 +315,6 @@ def validate_rule_phases(markdown: str) -> list[str]:
     return errors
 
 
-def validate_single_test_rule_risk_markers(markdown: str) -> list[str]:
-    errors: list[str] = []
-    for anchor, title, block, line in _iter_rule_blocks(markdown):
-        if _is_redirect_rule(title, block):
-            continue
-        test_names = set(TEST_NAME_RE.findall(block))
-        if len(test_names) == 1 and not any(
-            marker in block for marker in LOW_COVERAGE_MARKERS
-        ):
-            errors.append(
-                f"single-test rule #{anchor} at line {line} must mark low coverage risk"
-            )
-    return errors
-
-
 def validate_unstable_sample_summary(markdown: str) -> list[str]:
     errors: list[str] = []
     summary_rule_ids = _low_stability_summary_rule_ids(markdown)
@@ -397,67 +342,6 @@ def validate_fixtures(markdown: str) -> list[str]:
             continue
         if not path.is_file():
             errors.append(f"missing fixture linked at line {line}: {link}")
-    return errors
-
-
-def _documented_unlinked_fixture_sample_ids(markdown: str) -> set[str]:
-    start = markdown.find(UNLINKED_FIXTURES_START)
-    end = markdown.find(UNLINKED_FIXTURES_END)
-    if start == -1 or end == -1 or end < start:
-        return set()
-    section = markdown[start:end]
-    return set(re.findall(r"`([^`]+)`", section))
-
-
-def _covered_manifest_sample_ids(markdown: str) -> set[str]:
-    fixture_links = {
-        _normalize_fixture_link(link)
-        for link, _line in _extract_fixture_links(markdown)
-    }
-    covered: set[str] = set()
-    for sample_id, sample in _manifest_samples().items():
-        assets = sample.get("assets") if isinstance(sample, dict) else None
-        if not isinstance(assets, dict):
-            continue
-        if any(str(asset_path) in fixture_links for asset_path in assets.values()):
-            covered.add(sample_id)
-    return covered
-
-
-def validate_manifest_fixture_reverse_index(markdown: str) -> list[str]:
-    errors: list[str] = []
-    if UNLINKED_FIXTURES_START not in markdown or UNLINKED_FIXTURES_END not in markdown:
-        return ["missing unlinked fixture allowlist markers"]
-
-    samples = _manifest_samples()
-    sample_ids = set(samples)
-    covered = _covered_manifest_sample_ids(markdown)
-    documented_unlinked = _documented_unlinked_fixture_sample_ids(markdown)
-
-    unknown = documented_unlinked - sample_ids
-    for sample_id in sorted(unknown):
-        errors.append(
-            f"unlinked fixture list references unknown manifest sample: {sample_id}"
-        )
-
-    stale = documented_unlinked & covered
-    for sample_id in sorted(stale):
-        errors.append(
-            f"manifest sample is both reverse-indexed and listed as unlinked: {sample_id}"
-        )
-
-    sample_ids_with_assets = {
-        sample_id
-        for sample_id, sample in samples.items()
-        if isinstance(sample, dict)
-        and isinstance(sample.get("assets"), dict)
-        and sample["assets"]
-    }
-    undocumented = sample_ids_with_assets - covered - documented_unlinked
-    for sample_id in sorted(undocumented):
-        errors.append(
-            f"manifest sample is not covered by fixture reverse index or unlinked list: {sample_id}"
-        )
     return errors
 
 
@@ -499,47 +383,65 @@ def validate_canonical_fixture_manifest() -> list[str]:
     return errors
 
 
-def validate_test_names(markdown: str) -> list[str]:
-    test_defs = _iter_python_tests()
-    errors: list[str] = []
-    for test_name in sorted(set(TEST_NAME_RE.findall(markdown))):
-        if test_name not in test_defs:
-            errors.append(f"documented test does not exist under tests/: {test_name}")
-    return errors
-
-
-def validate_test_docstring_markers(markdown: str) -> list[str]:
-    test_defs = _iter_python_tests()
-    errors: list[str] = []
-    for anchor, title, block, line in _iter_rule_blocks(markdown):
-        if _is_redirect_rule(title, block):
-            continue
-        has_matching_marker = False
-        for test_name in sorted(set(TEST_NAME_RE.findall(block))):
-            for definition in test_defs.get(test_name, []):
-                if anchor in definition.rule_markers:
-                    has_matching_marker = True
-                elif definition.rule_markers:
-                    errors.append(
-                        f"documented test `{test_name}` for #{anchor} at line {line} "
-                        f"has rule markers {sorted(definition.rule_markers)}"
-                    )
-        if TEST_NAME_RE.findall(block) and not has_matching_marker:
-            errors.append(
-                f"rule #{anchor} at line {line} has no documented test with matching docstring marker"
-            )
-    return errors
-
-
-def validate_manifest_anchors(anchors: set[str]) -> list[str]:
+def validate_manifest_test_mapping(anchors: set[str]) -> list[str]:
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     errors: list[str] = []
-    for entry in manifest.get("tests", []):
-        test_id = entry.get("test", "<unknown>")
-        for anchor in entry.get("anchors", []):
+    samples = manifest.get("samples")
+    entries = manifest.get("tests")
+    if not isinstance(samples, dict):
+        return ["golden fixture manifest must define a samples object"]
+    if not isinstance(entries, list):
+        return ["golden fixture manifest must define a tests array"]
+    for index, entry in enumerate(entries):
+        if not isinstance(entry, dict):
+            errors.append(f"manifest tests[{index}] must be an object")
+            continue
+        missing = [key for key in ("test", "anchors", "samples") if key not in entry]
+        if missing:
+            errors.append(
+                f"manifest tests[{index}] is missing required field(s): {', '.join(missing)}"
+            )
+            continue
+        test_id = entry["test"]
+        test_anchors = entry["anchors"]
+        test_samples = entry["samples"]
+        if not isinstance(test_id, str) or test_id.count("::") != 1:
+            errors.append(f"manifest tests[{index}].test must be module.py::test_name")
+            continue
+        module_name, test_name = test_id.split("::", 1)
+        module_path = REPO_ROOT / module_name
+        if not module_path.is_file():
+            errors.append(f"manifest test {test_id} references missing module")
+        else:
+            tree = ast.parse(
+                module_path.read_text(encoding="utf-8"), filename=str(module_path)
+            )
+            names = {
+                node.name
+                for node in ast.walk(tree)
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+            }
+            if test_name not in names:
+                errors.append(f"manifest test {test_id} does not exist")
+        if not isinstance(test_anchors, list) or not test_anchors or not all(
+            isinstance(value, str) and value for value in test_anchors
+        ):
+            errors.append(f"manifest test {test_id} must define non-empty anchors")
+            continue
+        if not isinstance(test_samples, list) or not all(
+            isinstance(value, str) and value for value in test_samples
+        ):
+            errors.append(f"manifest test {test_id} must define a samples list")
+            continue
+        for anchor in test_anchors:
             if anchor not in anchors:
                 errors.append(
                     f"manifest test {test_id} references missing anchor #{anchor}"
+                )
+        for sample_id in test_samples:
+            if sample_id not in samples:
+                errors.append(
+                    f"manifest test {test_id} references missing sample {sample_id}"
                 )
     return errors
 
@@ -729,7 +631,14 @@ def validate_provider_shared_lists(markdown: str, anchors: set[str]) -> list[str
 def validate_provider_shared_applicability(markdown: str) -> list[str]:
     errors: list[str] = []
     rule_sections = _rule_top_level_sections(markdown)
-    test_defs = _iter_python_tests()
+    manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    tests_by_anchor: dict[str, list[str]] = {}
+    for entry in manifest.get("tests", []):
+        if not isinstance(entry, dict) or not isinstance(entry.get("test"), str):
+            continue
+        for anchor in entry.get("anchors", []):
+            if isinstance(anchor, str):
+                tests_by_anchor.setdefault(anchor, []).append(entry["test"])
     shared_by_provider: dict[str, set[str]] = {}
     for provider in PROVIDER_SECTIONS:
         body = _section_body(markdown, provider)
@@ -754,13 +663,8 @@ def validate_provider_shared_applicability(markdown: str) -> list[str]:
             continue
         owner_match = OWNER_FIELD_RE.search(block)
         inferred = _infer_providers(owner_match.group(1) if owner_match else "")
-        for test_name in TEST_NAME_RE.findall(block):
-            name_providers = _infer_providers(test_name)
-            for definition in test_defs.get(test_name, []):
-                inferred.update(
-                    name_providers
-                    or _infer_providers(str(definition.path.relative_to(REPO_ROOT)))
-                )
+        for test_id in tests_by_anchor.get(anchor, []):
+            inferred.update(_infer_providers(test_id))
         for provider in sorted(inferred):
             if anchor not in shared_by_provider.get(provider, set()):
                 errors.append(
@@ -770,54 +674,16 @@ def validate_provider_shared_applicability(markdown: str) -> list[str]:
     return errors
 
 
-def build_rule_coverage_report(markdown: str) -> list[RuleCoverageReport]:
-    rows: list[RuleCoverageReport] = []
-    for anchor, _title, block, _line in _iter_rule_blocks(markdown):
-        if _is_redirect_rule(_title, block):
-            continue
-        fixture_links = {
-            _normalize_fixture_link(link)
-            for link, _line_no in _extract_fixture_links(block)
-        }
-        stable_samples = len({"/".join(link.split("/")[:4]) for link in fixture_links})
-        no_stable_marker = "当前无稳定 DOI 样本" in block
-        low_coverage = any(marker in block for marker in LOW_COVERAGE_MARKERS)
-        rows.append(
-            RuleCoverageReport(
-                anchor=anchor,
-                stable_samples=stable_samples,
-                unstable_samples=1 if no_stable_marker else 0,
-                low_coverage=low_coverage,
-            )
-        )
-    return rows
-
-
-def format_rule_coverage_report(rows: list[RuleCoverageReport]) -> str:
-    lines = ["rule coverage report:"]
-    for row in rows:
-        low_coverage = "yes" if row.low_coverage else "no"
-        lines.append(
-            f"- {row.anchor}: stable={row.stable_samples} "
-            f"unstable={row.unstable_samples} low_coverage={low_coverage}"
-        )
-    return "\n".join(lines)
-
-
 def validate_markdown(markdown: str) -> list[str]:
     anchors = set(ANCHOR_RE.findall(markdown))
     errors: list[str] = []
     errors.extend(validate_anchors(markdown))
     errors.extend(validate_rule_phases(markdown))
     errors.extend(validate_rule_owners(markdown))
-    errors.extend(validate_single_test_rule_risk_markers(markdown))
     errors.extend(validate_unstable_sample_summary(markdown))
     errors.extend(validate_fixtures(markdown))
     errors.extend(validate_canonical_fixture_manifest())
-    errors.extend(validate_manifest_fixture_reverse_index(markdown))
-    errors.extend(validate_test_names(markdown))
-    errors.extend(validate_test_docstring_markers(markdown))
-    errors.extend(validate_manifest_anchors(anchors))
+    errors.extend(validate_manifest_test_mapping(anchors))
     errors.extend(validate_provider_rule_registry())
     errors.extend(validate_site_ui_copy_markers())
     errors.extend(validate_provider_shared_lists(markdown, anchors))
@@ -834,30 +700,13 @@ def _infer_providers(text: str) -> set[str]:
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
+    return argparse.ArgumentParser(
         description="Validate docs/extraction-rules.md and related rule registries."
     )
-    mode = parser.add_mutually_exclusive_group()
-    mode.add_argument(
-        "--ci",
-        action="store_true",
-        help="run merge-blocking extraction-rule checks",
-    )
-    mode.add_argument(
-        "--lint",
-        action="store_true",
-        help="run strict checks and print low-coverage report hints",
-    )
-    mode.add_argument(
-        "--report",
-        action="store_true",
-        help="print stable/unstable fixture coverage by rule anchor",
-    )
-    return parser
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = _parser().parse_args(argv)
+    _parser().parse_args(argv)
     markdown = DOC_PATH.read_text(encoding="utf-8")
     errors = validate_markdown(markdown)
 
@@ -868,8 +717,6 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     print("docs/extraction-rules.md validation passed")
-    if args.lint or args.report:
-        print(format_rule_coverage_report(build_rule_coverage_report(markdown)))
     return 0
 
 

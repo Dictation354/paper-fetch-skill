@@ -2,7 +2,6 @@ schema_version: 2
 provider: annualreviews
 manifest: onboarding/manifests/annualreviews.yml
 artifact: onboarding/cleaning-chain-proposals/annualreviews.yml
-evidence_artifact: onboarding/cleaning-chain-proposals/annualreviews.evidence.yml
 fixtures_digest:
 - purpose: structure
   doi: 10.1146/annurev-control-030123-013355
@@ -335,5 +334,5 @@ token_conflict_summary:
   - Database tools for integrating and searching membrane property data correlated
     with neuronal morphology.
 notes:
-- Compact proposal for implementation worker; full evidence is in evidence_artifact.
+- Compact fixture-derived cleaning proposal.
 - sentinel and cross_route_guard contract deltas are warnings, not blockers.

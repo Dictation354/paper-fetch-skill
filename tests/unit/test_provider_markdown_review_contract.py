@@ -10,7 +10,7 @@ from typing import Any
 import yaml
 from jsonschema import Draft202012Validator
 
-from paper_fetch.markdown_quality import (
+from paper_fetch_devtools.markdown_quality import (
     blocking_markdown_quality_issues,
     validate_markdown_quality_report,
 )

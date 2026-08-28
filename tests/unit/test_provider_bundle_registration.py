@@ -9,11 +9,11 @@ from pathlib import Path
 
 import pytest
 
-import paper_fetch.providers as provider_entries
 from paper_fetch.extraction.html.provider_rules import PROVIDER_HTML_RULES
 from paper_fetch.provider_catalog import (
     PROVIDER_CATALOG,
     SOURCE_PROVIDER_MAP,
+    ProviderRouteSpec,
     ProviderSpec,
 )
 from paper_fetch.providers._registry import (
@@ -51,6 +51,7 @@ def _identity_spec(
         client_factory_path=f"tests:{name}",
         status_order=900 + len(name),
         html_capable=False,
+        routes=(ProviderRouteSpec(name="metadata", kind="metadata"),),
         identity_priority=identity_priority,
         identity_conflict_reason=identity_conflict_reason,
     )
@@ -159,36 +160,37 @@ def test_provider_bundle_rejects_mutable_sequence_fields() -> None:
         ProviderRenderPolicy(mark_inline_assets=object())  # type: ignore[arg-type]
 
 
-def test_provider_entry_discovery_imports_new_bundle_modules_without_central_edit(
+def test_provider_entry_modules_require_explicit_catalog_registration(
     tmp_path: Path,
 ) -> None:
     provider_dir = tmp_path / "paper_fetch" / "providers"
     provider_dir.mkdir(parents=True)
-    (provider_dir / "autodiscovered.py").write_text(
+    (provider_dir / "explicit.py").write_text(
         """
 from __future__ import annotations
 
-from paper_fetch.provider_catalog import ProviderSpec
+from paper_fetch.provider_catalog import ProviderRouteSpec, ProviderSpec
 from paper_fetch.providers._registry import ProviderBundle, register_provider_bundle
 
 
 register_provider_bundle(
     ProviderBundle(
         catalog=ProviderSpec(
-            name="autodiscovered",
-            display_name="Autodiscovered",
+            name="explicit",
+            display_name="Explicit",
             official=True,
-            domains=("autodiscovered.example",),
+            domains=("explicit.example",),
             doi_prefixes=("10.4242/",),
-            publisher_aliases=("autodiscovered",),
+            publisher_aliases=("explicit",),
             asset_default="none",
             probe_capability="routing_signal",
             provider_managed_abstract_only=False,
-            client_factory_path="paper_fetch.providers.autodiscovered:AutodiscoveredClient",
+            client_factory_path="paper_fetch.providers.explicit:ExplicitClient",
             status_order=998,
             html_capable=False,
+            routes=(ProviderRouteSpec(name="metadata", kind="metadata"),),
         ),
-        sources=("autodiscovered_html",),
+        sources=("explicit_html",),
     )
 )
 """,
@@ -212,11 +214,16 @@ provider_entries.__path__ = [
 ]
 provider_entries.import_provider_entry_modules()
 
-assert ".autodiscovered" in tuple(provider_entries._PROVIDER_ENTRY_MODULES)
-assert PROVIDER_CATALOG["autodiscovered"].domains == ("autodiscovered.example",)
-assert SOURCE_PROVIDER_MAP["autodiscovered_html"] == "autodiscovered"
-assert provider_for_source("autodiscovered_html") == "autodiscovered"
-assert provider_bundle("autodiscovered").catalog.html_capable is False
+assert ".explicit" not in tuple(provider_entries._PROVIDER_ENTRY_MODULES)
+assert "explicit" not in PROVIDER_CATALOG
+
+provider_entries._PROVIDER_ENTRY_MODULES += (".explicit",)
+provider_entries.import_provider_entry_modules()
+
+assert PROVIDER_CATALOG["explicit"].domains == ("explicit.example",)
+assert SOURCE_PROVIDER_MAP["explicit_html"] == "explicit"
+assert provider_for_source("explicit_html") == "explicit"
+assert provider_bundle("explicit").catalog.html_capable is False
 """,
         ],
         check=False,
@@ -226,83 +233,6 @@ assert provider_bundle("autodiscovered").catalog.html_capable is False
     )
 
     assert probe.returncode == 0, probe.stderr
-
-
-def test_provider_entry_discovery_ignores_comments_and_docstrings(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    provider_dir = tmp_path / "paper_fetch" / "providers"
-    provider_dir.mkdir(parents=True)
-    (provider_dir / "ignored.py").write_text(
-        '''
-"""A docstring mentioning register_provider_bundle(ProviderBundle(...))."""
-
-# register_provider_bundle(ProviderBundle(...))
-TEXT = "register_provider_bundle(ProviderBundle(...))"
-''',
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(
-        provider_entries,
-        "__path__",
-        [str(provider_dir), *list(provider_entries.__path__)],
-    )
-    provider_entries._DISCOVERED_PROVIDER_ENTRY_MODULES_CACHE.clear()
-    try:
-        discovered = tuple(provider_entries._PROVIDER_ENTRY_MODULES)
-    finally:
-        provider_entries._DISCOVERED_PROVIDER_ENTRY_MODULES_CACHE.clear()
-
-    assert ".ignored" not in discovered
-    assert "paper_fetch.providers.ignored" not in sys.modules
-
-
-def test_provider_entry_discovery_reuses_ast_scan_cache(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    provider_dir = tmp_path / "paper_fetch" / "providers"
-    provider_dir.mkdir(parents=True)
-    (provider_dir / "cached.py").write_text(
-        """
-from __future__ import annotations
-
-from paper_fetch.providers._registry import register_provider_bundle
-
-
-def register() -> None:
-    register_provider_bundle(object())
-""",
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(
-        provider_entries,
-        "__path__",
-        [str(provider_dir), *list(provider_entries.__path__)],
-    )
-    original_declares = provider_entries._module_declares_provider_bundle
-    dynamic_calls: list[str] = []
-
-    def count_dynamic_scan(module_name: str) -> bool:
-        if module_name == "cached":
-            dynamic_calls.append(module_name)
-        return original_declares(module_name)
-
-    provider_entries._DISCOVERED_PROVIDER_ENTRY_MODULES_CACHE.clear()
-    monkeypatch.setattr(
-        provider_entries,
-        "_module_declares_provider_bundle",
-        count_dynamic_scan,
-    )
-    try:
-        assert ".cached" in tuple(provider_entries._PROVIDER_ENTRY_MODULES)
-        assert len(provider_entries._PROVIDER_ENTRY_MODULES) >= len(
-            provider_entries._BUILTIN_PROVIDER_ENTRY_MODULES
-        )
-        assert ".cached" in provider_entries._PROVIDER_ENTRY_MODULES
-    finally:
-        provider_entries._DISCOVERED_PROVIDER_ENTRY_MODULES_CACHE.clear()
-
-    assert dynamic_calls == ["cached"]
 
 
 def _client_class_from_factory_path(factory_path: str) -> type:

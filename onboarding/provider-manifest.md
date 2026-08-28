@@ -1,6 +1,6 @@
 # ProviderManifest v1 字段说明
 
-本文面向实现和维护 onboarding 工具的工程读者。`ProviderManifest` 是 implementation worker 的输入合约，字段必须能追溯到 runtime catalog、现有 fixture、公开 evidence 或后续 sync-back。
+本文面向实现和维护 provider 的工程读者。`ProviderManifest` 是 capture、scaffold、review 与 sync-back 的输入合约，字段必须能追溯到 runtime catalog、现有 fixture、公开 evidence 或后续 sync-back。
 
 ## 顶层字段
 
@@ -12,7 +12,7 @@
 | `route_sources` | object | 否 | key 必须来自 `main_path`，value 必须是当前 provider 注册 source；若存在，`display_source` 必须出现在 values 中 | 多 route provider 用它表达 `article_html` / `pdf_fallback` 等路线实际公开 source。 |
 | `generation` | object | 是 | 见下表 | 记录 manifest 由 discovery 生成还是由现有 provider 回放生成。 |
 | `routing` | object | 是 | 见下表 | scaffold 和路由同步检查的输入。 |
-| `main_path` | array[string] | 是 | item enum `landing_html` / `article_html` / `xml` / `pdf_fallback` / `abstract_only` / `metadata_only`；`minItems: 1` | implementation worker 用它按顺序生成 provider 主链骨架。 |
+| `main_path` | array[string] | 是 | item enum `landing_html` / `article_html` / `xml` / `pdf_fallback` / `abstract_only` / `metadata_only`；`minItems: 1` | scaffold 用它按顺序生成 provider 主链骨架。 |
 | `route_contract` | object | 是 | 每个 `main_path` step 都必须有同名 key | 实现前固定抓取成功 / 拒绝判定，避免只按 HTTP 200 判成功。 |
 | `markdown_contract` | object | 是 | 每个 non-null fixture purpose 都必须有同名 key | 实现前固定 Markdown 质量断言，供 scaffold 和 review loop 转成 provider-local tests。 |
 | `success_criteria` | object | 是 | step key 到 object / array / `null`；每个 step value 标注 `x-sync-back: true` | 实现完成后由代码侧实际阈值回写。 |
@@ -49,7 +49,7 @@
 
 ## `success_criteria`
 
-`success_criteria` 是以 `main_path` step 或 provider 自定义 step 为 key 的 object。每个 step value 由 implementation worker 或 sync-back 工具回写，schema 上均带 `x-sync-back: true`。
+`success_criteria` 是以 `main_path` step 或 provider 自定义 step 为 key 的 object。每个 step value 由实现者或 sync-back 工具回写，schema 上均带 `x-sync-back: true`。
 
 | 字段 | Type | Required | 约束 | 决策依据 |
 |---|---|---:|---|---|
@@ -57,7 +57,7 @@
 
 ## `route_contract`
 
-`route_contract` 是实现前的抓取判定合同，不是 sync-back 字段。每个 `main_path` step 必须有同名 key。Worker 必须先按它写 provider-local waterfall / rejection 测试，再实现 provider route。
+`route_contract` 是实现前的抓取判定合同，不是 sync-back 字段。每个 `main_path` step 必须有同名 key。实现者必须先按它写 provider-local waterfall / rejection 测试，再实现 provider route。
 
 | 字段 | Type | Required | 决策依据 |
 |---|---|---:|---|
@@ -106,7 +106,7 @@ route_sources:
 | 字段 | Type | Required | 决策依据 |
 |---|---|---:|---|
 | `<purpose>.doi` | string | 是 | 必须等于对应 `fixtures.doi_samples.<purpose>.doi`。 |
-| `<purpose>.must_include` | array[string] | 是 | scaffold 生成 `assert ... in markdown`，worker 可改成更强 provider-local 断言。 |
+| `<purpose>.must_include` | array[string] | 是 | scaffold 生成 `assert ... in markdown`，实现者可改成更强 provider-local 断言。 |
 | `<purpose>.must_not_include` | array[string] | 是 | scaffold 生成站点 chrome / access noise / boilerplate 负断言。 |
 | `<purpose>.must_match` | array[string] | 否 | 需要正则表达的表格、公式、图片或引用格式断言。 |
 | `<purpose>.count_equals` | object | 否 | 文本去重、caption 去重、重复 chrome 清理的计数断言。 |

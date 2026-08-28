@@ -482,8 +482,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
             context.close()
 
     def test_landing_attempt_merges_ieee_keywords_and_reference_text(self) -> None:
-        """rule: rule-ieee-landing-metadata-references
-        rule: rule-fulltext-reference-priority"""
+        """rule: rule-ieee-landing-metadata-references"""
         doi = "10.1109/ACCESS.2024.3352924"
         article_number = "10388355"
         landing_url = f"https://ieeexplore.ieee.org/document/{article_number}/"
@@ -576,8 +575,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
     def test_landing_attempt_keeps_metadata_references_when_ieee_payload_is_empty(
         self,
     ) -> None:
-        """rule: rule-ieee-landing-metadata-references
-        rule: rule-fulltext-reference-priority"""
+        """rule: rule-ieee-landing-metadata-references"""
         doi = "10.1109/ACCESS.2024.3352924"
         article_number = "10388355"
         landing_url = f"https://ieeexplore.ieee.org/document/{article_number}/"

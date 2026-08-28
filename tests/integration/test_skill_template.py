@@ -168,7 +168,7 @@ class StaticSkillTests(unittest.TestCase):
         self.assertIn("参考文献列表", text)
         self.assertIn("搜索工具只负责发现候选", text)
         self.assertIn("普通上下文阅读/总结不因保存策略缺失而阻塞", text)
-        self.assertIn("ProviderSpec.requires_browser_runtime=True", text)
+        self.assertIn("capabilities.browser_available=true", text)
         self.assertNotIn("当前 `wiley`", text)
         self.assertIn("不要仅因为本地没有 PDF", text)
         self.assertIn("acceptance", text)

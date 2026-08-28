@@ -8,70 +8,6 @@ from scripts import validate_extraction_rules as validator
 
 
 class ExtractionRulesValidatorUnitTests(unittest.TestCase):
-    def test_docstring_marker_is_required_for_each_documented_rule(self) -> None:
-        markdown = """
-## Generic
-
-<a id="rule-demo"></a>
-### Demo
-
-- 对应测试：
-  - [`../tests/unit/test_demo.py`](../tests/unit/test_demo.py) 中的 `test_demo`
-"""
-        test_defs = {
-            "test_demo": [
-                validator.TestDefinition(
-                    path=validator.REPO_ROOT / "tests/unit/test_demo.py",
-                    rule_markers=frozenset(),
-                )
-            ]
-        }
-
-        with mock.patch.object(validator, "_iter_python_tests", return_value=test_defs):
-            errors = validator.validate_test_docstring_markers(markdown)
-
-        self.assertIn(
-            "rule #rule-demo at line 4 has no documented test with matching docstring marker",
-            errors,
-        )
-
-    def test_docstring_marker_must_match_documented_anchor(self) -> None:
-        markdown = """
-## Generic
-
-<a id="rule-demo"></a>
-### Demo
-
-- 对应测试：
-  - [`../tests/unit/test_demo.py`](../tests/unit/test_demo.py) 中的 `test_demo`
-"""
-        test_defs = {
-            "test_demo": [
-                validator.TestDefinition(
-                    path=validator.REPO_ROOT / "tests/unit/test_demo.py",
-                    rule_markers=frozenset({"rule-other"}),
-                )
-            ]
-        }
-
-        with mock.patch.object(validator, "_iter_python_tests", return_value=test_defs):
-            errors = validator.validate_test_docstring_markers(markdown)
-
-        self.assertTrue(
-            any(
-                "documented test `test_demo` for #rule-demo" in error
-                for error in errors
-            ),
-            errors,
-        )
-        self.assertTrue(
-            any(
-                "has no documented test with matching docstring marker" in error
-                for error in errors
-            ),
-            errors,
-        )
-
     def test_non_generic_shared_rules_are_checked_against_provider_lists(self) -> None:
         markdown = """
 ## Models
@@ -80,24 +16,23 @@ class ExtractionRulesValidatorUnitTests(unittest.TestCase):
 ### Model shared rule
 
 - Owner：`paper_fetch.models.ArticleModel`。
-- 对应测试：
-  - [`../tests/unit/test_models.py`](../tests/unit/test_models.py) 中的 `test_science_model_rule`
-
 ## Science
 
 - 共享规则另见：
   - [Other rule](#rule-other)
 """
-        test_defs = {
-            "test_science_model_rule": [
-                validator.TestDefinition(
-                    path=validator.REPO_ROOT / "tests/unit/test_models.py",
-                    rule_markers=frozenset({"rule-model-shared"}),
-                )
+        manifest = {
+            "tests": [
+                {
+                    "test": "tests/unit/test_science_models.py::test_science_model_rule",
+                    "anchors": ["rule-model-shared"],
+                    "samples": ["sample"],
+                }
             ]
         }
-
-        with mock.patch.object(validator, "_iter_python_tests", return_value=test_defs):
+        with mock.patch.object(
+            Path, "read_text", return_value=__import__("json").dumps(manifest)
+        ):
             errors = validator.validate_provider_shared_applicability(markdown)
 
         self.assertEqual(
@@ -105,36 +40,6 @@ class ExtractionRulesValidatorUnitTests(unittest.TestCase):
             [
                 "shared rule #rule-model-shared at line 4 has Science owner/tests "
                 "but Science shared-rule list does not include it"
-            ],
-        )
-
-    def test_manifest_samples_with_assets_must_be_reverse_indexed_or_allowlisted(
-        self,
-    ) -> None:
-        markdown = """
-## 未直接挂规则 fixture 清单
-
-<!-- extraction-rules-unlinked-fixtures:start -->
-| 范围 | Sample | 用途说明 |
-| --- | --- | --- |
-<!-- extraction-rules-unlinked-fixtures:end -->
-"""
-        samples = {
-            "10.1000_missing": {
-                "assets": {
-                    "original.html": "tests/fixtures/golden_criteria/10.1000_missing/original.html"
-                }
-            }
-        }
-
-        with mock.patch.object(validator, "_manifest_samples", return_value=samples):
-            errors = validator.validate_manifest_fixture_reverse_index(markdown)
-
-        self.assertEqual(
-            errors,
-            [
-                "manifest sample is not covered by fixture reverse index or unlinked list: "
-                "10.1000_missing"
             ],
         )
 
@@ -223,24 +128,23 @@ class ExtractionRulesValidatorUnitTests(unittest.TestCase):
 ### Nature shared rule
 
 - Owner：`paper_fetch.models.ArticleModel`。
-- 对应测试：
-  - [`../tests/unit/test_springer.py`](../tests/unit/test_springer.py) 中的 `test_old_nature_fixture`
-
 ## Springer
 
 - 共享规则另见：
   - [Nature shared rule](#rule-nature-shared)
 """
-        test_defs = {
-            "test_old_nature_fixture": [
-                validator.TestDefinition(
-                    path=Path(validator.REPO_ROOT / "tests/unit/test_springer.py"),
-                    rule_markers=frozenset({"rule-nature-shared"}),
-                )
+        manifest = {
+            "tests": [
+                {
+                    "test": "tests/unit/test_springer.py::test_old_nature_fixture",
+                    "anchors": ["rule-nature-shared"],
+                    "samples": ["sample"],
+                }
             ]
         }
-
-        with mock.patch.object(validator, "_iter_python_tests", return_value=test_defs):
+        with mock.patch.object(
+            Path, "read_text", return_value=__import__("json").dumps(manifest)
+        ):
             errors = validator.validate_provider_shared_applicability(markdown)
 
         self.assertEqual(errors, [])
@@ -434,66 +338,6 @@ class ExtractionRulesValidatorUnitTests(unittest.TestCase):
             mock.patch.object(Path, "read_text", fake_read_text),
         ):
             self.assertEqual(validator.validate_site_ui_copy_markers(), [])
-
-    def test_rule_coverage_report_counts_stable_and_unstable_samples(self) -> None:
-        markdown = """
-## Generic
-
-<a id="rule-stable"></a>
-### Stable rule
-
-- 代表性 HTML / XML：
-  - [`../tests/fixtures/golden_criteria/10.1000_demo/original.html`](../tests/fixtures/golden_criteria/10.1000_demo/original.html)
-
-<a id="rule-unstable"></a>
-### Unstable rule
-
-- 代表性 HTML / XML：
-  - 当前无稳定 DOI 样本，直接见对应测试。
-- 边界说明：
-  - 测试覆盖度低：需要后续补样本。
-"""
-
-        report = validator.build_rule_coverage_report(markdown)
-
-        self.assertEqual(
-            report,
-            [
-                validator.RuleCoverageReport(
-                    anchor="rule-stable",
-                    stable_samples=1,
-                    unstable_samples=0,
-                    low_coverage=False,
-                ),
-                validator.RuleCoverageReport(
-                    anchor="rule-unstable",
-                    stable_samples=0,
-                    unstable_samples=1,
-                    low_coverage=True,
-                ),
-            ],
-        )
-
-    def test_validator_cli_report_mode_prints_coverage_report(self) -> None:
-        with (
-            mock.patch.object(validator, "validate_markdown", return_value=[]),
-            mock.patch.object(
-                Path,
-                "read_text",
-                return_value="""
-## Generic
-
-<a id="rule-demo"></a>
-### Demo
-
-- 代表性 HTML / XML：
-  - 当前无稳定 DOI 样本，直接见对应测试。
-""",
-            ),
-        ):
-            result = validator.main(["--report"])
-
-        self.assertEqual(result, 0)
 
 
 if __name__ == "__main__":

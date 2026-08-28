@@ -111,7 +111,7 @@ def test_tandf_provider_bundle_declares_routes_sources_and_browser_runtime() -> 
     assert catalog.domain_suffixes == ("tandfonline.com",)
     assert catalog.doi_prefixes == ("10.1080/",)
     assert provider_base_domains("tandf") == ("www.tandfonline.com",)
-    assert catalog.requires_browser_runtime is True
+    assert any(route.browser_required or route.browser_optional for route in catalog.routes)
     assert catalog.provider_managed_abstract_only is True
     assert catalog.status_order == 19
     assert default_asset_profile_for_provider("tandf") == "body"

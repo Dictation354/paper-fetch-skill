@@ -102,7 +102,7 @@ register_provider_bundle(
             ),
             sensitive_headers=("wiley-tdm-client-token",),
             env_requirements=(),
-            requires_playwright=True,
+            batch_concurrency=1,
             routes=(
                 ProviderRouteSpec(name="metadata", kind="metadata"),
                 ProviderRouteSpec(
@@ -111,6 +111,7 @@ register_provider_bundle(
                     browser_optional=True,
                     browser_preflight=True,
                     auth_supported=True,
+                    requires_playwright=True,
                     concurrency=1,
                     timeout_seconds=120,
                 ),
@@ -125,6 +126,7 @@ register_provider_bundle(
                     kind="pdf",
                     browser_optional=True,
                     browser_preflight=True,
+                    requires_playwright=True,
                     requires_pdf_conversion=True,
                     concurrency=1,
                     timeout_seconds=120,

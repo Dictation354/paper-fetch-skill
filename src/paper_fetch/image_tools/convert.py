@@ -247,15 +247,6 @@ def _working_binary_probe(
         return probe
 
 
-def _working_binary(
-    candidates: list[Path],
-    probe_args: list[str],
-    *,
-    env: Mapping[str, str] | None = None,
-) -> Path | None:
-    return _working_binary_probe(candidates, probe_args, env=env).binary
-
-
 def _tool_env_root(binary: Path) -> Path | None:
     parts = list(binary.resolve().parents)
     return next(

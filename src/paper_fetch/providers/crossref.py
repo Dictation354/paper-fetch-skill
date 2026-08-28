@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from ..http import HttpTransport
 from ..metadata.crossref import CrossrefLookupClient
 from ..metadata.types import CrossrefMetadata
-from ..provider_catalog import ProviderSpec
+from ..provider_catalog import ProviderRouteSpec, ProviderSpec
 from ._registry import ProviderBundle, register_provider_bundle
 from .base import (
     ProviderClient,
@@ -35,6 +35,7 @@ register_provider_bundle(
             html_capable=False,
             api_hosts=("api.crossref.org",),
             sensitive_headers=("cr-clickthrough-client-token",),
+            routes=(ProviderRouteSpec(name="metadata", kind="metadata"),),
         ),
         sources=("crossref_meta",),
     )

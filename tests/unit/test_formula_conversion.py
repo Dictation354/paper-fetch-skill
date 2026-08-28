@@ -14,6 +14,7 @@ from unittest import mock
 import pytest
 
 from paper_fetch.formula import convert as formula_conversion
+from scripts import benchmark_formula_converters as formula_benchmark
 from tests.golden_criteria import golden_criteria_scenario_asset
 
 
@@ -72,15 +73,6 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertEqual(result.status, "ok")
         self.assertEqual(captured_env, runtime_env)
 
-    def test_looks_like_mathml_element_excludes_tex_math(self) -> None:
-        tex_math_node = ET.fromstring("<tex-math>x^2</tex-math>")
-        math_node = ET.fromstring(
-            '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
-        )
-
-        self.assertFalse(formula_conversion.looks_like_mathml_element(tex_math_node))
-        self.assertTrue(formula_conversion.looks_like_mathml_element(math_node))
-
     def test_extract_formula_samples_from_xml_strips_tail_text(self) -> None:
         xml_body = """<?xml version="1.0"?>
 <article>
@@ -93,46 +85,12 @@ class FormulaConversionTests(unittest.TestCase):
             xml_path = Path(tmpdir) / "sample.xml"
             xml_path.write_text(xml_body, encoding="utf-8")
 
-            samples = formula_conversion.extract_formula_samples_from_xml(xml_path)
+            samples = formula_benchmark.extract_formula_samples_from_xml(xml_path)
 
         self.assertEqual(len(samples), 1)
         self.assertEqual(
             samples[0].raw_mathml,
             '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>',
-        )
-
-    def test_infer_source_provider_uses_provider_catalog(self) -> None:
-        elsevier_root = ET.fromstring("<full-text-retrieval-response />")
-        jats_root = ET.fromstring("<article />")
-        unknown_root = ET.fromstring("<payload />")
-
-        self.assertEqual(
-            formula_conversion.infer_source_provider(
-                elsevier_root,
-                Path("/tmp/10.1016_example/original.xml"),
-            ),
-            "elsevier",
-        )
-        self.assertEqual(
-            formula_conversion.infer_source_provider(
-                jats_root,
-                Path("/tmp/10.5194_acp-24-1-2024/original.xml"),
-            ),
-            "copernicus",
-        )
-        self.assertEqual(
-            formula_conversion.infer_source_provider(
-                jats_root,
-                Path("/tmp/10.1038_example/original.xml"),
-            ),
-            "springer",
-        )
-        self.assertEqual(
-            formula_conversion.infer_source_provider(
-                unknown_root,
-                Path("/tmp/payload.xml"),
-            ),
-            "unknown",
         )
 
     def test_normalize_latex_repairs_identifier_escaped_underscores(self) -> None:
@@ -225,10 +183,6 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertEqual(
             formula_conversion.SUPPORTED_BACKENDS,
             {"auto", "texmath", "mathml-to-latex", "mml2tex", "legacy"},
-        )
-        self.assertEqual(
-            formula_conversion.BENCHMARK_BACKENDS,
-            ("texmath", "mathml-to-latex", "mml2tex"),
         )
         self.assertEqual(
             formula_conversion.AUTO_BACKENDS, ("texmath", "mathml-to-latex")

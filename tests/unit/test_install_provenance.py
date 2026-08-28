@@ -16,6 +16,8 @@ from paper_fetch.skill_integrity import (
     require_valid_skill_bundle,
     verify_skill_bundle,
 )
+from paper_fetch.version import package_version
+from scripts.sync_version import project_version_facts, synchronized_version_issues
 from tests.paths import SKILL_DIR
 from tests.skill_bundle_links import (
     REQUIRED_REFERENCE_FILES,
@@ -24,6 +26,7 @@ from tests.skill_bundle_links import (
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+CURRENT_VERSION = package_version()
 
 
 def _write(path: Path, content: str = "") -> None:
@@ -45,8 +48,8 @@ def _copy_host_skills(skill_dir: Path, home: Path) -> None:
 def _create_install(
     root: Path,
     *,
-    manifest_version: str = "5.6.1",
-    runtime_version: str = "5.6.1",
+    manifest_version: str = CURRENT_VERSION,
+    runtime_version: str = CURRENT_VERSION,
     target_platform: str = "linux",
 ) -> tuple[Path, Path]:
     install_root = root / "install"
@@ -108,8 +111,8 @@ def _context(
     root: Path,
     home: Path,
     *,
-    distribution_version: str = "5.6.1",
-    cli_version: str = "5.6.1",
+    distribution_version: str = CURRENT_VERSION,
+    cli_version: str = CURRENT_VERSION,
     cli_path: Path | None = None,
     source_root: Path | None = None,
     module_file: Path | None = None,
@@ -164,7 +167,7 @@ def _create_source_checkout(root: Path) -> Path:
     _write(
         source_root / "pyproject.toml",
         (
-            '[project]\nname = "paper-fetch-skill"\nversion = "5.6.1"\n'
+            f'[project]\nname = "paper-fetch-skill"\nversion = "{CURRENT_VERSION}"\n'
             'dependencies = ["mcp>=2,<3"]\n'
         ),
     )
@@ -196,7 +199,7 @@ def test_consistent_posix_and_windows_install_provenance_is_ready(
 
     assert report["status"] == "ready"
     assert report["consistency"] == {
-        "expected_version": "5.6.1",
+        "expected_version": CURRENT_VERSION,
         "version_status": "ready",
         "version_drift": [],
         "issue_count": 0,
@@ -227,7 +230,7 @@ def test_runtime_old_version_reports_exact_metadata_path(tmp_path: Path) -> None
         for item in report["consistency"]["version_drift"]
         if item["component"] == "installed_runtime"
     ]
-    assert drift["expected"] == "5.6.1"
+    assert drift["expected"] == CURRENT_VERSION
     assert drift["actual"] == "3.0.0"
     assert drift["path"].endswith("paper_fetch_skill-3.0.0.dist-info/METADATA")
 
@@ -246,7 +249,7 @@ def test_old_manifest_version_is_distinguished_from_current_runtime(
     assert report["status"] == "drift"
     assert {
         (item["component"], item["expected"], item["actual"]) for item in drift
-    } == {("offline_manifest", "5.6.1", "3.0.0")}
+    } == {("offline_manifest", CURRENT_VERSION, "3.0.0")}
     assert drift[0]["path"] == str(install_root / "offline-manifest.json")
 
 
@@ -278,7 +281,7 @@ def test_source_development_without_manifest_is_not_applicable(tmp_path: Path) -
     source_root = tmp_path / "source"
     _write(
         source_root / "pyproject.toml",
-        '[project]\nname = "paper-fetch-skill"\nversion = "5.6.1"\n',
+        f'[project]\nname = "paper-fetch-skill"\nversion = "{CURRENT_VERSION}"\n',
     )
     cli_path = source_root / ".venv" / "bin" / "paper-fetch"
     _write(cli_path)
@@ -308,7 +311,7 @@ def test_source_development_ignores_unrelated_distribution_and_path_cli(
     source_root = tmp_path / "source"
     _write(
         source_root / "pyproject.toml",
-        '[project]\nname = "paper-fetch-skill"\nversion = "5.6.1"\n',
+        f'[project]\nname = "paper-fetch-skill"\nversion = "{CURRENT_VERSION}"\n',
     )
     home = tmp_path / "home"
     home.mkdir()
@@ -344,7 +347,7 @@ def test_source_checkout_reports_inactive_project_venv(tmp_path: Path) -> None:
     _write(
         source_root / "pyproject.toml",
         (
-            '[project]\nname = "paper-fetch-skill"\nversion = "5.6.1"\n'
+            f'[project]\nname = "paper-fetch-skill"\nversion = "{CURRENT_VERSION}"\n'
             'dependencies = ["mcp>=2,<3"]\n'
         ),
     )
@@ -381,7 +384,7 @@ def test_source_checkout_reports_incompatible_mcp_dependency(
     _write(
         source_root / "pyproject.toml",
         (
-            '[project]\nname = "paper-fetch-skill"\nversion = "5.6.1"\n'
+            f'[project]\nname = "paper-fetch-skill"\nversion = "{CURRENT_VERSION}"\n'
             'dependencies = ["mcp>=2,<3"]\n'
         ),
     )
@@ -678,20 +681,12 @@ def test_real_source_staging_and_temp_install_preserve_skill_and_version_provena
 
 
 def test_release_version_sources_are_synchronized() -> None:
-    pyproject = tomllib.loads(
-        (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    )
-    version = pyproject["project"]["version"]
+    facts = project_version_facts()
+    version = facts.version
     inno = (REPO_ROOT / "installer" / "paper-fetch-skill.iss").read_text(
         encoding="utf-8"
     )
 
-    assert version == "5.6.1"
     assert DEFAULT_USER_AGENT == f"paper-fetch-skill/{version}"
     assert f'#define AppVersion "{version}"' in inno
-    assert f"## {version} - 2026-08-27" in (REPO_ROOT / "CHANGELOG.md").read_text(
-        encoding="utf-8"
-    )
-    assert f"## {version} - 2026-08-27" in (REPO_ROOT / "CHANGELOG_CN.md").read_text(
-        encoding="utf-8"
-    )
+    assert synchronized_version_issues(facts) == []

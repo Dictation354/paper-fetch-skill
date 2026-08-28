@@ -853,20 +853,6 @@ def _storage_state_path(config: PlaywrightRuntimeConfig) -> Path | None:
     return _runtime_paths().storage_state_path(config)
 
 
-def _storage_context_options(config: PlaywrightRuntimeConfig) -> dict[str, Any]:
-    return _runtime_paths().storage_context_options(config)
-
-
-def _storage_origin_matches_url(origin: Mapping[str, Any], url: str | None) -> bool:
-    return _runtime_paths().storage_origin_matches_url(origin, url)
-
-
-def _filtered_storage_state_payload(
-    context: Any, *, url: str
-) -> Mapping[str, Any] | None:
-    return _runtime_paths().filtered_storage_state_payload(context, url=url)
-
-
 def _stage_storage_state(
     context: Any,
     config: PlaywrightRuntimeConfig,

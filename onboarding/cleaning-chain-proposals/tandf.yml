@@ -2,7 +2,6 @@ schema_version: 2
 provider: tandf
 manifest: onboarding/manifests/tandf.yml
 artifact: onboarding/cleaning-chain-proposals/tandf.yml
-evidence_artifact: onboarding/cleaning-chain-proposals/tandf.evidence.yml
 fixtures_digest:
 - purpose: structure
   doi: 10.1080/15481603.2026.2667034
@@ -465,5 +464,5 @@ token_conflict_summary:
   - Quantifying cumulative heat effects on heat-related mortality using MODIS land
     surface temperature data
 notes:
-- Compact proposal for implementation worker; full evidence is in evidence_artifact.
+- Compact fixture-derived cleaning proposal.
 - sentinel and cross_route_guard contract deltas are warnings, not blockers.

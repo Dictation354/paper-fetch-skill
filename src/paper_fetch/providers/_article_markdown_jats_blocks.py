@@ -221,15 +221,6 @@ def _render_structured_table_groups(
     return [_render_parsed_structured_table(parsed) for parsed in parsed_groups]
 
 
-def _render_structured_table(table: ET.Element) -> _JatsTableRenderResult:
-    """Return the first logical table group for legacy internal callers."""
-
-    results = _render_structured_table_groups(table)
-    if results:
-        return results[0]
-    return _JatsTableRenderResult(headers=[], rows=[], prefix_rows=[])
-
-
 def _table_footnotes(table_wrap: ET.Element) -> list[str]:
     notes: list[str] = []
     seen: set[str] = set()

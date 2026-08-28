@@ -22,7 +22,6 @@ from ..tracing import (
     TraceEvent,
     download_marker,
     merge_trace,
-    source_trail_from_trace,
     trace_from_markers,
 )
 from ..utils import (
@@ -164,35 +163,7 @@ class PreparedFetchResultPayload:
     context: dict[str, Any] = field(default_factory=dict)
 
 
-STRUCTURED_METADATA_KEYS = {
-    "route",
-    "route_name",
-    "reason",
-    "markdown_text",
-    "merged_metadata",
-    "availability_diagnostics",
-    "extraction",
-    "html_fetcher",
-    "browser_context_seed",
-    "suggested_filename",
-    "html_failure_reason",
-    "html_failure_message",
-    "extracted_assets",
-    "warnings",
-    "source_trail",
-}
-
-
-def _passthrough_metadata(metadata: Mapping[str, Any] | None) -> dict[str, Any]:
-    legacy = dict(metadata or {})
-    return {
-        key: value
-        for key, value in legacy.items()
-        if key not in STRUCTURED_METADATA_KEYS
-    }
-
-
-@dataclass(init=False)
+@dataclass
 class RawFulltextPayload:
     provider: str
     source_url: str
@@ -203,79 +174,6 @@ class RawFulltextPayload:
     trace: list[TraceEvent] = field(default_factory=list)
     merged_metadata: Mapping[str, Any] | None = None
     needs_local_copy: bool = False
-    _legacy_metadata: dict[str, Any] = field(default_factory=dict, repr=False)
-
-    def __init__(
-        self,
-        provider: str,
-        source_url: str,
-        content_type: str,
-        body: bytes,
-        *,
-        content: ProviderContent | None = None,
-        warnings: list[str] | None = None,
-        trace: list[TraceEvent] | None = None,
-        merged_metadata: Mapping[str, Any] | None = None,
-        needs_local_copy: bool = False,
-        metadata: Mapping[str, Any] | None = None,
-    ) -> None:
-        self.provider = provider
-        self.source_url = source_url
-        self.content_type = content_type
-        self.body = body
-        self.content = content
-        self.warnings = [str(item) for item in (warnings or []) if str(item).strip()]
-        self.trace = list(trace or [])
-        self.merged_metadata = (
-            dict(merged_metadata) if isinstance(merged_metadata, Mapping) else None
-        )
-        self.needs_local_copy = needs_local_copy
-        self._legacy_metadata = _passthrough_metadata(metadata)
-
-    @property
-    def metadata(self) -> dict[str, Any]:
-        """Legacy read-only compatibility view synthesized from typed payload fields."""
-
-        content = self.content
-        payload: dict[str, Any] = dict(self._legacy_metadata)
-        if content is not None:
-            if content.route_kind:
-                payload["route"] = content.route_kind
-            if content.route_name:
-                payload["route_name"] = content.route_name
-            if content.reason:
-                payload["reason"] = content.reason
-            if content.markdown_text is not None:
-                payload["markdown_text"] = content.markdown_text
-            if content.merged_metadata is not None:
-                payload["merged_metadata"] = dict(content.merged_metadata)
-            if content.diagnostics:
-                payload["availability_diagnostics"] = dict(
-                    content.diagnostics.get("availability_diagnostics")
-                    or content.diagnostics
-                )
-                for key, value in content.diagnostics.items():
-                    if key not in {"availability_diagnostics"} and key not in payload:
-                        payload[key] = value
-            if content.fetcher:
-                payload["html_fetcher"] = content.fetcher
-            if content.browser_context_seed:
-                payload["browser_context_seed"] = dict(content.browser_context_seed)
-            if content.suggested_filename:
-                payload["suggested_filename"] = content.suggested_filename
-            if content.html_failure_reason:
-                payload["html_failure_reason"] = content.html_failure_reason
-            if content.html_failure_message:
-                payload["html_failure_message"] = content.html_failure_message
-            if content.extracted_assets:
-                payload["extracted_assets"] = list(content.extracted_assets)
-        if self.merged_metadata is not None and "merged_metadata" not in payload:
-            payload["merged_metadata"] = dict(self.merged_metadata)
-        if self.warnings:
-            payload["warnings"] = list(self.warnings)
-        if self.trace:
-            payload["source_trail"] = source_trail_from_trace(self.trace)
-        return payload
 
 
 @dataclass(frozen=True)
@@ -1140,30 +1038,3 @@ class ProviderClient:
                 else:
                     delattr(self, "env")
         return replace(result, status=result.status.upper())
-
-
-def _build_provider_registry_compat(
-    *args: Any, **kwargs: Any
-) -> dict[str, ProviderClient]:
-    from .registry import build_clients
-
-    return build_clients(*args, **kwargs)
-
-
-def _install_provider_registry_compat() -> None:
-    import sys
-
-    registry_module = sys.modules.get("paper_fetch.providers.registry")
-    if registry_module is None:
-        try:
-            from . import registry as registry_module
-        except Exception:
-            return
-    if registry_module is not None and not hasattr(
-        registry_module,
-        "build_provider_registry",
-    ):
-        registry_module.build_provider_registry = _build_provider_registry_compat  # type: ignore[attr-defined]  # dynamic backward-compat shim
-
-
-_install_provider_registry_compat()

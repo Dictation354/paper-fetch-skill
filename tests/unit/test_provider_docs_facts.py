@@ -8,6 +8,7 @@ from paper_fetch.provider_catalog import (
     PROVIDER_CATALOG,
     SOURCE_PROVIDER_MAP,
     ordered_provider_specs,
+    provider_has_browser_route,
     provider_names,
 )
 
@@ -26,13 +27,6 @@ DEPLOYMENT_DOC_PATH = REPO_ROOT / "docs" / "deployment.md"
 ENVIRONMENT_REFERENCE_PATH = (
     REPO_ROOT / "skills" / "paper-fetch-skill" / "references" / "environment.md"
 )
-BROWSER_FACT_DOC_PATHS = (
-    REPO_ROOT / "README.md",
-    REPO_ROOT / "docs" / "README.md",
-    REPO_ROOT / "docs" / "deployment.md",
-    REPO_ROOT / "docs" / "providers.md",
-    REPO_ROOT / "docs" / "architecture" / "overview.md",
-)
 SOURCE_FACT_DOC_PATHS = (REPO_ROOT / "docs" / "providers.md",)
 
 
@@ -42,7 +36,9 @@ def _read(path: Path) -> str:
 
 def _browser_provider_specs():
     return tuple(
-        spec for spec in ordered_provider_specs() if spec.requires_browser_runtime
+        spec
+        for spec in ordered_provider_specs()
+        if provider_has_browser_route(spec.name)
     )
 
 
@@ -73,12 +69,15 @@ def _manifest_provider_names() -> frozenset[str]:
     return frozenset(path.stem for path in manifest_dir.glob("*.yml"))
 
 
-def test_browser_runtime_providers_are_declared_on_provider_specs() -> None:
+def test_browser_runtime_capability_is_declared_on_routes() -> None:
     source = _read(PROVIDER_CATALOG_PATH)
 
     assert "_BROWSER_RUNTIME_PROVIDER_NAMES" not in source
+    assert "requires_browser_runtime:" not in source
     for spec in _browser_provider_specs():
-        assert spec.requires_browser_runtime is True
+        assert any(
+            route.browser_required or route.browser_optional for route in spec.routes
+        )
 
 
 def test_camoufox_helper_does_not_keep_second_browser_provider_table() -> None:
@@ -110,24 +109,10 @@ def test_tool_contract_uses_dynamic_catalog_without_static_route_table() -> None
     assert all(source not in tool_contract for source in SOURCE_PROVIDER_MAP)
 
 
-def test_human_docs_cover_catalog_browser_runtime_providers() -> None:
-    for path in BROWSER_FACT_DOC_PATHS:
-        text = _read(path)
-        missing = [
-            spec.name
-            for spec in _browser_provider_specs()
-            if not _provider_is_mentioned(text, spec.name)
-        ]
-        assert not missing, (
-            f"{path.relative_to(REPO_ROOT)} must mention all catalog browser "
-            "runtime providers: " + ", ".join(missing)
-        )
-
-
 def test_skill_entrypoint_uses_catalog_browser_runtime_boundary() -> None:
     text = _read(SKILL_ENTRYPOINT_PATH)
 
-    assert "ProviderSpec.requires_browser_runtime=True" in text
+    assert "capabilities.browser_available=true" in text
     assert "provider_status()" in text
     listed = [
         spec.name

@@ -20,8 +20,8 @@ from paper_fetch.browser_preflight import (
 from paper_fetch.config import build_runtime_env, resolve_repo_root
 from paper_fetch.http import HttpTransport
 from paper_fetch.provider_catalog import (
-    ordered_provider_specs,
     provider_batch_concurrency,
+    provider_has_browser_route,
 )
 from paper_fetch.publisher_identity import normalize_doi
 from paper_fetch.utils import normalize_text
@@ -281,10 +281,7 @@ GoldenRunnerFn = Callable[..., GoldenCriteriaLiveReport]
 
 def _requires_browser_runtime(provider: str) -> bool:
     provider_key = normalize_text(provider).lower()
-    return any(
-        spec.name == provider_key and spec.requires_browser_runtime
-        for spec in ordered_provider_specs()
-    )
+    return provider_has_browser_route(provider_key)
 
 
 def timestamped_benchmark_output_dir(*, now: datetime | None = None) -> Path:

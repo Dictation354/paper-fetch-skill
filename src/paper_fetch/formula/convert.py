@@ -1,4 +1,4 @@
-"""MathML formula conversion adapters and benchmark helpers."""
+"""MathML formula conversion adapters."""
 
 from __future__ import annotations
 
@@ -29,7 +29,6 @@ from .paths import (
     mathml_to_latex_worker_script_candidates,
     texmath_binary_candidates,
 )
-from ..xml_security import XmlParseFailure, parse_trusted_xml_file
 
 BACKEND_AUTO = "auto"
 BACKEND_TEXMATH = "texmath"
@@ -171,7 +170,6 @@ class FormulaBackendStrategy:
     name: str
     aliases: tuple[str, ...] = ()
     converter_name: str | None = None
-    benchmark: bool = False
     fallback_backends: tuple[str, ...] = ()
     fallback_failure_labels: Mapping[str, str] = field(default_factory=dict)
     unavailable_message: str | None = None
@@ -279,7 +277,6 @@ FORMULA_BACKEND_REGISTRY: dict[str, FormulaBackendStrategy] = {
     BACKEND_TEXMATH: FormulaBackendStrategy(
         name=BACKEND_TEXMATH,
         converter_name="convert_with_texmath",
-        benchmark=True,
         fallback_backends=(BACKEND_MATHML_TO_LATEX,),
         fallback_failure_labels={
             BACKEND_MATHML_TO_LATEX: "mathml-to-latex fallback failed",
@@ -289,12 +286,10 @@ FORMULA_BACKEND_REGISTRY: dict[str, FormulaBackendStrategy] = {
         name=BACKEND_MATHML_TO_LATEX,
         aliases=("mathml_to_latex",),
         converter_name="convert_with_mathml_to_latex",
-        benchmark=True,
     ),
     BACKEND_MML2TEX: FormulaBackendStrategy(
         name=BACKEND_MML2TEX,
         converter_name="convert_with_mml2tex",
-        benchmark=True,
     ),
     BACKEND_LEGACY: FormulaBackendStrategy(
         name=BACKEND_LEGACY,
@@ -307,26 +302,11 @@ FORMULA_BACKEND_ALIASES = {
     for alias in strategy.aliases
 }
 SUPPORTED_BACKENDS = set(FORMULA_BACKEND_REGISTRY)
-BENCHMARK_BACKENDS = tuple(
-    strategy.name
-    for strategy in FORMULA_BACKEND_REGISTRY.values()
-    if strategy.benchmark
-)
 AUTO_BACKENDS = FORMULA_BACKEND_REGISTRY[BACKEND_AUTO].fallback_backends
 
 
 def backend_strategy(name: str) -> FormulaBackendStrategy:
     return FORMULA_BACKEND_REGISTRY[resolve_backend(backend=name)]
-
-
-@dataclass(slots=True)
-class FormulaSample:
-    sample_id: str
-    source_path: str
-    source_provider: str
-    display_mode: bool
-    raw_mathml: str
-    source_context: str | None = None
 
 
 def _env_config_value(env: Mapping[str, str], name: str) -> str:
@@ -463,10 +443,6 @@ def _formula_cache_key(
         _path_candidates_signature(mathml_to_latex_script_candidates(env)),
         _path_candidates_signature(mathml_to_latex_worker_script_candidates(env)),
     )
-
-
-def xml_local_name(tag: str) -> str:
-    return tag.rsplit("}", 1)[-1] if "}" in tag else tag
 
 
 def stringify_mathml(element: ET.Element | str | None) -> str:
@@ -1284,64 +1260,3 @@ def convert_mathml_element_to_latex(
     return convert_mathml_string(
         raw_mathml, display_mode=display_mode, env=env, backend=backend
     )
-
-
-def looks_like_mathml_element(element: ET.Element) -> bool:
-    tag = element.tag if isinstance(element.tag, str) else ""
-    return tag.rsplit("}", 1)[-1] == "math"
-
-
-def infer_source_provider(root: ET.Element, xml_path: Path) -> str:
-    from ..provider_catalog import provider_for_xml_source
-
-    root_name = xml_local_name(root.tag if isinstance(root.tag, str) else "")
-    return provider_for_xml_source(root_name, str(xml_path), xml_root=root)
-
-
-def extract_formula_samples_from_xml(
-    xml_path: Path, *, limit: int | None = None
-) -> list[FormulaSample]:
-    try:
-        root = parse_trusted_xml_file(xml_path)
-    except XmlParseFailure:
-        return []
-
-    samples: list[FormulaSample] = []
-    seen: set[str] = set()
-    counter = 0
-    source_provider = infer_source_provider(root, xml_path)
-    for node in root.iter():
-        if not isinstance(node.tag, str) or not looks_like_mathml_element(node):
-            continue
-        raw_mathml = stringify_mathml(node)
-        if not raw_mathml or raw_mathml in seen:
-            continue
-        seen.add(raw_mathml)
-        display_attr = (node.get("display") or "").strip().lower()
-        display_mode = display_attr == "block"
-        samples.append(
-            FormulaSample(
-                sample_id=f"{xml_path.stem}:{counter}",
-                source_path=str(xml_path),
-                source_provider=source_provider,
-                display_mode=display_mode,
-                raw_mathml=raw_mathml,
-            )
-        )
-        counter += 1
-        if limit is not None and len(samples) >= limit:
-            break
-    return samples
-
-
-def collect_formula_samples(
-    xml_paths: Iterable[Path],
-    *,
-    per_file_limit: int | None = None,
-) -> list[FormulaSample]:
-    collected: list[FormulaSample] = []
-    for xml_path in xml_paths:
-        collected.extend(
-            extract_formula_samples_from_xml(xml_path, limit=per_file_limit)
-        )
-    return collected

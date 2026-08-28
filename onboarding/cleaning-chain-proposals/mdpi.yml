@@ -2,7 +2,6 @@ schema_version: 2
 provider: mdpi
 manifest: onboarding/manifests/mdpi.yml
 artifact: onboarding/cleaning-chain-proposals/mdpi.yml
-evidence_artifact: onboarding/cleaning-chain-proposals/mdpi.evidence.yml
 fixtures_digest:
 - purpose: structure
   doi: 10.3390/membranes15030093
@@ -370,5 +369,5 @@ token_conflict_summary:
   - Econometrics
   - Metrics
 notes:
-- Compact proposal for implementation worker; full evidence is in evidence_artifact.
+- Compact fixture-derived cleaning proposal.
 - sentinel and cross_route_guard contract deltas are warnings, not blockers.

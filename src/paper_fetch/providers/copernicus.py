@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -17,7 +16,8 @@ from ..extraction.html.assets import (
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
     download_assets,
-    html_asset_identity_key,
+    filter_assets_for_profile,
+    merge_extracted_and_downloaded_assets,
     split_body_and_supplementary_assets,
 )
 from ..extraction.html.landing import (
@@ -125,6 +125,13 @@ register_provider_bundle(
             xml_file_tokens=("copernicus", "10.5194"),
             body_text_thresholds=BodyTextThresholds(min_chars=500),
             routes=(
+                ProviderRouteSpec(name="metadata", kind="metadata"),
+                ProviderRouteSpec(name="xml", kind="xml"),
+                ProviderRouteSpec(
+                    name="direct_pdf",
+                    kind="pdf",
+                    requires_pdf_conversion=True,
+                ),
                 ProviderRouteSpec(
                     name="assets",
                     kind="assets",
@@ -219,53 +226,6 @@ def _discover_link_urls(html_text: str, base_url: str, *, suffix: str) -> list[s
     deduped: list[str] = []
     extend_unique(deduped, urls)
     return deduped
-
-
-def _merge_assets(
-    extracted_assets: Sequence[Mapping[str, Any]] | None,
-    downloaded_assets: Sequence[Mapping[str, Any]] | None,
-) -> list[dict[str, Any]]:
-    merged: list[dict[str, Any]] = []
-    by_identity: dict[str, dict[str, Any]] = {}
-    for item in extracted_assets or []:
-        asset = dict(item)
-        merged.append(asset)
-        identity = html_asset_identity_key(asset)
-        if identity:
-            by_identity[identity] = asset
-    for item in downloaded_assets or []:
-        asset = dict(item)
-        identity = html_asset_identity_key(asset)
-        existing = by_identity.get(identity) if identity else None
-        if existing is not None:
-            existing.update(asset)
-            continue
-        merged.append(asset)
-        if identity:
-            by_identity[identity] = asset
-    return merged
-
-
-def _filter_assets_for_profile(
-    assets: Sequence[Mapping[str, Any]] | None,
-    *,
-    asset_profile: AssetProfile,
-) -> list[dict[str, Any]]:
-    if asset_profile == "none":
-        return []
-    filtered: list[dict[str, Any]] = []
-    for item in assets or []:
-        asset = dict(item)
-        kind = normalize_text(
-            str(asset.get("kind") or asset.get("asset_type") or "")
-        ).lower()
-        section = normalize_text(str(asset.get("section") or "")).lower()
-        if asset_profile != "all" and (
-            kind == "supplementary" or section == "supplementary"
-        ):
-            continue
-        filtered.append(asset)
-    return filtered
 
 
 class CopernicusClient(ProviderClient):
@@ -758,7 +718,7 @@ class CopernicusClient(ProviderClient):
         ).lower()
         if route == PDF_FALLBACK:
             return empty_asset_results()
-        extracted_assets = _filter_assets_for_profile(
+        extracted_assets = filter_assets_for_profile(
             list(content.extracted_assets if content is not None else []),
             asset_profile=asset_profile,
         )
@@ -912,7 +872,7 @@ class CopernicusClient(ProviderClient):
                 ]
             abstract_sections = extraction_diagnostics.get("abstract_sections")
             semantic_losses = extraction_diagnostics.get("semantic_losses")
-            assets = _merge_assets(
+            assets = merge_extracted_and_downloaded_assets(
                 list(content.extracted_assets if content is not None else []),
                 list(downloaded_assets or []),
             )
@@ -948,7 +908,9 @@ class CopernicusClient(ProviderClient):
                 trace=trace,
             )
         extracted_assets = list(content.extracted_assets if content is not None else [])
-        assets = _merge_assets(extracted_assets, list(downloaded_assets or []))
+        assets = merge_extracted_and_downloaded_assets(
+            extracted_assets, list(downloaded_assets or [])
+        )
         availability_diagnostics = (
             dict(content.diagnostics.get("availability_diagnostics") or {})
             if content is not None

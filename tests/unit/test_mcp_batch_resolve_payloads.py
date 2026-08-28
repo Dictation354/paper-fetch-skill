@@ -291,7 +291,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         self.assertEqual(payload["error_category"], "rate_limited")
         self.assertEqual(payload["retry_after_seconds"], 4)
 
-    def test_fetch_paper_tool_missing_env_payload_matches_output_schema(self) -> None:
+    def test_fetch_paper_tool_missing_env_payload_survives_without_output_schema(self) -> None:
         server = build_server()
 
         with mock.patch.object(
@@ -311,7 +311,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         self.assertEqual(result.structured_content["status"], "no_access")
         self.assertNotIn("acceptance", result.structured_content)
         self.assertEqual(result.structured_content["missing_env"], ["ELSEVIER_API_KEY"])
-        validate_mcp_tool_output_schema(
+        assert_mcp_tool_omits_output_schema(
             server, "fetch_paper", result.structured_content
         )
 
@@ -816,7 +816,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             result.structured_content["evidence"], ["crossref_fulltext_link"]
         )
         self.assertNotIn("title", result.structured_content)
-        validate_mcp_tool_output_schema(
+        assert_mcp_tool_omits_output_schema(
             server, "has_fulltext", result.structured_content
         )
 
@@ -837,11 +837,11 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         self.assertEqual(
             result.structured_content["candidates"], [{"doi": "10.1000/one"}]
         )
-        validate_mcp_tool_output_schema(
+        assert_mcp_tool_omits_output_schema(
             server, "has_fulltext", result.structured_content
         )
 
-    def test_fetch_paper_tool_error_payload_matches_output_schema(self) -> None:
+    def test_fetch_paper_tool_error_payload_survives_without_output_schema(self) -> None:
         server = build_server()
 
         result = asyncio.run(
@@ -851,7 +851,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         self.assertTrue(result.is_error)
         self.assertEqual(result.structured_content["status"], "error")
         self.assertNotIn("acceptance", result.structured_content)
-        validate_mcp_tool_output_schema(
+        assert_mcp_tool_omits_output_schema(
             server, "fetch_paper", result.structured_content
         )
 

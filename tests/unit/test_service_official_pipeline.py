@@ -37,9 +37,6 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                             source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
                             content_type="text/xml",
                             body=b"<xml/>",
-                            metadata={
-                                "reason": "Downloaded full text from the official Elsevier API."
-                            },
                         ),
                         article=official_article,
                     ),
@@ -101,9 +98,6 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                             source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
                             content_type="text/xml",
                             body=b"<xml/>",
-                            metadata={
-                                "reason": "Downloaded full text from the official Elsevier API."
-                            },
                         ),
                         article=official_article,
                     ),
@@ -190,9 +184,6 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                             source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
                             content_type="text/xml",
                             body=b"<xml/>",
-                            metadata={
-                                "reason": "Downloaded full text from the official Elsevier API."
-                            },
                         ),
                         article=official_article,
                     ),
@@ -238,9 +229,6 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                         source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
                         content_type="text/xml",
                         body=b"<xml/>",
-                        metadata={
-                            "reason": "Downloaded full text from the official Elsevier API."
-                        },
                     ),
                     article=sample_article(),
                 )
@@ -415,9 +403,6 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                                 source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
                                 content_type="text/xml",
                                 body=b"<xml/>",
-                                metadata={
-                                    "reason": "Downloaded full text from the official Elsevier API."
-                                },
                             ),
                             article=official_article,
                             related_asset_factory=write_related_assets,
@@ -485,9 +470,6 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                                 source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
                                 content_type="text/xml",
                                 body=b"<xml/>",
-                                metadata={
-                                    "reason": "Downloaded full text from the official Elsevier API."
-                                },
                             ),
                             article=official_article,
                             related_asset_factory=write_related_assets,
@@ -549,9 +531,6 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                                 source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
                                 content_type="text/xml",
                                 body=b"<xml/>",
-                                metadata={
-                                    "reason": "Downloaded full text from the official Elsevier API."
-                                },
                             ),
                             article=sample_article(),
                             related_asset_error=RequestFailure(
@@ -616,9 +595,6 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                                 source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
                                 content_type="text/xml",
                                 body=b"<xml/>",
-                                metadata={
-                                    "reason": "Downloaded full text from the official Elsevier API."
-                                },
                             ),
                             article=sample_article(),
                             related_asset_error=OSError("disk full"),
@@ -682,9 +658,6 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                                     source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
                                     content_type="text/xml",
                                     body=b"<xml/>",
-                                    metadata={
-                                        "reason": "Downloaded full text from the official Elsevier API."
-                                    },
                                 ),
                                 article=sample_article(),
                                 related_asset_error=AttributeError(

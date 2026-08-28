@@ -13,12 +13,6 @@
       "value": 13
     },
     {
-      "code": "C901",
-      "path": "src/paper_fetch/extraction/html/assets/download.py",
-      "symbol": "resolve_asset_download",
-      "value": 27
-    },
-    {
       "code": "PLR0913",
       "path": "src/paper_fetch/extraction/html/cleanup_policy.py",
       "symbol": "build_cleanup_policy",
@@ -58,13 +52,7 @@
       "code": "PLR0913",
       "path": "src/paper_fetch/manifest.py",
       "symbol": "build_manifest_record",
-      "value": 23
-    },
-    {
-      "code": "C901",
-      "path": "src/paper_fetch/markdown_quality.py",
-      "symbol": "validate_markdown_quality_report",
-      "value": 28
+      "value": 21
     },
     {
       "code": "PLR0913",
@@ -166,7 +154,7 @@
       "code": "C901",
       "path": "src/paper_fetch/providers/_pdf_fallback.py",
       "symbol": "fetch_pdf_with_browser",
-      "value": 41
+      "value": 36
     },
     {
       "code": "PLR0913",
@@ -178,13 +166,7 @@
       "code": "C901",
       "path": "src/paper_fetch/providers/_playwright_browser.py",
       "symbol": "fetch_html_with_playwright",
-      "value": 41
-    },
-    {
-      "code": "PLR0913",
-      "path": "src/paper_fetch/providers/_playwright_browser.py",
-      "symbol": "fetch_html_with_playwright",
-      "value": 11
+      "value": 40
     },
     {
       "code": "C901",
@@ -256,7 +238,7 @@
       "code": "C901",
       "path": "src/paper_fetch/workflow/batch_runner.py",
       "symbol": "BatchRunner.run_async",
-      "value": 54
+      "value": 38
     },
     {
       "code": "PLR0913",

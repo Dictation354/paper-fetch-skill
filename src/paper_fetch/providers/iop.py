@@ -58,8 +58,6 @@ register_provider_bundle(
             html_path_templates=("/article/{doi}",),
             pdf_path_templates=("/article/{doi}/pdf",),
             crossref_pdf_position=0,
-            requires_playwright=True,
-            requires_browser_runtime=True,
             body_text_thresholds=BodyTextThresholds(min_chars=1200),
             routes=(
                 ProviderRouteSpec(

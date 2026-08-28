@@ -1340,8 +1340,7 @@ class ArxivProviderTests(unittest.TestCase):
         self.assertIn("![Figure 9](body_assets/missing.png)", rendered)
 
     def test_html_route_normalizes_footnotes_tables_and_image_alt_noise(self) -> None:
-        """rule: rule-table-flatten-or-list
-        rule: rule-arxiv-html-artifact-cleanup"""
+        """rule: rule-table-flatten-or-list"""
         arxiv_id = "2605.06665v1"
         metadata = _metadata(arxiv_id)
         client = ArxivClient(_html_transport(arxiv_id), {})

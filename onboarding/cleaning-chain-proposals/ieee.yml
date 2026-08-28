@@ -2,7 +2,6 @@ schema_version: 2
 provider: ieee
 manifest: onboarding/manifests/ieee.yml
 artifact: onboarding/cleaning-chain-proposals/ieee.yml
-evidence_artifact: onboarding/cleaning-chain-proposals/ieee.evidence.yml
 fixtures_digest:
 - purpose: structure
   doi: 10.1109/access.2024.3352924
@@ -182,5 +181,5 @@ token_conflict_summary:
   - preload the data and the kernel into the memory region shared with the NDAcc.__
   - summarizes relevant related work. Finally,
 notes:
-- Compact proposal for implementation worker; full evidence is in evidence_artifact.
+- Compact fixture-derived cleaning proposal.
 - sentinel and cross_route_guard contract deltas are warnings, not blockers.

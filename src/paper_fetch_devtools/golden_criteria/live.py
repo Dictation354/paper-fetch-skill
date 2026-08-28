@@ -27,7 +27,7 @@ from paper_fetch.provider_catalog import (
     provider_has_browser_route,
 )
 from paper_fetch.providers.registry import build_clients
-from paper_fetch.quality.issues import is_authorless_briefing_like
+from paper_fetch_devtools.quality_issues import is_authorless_briefing_like
 from paper_fetch.quality.reason_codes import FULLTEXT, INSUFFICIENT_BODY
 from paper_fetch.reason_codes import (
     ABSTRACT_ONLY,

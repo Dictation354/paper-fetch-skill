@@ -286,20 +286,13 @@ def test_cleaning_proposal_cli_writes_yaml(tmp_path: Path) -> None:
 
     payload = json.loads(result.stdout)
     proposal = yaml.safe_load(output_path.read_text(encoding="utf-8"))
-    evidence = yaml.safe_load(
-        (tmp_path / "proposal.evidence.yml").read_text(encoding="utf-8")
-    )
     assert payload["provider"] == "mdpi"
     assert payload["output"] == output_path.as_posix()
-    assert payload["evidence_output"] == (tmp_path / "proposal.evidence.yml").as_posix()
     assert proposal["schema_version"] == 2
     assert proposal["provider"] == "mdpi"
     assert proposal["fixtures_digest"]
     assert "raw_fixture_inventory" not in proposal
-    assert proposal["evidence_artifact"].endswith("proposal.evidence.yml")
-    assert evidence["schema_version"] == 1
-    assert evidence["raw_fixture_inventory"]
-    assert evidence["overcleaning_probes"]
+    assert not (tmp_path / "proposal.evidence.yml").exists()
 
 
 def test_anchor_suggestions_are_normalized_and_deduped() -> None:

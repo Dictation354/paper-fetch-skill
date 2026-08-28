@@ -73,6 +73,15 @@ BrowserPreflightStatus = Literal[
     "runtime_error",
     "cancelled",
 ]
+BROWSER_PREFLIGHT_STATUSES: tuple[BrowserPreflightStatus, ...] = (
+    "ready",
+    "challenge",
+    "auth_required",
+    "network_timeout",
+    "extraction_error",
+    "runtime_error",
+    "cancelled",
+)
 
 _CHALLENGE_REASON_CODES = frozenset(
     {

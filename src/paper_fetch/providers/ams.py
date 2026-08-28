@@ -53,7 +53,6 @@ register_provider_bundle(
             status_order=9,
             base_domains=("journals.ametsoc.org",),
             crossref_pdf_position=0,
-            requires_browser_runtime=True,
             routes=(
                 ProviderRouteSpec(name="metadata", kind="metadata"),
                 ProviderRouteSpec(

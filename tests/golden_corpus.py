@@ -17,6 +17,7 @@ from paper_fetch.extraction.html._metadata import (
     merge_html_metadata,
     parse_html_metadata,
 )
+from paper_fetch.extraction.html.assets import merge_extracted_and_downloaded_assets
 from paper_fetch.http import HttpTransport
 from paper_fetch.models import article_from_markdown
 from paper_fetch.publisher_identity import normalize_doi
@@ -233,7 +234,6 @@ def _build_elsevier_article(fixture: GoldenCorpusFixture):
         source_url=fixture.source_url,
         content_type=fixture.content_type or "text/xml",
         body=fixture.raw_path.read_bytes(),
-        metadata={"route": "official"},
         trace=trace_from_markers(["fulltext:elsevier_xml_ok"]),
         merged_metadata=metadata,
     )
@@ -861,7 +861,7 @@ def _build_plos_article(fixture: GoldenCorpusFixture):
         article_metadata["references"] = list(extraction.references)
     downloaded_assets = _downloaded_plos_body_assets(fixture, list(extraction.assets))
     assets = (
-        plos_provider._merge_assets(extraction.assets, downloaded_assets)
+        merge_extracted_and_downloaded_assets(extraction.assets, downloaded_assets)
         if downloaded_assets
         else extraction.assets
     )

@@ -561,7 +561,6 @@ class RegressionSampleTests(unittest.TestCase):
             source_url="https://api.elsevier.com/content/article/doi/10.1016%2Fj.rse.2025.114648?view=FULL",
             content_type="text/xml",
             body=xml_body,
-            metadata={"reason": "Replay fixture for Elsevier XML regression test."},
         )
         real_elsevier_client = elsevier_provider.ElsevierClient(
             FixtureTransport({}), {}

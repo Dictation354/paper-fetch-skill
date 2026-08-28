@@ -9,7 +9,8 @@ from urllib.parse import quote, unquote, urljoin, urlparse
 
 from bs4 import BeautifulSoup, Tag
 
-from ..extraction.html._metadata import parse_html_metadata
+from ..extraction.html._metadata import parse_html_metadata, raw_html_meta_values
+from ..extraction.html.asset_fields import MARKDOWN_ASSET_REFERENCE_FIELDS
 from ..extraction.html.assets import extract_figure_assets
 from ..extraction.html.formula_rules import is_tex_formula_script_node
 from ..extraction.html.parsing import choose_parser
@@ -215,22 +216,6 @@ def iop_pdf_url_from_article_url(url: str | None) -> str | None:
     return f"{parsed.scheme or 'https'}://{parsed.netloc}{path.rstrip('/')}/pdf"
 
 
-def _raw_meta_values(metadata: Mapping[str, Any], key: str) -> list[str]:
-    raw_meta = metadata.get("raw_meta")
-    if not isinstance(raw_meta, Mapping):
-        return []
-    values = raw_meta.get(key) or raw_meta.get(key.lower()) or []
-    if isinstance(values, str):
-        values = [values]
-    if not isinstance(values, list):
-        return []
-    return [
-        normalize_text(str(item or ""))
-        for item in values
-        if normalize_text(str(item or ""))
-    ]
-
-
 def _append_unique(values: list[str], candidate: str | None) -> None:
     normalized = normalize_text(candidate)
     if normalized and normalized not in values:
@@ -278,7 +263,7 @@ def pdf_candidate_urls(
     base_url = normalize_text(source_url) or normalize_text(
         str(metadata.get("landing_page_url") or "")
     )
-    for value in _raw_meta_values(metadata, "citation_pdf_url"):
+    for value in raw_html_meta_values(metadata, "citation_pdf_url"):
         _append_unique(
             candidates, urljoin(base_url or direct_article_url(doi or ""), value)
         )
@@ -488,18 +473,7 @@ def _markdown_contains_asset_image(
     if not inline_candidates:
         return False
     asset_candidates: set[str] = set()
-    for field in (
-        "path",
-        "url",
-        "original_url",
-        "download_url",
-        "source_url",
-        "source_path",
-        "source_href",
-        "preview_url",
-        "full_size_url",
-        "link",
-    ):
+    for field in MARKDOWN_ASSET_REFERENCE_FIELDS:
         asset_candidates |= image_reference_candidates(str(asset.get(field) or ""))
     return bool(
         asset_candidates

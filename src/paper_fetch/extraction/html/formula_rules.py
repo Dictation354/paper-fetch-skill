@@ -6,7 +6,11 @@ import re
 import xml.etree.ElementTree as ET
 from typing import Any
 
-from .asset_fields import FULL_SIZE_IMAGE_ATTRS, PREVIEW_IMAGE_ATTRS
+from .asset_fields import (
+    FULL_SIZE_IMAGE_ATTRS,
+    PREVIEW_IMAGE_ATTRS,
+    best_url_from_srcset,
+)
 from ...utils import normalize_text
 from ...xml_security import XmlParseFailure, parse_mathml_fragment
 from .provider_rules import (
@@ -99,33 +103,6 @@ def display_formula_selectors_for_profile(noise_profile: str | None) -> tuple[st
         *GENERIC_DISPLAY_FORMULA_SELECTORS,
         *(provider_display_formula_selectors(noise_profile) if noise_profile else ()),
     )
-
-
-def first_url_from_srcset(value: str | None) -> str:
-    srcset = normalize_text(value)
-    if not srcset:
-        return ""
-    best_url = ""
-    best_score = -1.0
-    for raw_part in srcset.split(","):
-        part = raw_part.strip()
-        if not part:
-            continue
-        pieces = part.split()
-        url = pieces[0].strip()
-        score = 0.0
-        for descriptor in pieces[1:]:
-            match = re.match(
-                r"^([0-9]+(?:\.[0-9]+)?)(w|x)$", descriptor.strip().lower()
-            )
-            if not match:
-                continue
-            multiplier = 1000.0 if match.group(2) == "x" else 1.0
-            score = max(score, float(match.group(1)) * multiplier)
-        if score >= best_score:
-            best_url = url
-            best_score = score
-    return best_url
 
 
 def normalize_formula_script_type(value: Any) -> str:
@@ -299,7 +276,7 @@ def _candidate_urls(tag: Any) -> list[str]:
     for attr in FORMULA_IMAGE_SRCSET_ATTRS:
         raw_srcset = normalize_text(str(tag.get(attr) or ""))
         if raw_srcset:
-            candidate = first_url_from_srcset(raw_srcset)
+            candidate = best_url_from_srcset(raw_srcset)
             if candidate:
                 urls.append(candidate)
     return urls

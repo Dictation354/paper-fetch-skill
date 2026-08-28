@@ -2,7 +2,6 @@ schema_version: 2
 provider: science
 manifest: onboarding/manifests/science.yml
 artifact: onboarding/cleaning-chain-proposals/science.yml
-evidence_artifact: onboarding/cleaning-chain-proposals/science.evidence.yml
 fixtures_digest:
 - purpose: structure
   doi: 10.1126/science.abp8622
@@ -335,5 +334,5 @@ token_conflict_summary:
   - Share
   - Download
 notes:
-- Compact proposal for implementation worker; full evidence is in evidence_artifact.
+- Compact fixture-derived cleaning proposal.
 - sentinel and cross_route_guard contract deltas are warnings, not blockers.

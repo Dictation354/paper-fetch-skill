@@ -450,7 +450,6 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
 
     def test_mdpi_markdown_image_alts_are_short_and_balanced(self) -> None:
         """rule: rule-mdpi-display-object-anchoring-dedupe
-        rule: rule-short-markdown-image-alt-labels
         """
         short_alt_pattern = (
             r"^(?:Figure [A-Za-z]?\d+[A-Za-z]?(?:\.\d+[A-Za-z]?)*|"
