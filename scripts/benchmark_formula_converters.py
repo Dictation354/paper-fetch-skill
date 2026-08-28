@@ -43,9 +43,7 @@ def extract_formula_samples_from_xml(
     except XmlParseFailure:
         return []
     root_name = root.tag.rsplit("}", 1)[-1] if isinstance(root.tag, str) else ""
-    source_provider = provider_for_xml_source(
-        root_name, str(xml_path), xml_root=root
-    )
+    source_provider = provider_for_xml_source(root_name, str(xml_path), xml_root=root)
     samples: list[FormulaSample] = []
     seen: set[str] = set()
     for node in root.iter():
@@ -76,9 +74,7 @@ def collect_formula_samples(
     return [
         sample
         for xml_path in xml_paths
-        for sample in extract_formula_samples_from_xml(
-            xml_path, limit=per_file_limit
-        )
+        for sample in extract_formula_samples_from_xml(xml_path, limit=per_file_limit)
     ]
 
 

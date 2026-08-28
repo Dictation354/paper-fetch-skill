@@ -423,8 +423,10 @@ def validate_manifest_test_mapping(anchors: set[str]) -> list[str]:
             }
             if test_name not in names:
                 errors.append(f"manifest test {test_id} does not exist")
-        if not isinstance(test_anchors, list) or not test_anchors or not all(
-            isinstance(value, str) and value for value in test_anchors
+        if (
+            not isinstance(test_anchors, list)
+            or not test_anchors
+            or not all(isinstance(value, str) and value for value in test_anchors)
         ):
             errors.append(f"manifest test {test_id} must define non-empty anchors")
             continue

@@ -156,12 +156,8 @@ def _legal_access_evidence(
             requires_browser, requires_playwright = _catalog_runtime_requirements(
                 catalog
             )
-            runtime_bits.append(
-                f"requires_browser_runtime={requires_browser}"
-            )
-            runtime_bits.append(
-                f"requires_playwright={requires_playwright}"
-            )
+            runtime_bits.append(f"requires_browser_runtime={requires_browser}")
+            runtime_bits.append(f"requires_playwright={requires_playwright}")
         evidence.append(
             "registered provider bundle "
             f"sources={sources}"

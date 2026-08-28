@@ -63,7 +63,9 @@ def test_acs_provider_bundle_declares_routing_and_browser_workflow() -> None:
     assert catalog.domains == ("www.acs.org", "pubs.acs.org", "acs.org")
     assert catalog.doi_prefixes == ("10.1021/",)
     assert catalog.base_domains == ("pubs.acs.org",)
-    assert any(route.browser_required or route.browser_optional for route in catalog.routes)
+    assert any(
+        route.browser_required or route.browser_optional for route in catalog.routes
+    )
     assert default_asset_profile_for_provider("acs") == "body"
     assert bundle.sources == ("acs",)
     assert bundle.html_rules is not None

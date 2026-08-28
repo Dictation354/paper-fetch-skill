@@ -44,6 +44,7 @@ class BrowserWorkflowDeps:
     _assets_matching_download_failures: Callable[..., Any]
     _browser_workflow_image_download_candidates: Callable[..., Any]
 
+
 def default_browser_workflow_deps() -> BrowserWorkflowDeps:
     """返回生产默认依赖。"""
     from ...extraction.html.assets import (

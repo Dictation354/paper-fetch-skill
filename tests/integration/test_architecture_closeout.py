@@ -44,6 +44,8 @@ RAW_PAYLOAD_METADATA_MAGIC_PATTERN = re.compile(
     + "|".join(PROVIDER_MAGIC_METADATA_KEYS)
     + r")(?:\"|\'))"
 )
+
+
 def pythonpath_env() -> dict[str, str]:
     env = os.environ.copy()
     entries = [str(SRC_DIR)]

@@ -510,11 +510,7 @@ def _html_module_content(
     if spec.requires_browser_runtime and not browser_route_indexes:
         browser_route_indexes = {
             next(
-                (
-                    index
-                    for index, kind in enumerate(route_kinds)
-                    if kind != "metadata"
-                ),
+                (index for index, kind in enumerate(route_kinds) if kind != "metadata"),
                 0,
             )
         }

@@ -31,7 +31,7 @@ jobs:
           PYTHONPATH=src uv run mypy src/paper_fetch
           uv run python scripts/check_complexity_budget.py
           uv run python scripts/check_provider_governance.py
-          uv run python scripts/validate_extraction_rules.py --ci
+          uv run python scripts/validate_extraction_rules.py
           uv run python scripts/sync_version.py --check
       - name: Audit locked dependencies
         run: uv run python scripts/audit_dependencies.py

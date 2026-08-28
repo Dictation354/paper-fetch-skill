@@ -16,6 +16,8 @@ REQUIRED_KEYS = {
     "retryable",
     "details",
 }
+
+
 def _run(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, *args],

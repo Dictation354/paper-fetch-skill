@@ -269,7 +269,9 @@ def _effective_lane_limit(
         return max_workers
     if isinstance(configured, int):
         return configured
-    value = configured(key) if callable(configured) else configured.get(key, max_workers)
+    value = (
+        configured(key) if callable(configured) else configured.get(key, max_workers)
+    )
     return _validate_worker_limit(value, name=f"lane limit for {key!r}")
 
 
@@ -629,9 +631,7 @@ class BatchRunner(Generic[ItemT, ResultT]):
                     _record_lane_cooldown(
                         lane_cooldowns,
                         result,
-                        default_seconds=(
-                            self._default_rate_limit_cooldown_seconds
-                        ),
+                        default_seconds=(self._default_rate_limit_cooldown_seconds),
                     )
                     await record_result(result)
 

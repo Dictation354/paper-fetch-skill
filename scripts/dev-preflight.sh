@@ -114,7 +114,7 @@ if [[ "$run_devtools" == "1" ]]; then
   PYTHONPATH=src "$PYTHON_BIN" -m pytest tests/devtools -q --durations=30
 fi
 
-"$PYTHON_BIN" scripts/validate_extraction_rules.py --ci
+"$PYTHON_BIN" scripts/validate_extraction_rules.py
 
 if [[ "$run_integration" == "1" ]]; then
   PYTHONPATH=src "$PYTHON_BIN" -m pytest tests/integration -q --durations=30

@@ -697,8 +697,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertNotIn("Stale meta reference", str(references[0]["raw"]))
 
     def test_ams_bams_fixture_keeps_late_body_sections(self) -> None:
-        """
-        """
+        """ """
         doi = "10.1175/bams-d-24-0223.1"
         markdown, extraction = _extract_fixture_markdown(doi)
 
@@ -1020,8 +1019,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
                 self.assertIn(expected, markdown)
 
     def test_ams_inline_spacing_repairs_prose_parentheses_conservatively(self) -> None:
-        """
-        """
+        """ """
         jpo_markdown, jpo_extraction = _extract_fixture_markdown(
             "10.1175/jpo-d-23-0234.1"
         )

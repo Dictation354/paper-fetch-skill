@@ -861,9 +861,7 @@ async def _execute_batch_fetch(
                         concurrency=request.concurrency,
                         deps=deps,
                     )
-                    resolved_by_index = {
-                        item.index: item for item in resolved_items
-                    }
+                    resolved_by_index = {item.index: item for item in resolved_items}
                     items = [
                         resolved_by_index.get(item.index, item)
                         for item in [*known_doi_items, *unresolved_items]
@@ -1018,13 +1016,11 @@ async def _execute_batch_fetch(
                         ),
                     )
 
-                run_result: BatchRunResult[
-                    BatchFetchItem, BatchFetchOutcome
-                ] | None = None
+                run_result: BatchRunResult[BatchFetchItem, BatchFetchOutcome] | None = (
+                    None
+                )
                 if items:
-                    with lifecycle.event_writer(
-                        overwrite=request.overwrite
-                    ) as writer:
+                    with lifecycle.event_writer(overwrite=request.overwrite) as writer:
                         run_result = await run_batch_async(
                             items,
                             run_item,

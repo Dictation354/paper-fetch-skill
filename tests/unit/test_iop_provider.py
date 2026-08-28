@@ -280,7 +280,9 @@ def test_iop_provider_bundle_declares_routing_sources_and_browser_runtime() -> N
     assert provider_html_path_templates("iop") == ("/article/{doi}",)
     assert provider_pdf_path_templates("iop") == ("/article/{doi}/pdf",)
     assert any(route.requires_playwright for route in catalog.routes)
-    assert any(route.browser_required or route.browser_optional for route in catalog.routes)
+    assert any(
+        route.browser_required or route.browser_optional for route in catalog.routes
+    )
     assert default_asset_profile_for_provider("iop") == "body"
     assert SOURCE_PROVIDER_MAP["iop_html"] == "iop"
     assert SOURCE_PROVIDER_MAP["iop_pdf"] == "iop"

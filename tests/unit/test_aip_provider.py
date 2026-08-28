@@ -173,7 +173,9 @@ def test_aip_provider_bundle_declares_routing_sources_and_browser_runtime() -> N
     assert catalog.domains == ("pubs.aip.org",)
     assert catalog.doi_prefixes == ("10.1063/",)
     assert provider_base_domains("aip") == ("pubs.aip.org",)
-    assert any(route.browser_required or route.browser_optional for route in catalog.routes)
+    assert any(
+        route.browser_required or route.browser_optional for route in catalog.routes
+    )
     assert default_asset_profile_for_provider("aip") == "body"
     assert SOURCE_PROVIDER_MAP["aip_html"] == "aip"
     assert SOURCE_PROVIDER_MAP["aip_pdf"] == "aip"

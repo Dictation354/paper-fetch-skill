@@ -84,9 +84,7 @@ def validate_contract(
     matrix_runners = sorted({item.get("os", "") for item in matrix})
     matrix_targets = [item.get("target", "") for item in matrix]
     _all_targets, owner_targets, owner_installers = _release_owner_facts()
-    owner_versions = [
-        f"3.{target.rsplit('cp', 1)[1][-2:]}" for target in owner_targets
-    ]
+    owner_versions = [f"3.{target.rsplit('cp', 1)[1][-2:]}" for target in owner_targets]
     owner_architectures = sorted(
         {target.removeprefix("macos-").rsplit("-cp", 1)[0] for target in owner_targets}
     )
@@ -96,7 +94,10 @@ def validate_contract(
         errors.append("support.offline.minimum_os_version must be '15.0'")
     if offline.get("python_implementation") != "CPython":
         errors.append("support.offline.python_implementation must be CPython")
-    if offline.get("python_versions") != matrix_versions or matrix_versions != owner_versions:
+    if (
+        offline.get("python_versions") != matrix_versions
+        or matrix_versions != owner_versions
+    ):
         errors.append(
             "support.offline.python_versions must match the offline workflow and release asset owner"
         )
@@ -107,7 +108,9 @@ def validate_contract(
     if matrix_runners != [offline.get("runner")]:
         errors.append("support.offline.runner must match the offline workflow")
     if matrix_targets != owner_targets:
-        errors.append("offline workflow macOS targets must match the release asset owner")
+        errors.append(
+            "offline workflow macOS targets must match the release asset owner"
+        )
 
     installer = json.loads(
         (repo_root / "installer" / "manifest.json").read_text(encoding="utf-8")
@@ -137,7 +140,10 @@ def validate_contract(
     )
     native_job_text = native_text.split("\n  macos-native:", 1)[-1]
     native_job_text = re.split(r"\n  [A-Za-z0-9_-]+:", native_job_text, maxsplit=1)[0]
-    if f'python-version: "{native_contract.get("python_version")}"' not in native_job_text:
+    if (
+        f'python-version: "{native_contract.get("python_version")}"'
+        not in native_job_text
+    ):
         errors.append("evidence.native.python_version must match verify workflow")
 
     safety = contract.get("safety", {})

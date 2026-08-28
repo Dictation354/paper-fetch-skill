@@ -26,6 +26,7 @@ from .log_bridge import PaperFetchLogBridge
 from .results import _tool_result, error_payload_from_exception, with_schema_version
 from .schemas import BrowserPreflightRequest
 
+
 def _storage_state_payload(
     result: BrowserPreflightResult,
     *,

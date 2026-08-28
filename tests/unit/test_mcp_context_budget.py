@@ -16,6 +16,7 @@ FETCH_DESCRIPTION_MAX_CHARS = 1_200
 ALL_TOOL_DESCRIPTIONS_MAX_CHARS = 5_000
 HOST_NARRATIVE_MAX_CHARS = 24_000
 
+
 def _native_tools() -> list[mcp_types.Tool]:
     return asyncio.run(build_server().list_native_tools())
 

@@ -291,7 +291,9 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         self.assertEqual(payload["error_category"], "rate_limited")
         self.assertEqual(payload["retry_after_seconds"], 4)
 
-    def test_fetch_paper_tool_missing_env_payload_survives_without_output_schema(self) -> None:
+    def test_fetch_paper_tool_missing_env_payload_survives_without_output_schema(
+        self,
+    ) -> None:
         server = build_server()
 
         with mock.patch.object(
@@ -841,7 +843,9 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             server, "has_fulltext", result.structured_content
         )
 
-    def test_fetch_paper_tool_error_payload_survives_without_output_schema(self) -> None:
+    def test_fetch_paper_tool_error_payload_survives_without_output_schema(
+        self,
+    ) -> None:
         server = build_server()
 
         result = asyncio.run(
