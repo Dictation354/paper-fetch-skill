@@ -372,7 +372,11 @@ def test_release_emits_sbom_checksums_and_build_provenance() -> None:
     assert "posix_tooling_ref: ${{ needs.verify-tag.outputs.source_sha }}" in workflow
     assert "windows_tooling_ref: ${{ needs.verify-tag.outputs.source_sha }}" in workflow
     assert 'test "$(git rev-parse HEAD)" = "$SOURCE_SHA"' in workflow
-    assert '--target "$SOURCE_SHA"' in workflow
+    publish_step = workflow.split(
+        "- name: Publish immutable release assets", maxsplit=1
+    )[1]
+    assert "--verify-tag" in publish_step
+    assert '--target "$SOURCE_SHA"' not in publish_step
 
 
 def test_stable_release_validates_and_flattens_the_exact_asset_set() -> None:

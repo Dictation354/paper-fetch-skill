@@ -305,14 +305,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ needs.verify-tag.outputs.tag }}
-          SOURCE_SHA: ${{ needs.verify-tag.outputs.source_sha }}
         run: |
           set -euo pipefail
           mapfile -d '' assets < <(
             find release-assets -maxdepth 1 -type f -print0 | sort -z
           )
           gh release create "$TAG" "${assets[@]}" \
-            --target "$SOURCE_SHA" \
             --verify-tag \
             --notes-file release-notes.md \
             --title "$TAG"
