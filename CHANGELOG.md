@@ -6,6 +6,13 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.0.1 - 2026-08-28
+
+### Fixed — release publication
+
+- Stable publication now relies on the already verified remote tag instead of redundantly passing its commit as `target_commitish`, avoiding GitHub's workflow-permission rejection when the default branch advances while an immutable-tag release is building.
+- Applied the canonical formatter, synchronized the extraction-rule validator invocation after removal of its no-op `--ci` mode, and removed the local problem audit from tracked release source.
+
 ## 6.0.0 - 2026-08-28
 
 ### Changed — explicit capabilities and smaller public surfaces
