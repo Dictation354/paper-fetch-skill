@@ -991,10 +991,10 @@ class FrontiersClient(ProviderClient):
             in {"figure", "formula"}
         ]
         if body_image_assets and content is not None:
-            merged_metadata = content.merged_metadata or {}
+            landing_metadata = content.merged_metadata or {}
             landing_url = normalize_text(
                 str(
-                    merged_metadata.get("landing_page_url")
+                    landing_metadata.get("landing_page_url")
                     or metadata.get("landing_page_url")
                     or ""
                 )
