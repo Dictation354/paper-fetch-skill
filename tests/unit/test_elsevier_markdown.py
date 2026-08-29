@@ -954,6 +954,25 @@ class ElsevierMarkdownTests(unittest.TestCase):
         self.assertNotIn("Fig. 2\n,", text)
         self.assertNotIn("Table 1\n)", text)
 
+    def test_elsevier_xml_formatting_newlines_do_not_split_inline_operators(
+        self,
+    ) -> None:
+        fragment = ET.fromstring(
+            """
+<fragment xmlns:ce="http://www.elsevier.com/xml/common/dtd">
+  <ce:italic>r</ce:italic>
+  <ce:hsp sp="0.25"/>=1.00; <ce:italic>T<ce:inf>leaf &lt;</ce:inf>
+  <ce:hsp sp="0.25"/>T<ce:inf>air</ce:inf></ce:italic>.
+</fragment>
+"""
+        )
+
+        text = render_inline_text(fragment)
+
+        self.assertEqual(text, "*r* =1.00; *Tleaf < Tair*.")
+        self.assertNotIn("*r*\n=", text)
+        self.assertNotIn("<\n", text)
+
     def _render_real_elsevier_appendix_markdown(self) -> str:
         return _render_elsevier_golden_markdown(
             "10.1016/j.rse.2026.115369",

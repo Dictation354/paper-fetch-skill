@@ -24,6 +24,7 @@ from ._article_markdown_common import (
     first_descendant,
     iter_children,
     iter_descendants,
+    _normalize_xml_character_data,
     normalize_lines,
     render_figure_block,
     render_inline_text,
@@ -386,7 +387,7 @@ def _render_paragraph_block(
         return [text, ""] if text else []
 
     lines: list[str] = []
-    paragraph_parts: list[str] = [paragraph.text or ""]
+    paragraph_parts: list[str] = [_normalize_xml_character_data(paragraph.text)]
     for child in iter_children(paragraph):
         if id(child) in embedded_blocks:
             _flush_paragraph_parts(lines, paragraph_parts)
@@ -407,7 +408,7 @@ def _render_paragraph_block(
                 )
             )
         if child.tail:
-            paragraph_parts.append(child.tail)
+            paragraph_parts.append(_normalize_xml_character_data(child.tail))
     _flush_paragraph_parts(lines, paragraph_parts)
     return lines
 

@@ -6,6 +6,13 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.0.3 - 2026-08-29
+
+### Fixed — XML inline whitespace rendering
+
+- The shared Elsevier/JATS inline renderer now collapses publisher XML source-formatting whitespace before assembling Markdown. Line wrapping around operators and emphasis no longer produces malformed emphasis or unintended block parsing, while explicit break elements and the existing split-italic subscript repair keep their established behavior.
+- JATS paragraphs containing embedded blocks apply the same whitespace rule. Regression coverage includes the reported Elsevier `=` and `<` cases plus real Frontiers and Copernicus XML; PLOS shares the corrected JATS conversion path.
+
 ## 6.0.2 - 2026-08-29
 
 ### Fixed — Frontiers original figures and rolling releases

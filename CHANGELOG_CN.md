@@ -6,6 +6,13 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.0.3 - 2026-08-29
+
+### 修复——XML 行内空白渲染
+
+- Elsevier/JATS 共用的行内转换器现在会在组装 Markdown 前折叠出版社 XML 中仅用于源码排版的空白。运算符和强调标记附近的源码折行不再造成错误强调或意外块级解析，同时显式换行元素与既有的分离斜体下标修复保持原有行为。
+- 含嵌入块的 JATS 段落同步应用相同空白规则。回归测试覆盖本次报告的 Elsevier `=`、`<` 案例以及真实 Frontiers、Copernicus XML；PLOS 共用修复后的 JATS 转换路径。
+
 ## 6.0.2 - 2026-08-29
 
 ### 修复——Frontiers 原图与滚动发布
