@@ -104,8 +104,9 @@ def test_jats_explicit_editorial_uses_short_body_policy() -> None:
     assert availability.reason == "structured_short_article_body"
 
 
-def test_jats_xml_formatting_newlines_are_spaces_but_explicit_break_is_preserved(
-) -> None:
+def test_jats_xml_formatting_newlines_are_spaces_but_explicit_break_is_preserved() -> (
+    None
+):
     extraction = parse_jats_xml(
         _jats(
             body="""
@@ -146,12 +147,11 @@ def test_jats_embedded_blocks_do_not_leak_xml_tail_newlines() -> None:
     assert "After **block** = done." in extraction.markdown_text
 
 
-def test_shared_jats_renderer_normalizes_real_frontiers_and_copernicus_wrapping(
-) -> None:
+def test_shared_jats_renderer_normalizes_real_frontiers_and_copernicus_wrapping() -> (
+    None
+):
     frontiers = parse_jats_xml(
-        golden_criteria_asset(
-            "10.3389/fmars.2023.1101972", "original.xml"
-        ).read_bytes()
+        golden_criteria_asset("10.3389/fmars.2023.1101972", "original.xml").read_bytes()
     )
     copernicus = parse_jats_xml(
         golden_criteria_asset("10.5194/acp-1-1-2001", "original.xml").read_bytes()

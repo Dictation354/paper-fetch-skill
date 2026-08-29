@@ -6,6 +6,13 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.0.4 - 2026-08-29
+
+### 修复——发布质量门禁
+
+- 将 XML tail 空白处理从共用行内渲染器中提取，保持 6.0.3 行为不变，同时使渲染器回到仓库复杂度预算内；并对 JATS 回归测试应用规范格式。
+- 为 6.0.4 重新生成机器可读 provider catalog，使其 tool-version 快照与项目元数据一致，并恢复 provider governance 同步。
+
 ## 6.0.3 - 2026-08-29
 
 ### 修复——XML 行内空白渲染

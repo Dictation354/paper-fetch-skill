@@ -69,6 +69,21 @@ def _normalize_xml_character_data(value: str | None) -> str:
     return re.sub(r"[ \t\r\n]+", " ", value or "")
 
 
+def _render_xml_tail(child: ET.Element, next_child: ET.Element | None) -> str:
+    tail = child.tail or ""
+    if (
+        ("\n" in tail or "\r" in tail)
+        and not tail.strip()
+        and isinstance(child.tag, str)
+        and xml_local_name(child.tag) == "italic"
+        and next_child is not None
+        and isinstance(next_child.tag, str)
+        and xml_local_name(next_child.tag) == "italic"
+    ):
+        return "\n"
+    return _normalize_xml_character_data(tail)
+
+
 def iter_children(
     element: ET.Element | None, local_name: str | None = None
 ) -> list[ET.Element]:
@@ -137,20 +152,6 @@ def render_inline_text(
     skip_names = skip_local_names or set()
     parts: list[str] = []
 
-    def render_tail(child: ET.Element, next_child: ET.Element | None) -> str:
-        tail = child.tail or ""
-        if (
-            ("\n" in tail or "\r" in tail)
-            and not tail.strip()
-            and isinstance(child.tag, str)
-            and xml_local_name(child.tag) == "italic"
-            and next_child is not None
-            and isinstance(next_child.tag, str)
-            and xml_local_name(next_child.tag) == "italic"
-        ):
-            return "\n"
-        return _normalize_xml_character_data(tail)
-
     def visit(node: ET.Element) -> None:
         if node.text:
             parts.append(_normalize_xml_character_data(node.text))
@@ -160,13 +161,13 @@ def render_inline_text(
             next_child = children[index + 1] if index + 1 < len(children) else None
             if not isinstance(child.tag, str):
                 if child.tail:
-                    parts.append(render_tail(child, next_child))
+                    parts.append(_render_xml_tail(child, next_child))
                 continue
 
             local_name = xml_local_name(child.tag)
             if local_name in skip_names:
                 if child.tail:
-                    parts.append(render_tail(child, next_child))
+                    parts.append(_render_xml_tail(child, next_child))
                 continue
             if local_name == "math":
                 formula_result = render_mathml_formula_result(
@@ -227,7 +228,7 @@ def render_inline_text(
                 visit(child)
 
             if child.tail:
-                parts.append(render_tail(child, next_child))
+                parts.append(_render_xml_tail(child, next_child))
 
     visit(element)
     return normalize_inline_markup_text("".join(parts))

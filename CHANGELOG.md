@@ -6,6 +6,13 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.0.4 - 2026-08-29
+
+### Fixed — release quality gates
+
+- Extracted XML tail whitespace handling from the shared inline renderer, preserving the 6.0.3 behavior while bringing the renderer back within the repository complexity budget. Applied canonical formatting to the JATS regression tests.
+- Regenerated the machine-readable provider catalog for 6.0.4 so its tool-version snapshot matches project metadata and provider governance remains synchronized.
+
 ## 6.0.3 - 2026-08-29
 
 ### Fixed — XML inline whitespace rendering
