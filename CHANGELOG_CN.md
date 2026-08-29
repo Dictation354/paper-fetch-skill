@@ -6,6 +6,13 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.0.2 - 2026-08-29
+
+### 修复——Frontiers 原图与滚动发布
+
+- Frontiers 正文图和公式图片现在会从 canonical landing page 发现并优先使用出版社提供的精确 `xml-images` 原图 URL。按 graphic stem 匹配可保持已下载全尺寸资产与渲染后的 Markdown 一致，并避免根据 DOI 后缀推导出错误的文章目录 URL。
+- 滚动依赖发布的 `publish` job 现在会先 checkout 触发 workflow 的 commit，再调用仓库内的发布脚本。该 checkout 使用固定 action、浅克隆且不持久化凭证，避免 `prepare_release_assets.py` 因 `Errno 2` 失败；结构化 workflow 契约会持续保护执行顺序和信任边界。
+
 ## 6.0.1 - 2026-08-28
 
 ### 修复——发布流程

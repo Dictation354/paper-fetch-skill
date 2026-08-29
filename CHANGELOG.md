@@ -6,6 +6,13 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.0.2 - 2026-08-29
+
+### Fixed — Frontiers original figures and rolling releases
+
+- Frontiers body figures and formula images now discover and prefer the publisher's exact original `xml-images` URLs from the canonical landing page. Graphic-stem matching keeps downloaded full-size assets and rendered Markdown aligned while avoiding incorrect article-directory URLs derived from DOI suffixes.
+- The rolling dependency release `publish` job now checks out the triggering workflow commit before invoking repository release scripts. The checkout is pinned, shallow, and credential-free, preventing `prepare_release_assets.py` from failing with `Errno 2`; a structured workflow contract protects the ordering and trust boundary.
+
 ## 6.0.1 - 2026-08-28
 
 ### Fixed — release publication

@@ -422,6 +422,28 @@ def test_release_build_jobs_check_out_the_verified_tag_commit() -> None:
     assert package_job["with"]["ref"] == expected_ref
 
 
+def test_rolling_publish_checks_out_the_triggering_workflow_tooling() -> None:
+    steps = _workflow("rolling-release.yml")["jobs"]["publish"]["steps"]
+    checkouts = [
+        (index, step)
+        for index, step in enumerate(steps)
+        if str(step.get("uses") or "").startswith("actions/checkout@")
+    ]
+    script_steps = [
+        index
+        for index, step in enumerate(steps)
+        if "scripts/" in str(step.get("run") or "")
+    ]
+
+    assert len(checkouts) == 1
+    assert script_steps
+    checkout_index, checkout = checkouts[0]
+    assert checkout_index < min(script_steps)
+    assert checkout["with"]["ref"] == "${{ github.sha }}"
+    assert checkout["with"]["fetch-depth"] == 1
+    assert checkout["with"]["persist-credentials"] is False
+
+
 def test_stable_release_builds_only_artifacts_without_test_gates() -> None:
     workflow_text = _workflow_text("release.yml")
     jobs = _workflow("release.yml")["jobs"]

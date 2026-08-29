@@ -354,6 +354,13 @@ jobs:
       }}
     runs-on: ubuntu-latest
     steps:
+      - name: Check out dependency refresh tooling
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
       - name: Require rolling release token
         env:
           ROLLING_RELEASE_TOKEN: ${{ secrets.ROLLING_RELEASE_TOKEN }}

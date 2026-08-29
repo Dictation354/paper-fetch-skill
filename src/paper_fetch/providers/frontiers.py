@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
+import html
 from pathlib import PurePosixPath
 from typing import Any
 from collections.abc import Mapping, Sequence
@@ -147,6 +148,15 @@ FRONTIERS_ARTICLE_ID_PATTERN = re.compile(
 )
 FRONTIERS_GRAPHIC_FILENAME_PATTERN = re.compile(
     r"(?P<article_id>\d+)-g\d+",
+    flags=re.IGNORECASE,
+)
+FRONTIERS_ORIGINAL_GRAPHIC_URL_PATTERN = re.compile(
+    r"https?://(?:www\.)?frontiersin\.org/files/Articles/"
+    r"\d+/xml-images/[^\"'<>?&#\s]+",
+    flags=re.IGNORECASE,
+)
+FRONTIERS_ORIGINAL_GRAPHIC_PATH_PATTERN = re.compile(
+    r"^/files/Articles/\d+/xml-images/[^/]+$",
     flags=re.IGNORECASE,
 )
 
@@ -308,6 +318,107 @@ def _frontiers_graphic_url(*, doi: str | None, href: str | None) -> str:
     return f"{FRONTIERS_HOST}/files/Articles/{article_id}/xml-images/{stem}.webp"
 
 
+def _frontiers_graphic_stem(value: str | None) -> str:
+    normalized = normalize_text(value)
+    if not normalized:
+        return ""
+    parsed = urllib.parse.urlparse(normalized)
+    filename = PurePosixPath(urllib.parse.unquote(parsed.path)).name
+    return filename.rsplit(".", 1)[0] if filename else ""
+
+
+def _is_frontiers_original_graphic_url(value: str | None) -> bool:
+    normalized = normalize_text(value)
+    if not normalized:
+        return False
+    parsed = urllib.parse.urlparse(normalized)
+    return (
+        parsed.scheme.lower() in {"http", "https"}
+        and _is_frontiers_url(normalized)
+        and bool(FRONTIERS_ORIGINAL_GRAPHIC_PATH_PATTERN.fullmatch(parsed.path))
+    )
+
+
+def _frontiers_original_graphics_from_landing(html_text: str) -> dict[str, str]:
+    original_graphics: dict[str, str] = {}
+    for match in FRONTIERS_ORIGINAL_GRAPHIC_URL_PATTERN.finditer(
+        html.unescape(str(html_text or ""))
+    ):
+        candidate = normalize_text(match.group(0))
+        stem = _frontiers_graphic_stem(candidate)
+        if stem and _is_frontiers_original_graphic_url(candidate):
+            original_graphics.setdefault(stem, candidate)
+    return original_graphics
+
+
+def _frontiers_asset_graphic_stems(asset: Mapping[str, Any]) -> list[str]:
+    stems: list[str] = []
+    for key in (
+        "download_url",
+        "full_size_url",
+        "url",
+        "original_url",
+        "link",
+        "preview_url",
+    ):
+        _append_unique(stems, _frontiers_graphic_stem(str(asset.get(key) or "")))
+    alternatives = asset.get("alternatives")
+    if isinstance(alternatives, Sequence) and not isinstance(
+        alternatives, (bytes, bytearray, str)
+    ):
+        for alternative in alternatives:
+            if not isinstance(alternative, Mapping):
+                continue
+            for key in ("url", "original_url"):
+                _append_unique(
+                    stems,
+                    _frontiers_graphic_stem(str(alternative.get(key) or "")),
+                )
+    return stems
+
+
+def _promote_frontiers_original_graphics(
+    assets: Sequence[Mapping[str, Any]],
+    *,
+    original_graphics: Mapping[str, str],
+) -> tuple[list[dict[str, Any]], dict[str, str]]:
+    promoted_assets: list[dict[str, Any]] = []
+    replacements: dict[str, str] = {}
+    for item in assets:
+        asset = dict(item)
+        kind = normalize_text(
+            str(asset.get("kind") or asset.get("asset_type") or "")
+        ).lower()
+        matched_url = ""
+        if kind in {"figure", "formula"}:
+            matched_url = next(
+                (
+                    normalize_text(original_graphics.get(stem))
+                    for stem in _frontiers_asset_graphic_stems(asset)
+                    if normalize_text(original_graphics.get(stem))
+                ),
+                "",
+            )
+        if matched_url:
+            for key in (
+                "download_url",
+                "full_size_url",
+                "url",
+                "original_url",
+                "link",
+                "preview_url",
+            ):
+                previous = normalize_text(str(asset.get(key) or ""))
+                if previous and previous != matched_url:
+                    replacements[previous] = matched_url
+            asset["link"] = matched_url
+            asset["original_url"] = matched_url
+            asset["download_url"] = matched_url
+            asset["full_size_url"] = matched_url
+        promoted_assets.append(asset)
+    return promoted_assets, replacements
+
+
 def _frontiers_supplementary_anchor(landing_url: str) -> str:
     return f"{landing_url}#supplementary-material" if landing_url else ""
 
@@ -398,18 +509,23 @@ def _frontiers_figure_candidates(
     del _transport, user_agent, figure_page_fetcher
     candidates: list[str] = []
     doi = normalize_text(str(asset.get("doi") or ""))
-    for key in (
+    keys = (
         "download_url",
         "full_size_url",
         "url",
         "original_url",
         "link",
         "preview_url",
-    ):
-        value = normalize_text(str(asset.get(key) or ""))
+    )
+    values = [normalize_text(str(asset.get(key) or "")) for key in keys]
+    for value in values:
+        if _is_frontiers_original_graphic_url(value):
+            _append_unique(candidates, value)
+    for value in values:
         derived = _frontiers_graphic_url(doi=doi, href=value)
         if derived:
             _append_unique(candidates, derived)
+    for value in values:
         if value.startswith(("http://", "https://")):
             _append_unique(candidates, value)
     return candidates
@@ -458,6 +574,27 @@ class FrontiersClient(ProviderClient):
 
     def _asset_headers(self) -> dict[str, str]:
         return {"User-Agent": self.user_agent}
+
+    def _landing_original_graphics(self, landing_url: str) -> dict[str, str]:
+        if not _is_frontiers_url(landing_url):
+            return {}
+        try:
+            landing = fetch_landing_html(
+                landing_url,
+                transport=self.transport,
+                headers=self._landing_headers(),
+                timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+                retry_on_transient=True,
+                max_redirects=self.landing_max_redirects,
+            )
+        except (OSError, RequestFailure):
+            return {}
+        if int(landing.status_code or 200) >= 400:
+            return {}
+        content_type = header_value(landing.headers, "content-type", "text/html")
+        if "html" not in normalize_text(content_type).lower():
+            return {}
+        return _frontiers_original_graphics_from_landing(landing.html_text)
 
     def landing_candidates(self, doi: str, metadata: Mapping[str, Any]) -> list[str]:
         candidates: list[str] = []
@@ -853,6 +990,44 @@ class FrontiersClient(ProviderClient):
             ).lower()
             in {"figure", "formula"}
         ]
+        if body_image_assets and content is not None:
+            merged_metadata = content.merged_metadata or {}
+            landing_url = normalize_text(
+                str(
+                    merged_metadata.get("landing_page_url")
+                    or metadata.get("landing_page_url")
+                    or ""
+                )
+            )
+            original_graphics = self._landing_original_graphics(landing_url)
+            if original_graphics:
+                promoted_assets, replacements = _promote_frontiers_original_graphics(
+                    content.extracted_assets,
+                    original_graphics=original_graphics,
+                )
+                content = replace(
+                    content,
+                    extracted_assets=promoted_assets,
+                    markdown_text=_replace_markdown_urls(
+                        content.markdown_text or "", replacements
+                    ),
+                )
+                raw_payload.content = content
+                extracted_assets = filter_assets_for_profile(
+                    promoted_assets,
+                    asset_profile=asset_profile,
+                )
+                body_assets, supplementary_assets = split_body_and_supplementary_assets(
+                    extracted_assets
+                )
+                body_image_assets = [
+                    dict(item)
+                    for item in body_assets
+                    if normalize_text(
+                        str(item.get("kind") or item.get("asset_type") or "")
+                    ).lower()
+                    in {"figure", "formula"}
+                ]
         merged_metadata = content.merged_metadata if content is not None else None
         article_id = (
             normalize_doi(str((merged_metadata or {}).get("doi") or doi or ""))
