@@ -2,48 +2,82 @@
 
 > Fetch papers as agent-ready markdown — DOI/URL/title in, structured full text out. CLI · MCP · Skill.
 
-**Paper Fetch Skill** —— 已知论文的 AI 阅读层。
-你输入 DOI、URL 或标题，它返回结构化元数据 + 干净 Markdown 全文 + 图表资源，直接喂给 Codex / Claude Code / 任意 MCP host。
-不绕付费墙，只在你本就有访问权限的地方，把 AI 从「只能读摘要」升级到「读全文」。
+**Paper Fetch Skill** 是已知论文的 AI 阅读层：输入 DOI、URL 或标题，在你已有合法访问权限的范围内，返回结构化元数据、干净 Markdown 全文和可选图表资源，让 Codex、Claude Code 或任意 MCP host 从“只能读摘要”升级到“可以读全文”。
 
-如果觉得有帮助，欢迎 star⭐ 支持！
+```text
+DOI / URL / title
+        ↓
+受支持 provider 的官方 HTML/XML → 验证后的 PDF fallback
+        ↓
+Sections · formulas · tables · references · local assets
+        ↓
+Markdown · structured article · quality diagnostics
+```
 
-## 🙁 AI agent 读论文的痛点
+## 为什么不只是 PDF → Markdown
 
-1. 你有权限获取全文，但 AI 没有权限，AI 只能搜到摘要。
-2. PDF 无法正确解析文字、图片，agent 理解效果不如 markdown。
-3. 文章 html 有很多无关的网页信息，给 agent 造成语义负担和 token 消耗。
-4. 文章 html 中的图片 agent 读不到。
+Paper Fetch 不替代通用 PDF 转换器，而是在它们之外增加论文身份解析、provider 路由、官方结构化全文和统一质量诊断。具体 PDF 工具的能力各不相同；下表比较的是两种设计重点，而不是对所有 PDF 转换器作统一评价。
 
-## 😍 这个项目做什么
+| 维度 | Paper Fetch | 单一 PDF → Markdown 路径 |
+| --- | --- | --- |
+| 输入入口 | DOI、URL、标题、arXiv ID 或引用条目 | 已取得的 PDF |
+| 首选内容源 | 受支持 provider 优先使用官方 HTML/XML，失败时再走验证后的 PDF fallback | PDF 文本层、版面和 OCR |
+| 论文结构 | 统一为 metadata、sections、references、assets 和 quality | 取决于具体转换器及 PDF 版面 |
+| 公式 | 源站提供 MathML/TeX 时转换并规范化；失败时保留公式图片或缺失诊断 | PDF 公式恢复能力取决于具体转换器 |
+| 图表资源 | 发现、下载、验证、本地链接改写并报告失败或降级 | 图片导出和链接方式取决于具体转换器 |
+| References | 全文/出版社 references 优先，保留 raw、DOI、标题和年份等可得字段 | 引用顺序和字段恢复取决于 PDF 版面与工具 |
+| 质量可见性 | 区分正文充分性、表格/公式语义损失和资产质量 | 诊断范围取决于具体转换器 |
 
-✅这个项目把这些问题收敛到一个工具层：
-1. 当你有全文获取权限时，让 AI 也能获取全文，而不仅是摘要。
-2. 输入已知论文的 DOI、URL 或标题，抓取 AI 更容易理解的 markdown 版本，为后续知识库构建做好干净的数据基础。
+## 快速开始
 
-✅项目提供三个主要入口：
+源码 checkout 内安装完整能力并抓取一篇论文：
 
-1. `paper-fetch`：命令行工具，适合手动大规模快速抓取文献。
-2. `paper-fetch-mcp`：stdio MCP server，适合接入 Codex、Claude Code 等支持 MCP 的 host。
-3. `skills/paper-fetch-skill/`：静态 agent skill，告诉 agent 什么时候应该调用论文抓取工具。
+```bash
+python -m pip install ".[full]"
 
-核心能力：
+paper-fetch fetch \
+  --query "10.1186/1471-2105-11-421" \
+  --output-dir ./papers
+```
 
-- 支持 DOI、URL 和标题查询。
-- 输出结构化论文元数据、正文 Markdown、引用信息和本地缓存资源。
-- 支持多家出版社与平台的官方全文 provider；当前清单和逐 route 能力从 runtime provider catalog 动态生成。
-- 在无法取得全文时返回带警告的仅摘要或仅元数据结果。
+`--query` 可以是 DOI、论文 landing URL 或标题。未显式传 `--output` 且指定 `--output-dir` 时，CLI 会在目录中生成安全命名的主输出；默认 Markdown 模式会保留全文 references，并按 `body` 资产范围尝试归档正文图表资源。全文不可用时，结果会明确降级为仅摘要、仅元数据或可诊断的失败，而不是伪装成完整正文。
 
-项目边界：
+只需要临时把 Markdown 输出到终端、不归档论文资产时：
 
-- 不替代主题检索、文献推荐或综述生成；开放式搜索可先形成候选，当后续需要阅读、总结、比较、核验可读性或获取全文时，再把 DOI、URL、标题、arXiv ID 或引用条目交给 paper-fetch 抓取和核验候选论文全文。
-- 不绕过付费墙或访问授权；可用性取决于 provider、凭据和本机运行环境。
-- Wiley、Science、PNAS、Annual Reviews、Royal Society Publishing、ACS、IOP、AIP、MDPI 共用原生 Firefox/Juggler Camoufox browser workflow，见 [`docs/browser-backends.md`](docs/browser-backends.md)。
-- 用户可以自行 fork 后添加新出版社，见 [`onboarding/README.md`](onboarding/README.md)，但是需要人工审核确定全文获取、markdown 转换质量等能力。
+```bash
+paper-fetch fetch \
+  --query "10.1186/1471-2105-11-421" \
+  --format markdown \
+  --output - \
+  --output-dir ./.paper-fetch-tmp \
+  --no-download \
+  --artifact-mode none \
+  --asset-profile none \
+  --include-refs all \
+  --max-tokens full_text
+```
+
+CLI 仍会准备显式工作目录；需要真正无落盘的临时读取时，使用 MCP 临时阅读预设。完整输出和落盘矩阵见 [`docs/cli.md`](docs/cli.md) 与 [`presets.md`](skills/paper-fetch-skill/references/presets.md)。
+
+## 你会得到什么
+
+- 带 YAML front matter 的论文 Markdown，包含题名、作者、期刊、DOI、来源和正文状态。
+- 按源文档恢复的摘要、正文 section、表格、公式、figure caption 和 references。
+- `asset_profile=body|all` 时可下载的正文或补充资源，以及改写后的本地 Markdown 链接。
+- JSON、MCP 和 manifest 中统一的 acquisition、content、asset 和 semantic-loss 诊断。
+- 当全文、公式、表格或资产不完整时，明确的 warning、质量状态和稳定 reason code。
+
+项目提供三个入口：
+
+| 入口 | 适用场景 |
+| --- | --- |
+| `paper-fetch` | 单篇或批量本地抓取与归档 |
+| `paper-fetch-mcp` | Codex、Claude Code 等 MCP host 内的结构化调用、缓存和批处理 |
+| `skills/paper-fetch-skill/` | 告诉 agent 何时调用、如何选择预设以及如何验收结果 |
 
 ## 效果展示
 
-agent 安装 skill 后，可以识别 `paper-fetch-skill` 的适用边界，并在抓取前确认是否保存全文和图表资源。
+agent 安装 skill 后，可以识别 Paper Fetch 的适用边界，并在抓取前确认是否保存全文和图表资源。
 
 ![agent 识别 paper-fetch-skill 能力范围](figures/agent-skill-overview.png)
 
@@ -68,99 +102,44 @@ agent 安装 skill 后，可以识别 `paper-fetch-skill` 的适用边界，并�
 
 ![Science Advances 论文抓取结果](figures/science-fetch-result.png)
 
-## 快速开始
+## 安装
 
-### 1. 安装
+面向最终用户，推荐从 [GitHub Releases](https://github.com/Dictation354/paper-fetch-skill/releases) 下载离线安装包：
 
-推荐使用 Releases 里的离线安装包：
-
-- Windows：下载并运行 `paper-fetch-skill-windows-x86_64-setup.exe`。
-- Linux：下载匹配 Python ABI 的 `paper-fetch-skill-offline-linux-x86_64-cp*.sh`。
-- macOS：在 macOS 15+ Apple Silicon 上下载匹配 Python ABI 的
-  `paper-fetch-skill-offline-macos-arm64-cp*.tar.gz`。
-
-每个 `v*` Release 公开九个离线安装包和 `SHA256SUMS`；CycloneDX SBOM、Python distributions、inventory 与 target evidence 在发布流程内验证，不作为公开下载资产。
+- Windows：`paper-fetch-skill-windows-x86_64-setup.exe`
+- Linux：与本机 CPython ABI 匹配的 `paper-fetch-skill-offline-linux-x86_64-cp*.sh`
+- macOS 15+ Apple Silicon：与本机 CPython ABI 匹配的 `paper-fetch-skill-offline-macos-arm64-cp*.tar.gz`
 
 源码安装按能力分层：
 
 ```bash
 python -m pip install .             # 轻量 core
-python -m pip install ".[browser]"  # Camoufox/HTML
-python -m pip install ".[pdf]"      # PDF
-python -m pip install ".[full]"     # browser + PDF
-uv sync --frozen --extra dev --extra full  # 可复现开发环境
+python -m pip install ".[browser]" # Camoufox/HTML
+python -m pip install ".[pdf]"     # PDF fallback
+python -m pip install ".[full]"    # browser + PDF
 ```
 
-core 安装包含 MCP Python SDK 2.x（依赖范围 `mcp>=2,<3`）。`paper-fetch-mcp`
-同时服务 2025 握手协议客户端和 2026-07-28 无状态协议客户端；从源码升级后应重新同步
-环境并重启 MCP host。
+离线包校验、平台矩阵、升级、卸载、Python ABI、Gatekeeper 和 quarantine 处理见 [`docs/deployment.md`](docs/deployment.md)。
 
-Windows 安装后新开 PowerShell，验证 CLI：
+## 单篇、批量与 Agent 接入
 
-```powershell
-paper-fetch --help
-```
-
-看到 `usage: paper-fetch ...` 或正常帮助输出即表示 CLI 可用。
-
-Linux 示例：
-
-```bash
-python3 --version
-chmod +x paper-fetch-skill-offline-linux-x86_64-cp312.sh
-./paper-fetch-skill-offline-linux-x86_64-cp312.sh --preset=headless --no-user-config
-source ~/.local/share/paper-fetch-skill/activate-offline.sh
-paper-fetch --help
-```
-
-macOS 示例：
-
-```bash
-tar -xzf paper-fetch-skill-offline-macos-arm64-cp312.tar.gz
-cd paper-fetch-skill-offline-macos-arm64-cp312
-./install-offline.sh --preset=headful --no-user-config
-source ~/.local/share/paper-fetch-skill/activate-offline.sh
-paper-fetch --help
-```
-
-安装器会在修改 shell、skill、MCP 或用户配置前检查 arm64、标准 GIL CPython
-ABI 与解释器架构、最低 macOS 15.0、checksum，并递归检查整个 bundle 的
-quarantine。安装目标只允许不存在、空目录或带 ownership manifest 和安装标记的
-已有目录。若从浏览器下载的 bundle 因 quarantine
-被拒绝，请先核验 Release 来源与 `SHA256SUMS`，再按安装器提示显式执行
-`xattr -dr com.apple.quarantine <解压后的-bundle>` 后重试；安装器不会静默
-绕过 Gatekeeper。
-
-完整安装、升级、卸载和离线包矩阵见 [`docs/deployment.md`](docs/deployment.md)。
-
-### 2. 抓取一篇论文
-
-```bash
-paper-fetch --query "10.1186/1471-2105-11-421" --output-dir ./papers
-```
-
-未显式传 `--output` 且指定 `--output-dir` 时，CLI 会把主输出写到该目录，不向 stdout 打印正文。默认文件名使用安全化的论文 stem，优先包含作者、年份和标题；元数据不足时回退 DOI，仍无法识别时使用规范化 query 的短 SHA-256 摘要，避免批量任务中的匿名文件名冲突且不暴露完整 URL。需要精确路径时使用 `--output ./papers/article.md`。
-
-### 3. 批量抓取
-
-准备 `queries.txt`：
+批量抓取时准备一个每行一个 query 的文件：
 
 ```text
 10.1186/1471-2105-11-421
 https://www.nature.com/articles/s41559-026-03039-9
 ```
 
-运行：
-
 ```bash
-paper-fetch --query-file ./queries.txt \
+paper-fetch fetch \
+  --query-file ./queries.txt \
   --output-dir ./papers \
   --batch-concurrency 4
 ```
 
-批量结果会写入 `./papers/batch-results.jsonl`，单篇失败会记录后继续后续条目。完整 CLI 输出、artifact、资产和错误码语义见 [`docs/cli.md`](docs/cli.md)。
+批量结果会写入 `batch-results.jsonl` 和 run manifest；单篇失败会被记录，不会阻止其它条目继续。需要正文图时使用 `--artifact-mode markdown-assets --asset-profile body`，需要补充材料时将 asset profile 改为 `all`。
 
-## 接入 Agent
+将本仓库接入 Agent：
 
 | Host | 命令 |
 | --- | --- |
@@ -168,76 +147,39 @@ paper-fetch --query-file ./queries.txt \
 | Claude Code | `./scripts/install-claude-skill.sh --register-mcp` |
 | Antigravity CLI | `./scripts/install-antigravity-skill.sh --register-mcp` |
 
-带配置文件注册：
+需要自定义环境文件、project/user scope 或手动 MCP 注册时，见 [`docs/deployment.md`](docs/deployment.md)。
+
+## 访问权限与运行时
+
+Paper Fetch 不绕过付费墙或访问授权。可用性取决于 provider、用户凭据、机构访问状态和本机运行环境。
+
+- Elsevier 官方 XML/API 和部分 PDF fallback 需要从 <https://dev.elsevier.com/> 申请 `ELSEVIER_API_KEY`。
+- 部分 provider 需要 Camoufox browser runtime 或用户已有的合法登录状态。
+- CLI 的 `fetch`、`auth` 和 `browser-preflight` 在真正需要 managed Camoufox 时默认可以按需准备运行时；MCP 和库调用默认不自动联网准备，必须显式开启。
+- `paper-fetch doctor` 只做本地静态诊断；`paper-fetch browser-preflight` 才会启动浏览器并访问 provider 页面；只有结果明确要求认证时才运行 `paper-fetch auth <provider>`。
 
 ```bash
-# Linux
-./scripts/install-codex-skill.sh --register-mcp --env-file ~/.config/paper-fetch/.env
-
-# macOS
-./scripts/install-codex-skill.sh --register-mcp \
-  --env-file "$HOME/Library/Application Support/paper-fetch/.env"
-```
-
-只安装到当前项目可加 `--project`。安装后重启对应 host，让它重新扫描 skills 和 MCP 配置。手动 MCP 注册和各 host 路径细节见 [`docs/deployment.md`](docs/deployment.md)。
-
-## 常用配置
-
-默认配置文件位置由 `platformdirs` 决定：
-
-```text
-Linux: ~/.config/paper-fetch/.env
-macOS: ~/Library/Application Support/paper-fetch/.env
-```
-
-Linux 创建配置文件：
-
-```bash
-mkdir -p ~/.config/paper-fetch
-cp .env.example ~/.config/paper-fetch/.env
-```
-
-macOS 可用离线安装器的 `--user-config` 合并受管理配置块，或自行创建
-`~/Library/Application Support/paper-fetch/.env`。
-
-Elsevier 官方 XML/API 和 PDF fallback 需要从 <https://dev.elsevier.com/> 申请 key：
-
-```bash
-ELSEVIER_API_KEY="..."
-```
-
-部分 browser-backed provider 需要本机 browser runtime 或手动登录态。离线包只
-包含 Camoufox / Playwright 的 Python 包，不包含 Camoufox 浏览器 binary。CLI 的
-`fetch`、`auth` 和 `browser-preflight` 在真正需要 managed Camoufox 时默认会显示
-进度并按需安装、修复或检查更新；可用 `--no-browser-auto-prepare` 或
-`PAPER_FETCH_BROWSER_AUTO_PREPARE=false` 禁止。MCP/库默认不自动联网，需传
-`browser_auto_prepare=true` 或用环境变量显式开启。进入受限网络或离线环境前，仍应
-在联网状态预置 binary 并运行 preflight：
-
-```bash
-source ~/.local/share/paper-fetch-skill/activate-offline.sh
-python -m camoufox fetch
+paper-fetch doctor
 paper-fetch browser-preflight
 paper-fetch auth wiley
 ```
 
-不想依赖已激活 shell 时，也可以运行
-`~/.local/share/paper-fetch-skill/runtime/paper-fetch-python -m camoufox fetch`。
-CLI `browser-preflight` 默认可以完成缺失 runtime 的按需准备；若策略被关闭，必须先
-显式运行 `python -m camoufox fetch`。preflight 还会访问出版社页面。当前原生 Mac
-验证覆盖 Python 包导入
-和在线准备入口，尚未关闭“预置后真正断网启动 Camoufox”的审计项，因此 macOS
-tarball 不能被描述为完整离线浏览器包。
+浏览器后端、认证、自动准备和平台限制见 [`docs/browser-runtime.md`](docs/browser-runtime.md) 与 [`docs/browser-backends.md`](docs/browser-backends.md)；provider 的当前能力和环境要求见 [`docs/providers.md`](docs/providers.md)。
 
-当前 browser-backed auth/preflight provider 包括 `wiley`、`science`、`pnas`、`ams`、`mdpi`、`royalsocietypublishing`、`annualreviews`、`acs`、`iop`、`aip`、`tandf`。AMS 默认直接启动 Camoufox 尝试站点的静默 JavaScript 验证；已有 provider storage-state 时会自动复用，静默验证失败时可运行 `paper-fetch auth ams` 完成人工验证并保存状态。T&F 只复用操作者已有的合法浏览器访问状态，不自动登录或绕过 challenge、付费墙。完整 provider、运行时和环境变量说明见 [`docs/providers.md`](docs/providers.md) 与 [`docs/browser-runtime.md`](docs/browser-runtime.md)。
+## 项目边界
+
+- 只负责已知论文的身份解析、全文获取、验收和报告，不替代开放式主题检索、文献推荐或综述生成。
+- 只访问用户本来就有权访问的内容，不绕过 challenge、付费墙或机构权限。
+- 官方 HTML/XML、浏览器路径和 PDF fallback 都受 provider、凭据和运行环境限制；“已找到论文”不等于“一定能取得完整全文”。
+- 结构化公式转换依赖源站提供 MathML/TeX；只有图片或 PDF 排版信息时，不承诺恢复可靠 LaTeX。
+- 用户可以按 [`onboarding/README.md`](onboarding/README.md) 添加 provider，但必须用真实样本和人工 Markdown review 验证全文及转换质量。
 
 ## 文档
 
-- [`docs/deployment.md`](docs/deployment.md)：安装、配置、MCP 注册和更新。
-- [`docs/browser-backends.md`](docs/browser-backends.md)：后端选择、Camoufox runtime、headed 认证、离线准备和 live 验收。
 - [`docs/cli.md`](docs/cli.md)：CLI 输出、artifact、批量抓取和错误码。
-- [`docs/providers.md`](docs/providers.md)：provider 能力、环境变量和运行时配置。
-- [`docs/macos-adaptation-audit.md`](docs/macos-adaptation-audit.md)：macOS 支持、安全不变量以及 portable/原生证据边界。
+- [`docs/deployment.md`](docs/deployment.md)：安装、配置、MCP 注册和更新。
+- [`docs/providers.md`](docs/providers.md)：provider 路由、能力和环境变量。
+- [`docs/browser-runtime.md`](docs/browser-runtime.md)：浏览器运行时、认证和预检。
 - [`docs/README.md`](docs/README.md)：完整文档导航。
 - [`docs/architecture/overview.md`](docs/architecture/overview.md)：架构边界和维护者视角。
 - [`onboarding/README.md`](onboarding/README.md)：自助添加新 provider。
@@ -246,7 +188,6 @@ tarball 不能被描述为完整离线浏览器包。
 
 - 获取的文献仅供个人学术研究和学习使用，不得用于商业用途。
 - 请遵守所在国家/地区著作权法律法规及所在机构的知识产权政策。
-- 本项目不绕过付费墙或访问授权；可用性取决于 provider、凭据和本机运行环境。
 - 本项目不存储、分发或传播任何文献内容，仅协助用户定位、抓取或转换用户有权访问的论文内容。
 - fixture 中的文献样本仅作为测试使用，严禁对 fixture 进行任何形式的二次分发。
 - 使用者应对自身的文献获取和使用行为承担全部责任。
