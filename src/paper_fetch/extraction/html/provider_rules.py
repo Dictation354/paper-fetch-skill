@@ -562,21 +562,15 @@ _PROVIDER_HTML_RULES_CACHE: Mapping[str, ProviderHtmlRules] | None = None
 
 
 def _build_provider_html_rules() -> Mapping[str, ProviderHtmlRules]:
-    from ...provider_catalog import _registered_provider_bundles
+    from ...provider_catalog import PROVIDER_BUNDLES
 
     return MappingProxyType(
         {
             bundle.html_rules.name: bundle.html_rules
-            for bundle in _registered_provider_bundles()
+            for bundle in PROVIDER_BUNDLES
             if bundle.html_rules is not None
         }
     )
-
-
-def _provider_entry_imports_complete() -> bool:
-    import paper_fetch.providers as providers
-
-    return bool(getattr(providers, "_PROVIDER_ENTRY_IMPORTS_COMPLETE", False))
 
 
 def _provider_html_rules_map() -> Mapping[str, ProviderHtmlRules]:
@@ -584,8 +578,7 @@ def _provider_html_rules_map() -> Mapping[str, ProviderHtmlRules]:
     rules = _PROVIDER_HTML_RULES_CACHE
     if rules is None:
         rules = _build_provider_html_rules()
-        if _provider_entry_imports_complete():
-            _PROVIDER_HTML_RULES_CACHE = rules
+        _PROVIDER_HTML_RULES_CACHE = rules
     return rules
 
 
@@ -673,8 +666,7 @@ def _provider_lookup() -> Mapping[str, ProviderHtmlRules]:
     lookup = _PROVIDER_LOOKUP_CACHE
     if lookup is None:
         lookup = MappingProxyType(_build_provider_lookup())
-        if _provider_entry_imports_complete():
-            _PROVIDER_LOOKUP_CACHE = lookup
+        _PROVIDER_LOOKUP_CACHE = lookup
     return lookup
 
 
@@ -683,8 +675,7 @@ def _noise_profile_lookup() -> Mapping[str, ProviderHtmlRules]:
     lookup = _NOISE_PROFILE_LOOKUP_CACHE
     if lookup is None:
         lookup = MappingProxyType(_build_noise_profile_lookup())
-        if _provider_entry_imports_complete():
-            _NOISE_PROFILE_LOOKUP_CACHE = lookup
+        _NOISE_PROFILE_LOOKUP_CACHE = lookup
     return lookup
 
 

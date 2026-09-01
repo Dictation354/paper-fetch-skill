@@ -216,40 +216,6 @@ class OfflinePackageBuildTests(unittest.TestCase):
             self.assertIn("Unsafe package name", result.stderr)
             self.assertFalse((root / "unsafe").exists())
 
-    def test_posix_build_rejects_invalid_tooling_revision_before_cleanup(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            root = Path(tmpdir)
-            protected = root / "build" / "safe-package"
-            protected.mkdir(parents=True)
-            sentinel = protected / "keep.txt"
-            sentinel.write_text("keep\n", encoding="utf-8")
-            env = os.environ.copy()
-            env["PAPER_FETCH_OFFLINE_BUILD_DIR"] = str(root / "build")
-            env["PAPER_FETCH_OFFLINE_TOOLING_REVISION"] = "not-a-git-revision"
-
-            result = subprocess.run(
-                [
-                    "bash",
-                    str(BUILD_OFFLINE_PACKAGE),
-                    "--package-name",
-                    "safe-package",
-                ],
-                cwd=REPO_ROOT,
-                env=env,
-                text=True,
-                capture_output=True,
-                check=False,
-            )
-
-            self.assertNotEqual(result.returncode, 0)
-            self.assertIn(
-                "must be a 40-character hexadecimal Git revision",
-                result.stderr,
-            )
-            self.assertEqual(sentinel.read_text(encoding="utf-8"), "keep\n")
-
     def test_posix_staging_cleanup_requires_unpacked_ownership_marker(
         self,
     ) -> None:
@@ -784,18 +750,6 @@ exit 73
             self.assertNotIn('rm -f "$output_path"', block)
         self.assertIn('chmod 0644 "$temporary_output"', blocks[1])
 
-    def test_posix_manifest_records_optional_tooling_revision(self) -> None:
-        script = BUILD_OFFLINE_PACKAGE.read_text(encoding="utf-8")
-        manifest_block = _shell_function(
-            script,
-            "write_manifest_and_checksums",
-            "create_self_extracting_installer",
-        )
-
-        self.assertIn("PAPER_FETCH_OFFLINE_TOOLING_REVISION", script)
-        self.assertIn("tooling_revision = sys.argv[10] or None", manifest_block)
-        self.assertIn('{"tooling_revision": tooling_revision}', manifest_block)
-
     def test_posix_build_uses_resolved_camoufox_wheel_version(self) -> None:
         script = BUILD_OFFLINE_PACKAGE.read_text(encoding="utf-8")
         runtime_block = _shell_function(
@@ -832,7 +786,7 @@ exit 73
             "create_self_extracting_installer",
         )
 
-        self.assertIn("resolved_camoufox_version = sys.argv[11]", manifest_block)
+        self.assertIn("resolved_camoufox_version = sys.argv[10]", manifest_block)
         self.assertIn(
             "distributions(path=[str(site_packages)])",
             manifest_block,
@@ -1213,7 +1167,9 @@ exit 73
         self.assertIn("import camoufox", script)
         self.assertIn("import playwright", script)
         self.assertIn(
-            "from paper_fetch.runtime_browser import BrowserContextManager", script
+            "from paper_fetch.providers.browser_runtime.camoufox_manager import "
+            "CamoufoxBrowserManager",
+            script,
         )
         self.assertIn('assert hasattr(camoufox, "Camoufox")', script)
         self.assertNotIn('assert hasattr(camoufox, "launch")', script)
@@ -1228,8 +1184,7 @@ exit 73
         self.assertIn("PYTHONUTF8", script)
         self.assertIn("PYTHONIOENCODING", script)
         self.assertIn("paper-fetch doctor", script)
-        self.assertIn("install_provenance", script)
-        self.assertIn('schema_version"] == 3', script)
+        self.assertIn("scripts/skill_integrity.py", script)
         self.assertNotIn(".venv/bin", script)
         self.assertNotIn("sessions.list", script)
         self.assertNotIn("playwright.sync_api", script)
@@ -1392,37 +1347,6 @@ exit 73
         self.assertIn('site-packages "$staging/runtime/site-packages"', posix)
         self.assertIn('Join-Path $Staging "runtime/Lib/site-packages"', windows)
 
-    def test_windows_manifest_validates_and_records_optional_tooling_revision(
-        self,
-    ) -> None:
-        script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
-        validation = script.index("function Get-OfflineToolingRevision")
-        validation_call = script.index("$toolingRevision = Get-OfflineToolingRevision")
-        cleanup = script.index(
-            "Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $staging"
-        )
-        manifest_block = script[
-            script.index("function Write-ManifestAndChecksums") : script.index(
-                "function Assert-RuntimeOnlyStaging"
-            )
-        ]
-
-        self.assertLess(validation, cleanup)
-        self.assertLess(validation_call, cleanup)
-        self.assertIn("PAPER_FETCH_OFFLINE_TOOLING_REVISION", script)
-        self.assertIn(r"\A[0-9A-Fa-f]{40}\z", script)
-        self.assertIn("$revision.ToLowerInvariant()", script)
-        self.assertIn("[AllowNull()][string]$ToolingRevision", manifest_block)
-        self.assertIn(
-            "if (-not [string]::IsNullOrEmpty($ToolingRevision))",
-            manifest_block,
-        )
-        self.assertIn(
-            '$payload["tooling_revision"] = $ToolingRevision',
-            manifest_block,
-        )
-        self.assertIn("-ToolingRevision $toolingRevision", script)
-
     def test_windows_wrappers_and_manifest_publish_browser_backend_policy(self) -> None:
         script = BUILD_OFFLINE_PACKAGE_WINDOWS.read_text(encoding="utf-8")
         wrapper_block = script[
@@ -1466,7 +1390,6 @@ exit 73
 
     def test_windows_powershell_arrays_do_not_end_with_trailing_commas(self) -> None:
         paths = (
-            REPO_ROOT / "install-offline.ps1",
             REPO_ROOT / "scripts" / "build-offline-package-windows.ps1",
             REPO_ROOT / "scripts" / "windows-installer-helper.ps1",
         )

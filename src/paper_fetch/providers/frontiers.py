@@ -15,6 +15,7 @@ from ..failure import FailureDiagnostics
 from ..extraction.html.assets import (
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
+    AssetDownloadOptions,
     download_assets,
     filter_assets_for_profile,
     merge_extracted_and_downloaded_assets,
@@ -57,7 +58,7 @@ from ._pdf_common import (
     pdf_fetch_result_warnings,
 )
 from ._pdf_fallback import PdfFallbackStrategy, PdfFetchFailure, fetch_pdf_over_http
-from ._registry import ProviderBundle, register_provider_bundle
+from ._registry import ProviderBundle
 from .base import (
     ProviderArtifacts,
     ProviderClient,
@@ -71,65 +72,63 @@ from .base import (
 )
 
 
-register_provider_bundle(
-    ProviderBundle(
-        catalog=ProviderSpec(
-            name="frontiers",
-            display_name="Frontiers",
-            official=True,
-            domains=("www.frontiersin.org", "frontiersin.org"),
-            doi_prefixes=("10.3389/",),
-            publisher_aliases=(
-                "frontiers",
-                "frontiers media",
-                "frontiers media s.a.",
-                "frontiers media sa",
+PROVIDER_BUNDLE = ProviderBundle(
+    catalog=ProviderSpec(
+        name="frontiers",
+        display_name="Frontiers",
+        official=True,
+        domains=("www.frontiersin.org", "frontiersin.org"),
+        doi_prefixes=("10.3389/",),
+        publisher_aliases=(
+            "frontiers",
+            "frontiers media",
+            "frontiers media s.a.",
+            "frontiers media sa",
+        ),
+        asset_default="body",
+        probe_capability="routing_signal",
+        provider_managed_abstract_only=False,
+        client_factory_path="paper_fetch.providers.frontiers:FrontiersClient",
+        status_order=18,
+        base_domains=("www.frontiersin.org",),
+        landing_path_templates=("/articles/{doi}/full",),
+        xml_path_templates=("/journals/{journal_slug}/articles/{doi}/xml",),
+        pdf_path_templates=(
+            "/journals/{journal_slug}/articles/{doi}/pdf",
+            "/articles/{doi}/pdf",
+        ),
+        emits_html_managed_marker=False,
+        html_capable=False,
+        xml_root_tags=("article",),
+        xml_file_tokens=("10.3389", "frontiers"),
+        body_text_thresholds=BodyTextThresholds(min_chars=1200),
+        routes=(
+            ProviderRouteSpec(name="metadata", kind="metadata"),
+            ProviderRouteSpec(name="xml", kind="xml"),
+            ProviderRouteSpec(
+                name="direct_pdf",
+                kind="pdf",
+                requires_pdf_conversion=True,
             ),
-            asset_default="body",
-            probe_capability="routing_signal",
-            provider_managed_abstract_only=False,
-            client_factory_path="paper_fetch.providers.frontiers:FrontiersClient",
-            status_order=18,
-            base_domains=("www.frontiersin.org",),
-            landing_path_templates=("/articles/{doi}/full",),
-            xml_path_templates=("/journals/{journal_slug}/articles/{doi}/xml",),
-            pdf_path_templates=(
-                "/journals/{journal_slug}/articles/{doi}/pdf",
-                "/articles/{doi}/pdf",
-            ),
-            emits_html_managed_marker=False,
-            html_capable=False,
-            xml_root_tags=("article",),
-            xml_file_tokens=("10.3389", "frontiers"),
-            body_text_thresholds=BodyTextThresholds(min_chars=1200),
-            routes=(
-                ProviderRouteSpec(name="metadata", kind="metadata"),
-                ProviderRouteSpec(name="xml", kind="xml"),
-                ProviderRouteSpec(
-                    name="direct_pdf",
-                    kind="pdf",
-                    requires_pdf_conversion=True,
-                ),
-                ProviderRouteSpec(
-                    name="assets",
-                    kind="assets",
-                    timeout_seconds=20,
-                    concurrency=2,
-                    transient_retries=2,
-                ),
+            ProviderRouteSpec(
+                name="assets",
+                kind="assets",
+                timeout_seconds=20,
+                concurrency=2,
+                transient_retries=2,
             ),
         ),
-        html_rules=ProviderHtmlRules(
-            name="frontiers",
-            front_matter=ProviderFrontMatterRules(
-                exact_texts=(),
-                contains_tokens=(),
-                publication_keywords=("frontiers", "frontiers media"),
-            ),
-            availability=AvailabilityPolicy(name="frontiers", no_signals=True),
+    ),
+    html_rules=ProviderHtmlRules(
+        name="frontiers",
+        front_matter=ProviderFrontMatterRules(
+            exact_texts=(),
+            contains_tokens=(),
+            publication_keywords=("frontiers", "frontiers media"),
         ),
-        sources=("frontiers_xml", "frontiers_pdf"),
-    )
+        availability=AvailabilityPolicy(name="frontiers", no_signals=True),
+    ),
+    sources=("frontiers_xml", "frontiers_pdf"),
 )
 
 
@@ -1047,12 +1046,14 @@ class FrontiersClient(ProviderClient):
                     output_dir=output_dir,
                     user_agent=self.user_agent,
                     asset_profile=asset_profile,
-                    headers=self._asset_headers(),
-                    candidate_builder=_frontiers_figure_candidates,
-                    asset_download_concurrency=concurrency,
-                    fetch_policy="direct_then_browser",
-                    provider_name="frontiers",
-                    runtime_context=context,
+                    options=AssetDownloadOptions(
+                        headers=self._asset_headers(),
+                        candidate_builder=_frontiers_figure_candidates,
+                        asset_download_concurrency=concurrency,
+                        fetch_policy="direct_then_browser",
+                        provider_name="frontiers",
+                        runtime_context=context,
+                    ),
                 )
             )
         if asset_profile == "all" and supplementary_assets:
@@ -1072,11 +1073,13 @@ class FrontiersClient(ProviderClient):
                         output_dir=output_dir,
                         user_agent=self.user_agent,
                         asset_profile=asset_profile,
-                        headers=self._asset_headers(),
-                        asset_download_concurrency=concurrency,
-                        fetch_policy="direct_then_browser",
-                        provider_name="frontiers",
-                        runtime_context=context,
+                        options=AssetDownloadOptions(
+                            headers=self._asset_headers(),
+                            asset_download_concurrency=concurrency,
+                            fetch_policy="direct_then_browser",
+                            provider_name="frontiers",
+                            runtime_context=context,
+                        ),
                     )
                 )
             unresolved_failures = [

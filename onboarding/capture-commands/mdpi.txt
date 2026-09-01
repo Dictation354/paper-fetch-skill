@@ -1,6 +1,0 @@
-# MDPI replay capture command used for onboarding.
-PYTHONPATH=src python3 scripts/capture_fixture.py --from-manifest onboarding/manifests/mdpi.yml --all --auto-via --fail-fast
-
-# Null DOI purposes are skipped automatically by --all. MDPI is treated as an
-# open-access route for this provider, so abstract_only, access_gate, and
-# empty_shell remain doi: null in onboarding/manifests/mdpi.yml.

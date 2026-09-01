@@ -110,7 +110,6 @@ class FetchPipelineTests(unittest.TestCase):
         context = captured["context"]
         self.assertEqual(context.download_dir, Path(tmpdir))
         self.assertEqual(context.artifact_mode, "markdown-assets")
-        self.assertIsNone(context.transport.disk_cache_dir)
 
     def test_cache_hit_short_circuits_service_and_write_hook(self) -> None:
         cached = build_envelope(sample_article())

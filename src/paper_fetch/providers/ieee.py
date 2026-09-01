@@ -75,7 +75,7 @@ from ._payloads import (
     build_provider_payload,
     provider_failure_diagnostics as _provider_failure_diagnostics,
 )
-from ._registry import ProviderBundle, register_provider_bundle
+from ._registry import ProviderBundle
 from ._waterfall import (
     DEFAULT_WATERFALL_CONTINUE_CODES,
     ProviderWaterfallState,
@@ -96,44 +96,42 @@ from .base import (
 
 __all__ = ["IeeeClient"]
 
-register_provider_bundle(
-    ProviderBundle(
-        catalog=ProviderSpec(
-            name="ieee",
-            display_name="IEEE",
-            official=True,
-            domains=("ieeexplore.ieee.org",),
-            doi_prefixes=("10.1109/",),
-            publisher_aliases=(
-                "ieee",
-                "institute of electrical and electronics engineers",
-            ),
-            asset_default="body",
-            probe_capability="routing_signal",
-            provider_managed_abstract_only=True,
-            client_factory_path="paper_fetch.providers.ieee:IeeeClient",
-            status_order=6,
-            routes=IEEE_ROUTES,
+PROVIDER_BUNDLE = ProviderBundle(
+    catalog=ProviderSpec(
+        name="ieee",
+        display_name="IEEE",
+        official=True,
+        domains=("ieeexplore.ieee.org",),
+        doi_prefixes=("10.1109/",),
+        publisher_aliases=(
+            "ieee",
+            "institute of electrical and electronics engineers",
         ),
-        html_rules=ProviderHtmlRules(
-            name="ieee",
-            noise_profile="ieee",
-            cleanup=ProviderCleanupRules(
-                markdown_promo_tokens=IEEE_MARKDOWN_PROMO_TOKENS,
-                extraction_cleanup_selectors=IEEE_EXTRACTION_CLEANUP_SELECTORS,
-                extraction_drop_keywords=IEEE_AVAILABILITY_DROP_KEYWORDS,
-                access_block_text_tokens=IEEE_ACCESS_BLOCK_TEXT_TOKENS,
-            ),
-            availability=AvailabilityPolicy(
-                name="ieee",
-                site_rule_overrides=IEEE_SITE_RULE_OVERRIDES,
-                text_marker_signal_set=IEEE_TEXT_MARKER_SIGNAL_SET,
-                overrides=IEEE_AVAILABILITY_OVERRIDES,
-            ),
+        asset_default="body",
+        probe_capability="routing_signal",
+        provider_managed_abstract_only=True,
+        client_factory_path="paper_fetch.providers.ieee:IeeeClient",
+        status_order=6,
+        routes=IEEE_ROUTES,
+    ),
+    html_rules=ProviderHtmlRules(
+        name="ieee",
+        noise_profile="ieee",
+        cleanup=ProviderCleanupRules(
+            markdown_promo_tokens=IEEE_MARKDOWN_PROMO_TOKENS,
+            extraction_cleanup_selectors=IEEE_EXTRACTION_CLEANUP_SELECTORS,
+            extraction_drop_keywords=IEEE_AVAILABILITY_DROP_KEYWORDS,
+            access_block_text_tokens=IEEE_ACCESS_BLOCK_TEXT_TOKENS,
         ),
-        asset_retry=ieee_html.IEEE_ASSET_RETRY_POLICY,
-        sources=("ieee_html", "ieee_pdf"),
-    )
+        availability=AvailabilityPolicy(
+            name="ieee",
+            site_rule_overrides=IEEE_SITE_RULE_OVERRIDES,
+            text_marker_signal_set=IEEE_TEXT_MARKER_SIGNAL_SET,
+            overrides=IEEE_AVAILABILITY_OVERRIDES,
+        ),
+    ),
+    asset_retry=ieee_html.IEEE_ASSET_RETRY_POLICY,
+    sources=("ieee_html", "ieee_pdf"),
 )
 
 _FETCH_PDF_WITH_BROWSER = fetch_pdf_with_playwright = fetch_pdf_with_browser
@@ -184,9 +182,7 @@ class IeeeClient(ProviderClient):
                         f"is {browser_status.status}."
                     ),
                     details={
-                        "backend": browser_runtime.selected_browser_runtime_backend(
-                            self.env
-                        ).name,
+                        "backend": "camoufox",
                         "fallback_status": browser_status.status,
                         "fallback_available": browser_status.available,
                         "notes": list(browser_status.notes),
@@ -478,7 +474,6 @@ class IeeeClient(ProviderClient):
                     )
                     or self.browser_user_agent,
                     browser_cookies=list(browser_seed.get("browser_cookies") or []),
-                    headless=True,
                     referer=document_url,
                     seed_urls=browser_seed_urls,
                     allow_pdf_only=True,
@@ -497,7 +492,7 @@ class IeeeClient(ProviderClient):
                         pdf_result = run_browser_pdf(Path(tempdir))
                 else:
                     pdf_result = run_browser_pdf(artifact_dir)
-                fetcher = f"{runtime_config.backend}_browser"
+                fetcher = "camoufox_browser"
             except PdfFetchFailure as browser_exc:
                 raise PdfFetchFailure(
                     browser_exc.kind,
@@ -625,7 +620,7 @@ class IeeeClient(ProviderClient):
                     html_failure_message=html_failure_message,
                     warnings=[],
                     context=runtime_context,
-                    html_trace_markers=state.source_markers(),
+                    html_trace_markers=state.source_trail,
                 )
             except PdfFetchFailure as exc:
                 pdf_failure_diagnostics = _pdf_failure_diagnostics(exc)
@@ -635,7 +630,7 @@ class IeeeClient(ProviderClient):
             return self._abstract_only_payload(
                 landing_attempt,
                 warnings=[],
-                trace_markers=state.source_markers(),
+                trace_markers=state.source_trail,
                 diagnostics={
                     "html_failure": _provider_failure_diagnostics(
                         state.failure("html")

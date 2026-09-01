@@ -11,9 +11,6 @@ from ...tracing import trace_event, trace_from_markers
 from ...reason_codes import PDF_FALLBACK
 from .._pdf_fallback import PdfRequestContext
 from ..base import ProviderContent, RawFulltextPayload
-from ..browser_runtime.api import (
-    storage_state_path as browser_runtime_storage_state_path,
-)
 from .._pdf_common import (
     pdf_asset_output_dir,
     pdf_asset_profile_from_context,
@@ -21,13 +18,6 @@ from .._pdf_common import (
 )
 from .fetchers import _choose_browser_seed_url
 from .shared import BrowserWorkflowDeps, default_browser_workflow_deps
-
-
-def _runtime_storage_state_path(runtime: Any) -> Any | None:
-    if runtime is None:
-        return None
-    path = browser_runtime_storage_state_path(runtime)
-    return path if path is not None and path.is_file() else None
 
 
 def _raise_if_cancelled(context: RuntimeContext | None) -> None:
@@ -91,14 +81,7 @@ def fetch_seeded_browser_pdf_payload(
         browser_cookies=seeded_browser_cookies,
         browser_user_agent=pdf_context_seed.get("browser_user_agent")
         or getattr(runtime, "user_agent", None),
-        headless=runtime.headless,
         referer=seed_url,
-        binary_path=getattr(runtime, "binary_path", None),
-        cdp_endpoint=getattr(runtime, "cdp_endpoint", None),
-        external_new_context=getattr(runtime, "external_new_context", False),
-        profile_dir=getattr(runtime, "profile_dir", None),
-        user_data_dir=getattr(runtime, "user_data_dir", None),
-        storage_state_path=_runtime_storage_state_path(runtime),
         browser_config=runtime,
         seed_urls=seed_urls,
         allow_pdf_only=True,

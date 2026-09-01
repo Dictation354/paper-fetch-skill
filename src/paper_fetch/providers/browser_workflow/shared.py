@@ -22,6 +22,29 @@ looks_like_abstract_redirect = _html_profiles.looks_like_abstract_redirect
 BROWSER_HTML_BLOCKED_RESOURCE_TYPES = {"image", "font", "stylesheet", "media"}
 
 
+def normalize_browser_url(value: str | None) -> str:
+    raw = normalize_text(value)
+    if not raw:
+        return ""
+    try:
+        parsed = urllib.parse.urlsplit(raw)
+        port = parsed.port
+    except ValueError:
+        return ""
+    scheme = parsed.scheme.lower()
+    host = normalize_text(parsed.hostname).lower()
+    if scheme not in {"http", "https"} or not host:
+        return ""
+    default_port = (scheme == "http" and port == 80) or (
+        scheme == "https" and port == 443
+    )
+    netloc_host = f"[{host}]" if ":" in host else host
+    netloc = netloc_host if port is None or default_port else f"{netloc_host}:{port}"
+    return urllib.parse.urlunsplit(
+        (scheme, netloc, parsed.path or "/", parsed.query, "")
+    )
+
+
 @dataclass(frozen=True, kw_only=True)
 class BrowserWorkflowDeps:
     load_runtime_config: Callable[..., Any]

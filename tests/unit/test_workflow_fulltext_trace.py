@@ -5,6 +5,7 @@ from unittest import mock
 
 from paper_fetch.models import ArticleModel, Metadata, Quality, Section
 from paper_fetch.providers.base import ProviderFetchResult
+from paper_fetch.providers.protocols import FulltextProvider
 from paper_fetch.tracing import (
     TraceContext,
     merge_trace,
@@ -20,8 +21,8 @@ def test_official_provider_structured_fallback_trace_reaches_article() -> None:
         "fulltext",
         "wiley_html",
         "fail",
-        code="managed_chrome_cdp_timeout",
-        message="CDP startup timed out.",
+        code="browser_runtime_prepare_timeout",
+        message="Camoufox runtime preparation timed out.",
     )
     article = ArticleModel(
         doi="10.1111/gcb.16414",
@@ -38,13 +39,12 @@ def test_official_provider_structured_fallback_trace_reaches_article() -> None:
         quality=Quality(has_fulltext=True, content_kind="fulltext"),
     )
 
-    class _Provider:
-        def fetch_result(self, *_args, **_kwargs) -> ProviderFetchResult:
-            return ProviderFetchResult(
-                provider="wiley",
-                article=article,
-                trace=[browser_failure],
-            )
+    provider = mock.Mock(spec=FulltextProvider)
+    provider.fetch_result.return_value = ProviderFetchResult(
+        provider="wiley",
+        article=article,
+        trace=[browser_failure],
+    )
 
     artifact_store = mock.Mock()
     artifact_store.asset_download_dir = None
@@ -59,7 +59,7 @@ def test_official_provider_structured_fallback_trace_reaches_article() -> None:
         strategy=fulltext.FetchStrategy(),
         artifact_store=artifact_store,
         context=SimpleNamespace(asset_profile=None),
-        clients={"wiley": _Provider()},
+        clients={"wiley": provider},
         outputs=fulltext._ProviderAttemptOutputs(trace=workflow_trace),
     )
 

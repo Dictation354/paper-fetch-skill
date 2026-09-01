@@ -7,10 +7,7 @@ import pytest
 
 from scripts.prepare_release_assets import (
     _fsync_directory_best_effort,
-    prepare_rolling_release,
     prepare_stable_release,
-    rolling_asset_names,
-    rolling_input_mapping,
     stable_asset_names,
     stable_input_mapping,
 )
@@ -34,13 +31,6 @@ def _read_checksum_manifest(path: Path) -> dict[str, str]:
         assert name not in checksums
         checksums[name] = digest
     return checksums
-
-
-def _write_rolling_inputs(root: Path) -> None:
-    for relative in rolling_input_mapping():
-        path = root / relative
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(f"payload:{relative.as_posix()}\n".encode())
 
 
 def test_stable_assets_are_exactly_flattened_and_checksums_use_basenames(
@@ -116,39 +106,3 @@ def test_stable_asset_input_rejects_missing_extra_and_basename_collision(
         )
 
     assert not output_dir.exists()
-
-
-def test_rolling_inventory_rejects_unknown_build_input(
-    tmp_path: Path,
-) -> None:
-    input_root = tmp_path / "inputs"
-    output_dir = tmp_path / "release-assets"
-    _write_rolling_inputs(input_root)
-    extra = input_root / "offline/unexpected.bin"
-    extra.write_bytes(b"extra")
-
-    with pytest.raises(ValueError, match="extra="):
-        prepare_rolling_release(input_root=input_root, output_dir=output_dir)
-
-    assert not output_dir.exists()
-
-
-def test_rolling_release_publishes_ten_inputs_and_exact_checksums(
-    tmp_path: Path,
-) -> None:
-    input_root = tmp_path / "inputs"
-    output_dir = tmp_path / "release-assets"
-    _write_rolling_inputs(input_root)
-
-    expected = prepare_rolling_release(
-        input_root=input_root,
-        output_dir=output_dir,
-    )
-
-    assert expected == rolling_asset_names()
-    assert len(expected) == 10
-    assert {path.name for path in output_dir.iterdir()} == {
-        *expected,
-        "SHA256SUMS",
-    }
-    assert set(_read_checksum_manifest(output_dir / "SHA256SUMS")) == set(expected)

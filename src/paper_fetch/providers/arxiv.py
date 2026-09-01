@@ -72,7 +72,7 @@ from ._pdf_common import (
     pdf_fetch_result_assets,
     pdf_fetch_result_warnings,
 )
-from ._registry import ProviderBundle, register_provider_bundle
+from ._registry import ProviderBundle
 from ._waterfall import (
     DEFAULT_WATERFALL_CONTINUE_CODES,
     ProviderWaterfallStep,
@@ -92,57 +92,52 @@ from .base import (
 )
 
 
-register_provider_bundle(
-    ProviderBundle(
-        catalog=ProviderSpec(
-            name="arxiv",
-            display_name="arXiv",
-            official=True,
-            domains=("arxiv.org",),
-            doi_prefixes=("10.48550/",),
-            publisher_aliases=("arxiv",),
-            asset_default="body",
-            probe_capability="metadata_api",
-            provider_managed_abstract_only=False,
-            client_factory_path="paper_fetch.providers.arxiv:ArxivClient",
-            status_order=7,
-            metadata_probe_short_circuit=(
-                "paper_fetch.providers._arxiv_metadata:"
-                "arxiv_metadata_probe_short_circuit"
+PROVIDER_BUNDLE = ProviderBundle(
+    catalog=ProviderSpec(
+        name="arxiv",
+        display_name="arXiv",
+        official=True,
+        domains=("arxiv.org",),
+        doi_prefixes=("10.48550/",),
+        publisher_aliases=("arxiv",),
+        asset_default="body",
+        probe_capability="metadata_api",
+        provider_managed_abstract_only=False,
+        client_factory_path="paper_fetch.providers.arxiv:ArxivClient",
+        status_order=7,
+        metadata_probe_short_circuit=(
+            "paper_fetch.providers._arxiv_metadata:arxiv_metadata_probe_short_circuit"
+        ),
+        persist_provider_html=True,
+        routes=(
+            ProviderRouteSpec(
+                name="atom_metadata",
+                kind="metadata",
+                transport="api",
+                timeout_seconds=60,
+                qps=1 / 3,
             ),
-            persist_provider_html=True,
-            routes=(
-                ProviderRouteSpec(
-                    name="atom_metadata",
-                    kind="metadata",
-                    transport="api",
-                    timeout_seconds=60,
-                    qps=1 / 3,
-                    rate_policy="arxiv_three_second_pacing",
-                ),
-                ProviderRouteSpec(name="official_html", kind="html"),
-                ProviderRouteSpec(
-                    name="direct_pdf",
-                    kind="pdf",
-                    requires_pdf_conversion=True,
-                ),
-                ProviderRouteSpec(
-                    name="source_assets",
-                    kind="assets",
-                    hosts=("arxiv.org",),
-                    qps=1 / 3,
-                    rate_policy="arxiv_three_second_pacing",
-                    asset_scope="body",
-                ),
+            ProviderRouteSpec(name="official_html", kind="html"),
+            ProviderRouteSpec(
+                name="direct_pdf",
+                kind="pdf",
+                requires_pdf_conversion=True,
+            ),
+            ProviderRouteSpec(
+                name="source_assets",
+                kind="assets",
+                hosts=("arxiv.org",),
+                qps=1 / 3,
+                asset_scope="body",
             ),
         ),
-        html_rules=ProviderHtmlRules(
-            name="arxiv",
-            availability=AvailabilityPolicy(name="arxiv", no_signals=True),
-        ),
-        asset_retry=ARXIV_ASSET_RETRY_POLICY,
-        sources=("arxiv_html", "arxiv_pdf"),
-    )
+    ),
+    html_rules=ProviderHtmlRules(
+        name="arxiv",
+        availability=AvailabilityPolicy(name="arxiv", no_signals=True),
+    ),
+    asset_retry=ARXIV_ASSET_RETRY_POLICY,
+    sources=("arxiv_html", "arxiv_pdf"),
 )
 
 

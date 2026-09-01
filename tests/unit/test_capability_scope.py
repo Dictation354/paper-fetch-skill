@@ -108,13 +108,11 @@ def test_capability_scope_binds_final_browser_state_path_and_digest(
     ]
 
 
-def test_env_only_compatibility_wrapper_preserves_historical_digest() -> None:
+def test_env_only_scope_uses_current_capability_facts() -> None:
     env = {"ELSEVIER_API_KEY": "unit-secret", "CROSSREF_MAILTO": "x@example.test"}
 
-    # Frozen from v5.5.0's credential_scope_from_env implementation.
-    assert credential_scope_from_env(env) == (
-        "credential:c9ab424f29b0b413689263ce667b88fa1aa67c446523412522c6f296ce9f2219"
-    )
+    assert credential_scope_from_env(env) == CapabilityScopeBuilder(env).build()
+    assert credential_scope_from_env(env).startswith("credential:")
 
 
 def test_runtime_scope_only_records_browser_state_after_actual_use(

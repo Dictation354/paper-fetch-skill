@@ -28,14 +28,12 @@ from paper_fetch.providers.browser_workflow.shared import default_browser_workfl
     ("reason_code", "stage", "expected"),
     [
         ("request_cancelled", None, "cancelled"),
-        ("browser_runtime_prepare_cancelled", "runtime_prepare", "cancelled"),
         ("aws_waf_challenge", "page", "challenge"),
         ("cloudflare_challenge", "page", "challenge"),
         ("publisher_access_denied", "availability", "auth_required"),
         ("browser_connect_timeout", "browser_connect", "network_timeout"),
         ("article_container_not_found", "html_extraction", "extraction_error"),
         ("empty_article_shell", "html_extraction", "extraction_error"),
-        ("managed_chrome_cdp_timeout", "managed_chrome_startup", "runtime_error"),
         ("unknown_html_failure", "html_extraction", "extraction_error"),
         ("unknown_runtime_failure", "browser_context_create", "runtime_error"),
     ],
@@ -61,7 +59,6 @@ def _runtime_config(tmp_path: Path, *, provider: str, doi: str) -> BrowserRuntim
         artifact_dir=tmp_path / "artifacts" / provider,
         headless=True,
         user_agent=None,
-        backend="camoufox",
     )
 
 
@@ -98,9 +95,7 @@ def test_static_browser_capabilities_never_claims_live_health() -> None:
                 "ok",
                 "configured",
                 details={
-                    "cdp_endpoint_configured": True,
-                    "binary_path_configured": False,
-                    "auto_cdp_browser_enabled": False,
+                    "backend": "camoufox",
                 },
             ),
             build_provider_status_check(
@@ -121,9 +116,6 @@ def test_static_browser_capabilities_never_claims_live_health() -> None:
     assert report["publisher_page_checked"] is False
     assert report["playwright"]["available"] is True
     assert report["camoufox"]["available"] is True
-    assert report["chrome_cdp"]["status"] == "configured"
-    assert report["chrome_cdp"]["reason_code"] == ("cdp_endpoint_configured_not_probed")
-    assert report["chrome_cdp"]["connection_checked"] is False
 
 
 def test_browser_preflight_adds_provider_storage_path_for_camoufox(
@@ -489,7 +481,6 @@ def test_preflight_preserves_captured_page_diagnostic_without_artifact_file(
                 stage="selector_readiness",
                 diagnostics={
                     "challenge_provider": "aws_waf",
-                    "legacy_reason_code": "cloudflare_challenge",
                     "failure_diagnostic": captured_page,
                 },
                 diagnostic_context=runtime,
@@ -636,7 +627,6 @@ def test_browser_preflight_records_failure_and_continues(tmp_path: Path) -> None
             artifact_dir=tmp_path / "artifacts" / provider,
             headless=True,
             user_agent=None,
-            backend="camoufox",
             user_data_dir=tmp_path / "profiles" / provider,
         )
 
@@ -644,11 +634,11 @@ def test_browser_preflight_records_failure_and_continues(tmp_path: Path) -> None
         del config, kwargs
         if publisher == "science":
             raise BrowserRuntimeFailure(
-                "managed_chrome_exited_before_cdp",
-                "Managed Chrome exited before CDP was ready.",
+                "browser_context_create_failed",
+                "Camoufox browser context creation failed.",
                 details={
                     "browser_failure": {
-                        "stage": "managed_chrome_startup",
+                        "stage": "browser_context_create",
                         "exit_code": 12,
                         "stderr_summary": "profile startup failed",
                     }
@@ -698,13 +688,13 @@ def test_browser_preflight_records_failure_and_continues(tmp_path: Path) -> None
     assert [result.provider for result in results] == ["science", "wiley"]
     assert results[0].ready is False
     assert results[0].status == "runtime_error"
-    assert results[0].reason_code == "managed_chrome_exited_before_cdp"
+    assert results[0].reason_code == "browser_context_create_failed"
     assert results[0].diagnostics is not None
     assert results[0].diagnostics["browser_failure"]["exit_code"] == 12
     diagnostic_path = Path(results[0].diagnostics["diagnostic_path"])
     assert diagnostic_path.is_file()
     diagnostic = results[0].diagnostics["failure_diagnostic"]
-    assert diagnostic["stage"] == "managed_chrome_startup"
+    assert diagnostic["stage"] == "browser_context_create"
     assert diagnostic["raw_html"] is None
     assert (
         results[0].storage_state_path

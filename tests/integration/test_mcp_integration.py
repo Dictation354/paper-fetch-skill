@@ -7,20 +7,12 @@ import textwrap
 import unittest
 from pathlib import Path
 
-from mcp import types as mcp_types
 from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
-from paper_fetch.mcp.cache_index import (
-    cache_scope_id,
-    scoped_cache_index_resource_uri,
-    scoped_cached_resource_uri,
-    scoped_cached_resource_uri_prefix,
-)
 from paper_fetch.mcp.provider_catalog import PROVIDER_CATALOG_RESOURCE_URI
 from paper_fetch.provider_catalog import SOURCE_PROVIDER_MAP, provider_status_order
 from tests.paths import REPO_ROOT, SRC_DIR
-
 
 SERVER_SCRIPT = textwrap.dedent(
     """
@@ -37,7 +29,7 @@ SERVER_SCRIPT = textwrap.dedent(
     from paper_fetch.providers.base import ProviderStatusResult, build_provider_status_check
     from paper_fetch.resolve.query import ResolvedQuery
     from paper_fetch.service import HasFulltextProbeResult
-    from paper_fetch.tracing import trace_event
+    from paper_fetch.tracing import TraceContext, trace_event
     from paper_fetch.utils import sanitize_filename
 
     def fake_resolve(query, *, context=None):
@@ -139,15 +131,19 @@ SERVER_SCRIPT = textwrap.dedent(
                     "metadata",
                     "elsevier",
                     "ok",
-                    provider="elsevier",
-                    route="metadata_api",
+                    context=TraceContext(
+                        provider="elsevier",
+                        route="metadata_api",
+                    ),
                 ),
                 trace_event(
                     "fulltext",
                     "elsevier_xml",
                     "ok",
-                    provider="elsevier",
-                    route="xml_api",
+                    context=TraceContext(
+                        provider="elsevier",
+                        route="xml_api",
+                    ),
                 ),
             ],
             token_estimate=64,
@@ -270,7 +266,7 @@ SERVER_SCRIPT = textwrap.dedent(
                         build_provider_status_check(
                             "playwright_dependency",
                             "ok",
-                            "Playwright Python package is importable; CDP connection is not probed.",
+                            "Playwright Python package is importable; live browser startup is not probed.",
                         ),
                     ],
                 )
@@ -436,7 +432,7 @@ SERVER_SCRIPT = textwrap.dedent(
 
 
 class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
-    async def test_stdio_server_lists_tools_and_serves_cached_resources(self) -> None:
+    async def test_stdio_server_lists_tools_and_serves_provider_catalog(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             default_dir = Path(tmpdir) / "default"
             isolated_dir = Path(tmpdir) / "isolated"
@@ -444,7 +440,6 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
             batch_fetch_progress: list[tuple[float, float | None, str | None]] = []
             preflight_progress: list[tuple[float, float | None, str | None]] = []
             log_messages: list[object] = []
-            protocol_messages: list[object] = []
             server = StdioServerParameters(
                 command=sys.executable,
                 args=["-c", SERVER_SCRIPT],
@@ -477,18 +472,16 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                     ) -> None:
                         batch_fetch_progress.append((progress, total, message))
 
-                    async def message_handler(message) -> None:
-                        protocol_messages.append(message)
-
                     async with ClientSession(
                         read_stream,
                         write_stream,
                         logging_callback=logging_callback,
-                        message_handler=message_handler,
                     ) as session:
                         init_result = await session.initialize()
                         self.assertIsNotNone(init_result.capabilities.resources)
-                        self.assertTrue(init_result.capabilities.resources.list_changed)
+                        self.assertFalse(
+                            bool(init_result.capabilities.resources.list_changed)
+                        )
 
                         listed = await session.list_tools()
                         tool_names = sorted(tool.name for tool in listed.tools)
@@ -768,8 +761,12 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         self.assertEqual(
                             custom_cached.structured_content["status"], "hit"
                         )
-                        self.assertEqual(
-                            len(custom_cached.structured_content["entries"]), 4
+                        self.assertIn(
+                            "fetch_envelope",
+                            {
+                                entry["kind"]
+                                for entry in custom_cached.structured_content["entries"]
+                            },
                         )
 
                         compact_cached = await session.call_tool(
@@ -809,9 +806,7 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             "list_cached", {"download_dir": str(isolated_dir)}
                         )
                         self.assertFalse(listed_custom.is_error)
-                        self.assertEqual(
-                            len(listed_custom.structured_content["entries"]), 4
-                        )
+                        self.assertTrue(listed_custom.structured_content["entries"])
 
                         batch = await session.call_tool(
                             "batch_check",
@@ -906,67 +901,15 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                             "fetch_paper", {"query": "10.1000/default"}
                         )
                         self.assertFalse(default_fetch.is_error)
-                        self.assertTrue(
-                            any(
-                                isinstance(
-                                    message,
-                                    mcp_types.ResourceListChangedNotification,
-                                )
-                                for message in protocol_messages
-                            )
-                        )
 
                         resources = await session.list_resources()
                         resource_uris = sorted(
                             str(resource.uri) for resource in resources.resources
                         )
-                        self.assertIn(
-                            "resource://paper-fetch/cache-index", resource_uris
-                        )
-                        self.assertIn(PROVIDER_CATALOG_RESOURCE_URI, resource_uris)
-                        self.assertTrue(
-                            any(
-                                uri.startswith("resource://paper-fetch/cached/")
-                                for uri in resource_uris
-                            )
-                        )
-                        custom_scope_id = cache_scope_id(isolated_dir)
-                        custom_index_uri = scoped_cache_index_resource_uri(
-                            custom_scope_id
-                        )
-                        self.assertIn(custom_index_uri, resource_uris)
-                        self.assertTrue(
-                            any(
-                                uri.startswith(
-                                    scoped_cached_resource_uri_prefix(custom_scope_id)
-                                )
-                                for uri in resource_uris
-                            )
-                        )
+                        self.assertEqual(resource_uris, [PROVIDER_CATALOG_RESOURCE_URI])
 
                         templates = await session.list_resource_templates()
-                        template_uris = [
-                            str(template.uri_template)
-                            for template in templates.resource_templates
-                        ]
-                        self.assertIn(
-                            "resource://paper-fetch/cached/{entry_id}", template_uris
-                        )
-
-                        cache_index = await session.read_resource(
-                            "resource://paper-fetch/cache-index"
-                        )
-                        cache_text = cache_index.contents[0].text
-                        cache_payload = json.loads(cache_text)
-                        self.assertEqual(
-                            str(default_dir), cache_payload["download_dir"]
-                        )
-                        markdown_entry = next(
-                            entry
-                            for entry in cache_payload["entries"]
-                            if entry["doi"] == "10.1000/default"
-                            and entry["kind"] == "markdown"
-                        )
+                        self.assertEqual(templates.resource_templates, [])
 
                         provider_catalog = await session.read_resource(
                             PROVIDER_CATALOG_RESOURCE_URI
@@ -988,38 +931,6 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         self.assertEqual(
                             provider_catalog_payload["source_provider_map"],
                             dict(sorted(SOURCE_PROVIDER_MAP.items())),
-                        )
-
-                        markdown_resource = await session.read_resource(
-                            f"resource://paper-fetch/cached/{markdown_entry['id']}"
-                        )
-                        self.assertIn(
-                            "# Example Article", markdown_resource.contents[0].text
-                        )
-
-                        custom_cache_index = await session.read_resource(
-                            custom_index_uri
-                        )
-                        custom_cache_payload = json.loads(
-                            custom_cache_index.contents[0].text
-                        )
-                        self.assertEqual(
-                            str(isolated_dir), custom_cache_payload["download_dir"]
-                        )
-                        custom_markdown_entry = next(
-                            entry
-                            for entry in custom_cache_payload["entries"]
-                            if entry["doi"] == "10.1000/custom"
-                            and entry["kind"] == "markdown"
-                        )
-                        custom_markdown_resource = await session.read_resource(
-                            scoped_cached_resource_uri(
-                                custom_scope_id, custom_markdown_entry["id"]
-                            )
-                        )
-                        self.assertIn(
-                            "# Example Article",
-                            custom_markdown_resource.contents[0].text,
                         )
 
                         invalid = await session.call_tool(

@@ -7,6 +7,7 @@ from pathlib import Path
 
 from bs4 import BeautifulSoup
 
+from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.http import HttpTransport
 from paper_fetch.providers import _springer_html as springer_html
 from paper_fetch.providers import html_springer_nature, springer as springer_provider
@@ -18,7 +19,6 @@ from paper_fetch.providers._html_section_markdown import render_clean_text_from_
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.tracing import trace_from_markers
 from paper_fetch.utils import normalize_text
-from paper_fetch.workflow.fulltext import maybe_save_provider_html_payload
 from tests.block_fixtures import block_asset
 from tests.golden_criteria import (
     golden_criteria_asset,
@@ -66,6 +66,63 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         self.assertIsNone(soup.find(id="ai-alt-disclaimer-1"))
         self.assertEqual(soup.find("img").get("aria-describedby"), "caption")
         self.assertIn("alternative text for this image", soup.get_text(" ", strip=True))
+
+    def test_springer_expandable_box_survives_shared_html_cleanup(self) -> None:
+        html = r"""
+        <html>
+          <body>
+            <article>
+              <h1>Expandable Box Example</h1>
+              <div class="c-article-body">
+                <div class="main-content">
+                  <section data-title="Results">
+                    <h2 class="c-article-section__title">Results</h2>
+                    <p>Visible body text.</p>
+                    <div class="c-article-box" data-expandable-box-container="true">
+                      <div
+                        class="c-article-box__container"
+                        data-expandable-box="true"
+                        aria-hidden="true"
+                        id="box-Sec4"
+                      >
+                        <h3>Box 1 | Model</h3>
+                        <p>Preserved box prose.</p>
+                        <div class="c-article-equation">
+                          <div class="c-article-equation__content">
+                            <span class="mathjax-tex">$$x = y + 1$$</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <p aria-hidden="true">Hidden interface text.</p>
+                  </section>
+                </div>
+              </div>
+            </article>
+          </body>
+        </html>
+        """
+        urls = (
+            "https://www.nature.com/articles/s41477-026-02304-w",
+            "https://link.springer.com/article/10.1007/example",
+            "https://bmcmedicine.biomedcentral.com/articles/10.1186/example",
+        )
+
+        for url in urls:
+            with self.subTest(url=url):
+                payload = springer_html.extract_html_payload(
+                    html,
+                    url,
+                    title="Expandable Box Example",
+                )
+                markdown = payload["markdown_text"]
+
+                self.assertIn("Box 1 | Model", markdown)
+                self.assertIn("Preserved box prose.", markdown)
+                self.assertIn("$$x = y + 1$$", markdown)
+                self.assertNotIn("Hidden interface text.", markdown)
+                self.assertIn("Preserved box prose.", payload["cleaned_html"])
+                self.assertNotIn("Hidden interface text.", payload["cleaned_html"])
 
     def test_springer_nature_license_cleanup_uses_creative_commons_link(self) -> None:
         soup = BeautifulSoup(
@@ -780,10 +837,11 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
                 body=b"<html><body>fixture</body></html>",
             )
 
-            warnings, trail = maybe_save_provider_html_payload(
+            warnings, trail = ArtifactStore.from_download_dir(
+                download_dir
+            ).save_provider_html_payload(
                 "springer",
                 content=content,
-                download_dir=download_dir,
                 doi="10.1038/nature12915",
                 metadata={"title": "Example"},
             )
@@ -1225,6 +1283,9 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
                     <h2 class="c-article-section__title">Methods</h2>
                     <div class="c-article-section__content">
                       <p>Inline <span class="mathjax-tex">\(\alpha _{i,t} = \updelta Q_{i,t}/E_{i,t}\)</span>.</p>
+                      <p>Existing <span class="mathjax-tex">$x + y$</span>.</p>
+                      <p>Bare <span class="mathjax-tex">z + 1</span>.</p>
+                      <p>Incomplete <span class="mathjax-tex">\(q + 1</span>.</p>
                       <div class="c-article-equation">
                         <div class="c-article-equation__content">
                           <span class="mathjax-tex">
@@ -1241,16 +1302,30 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         </html>
         """
 
-        markdown = html_springer_nature.extract_springer_nature_markdown(
-            html,
+        urls = (
             "https://www.nature.com/articles/s41561-022-00912-7",
+            "https://link.springer.com/article/10.1007/example",
+            "https://bmcmedicine.biomedcentral.com/articles/10.1186/example",
         )
 
-        self.assertIn(r"\(\alpha _{i,t} = \delta Q_{i,t}/E_{i,t}\)", markdown)
-        self.assertIn(
-            r"$$\delta Q_{i,t} = \alpha _{i,t}E_{{\mathrm{p}}(i,t)}S_{i,t}$$", markdown
-        )
-        self.assertNotIn(r"\updelta", markdown)
+        for url in urls:
+            with self.subTest(url=url):
+                markdown = html_springer_nature.extract_springer_nature_markdown(
+                    html,
+                    url,
+                )
+
+                self.assertIn(r"$\alpha _{i,t} = \delta Q_{i,t}/E_{i,t}$", markdown)
+                self.assertIn("Existing $x + y$.", markdown)
+                self.assertIn("Bare $z + 1$.", markdown)
+                self.assertIn(r"Incomplete $\(q + 1$.", markdown)
+                self.assertIn(
+                    r"$$\delta Q_{i,t} = \alpha _{i,t}E_{{\mathrm{p}}(i,t)}S_{i,t}$$",
+                    markdown,
+                )
+                self.assertNotIn(r"\updelta", markdown)
+                self.assertNotIn(r"\(\alpha", markdown)
+                self.assertNotIn(r"E_{i,t}\)", markdown)
 
     def test_springer_mathjax_tex_uses_shared_latex_normalization(self) -> None:
         html = r"""

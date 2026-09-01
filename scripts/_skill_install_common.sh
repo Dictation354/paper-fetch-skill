@@ -146,7 +146,7 @@ pf_skill_copy_static_skill() {
 
 pf_skill_compare_bundle() {
     command -v python3 >/dev/null 2>&1 || pf_skill_die "python3 not found on PATH"
-    local verifier="$PF_REPO_DIR/src/paper_fetch/skill_integrity.py"
+    local verifier="$PF_REPO_DIR/scripts/skill_integrity.py"
     [ -f "$verifier" ] || pf_skill_die "Missing skill verifier at $verifier"
     PYTHONDONTWRITEBYTECODE=1 python3 "$verifier" compare \
         --expected-dir "$PF_SOURCE_SKILL_DIR" \

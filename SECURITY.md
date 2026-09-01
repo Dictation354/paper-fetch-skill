@@ -45,6 +45,6 @@ match reports only the variable name and file path and blocks publication.
 
 ## Dependency policy
 
-CI audits the complete locked dependency graph. Every known finding fails the
-gate unless `security/vulnerability-waivers.json` contains an exact
-package/version/advisory match with a non-expired date and a documented reason.
+CI exports the complete locked dependency graph with all extras and audits it
+directly with `pip-audit`. Every known finding fails the gate; there is no
+repository-local vulnerability waiver mechanism.

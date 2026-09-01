@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import mimetypes
 from pathlib import Path
 import threading
-from typing import Any, cast
+from typing import Any
 
 from mcp.server.mcpserver import Context
 from mcp.types import CallToolResult, ImageContent, TextContent
@@ -19,24 +19,15 @@ from ..capability_scope import (
     capability_scope_from_runtime_context,
     capability_scopes_for_query,
 )
-from ..config import apply_browser_auto_prepare_policy
 from ..diagnostics import provider_status_payload as _shared_provider_status_payload
 from ..http import HttpTransport
 from ..models import ArticleModel, Asset, FetchEnvelope
 from ..provider_catalog import provider_status_order
-from ..publisher_identity import normalize_doi
-from ..providers.browser_runtime.preparation import (
-    browser_runtime_preparation_scope,
-)
 from ..resolve.query import StructuredResolveRequest
 from ..runtime import RuntimeContext
 from ..utils import extend_unique, normalize_text
 from ..workflow.pipeline import FetchPipeline, FetchPipelineCacheHooks
 from ..workflow.request_builder import build_fetch_pipeline_request
-from ..workflow.singleflight import (
-    FETCH_ENVELOPE_SINGLEFLIGHT,
-    fetch_request_singleflight_key,
-)
 from ..workflow.rendering import save_markdown_to_disk
 from ..workflow.types import effective_asset_profile
 from ..workflow.acceptance import evaluate_fetch_acceptance
@@ -162,7 +153,6 @@ def _save_markdown_result_for_fetch_request(
         cache_entry = FetchCache(
             saved_path.parent,
             dependencies=FetchCacheDependencies(
-                refresh_for_doi=deps.refresh_cache_index_for_doi,
                 register_markdown=deps.register_markdown_entry,
             ),
             credential_scope=credential_scope,
@@ -210,9 +200,7 @@ def _load_cached_fetch_envelope(
     read_scopes = capability_scopes_for_query(context.env, request.query)
     return FetchCache(
         download_dir,
-        dependencies=FetchCacheDependencies(
-            refresh_for_doi=deps.refresh_cache_index_for_doi
-        ),
+        dependencies=FetchCacheDependencies(),
         credential_scope=read_scopes[0],
         read_credential_scopes=read_scopes,
     ).load_fetch_envelope(
@@ -233,9 +221,7 @@ def _write_cached_fetch_envelope(
 ) -> None:
     FetchCache(
         download_dir,
-        dependencies=FetchCacheDependencies(
-            refresh_for_doi=deps.refresh_cache_index_for_doi
-        ),
+        dependencies=FetchCacheDependencies(),
         credential_scope=credential_scope,
     ).write_fetch_envelope(
         envelope,
@@ -325,40 +311,34 @@ def _fetch_paper_envelope(
                 deps=deps,
             )
 
-    preparation_cancel_check = cancel_check or (
-        context.cancel_check if context is not None else None
-    )
-    with browser_runtime_preparation_scope(
-        cancel_check=preparation_cancel_check,
-    ):
-        return (
-            FetchPipeline(deps.service_fetch_paper)
-            .run(
-                build_fetch_pipeline_request(
-                    query=request.query,
-                    modes=_service_modes_for_fetch_request(
-                        request, include_article_for_assets=include_article_for_assets
-                    ),  # type: ignore[arg-type]
-                    strategy=request.strategy.to_service_strategy(),
-                    render=request.to_render_options(),
-                    env=runtime_env,
-                    transport=transport,
-                    context=context,
-                    cancel_check=cancel_check,
-                    download_dir=cache_download_dir,
-                    artifact_mode=request.artifact_mode,
-                    no_download=request.no_download,
-                    fetch_cache=FetchCache(
-                        service_download_dir,
-                        credential_scope=credential_scope_from_env(runtime_env),
-                    ),
-                    cache_hooks=FetchPipelineCacheHooks(
-                        load=load_cached, write=write_cached
-                    ),
-                )
+    return (
+        FetchPipeline(deps.service_fetch_paper)
+        .run(
+            build_fetch_pipeline_request(
+                query=request.query,
+                modes=_service_modes_for_fetch_request(
+                    request, include_article_for_assets=include_article_for_assets
+                ),  # type: ignore[arg-type]
+                strategy=request.strategy.to_service_strategy(),
+                render=request.to_render_options(),
+                env=runtime_env,
+                transport=transport,
+                context=context,
+                cancel_check=cancel_check,
+                download_dir=cache_download_dir,
+                artifact_mode=request.artifact_mode,
+                no_download=request.no_download,
+                fetch_cache=FetchCache(
+                    service_download_dir,
+                    credential_scope=credential_scope_from_env(runtime_env),
+                ),
+                cache_hooks=FetchPipelineCacheHooks(
+                    load=load_cached, write=write_cached
+                ),
             )
-            .envelope
         )
+        .envelope
+    )
 
 
 def _fetch_envelope_cache_path(download_dir: Path, doi: str) -> Path:
@@ -395,7 +375,6 @@ def _fetch_request_from_inputs(
     save_markdown: bool,
     markdown_output_dir: str | None,
     markdown_filename: str | None,
-    browser_auto_prepare: bool | None,
 ) -> FetchPaperRequest:
     return FetchPaperRequest.model_validate(
         {
@@ -410,7 +389,6 @@ def _fetch_request_from_inputs(
             "save_markdown": save_markdown,
             "markdown_output_dir": markdown_output_dir,
             "markdown_filename": markdown_filename,
-            "browser_auto_prepare": browser_auto_prepare,
         }
     )
 
@@ -512,7 +490,6 @@ def fetch_paper_payload(
     save_markdown: bool = False,
     markdown_output_dir: str | None = None,
     markdown_filename: str | None = None,
-    browser_auto_prepare: bool | None = None,
     env: Mapping[str, str] | None = None,
     download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
     transport: HttpTransport | None = None,
@@ -531,13 +508,8 @@ def fetch_paper_payload(
         save_markdown=save_markdown,
         markdown_output_dir=markdown_output_dir,
         markdown_filename=markdown_filename,
-        browser_auto_prepare=browser_auto_prepare,
     )
-    runtime_env = apply_browser_auto_prepare_policy(
-        deps.build_runtime_env(env),
-        override=request.browser_auto_prepare,
-        default=False,
-    )
+    runtime_env = deps.build_runtime_env(env)
     cache_download_dir = (
         _resolve_download_dir(runtime_env, download_dir, deps=deps)
         if _needs_download_dir_for_fetch(request)
@@ -561,7 +533,7 @@ def fetch_paper_payload(
             deps=deps,
         )
         runtime_context.raise_if_cancelled()
-        saved_markdown_path = _save_markdown_for_fetch_request(
+        _save_markdown_for_fetch_request(
             envelope,
             request,
             env=runtime_env,
@@ -570,8 +542,6 @@ def fetch_paper_payload(
             deps=deps,
         )
         payload = _response_payload_from_envelope(envelope, request)
-        if saved_markdown_path is not None:
-            payload["saved_markdown_path"] = str(saved_markdown_path)
         return with_schema_version(payload)
     finally:
         if owns_context:
@@ -703,12 +673,9 @@ def build_fetch_tool_result(
     envelope: FetchEnvelope,
     request: FetchPaperRequest,
     *,
-    saved_markdown_path: Path | None = None,
     download_dir: Path | None = None,
 ) -> CallToolResult:
     payload = _response_payload_from_envelope(envelope, request)
-    if saved_markdown_path is not None:
-        payload["saved_markdown_path"] = str(saved_markdown_path)
     extra_content: list[TextContent | ImageContent] = []
 
     resolved_asset_profile = effective_asset_profile(
@@ -808,7 +775,6 @@ async def fetch_paper_tool_async(
     save_markdown: bool = False,
     markdown_output_dir: str | None = None,
     markdown_filename: str | None = None,
-    browser_auto_prepare: bool | None = None,
     env: Mapping[str, str] | None = None,
     download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
     ctx: Context | None = None,
@@ -830,7 +796,6 @@ async def fetch_paper_tool_async(
             save_markdown=save_markdown,
             markdown_output_dir=markdown_output_dir,
             markdown_filename=markdown_filename,
-            browser_auto_prepare=browser_auto_prepare,
         )
     except Exception as error:
         await report_progress(
@@ -841,12 +806,9 @@ async def fetch_paper_tool_async(
     await report_progress(ctx, 1, _FETCH_PROGRESS_TOTAL, "Fetching paper content")
     cancelled = threading.Event()
     runtime_context: RuntimeContext | None = None
+    markdown_saved = False
     try:
-        runtime_env = apply_browser_auto_prepare_policy(
-            deps.build_runtime_env(env),
-            override=request.browser_auto_prepare,
-            default=False,
-        )
+        runtime_env = deps.build_runtime_env(env)
         cache_download_dir = (
             _resolve_download_dir(runtime_env, download_dir, deps=deps)
             if _needs_download_dir_for_fetch(request)
@@ -858,76 +820,45 @@ async def fetch_paper_tool_async(
             artifact_mode=("none" if request.no_download else request.artifact_mode),
             cancel_check=cancelled.is_set,
         )
-        markdown_dir = (
-            _markdown_output_dir_for_fetch_request(
-                request,
-                runtime_env=runtime_env,
-                download_dir=download_dir,
-                deps=deps,
-            )
-            if request.save_markdown
-            else None
-        )
 
-        def fetch_and_save() -> tuple[FetchEnvelope, Path | None]:
+        def fetch_and_save() -> FetchEnvelope:
+            nonlocal markdown_saved
             assert runtime_context is not None
-
-            def fetch_owner() -> FetchEnvelope:
-                return deps.fetch_paper_envelope(
-                    request,
-                    env=runtime_env,
-                    download_dir=download_dir,
-                    transport=None,
-                    include_article_for_assets=True,
-                    context=runtime_context,
-                    cancel_check=cancelled.is_set,
-                    deps=deps,
-                )
-
-            canonical_doi = normalize_doi(expected_doi_from_query(request.query) or "")
-            if canonical_doi:
-                scope = capability_scopes_for_query(runtime_context.env, canonical_doi)[
-                    0
-                ]
-                singleflight_key = fetch_request_singleflight_key(
-                    canonical_doi,
-                    request=request,
-                    capability_scope=scope,
-                    cache_dir=cache_download_dir,
-                    markdown_dir=markdown_dir,
-                )
-                envelope = cast(
-                    FetchEnvelope,
-                    FETCH_ENVELOPE_SINGLEFLIGHT.run(
-                        singleflight_key,
-                        fetch_owner,
-                        cancel_check=lambda: runtime_context.cancelled,
-                    ),
-                )
-            else:
-                envelope = fetch_owner()
-            runtime_context.raise_if_cancelled()
-            saved_path = _save_markdown_for_fetch_request(
-                envelope,
+            envelope = deps.fetch_paper_envelope(
                 request,
                 env=runtime_env,
                 download_dir=download_dir,
+                transport=None,
+                include_article_for_assets=True,
                 context=runtime_context,
+                cancel_check=cancelled.is_set,
                 deps=deps,
             )
-            return envelope, saved_path
+            runtime_context.raise_if_cancelled()
+            markdown_saved = (
+                _save_markdown_for_fetch_request(
+                    envelope,
+                    request,
+                    env=runtime_env,
+                    download_dir=download_dir,
+                    context=runtime_context,
+                    deps=deps,
+                )
+                is not None
+            )
+            return envelope
 
         loop = asyncio.get_running_loop()
         bridge = PaperFetchLogBridge(ctx=ctx, loop=loop) if ctx is not None else None
         if bridge is None:
-            envelope, saved_markdown_path = await run_blocking_call(
+            envelope = await run_blocking_call(
                 fetch_and_save,
                 cancel_event=cancelled,
                 cancel_fence=runtime_context.fence_commits,
             )
         else:
             with bridge:
-                envelope, saved_markdown_path = await run_blocking_call(
+                envelope = await run_blocking_call(
                     fetch_and_save,
                     cancel_event=cancelled,
                     cancel_fence=runtime_context.fence_commits,
@@ -939,9 +870,9 @@ async def fetch_paper_tool_async(
         result = build_fetch_tool_result(
             envelope,
             request,
-            saved_markdown_path=saved_markdown_path,
             download_dir=resolved_download_dir,
         )
+        result.meta = {"paper_fetch": {"markdown_saved": markdown_saved}}
         await report_progress(
             ctx, _FETCH_PROGRESS_TOTAL, _FETCH_PROGRESS_TOTAL, "fetch_paper complete"
         )

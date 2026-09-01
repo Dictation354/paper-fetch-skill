@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import pickle
 import unittest
-from dataclasses import FrozenInstanceError
 
 from paper_fetch.quality.html_signals import (
     TextMarkerRule,
@@ -13,15 +11,6 @@ from paper_fetch.quality.html_signals import (
 
 
 class TextMarkerSignalSetTests(unittest.TestCase):
-    def test_signal_set_dataclasses_are_frozen_and_round_trip(self) -> None:
-        rule = TextMarkerRule("full text", "fulltext_marker")
-
-        with self.assertRaises(FrozenInstanceError):
-            rule.token = "other"
-
-        signal_set = TextMarkerSignalSet(strong_rules=(rule,))
-        self.assertEqual(pickle.loads(pickle.dumps(signal_set)), signal_set)
-
     def test_blocking_rule_triggers_from_substring(self) -> None:
         signal_set = TextMarkerSignalSet(
             blocking_rules=(TextMarkerRule("purchase access", "purchase_wall"),)

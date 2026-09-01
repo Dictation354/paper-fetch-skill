@@ -1,6 +1,10 @@
 # ruff: noqa: F403,F405
 from __future__ import annotations
 
+from unittest import mock
+
+from paper_fetch.providers.protocols import FulltextProvider
+
 from ._service_support import *
 
 
@@ -16,7 +20,7 @@ class ServiceRuntimeTests(unittest.TestCase):
             provider_hint="science",
             confidence=1.0,
         )
-        crossref = StubProvider(
+        crossref = FixtureProvider(
             metadata={
                 "provider": "crossref",
                 "official_provider": False,
@@ -47,7 +51,7 @@ class ServiceRuntimeTests(unittest.TestCase):
                 ),
                 clients={
                     "crossref": crossref,
-                    "science": StubProvider(
+                    "science": FixtureProvider(
                         raw_payload=_typed_payload(
                             provider="science",
                             source_url=resolved.landing_url,
@@ -106,7 +110,7 @@ class ServiceRuntimeTests(unittest.TestCase):
                     }
                 ),
                 clients={
-                    "science": StubProvider(
+                    "science": FixtureProvider(
                         raw_payload=_typed_payload(
                             provider="science",
                             source_url=landing_url,
@@ -159,8 +163,8 @@ class ServiceRuntimeTests(unittest.TestCase):
             confidence=1.0,
         )
 
-        def counting_crossref(counter: dict[str, int]) -> StubProvider:
-            provider = StubProvider(
+        def counting_crossref(counter: dict[str, int]) -> FixtureProvider:
+            provider = FixtureProvider(
                 metadata={
                     "provider": "crossref",
                     "official_provider": False,
@@ -250,7 +254,7 @@ class ServiceRuntimeTests(unittest.TestCase):
                     env=runtime_env,
                     transport=runtime_transport,
                     clients={
-                        "science": StubProvider(
+                        "science": FixtureProvider(
                             raw_payload=_typed_payload(
                                 provider="science",
                                 source_url=resolved.landing_url,
@@ -285,149 +289,20 @@ class ServiceRuntimeTests(unittest.TestCase):
         self.assertEqual(captured["env"], runtime_env)
         self.assertEqual(asset_output_dirs, [context.download_dir])
 
-    def test_provider_client_fetch_result_accumulates_asset_timing(self) -> None:
-        class TimedProvider(ProviderClient):
-            name = "timed"
-
-            def fetch_raw_fulltext(self, doi, metadata, *, context=None):
-                return _typed_payload(
-                    provider="timed",
-                    source_url="https://example.test/article",
-                    content_type="text/xml",
-                    body=b"<xml/>",
-                    route_kind="official",
-                )
-
-            def to_article_model(
-                self,
-                metadata,
-                raw_payload,
-                *,
-                downloaded_assets=None,
-                asset_failures=None,
-                context=None,
-            ):
-                return sample_article()
-
-            def download_related_assets(
-                self,
-                doi,
-                metadata,
-                raw_payload,
-                output_dir,
-                *,
-                asset_profile="all",
-                context=None,
-            ):
-                return {"assets": [], "asset_failures": []}
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            context = RuntimeContext(env={}, download_dir=Path(tmpdir))
-            original_monotonic = runtime_module.time.monotonic
-            monotonic_values = iter([100.0, 100.2])
-            try:
-                runtime_module.time.monotonic = lambda: next(monotonic_values)
-                TimedProvider().fetch_result(
-                    "10.1000/timed",
-                    {"title": "Timed"},
-                    Path(tmpdir),
-                    asset_profile="body",
-                    context=context,
-                )
-            finally:
-                runtime_module.time.monotonic = original_monotonic
-
-        self.assertEqual(context.stage_timings["asset_seconds"], 0.2)
-
-    def test_raw_fulltext_provider_branch_accumulates_asset_timing(self) -> None:
-        class RawTimedProvider:
-            name = "raw_timed"
-
-            def fetch_raw_fulltext(self, doi, metadata, *, context=None):
-                return _typed_payload(
-                    provider="raw_timed",
-                    source_url="https://example.test/article",
-                    content_type="text/xml",
-                    body=b"<xml/>",
-                    route_kind="official",
-                )
-
-            def to_article_model(
-                self,
-                metadata,
-                raw_payload,
-                *,
-                downloaded_assets=None,
-                asset_failures=None,
-                context=None,
-            ):
-                return sample_article()
-
-            def download_related_assets(
-                self,
-                doi,
-                metadata,
-                raw_payload,
-                output_dir,
-                *,
-                asset_profile="all",
-                context=None,
-            ):
-                return {"assets": [], "asset_failures": []}
-
-            def asset_download_failure_warning(self, exc):
-                return str(exc)
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            context = RuntimeContext(env={}, download_dir=Path(tmpdir))
-            artifact_store = ArtifactStore.from_download_dir(Path(tmpdir))
-            original_monotonic = runtime_module.time.monotonic
-            monotonic_values = iter([200.0, 200.3])
-            try:
-                runtime_module.time.monotonic = lambda: next(monotonic_values)
-                _provider_fetch_result(
-                    RawTimedProvider(),
-                    doi="10.1000/raw-timed",
-                    metadata={"title": "Raw Timed"},
-                    artifact_store=artifact_store,
-                    asset_profile="body",
-                    context=context,
-                )
-            finally:
-                runtime_module.time.monotonic = original_monotonic
-
-        self.assertEqual(context.stage_timings["asset_seconds"], 0.3)
-
     def test_provider_fetch_result_passes_artifact_store_to_fulltext_provider(
         self,
     ) -> None:
-        seen: dict[str, object] = {}
-
-        class RecordingProvider:
-            name = "recording"
-
-            def fetch_result(
-                self,
-                doi,
-                metadata,
-                output_dir,
-                *,
-                asset_profile="none",
-                artifact_store=None,
-                context=None,
-            ):
-                seen["output_dir"] = output_dir
-                seen["artifact_store"] = artifact_store
-                seen["context"] = context
-                return ProviderFetchResult(
-                    provider="recording", article=sample_article()
-                )
+        provider = mock.Mock(spec=FulltextProvider)
+        provider.name = "recording"
+        provider.fetch_result.return_value = ProviderFetchResult(
+            provider="recording", article=sample_article()
+        )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             artifact_store = ArtifactStore.from_download_dir(Path(tmpdir))
             context = RuntimeContext(env={}, download_dir=Path(tmpdir))
             _provider_fetch_result(
-                RecordingProvider(),
+                provider,
                 doi="10.1000/recording",
                 metadata={"title": "Recording"},
                 artifact_store=artifact_store,
@@ -435,22 +310,10 @@ class ServiceRuntimeTests(unittest.TestCase):
                 context=context,
             )
 
-        self.assertEqual(seen["output_dir"], artifact_store.download_dir)
-        self.assertIs(seen["artifact_store"], artifact_store)
-        self.assertIs(seen["context"], context)
-
-    def test_fetch_paper_rejects_legacy_runtime_keywords(self) -> None:
-        with self.assertRaises(TypeError):
-            paper_fetch.fetch_paper("10.1126/science.override", clients={})
-
-        with self.assertRaises(TypeError):
-            paper_fetch.fetch_paper(
-                "10.1126/science.override", download_dir=Path("/tmp/paper-fetch-test")
-            )
-
-    def test_probe_has_fulltext_rejects_legacy_runtime_keywords(self) -> None:
-        with self.assertRaises(TypeError):
-            paper_fetch.probe_has_fulltext("10.1126/science.override", clients={})
+        args, kwargs = provider.fetch_result.call_args
+        self.assertEqual(args[2], artifact_store.download_dir)
+        self.assertIs(kwargs["artifact_store"], artifact_store)
+        self.assertIs(kwargs["context"], context)
 
     def test_artifact_store_preserves_provider_payload_and_springer_html_markers(
         self,
@@ -480,7 +343,7 @@ class ServiceRuntimeTests(unittest.TestCase):
         self.assertEqual(
             skipped_warnings,
             [
-                "Wiley official PDF/binary was not written to disk because --no-download was set."
+                "Wiley official PDF/binary was not written to disk because artifact mode is none."
             ],
         )
         self.assertEqual(skipped_trail, ["download:wiley_skipped"])
@@ -495,7 +358,7 @@ class ServiceRuntimeTests(unittest.TestCase):
         self.assertEqual(
             ieee_skipped_warnings,
             [
-                "IEEE official PDF/binary was not written to disk because --no-download was set."
+                "IEEE official PDF/binary was not written to disk because artifact mode is none."
             ],
         )
         self.assertEqual(ieee_skipped_trail, ["download:ieee_skipped"])

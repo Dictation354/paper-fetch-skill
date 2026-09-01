@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 import hashlib
 import math
-from typing import Any
 import urllib.parse
 from collections.abc import Iterable, Mapping
 
@@ -97,22 +96,6 @@ class _TraceAttemptBucket:
     durations_ms: list[float] = field(default_factory=list)
 
 
-_TRACE_CONTEXT_FIELDS = frozenset(TraceContext.__dataclass_fields__)
-
-
-def _coerce_trace_context(
-    context: TraceContext | None,
-    legacy_fields: Mapping[str, Any],
-) -> TraceContext:
-    unexpected = sorted(set(legacy_fields) - _TRACE_CONTEXT_FIELDS)
-    if unexpected:
-        names = ", ".join(unexpected)
-        raise TypeError(f"unexpected trace context field(s): {names}")
-    if not legacy_fields:
-        return context or TraceContext()
-    return replace(context or TraceContext(), **legacy_fields)
-
-
 def trace_event(
     stage: str,
     component: str,
@@ -121,9 +104,8 @@ def trace_event(
     code: str | None = None,
     message: str | None = None,
     context: TraceContext | None = None,
-    **legacy_fields: Any,
 ) -> TraceEvent:
-    trace_context = _coerce_trace_context(context, legacy_fields)
+    trace_context = context or TraceContext()
     safe_target, inferred_target_digest = _safe_trace_target(trace_context.target)
     return TraceEvent(
         stage=normalize_text(stage).lower(),

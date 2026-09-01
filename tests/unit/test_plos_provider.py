@@ -5,7 +5,6 @@ from pathlib import Path
 import re
 
 import pytest
-import yaml
 
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.providers.plos import (
@@ -23,8 +22,6 @@ from tests.unit._atypon_browser_workflow_provider_support import png_header
 from tests.unit._paper_fetch_support import FixtureHtmlTransport, http_response
 
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-MANIFEST_PATH = REPO_ROOT / "onboarding" / "manifests" / "plos.yml"
 STRUCTURE_DOI = "10.1371/journal.pone.0263725"
 TABLE_DOI = "10.1371/journal.pone.0304873"
 FORMULA_DOI = "10.1371/journal.pone.0126635"
@@ -345,15 +342,6 @@ def test_plos_runtime_pdf_fallback_rejects_html_xml_candidate() -> None:
     assert article.quality.content_kind == "fulltext"
     assert "fulltext:plos_xml_fail" in article.quality.source_trail
     assert "fulltext:plos_pdf_fallback_ok" in article.quality.source_trail
-
-
-def test_plos_metadata_only_route_contract_is_fallback_only() -> None:
-    manifest = yaml.safe_load(MANIFEST_PATH.read_text(encoding="utf-8"))
-    contract = manifest["route_contract"]["metadata_only"]
-
-    assert "metadata_only" in manifest["main_path"]
-    assert "metadata contains DOI or title" in contract["success_requires"]
-    assert "fabricated body text" in contract["reject_if_any"]
 
 
 def test_plos_markdown_review_loop_non_null_fixture_contracts() -> None:

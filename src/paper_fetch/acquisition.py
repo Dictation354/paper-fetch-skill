@@ -17,7 +17,7 @@ _ACQUISITION_TRANSPORTS = frozenset({"api", "browser", "http"})
 
 @dataclass(frozen=True)
 class AcquisitionProvenance:
-    """Exact final content-acquisition route alongside the legacy source label."""
+    """Exact final content-acquisition route."""
 
     provider: str
     route: str

@@ -22,11 +22,6 @@ from ..browser_runtime.types import BrowserRuntimeFailure
 from ..base import ProviderFailure
 from ...reason_codes import NOT_SUPPORTED
 from .profile import BrowserWorkflowBootstrapResult
-from .reuse_cache import (
-    DEFAULT_BROWSER_DOI_ROUTE_HINT_CACHE,
-    DEFAULT_BROWSER_PREFLIGHT_REUSE_CACHE,
-    browser_preflight_producer,
-)
 
 if TYPE_CHECKING:
     from .client import BrowserWorkflowClient
@@ -96,15 +91,6 @@ def bootstrap_browser_workflow(
     profile = client.require_profile()
     landing_page_url = str(metadata.get("landing_page_url") or "") or None
     html_candidates = client.html_candidates(normalized_doi, metadata)
-    candidate_reorder: Mapping[str, object] | None = None
-    if profile.doi_route_hint:
-        html_candidates, candidate_reorder = (
-            DEFAULT_BROWSER_DOI_ROUTE_HINT_CACHE.reorder(
-                provider=client.name,
-                doi=normalized_doi,
-                candidate_urls=html_candidates,
-            )
-        )
     pdf_candidates = client.pdf_candidates(normalized_doi, metadata)
     result = BrowserWorkflowBootstrapResult(
         normalized_doi=normalized_doi,
@@ -156,69 +142,6 @@ def bootstrap_browser_workflow(
         result.html_failure_message = exc.message
         return result
 
-    producer = browser_preflight_producer(context)
-    preflight_reuse: dict[str, object]
-    if producer is not None:
-        preflight_reuse = {
-            "state": "miss",
-            "reason": "preflight_producer",
-            "one_shot": True,
-        }
-    elif not profile.preflight_html_reuse:
-        preflight_reuse = {
-            "state": "disabled",
-            "reason": "provider_runtime_fingerprint_boundary",
-        }
-    else:
-        cached_html, preflight_reuse = DEFAULT_BROWSER_PREFLIGHT_REUSE_CACHE.consume(
-            provider=client.name,
-            doi=normalized_doi,
-            candidate_urls=html_candidates,
-            runtime=result.runtime,
-        )
-        if cached_html is not None:
-            try:
-                html_result, html_payload = (
-                    _html_extraction._payload_from_reused_browser_html(
-                        client,
-                        cached_html,
-                        runtime=result.runtime,
-                        metadata=metadata,
-                        context=context,
-                        warnings=result.warnings,
-                        preflight_reuse=preflight_reuse,
-                        candidate_reorder=candidate_reorder,
-                    )
-                )
-            except HtmlExtractionFailure as exc:
-                preflight_reuse = {
-                    "state": "miss",
-                    "reason": "cached_html_reextract_failed",
-                    "failure_code": exc.reason,
-                    "consumed": True,
-                }
-            else:
-                route_hint_write = None
-                if profile.doi_route_hint:
-                    route_hint_write = {
-                        "stored": DEFAULT_BROWSER_DOI_ROUTE_HINT_CACHE.store(
-                            provider=client.name,
-                            doi=normalized_doi,
-                            url=html_result.final_url,
-                        ),
-                        "source": "reused_final_url",
-                    }
-                    html_result, html_payload = (
-                        _html_extraction._annotate_browser_html_payload(
-                            html_result,
-                            html_payload,
-                            route_hint_write=route_hint_write,
-                        )
-                    )
-                result.browser_context_seed = html_result.browser_context_seed
-                result.html_payload = html_payload
-                return result
-
     try:
         html_result, html_payload = _fetch_browser_html_payload_with_fast_path(
             client,
@@ -229,19 +152,6 @@ def bootstrap_browser_workflow(
             warnings=result.warnings,
             deps=deps,
         )
-        if producer is None:
-            html_result, html_payload = _html_extraction._annotate_browser_html_payload(
-                html_result,
-                html_payload,
-                preflight_reuse=preflight_reuse,
-                candidate_reorder=candidate_reorder,
-            )
-        elif candidate_reorder is not None:
-            html_result, html_payload = _html_extraction._annotate_browser_html_payload(
-                html_result,
-                html_payload,
-                candidate_reorder=candidate_reorder,
-            )
         result.browser_context_seed = html_result.browser_context_seed
         result.html_payload = html_payload
         return result

@@ -8,7 +8,6 @@ from pathlib import Path
 import time
 from typing import Any, Literal
 import urllib.parse
-import urllib.request
 import uuid
 from collections.abc import Callable, Mapping, Sequence
 
@@ -22,6 +21,7 @@ from ....http import (
     DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
     DEFAULT_TRANSIENT_RETRIES,
     HttpRequestPolicy,
+    HttpStreamOptions,
     HttpTransport,
     RequestFailure,
     is_retryable_network_error,
@@ -55,7 +55,6 @@ from ._kind import (
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
     AssetDownloadKind,
-    active_seed_urls as _active_seed_urls,
     failure_from_document_fetch as _failure_from_document_fetch,
     is_preview_candidate as _is_preview_candidate,
     requires_image_payload as _requires_image_payload,
@@ -71,11 +70,7 @@ from .dom import (
 )
 from .figures import FigurePageFetcher, figure_download_candidates
 from .identity import html_asset_is_supplementary
-from .requester import (
-    build_cookie_seeded_opener as _build_cookie_seeded_opener,
-    cookie_header_for_url as _cookie_header_for_url,
-    request_with_opener as _request_with_opener,
-)
+from .requester import cookie_header_for_url as _cookie_header_for_url
 from .state import (
     AssetDownloadAttempt as _AssetDownloadAttempt,
     AssetDownloadCandidate as _AssetDownloadCandidate,
@@ -112,16 +107,12 @@ class _AssetRequestContext:
     user_agent: str
     browser_context_seed: Mapping[str, Any] | None
     browser_cookies: list[dict[str, Any]]
-    active_seed_urls: list[str]
-    cookie_opener_builder: Callable[..., urllib.request.OpenerDirector | None]
-    opener_requester: Callable[..., dict[str, Any]]
     fetch_policy: AssetFetchPolicy
     asset_budget: AssetBudget
     staging_dir: Path
     allowed_hosts: tuple[str, ...] | None = None
     provider_name: str | None = None
     route_name: str | None = None
-    use_legacy_requester: bool = False
 
 
 @dataclass(frozen=True)
@@ -133,10 +124,7 @@ class AssetResolutionOptions:
     user_agent: str
     browser_context_seed: Mapping[str, Any] | None
     browser_cookies: list[dict[str, Any]]
-    active_seed_urls: list[str]
     document_fetcher: ImageDocumentFetcher | FileDocumentFetcher | None
-    cookie_opener_builder: Callable[..., urllib.request.OpenerDirector | None]
-    opener_requester: Callable[..., dict[str, Any]]
     candidate_url_resolver: Callable[[Mapping[str, Any]], list[str]] | None = None
     fetch_policy: AssetFetchPolicy = "browser_first"
     asset_budget: AssetBudget | None = None
@@ -144,7 +132,6 @@ class AssetResolutionOptions:
     allowed_hosts: tuple[str, ...] | None = None
     provider_name: str | None = None
     route_name: str | None = None
-    use_legacy_requester: bool = False
     host_recovery_circuit: AssetHostRecoveryCircuit | None = None
 
 
@@ -154,16 +141,11 @@ class AssetDownloadOptions:
 
     headers: Mapping[str, str] | None = None
     browser_context_seed: Mapping[str, Any] | None = None
-    seed_urls: Sequence[str] | None = None
     figure_page_fetcher: FigurePageFetcher | None = None
     candidate_builder: Callable[..., list[str]] | None = None
     document_fetcher: ImageDocumentFetcher | FileDocumentFetcher | None = None
     image_document_fetcher: ImageDocumentFetcher | None = None
     file_document_fetcher: FileDocumentFetcher | None = None
-    cookie_opener_builder: (
-        Callable[..., urllib.request.OpenerDirector | None] | None
-    ) = None
-    opener_requester: Callable[..., dict[str, Any]] | None = None
     asset_download_concurrency: int | None = None
     fetch_policy: AssetFetchPolicy = "browser_first"
     asset_budget: AssetBudget | None = None
@@ -173,21 +155,6 @@ class AssetDownloadOptions:
     artifact_store: Any | None = None
     runtime_context: Any | None = None
     host_recovery_circuit: AssetHostRecoveryCircuit | None = None
-
-
-def _coerce_asset_download_options(
-    options: AssetDownloadOptions | None,
-    legacy_options: Mapping[str, Any],
-) -> AssetDownloadOptions:
-    if not legacy_options:
-        return options or AssetDownloadOptions()
-    known = frozenset(AssetDownloadOptions.__dataclass_fields__)
-    unexpected = sorted(set(legacy_options) - known)
-    if unexpected:
-        raise TypeError(
-            "unexpected download_assets option(s): " + ", ".join(unexpected)
-        )
-    return replace(options or AssetDownloadOptions(), **dict(legacy_options))
 
 
 _BROWSER_RECOVERABLE_NETWORK_CATEGORIES = {
@@ -686,7 +653,7 @@ def _stream_asset_candidate(
         retry_on_transient=True,
         transient_retries=DEFAULT_TRANSIENT_RETRIES,
     )
-    if request_context.provider_name:
+    if request_context.provider_name and request_context.route_name:
         request_policy = provider_request_policy(
             request_context.provider_name,
             request_context.route_name,
@@ -707,14 +674,15 @@ def _stream_asset_candidate(
                 candidate_url,
                 staging_path,
                 headers=request_headers,
-                # Transient retries live in this layer so partial-body retries
-                # receive a fresh exclusive staging path and reservation. The
-                # attempt count/backoff still comes from the compiled policy.
-                retry_on_transient=False,
-                transient_retries=0,
-                request_policy=request_policy,
-                on_content_length=reservation.declare_content_length,
-                on_chunk=reservation.consume,
+                options=HttpStreamOptions(
+                    # Transient retries live in this layer so partial-body retries
+                    # receive a fresh exclusive staging path and reservation.
+                    retry_on_transient=False,
+                    transient_retries=0,
+                    request_policy=request_policy,
+                    on_content_length=reservation.declare_content_length,
+                    on_chunk=reservation.consume,
+                ),
             )
             dimensions = (
                 image_dimensions_from_path(staging_path)
@@ -811,37 +779,6 @@ def _request_asset_candidate(
             request_context=request_context,
         )
 
-    # Compatibility path for injected unit-test transports. Runtime transports
-    # always expose bounded streaming and never reach urllib here.
-
-    browser_first = request_context.fetch_policy == "browser_first"
-    opener_seed_urls = request_context.active_seed_urls if browser_first else []
-    opener = (
-        request_context.cookie_opener_builder(
-            opener_seed_urls,
-            headers=request_headers,
-            timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-            browser_cookies=request_context.browser_cookies,
-            cancel_check=lambda: bool(getattr(transport, "cancelled", False)),
-            force=kind.name == "supplementary" and browser_first,
-        )
-        if request_context.use_legacy_requester
-        and browser_first
-        and (
-            request_context.browser_cookies
-            or request_context.active_seed_urls
-            or kind.name == "supplementary"
-        )
-        else None
-    )
-    if opener is not None:
-        return request_context.opener_requester(
-            opener,
-            candidate_url,
-            headers=request_headers,
-            timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-            cancel_check=lambda: bool(getattr(transport, "cancelled", False)),
-        )
     request_policy = HttpRequestPolicy(
         allowed_hosts=request_context.allowed_hosts,
         max_response_bytes=request_context.asset_budget.max_bytes_per_asset,
@@ -850,36 +787,17 @@ def _request_asset_candidate(
         retry_on_rate_limit=True,
         retry_on_transient=True,
     )
-    if request_context.provider_name:
+    if request_context.provider_name and request_context.route_name:
         request_policy = provider_request_policy(
             request_context.provider_name,
             request_context.route_name,
             base=request_policy,
         )
-    # Third-party and test transports historically implement the public
-    # request keyword surface rather than accepting ``HttpRequestPolicy`` as a
-    # single extension object. Keep that compatibility path while the runtime
-    # ``HttpTransport`` continues to receive the complete policy object.
-    if isinstance(transport, HttpTransport):
-        return transport.request(
-            "GET",
-            candidate_url,
-            headers=request_headers,
-            request_policy=request_policy,
-        )
     return transport.request(
         "GET",
         candidate_url,
         headers=request_headers,
-        timeout=int(request_policy.timeout_seconds or DEFAULT_FULLTEXT_TIMEOUT_SECONDS),
-        retry_on_rate_limit=bool(request_policy.retry_on_rate_limit),
-        rate_limit_retries=int(request_policy.rate_limit_retries or 0),
-        max_rate_limit_wait_seconds=float(
-            request_policy.max_rate_limit_wait_seconds or 0
-        ),
-        retry_on_transient=bool(request_policy.retry_on_transient),
-        transient_retries=int(request_policy.transient_retries or 0),
-        transient_backoff_base_seconds=(request_policy.transient_backoff_base_seconds),
+        request_policy=request_policy,
     )
 
 
@@ -974,16 +892,12 @@ def _asset_request_context(
         user_agent=options.user_agent,
         browser_context_seed=options.browser_context_seed,
         browser_cookies=options.browser_cookies,
-        active_seed_urls=options.active_seed_urls,
-        cookie_opener_builder=options.cookie_opener_builder,
-        opener_requester=options.opener_requester,
         fetch_policy=options.fetch_policy,
         asset_budget=active_budget,
         staging_dir=active_staging_dir,
         allowed_hosts=options.allowed_hosts,
         provider_name=options.provider_name,
         route_name=options.route_name,
-        use_legacy_requester=options.use_legacy_requester,
     )
 
 
@@ -1346,14 +1260,9 @@ def _resolve_asset_download_impl(
     kind: AssetDownloadKind,
     asset: Mapping[str, Any],
     *,
-    options: AssetResolutionOptions | None = None,
-    **legacy_options: Any,
+    options: AssetResolutionOptions,
 ) -> _AssetDownloadResolution:
-    if options is not None and legacy_options:
-        raise TypeError(
-            "options cannot be combined with legacy asset resolver keywords"
-        )
-    active_options = options or AssetResolutionOptions(**legacy_options)
+    active_options = options
     transport = active_options.transport
     request_context = _asset_request_context(kind, asset, active_options)
     active_budget = request_context.asset_budget
@@ -1700,16 +1609,11 @@ def resolve_asset_download(
     kind: AssetDownloadKind,
     asset: Mapping[str, Any],
     *,
-    options: AssetResolutionOptions | None = None,
-    **legacy_options: Any,
+    options: AssetResolutionOptions,
 ) -> _AssetDownloadResolution:
     """Resolve one asset with timed candidates and article-local host routing."""
 
-    if options is not None and legacy_options:
-        raise TypeError(
-            "options cannot be combined with legacy asset resolver keywords"
-        )
-    active_options = options or AssetResolutionOptions(**legacy_options)
+    active_options = options
     candidate_resolver = (
         active_options.candidate_url_resolver or kind.candidate_url_resolver
     )
@@ -2100,21 +2004,17 @@ def download_assets(
     user_agent: str,
     asset_profile: AssetProfile | None = "all",
     options: AssetDownloadOptions | None = None,
-    **legacy_options: Any,
 ) -> dict[str, list[dict[str, Any]]]:
     if output_dir is None or not assets:
         return empty_asset_results()
-    active_options = _coerce_asset_download_options(options, legacy_options)
+    active_options = options or AssetDownloadOptions()
     headers = active_options.headers
     browser_context_seed = active_options.browser_context_seed
-    seed_urls = active_options.seed_urls
     figure_page_fetcher = active_options.figure_page_fetcher
     candidate_builder = active_options.candidate_builder
     document_fetcher = active_options.document_fetcher
     image_document_fetcher = active_options.image_document_fetcher
     file_document_fetcher = active_options.file_document_fetcher
-    cookie_opener_builder = active_options.cookie_opener_builder
-    opener_requester = active_options.opener_requester
     asset_download_concurrency = active_options.asset_download_concurrency
     fetch_policy = active_options.fetch_policy
     asset_budget = active_options.asset_budget
@@ -2212,10 +2112,7 @@ def download_assets(
     if not asset_items:
         return {"assets": [], "asset_failures": rejected_failures}
     used_names_by_dir: dict[Path, set[str]] = {}
-    active_cookie_opener_builder = cookie_opener_builder or _build_cookie_seeded_opener
-    active_opener_requester = opener_requester or _request_with_opener
     browser_cookies = list((browser_context_seed or {}).get("browser_cookies") or [])
-    active_seed_urls = _active_seed_urls(seed_urls, browser_context_seed)
     normalized_allowed_hosts = tuple(allowed_hosts or ()) or None
     active_document_fetcher = document_fetcher
     if active_document_fetcher is None:
@@ -2270,10 +2167,7 @@ def download_assets(
                 user_agent=user_agent,
                 browser_context_seed=browser_context_seed,
                 browser_cookies=browser_cookies,
-                active_seed_urls=active_seed_urls,
                 document_fetcher=active_document_fetcher,
-                cookie_opener_builder=active_cookie_opener_builder,
-                opener_requester=active_opener_requester,
                 candidate_url_resolver=candidate_url_resolver,
                 fetch_policy=fetch_policy,
                 asset_budget=active_budget,
@@ -2281,7 +2175,6 @@ def download_assets(
                 allowed_hosts=normalized_allowed_hosts,
                 provider_name=provider_name,
                 route_name=asset_route_name,
-                use_legacy_requester=not _transport_supports_streaming(transport),
                 host_recovery_circuit=active_host_recovery_circuit,
             ),
         ),
@@ -2318,8 +2211,6 @@ __all__ = [
     "AssetResolutionOptions",
     "FileDocumentFetcher",
     "ImageDocumentFetcher",
-    "_build_cookie_seeded_opener",
-    "_request_with_opener",
     "browser_asset_recovery_allowed",
     "download_assets",
     "resolve_asset_download",

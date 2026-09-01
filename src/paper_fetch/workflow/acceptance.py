@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Collection, Mapping, Sequence
 from enum import StrEnum
-from typing import Any, Literal, TypedDict, Unpack
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -101,23 +101,6 @@ class AcceptanceOutputKind(StrEnum):
 AcceptanceAssetProfile = Literal["none", "body", "all", "unknown"]
 
 
-class _AcceptanceIdentityLandingOptions(TypedDict, total=False):
-    """Keyword-compatible DOI-less landing facts for acceptance evaluation."""
-
-    require_local_body_assets: bool
-    require_full_size_body_assets: bool
-    title: str | None
-    source: str | None
-    canonical_landing_url: str | None
-    canonical_landing_verified: bool
-    canonical_landing_unique: bool
-
-
-_ACCEPTANCE_IDENTITY_LANDING_OPTION_KEYS = frozenset(
-    _AcceptanceIdentityLandingOptions.__annotations__
-)
-
-
 class _AcceptanceModel(BaseModel):
     # Schema-version-compatible readers ignore additive fields they do not know.
     model_config = ConfigDict(extra="ignore", frozen=True, from_attributes=True)
@@ -161,7 +144,6 @@ class TableAcceptanceFacet(_AcceptanceModel):
     fallback_count: int = Field(default=0, ge=0)
     layout_degraded_count: int = Field(default=0, ge=0)
     semantic_loss_count: int = Field(default=0, ge=0)
-    legacy_lossy_count: int = Field(default=0, ge=0)
 
 
 class FormulaAcceptanceFacet(_AcceptanceModel):
@@ -232,17 +214,6 @@ class AssetAcceptanceSummary(_AcceptanceModel):
     full_size_body_assets_satisfied: bool = True
     failure_codes: tuple[str, ...] = ()
     issue_codes: tuple[str, ...] = ()
-
-    @model_validator(mode="before")
-    @classmethod
-    def migrate_legacy_preview_counts(cls, value: Any) -> Any:
-        if not isinstance(value, Mapping):
-            return value
-        payload = dict(value)
-        if "accepted_preview" not in payload and "fallback_preview" not in payload:
-            payload["accepted_preview"] = 0
-            payload["fallback_preview"] = max(int(payload.get("preview") or 0), 0)
-        return payload
 
     @model_validator(mode="after")
     def validate_preview_counts(self) -> AssetAcceptanceSummary:
@@ -330,18 +301,6 @@ _REMOTE_ASSET_FIELDS = (
     "source_href",
 )
 _BODY_ASSET_KINDS = frozenset({"figure", "formula", "table"})
-_BODY_ASSET_EVIDENCE_FIELDS = frozenset(
-    {
-        "body_discovered",
-        "body_attempted",
-        "body_local",
-        "body_full_size",
-        "body_preview",
-        "body_failed",
-        "body_not_archived",
-        "body_remote_only_count",
-    }
-)
 
 
 def _normalized_codes(values: Sequence[str | None]) -> tuple[str, ...]:
@@ -500,7 +459,6 @@ def _content_facet(
             fallback_count=max(int(losses.table_fallback_count or 0), 0),
             layout_degraded_count=max(int(losses.table_layout_degraded_count or 0), 0),
             semantic_loss_count=max(int(losses.table_semantic_loss_count or 0), 0),
-            legacy_lossy_count=max(int(losses.table_lossy_count or 0), 0),
         ),
         formulas=FormulaAcceptanceFacet(
             fallback_count=max(int(losses.formula_fallback_count or 0), 0),
@@ -611,10 +569,6 @@ def _audited_asset_summary(
     preview = max(int(value("preview") or 0), 0)
     accepted_preview = max(int(value("accepted_preview") or 0), 0)
     fallback_preview = max(int(value("fallback_preview") or 0), 0)
-    if accepted_preview + fallback_preview != preview:
-        accepted_preview = 0
-        fallback_preview = preview
-
     by_kind = value("by_kind", {})
 
     def kind_value(kind: str, field: str) -> int:
@@ -822,34 +776,6 @@ def _with_asset_requirements(
     body_failed = summary.body_failed
     body_not_archived = summary.body_not_archived
     body_remote_only = summary.body_remote_only_count
-    if (
-        applicable
-        and body_discovered == 0
-        and summary.discovered > 0
-        and not (_BODY_ASSET_EVIDENCE_FIELDS & summary.model_fields_set)
-        and not any(
-            (
-                body_attempted,
-                body_local,
-                body_full_size,
-                body_preview,
-                body_failed,
-                body_not_archived,
-                body_remote_only,
-            )
-        )
-    ):
-        # A legacy externally supplied summary cannot distinguish body from
-        # supplementary rows. Strict mode requires proof, so conservatively
-        # treat its requested rows as body assets.
-        body_discovered = summary.discovered
-        body_attempted = summary.attempted
-        body_local = summary.local
-        body_full_size = summary.full_size
-        body_preview = summary.preview
-        body_failed = summary.failed
-        body_not_archived = summary.not_archived
-        body_remote_only = summary.remote_only_count
     all_local = bool(
         body_discovered == 0
         or (
@@ -1015,7 +941,7 @@ def _structured_warning_codes(
         codes.append("table_fallback")
     if losses.table_layout_degraded_count:
         codes.append("table_layout_degraded")
-    if losses.table_semantic_loss_count or losses.table_lossy_count:
+    if losses.table_semantic_loss_count:
         codes.append("table_semantic_loss")
     if losses.formula_fallback_count:
         codes.append("formula_fallback")
@@ -1244,29 +1170,16 @@ def evaluate_fetch_acceptance(
     candidate_count: int = 0,
     doi: str | None = None,
     expected_doi: str | None = None,
-    **identity_landing: Unpack[_AcceptanceIdentityLandingOptions],
+    require_local_body_assets: bool = False,
+    require_full_size_body_assets: bool = False,
+    title: str | None = None,
+    source: str | None = None,
+    canonical_landing_url: str | None = None,
+    canonical_landing_verified: bool = False,
+    canonical_landing_unique: bool = False,
 ) -> FetchAcceptanceReport:
     """Evaluate immutable fetch facts without network, filesystem, or provider work."""
 
-    unknown_identity_landing = (
-        set(identity_landing) - _ACCEPTANCE_IDENTITY_LANDING_OPTION_KEYS
-    )
-    if unknown_identity_landing:
-        unknown = ", ".join(sorted(unknown_identity_landing))
-        raise TypeError(f"unexpected acceptance keyword argument(s): {unknown}")
-    title = identity_landing.get("title")
-    source = identity_landing.get("source")
-    require_local_body_assets = bool(
-        identity_landing.get("require_local_body_assets", False)
-    )
-    require_full_size_body_assets = bool(
-        identity_landing.get("require_full_size_body_assets", False)
-    )
-    canonical_landing_url = identity_landing.get("canonical_landing_url")
-    canonical_landing_verified = identity_landing.get(
-        "canonical_landing_verified", False
-    )
-    canonical_landing_unique = identity_landing.get("canonical_landing_unique", False)
     if candidate_count < 0:
         raise ValueError("candidate_count must not be negative")
     normalized_failure = normalize_text(failure_code).lower() or None

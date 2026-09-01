@@ -550,7 +550,7 @@ class BrowserWorkflowClient(ProviderClient):
                 doi=normalized_doi,
             )
             self.deps.ensure_runtime_ready(runtime)
-        camoufox_backend = bool(runtime is not None and runtime.backend == "camoufox")
+        camoufox_backend = runtime is not None
         asset_download_concurrency = resolve_asset_download_concurrency(context.env)
         recovery = BrowserAssetRecoveryContext(
             runtime=runtime,
@@ -571,7 +571,7 @@ class BrowserWorkflowClient(ProviderClient):
             runtime_context=context,
         )
 
-        requester = {
+        download_settings = {
             "transport": self.transport,
             "asset_download_concurrency": asset_download_concurrency,
             "figure_page_fetcher_factory": _MemoizedFigurePageFetcher,
@@ -592,7 +592,7 @@ class BrowserWorkflowClient(ProviderClient):
             recovery,
             image_fetcher_factory=image_fetcher_factory,
             file_fetcher_factory=file_fetcher_factory,
-            opener_requester=requester,
+            download_settings=download_settings,
             deps=self.deps,
         )
 
@@ -611,10 +611,6 @@ class BrowserWorkflowClient(ProviderClient):
             headless=request["headless"],
             runtime_context=context,
             use_runtime_shared_browser=True,
-            binary_path=request.get("binary_path"),
-            cdp_endpoint=request.get("cdp_endpoint"),
-            profile_dir=request.get("profile_dir"),
-            user_data_dir=request.get("user_data_dir"),
             browser_options=BrowserDocumentFetcherOptions(
                 runtime_config=request.get("browser_config")
             ),
@@ -641,10 +637,6 @@ class BrowserWorkflowClient(ProviderClient):
             headless=request["headless"],
             runtime_context=context,
             use_runtime_shared_browser=True,
-            binary_path=request.get("binary_path"),
-            cdp_endpoint=request.get("cdp_endpoint"),
-            profile_dir=request.get("profile_dir"),
-            user_data_dir=request.get("user_data_dir"),
             browser_options=BrowserDocumentFetcherOptions(
                 runtime_config=request.get("browser_config")
             ),

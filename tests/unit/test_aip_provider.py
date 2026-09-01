@@ -46,7 +46,6 @@ def test_aip_cold_html_retry_reuses_transient_seed_without_persisting_state(
         artifact_dir=tmp_path / "artifacts",
         headless=True,
         user_agent=None,
-        backend="camoufox",
         storage_state_path=state_path,
     )
     seed = {
@@ -453,82 +452,6 @@ def test_aip_article_source_tracks_pdf_fallback_payload() -> None:
     )
 
     assert client.article_source_for_payload(payload) == "aip_pdf"
-
-
-def test_aip_markdown_review_contract_markers() -> None:
-    markdown = """
-    # On-chip on-demand delivery of K<sup>+</sup> for in vitro bioelectronics
-
-    ## Abstract
-
-    Bioelectronic devices can actuate biological processes.
-
-    ## I. INTRODUCTION
-
-    Bioelectronics bridges the gap between biology and electronics.
-
-    ![Figure 1](body_assets/aip-figure-1.jpeg)
-
-    **Figure 1.** Six-well potassium ion pump design.
-
-    ## SUPPLEMENTARY MATERIAL
-
-    See the supplementary material for additional characterization.
-
-    ## References
-
-    1. Seitanidou M. Adv. Healthcare Mater. 2019.
-    """
-
-    # markdown-review: purpose=structure doi=10.1063/5.0129134
-    assert "## Abstract" in markdown
-    assert "## I. INTRODUCTION" in markdown
-    assert "Download Citation" not in markdown
-    assert "Article Navigation" not in markdown
-
-    # markdown-review: purpose=figure doi=10.1063/5.0129134
-    assert "Figure 1" in markdown
-    assert "![Figure" in markdown
-    assert "Open figure viewer" not in markdown
-    assert "View large" not in markdown
-    assert "Close modal" not in markdown
-
-    # markdown-review: purpose=supplementary doi=10.1063/5.0129134
-    assert "SUPPLEMENTARY MATERIAL" in markdown
-    assert "supplementary material" in markdown
-    assert "Download Citation" not in markdown
-
-    # markdown-review: purpose=references doi=10.1063/5.0129134
-    assert "## References" in markdown
-    assert "Seitanidou" in markdown
-    assert "Google Scholar" not in markdown
-
-    markdown_text = """
-    # Machine-learned atomic cluster expansion
-
-    **Table** Comparison of the lattice parameters of w-AlN determined by different methods.
-
-    | Method | a | c |
-    | ------ | - | - |
-    | ACE    | 3 | 5 |
-
-    **Equation 1.**
-
-    $$
-    \\begin{matrix} {E = \\sum\\limits_{i}\\varepsilon_{i},} \\end{matrix}
-    $$
-    """
-
-    # markdown-review: purpose=table doi=10.1063/5.0188905
-    assert "Comparison of the lattice parameters" in markdown_text
-    assert "| Method" in markdown_text
-    assert "Google Scholar" not in markdown_text
-
-    # markdown-review: purpose=formula doi=10.1063/5.0188905
-    assert "Equation 1." in markdown_text
-    assert "\\begin{matrix}" in markdown_text
-    assert "$$" in markdown_text
-    assert "[Formula unavailable]" not in markdown_text
 
 
 def test_aip_download_related_assets_contract_marker(monkeypatch, tmp_path) -> None:

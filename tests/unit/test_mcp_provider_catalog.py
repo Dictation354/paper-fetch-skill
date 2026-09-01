@@ -150,12 +150,14 @@ def test_provider_catalog_payload_automatically_includes_discovered_changes() ->
 def test_server_registers_readable_provider_catalog_resource() -> None:
     async def read_resource() -> tuple[str, str | None]:
         server = build_server()
-        resource = await server._resource_manager.get_resource(
-            PROVIDER_CATALOG_RESOURCE_URI,
-            context=None,
-        )
-        assert resource is not None
-        return await resource.read(), resource.mime_type
+        resources = await server.list_resources()
+        assert [str(resource.uri) for resource in resources] == [
+            PROVIDER_CATALOG_RESOURCE_URI
+        ]
+        contents = await server.read_resource(PROVIDER_CATALOG_RESOURCE_URI)
+        assert isinstance(contents, list)
+        assert len(contents) == 1
+        return contents[0].content, contents[0].mime_type
 
     raw_payload, mime_type = asyncio.run(read_resource())
     assert mime_type == "application/json"

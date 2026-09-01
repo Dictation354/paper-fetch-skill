@@ -181,7 +181,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
         )
         fake_context = _FakeIeeeBrowserContext(page)
         fake_runtime = mock.Mock()
-        fake_runtime.env = {"PAPER_FETCH_BROWSER_BACKEND": "camoufox"}
+        fake_runtime.env = {}
         fake_runtime.new_browser_context_for_runtime_config.return_value = fake_context
         runtime_config = browser_runtime.BrowserRuntimeConfig(
             provider="ieee",
@@ -189,7 +189,6 @@ class IeeeProviderRouteTests(unittest.TestCase):
             artifact_dir=Path(tempfile.mkdtemp()),
             headless=True,
             user_agent=None,
-            backend="camoufox",
         )
         result = _ieee_browser_html.fetch_ieee_browser_html_payload(
             provider_name="ieee",
@@ -845,7 +844,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
             )
         )
         fake_runtime = mock.Mock()
-        fake_runtime.env = {"PAPER_FETCH_BROWSER_BACKEND": "camoufox"}
+        fake_runtime.env = {}
         fake_runtime.new_browser_context_for_runtime_config.return_value = (
             fake_browser_context
         )
@@ -998,7 +997,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
         )
         fake_browser_context = _FakeIeeeBrowserContext(page)
         fake_runtime = mock.Mock()
-        fake_runtime.env = {"PAPER_FETCH_BROWSER_BACKEND": "camoufox"}
+        fake_runtime.env = {}
         fake_runtime.new_browser_context_for_runtime_config.return_value = (
             fake_browser_context
         )
@@ -1039,7 +1038,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
         )
         fake_browser_context = _FakeIeeeBrowserContext(page)
         fake_runtime = mock.Mock()
-        fake_runtime.env = {"PAPER_FETCH_BROWSER_BACKEND": "camoufox"}
+        fake_runtime.env = {}
         fake_runtime.new_browser_context_for_runtime_config.return_value = (
             fake_browser_context
         )
@@ -1071,7 +1070,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
         )
         fake_browser_context = _FakeIeeeBrowserContext(page)
         fake_runtime = mock.Mock()
-        fake_runtime.env = {"PAPER_FETCH_BROWSER_BACKEND": "camoufox"}
+        fake_runtime.env = {}
         fake_runtime.new_browser_context_for_runtime_config.return_value = (
             fake_browser_context
         )
@@ -1109,7 +1108,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
         page = _FakeIeeeBrowserPage(document_url, html_text=article_html)
         fake_browser_context = _FakeIeeeBrowserContext(page)
         fake_runtime = mock.Mock()
-        fake_runtime.env = {"PAPER_FETCH_BROWSER_BACKEND": "camoufox"}
+        fake_runtime.env = {}
         fake_runtime.new_browser_context_for_runtime_config.return_value = (
             fake_browser_context
         )
@@ -1153,7 +1152,6 @@ class IeeeProviderRouteTests(unittest.TestCase):
             output_dir = Path(tmpdir)
             runtime = RuntimeContext(
                 env={
-                    "PAPER_FETCH_BROWSER_BACKEND": "camoufox",
                     "PAPER_FETCH_BROWSER_USER_DATA_DIR": str(
                         output_dir / "browser-profile"
                     ),
@@ -1223,7 +1221,6 @@ class IeeeProviderRouteTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = RuntimeContext(
                 env={
-                    "PAPER_FETCH_BROWSER_BACKEND": "camoufox",
                     "PAPER_FETCH_BROWSER_USER_DATA_DIR": str(
                         Path(tmpdir) / "browser-profile"
                     ),
@@ -1286,7 +1283,6 @@ class IeeeProviderRouteTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = RuntimeContext(
                 env={
-                    "PAPER_FETCH_BROWSER_BACKEND": "camoufox",
                     "PAPER_FETCH_BROWSER_USER_DATA_DIR": str(
                         Path(tmpdir) / "browser-profile"
                     ),
@@ -1320,10 +1316,6 @@ class IeeeProviderRouteTests(unittest.TestCase):
                 self.assertFalse(failure.retryable)
                 self.assertEqual(failure.stage, "block_detection")
                 self.assertEqual(failure.details["challenge_provider"], "aws_waf")
-                self.assertEqual(
-                    failure.details["legacy_reason_code"],
-                    "cloudflare_challenge",
-                )
             finally:
                 runtime.close()
 

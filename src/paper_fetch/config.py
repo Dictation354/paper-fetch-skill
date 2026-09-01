@@ -42,80 +42,31 @@ CONFIG_SOURCE_PRECEDENCE = (
 )
 USER_AGENT_ENV_VAR = "PAPER_FETCH_SKILL_USER_AGENT"
 BROWSER_USER_AGENT_ENV_VAR = "PAPER_FETCH_BROWSER_USER_AGENT"
-BROWSER_BACKEND_ENV_VAR = "PAPER_FETCH_BROWSER_BACKEND"
 BROWSER_HEADLESS_ENV_VAR = "PAPER_FETCH_BROWSER_HEADLESS"
 BROWSER_BINARY_PATH_ENV_VAR = "PAPER_FETCH_BROWSER_BINARY_PATH"
 BROWSER_PROFILE_DIR_ENV_VAR = "PAPER_FETCH_BROWSER_PROFILE_DIR"
 BROWSER_USER_DATA_DIR_ENV_VAR = "PAPER_FETCH_BROWSER_USER_DATA_DIR"
 BROWSER_TIMEOUT_MS_ENV_VAR = "PAPER_FETCH_BROWSER_TIMEOUT_MS"
-BROWSER_AUTO_PREPARE_ENV_VAR = "PAPER_FETCH_BROWSER_AUTO_PREPARE"
-DEFAULT_BROWSER_BACKEND = "camoufox"
-SUPPORTED_BROWSER_BACKENDS = frozenset({"camoufox"})
 ENV_FILE_ENV_VAR = "PAPER_FETCH_ENV_FILE"
 DOWNLOAD_DIR_ENV_VAR = "PAPER_FETCH_DOWNLOAD_DIR"
 XDG_DATA_HOME_ENV_VAR = "XDG_DATA_HOME"
 HTTP_POOL_NUM_POOLS_ENV_VAR = "PAPER_FETCH_HTTP_POOL_NUM_POOLS"
 HTTP_POOL_MAXSIZE_ENV_VAR = "PAPER_FETCH_HTTP_POOL_MAXSIZE"
 HTTP_PER_HOST_CONCURRENCY_ENV_VAR = "PAPER_FETCH_HTTP_PER_HOST_CONCURRENCY"
-HTTP_DISK_CACHE_DIR_ENV_VAR = "PAPER_FETCH_HTTP_DISK_CACHE_DIR"
-HTTP_DISK_CACHE_ENV_VAR = "PAPER_FETCH_HTTP_DISK_CACHE"
-HTTP_METADATA_CACHE_TTL_ENV_VAR = "PAPER_FETCH_HTTP_METADATA_CACHE_TTL"
-HTTP_DISK_CACHE_MAX_ENTRIES_ENV_VAR = "PAPER_FETCH_HTTP_DISK_CACHE_MAX_ENTRIES"
-HTTP_DISK_CACHE_MAX_BYTES_ENV_VAR = "PAPER_FETCH_HTTP_DISK_CACHE_MAX_BYTES"
-HTTP_DISK_CACHE_MAX_AGE_DAYS_ENV_VAR = "PAPER_FETCH_HTTP_DISK_CACHE_MAX_AGE_DAYS"
 ASSET_DOWNLOAD_CONCURRENCY_ENV_VAR = "PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY"
 DEFAULT_ASSET_DOWNLOAD_CONCURRENCY = 4
-CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR = "PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT"
 AMS_STORAGE_STATE_JSON_ENV_VAR = "PAPER_FETCH_AMS_STORAGE_STATE_JSON"
 WILEY_STORAGE_STATE_JSON_ENV_VAR = "PAPER_FETCH_WILEY_STORAGE_STATE_JSON"
 WILEY_PROFILE_DIR_ENV_VAR = "PAPER_FETCH_WILEY_PROFILE_DIR"
 
 
-@dataclass(frozen=True)
-class BrowserBackendSelection:
-    """Resolved browser backend choice."""
-
-    backend: str
-    explicit: bool
-
-    @property
-    def notes(self) -> tuple[str, ...]:
-        return ()
-
-
-def resolve_browser_backend_selection(
-    env: Mapping[str, str],
-) -> BrowserBackendSelection:
-    """Resolve the backend without probing or importing a browser runtime."""
-
-    raw_value = str(env.get(BROWSER_BACKEND_ENV_VAR, "")).strip()
-    backend = raw_value.lower() or DEFAULT_BROWSER_BACKEND
-    return BrowserBackendSelection(
-        backend=backend,
-        explicit=bool(raw_value),
-    )
-
-
-def configured_browser_backend(env: Mapping[str, str]) -> str:
-    """Return the explicitly selected browser backend or the stable default."""
-
-    return resolve_browser_backend_selection(env).backend
-
-
 def browser_env_value(
     env: Mapping[str, str],
     generic_name: str,
-    *,
-    legacy_name: str | None = None,
 ) -> str:
-    """Resolve a generic browser setting before a backend-specific legacy name."""
+    """Resolve a browser setting from its current environment variable."""
 
-    generic = str(env.get(generic_name, "")).strip()
-    if generic or generic_name in env:
-        return generic
-    if legacy_name is None:
-        return ""
-    return str(env.get(legacy_name, "")).strip()
+    return str(env.get(generic_name, "")).strip()
 
 
 def load_env_file(path: Path) -> dict[str, str]:
@@ -335,74 +286,9 @@ def parse_positive_int_env(
         return default
 
 
-def parse_nonnegative_int_env(
-    env: Mapping[str, str],
-    name: str,
-    *,
-    default: int,
-) -> int:
-    raw_value = str(env.get(name, "")).strip()
-    if not raw_value:
-        return default
-    try:
-        return max(0, int(raw_value))
-    except ValueError:
-        return default
-
-
 def resolve_asset_download_concurrency(env: Mapping[str, str] | None = None) -> int:
     return parse_positive_int_env(
         _active_env(env),
         ASSET_DOWNLOAD_CONCURRENCY_ENV_VAR,
         default=DEFAULT_ASSET_DOWNLOAD_CONCURRENCY,
     )
-
-
-def env_flag_enabled(env: Mapping[str, str], name: str) -> bool:
-    value = str(env.get(name, "")).strip().lower()
-    return value in {"1", "true", "yes", "on"}
-
-
-_TRUE_ENV_VALUES = frozenset({"1", "true", "yes", "on"})
-_FALSE_ENV_VALUES = frozenset({"0", "false", "no", "off"})
-
-
-def resolve_browser_auto_prepare(
-    env: Mapping[str, str],
-    *,
-    override: bool | None = None,
-    default: bool = False,
-) -> bool:
-    """Resolve the browser preparation policy with a strict tri-state override."""
-
-    if override is not None:
-        return bool(override)
-    if BROWSER_AUTO_PREPARE_ENV_VAR not in env:
-        return bool(default)
-    value = str(env.get(BROWSER_AUTO_PREPARE_ENV_VAR, "")).strip().lower()
-    if value in _TRUE_ENV_VALUES:
-        return True
-    if value in _FALSE_ENV_VALUES:
-        return False
-    raise ValueError(
-        f"{BROWSER_AUTO_PREPARE_ENV_VAR} must be one of "
-        "1/0, true/false, yes/no, or on/off."
-    )
-
-
-def apply_browser_auto_prepare_policy(
-    env: Mapping[str, str],
-    *,
-    override: bool | None = None,
-    default: bool = False,
-) -> dict[str, str]:
-    """Return a copied environment containing one canonical resolved policy."""
-
-    resolved = resolve_browser_auto_prepare(
-        env,
-        override=override,
-        default=default,
-    )
-    values = dict(env)
-    values[BROWSER_AUTO_PREPARE_ENV_VAR] = "true" if resolved else "false"
-    return values

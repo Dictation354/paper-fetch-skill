@@ -57,9 +57,6 @@ class ProviderWaterfallState:
     def last_failure(self) -> ProviderFailure | None:
         return self.failures[-1][1] if self.failures else None
 
-    def source_markers(self) -> list[str]:
-        return self.source_trail
-
 
 WarningFactory = Callable[[ProviderFailure, ProviderWaterfallState], str | None]
 StepRunner = Callable[..., RawFulltextPayload]
@@ -67,7 +64,7 @@ FinalFailureFactory = Callable[[ProviderWaterfallState], ProviderFailure]
 StepCondition = Callable[[ProviderWaterfallState], bool]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class WaterfallStep:
     label: str
     run: StepRunner
@@ -78,7 +75,6 @@ class WaterfallStep:
     success_warning: str | None = None
     include_failure_trail_on_success: bool = True
     condition: StepCondition | None = None
-    # Additive field kept last for compatibility with positional step builders.
     route_name: str | None = None
 
 

@@ -21,13 +21,12 @@ from paper_fetch.manifest import (
     ManifestRecordStatus,
     parse_manifest_record,
 )
-from paper_fetch.manifest_writer import ManifestAuditStatus, audit_manifest_path
 from paper_fetch.models import AcquisitionProvenance, Asset, SemanticLosses
 from paper_fetch.providers import springer as springer_provider
 from paper_fetch.providers._asset_retry import merge_asset_retry_results
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.quality.assets import build_asset_quality_summary
-from paper_fetch.reason_codes import MANAGED_CHROME_EXITED_BEFORE_CDP, RATE_LIMITED
+from paper_fetch.reason_codes import BROWSER_CONTEXT_CREATE_FAILED, RATE_LIMITED
 from paper_fetch.tracing import trace_event
 from paper_fetch.workflow.acceptance import (
     AssetAcceptanceStatus,
@@ -153,25 +152,14 @@ def test_single_manifest_is_explicit_atomic_and_hashes_final_output(
     assert record.completed_at == COMPLETED_AT
     assert len(record.request_fingerprint) == 64
     assert record.request.parameters["format"] == "markdown"
-    assert record.status == "ok"
+    assert record.error is None
     assert record.acceptance.overall == OverallAcceptanceStatus.COMPLETE
     assert [event.stage for event in record.trace[:2]] == ["resolve", "fulltext"]
     assert record.fallback_codes == ()
-    assert record.output_path == str(output_path)
+    assert primary.path == str(output_path)
     assert primary.size == len(body)
     assert primary.sha256 == hashlib.sha256(body).hexdigest()
     assert primary.verification_status == "verified"
-    assert list(record.legacy_projection().to_dict()) == [
-        "index",
-        "query",
-        "status",
-        "doi",
-        "source",
-        "output_path",
-        "saved_markdown_path",
-        "warnings",
-        "error",
-    ]
 
 
 def test_single_manifest_hashes_primary_and_saved_markdown_outputs(
@@ -188,6 +176,7 @@ def test_single_manifest_hashes_primary_and_saved_markdown_outputs(
     ):
         exit_code = cli.main(
             [
+                "fetch",
                 "--query",
                 "10.1000/acceptance",
                 "--format",
@@ -206,8 +195,9 @@ def test_single_manifest_hashes_primary_and_saved_markdown_outputs(
 
     record = parse_manifest_record(json.loads(manifest_path.read_text("utf-8")))
     assert exit_code == 0
-    assert record.output_path == str(output_path)
-    assert record.saved_markdown_path is not None
+    assert any(
+        artifact.path == str(output_path) for artifact in record.output_artifacts
+    )
     assert {artifact.kind for artifact in record.output_artifacts} == {
         "primary_json",
         "saved_markdown",
@@ -230,6 +220,7 @@ def test_single_default_does_not_write_a_manifest(tmp_path: Path) -> None:
     ):
         exit_code = cli.main(
             [
+                "fetch",
                 "--query",
                 "10.1000/acceptance",
                 "--artifact-mode",
@@ -255,6 +246,7 @@ def test_single_manifest_cannot_overwrite_the_primary_output(tmp_path: Path) -> 
     ):
         exit_code = cli.main(
             [
+                "fetch",
                 "--query",
                 "10.1000/acceptance",
                 "--output",
@@ -299,6 +291,7 @@ def test_single_failure_manifest_preserves_exit_code_and_null_output_fields(
     ):
         exit_code = cli.main(
             [
+                "fetch",
                 "--query",
                 "10.1000/acceptance",
                 "--output-dir",
@@ -312,26 +305,25 @@ def test_single_failure_manifest_preserves_exit_code_and_null_output_fields(
     assert exit_code == 3
     assert json.loads(stderr.getvalue())["status"] == "no_access"
     assert record.record_status == ManifestRecordStatus.FAILED
-    assert record.status == "no_access"
-    assert record.output_path is None
-    assert record.saved_markdown_path is None
+    assert record.error is not None
+    assert record.error.status == "no_access"
     assert record.output_artifacts == ()
     assert record.warnings == ("license required",)
 
 
-def test_failed_manifest_preserves_managed_chrome_stage_code_and_summary(
+def test_failed_manifest_preserves_browser_runtime_stage_code_and_summary(
     tmp_path: Path,
 ) -> None:
     error = ProviderFailure(
-        MANAGED_CHROME_EXITED_BEFORE_CDP,
-        "managed_chrome_startup: Chrome exited. Chrome stderr: profile locked",
+        BROWSER_CONTEXT_CREATE_FAILED,
+        "runtime_prepare: Camoufox exited. stderr: profile locked",
         trace=[
             trace_event(
-                "managed_chrome_startup",
+                "runtime_prepare",
                 "wiley_html",
                 "fail",
-                code=MANAGED_CHROME_EXITED_BEFORE_CDP,
-                message="Chrome stderr: profile locked",
+                code=BROWSER_CONTEXT_CREATE_FAILED,
+                message="Camoufox stderr: profile locked",
             )
         ],
     )
@@ -340,11 +332,11 @@ def test_failed_manifest_preserves_managed_chrome_stage_code_and_summary(
 
     assert record.record_status == ManifestRecordStatus.FAILED
     assert record.error is not None
-    assert record.error.status == MANAGED_CHROME_EXITED_BEFORE_CDP
-    assert record.trace[0].stage == "managed_chrome_startup"
-    assert record.trace[0].code == MANAGED_CHROME_EXITED_BEFORE_CDP
-    assert record.trace[0].message == "Chrome stderr: profile locked"
-    assert MANAGED_CHROME_EXITED_BEFORE_CDP in record.failure_codes
+    assert record.error.status == BROWSER_CONTEXT_CREATE_FAILED
+    assert record.trace[0].stage == "runtime_prepare"
+    assert record.trace[0].code == BROWSER_CONTEXT_CREATE_FAILED
+    assert record.trace[0].message == "Camoufox stderr: profile locked"
+    assert BROWSER_CONTEXT_CREATE_FAILED in record.failure_codes
 
 
 def test_successful_pdf_fallback_keeps_html_browser_failure_degraded(
@@ -356,8 +348,8 @@ def test_successful_pdf_fallback_keeps_html_browser_failure_degraded(
                 "fulltext",
                 "wiley_html",
                 "fail",
-                code="managed_chrome_cdp_timeout",
-                message="CDP startup timed out.",
+                code="browser_runtime_prepare_timeout",
+                message="Camoufox preparation timed out.",
             ),
             trace_event("fulltext", "wiley_pdf_fallback", "ok"),
         ]
@@ -368,10 +360,10 @@ def test_successful_pdf_fallback_keeps_html_browser_failure_degraded(
         result=cli.SingleFetchResult(envelope),
     )
 
-    assert record.status == "ok"
+    assert record.error is None
     assert record.acceptance.overall == OverallAcceptanceStatus.DEGRADED
-    assert "managed_chrome_cdp_timeout" in record.failure_codes
-    assert "managed_chrome_cdp_timeout" in record.fallback_codes
+    assert "browser_runtime_prepare_timeout" in record.failure_codes
+    assert "browser_runtime_prepare_timeout" in record.fallback_codes
 
 
 @pytest.mark.parametrize(
@@ -426,7 +418,7 @@ def test_cli_adapter_exposes_fulltext_limited_and_asset_acceptance(
         result=cli.SingleFetchResult(envelope),
     )
 
-    assert record.status == "ok"
+    assert record.error is None
     assert record.acceptance.overall == overall
     assert record.asset_summary.status == asset_status
 
@@ -586,7 +578,6 @@ def test_springer_formula_rendition_aliases_produce_complete_manifest(
     assert record.asset_summary.failed == 0
     assert record.asset_summary.remote_only_count == 0
     assert record.asset_summary.issue_codes == ()
-    assert audit_manifest_path(manifest_path).status == ManifestAuditStatus.OK
 
 
 def test_cli_adapter_publishes_semantic_losses(tmp_path: Path) -> None:
@@ -656,7 +647,7 @@ def test_batch_rate_limit_streams_one_terminal_record_per_input_and_aborts_lane(
     assert {record.index for record in records} == {1, 2, 3}
     assert len({record.record_id for record in records}) == 3
     assert {record.run_id for record in records} == {RUN_ID}
-    assert [record.status for record in records] == [
+    assert [record.error.status if record.error else "ok" for record in records] == [
         RATE_LIMITED,
         "aborted",
         "aborted",
@@ -666,8 +657,7 @@ def test_batch_rate_limit_streams_one_terminal_record_per_input_and_aborts_lane(
         ManifestRecordStatus.ABORTED,
         ManifestRecordStatus.ABORTED,
     ]
-    assert all(record.output_path is None for record in records)
-    assert all(record.saved_markdown_path is None for record in records)
+    assert all(not record.output_artifacts for record in records)
 
 
 def test_batch_rate_limit_keeps_an_unrelated_provider_lane_running(
@@ -720,7 +710,7 @@ def test_batch_rate_limit_keeps_an_unrelated_provider_lane_running(
     ]
     assert exit_code == 4
     assert calls == ["10.1016/limited", "10.1111/continues"]
-    assert [record.status for record in records] == [
+    assert [record.error.status if record.error else "ok" for record in records] == [
         RATE_LIMITED,
         "ok",
         "aborted",
@@ -765,7 +755,10 @@ def test_batch_generic_exception_is_failed_and_does_not_drop_later_input(
         for line in results_path.read_text("utf-8").splitlines()
     ]
     assert exit_code == 1
-    assert [record.status for record in records] == ["error", "ok"]
+    assert [record.error.status if record.error else "ok" for record in records] == [
+        "error",
+        "ok",
+    ]
     assert records[0].record_status == ManifestRecordStatus.FAILED
     assert records[0].error is not None
     assert records[0].error.reason == "worker exploded"
@@ -859,7 +852,7 @@ def test_metadata_only_batch_status_ok_remains_zero_exit(tmp_path: Path) -> None
 
     record = parse_manifest_record(json.loads(results_path.read_text("utf-8").strip()))
     assert exit_code == 0
-    assert record.status == "ok"
+    assert record.error is None
     assert record.acceptance.overall == OverallAcceptanceStatus.LIMITED
     assert record.acceptance.content.has_fulltext is False
 
@@ -872,6 +865,7 @@ def test_batch_rejects_single_manifest_option(tmp_path: Path) -> None:
     with redirect_stderr(stderr), pytest.raises(SystemExit) as raised:
         cli.main(
             [
+                "fetch",
                 "--query-file",
                 str(query_file),
                 "--manifest",

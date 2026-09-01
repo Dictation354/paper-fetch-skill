@@ -26,8 +26,8 @@ class MarkdownFrontMatter:
     source: str
     has_fulltext: bool
     content_kind: str
+    acquisition: AcquisitionProvenance
     completed_at: str | None = None
-    acquisition: AcquisitionProvenance | None = None
 
     @property
     def is_fulltext(self) -> bool:
@@ -94,7 +94,7 @@ def parse_markdown_front_matter(markdown: str) -> MarkdownFrontMatter | None:
         return None
     raw_acquisition = parsed.get("acquisition")
     acquisition = coerce_acquisition_provenance(raw_acquisition)
-    if raw_acquisition is not None and acquisition is None:
+    if acquisition is None:
         return None
     return MarkdownFrontMatter(
         doi=doi,

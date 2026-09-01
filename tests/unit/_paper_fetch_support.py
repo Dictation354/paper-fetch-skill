@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from dataclasses import replace
 
 from paper_fetch import service as paper_fetch
 from paper_fetch.http import (
@@ -20,15 +19,12 @@ from paper_fetch.models import (
     TokenEstimateBreakdown,
 )
 from paper_fetch.providers.base import (
-    ProviderArtifacts,
-    ProviderFailure,
-    ProviderFetchResult,
+    ProviderClient,
 )
-from paper_fetch.tracing import trace_from_markers
 from paper_fetch.utils import empty_asset_results
 
 
-class StubProvider:
+class FixtureProvider(ProviderClient):
     name = "provider"
 
     def __init__(
@@ -42,6 +38,10 @@ class StubProvider:
         related_asset_factory=None,
         related_asset_error=None,
     ):
+        provider_name = getattr(raw_payload, "provider", None)
+        if not provider_name and isinstance(metadata, dict):
+            provider_name = metadata.get("provider")
+        self.name = str(provider_name or "provider")
         self._metadata = metadata
         self._raw_payload = raw_payload
         self._raw_error = raw_error
@@ -101,137 +101,6 @@ class StubProvider:
         if self._related_assets is not None:
             return self._related_assets
         return empty_asset_results()
-
-    def fetch_result(
-        self,
-        doi,
-        metadata,
-        output_dir,
-        *,
-        asset_profile="none",
-        artifact_store=None,
-        context=None,
-    ):
-        active_output_dir = (
-            artifact_store.download_dir if artifact_store is not None else output_dir
-        )
-        raw_payload = self.fetch_raw_fulltext(doi, metadata, context=context)
-        content = getattr(raw_payload, "content", None)
-        if (
-            content is not None
-            and getattr(raw_payload, "needs_local_copy", False)
-            and not content.needs_local_copy
-        ):
-            content = replace(content, needs_local_copy=True)
-            raw_payload.content = content
-        route = str(content.route_kind if content is not None else "").strip().lower()
-        provider_name = (
-            str(raw_payload.provider or self.name or "provider").strip().lower()
-        )
-        downloaded_assets = []
-        asset_failures = []
-        skip_warning = None
-        skip_trace = []
-        allow_related_assets = True
-        if provider_name.startswith("elsevier") and route == "pdf_fallback":
-            allow_related_assets = False
-            skip_warning = (
-                "Elsevier PDF fallback currently returns text-only full text; "
-                "figure and supplementary asset downloads are not implemented yet."
-            )
-            skip_trace = trace_from_markers(
-                ["download:elsevier_assets_skipped_text_only"]
-            )
-        elif provider_name == "springer" and route == "pdf_fallback":
-            allow_related_assets = False
-            skip_warning = (
-                "Springer PDF fallback currently returns text-only full text; "
-                "figure and supplementary asset downloads are not implemented yet."
-            )
-            skip_trace = trace_from_markers(
-                ["download:springer_assets_skipped_text_only"]
-            )
-        elif provider_name == "ieee" and route == "pdf_fallback":
-            allow_related_assets = False
-            skip_warning = (
-                "IEEE PDF fallback currently returns text-only full text; "
-                "figure and supplementary asset downloads are not implemented for PDF fallback."
-            )
-            skip_trace = trace_from_markers(["download:ieee_assets_skipped_text_only"])
-        elif (
-            provider_name in {"wiley", "science", "pnas", "ams", "acs"}
-            and route == "pdf_fallback"
-        ):
-            allow_related_assets = False
-            provider_label = (
-                provider_name.upper()
-                if provider_name in {"ams", "pnas", "acs"}
-                else provider_name.title()
-            )
-            skip_warning = (
-                f"{provider_label} PDF fallback currently returns text-only full text; "
-                "figure and supplementary asset downloads are not implemented yet."
-            )
-            skip_trace = trace_from_markers(
-                [f"download:{provider_name}_assets_skipped_text_only"]
-            )
-        elif active_output_dir is not None and asset_profile != "none":
-            try:
-                asset_results = self.download_related_assets(
-                    doi,
-                    metadata,
-                    raw_payload,
-                    active_output_dir,
-                    asset_profile=asset_profile,
-                    context=context,
-                )
-                downloaded_assets = list(asset_results.get("assets") or [])
-                asset_failures = list(asset_results.get("asset_failures") or [])
-            except (ProviderFailure, RequestFailure, OSError) as exc:
-                article = self.to_article_model(
-                    metadata,
-                    raw_payload,
-                    downloaded_assets=[],
-                    asset_failures=[],
-                    context=context,
-                )
-                article.quality.warnings.append(
-                    f"{provider_name.replace('_', ' ').title()} related assets could not be downloaded: {exc}"
-                )
-                article.quality.source_trail.append(
-                    f"download:{provider_name}_assets_failed"
-                )
-                return ProviderFetchResult(
-                    provider=provider_name or "provider",
-                    article=article,
-                    content=content,
-                    warnings=list(getattr(raw_payload, "warnings", []) or []),
-                    trace=list(getattr(raw_payload, "trace", []) or []),
-                    artifacts=ProviderArtifacts(),
-                )
-
-        article = self.to_article_model(
-            metadata,
-            raw_payload,
-            downloaded_assets=downloaded_assets,
-            asset_failures=asset_failures,
-            context=context,
-        )
-        return ProviderFetchResult(
-            provider=provider_name or "provider",
-            article=article,
-            content=content,
-            warnings=list(getattr(raw_payload, "warnings", []) or []),
-            trace=list(getattr(raw_payload, "trace", []) or []),
-            artifacts=ProviderArtifacts(
-                assets=[dict(item) for item in downloaded_assets],
-                asset_failures=[dict(item) for item in asset_failures],
-                allow_related_assets=allow_related_assets,
-                text_only=not allow_related_assets,
-                skip_warning=skip_warning,
-                skip_trace=skip_trace,
-            ),
-        )
 
 
 class FixtureHtmlTransport(HttpTransport):

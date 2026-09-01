@@ -24,8 +24,6 @@ class GoldenCorpusAdapter:
     fallback_contracts: Mapping[str, ProviderGoldenContract] = field(
         default_factory=dict
     )
-    representative_doi: str | None = None
-    representative_count_fields: tuple[str, ...] | None = None
 
     def contract_for_fixture(self, fixture: Any) -> ProviderGoldenContract:
         route_kind = str(getattr(fixture, "route_kind", "") or "")
@@ -68,16 +66,6 @@ def golden_corpus_adapter(provider: str) -> GoldenCorpusAdapter:
 
 def iter_golden_corpus_adapters() -> tuple[GoldenCorpusAdapter, ...]:
     return tuple(_GOLDEN_CORPUS_ADAPTERS.values())
-
-
-def representative_golden_corpus_dois() -> tuple[str, ...]:
-    return tuple(
-        doi
-        for doi in (
-            adapter.representative_doi for adapter in iter_golden_corpus_adapters()
-        )
-        if doi
-    )
 
 
 def adapter_provider_names(

@@ -52,13 +52,13 @@ Date: 2026-07-29
 
 - 暴露 MCP tools、prompts 与 resources，校验工具参数
 - 把 service 结果序列化成 JSON-safe payload
-- 通过 `FetchCache` 管理 fetch-envelope sidecar / cache resources
+- 通过 `FetchCache` 管理 fetch-envelope sidecar，并由 `list_cached` / `get_cached` 查询
 - 通过 `FetchPipeline` cache hooks 复用 CLI/MCP 共享的 fetch lifecycle
 - 管理 progress、structured log、cancellation
 
 实现边界：
 
-- MCP runtime 基于官方 Python SDK 2.x 的 `MCPServer` 与 stdio transport，不再维护自定义 stdin reader/stream pump；server 同时服务 2025 握手协议与 2026-07-28 无状态协议，动态 resource 变更在旧协议走 `notifications/resources/list_changed`，在新协议走 `subscriptions/listen` bus。
+- MCP runtime 基于官方 Python SDK 2.x 的 `MCPServer` 与 stdio transport，不再维护自定义 stdin reader/stream pump；server 同时服务 2025 握手协议与 2026-07-28 无状态协议，只保留静态 provider catalog resource。
 - payload/tool 入口通过 `paper_fetch.mcp._deps.MCPDeps` 显式注入 runtime env、service、provider registry 与 cache index 依赖；生产默认由 `default_mcp_deps()` 装配，测试通过构造定制 deps 注入。
 - 所有 MCP tool JSON payload 顶层都带 `schema_version=2`；错误 payload 保留兼容字段 `status` / `reason`，并补充 `code`、`http_status`、`error_category`、`retry_after_seconds`、`provider`、`warnings`、顶层唯一完整 `trace` 和 `source_trail` 供 host 做机器判断。v2 的 `quality` 不再复制完整 trace。
 - MCPServer/Pydantic 仍生成并保留完整 typed output contract；注册工具时只从发布到 `tools/list` 的 output schema 移除展示性 `title` 注解和可选字段的 `default: null`。压缩器识别 `properties`、`$defs` 等命名 schema 映射，真实的 `title`/`default` 字段名与全部验证约束保持不变。
@@ -74,7 +74,7 @@ Date: 2026-07-29
 入口：`skills/paper-fetch-skill/`
 
 - 告诉 agent 什么时候调用哪些 MCP 工具，提供薄说明和渐进式引用文档
-- `src/paper_fetch/skill_integrity.py` 对路径排序后的完整 regular-file inventory 计算稳定 aggregate SHA-256/version；源码、offline staging/manifest 与 host 安装副本共用该语义，missing/extra/symlink/special 均 fail closed
+- `scripts/skill_integrity.py` 由构建器和安装器调用，对路径排序后的完整 regular-file inventory 计算稳定 aggregate SHA-256/version；offline staging/manifest 与 host 安装副本共用该语义，missing/extra/symlink/special 均 fail closed
 - `agents/openai.yaml` 是仓库内 canonical 静态模板，随 bundle 一起哈希和发布，不在安装时动态生成
 
 不负责安装依赖、抓取逻辑、provider 配置。
@@ -111,7 +111,7 @@ Date: 2026-07-29
 
 现有 MCP `batch_resolve` / `batch_check` / `batch_fetch` 与 CLI batch 都通过这个 runner 调度。前两个 probe/resolve 工具保持既有兼容调度；`batch_fetch` 在提交前只调用 catalog-backed URL/DOI 身份 helper 推断 provider lane，一个 lane 限流后把该 lane 的后续输入终态化为未调度，其他 lane 继续。它的 `results` 按原 1-based input index 返回，`completion_order` 单独投影完成顺序，progress 使用完整终态计数。
 
-`RuntimeContext` 是 service/workflow 的显式运行时依赖容器，持有 `env`、`transport`、`clients`、`download_dir`、`cancel_check`、`artifact_store`、可选 `fetch_cache`，以及单次 fetch 生命周期内的 `parse_cache`、`session_cache` 和 `stage_timings`。Browser provider 只依赖 `paper_fetch.providers.browser_runtime` facade；生产 backend 是 Camoufox，storage/profile 路径由 `browser_runtime.paths` 统一解析。同一 owning thread 在一个 `RuntimeContext` 内复用 Camoufox process，每项操作创建隔离 context/page，batch/进程退出时统一清理。公开 service API 只接受 `context=`；调用方必须先构造 `RuntimeContext`，再交给 `paper_fetch.workflow.pipeline.FetchPipeline`。
+`RuntimeContext` 是 service/workflow 的显式运行时依赖容器，持有 `env`、`transport`、`clients`、`download_dir`、`cancel_check`、`artifact_store`、可选 `fetch_cache`，以及单次 fetch 生命周期内的 `parse_cache`、`session_cache`。Browser provider 只依赖 `paper_fetch.providers.browser_runtime` facade；生产 backend 是 Camoufox，storage/profile 路径由 `browser_runtime.paths` 统一解析。同一 owning thread 在一个 `RuntimeContext` 内复用 Camoufox process，每项操作创建隔离 context/page，batch/进程退出时统一清理。公开 service API 只接受 `context=`；调用方必须先构造 `RuntimeContext`，再交给 `paper_fetch.workflow.pipeline.FetchPipeline`。
 
 #### 统一抓取验收模型
 
@@ -143,13 +143,13 @@ Date: 2026-07-29
 
 验收 schema 当前为 v2。每份报告都必须序列化 `schema_version=2` 和 `minimum_reader_schema_version=2`。v2 增加 `accepted_preview`、`fallback_preview`、稳定 `issue_codes`、正文资产计数与 `require_local_body_assets` / `require_full_size_body_assets`（后者隐含前者），并要求 `preview == accepted_preview + fallback_preview`。严格分母只包含需要独立归档文件的正文逻辑资产；已经以内联语义完成且没有 binary payload/remote/failure 的 table、formula 或 figure 不会被误算为缺少本地文件。两项约束默认关闭且只适用于 `body|all`；未满足时 asset/overall 降为 `degraded`，已经取得的全文仍保持 `fetch=ok`。reader 可忽略未知 additive field，但缺少版本、v1 或未来不支持的版本必须拒绝，不能猜测迁移。`FetchAcceptanceReport.model_json_schema()` / `fetch_acceptance_json_schema()` 是 JSON Schema 唯一生成入口。
 
-`FetchEnvelope.trace` 是一次 fetch 的唯一完整 trace owner。provider/waterfall 先在局部列表累积事件，workflow 最终只写入 envelope 一次；`Quality` 仅保留去重后的 article source-trail 摘要。acceptance、manifest 与 MCP 都只投影 envelope 顶层 trace，两个不同 attempt 的同 code 会保留为两条真实事件。旧 v1 FetchEnvelope cache 读取时按“顶层 trace → quality.trace → article.quality.trace”提升一次，新写入统一为 v2 且只写顶层。
+`FetchEnvelope.trace` 是一次 fetch 的唯一完整 trace owner。provider/waterfall 先在局部列表累积事件，workflow 最终只写入 envelope 一次；`Quality` 仅保留去重后的 article source-trail 摘要。acceptance、manifest 与 MCP 都只投影 envelope 顶层 trace，两个不同 attempt 的同 code 会保留为两条真实事件。
 
 #### 版本化 manifest record
 
-`paper_fetch.manifest` 是单篇 CLI、CLI batch 和 MCP `batch_fetch` 共用的 manifest record owner。adapter 只向 `build_manifest_record()` 提交原 query、JSON-safe 请求参数、`FetchEnvelope` 或结构化 error、输出文件声明和 run/index/attempt；schema 字段、兼容字段、验收摘要、trace 与文件快照均由 builder 统一派生。builder 保持纯逻辑，不写 JSONL、run manifest 或任何输出文件，也不执行 audit/resume。
+`paper_fetch.manifest` 是单篇 CLI、CLI batch 和 MCP `batch_fetch` 共用的 manifest record owner。adapter 只向 `build_manifest_record()` 提交原 query、JSON-safe 请求参数、`FetchEnvelope` 或结构化 error、输出文件声明和 run/index/attempt；schema 字段、验收摘要、trace 与文件快照均由 builder 统一派生。builder 保持纯逻辑，不写输出文件。
 
-manifest record schema 当前为 v2，`schema_version=2` 和 `minimum_reader_schema_version=2` 都是必填常量。v2 是旧无版本 CLI JSONL 的首个版本化超集，仍在 record 顶层保留原九字段 `index/query/status/doi/source/output_path/saved_markdown_path/warnings/error`；`legacy_projection()` 可以直接返回且只返回这九个字段，CLI/MCP 不应各自维护兼容字段表。旧 `status=ok` 仍只表示调用未抛异常，完整度必须读取同一 record 内的 `acceptance.overall/content/asset`。
+manifest record schema 当前为 v2，`schema_version=2` 和 `minimum_reader_schema_version=2` 都是必填常量。每条记录以 `record_status` 表示 `completed/failed/aborted`，以 `error.status` 表示失败分类，以 `output_artifacts` 记录最终文件；完整度读取同一 record 内的 `acceptance.overall/content/asset`。
 
 其余关键不变量如下：
 
@@ -158,19 +158,13 @@ manifest record schema 当前为 v2，`schema_version=2` 和 `minimum_reader_sch
 - `identity`、`doi`、`source`、`fallback_codes`、`warning_codes`、`failure_codes`、`semantic_losses` 和 `asset_summary` 都直接来自 `FetchAcceptanceReport`，不会重新按 warning/message 文本分类。原 warning 文本只为兼容和人工诊断原样保留。
 - `trace` 由既有 `TraceEvent` 或兼容 `source_trail` marker 转换；message 只是说明文字，不参与 fallback/warning/failure 分类。
 - 每个 `output_artifacts[*]` 记录 path、kind、size、SHA-256、mtime、record completion time 和 `verified/missing/unreadable` 快照状态。stat 与 hash reader 可注入，builder 只读文件，不落盘。
-- artifact facts 表示 record 完成时观察到的状态，不证明文件现在仍存在或内容未变。当前文件状态必须由只读 audit/reconcile 重新 stat/hash 后判断，禁止把历史 `verification_status=verified` 当作持续有效的文件锁或 resume 依据。
+- artifact facts 只表示 record 完成时观察到的状态，不证明文件现在仍存在或内容未变。
 
 打包资源 `paper_fetch.resources.manifest/manifest-record-v2.schema.json` 是对外稳定的 Draft 2020-12 schema；测试要求它与 `generated_manifest_record_json_schema()` 同步并能验证真实 round-trip payload。v2 reader 忽略 additive unknown fields；删除字段、改变必填性/含义或收窄既有值域属于不兼容变更，必须提升 manifest schema version，不能覆盖 v2 资源或猜测迁移。缺少版本、fingerprint 或违反派生字段一致性的 record 必须拒绝。
 
-#### Run persistence、只读审计与恢复
+#### 批量最终结果
 
-`paper_fetch.manifest_writer` 是 durable manifest persistence 和只读审计的 owner，复用 `paper_fetch.manifest` 的 v2 record 与 `workflow.acceptance` 的质量事实，不建立第二套 record 或验收模型。`RunManifestStore` 原子维护 schema-v1 `run-manifest.json` 摘要；`ManifestJsonlWriter` 以 append-only JSONL 持久化 attempts。摘要包含完整有序输入、run 级 request fingerprint、工具版本、事件文件引用、时间、attempt 数和按最新 attempt 汇总的状态计数。
-
-run 状态机为 `running -> completed|interrupted|cancelled|failed`。每个终态 event 先 flush/fsync，再原子 checkpoint 摘要；异常路径尽力写入对应终态而不掩盖原始异常。`index` 始终绑定有序输入，`attempt` 必须是每个 index 的连续 `1..N`；`record_id` 由 run/index/attempt 确定，因此完成顺序乱序不影响重建。run lock 串行化同一 run 的新建和恢复，artifact path lock、同目录 `.part` 与 `os.replace` 保护最终输出及 JSON 摘要；默认拒绝覆盖，调用方必须显式声明 overwrite。
-
-`audit_manifest_path()` 同时接受 run 摘要和单篇 v2 manifest，全程只读且无网络。它校验 run/input/index/attempt/record id/request fingerprint/计数结构，并重新读取当前 artifact 的存在性、size、SHA256 和通过 PF-005 YAML helper 解析的 Markdown front matter DOI/source/content，再结合 record acceptance 判断是否可复用。稳定结果为 `ok`、`manifest_stale` 或 `invalid`；CLI 将其映射到退出码 `0/1/2`。`audit` 与 `reconcile` 当前共享同一审计引擎，二者都不修复或改写状态。
-
-CLI 和 MCP `batch_fetch` resume 都必须提交原有序输入、同一工具版本和完全相同的关键请求参数。只有 audit 标记为 reusable 的最新 attempt 会被跳过；missing、stale、失败或低于请求质量的项进入共享 batch runner 并追加下一 attempt。输入或 fingerprint 变化、结构无效会在任何 run mutation 前拒绝；仍存在的 stale 输出必须显式 overwrite，已经缺失的输出可以安全重建。MCP adapter 只在显式 `run_manifest` / `batch_results` / `resume` 时创建 durable 状态；默认内存 run 保留相同 record/run fingerprint 但不写盘。取消和适配层异常分别尽力终态化完整 index 集合并写 `cancelled` / `interrupted`，不复制 persistence 状态机。
+CLI 的 `--batch-results` 与 MCP 的 `batch_results` 都只写一次最终 JSONL：每个输入恰好一条 schema-v2 record，并按输入 `index` 排列。写入复用 `ArtifactStore` 的同目录临时文件、flush/fsync、commit fence 与原子替换；默认拒绝覆盖，显式 `overwrite` 才允许替换。批处理不维护 run manifest、append-only journal、审计或恢复状态。
 
 ### 6. Extraction 层
 
@@ -229,54 +223,54 @@ CLI 和 MCP `batch_fetch` resume 都必须提交原有序输入、同一工具�
 
 provider fulltext 内部链路统一接收同一个 `RuntimeContext`：workflow 调用 `FulltextProvider.fetch_result()` 时传入 `artifact_store=` 与 `context=`，context 继续传给 raw fulltext、abstract-only recovery、related assets 和 `to_article_model`，使同一次 fetch 内可 memo 派生 payload 并复用 runtime browser。需要原始 payload 用 `fetch_raw_fulltext()`，需要完整结果用 `fetch_result()`。`RawFulltextPayload` 不提供 `metadata` 兼容视图；route、markdown_text、warnings、trace、diagnostics 等结构化字段必须由 typed fields 传入。
 
-provider 身份与能力配置统一来自 provider entry module 顶部注册的 `ProviderBundle`：各入口导入时调用 `register_provider_bundle(ProviderBundle(...))`，`_registry.py` 只负责保存与查找。`paper_fetch.provider_catalog.PROVIDER_CATALOG` 与 source map 是已登记 bundle 的懒加载视图；根 `paper_fetch` import 不导入 provider entries 或 HTML 重依赖。内置 provider entry 只由 `paper_fetch.providers._BUILTIN_PROVIDER_ENTRY_MODULES` 显式清单加载，新增 provider 在该处登记一次；运行时不做源码 AST 扫描、文件 fingerprint cache 或 discovery lock。routing、默认资产策略、MCP status 顺序和 registry 都从已登记 bundle 派生，不维护第二份 provider 行为字典。Crossref 的 provider adapter 是 `paper_fetch.providers.crossref.CrossrefClient`，与 resolve 共同依赖 `paper_fetch.metadata.crossref.CrossrefLookupClient`。
+provider 身份与能力配置统一来自 provider entry module 导出的 `PROVIDER_BUNDLE`。内置 provider entry 只由 `paper_fetch.providers._BUILTIN_PROVIDER_ENTRY_MODULES` 显式清单加载；固定 loader 在启动时一次构造按 status 排序的不可变 bundle tuple、provider map、`PROVIDER_CATALOG` 与 source map，并立即验证 provider name/status order/client factory/source 及 alias、DOI prefix、exact/suffix domain 无冲突。运行时没有 mutable registry、导入协调、cache invalidation、源码扫描或第三方 bundle 注入。routing、默认资产策略、MCP status 顺序和 client registry 都从这些不可变映射派生，不维护第二份 provider 行为字典。Crossref 的 provider adapter 是 `paper_fetch.providers.crossref.CrossrefClient`，与 resolve 共同依赖 `paper_fetch.metadata.crossref.CrossrefLookupClient`。
 
-`compile_route_execution_policy()` 是 catalog 到 runtime 的唯一非授权执行策略边界。Catalog 仍合并并公开 exact/suffix/base、API/CDN/template/route host 供 routing、诊断与生成文档使用，但 `provider_request_policy()` 不再把这些 host 或 catalog sensitive headers 自动接入 HTTP/PDF/body/supplementary 的 allowlist。它只投影 timeout、transient/rate retry、QPS/minimum interval、rate-wait budget、acceptance policy、asset scope 与 route concurrency cap；调用方显式提供的 `HttpRequestPolicy.allowed_hosts` / `SafeRemoteUrlPolicy.allowed_hosts` 仍逐跳 fail closed。minimum interval 通过每 scope 串行 start gate 执行，排队和 cooldown 等待不占 host semaphore；迟到的 `Retry-After` 移动队首后，后续请求仍从实际起点继续保持间隔。未显式提供 asset profile 时，route `asset_scope` 选择执行范围；显式 `none|body|all` 保持用户覆盖。Acceptance 分别用 resolved identity、匹配 representation 的 fulltext 或已审计/本地 asset 事实验证声明，未知 policy 不会被当作满足。Registry 在注册时统一检测规范化 alias、DOI prefix、exact/suffix domain 及交叉覆盖；只有双方声明不同 `identity_priority` 和非空原因时才允许有意重叠，identity lookup 按该优先级而不是导入顺序决定。
+`compile_route_execution_policy()` 是 catalog 到 runtime 的唯一非授权执行策略边界。Catalog 合并并公开 exact/suffix/base、API/template/route host 供 routing 与诊断使用，但 `provider_request_policy()` 不把这些 host 或 catalog sensitive headers 自动接入 HTTP/PDF/body/supplementary allowlist；它只投影 transport 实际读取的 timeout、transient/rate retry、QPS/minimum interval 与 rate-wait budget。调用方显式提供的 `HttpRequestPolicy.allowed_hosts` / `SafeRemoteUrlPolicy.allowed_hosts` 仍逐跳 fail closed。minimum interval 通过每 scope 串行 start gate 执行；未显式提供 asset profile 时，compiled route 的 `asset_scope` 选择执行范围，acceptance owner 使用 compiled `acceptance_policy` 验证真实 representation。固定 catalog 的身份重叠直接拒绝，不保留未被内置 provider 使用的 priority/reason 豁免。
 
 ### 8. Runtime / Artifact / Cache 边界
 
 入口：`src/paper_fetch/runtime.py`、`artifacts.py`、`mcp/fetch_cache.py`
 
 - `RuntimeContext` 显式承载运行时依赖；`parse_cache` 是进程内、单 context 生命周期的解析 memo（key 含 provider、role、source、body sha256、parser 和配置指纹），访问器由 `RLock` 保护，`get_or_set` 对同 key 原子执行一次 supplier，dict/list 读取返回拷贝，XML root 只读复用。
-- Browser runtime 使用 backend facade 和集中 storage-state manager；auth、preflight、HTML fetch、seeded PDF fallback 共享 provider-scoped `storage-state.json` 路径、写锁和 atomic write。preflight 的唯一状态契约为 `ready/challenge/auth_required/network_timeout/extraction_error/runtime_error/cancelled`，CLI/MCP 共用核心 reason-code 分类和 next action。managed Chrome stderr 使用有界脱敏尾部，启动、CDP 连接、context 和 page 阶段分别发布稳定 code，preflight、provider trace、manifest 与 PDF fallback acceptance 保留同一结构化失败事实。Browser-backed image fetch 对单图 seed warm、page fetch、request-context fetch、直接导航和 image wait 共用一个 wall-clock budget；PDF fallback 只用 lightweight browser warm 采集 cookies/user-agent/final URL，已有 cookie seed 时不再对同一 seed URL 做第二次 browser navigation。External CDP 默认借用既有 context，并在 diagnostics 中报告被忽略的 context options；`PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT=1` 可要求在外部浏览器中创建新 context。
+- Browser runtime 统一使用 Camoufox facade 和集中 storage-state manager；auth、preflight、HTML fetch、seeded PDF fallback 共享 provider-scoped `storage-state.json` 路径、写锁和 atomic write。preflight 的状态契约为 `ready/challenge/auth_required/network_timeout/extraction_error/runtime_error/cancelled`，CLI/MCP 共用 reason-code 分类和 next action。Browser-backed image fetch 共用一个 wall-clock budget；PDF fallback 只用 lightweight browser warm 采集 cookies、user-agent 和 final URL。
 - `artifact_mode=all` 下，已到达页面但 extraction/availability 失败的 HTML route 会在 `diagnostics/<provider>/<doi-or-url-digest>/<route>-<attempt>/` 保存 `diagnostic.json` 与隐私清洗后的 `page-sanitized.html`。自动流程不保存原始失败 HTML 或截图；query、userinfo、email、表单、脚本及事件属性会被删除/脱敏，2 MiB 上限只在 DOM 节点边界截断。成功或终态失败的 CLI/MCP manifest 都把这些文件作为 `kind=diagnostic` additive artifact 快照保存 size/SHA-256。
-- `RuntimeContext.stage_timings` 使用独立 monotonic 计时器记录 browser、DOM readiness、HTTP、retry、asset、formula、render，以及资产 browser context 的 prepare/release；每个资产/失败项另只保留 `asset_timing={queue,candidate_resolution,dns_policy_validation,connect_to_headers_ttfb,body_stream,browser_recovery,retry_wait,conversion,save,total}_ms` 和终态，不保存签名 URL。golden live 报告保留墙钟并聚合各 phase、状态、download tier、质量原因和逐资产 total 中位数；并发 phase 累计值不得冒充墙钟。
+- 每个资产/失败项保留 `asset_timing={queue,candidate_resolution,dns_policy_validation,connect_to_headers_ttfb,body_stream,browser_recovery,retry_wait,conversion,save,total}_ms` 和终态，不保存签名 URL；请求级耗时由 trace event 与外层调用者墙钟观察，不在 runtime 聚合第二份统计。
 - 本地转换工具链使用进程内有界缓存降低重复探测：Ghostscript/libvips 候选路径、`--version` probe 和工具 env overlay 按相关 env/目录/文件指纹失效；公式转换保留 MathML 结果缓存和 `mathml-to-latex` worker 复用；PDF fallback 对无图片导出路径的同一 PDF hash 复用 Markdown 渲染结果，并在成功结果 diagnostics 中记录 hash、字节数、页数、cache status 和耗时。
-- `ArtifactStore` / `DownloadPolicy` 管理 artifact mode：provider PDF/binary local copy、PDF fallback 源文件、provider 原始 HTML、Markdown 保存、asset 诊断、HTTP textual cache 开关，以及 fetch-envelope/cache-index JSON 的原子写入。
+- `ArtifactStore` / `DownloadPolicy` 管理 artifact mode：provider PDF/binary local copy、PDF fallback 源文件、provider 原始 HTML、Markdown 保存、asset 诊断，以及 fetch-envelope/cache-index JSON 的原子写入。
 - `RuntimeContext.asset_budget` 是同一篇论文所有二进制资产的唯一资源边界；正文图与 supplementary 即使分两次 provider 调用，也共享默认 128 文件、单文件 32 MiB、累计 256 MiB、64,000,000 像素和最多 4 个（再受 route cap 限制）的 worker。Content-Length 先验、未知长度 chunk、gzip 压缩/解压、图片尺寸、转换输出、arXiv source archive 成员及临时 staging 都进入 rollback-safe reservation；失败候选回滚，成功发布后才 commit。
 - `asset_default != none` 的 provider 必须声明显式 `assets` route；正文资源策略从 catalog 编译为 direct 单次 `20` 秒、route cap `2`，具有可靠 browser byte recovery 的 provider 使用零 transient direct retry。资产首先按 URL 使用共享 hostname 连接池进行有界 direct stream；每篇论文的每个 host 只有一个首资源 direct probe，并发请求等待 probe 结论。direct 超时/拒绝且 browser recovery 真正成功后，同篇剩余同源资源才直接复用已验证 browser 路径；不同 host 独立决策，熔断状态通过 provider/article key 限定在当前 `RuntimeContext`，不跨论文持久化。Browser 可从 `response.body()`、page-context `arrayBuffer()`、canvas、download/file 或 viewer PDF response 交付字节。无论来源，Content-Length/实际字节、MIME、像素、取消、同目录唯一 staging、flush/fsync 和原子发布均复用同一 `AssetBudget`/`ArtifactStore` 边界。EPS/TIFF、PDF screenshot copy 与 arXiv source figure 继续采用 path-to-path 处理。
 - 资产 future 以 `as_completed` 顺序立即保存或释放 staging/reservation，最终只把轻量结果恢复为输入顺序。caller-thread browser 路径先同步探测首资源，再让剩余 HTTP 工作按 route cap 并发；IEEE 等自定义恢复在合并逻辑记录时保留统一逐资源 timing/route。致命文件/字节/像素超限会保留首个稳定 reason、删除所有登记 staging、设置 cooperative stop fence 并取消 pending future；来自 `RuntimeContext` 的外部取消不会被内部 budget stop 合并掉。资产 HTTP 使用共享 hostname pool；全局 worker 上限仍为 4，显式 assets route cap 通常为 2，HTML/PDF 的串行限制不再误降资产 worker。
 - arXiv source archive 的流式解包、regular-member 遍历门禁和 LaTeX figure 引用解析集中在 `_arxiv_source_archive.py`；重复或非法名称也计入最多 128 个检查成员，保留成员继续使用共享 `AssetBudget` 的单文件/累计字节 reservation。
-- `FetchCache` 管理 MCP fetch-envelope sidecar reuse/write 语义与 cache index refresh；当前 sidecar version 为 5，并要求完整 acquisition，缺少该事实的 v4 sidecar 以 `version_mismatch` 失效后重新抓取，不删除既有 Markdown。sidecar version、`EXTRACTION_REVISION` 校验、resource URI 与 scoped cache resource 语义稳定，实际 JSON materialization 委托给 `ArtifactStore`。MCP cache index 读取会校验 `INDEX_VERSION`；旧版/坏 schema 默认拒绝作为可信 manifest，`list_cached(cache_mode="index")` 只读 manifest，`refresh` 只校验/修剪现有 manifest，`rescan` 只从可证明 DOI 归属的 fetch-envelope sidecar 重建。`get_cached(detail="compact")` 仍由该 facade 读取确定性 sidecar：请求兼容唯一调用 `cached_request_matches()`，质量摘要调用统一 `evaluate_fetch_acceptance()`，request fingerprint 复用 manifest canonical hash；adapter 只裁剪 full/preferred/compact 视图，不复制匹配或验收规则。查询先使用当前 runtime 的摘要化 `credential_scope`；带凭据 scope 在精确 sidecar 缺失或 scope 不匹配时可安全复用 public sidecar，public scope 绝不反向读取 API token 或 storage-state sidecar。
-- `CapabilityScopeBuilder` 是 cache capability identity 的唯一 owner。环境凭据继续生成兼容的旧摘要；成功注入 browser context 的状态另绑定 provider、backend、最终 canonical storage-state 路径和写 sidecar 时的最终内容 SHA-256。`RuntimeContext` 只在 context 创建成功且确实传入 `storage_state` 后记录 use；配置了空 profile/path 不会制造 private scope，实际 use 即使文件随后消失也不会降级成 public。
-- Cache sidecar 的 loader、inspector 与 compact projection 共用同一个 variant selector：每个候选只解析一次，先选当前精确 private scope，只有缺失/不满足时单向回退 public；public 以及不同 private scope 不能横向读取。非 sidecar artifact 的 scope 独立绑定：stat fingerprint 未变时保留可信 index provenance，明确 commit 中发生变化或由 envelope path 证明的文件才绑定本次 write scope；无 scope 的 legacy entry、丢失 index 后存在多个 sidecar scope、或无法证明 owner 的路径保持 ambiguous/fail closed，最新 canonical sidecar 不能批量重标旧文件。相同 visibility filter 同时约束 cache index、`list_cached`、`get_cached` entry、entry template 和动态 MCP resource。每次读取已发布 URI 都重新计算当前 API/storage-state capability、查询最新 index entry 并用 scoped open 校验路径/大小/hash，因此 capability 被撤销后无需重新 sync 即拒绝旧 URI。已知 DOI 先做无网络规范化和精确 sidecar 查找，miss 后才进入完整 resolver/provider enrichment。
-- Cache index 的目录扫描、front matter 解析与全文 hash 均在全局 index lock 外；锁内只读取版本快照并原子 merge。Markdown front matter 最多读取 256 KiB 前缀，index 保存 device/inode/size/mtime_ns、front-matter digest 与 content SHA-256，未变化文件只做 stat。批量 refresh 一次扫描 DOI 集合，逐 DOI refresh 会把同次已解析的其他 Markdown 身份增量 upsert；sidecar 写后只枚举并 upsert 同 DOI 前缀和 asset 目录，不再扫描全局 loose Markdown。二次加锁会合并 refresh/rescan 期间的并发注册，避免覆盖晚到更新。
-- Artifact、fetch-envelope variant/canonical sidecar、Markdown、cache index 与 run summary 使用同一提交协议：目标路径对应进程/跨进程 `FileLock`，每个 writer 在目标同目录创建唯一 staging file，写完 flush/fsync，再在 `RuntimeContext.commit_guard` 的最终临界区内 `os.replace` 并 fsync 目录。取消 fence 与最终 replace 由同一锁线性化；fence 返回后，后台 worker 即使晚返回也不能提交。`overwrite=false` 时相同字节是无改写的幂等成功、不同字节是显式冲突；`overwrite=true` 允许串行原子替换。
+- `FetchCache` 管理 MCP fetch-envelope sidecar reuse/write 语义；当前 sidecar version 为 5，并要求完整 acquisition，旧 sidecar 以 `version_mismatch` 失效后重新抓取，不删除既有 Markdown。MCP cache index 只信任当前版本以及显式注册、仍通过 DOI/hash/scope 校验的条目，不自动迁移、修复或全目录重扫。`get_cached(detail="compact")` 的请求兼容唯一调用 `cached_request_matches()`，质量摘要调用统一 `evaluate_fetch_acceptance()`；public scope 绝不反向读取 API token 或 storage-state sidecar。
+- `CapabilityScopeBuilder` 是 cache capability identity 的唯一 owner。当前 scope digest 绑定版本化 credential facts；成功注入 browser context 的状态另绑定 provider、backend、最终 canonical storage-state 路径和写 sidecar 时的最终内容 SHA-256。`RuntimeContext` 只在 context 创建成功且确实传入 `storage_state` 后记录 use；配置了空 profile/path 不会制造 private scope，实际 use 即使文件随后消失也不会降级成 public。
+- Cache sidecar 的 loader、inspector 与 compact projection 只检查当前请求在可读 scope 中的精确 variant，再单向回退 canonical/public；不会 glob 或自动选择其它历史 variant。public 以及不同 private scope 不能横向读取。旧版本、无 scope、损坏或 DOI/scope 不匹配条目 fail closed。相同 visibility filter 同时约束 cache index、`list_cached`、`get_cached` entry、entry template 和动态 MCP resource。
+- Cache index 写入在 artifact 成功提交后按 DOI 增量注册，并在锁内原子合并；读取会复核 scope 与文件事实。Loose Markdown 只有在保存时凭 envelope DOI 显式注册后才可命中，文件名或正文 DOI 文本不作为身份凭据。
+- Artifact、fetch-envelope variant/canonical sidecar、Markdown、cache index 与 batch results 使用同一提交协议：目标路径对应进程/跨进程 `FileLock`，每个 writer 在目标同目录创建唯一 staging file，写完 flush/fsync，再在 `RuntimeContext.commit_guard` 的最终临界区内 `os.replace` 并 fsync 目录。取消 fence 与最终 replace 由同一锁线性化；fence 返回后，后台 worker 即使晚返回也不能提交。`overwrite=false` 时相同字节是无改写的幂等成功、不同字节是显式冲突；`overwrite=true` 允许串行原子替换。
 - 单篇 sync/async 入口从 fetch、cache、Markdown 到最终 CLI/MCP 输出贯穿一个 `RuntimeContext`。异步取消先设置 cooperative event 和 commit fence，再用独立 task 等待有界 grace；重复 `CancelledError` 不会跳过该等待。Batch 每个 logical item 使用独立 child context，只共享线程安全 HTTP transport 与 immutable env，不共享 provider client、session、CookieJar、trace/timing/cache；duplicate 与未调度 item 也会幂等关闭。
 - Batch resolve/check 始终保留输入等长、原顺序的终态数组，以及稳定 1-based `index/query/status/error/provider_lane`；progress 区分 `terminal/completed/not_scheduled`。`batch_check` 对 title/generic 输入先在 child context 解析并缓存 provider identity，再按 resolved lane 调度；已知 DOI 只用无网络 initial lane。`batch_resolve` 本身在执行解析前无法预知 title provider，故预解析阶段是 generic，但成功结果会报告本轮解析出的 provider。
-- Batch fetch 在 resolve 后以规范 DOI 建 canonical target table，只执行 representative，并按原 index fan-out。进程内跨请求 singleflight key 统一为 canonical DOI + 完整 `FetchPaperRequest` 语义 + capability scope + canonical cache/Markdown 目录；等待者取消不取消 owner，结果和异常通过安全快照隔离，不同 request/scope/path 不合并。Run manifest 将 inputs/content/output 的 semantic fingerprint 与 `execution_policy` 分开；concurrency、retry/rate/continue-on-error 可在 resume 时覆盖，旧版嵌入式 execution 字段会在验证后迁移。
+- Batch fetch 在 resolve 后以规范 DOI 建 canonical target table，只执行 representative，并按原 index fan-out；该去重仅限当前批次。每个输入仍得到一个终态 record，最终结果按输入顺序原子写入。
 
 ### 9. Transport 层
 
 入口：`src/paper_fetch/http/`
 
-- HTTP 请求、连接复用与同 host 有界并发、进程内短 TTL GET 缓存与可选磁盘 textual GET 缓存、响应体大小限制、有限短重试、协作式取消检查
+- HTTP 请求、连接复用与同 host 有界并发、进程内短 TTL GET 缓存、响应体大小限制、有限短重试、协作式取消检查
 
-`HttpTransport` 保持 public request options、structured logs、cancel checks、`Retry-After` 最大等待和 `RequestFailure` 形状；瞬时错误与 429 retry policy 由 `urllib3.util.Retry` 表达，连接池由 `PoolManager(num_pools, maxsize, block=True)` 配置并按 hostname 复用。`SafeRemoteUrlPolicy` 在每个 redirect hop 检查 HTTP(S)、标准端口、无 userinfo、无 HTTPS 降级以及全部 DNS 答案均为公网地址，然后由共享 pool 按原 hostname 连接；不再把所选 IP 写成 TCP endpoint。跨 origin redirect 始终剥离 Authorization/Cookie/Proxy-Authorization/Referer；额外敏感 header 和 host allowlist 只有调用方显式放入 request policy 时才生效，catalog 不自动扩大或收紧网络授权。磁盘 textual GET 缓存使用脱敏 cache key（敏感 header 用短 SHA-256 digest 区分凭据且不落原文），默认按 `4096` 条、`512 MiB`、`30` 天清理，三项上限可用环境变量独立覆盖。内部子模块：`transport.py`（request loop / pool / semaphore / log）、`url_policy.py`（direct URL、DNS/IP 与 redirect 安全）、`provider_policy.py`（catalog 到非授权执行策略）、`cache.py`（cache key / digest / memory+disk cache / stats / prune）、`retry.py`（retry policy / backoff）、`body.py`（读取 / 解压 / content-type / preview）、`errors.py`（异常类型）。`paper_fetch.http` 是兼容 facade。
+`HttpTransport` 保持 public request options、structured logs、cancel checks、`Retry-After` 最大等待和 `RequestFailure` 形状；瞬时错误与 429 retry policy 由 `urllib3.util.Retry` 表达，连接池由 `PoolManager(num_pools, maxsize, block=True)` 配置并按 hostname 复用。`SafeRemoteUrlPolicy` 在每个 redirect hop 检查 HTTP(S)、标准端口、无 userinfo、无 HTTPS 降级以及全部 DNS 答案均为公网地址，然后由共享 pool 按原 hostname 连接。跨 origin redirect 始终剥离 Authorization/Cookie/Proxy-Authorization/Referer；额外敏感 header 和 host allowlist 只有调用方显式放入 request policy 时才生效。HTTP cache 仅在当前进程内按请求 key、TTL、条数和总字节上限复用，不写磁盘、不做 conditional 304、reconcile 或 prune。内部子模块：`transport.py`（request loop / pool / semaphore / log）、`url_policy.py`（direct URL、DNS/IP 与 redirect 安全）、`provider_policy.py`、`cache.py`（memory cache key / bounds / stats）、`retry.py`、`body.py`、`errors.py`。
 
 Route QPS 使用同一个 transport cooldown lock 与 scope 做跨 worker 原子时隙预留；服务端 `Retry-After` 与既有 minimum interval 总是取更晚 deadline。arXiv Atom route 因而在同一共享 transport 上至少间隔三秒，batch child context 共享该 transport 但不共享可变请求状态。测试使用 fake clock/barrier，不依赖真实等待。
 
 Fulltext provider identity evidence 保留 domain、publisher、DOI 的一致与冲突事实。DOI prefix 或两个独立信号一致才属于 strong；只有 strong provider 的 `NO_ACCESS` 能终止 provider waterfall，weak access boundary 会保留 diagnostics 后继续严格 identity-checked candidate。Acceptance 不再用 title 证明 DOI-less identity；只有 DOI，或同时声明 URL、verified、unique 的 canonical landing fact，才会得到 `identity=resolved`。
 
-Camoufox/Playwright 的 navigation、redirect、子资源与 service worker 使用浏览器原生行为；项目不安装 BrowserContext-wide URL/DNS interceptor，也不把带 cookie、storage state、profile 或 user-data 的 context 绑定到单一 origin。Provider image/font/media 优化只在 page scope 按资源类型生效，external CDP 可继续借用既有 context。Browser 资产恢复可以直接返回 browser-owned image/file/PDF bytes，再进入统一预算与 staging；未显式 host allowlist 时，Royal Society、IOP、AIP 等公网 CDN 按基础 URL 策略访问。Browser cookie 转 direct opener 使用标准 `CookieJar`/`DefaultCookiePolicy`，保留 host-only/domain、path、secure 和 expiry 语义。
+Camoufox/Playwright 的 navigation、redirect、子资源与 service worker 使用浏览器原生行为；项目不安装 BrowserContext-wide URL/DNS interceptor，也不把带 cookie 或 storage state 的 context 绑定到单一 origin。Provider image/font/media 优化只在 page scope 按资源类型生效。Browser 资产恢复可以直接返回 browser-owned image/file/PDF bytes，再进入统一预算与 staging。
 
 日志出口对 URL query/fragment、header map、query map 和任意文本中的标准/provider secret 使用同一递归 scanner；MCP bridge 再执行一次防御性过滤。MCP 只安装一个 ref-counted process-global router handler，当前 request target 存在 `ContextVar`，并显式传播到项目创建的 worker context。Target 自身用锁线性化 emit 与失效：bridge 退出会先将自己的 target 标记 inactive，再恢复 ContextVar、递减 handler 引用；因此保留 copied context 的迟到 worker 既不能写入已结束 session，也不能串到仍活跃的其它请求。Handler 在构造 notification coroutine 前同时拒绝 inactive target 与停止/关闭的 loop，重叠请求不会互收日志或乱序恢复 logger level。
 
 ### 10. CI / 回归验证边界
 
-`.github/workflows/ci.yml` 是普通 `push` / `pull_request` 的薄触发器，完整命令事实来源是 reusable `.github/workflows/verify.yml`。它在调用者给出的不可变 commit SHA 上运行 unit branch coverage、integration、devtools、Ruff、生产包 mypy、复杂度、provider route/catalog/manifest/fixture/docs、抽取规则、版本与依赖漏洞门禁，并把全部可执行 exact fixture 按 provider 稳定分成四个 shard，每个 fixture 恰好运行一次。wheel/sdist 的完整 archive 按结构化 inventory 验证唯一 root、metadata、`RECORD`、声明 data files 与 static skill，两种分发物分别进入隔离 venv 执行 CLI/import/MCP/resource smoke。provider governance 只让 canonical raw、expected contract 和当前可执行 builder 的 real replay 覆盖 route；runtime 快照与自动路由文档由 `scripts/check_provider_governance.py --update` 生成，正常验证只检查、不改文件。CI 与本地 unit/integration/devtools 默认复用 `pyproject.toml` 的并行配置。稳定 release 冻结九目标依赖，并在构建期验证 Python distributions、inventory、merged manifest、SBOM 与 target evidence；发布 job 从 release asset owner 读取 exact set，拒绝 missing/extra/basename collision，只公开声明的安装包与 `SHA256SUMS`。真实 publisher/MCP/browser/auth live 仍只允许显式入口；只有依赖共享外部状态、最终平台安装状态或专门排查顺序问题的测试可串行，并在命令旁说明原因。
+`.github/workflows/ci.yml` 是默认分支 push / pull request 的薄触发器，完整命令事实来源是 reusable `.github/workflows/verify.yml`。CI 运行一次完整 unit、integration、Ruff、生产包 mypy、版本与依赖漏洞门禁，并把全部可执行 exact fixture 按 provider 稳定分成四个 shard。devtools 退出默认门禁，按维护或发布需求显式运行。wheel/sdist 仍分别进入隔离 venv 执行 CLI/import/MCP/resource smoke；release 继续验证依赖、inventory、SBOM、checksum 与 provenance。
 
-架构边界由测试强制，而非仅靠文档约定：`tests/unit/test_import_boundaries.py` 阻止 provider-neutral 层 import `providers._*` 与 compat module，`tests/integration/test_architecture_closeout.py` 锁定 service facade、magic-key 契约、import-cycle 和兼容表面边界。pytest 在收集前验证锁定 MCP major 与 trafilatura API 行为；ambient 环境不兼容时会提示先执行 `uv sync --frozen --extra dev --extra full`，常规验证统一通过 `PYTHONPATH=src uv run python -m pytest ...`。更新提取规则文档后先运行 `python3 scripts/validate_extraction_rules.py`，再按变更范围运行并行 unit / integration。
+pytest 在收集前验证锁定 MCP major 与 trafilatura API 行为；ambient 环境不兼容时会提示先执行 `uv sync --frozen --extra dev --extra full`，常规验证统一通过 `PYTHONPATH=src uv run python -m pytest ...`。运行时 registry、公开入口和行为测试负责验证架构边界，不以私有模块布局或文档措辞作为契约。
 
 ## 端到端业务流程
 
@@ -359,7 +353,7 @@ MCP tool 返回的是在业务 payload 顶层追加 `schema_version=2` 的 JSON-
 
 CLI 与 MCP live 入口都以 `paper_fetch.browser_preflight.run_browser_provider_preflight()` 为唯一 orchestration owner；`paper_fetch.mcp.browser_preflight` 只做 Pydantic 入参、状态分类、progress/cancel 转接和 JSON-safe structured output。共享核心串行保留逐 provider 结果，把 `RuntimeContext.cancel_check` 传入现有 browser HTML bootstrap，并通过 `BrowserRuntimeConfig.persist_storage_state` 控制是否保存；不得复制 provider workflow 或转入 PDF fallback。
 
-诊断语义分三层：`provider_status` / `doctor` 只证明静态配置与本地依赖；CLI `browser-preflight` / MCP `browser_preflight` 才证明一次真实样例页面链路并可能写 storage-state；auth 是明确的人工副作用入口。源码模块位于 checkout 时 doctor 输出 `provenance_scope=source_development`，只审计 source bundle 与 active Codex skill，不从 PATH/env-file 混入旧离线根；显式 `--install-root` 或安装包运行输出 `installation` 并执行严格 manifest/runtime/entrypoint/skill 审计。三层结果不得相互冒充。
+诊断语义分三层：`provider_status` / `doctor` 只证明静态配置与本地依赖；CLI `browser-preflight` / MCP `browser_preflight` 才证明一次真实样例页面链路并可能写 storage-state；auth 是明确的人工副作用入口。安装与宿主 Skill 完整性由构建器、安装器和独立 verifier 负责，不参与 doctor 的业务健康状态。三层结果不得相互冒充。
 
 ### `has_fulltext`
 
@@ -384,11 +378,11 @@ CLI 与 MCP live 入口都以 `paper_fetch.browser_preflight.run_browser_provide
 - **`warnings`** 常见内容：abstract-only / metadata-only 降级、HTML / provider fallback 提示、资产部分下载失败、preview 资产可接受降级或不可接受 fallback、表格版式降级 / 语义丢失、公式 fallback / missing、token 截断。
 - **`source_trail`** 常见轨迹：`resolve:*`、`route:*`、`metadata:*`、`fulltext:*`、`fallback:*`、`download:*`。
 - **`token_estimate_breakdown`** 拆成 `abstract` / `body` / `refs`，帮 host 决定是否截断、哪段最占预算、是否改 metadata-only / summary-first。
-- **MCP cache resources**：默认共享缓存索引与条目，显式 `download_dir` 时有 scoped cache resources。`FetchCache` 匹配 `prefer_cache=true` 请求（按 modes、strategy、`include_refs`、`max_tokens`、sidecar version 和 `EXTRACTION_REVISION` 复用本地 fetch-envelope），只在 fetch 实际使用下载目录或 Markdown 保存成功落盘后刷新 resources。
+- **MCP cache tools**：`list_cached` / `get_cached` 在显式 `download_dir` scope 内查询索引与条目。`FetchCache` 匹配 `prefer_cache=true` 请求（按 modes、strategy、`include_refs`、`max_tokens`、sidecar version 和 `EXTRACTION_REVISION` 复用本地 fetch-envelope）；cache 不再镜像为动态 MCP resources。
 
 ## 扩展点：新增能力时应改哪一层
 
-- **新增 provider**：主要改 `src/paper_fetch/providers/`，必要时更新 provider-specific extraction / metadata adapter，并在 provider entry module 顶部注册 `ProviderBundle`；不要手工编辑 `provider_catalog.py`、`provider_rules.py`、`quality/html_signals.py` 或 `quality/html_availability.py`，不要把 provider 逻辑塞进 CLI / MCP。
+- **新增 provider**：主要改 `src/paper_fetch/providers/`，必要时更新 provider-specific extraction / metadata adapter；entry module 导出 `PROVIDER_BUNDLE` 并加入固定模块清单，不手工编辑 `provider_catalog.py`、`provider_rules.py`、`quality/html_signals.py` 或 `quality/html_availability.py`，也不把 provider 逻辑塞进 CLI / MCP。
 - **新增 MCP surface**：主要改 `src/paper_fetch/mcp/`（`schemas.py`、`fetch_tool.py`、`cache_payloads.py`、`batch.py`、`batch_fetch.py`、`server.py`）；需要真正的新抓取逻辑要先落到 service / workflow 层。新的批量抓取入口必须继续复用 `workflow.batch_runner`、`manifest.build_manifest_record` 和 `manifest_writer.RunManifestStore`。
 - **新增渲染能力**：正文渲染或资产展示能力优先改 `src/paper_fetch/models/` 与 provider 到 `ArticleModel` 的转换，而不是让 CLI / MCP 自己拼装业务结果。
 

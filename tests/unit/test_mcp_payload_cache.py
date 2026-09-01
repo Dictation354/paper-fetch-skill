@@ -1,15 +1,60 @@
-# ruff: noqa: F403,F405
 from __future__ import annotations
 
-from ._mcp_support import *
+import asyncio
+import json
+import tempfile
+import unittest
+from dataclasses import asdict, replace
+from pathlib import Path
+from unittest import mock
+
+from paper_fetch.mcp import fetch_tool as mcp_fetch_tool
+from paper_fetch.mcp._deps import default_mcp_deps
+from paper_fetch.mcp.cache_index import (
+    IDENTITY_PROOF_MARKDOWN_REGISTRATION,
+    LOCK_DIRNAME,
+    cache_lock_dir,
+)
+from paper_fetch.mcp.cache_payloads import list_cached_payload
 from paper_fetch.mcp.fetch_cache import (
     PUBLIC_CREDENTIAL_SCOPE,
+    FetchCache,
+    article_from_payload,
     cache_request_fingerprint,
+    envelope_from_payload,
+    payload_from_envelope,
     request_cache_payload,
+)
+from paper_fetch.mcp.fetch_tool import (
+    _PROVIDER_STATUS_ORDER,
+    fetch_paper_payload,
+    fetch_paper_tool_async,
+    provider_status_tool,
+)
+from paper_fetch.mcp.schemas import FetchPaperRequest
+from paper_fetch.mcp.server import build_server
+from paper_fetch.models import (
+    EXTRACTION_REVISION,
+    QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION,
+    Asset,
+    FetchEnvelope,
+    Metadata,
+    Quality,
+    RenderOptions,
 )
 from paper_fetch.providers.browser_runtime.backends import camoufox as camoufox_backend
 from paper_fetch.runtime import RuntimeContext
+from paper_fetch.service import FetchStrategy
 from paper_fetch.tracing import TraceContext, trace_event
+from tests.golden_criteria import golden_criteria_scenario_asset
+
+from ._mcp_support import (
+    create_cached_downloads,
+    create_cached_fetch_envelope,
+    mcp_test_deps,
+    sample_envelope,
+    sample_resolved_query,
+)
 
 
 class McpPayloadCacheTests(unittest.TestCase):
@@ -99,60 +144,10 @@ class McpPayloadCacheTests(unittest.TestCase):
         self.assertIs(captured["save_guard"], instances[0].commit_guard)
         self.assertEqual(instances[0].close_count, 1)
 
-    def test_v1_trace_migration_uses_top_level_then_quality_then_article(self) -> None:
-        base = sample_envelope(
-            modes={"article", "markdown"},
-            doi="10.1000/trace-migration",
-        ).to_dict()
-        top = [
-            {
-                "stage": "fulltext",
-                "component": "top",
-                "outcome": "fail",
-                "code": "top_failure",
-            }
-        ]
-        quality = [
-            {
-                "stage": "fulltext",
-                "component": "quality",
-                "outcome": "fail",
-                "code": "quality_failure",
-            }
-        ]
-        article = [
-            {
-                "stage": "fulltext",
-                "component": "article",
-                "outcome": "fail",
-                "code": "article_failure",
-            }
-        ]
-        base["trace"] = top
-        base["quality"]["trace"] = quality
-        base["article"]["quality"]["trace"] = article
-
-        migrated = mcp_tools._envelope_from_payload(base)
-        self.assertEqual([event.code for event in migrated.trace], ["top_failure"])
-
-        base["trace"] = []
-        migrated = mcp_tools._envelope_from_payload(base)
-        self.assertEqual(
-            [event.code for event in migrated.trace],
-            ["quality_failure"],
-        )
-
-        base["quality"]["trace"] = []
-        migrated = mcp_tools._envelope_from_payload(base)
-        self.assertEqual(
-            [event.code for event in migrated.trace],
-            ["article_failure"],
-        )
-
     def test_v2_writer_has_one_top_level_trace_owner_and_preserves_retries(
         self,
     ) -> None:
-        request = mcp_tools.FetchPaperRequest(
+        request = FetchPaperRequest(
             query="10.1000/trace-v2",
             modes=["article", "markdown"],
         )
@@ -177,8 +172,8 @@ class McpPayloadCacheTests(unittest.TestCase):
             ),
         ]
 
-        payload = mcp_tools._payload_from_envelope(envelope, request)
-        round_trip = mcp_tools._envelope_from_payload(payload)
+        payload = payload_from_envelope(envelope, request)
+        round_trip = envelope_from_payload(payload)
 
         self.assertEqual(payload["schema_version"], 2)
         self.assertEqual(len(payload["trace"]), 2)
@@ -191,8 +186,8 @@ class McpPayloadCacheTests(unittest.TestCase):
 
     def test_build_server_omits_output_schemas_for_all_tools(self) -> None:
         server = build_server()
-        for name, tool in server._tool_manager._tools.items():
-            self.assertIsNone(tool.output_schema, name)
+        for tool in asyncio.run(server.list_native_tools()):
+            self.assertIsNone(tool.output_schema, tool.name)
 
     def test_build_server_exposes_expected_tool_annotations(self) -> None:
         server = build_server()
@@ -227,8 +222,9 @@ class McpPayloadCacheTests(unittest.TestCase):
             },
         }
 
-        self.assertEqual(set(server._tool_manager._tools), set(expected))
-        for name, tool in server._tool_manager._tools.items():
+        tools = {tool.name: tool for tool in asyncio.run(server.list_native_tools())}
+        self.assertEqual(set(tools), set(expected))
+        for name, tool in tools.items():
             self.assertIsNotNone(tool.annotations, name)
             for field_name, value in expected[name].items():
                 self.assertEqual(
@@ -246,21 +242,20 @@ class McpPayloadCacheTests(unittest.TestCase):
             "probe": "unit_test",
             "packages": {"playwright": False, "camoufox": False},
         }
-        with (
-            mock.patch.object(mcp_tools, "build_runtime_env", return_value=blank_env),
-            mock.patch.object(
-                camoufox_backend,
-                "_dependency_details",
-                return_value=missing_dependencies,
-            ),
+        with mock.patch.object(
+            camoufox_backend,
+            "_dependency_details",
+            return_value=missing_dependencies,
         ):
-            result = mcp_tools.provider_status_tool()
+            result = provider_status_tool(
+                deps=mcp_test_deps(build_runtime_env=lambda _env=None: blank_env)
+            )
 
         self.assertFalse(result.is_error)
         providers = result.structured_content["providers"]
         self.assertEqual(
             [entry["provider"] for entry in providers],
-            list(mcp_tools._PROVIDER_STATUS_ORDER),
+            list(_PROVIDER_STATUS_ORDER),
         )
         self.assertEqual(providers[0]["provider"], "crossref")
         self.assertEqual(providers[0]["status"], "ready")
@@ -290,30 +285,21 @@ class McpPayloadCacheTests(unittest.TestCase):
             captured.update(kwargs)
             return sample_envelope(modes=kwargs["modes"])
 
-        with (
-            mock.patch.object(mcp_tools, "build_runtime_env", return_value=runtime_env),
-            mock.patch.object(
-                mcp_tools, "resolve_mcp_download_dir", return_value=default_download_dir
+        payload = fetch_paper_payload(
+            query="10.1000/example",
+            deps=mcp_test_deps(
+                build_runtime_env=lambda _env=None: runtime_env,
+                resolve_mcp_download_dir=lambda _env: default_download_dir,
+                service_fetch_paper=fake_fetch_paper,
             ),
-            mock.patch.object(
-                mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper
-            ),
-            mock.patch.object(mcp_tools, "refresh_cache_index_for_doi"),
-        ):
-            payload = mcp_tools.fetch_paper_payload(query="10.1000/example")
+        )
 
         self.assertEqual(payload["doi"], "10.1000/example")
         self.assertEqual(captured["query"], "10.1000/example")
         self.assertEqual(captured["modes"], {"article", "markdown"})
         self.assertEqual(captured["context"].download_dir, default_download_dir)
         self.assertEqual(captured["context"].artifact_mode, "markdown-assets")
-        self.assertEqual(
-            captured["context"].env,
-            {
-                **runtime_env,
-                "PAPER_FETCH_BROWSER_AUTO_PREPARE": "false",
-            },
-        )
+        self.assertEqual(captured["context"].env, runtime_env)
         self.assertEqual(
             captured["render"],
             RenderOptions(
@@ -342,17 +328,15 @@ class McpPayloadCacheTests(unittest.TestCase):
                     captured.update(kwargs)
                     return sample_envelope(modes=kwargs["modes"], doi=query)
 
-                with (
-                    mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
-                    mock.patch.object(
-                        mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper
+                payload = fetch_paper_payload(
+                    query="10.1000/example",
+                    artifact_mode=artifact_mode,
+                    download_dir=download_dir,
+                    deps=mcp_test_deps(
+                        build_runtime_env=lambda _env=None: {},
+                        service_fetch_paper=fake_fetch_paper,
                     ),
-                ):
-                    payload = mcp_tools.fetch_paper_payload(
-                        query="10.1000/example",
-                        artifact_mode=artifact_mode,
-                        download_dir=download_dir,
-                    )
+                )
 
                 self.assertEqual(payload["doi"], "10.1000/example")
                 self.assertEqual(captured["context"].download_dir, download_dir)
@@ -369,25 +353,21 @@ class McpPayloadCacheTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             download_dir = Path(tmpdir)
-            with (
-                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
-                mock.patch.object(
-                    mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper
+            payload = fetch_paper_payload(
+                query="10.1000/example",
+                artifact_mode="none",
+                download_dir=download_dir,
+                deps=mcp_test_deps(
+                    build_runtime_env=lambda _env=None: {},
+                    service_fetch_paper=fake_fetch_paper,
                 ),
-            ):
-                payload = mcp_tools.fetch_paper_payload(
-                    query="10.1000/example",
-                    artifact_mode="none",
-                    download_dir=download_dir,
-                )
+            )
 
             sidecar_path = download_dir / "10.1000_example.fetch-envelope.json"
             sidecar_exists = sidecar_path.exists()
             listed_kinds = {
                 entry["kind"]
-                for entry in mcp_tools.list_cached_payload(download_dir=download_dir)[
-                    "entries"
-                ]
+                for entry in list_cached_payload(download_dir=download_dir)["entries"]
             }
 
         self.assertEqual(payload["doi"], "10.1000/example")
@@ -405,22 +385,18 @@ class McpPayloadCacheTests(unittest.TestCase):
             captured.update(kwargs)
             return sample_envelope(modes=kwargs["modes"])
 
-        with (
-            mock.patch.object(
-                mcp_tools,
-                "build_runtime_env",
-                return_value={"PAPER_FETCH_DOWNLOAD_DIR": "/tmp/shared"},
+        mocked_resolve = mock.Mock()
+        fetch_paper_payload(
+            query="10.1000/example",
+            download_dir=explicit_download_dir,
+            deps=mcp_test_deps(
+                build_runtime_env=lambda _env=None: {
+                    "PAPER_FETCH_DOWNLOAD_DIR": "/tmp/shared"
+                },
+                resolve_mcp_download_dir=mocked_resolve,
+                service_fetch_paper=fake_fetch_paper,
             ),
-            mock.patch.object(mcp_tools, "resolve_mcp_download_dir") as mocked_resolve,
-            mock.patch.object(
-                mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper
-            ),
-            mock.patch.object(mcp_tools, "refresh_cache_index_for_doi"),
-        ):
-            mcp_tools.fetch_paper_payload(
-                query="10.1000/example",
-                download_dir=explicit_download_dir,
-            )
+        )
 
         mocked_resolve.assert_not_called()
         self.assertEqual(captured["context"].download_dir, explicit_download_dir)
@@ -434,22 +410,20 @@ class McpPayloadCacheTests(unittest.TestCase):
                 download_dir, "10.1000/example", modes=["markdown"]
             )
 
-            with (
-                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
-                mock.patch.object(mcp_tools, "service_resolve_paper") as mocked_resolve,
-                mock.patch.object(
-                    mcp_tools,
-                    "service_fetch_paper",
-                    return_value=sample_envelope(
-                        modes={"markdown"}, doi="10.1000/example"
-                    ),
-                ) as mocked_fetch,
-            ):
-                payload = mcp_tools.fetch_paper_payload(
-                    query="10.1000/example",
-                    modes=["markdown"],
-                    download_dir=download_dir,
-                )
+            mocked_resolve = mock.Mock()
+            mocked_fetch = mock.Mock(
+                return_value=sample_envelope(modes={"markdown"}, doi="10.1000/example")
+            )
+            payload = fetch_paper_payload(
+                query="10.1000/example",
+                modes=["markdown"],
+                download_dir=download_dir,
+                deps=mcp_test_deps(
+                    build_runtime_env=lambda _env=None: {},
+                    service_resolve_paper=mocked_resolve,
+                    service_fetch_paper=mocked_fetch,
+                ),
+            )
 
         self.assertEqual(payload["doi"], "10.1000/example")
         mocked_resolve.assert_not_called()
@@ -466,26 +440,20 @@ class McpPayloadCacheTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             download_dir = Path(tmpdir) / "downloads"
-            with (
-                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
-                mock.patch.object(
-                    mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper
+            payload = fetch_paper_payload(
+                query="10.1000/example",
+                no_download=True,
+                download_dir=download_dir,
+                deps=mcp_test_deps(
+                    build_runtime_env=lambda _env=None: {},
+                    service_fetch_paper=fake_fetch_paper,
                 ),
-                mock.patch.object(
-                    mcp_tools, "refresh_cache_index_for_doi"
-                ) as mocked_refresh,
-            ):
-                payload = mcp_tools.fetch_paper_payload(
-                    query="10.1000/example",
-                    no_download=True,
-                    download_dir=download_dir,
-                )
+            )
 
             self.assertEqual(payload["doi"], "10.1000/example")
             self.assertIsNone(captured["context"].download_dir)
             self.assertEqual(captured["context"].artifact_mode, "none")
             self.assertFalse(download_dir.exists())
-            mocked_refresh.assert_not_called()
 
     def test_fetch_paper_payload_save_markdown_writes_file_and_returns_path(
         self,
@@ -498,21 +466,18 @@ class McpPayloadCacheTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             download_dir = Path(tmpdir)
-            with (
-                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
-                mock.patch.object(
-                    mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper
+            payload = fetch_paper_payload(
+                query="10.1000/example",
+                save_markdown=True,
+                markdown_filename="custom.md",
+                download_dir=download_dir,
+                deps=mcp_test_deps(
+                    build_runtime_env=lambda _env=None: {},
+                    service_fetch_paper=fake_fetch_paper,
                 ),
-            ):
-                payload = mcp_tools.fetch_paper_payload(
-                    query="10.1000/example",
-                    save_markdown=True,
-                    markdown_filename="custom.md",
-                    download_dir=download_dir,
-                )
+            )
 
             saved_path = download_dir / "custom.md"
-            self.assertEqual(payload["saved_markdown_path"], str(saved_path))
             self.assertIsNone(payload["markdown"])
             self.assertIsNone(payload["article"])
             self.assertEqual(payload["metadata"]["title"], "Example Article")
@@ -539,19 +504,16 @@ class McpPayloadCacheTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             download_dir = Path(tmpdir)
-            with (
-                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
-                mock.patch.object(
-                    mcp_tools, "service_fetch_paper", return_value=envelope
+            payload = fetch_paper_payload(
+                query="10.1000/example",
+                save_markdown=True,
+                download_dir=download_dir,
+                deps=mcp_test_deps(
+                    build_runtime_env=lambda _env=None: {},
+                    service_fetch_paper=lambda *_args, **_kwargs: envelope,
                 ),
-            ):
-                payload = mcp_tools.fetch_paper_payload(
-                    query="10.1000/example",
-                    save_markdown=True,
-                    download_dir=download_dir,
-                )
+            )
 
-            self.assertNotIn("saved_markdown_path", payload)
             self.assertIsNone(payload["markdown"])
             self.assertIsNone(payload["article"])
             self.assertFalse(
@@ -580,18 +542,16 @@ class McpPayloadCacheTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             download_dir = Path(tmpdir)
-            with (
-                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
-                mock.patch.object(
-                    mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper
+            payload = fetch_paper_payload(
+                query="10.1000/example",
+                no_download=True,
+                save_markdown=True,
+                download_dir=download_dir,
+                deps=mcp_test_deps(
+                    build_runtime_env=lambda _env=None: {},
+                    service_fetch_paper=fake_fetch_paper,
                 ),
-            ):
-                payload = mcp_tools.fetch_paper_payload(
-                    query="10.1000/example",
-                    no_download=True,
-                    save_markdown=True,
-                    download_dir=download_dir,
-                )
+            )
 
             self.assertIsNone(captured["context"].download_dir)
             self.assertTrue((download_dir / "Example_2026_Example_Article.md").exists())
@@ -600,13 +560,9 @@ class McpPayloadCacheTests(unittest.TestCase):
             )
             self.assertFalse((download_dir / "10.1000_example.xml").exists())
             self.assertFalse((download_dir / "10.1000_example_assets").exists())
-            self.assertEqual(
-                payload["saved_markdown_path"],
-                str(download_dir / "Example_2026_Example_Article.md"),
-            )
             self.assertIsNone(payload["markdown"])
             self.assertIsNone(payload["article"])
-            listed = mcp_tools.list_cached_payload(download_dir=download_dir)
+            listed = list_cached_payload(download_dir=download_dir)
             self.assertEqual(
                 [entry["kind"] for entry in listed["entries"]], ["markdown"]
             )
@@ -623,32 +579,29 @@ class McpPayloadCacheTests(unittest.TestCase):
             captured.update(kwargs)
             return sample_envelope(modes=kwargs["modes"])
 
-        with (
-            mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
-            mock.patch.object(
-                mcp_tools,
-                "resolve_mcp_download_dir",
-                return_value=Path("/tmp/downloads"),
+        fetch_paper_payload(
+            query="10.1000/example",
+            strategy={"preferred_providers": [" Wiley ", "crossref", "wiley", ""]},
+            deps=mcp_test_deps(
+                build_runtime_env=lambda _env=None: {},
+                resolve_mcp_download_dir=lambda _env: Path("/tmp/downloads"),
+                service_fetch_paper=fake_fetch_paper,
             ),
-            mock.patch.object(
-                mcp_tools, "service_fetch_paper", side_effect=fake_fetch_paper
-            ),
-            mock.patch.object(mcp_tools, "refresh_cache_index_for_doi"),
-        ):
-            mcp_tools.fetch_paper_payload(
-                query="10.1000/example",
-                strategy={"preferred_providers": [" Wiley ", "crossref", "wiley", ""]},
-            )
+        )
 
         strategy = captured["strategy"]
         assert isinstance(strategy, FetchStrategy)
         self.assertEqual(strategy.preferred_providers, ["wiley", "crossref"])
 
     def test_fetch_paper_tool_rejects_invalid_modes_before_service_call(self) -> None:
-        with mock.patch.object(mcp_tools, "service_fetch_paper") as mocked_fetch:
-            result = asyncio.run(
-                mcp_tools.fetch_paper_tool_async(query="10.1000/example", modes=["pdf"])
+        mocked_fetch = mock.Mock()
+        result = asyncio.run(
+            fetch_paper_tool_async(
+                query="10.1000/example",
+                modes=["pdf"],
+                deps=mcp_test_deps(service_fetch_paper=mocked_fetch),
             )
+        )
 
         self.assertTrue(result.is_error)
         self.assertIn("unsupported output modes", result.structured_content["reason"])
@@ -657,12 +610,14 @@ class McpPayloadCacheTests(unittest.TestCase):
     def test_fetch_paper_tool_rejects_invalid_include_refs_before_service_call(
         self,
     ) -> None:
-        with mock.patch.object(mcp_tools, "service_fetch_paper") as mocked_fetch:
-            result = asyncio.run(
-                mcp_tools.fetch_paper_tool_async(
-                    query="10.1000/example", include_refs="summary"
-                )
+        mocked_fetch = mock.Mock()
+        result = asyncio.run(
+            fetch_paper_tool_async(
+                query="10.1000/example",
+                include_refs="summary",
+                deps=mcp_test_deps(service_fetch_paper=mocked_fetch),
             )
+        )
 
         self.assertTrue(result.is_error)
         self.assertIn(
@@ -673,13 +628,14 @@ class McpPayloadCacheTests(unittest.TestCase):
     def test_fetch_paper_tool_rejects_invalid_asset_profile_before_service_call(
         self,
     ) -> None:
-        with mock.patch.object(mcp_tools, "service_fetch_paper") as mocked_fetch:
-            result = asyncio.run(
-                mcp_tools.fetch_paper_tool_async(
-                    query="10.1000/example",
-                    strategy={"asset_profile": "full"},
-                )
+        mocked_fetch = mock.Mock()
+        result = asyncio.run(
+            fetch_paper_tool_async(
+                query="10.1000/example",
+                strategy={"asset_profile": "full"},
+                deps=mcp_test_deps(service_fetch_paper=mocked_fetch),
             )
+        )
 
         self.assertTrue(result.is_error)
         self.assertIn(
@@ -690,13 +646,14 @@ class McpPayloadCacheTests(unittest.TestCase):
     def test_fetch_paper_tool_rejects_invalid_artifact_mode_before_service_call(
         self,
     ) -> None:
-        with mock.patch.object(mcp_tools, "service_fetch_paper") as mocked_fetch:
-            result = asyncio.run(
-                mcp_tools.fetch_paper_tool_async(
-                    query="10.1000/example",
-                    artifact_mode="debug",
-                )
+        mocked_fetch = mock.Mock()
+        result = asyncio.run(
+            fetch_paper_tool_async(
+                query="10.1000/example",
+                artifact_mode="debug",
+                deps=mcp_test_deps(service_fetch_paper=mocked_fetch),
             )
+        )
 
         self.assertTrue(result.is_error)
         self.assertIn(
@@ -713,21 +670,20 @@ class McpPayloadCacheTests(unittest.TestCase):
                 download_dir, "10.1000/example", modes=["markdown"]
             )
 
-            with (
-                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
-                mock.patch.object(
-                    mcp_tools,
-                    "service_resolve_paper",
-                    return_value=sample_resolved_query("10.1000/example"),
+            mocked_fetch = mock.Mock()
+            payload = fetch_paper_payload(
+                query="10.1000/example",
+                modes=["markdown"],
+                prefer_cache=True,
+                download_dir=download_dir,
+                deps=mcp_test_deps(
+                    build_runtime_env=lambda _env=None: {},
+                    service_resolve_paper=lambda *_args, **_kwargs: (
+                        sample_resolved_query("10.1000/example")
+                    ),
+                    service_fetch_paper=mocked_fetch,
                 ),
-                mock.patch.object(mcp_tools, "service_fetch_paper") as mocked_fetch,
-            ):
-                payload = mcp_tools.fetch_paper_payload(
-                    query="10.1000/example",
-                    modes=["markdown"],
-                    prefer_cache=True,
-                    download_dir=download_dir,
-                )
+            )
 
         self.assertEqual(payload["doi"], "10.1000/example")
         self.assertEqual(payload["markdown"], "# Example Article\n\nExample body.\n")
@@ -745,22 +701,21 @@ class McpPayloadCacheTests(unittest.TestCase):
                 download_dir, "10.1000/example", modes=["markdown"]
             )
 
-            with (
-                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
-                mock.patch.object(
-                    mcp_tools,
-                    "service_resolve_paper",
-                    return_value=sample_resolved_query("10.1000/example"),
+            mocked_fetch = mock.Mock()
+            payload = fetch_paper_payload(
+                query="10.1000/example",
+                modes=["markdown"],
+                prefer_cache=True,
+                artifact_mode="none",
+                download_dir=download_dir,
+                deps=mcp_test_deps(
+                    build_runtime_env=lambda _env=None: {},
+                    service_resolve_paper=lambda *_args, **_kwargs: (
+                        sample_resolved_query("10.1000/example")
+                    ),
+                    service_fetch_paper=mocked_fetch,
                 ),
-                mock.patch.object(mcp_tools, "service_fetch_paper") as mocked_fetch,
-            ):
-                payload = mcp_tools.fetch_paper_payload(
-                    query="10.1000/example",
-                    modes=["markdown"],
-                    prefer_cache=True,
-                    artifact_mode="none",
-                    download_dir=download_dir,
-                )
+            )
 
         self.assertEqual(payload["doi"], "10.1000/example")
         self.assertEqual(payload["markdown"], "# Example Article\n\nExample body.\n")
@@ -773,25 +728,23 @@ class McpPayloadCacheTests(unittest.TestCase):
             download_dir = Path(tmpdir)
             create_cached_fetch_envelope(download_dir, "10.1000/example")
 
-            with (
-                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
-                mock.patch.object(
-                    mcp_tools,
-                    "service_resolve_paper",
-                    return_value=sample_resolved_query("10.1000/example"),
+            mocked_fetch = mock.Mock()
+            payload = fetch_paper_payload(
+                query="10.1000/example",
+                modes=["markdown"],
+                prefer_cache=True,
+                save_markdown=True,
+                download_dir=download_dir,
+                deps=mcp_test_deps(
+                    build_runtime_env=lambda _env=None: {},
+                    service_resolve_paper=lambda *_args, **_kwargs: (
+                        sample_resolved_query("10.1000/example")
+                    ),
+                    service_fetch_paper=mocked_fetch,
                 ),
-                mock.patch.object(mcp_tools, "service_fetch_paper") as mocked_fetch,
-            ):
-                payload = mcp_tools.fetch_paper_payload(
-                    query="10.1000/example",
-                    modes=["markdown"],
-                    prefer_cache=True,
-                    save_markdown=True,
-                    download_dir=download_dir,
-                )
+            )
 
             saved_path = download_dir / "Example_2026_Example_Article.md"
-            self.assertEqual(payload["saved_markdown_path"], str(saved_path))
             self.assertTrue(saved_path.exists())
         self.assertIsNone(payload["markdown"])
         self.assertIsNone(payload["article"])
@@ -808,81 +761,26 @@ class McpPayloadCacheTests(unittest.TestCase):
                 download_dir, "10.1000/example", modes=["markdown"]
             )
 
-            with (
-                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
-                mock.patch.object(
-                    mcp_tools,
-                    "service_resolve_paper",
-                    return_value=sample_resolved_query("10.1000/example"),
-                ),
-                mock.patch.object(
-                    mcp_tools,
-                    "service_fetch_paper",
-                    return_value=sample_envelope(
-                        modes={"article"}, doi="10.1000/example"
+            mocked_fetch = mock.Mock(
+                return_value=sample_envelope(modes={"article"}, doi="10.1000/example")
+            )
+            payload = fetch_paper_payload(
+                query="10.1000/example",
+                modes=["article"],
+                prefer_cache=True,
+                download_dir=download_dir,
+                deps=mcp_test_deps(
+                    build_runtime_env=lambda _env=None: {},
+                    service_resolve_paper=lambda *_args, **_kwargs: (
+                        sample_resolved_query("10.1000/example")
                     ),
-                ) as mocked_fetch,
-            ):
-                payload = mcp_tools.fetch_paper_payload(
-                    query="10.1000/example",
-                    modes=["article"],
-                    prefer_cache=True,
-                    download_dir=download_dir,
-                )
+                    service_fetch_paper=mocked_fetch,
+                ),
+            )
 
         self.assertEqual(payload["doi"], "10.1000/example")
         self.assertIsNotNone(payload["article"])
         mocked_fetch.assert_called_once()
-
-    def test_fetch_paper_payload_prefer_cache_derives_breakdown_from_legacy_sidecar_payload(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            download_dir = Path(tmpdir)
-            create_cached_fetch_envelope(
-                download_dir, "10.1000/example", modes=["article", "metadata"]
-            )
-            cache_path = mcp_tools._fetch_envelope_cache_path(
-                download_dir, "10.1000/example"
-            )
-            cache_payload = json.loads(cache_path.read_text(encoding="utf-8"))
-            cache_payload["payload"].pop("token_estimate_breakdown", None)
-            cache_payload["payload"]["article"]["quality"].pop(
-                "token_estimate_breakdown", None
-            )
-            cache_path.write_text(
-                json.dumps(cache_payload, ensure_ascii=False, indent=2),
-                encoding="utf-8",
-            )
-
-            with (
-                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
-                mock.patch.object(
-                    mcp_tools,
-                    "service_resolve_paper",
-                    return_value=sample_resolved_query("10.1000/example"),
-                ),
-                mock.patch.object(mcp_tools, "service_fetch_paper") as mocked_fetch,
-            ):
-                payload = mcp_tools.fetch_paper_payload(
-                    query="10.1000/example",
-                    modes=["article", "metadata"],
-                    prefer_cache=True,
-                    download_dir=download_dir,
-                )
-
-        self.assertEqual(
-            payload["token_estimate_breakdown"], {"abstract": 4, "body": 4, "refs": 0}
-        )
-        self.assertEqual(
-            payload["article"]["quality"]["token_estimate_breakdown"],
-            {"abstract": 4, "body": 4, "refs": 0},
-        )
-        self.assertEqual(payload["quality"]["extraction_revision"], EXTRACTION_REVISION)
-        self.assertIn(
-            QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION, payload["quality"]["flags"]
-        )
-        mocked_fetch.assert_not_called()
 
     def test_article_payload_preserves_asset_download_diagnostics(self) -> None:
         """rule: rule-asset-download-diagnostic-fields"""
@@ -905,7 +803,8 @@ class McpPayloadCacheTests(unittest.TestCase):
                 "reason": "recovered",
             },
         ]
-        article = mcp_tools._article_from_payload(payload)
+        payload["quality"] = asdict(Quality())
+        article = article_from_payload(payload)
 
         self.assertIsNotNone(article)
         assert article is not None
@@ -922,9 +821,7 @@ class McpPayloadCacheTests(unittest.TestCase):
         self.assertEqual(asset.provenance, ["conversion_degraded"])
 
     def test_fetch_envelope_payload_preserves_quality_asset_failures(self) -> None:
-        request = mcp_tools.FetchPaperRequest(
-            query="10.1000/example", modes=["article"]
-        )
+        request = FetchPaperRequest(query="10.1000/example", modes=["article"])
         envelope = sample_envelope(modes={"article"}, doi="10.1000/example")
         assert envelope.article is not None
         envelope.article.quality.asset_failures = [
@@ -938,7 +835,6 @@ class McpPayloadCacheTests(unittest.TestCase):
                 "body_snippet": "Just a moment... Please enable JavaScript and Cookies.",
                 "reason": "aws_waf_challenge",
                 "challenge_provider": "aws_waf",
-                "legacy_reason_code": "cloudflare_challenge",
                 "recovery_attempts": [
                     {
                         "status": "failed",
@@ -963,8 +859,8 @@ class McpPayloadCacheTests(unittest.TestCase):
             )
         ]
 
-        payload = mcp_tools._payload_from_envelope(envelope, request)
-        round_trip = mcp_tools._envelope_from_payload(payload)
+        payload = payload_from_envelope(envelope, request)
+        round_trip = envelope_from_payload(payload)
 
         self.assertEqual(payload["quality"]["asset_failures"][0]["status"], 403)
         self.assertEqual(
@@ -981,10 +877,6 @@ class McpPayloadCacheTests(unittest.TestCase):
         )
         self.assertEqual(
             round_trip.quality.asset_failures[0]["challenge_provider"], "aws_waf"
-        )
-        self.assertEqual(
-            round_trip.quality.asset_failures[0]["legacy_reason_code"],
-            "cloudflare_challenge",
         )
         self.assertEqual(payload["article"]["assets"][0]["browser_backend"], "camoufox")
         self.assertEqual(round_trip.article.assets[0].final_fetcher, "camoufox")
@@ -1004,27 +896,22 @@ class McpPayloadCacheTests(unittest.TestCase):
                 extraction_revision=EXTRACTION_REVISION - 1,
             )
 
-            with (
-                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
-                mock.patch.object(
-                    mcp_tools,
-                    "service_resolve_paper",
-                    return_value=sample_resolved_query("10.1000/example"),
-                ),
-                mock.patch.object(
-                    mcp_tools,
-                    "service_fetch_paper",
-                    return_value=sample_envelope(
-                        modes={"markdown"}, doi="10.1000/example"
+            mocked_fetch = mock.Mock(
+                return_value=sample_envelope(modes={"markdown"}, doi="10.1000/example")
+            )
+            payload = fetch_paper_payload(
+                query="10.1000/example",
+                modes=["markdown"],
+                prefer_cache=True,
+                download_dir=download_dir,
+                deps=mcp_test_deps(
+                    build_runtime_env=lambda _env=None: {},
+                    service_resolve_paper=lambda *_args, **_kwargs: (
+                        sample_resolved_query("10.1000/example")
                     ),
-                ) as mocked_fetch,
-            ):
-                payload = mcp_tools.fetch_paper_payload(
-                    query="10.1000/example",
-                    modes=["markdown"],
-                    prefer_cache=True,
-                    download_dir=download_dir,
-                )
+                    service_fetch_paper=mocked_fetch,
+                ),
+            )
 
         self.assertEqual(payload["doi"], "10.1000/example")
         self.assertNotIn(
@@ -1035,15 +922,11 @@ class McpPayloadCacheTests(unittest.TestCase):
     def test_fetch_cache_write_refreshes_index_with_scoped_entries(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             download_dir = Path(tmpdir)
-            request = mcp_tools.FetchPaperRequest(
-                query="10.1000/example", modes=["markdown"]
-            )
+            request = FetchPaperRequest(query="10.1000/example", modes=["markdown"])
             envelope = sample_envelope(modes={"markdown"}, doi="10.1000/example")
 
             FetchCache(download_dir).write_fetch_envelope(envelope, request)
-            entries = mcp_tools.list_cached_payload(download_dir=download_dir)[
-                "entries"
-            ]
+            entries = list_cached_payload(download_dir=download_dir)["entries"]
             lock_dir_exists = cache_lock_dir(download_dir).is_dir()
 
         self.assertEqual([entry["kind"] for entry in entries], ["fetch_envelope"])

@@ -3,7 +3,7 @@
   "$id": "https://paper-fetch.local/schemas/fixture-manifest-v1.json",
   "title": "Paper Fetch Fixture Manifest",
   "type": "object",
-  "required": ["samples", "tests"],
+  "required": ["samples"],
   "properties": {
     "$schema": {
       "type": "string",
@@ -14,44 +14,10 @@
       "additionalProperties": {
         "$ref": "#/$defs/sample"
       }
-    },
-    "tests": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/test"
-      }
     }
   },
   "additionalProperties": false,
   "$defs": {
-    "test": {
-      "type": "object",
-      "required": ["test", "anchors", "samples"],
-      "properties": {
-        "test": {
-          "type": "string",
-          "pattern": "^tests/.+\\.py::test_[A-Za-z0-9_]+$"
-        },
-        "anchors": {
-          "type": "array",
-          "minItems": 1,
-          "uniqueItems": true,
-          "items": {
-            "type": "string",
-            "pattern": "^rule-[A-Za-z0-9_-]+$"
-          }
-        },
-        "samples": {
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string",
-            "minLength": 1
-          }
-        }
-      },
-      "additionalProperties": false
-    },
     "sample": {
       "type": "object",
       "required": [

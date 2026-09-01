@@ -19,7 +19,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
-from collections.abc import Callable, Iterable, Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 
 from cachetools import LRUCache
 
@@ -34,7 +34,6 @@ BACKEND_AUTO = "auto"
 BACKEND_TEXMATH = "texmath"
 BACKEND_MATHML_TO_LATEX = "mathml-to-latex"
 BACKEND_MML2TEX = "mml2tex"
-BACKEND_LEGACY = "legacy"
 DEFAULT_BACKEND = BACKEND_TEXMATH
 DEFAULT_TIMEOUT_SECONDS = 5.0
 DEFAULT_CONVERSION_CACHE_SIZE = 1024
@@ -47,13 +46,6 @@ _CONVERSION_CACHE_LOCK = threading.RLock()
 _MATHML_WORKERS: dict[tuple[str, str], MathMLToLatexWorker] = {}
 _MATHML_WORKERS_LOCK = threading.Lock()
 _PERSISTENT_MATHML_WORKER_SUPPORTED = os.name != "nt"
-_FORMULA_TIMING_COLLECTOR: ContextVar[Callable[[float], None] | None] = ContextVar(
-    "paper_fetch_formula_timing_collector",
-    default=None,
-)
-_FORMULA_TIMING_DEPTH: ContextVar[int] = ContextVar(
-    "paper_fetch_formula_timing_depth", default=0
-)
 _FORMULA_RUNTIME_ENV: ContextVar[Mapping[str, str] | None] = ContextVar(
     "paper_fetch_formula_runtime_env", default=None
 )
@@ -291,10 +283,6 @@ FORMULA_BACKEND_REGISTRY: dict[str, FormulaBackendStrategy] = {
         name=BACKEND_MML2TEX,
         converter_name="convert_with_mml2tex",
     ),
-    BACKEND_LEGACY: FormulaBackendStrategy(
-        name=BACKEND_LEGACY,
-        unavailable_message="Legacy conversion is not available through formula_conversion.py",
-    ),
 }
 FORMULA_BACKEND_ALIASES = {
     alias: strategy.name
@@ -336,19 +324,6 @@ def clear_conversion_cache() -> None:
 
 
 @contextmanager
-def formula_timing_collector(
-    collector: Callable[[float], None] | None,
-) -> Iterator[None]:
-    """Collect wall-clock seconds spent in top-level MathML conversion calls."""
-
-    token = _FORMULA_TIMING_COLLECTOR.set(collector)
-    try:
-        yield
-    finally:
-        _FORMULA_TIMING_COLLECTOR.reset(token)
-
-
-@contextmanager
 def formula_runtime_env(env: Mapping[str, str]) -> Iterator[None]:
     """Scope implicit formula conversion to the active request environment."""
 
@@ -357,14 +332,6 @@ def formula_runtime_env(env: Mapping[str, str]) -> Iterator[None]:
         yield
     finally:
         _FORMULA_RUNTIME_ENV.reset(token)
-
-
-def _record_formula_timing(started_at: float) -> None:
-    collector = _FORMULA_TIMING_COLLECTOR.get()
-    if collector is None:
-        return
-    with suppress(Exception):
-        collector(max(0.0, time.monotonic() - started_at))
 
 
 def _conversion_cache_for(
@@ -1186,39 +1153,31 @@ def convert_mathml_string(
     env: Mapping[str, str] | None = None,
     backend: str | None = None,
 ) -> FormulaConversionResult:
-    started_at = time.monotonic()
-    depth = _FORMULA_TIMING_DEPTH.get()
-    depth_token = _FORMULA_TIMING_DEPTH.set(depth + 1)
-    try:
-        runtime_env = dict(env or _FORMULA_RUNTIME_ENV.get() or os.environ)
-        explicitly_selected = bool(
-            (backend or runtime_env.get("MATHML_CONVERTER_BACKEND") or "").strip()
-        )
-        selected_backend = resolve_backend(env=env, backend=backend)
-        cache_key = _formula_cache_key(
-            backend=selected_backend,
-            raw_mathml=raw_mathml,
+    runtime_env = dict(env or _FORMULA_RUNTIME_ENV.get() or os.environ)
+    explicitly_selected = bool(
+        (backend or runtime_env.get("MATHML_CONVERTER_BACKEND") or "").strip()
+    )
+    selected_backend = resolve_backend(env=env, backend=backend)
+    cache_key = _formula_cache_key(
+        backend=selected_backend,
+        raw_mathml=raw_mathml,
+        display_mode=display_mode,
+        env=runtime_env,
+    )
+    cached = _cached_result(cache_key, runtime_env)
+    if cached is not None:
+        return cached
+    return _store_result(
+        cache_key,
+        runtime_env,
+        _convert_mathml_string_uncached(
+            raw_mathml,
             display_mode=display_mode,
             env=runtime_env,
-        )
-        cached = _cached_result(cache_key, runtime_env)
-        if cached is not None:
-            return cached
-        return _store_result(
-            cache_key,
-            runtime_env,
-            _convert_mathml_string_uncached(
-                raw_mathml,
-                display_mode=display_mode,
-                env=runtime_env,
-                backend=selected_backend,
-                explicitly_selected=explicitly_selected,
-            ),
-        )
-    finally:
-        _FORMULA_TIMING_DEPTH.reset(depth_token)
-        if depth == 0:
-            _record_formula_timing(started_at)
+            backend=selected_backend,
+            explicitly_selected=explicitly_selected,
+        ),
+    )
 
 
 def _convert_mathml_string_uncached(

@@ -2,9 +2,6 @@
 from __future__ import annotations
 
 from paper_fetch.providers.base import ProviderFailure
-from paper_fetch.providers.browser_workflow.reuse_cache import (
-    DEFAULT_BROWSER_DOI_ROUTE_HINT_CACHE,
-)
 
 from ._atypon_browser_workflow_provider_support import *
 
@@ -165,7 +162,6 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
                 artifact_dir=Path("/tmp/paper-fetch-test-pnas"),
                 headless=True,
                 user_agent=None,
-                backend="camoufox",
             )
         )
         mocked_browser = mock.Mock(
@@ -742,8 +738,6 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
         self.assertEqual(raised.exception.code, "no_access")
 
     def test_pnas_provider_falls_back_to_pdf_with_browser_seed(self) -> None:
-        DEFAULT_BROWSER_DOI_ROUTE_HINT_CACHE.clear()
-        self.addCleanup(DEFAULT_BROWSER_DOI_ROUTE_HINT_CACHE.clear)
         client = pnas_provider.PnasClient(transport=None, env={})
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "pnas", PNAS_SAMPLE.doi)

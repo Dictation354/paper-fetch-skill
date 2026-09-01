@@ -10,7 +10,6 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 from hashlib import sha256
 import json
-import logging
 import os
 import signal
 import sys
@@ -31,11 +30,7 @@ from .browser_preflight import (
     run_browser_provider_preflight,
 )
 from .provider_catalog import browser_preflight_provider_names
-from .config import (
-    apply_browser_auto_prepare_policy,
-    build_runtime_env,
-    resolve_cli_download_dir,
-)
+from .config import build_runtime_env, resolve_cli_download_dir
 from .diagnostics import (
     doctor_payload as build_doctor_payload,
     provider_status_group_names,
@@ -44,20 +39,14 @@ from .diagnostics import (
 from .http import RequestCancelledError
 from .manifest import (
     DEFAULT_MANIFEST_BUILDER_DEPENDENCIES,
-    LegacyArtifactField,
     ManifestBuilderDependencies,
     ManifestOutputArtifactSpec,
     ManifestRecord,
-    ManifestRecordStatus,
     build_manifest_record,
 )
 from .manifest_writer import (
-    ManifestPersistenceError,
-    RunManifestState,
-    RunManifestStore,
-    audit_manifest_path,
     deterministic_manifest_record_id,
-    manifest_audit_exit_code,
+    serialize_manifest_record,
     write_manifest_record,
 )
 from .models import FetchEnvelope, OutputMode, RenderOptions
@@ -67,14 +56,10 @@ from .publisher_identity import (
     extract_doi_from_url,
     normalize_doi,
 )
-from .reason_codes import ERROR, NO_ACCESS, NOT_CONFIGURED, RATE_LIMITED
-from .providers.browser_runtime.preparation import (
-    browser_runtime_preparation_scope,
-)
+from .reason_codes import ERROR, NO_ACCESS, RATE_LIMITED
 from .runtime import (
     RuntimeContext,
     build_http_transport_for_context,
-    close_shared_browser_managers,
 )
 from .service import FetchStrategy, PaperFetchFailure, fetch_paper, resolve_paper
 from .tracing import merge_trace, trace_from_markers
@@ -92,12 +77,6 @@ from .workflow.batch_runner import (
     BatchItemStatus,
     run_batch,
 )
-from .workflow.batch_lifecycle import (
-    BatchLifecycleMode,
-    BatchLifecycleOverwriteError,
-    BatchLifecycleResumeError,
-    batch_run_lifecycle,
-)
 from .workflow.batch_routing import (
     initial_provider_lane,
     provider_lane_limit,
@@ -110,38 +89,6 @@ from .workflow.rendering import rewrite_markdown_asset_links
 from .workflow.rendering import (
     save_markdown_to_disk as save_markdown_to_disk_for_target,
 )
-
-
-class _BrowserPreparationProgressHandler(logging.Handler):
-    """Render browser preparation logs as concise CLI progress on stderr."""
-
-    def emit(self, record: logging.LogRecord) -> None:
-        try:
-            payload = getattr(record, "structured_data", None)
-            message = (
-                str(payload.get("message") or "").strip()
-                if isinstance(payload, Mapping)
-                else ""
-            )
-            sys.stderr.write(f"Camoufox: {message or record.getMessage()}\n")
-            sys.stderr.flush()
-        except Exception:
-            return
-
-
-@contextlib.contextmanager
-def _browser_preparation_progress():
-    runtime_logger = logging.getLogger("paper_fetch.browser_runtime")
-    previous_level = runtime_logger.level
-    handler = _BrowserPreparationProgressHandler(level=logging.INFO)
-    runtime_logger.addHandler(handler)
-    runtime_logger.setLevel(logging.INFO)
-    try:
-        yield
-    finally:
-        runtime_logger.removeHandler(handler)
-        runtime_logger.setLevel(previous_level)
-        handler.close()
 
 
 @dataclass(frozen=True)
@@ -209,10 +156,6 @@ class ManifestTargetConflict(OutputDirectoryError):
     """Raised when a manifest would overwrite a recorded output artifact."""
 
 
-class ManifestResumeError(OutputDirectoryError):
-    """Raised when a durable run cannot be safely resumed."""
-
-
 class OutputOverwriteRequired(OutputDirectoryError):
     """Raised when replacing an existing final artifact needs permission."""
 
@@ -221,7 +164,10 @@ SubcommandRegistrar = Callable[[argparse._SubParsersAction], None]
 
 
 @contextlib.contextmanager
-def _cooperative_batch_cancel(cancel_event: threading.Event):
+def _cooperative_batch_cancel(
+    cancel_event: threading.Event,
+    close_active_contexts: Callable[[], None],
+):
     if threading.current_thread() is not threading.main_thread() or not hasattr(
         signal, "SIGINT"
     ):
@@ -232,7 +178,7 @@ def _cooperative_batch_cancel(cancel_event: threading.Event):
 
     def handle_interrupt(_signum, _frame) -> None:
         if cancel_event.is_set():
-            close_shared_browser_managers()
+            close_active_contexts()
             raise KeyboardInterrupt
         cancel_event.set()
         print(
@@ -309,7 +255,6 @@ def write_output(
         serialized,
         encoding="utf-8",
         overwrite=overwrite,
-        use_lock=True,
     )
 
 
@@ -447,7 +392,6 @@ def save_formatted_output_copy(
         serialized,
         encoding="utf-8",
         overwrite=overwrite,
-        use_lock=True,
     )
 
 
@@ -534,8 +478,6 @@ def _compute_modes(args: argparse.Namespace) -> set[OutputMode]:
 
 
 def _effective_artifact_mode(args: argparse.Namespace) -> ArtifactMode:
-    if args.no_download:
-        return "none"
     return args.artifact_mode
 
 
@@ -632,8 +574,8 @@ def run_single_fetch(
     active_context = context or RuntimeContext(
         env=runtime_env,
         transport=transport,
-        download_dir=None if args.no_download else output_dir,
-        artifact_mode="none" if args.no_download else artifact_mode,
+        download_dir=output_dir,
+        artifact_mode=artifact_mode,
         asset_profile=args.asset_profile,
         cancel_check=cancel_check,
     )
@@ -667,44 +609,40 @@ def _run_single_fetch_with_context(
     modes = _compute_modes(args)
     render_options = _render_options_from_args(args)
     overwrite = bool(getattr(args, "overwrite", False))
-    preparation_cancel_check = cancel_check or context.cancel_check
-    with browser_runtime_preparation_scope(
-        cancel_check=preparation_cancel_check,
-    ):
-        try:
-            result = FetchPipeline(fetch_paper).run(
-                build_fetch_pipeline_request(
-                    query=query,
-                    modes=modes,
-                    strategy=FetchStrategy(
-                        allow_metadata_only_fallback=True,
-                        asset_profile=args.asset_profile,
-                        require_local_body_assets=bool(
-                            getattr(args, "require_local_body_assets", False)
-                        ),
-                        require_full_size_body_assets=bool(
-                            getattr(args, "require_full_size_body_assets", False)
-                        ),
+    try:
+        result = FetchPipeline(fetch_paper).run(
+            build_fetch_pipeline_request(
+                query=query,
+                modes=modes,
+                strategy=FetchStrategy(
+                    allow_metadata_only_fallback=True,
+                    asset_profile=args.asset_profile,
+                    require_local_body_assets=bool(
+                        getattr(args, "require_local_body_assets", False)
                     ),
-                    render=render_options,
-                    env=dict(runtime_env),
-                    download_dir=output_dir,
-                    no_download=args.no_download,
-                    artifact_mode=artifact_mode,
-                    transport=transport,
-                    cancel_check=cancel_check,
-                    context=context,
-                    markdown_save=_markdown_save_spec(
-                        args,
-                        output_dir=output_dir,
-                        render_options=render_options,
+                    require_full_size_body_assets=bool(
+                        getattr(args, "require_full_size_body_assets", False)
                     ),
-                )
+                ),
+                render=render_options,
+                env=dict(runtime_env),
+                download_dir=output_dir,
+                no_download=False,
+                artifact_mode=artifact_mode,
+                transport=transport,
+                cancel_check=cancel_check,
+                context=context,
+                markdown_save=_markdown_save_spec(
+                    args,
+                    output_dir=output_dir,
+                    render_options=render_options,
+                ),
             )
-        except FileExistsError as exc:
-            raise OutputOverwriteRequired(
-                f"{exc}; rerun with --overwrite after reviewing the existing output"
-            ) from exc
+        )
+    except FileExistsError as exc:
+        raise OutputOverwriteRequired(
+            f"{exc}; rerun with --overwrite after reviewing the existing output"
+        ) from exc
     context.raise_if_cancelled()
     envelope = result.envelope
     if args.primary_output_to_output_dir:
@@ -831,7 +769,7 @@ def _manifest_request_parameters(
             "max_tokens": args.max_tokens,
         },
         "artifact_mode": artifact_mode,
-        "no_download": bool(args.no_download),
+        "no_download": False,
         "save_markdown": bool(args.save_markdown_to_disk),
         "output": args.output,
         "output_dir": str(output_dir),
@@ -931,7 +869,6 @@ def _manifest_output_artifacts(
                     "json": "primary_json",
                     "both": "primary_both",
                 }[args.format],
-                legacy_field=LegacyArtifactField.OUTPUT_PATH,
             )
         )
     if result.saved_markdown_path is not None:
@@ -939,7 +876,6 @@ def _manifest_output_artifacts(
             ManifestOutputArtifactSpec(
                 path=str(result.saved_markdown_path),
                 kind="saved_markdown",
-                legacy_field=LegacyArtifactField.SAVED_MARKDOWN_PATH,
             )
         )
     for diagnostic in result.envelope.diagnostic_artifacts:
@@ -1201,7 +1137,11 @@ def exit_code_for_batch_results(
     results: Sequence[ManifestRecord | Mapping[str, Any]],
 ) -> int:
     statuses = [
-        item.status if isinstance(item, ManifestRecord) else str(item.get("status"))
+        (
+            ("ok" if item.error is None else item.error.status)
+            if isinstance(item, ManifestRecord)
+            else str(item.get("status"))
+        )
         for item in results
     ]
     failure_statuses = {status for status in statuses if status != "ok"}
@@ -1215,10 +1155,6 @@ def exit_code_for_batch_results(
         if status in failure_statuses:
             return exit_code
     return 1
-
-
-def _default_run_manifest_path(results_path: Path) -> Path:
-    return results_path.parent / "run-manifest.json"
 
 
 def run_batch_fetch(
@@ -1239,226 +1175,146 @@ def run_batch_fetch(
         else output_dir / "batch-results.jsonl"
     )
     effective_tool_version = tool_version or package_version()
-    request_parameters = _manifest_request_parameters(
-        args,
-        output_dir=output_dir,
+    overwrite = bool(getattr(args, "overwrite", False))
+    if requested_results_path.exists() and not overwrite:
+        raise OutputOverwriteRequired(
+            f"refusing to overwrite existing batch results: {requested_results_path}; "
+            "rerun with --overwrite"
+        )
+
+    active_run_id = run_id or deps.uuid_factory()
+    items = [
+        CliBatchItem(
+            index=index,
+            query=query,
+            lane_key=_batch_lane_for_query(query),
+            canonical_doi=_expected_doi_for_query(query),
+        )
+        for index, query in enumerate(queries, start=1)
+    ]
+    records: dict[int, ManifestRecord] = {}
+    records_lock = threading.Lock()
+    cancel_event = threading.Event()
+    shared_transport = build_http_transport_for_context(
+        runtime_env,
+        download_dir=output_dir,
+        cancel_check=cancel_event.is_set,
         artifact_mode=artifact_mode,
     )
-    overwrite = bool(getattr(args, "overwrite", False))
-    resume_value = getattr(args, "resume", None)
+    with RuntimeContext(
+        env=runtime_env,
+        transport=shared_transport,
+        download_dir=output_dir,
+        artifact_mode=artifact_mode,
+        cancel_check=cancel_event.is_set,
+    ) as batch_context:
+        item_contexts = {
+            item.index: batch_context.new_request_context(
+                asset_profile=args.asset_profile,
+            )
+            for item in items
+        }
 
-    if resume_value:
+        def close_active_contexts() -> None:
+            for active_context in item_contexts.values():
+                active_context.close()
+
         try:
-            store = RunManifestStore.from_manifest(Path(resume_value))
-        except ManifestPersistenceError as exc:
-            raise ManifestResumeError(str(exc)) from exc
-        if args.batch_results and (
-            requested_results_path.resolve(strict=False)
-            != store.events_path.resolve(strict=False)
-        ):
-            raise ManifestResumeError(
-                "--batch-results differs from the event path recorded by --resume; "
-                "create a new run instead"
-            )
-        if getattr(args, "run_manifest", None):
-            raise ManifestResumeError("--run-manifest cannot be combined with --resume")
-    else:
-        results_path = requested_results_path
-        manifest_value = getattr(args, "run_manifest", None)
-        manifest_path = (
-            Path(manifest_value)
-            if manifest_value
-            else _default_run_manifest_path(results_path)
-        )
-        if manifest_path.resolve(strict=False) == results_path.resolve(strict=False):
-            raise ManifestTargetConflict(
-                "--run-manifest and --batch-results must use different paths."
-            )
-        store = RunManifestStore.for_new_run(
-            manifest_path=manifest_path,
-            events_path=results_path,
-        )
+            with _cooperative_batch_cancel(cancel_event, close_active_contexts):
+                prepared_lanes = run_batch(
+                    items,
+                    lambda item: _resolve_cli_batch_item_lane(
+                        item,
+                        context=item_contexts[item.index],
+                    ),
+                    max_workers=args.batch_concurrency,
+                    lane_key=lambda item: f"resolve:{item.index}",
+                    cancel_event=cancel_event,
+                )
+                logical_items = [
+                    result.value if result.value is not None else result.item
+                    for result in prepared_lanes.results
+                ]
+                scheduled_items, duplicates_by_owner = _deduplicate_cli_batch_items(
+                    logical_items
+                )
 
-    try:
-        with batch_run_lifecycle(
-            store=store,
-            queries=queries,
-            request_parameters=request_parameters,
-            execution_policy=_manifest_execution_policy(args),
-            tool_version=effective_tool_version,
-            requested_run_id=run_id,
-            mode=BatchLifecycleMode(
-                resume=bool(resume_value),
-                overwrite=overwrite,
-            ),
-            clock=deps.clock,
-            uuid_factory=deps.uuid_factory,
-            item_factory=lambda index, query, attempt: CliBatchItem(
-                index=index,
-                query=query,
-                lane_key=_batch_lane_for_query(query),
-                attempt=attempt,
-                canonical_doi=_expected_doi_for_query(query),
-            ),
-        ) as lifecycle:
-            try:
-                items = lifecycle.items
-                run_cancelled = False
-                if items:
-                    cancel_event = threading.Event()
-                    shared_transport = build_http_transport_for_context(
-                        runtime_env,
-                        download_dir=output_dir,
-                        cancel_check=cancel_event.is_set,
-                        artifact_mode=artifact_mode,
+                def on_completion(
+                    event: BatchCompletionEvent[CliBatchItem, CliFetchOutcome],
+                ) -> None:
+                    fanout_items = (
+                        event.result.item,
+                        *duplicates_by_owner.get(event.result.item.index, ()),
                     )
-                    batch_context = lifecycle.track_closable(
-                        RuntimeContext(
-                            env=runtime_env,
-                            transport=shared_transport,
-                            download_dir=output_dir,
+                    for position, fanout_item in enumerate(fanout_items):
+                        outcome = event.result.value
+                        if position and outcome is not None:
+                            with contextlib.suppress(Exception):
+                                outcome = copy.deepcopy(outcome)
+                        fanout_result = replace(
+                            event.result,
+                            item=fanout_item,
+                            lane_key=fanout_item.lane_key,
+                            value=outcome,
+                        )
+                        record = _record_from_batch_result(
+                            args,
+                            fanout_result,
+                            output_dir=output_dir,
                             artifact_mode=artifact_mode,
-                            cancel_check=cancel_event.is_set,
+                            run_id=active_run_id,
+                            tool_version=effective_tool_version,
+                            deps=deps,
                         )
-                    )
-                    item_contexts = {
-                        item.index: lifecycle.track_closable(
-                            batch_context.new_request_context(
-                                asset_profile=args.asset_profile,
-                            )
-                        )
-                        for item in items
-                    }
-                    with lifecycle.event_writer(overwrite=overwrite) as writer:
-                        with _cooperative_batch_cancel(cancel_event):
-                            prepared_lanes = run_batch(
-                                items,
-                                lambda item: _resolve_cli_batch_item_lane(
-                                    item,
-                                    context=item_contexts[item.index],
-                                ),
-                                max_workers=args.batch_concurrency,
-                                lane_key=lambda item: f"resolve:{item.index}",
-                                cancel_event=cancel_event,
-                            )
-                            logical_items = [
-                                result.value
-                                if result.value is not None
-                                else result.item
-                                for result in prepared_lanes.results
-                            ]
-                            items, duplicates_by_owner = _deduplicate_cli_batch_items(
-                                logical_items
-                            )
+                        with records_lock:
+                            records[fanout_item.index] = record
 
-                            def on_completion(
-                                event: BatchCompletionEvent[
-                                    CliBatchItem, CliFetchOutcome
-                                ],
-                            ) -> None:
-                                fanout_items = (
-                                    event.result.item,
-                                    *duplicates_by_owner.get(
-                                        event.result.item.index, ()
-                                    ),
-                                )
-                                for position, fanout_item in enumerate(fanout_items):
-                                    outcome = event.result.value
-                                    if position and outcome is not None:
-                                        with contextlib.suppress(Exception):
-                                            outcome = copy.deepcopy(outcome)
-                                    fanout_result = replace(
-                                        event.result,
-                                        item=fanout_item,
-                                        lane_key=fanout_item.lane_key,
-                                        value=outcome,
-                                    )
-                                    lifecycle.persist(
-                                        _record_from_batch_result(
-                                            args,
-                                            fanout_result,
-                                            output_dir=output_dir,
-                                            artifact_mode=artifact_mode,
-                                            run_id=lifecycle.run_id,
-                                            tool_version=effective_tool_version,
-                                            deps=deps,
-                                        ),
-                                        writer=writer,
-                                    )
+                run_result = run_batch(
+                    scheduled_items,
+                    lambda item: _run_batch_item(
+                        item,
+                        args=args,
+                        output_dir=output_dir,
+                        runtime_env=runtime_env,
+                        artifact_mode=artifact_mode,
+                        context=item_contexts[item.index],
+                        deps=deps,
+                    ),
+                    max_workers=args.batch_concurrency,
+                    lane_key=lambda item: item.lane_key,
+                    lane_limits=lambda lane: provider_lane_limit(
+                        lane,
+                        global_limit=args.batch_concurrency,
+                    ),
+                    completion_callback=on_completion,
+                    result_classifier=_classify_batch_outcome,
+                    cancel_event=cancel_event,
+                    cancel_escalation_callback=close_active_contexts,
+                )
+        finally:
+            close_active_contexts()
 
-                            run_result = run_batch(
-                                items,
-                                lambda item: _run_batch_item(
-                                    item,
-                                    args=args,
-                                    output_dir=output_dir,
-                                    runtime_env=runtime_env,
-                                    artifact_mode=artifact_mode,
-                                    context=item_contexts[item.index],
-                                    deps=deps,
-                                ),
-                                max_workers=args.batch_concurrency,
-                                lane_key=lambda item: item.lane_key,
-                                lane_limits=lambda lane: provider_lane_limit(
-                                    lane,
-                                    global_limit=args.batch_concurrency,
-                                ),
-                                completion_callback=on_completion,
-                                result_classifier=_classify_batch_outcome,
-                                cancel_event=cancel_event,
-                                cancel_escalation_callback=(
-                                    close_shared_browser_managers
-                                ),
-                            )
-                    if run_result.callback_failures:
-                        details = "; ".join(
-                            f"index {items[failure.source_index].index}: "
-                            f"{failure.message}"
-                            for failure in run_result.callback_failures
-                        )
-                        raise OutputDirectoryError(
-                            f"could not persist complete batch events: {details}"
-                        )
-                    run_cancelled = run_result.cancelled
-
-                latest_records = lifecycle.journal.require_complete(len(queries))
-                run_cancelled = run_cancelled or any(
-                    record.record_status == ManifestRecordStatus.ABORTED
-                    and record.error is not None
-                    and (record.error.model_extra or {}).get("code")
-                    == "request_cancelled"
-                    for record in latest_records.values()
-                )
-                _manifest, latest_records = lifecycle.complete(
-                    state=(
-                        RunManifestState.CANCELLED
-                        if run_cancelled
-                        else RunManifestState.COMPLETED
-                    )
-                )
-                return exit_code_for_batch_results(
-                    [latest_records[index] for index in sorted(latest_records)]
-                )
-            except BaseException as exc:
-                lifecycle.best_effort_abort(
-                    state=(
-                        RunManifestState.INTERRUPTED
-                        if isinstance(exc, KeyboardInterrupt)
-                        else RunManifestState.CANCELLED
-                        if isinstance(exc, RequestCancelledError)
-                        else RunManifestState.FAILED
-                    )
-                )
-                raise
-    except BatchLifecycleResumeError as exc:
-        raise ManifestResumeError(str(exc)) from exc
-    except BatchLifecycleOverwriteError as exc:
-        message = str(exc).replace("enable overwrite", "rerun with --overwrite")
-        raise OutputOverwriteRequired(message) from exc
-    except ManifestPersistenceError as exc:
-        if resume_value:
-            raise ManifestResumeError(str(exc)) from exc
-        raise
+    if run_result.callback_failures:
+        details = "; ".join(
+            f"index {scheduled_items[failure.source_index].index}: {failure.message}"
+            for failure in run_result.callback_failures
+        )
+        raise OutputDirectoryError(f"could not build complete batch results: {details}")
+    if len(records) != len(queries):
+        raise OutputDirectoryError("batch runner did not produce one result per input")
+    ordered_records = [records[index] for index in sorted(records)]
+    body = "".join(
+        f"{serialize_manifest_record(record)}\n" for record in ordered_records
+    )
+    try:
+        ArtifactStore.from_download_dir(output_dir).write_text_file(
+            requested_results_path,
+            body,
+            overwrite=overwrite,
+        )
+    except FileExistsError as exc:
+        raise OutputOverwriteRequired(str(exc)) from exc
+    return exit_code_for_batch_results(ordered_records)
 
 
 def _default(value: Any, *, suppress_defaults: bool) -> Any:
@@ -1470,7 +1326,7 @@ def _add_fetch_arguments(
     *,
     suppress_defaults: bool,
 ) -> None:
-    """Register fetch flags once for the explicit and legacy command surfaces."""
+    """Register the current fetch flags on a parser."""
     query_group = parser.add_mutually_exclusive_group()
     query_group.add_argument(
         "--query",
@@ -1494,22 +1350,6 @@ def _add_fetch_arguments(
         help="JSONL summary path for --query-file batch mode. Defaults to <output-dir>/batch-results.jsonl.",
     )
     parser.add_argument(
-        "--run-manifest",
-        default=_default(None, suppress_defaults=suppress_defaults),
-        help=(
-            "Atomic run summary path for --query-file batch mode. Defaults to "
-            "run-manifest.json beside --batch-results."
-        ),
-    )
-    parser.add_argument(
-        "--resume",
-        default=_default(None, suppress_defaults=suppress_defaults),
-        help=(
-            "Resume a batch from its run-manifest.json after read-only audit. "
-            "Requires the original --query-file and matching fetch/output options."
-        ),
-    )
-    parser.add_argument(
         "--manifest",
         default=_default(None, suppress_defaults=suppress_defaults),
         help=(
@@ -1521,10 +1361,7 @@ def _add_fetch_arguments(
         "--overwrite",
         action="store_true",
         default=_default(False, suppress_defaults=suppress_defaults),
-        help=(
-            "Allow replacement of existing final outputs or a new run's manifest files. "
-            "Resume still audits before replacement."
-        ),
+        help=("Allow replacement of existing final outputs and batch results."),
     )
     parser.add_argument(
         "--format",
@@ -1560,15 +1397,6 @@ def _add_fetch_arguments(
             "Controls local artifact retention. markdown-assets saves Markdown plus assets from "
             "--asset-profile and keeps PDF fallback sources; all preserves raw provider/cache "
             "artifacts; none disables provider artifacts and assets (default: markdown-assets)."
-        ),
-    )
-    parser.add_argument(
-        "--no-download",
-        action="store_true",
-        default=_default(False, suppress_defaults=suppress_defaults),
-        help=(
-            "CLI artifact alias for --artifact-mode none; disables provider artifacts and assets, "
-            "but does not block explicit --output, --output-dir primary output, or --save-markdown."
         ),
     )
     parser.add_argument(
@@ -1635,16 +1463,6 @@ def _add_fetch_arguments(
         version=f"paper-fetch {package_version()}",
         help="Show the installed paper-fetch version and exit.",
     )
-    parser.add_argument(
-        "--browser-auto-prepare",
-        action=argparse.BooleanOptionalAction,
-        default=_default(None, suppress_defaults=suppress_defaults),
-        help=(
-            "Allow browser-triggering CLI fetches to install, repair, or periodically "
-            "update the managed Camoufox runtime on demand (default: enabled; "
-            "use --no-browser-auto-prepare to forbid browser downloads)."
-        ),
-    )
 
 
 def _build_fetch_parent_parser(*, suppress_defaults: bool) -> argparse.ArgumentParser:
@@ -1673,48 +1491,11 @@ def _add_auth_arguments(parser: argparse.ArgumentParser) -> None:
         "--browser-user-agent",
         help="Browser-only User-Agent override for this authentication run (default: runtime configuration).",
     )
-    parser.add_argument(
-        "--browser-auto-prepare",
-        action=argparse.BooleanOptionalAction,
-        default=None,
-        help=(
-            "Install, repair, or periodically update the managed Camoufox runtime "
-            "when needed (default: enabled)."
-        ),
-    )
-    parser.add_argument(
-        "--state-json",
-        help=argparse.SUPPRESS,
-    )
-    parser.add_argument(
-        "--env-file",
-        help=argparse.SUPPRESS,
-    )
-    parser.add_argument(
-        "--no-env-write",
-        action="store_true",
-        help=argparse.SUPPRESS,
-    )
-    parser.add_argument(
-        "--wait-seconds",
-        type=parse_positive_int_arg,
-        default=None,
-        help=argparse.SUPPRESS,
-    )
 
 
 def _build_auth_parent_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(add_help=False)
     _add_auth_arguments(parser)
-    return parser
-
-
-def build_auth_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        prog="paper-fetch auth",
-        description="Manage publisher browser authentication state.",
-        parents=[_build_auth_parent_parser()],
-    )
     return parser
 
 
@@ -1739,15 +1520,6 @@ def _add_browser_preflight_arguments(parser: argparse.ArgumentParser) -> None:
         help="Browser-only User-Agent override for this preflight run (default: runtime configuration).",
     )
     parser.add_argument(
-        "--browser-auto-prepare",
-        action=argparse.BooleanOptionalAction,
-        default=None,
-        help=(
-            "Install, repair, or periodically update the managed Camoufox runtime "
-            "when needed (default: enabled)."
-        ),
-    )
-    parser.add_argument(
         "--download-dir",
         type=Path,
         default=None,
@@ -1767,60 +1539,6 @@ def _build_browser_preflight_parent_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def build_browser_preflight_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        prog="paper-fetch browser-preflight",
-        description=(
-            "Serially open browser-backed provider sample pages, save provider "
-            "storage-state JSON on success, and report providers that need manual auth."
-        ),
-        parents=[_build_browser_preflight_parent_parser()],
-    )
-    return parser
-
-
-def _run_manifest_namespace(args: argparse.Namespace) -> int:
-    report = audit_manifest_path(args.path, mode=args.manifest_action)
-    sys.stdout.write(report.to_json() + "\n")
-    return manifest_audit_exit_code(report)
-
-
-def _register_manifest_subcommand(
-    subparsers: argparse._SubParsersAction,
-) -> None:
-    manifest_parser = subparsers.add_parser(
-        "manifest",
-        help="Read-only audit and reconciliation for run or single manifests.",
-        description=(
-            "Inspect manifest structure, current output hashes, Markdown front matter, "
-            "request fingerprints, and acceptance without writing files or using network."
-        ),
-    )
-    actions = manifest_parser.add_subparsers(
-        dest="manifest_action",
-        title="manifest commands",
-        required=True,
-    )
-    for action in ("audit", "reconcile"):
-        action_parser = actions.add_parser(
-            action,
-            help=(
-                "Inspect manifest state without mutation."
-                if action == "audit"
-                else "Re-read final artifacts and report stale state without mutation."
-            ),
-        )
-        action_parser.add_argument(
-            "path",
-            type=Path,
-            help="Path to run-manifest.json or a single-paper manifest.",
-        )
-        action_parser.set_defaults(
-            _command_handler=_run_manifest_namespace,
-            _command_parser=action_parser,
-        )
-
-
 def _write_doctor_human(report: Mapping[str, Any]) -> None:
     provider_report = report.get("provider_status")
     providers = (
@@ -1833,60 +1551,6 @@ def _write_doctor_human(report: Mapping[str, Any]) -> None:
     )
     sys.stdout.write(f"Status: {report.get('status', ERROR)}\n")
     sys.stdout.write("Live publisher or browser-page checks: not run\n")
-    provenance = report.get("install_provenance")
-    if isinstance(provenance, Mapping):
-        sys.stdout.write(
-            f"Provenance scope: {provenance.get('provenance_scope', 'runtime')}\n"
-        )
-        sys.stdout.write(
-            f"Install provenance: {provenance.get('status', 'not_applicable')}"
-        )
-        expected_version = provenance.get("consistency")
-        if isinstance(expected_version, Mapping) and expected_version.get(
-            "expected_version"
-        ):
-            sys.stdout.write(
-                f" (expected version {expected_version['expected_version']})"
-            )
-        sys.stdout.write("\n")
-        bundled_skill = provenance.get("bundled_skill")
-        if isinstance(bundled_skill, Mapping) and bundled_skill.get(
-            "expected_content_version"
-        ):
-            sys.stdout.write(
-                "Skill source bundle: "
-                f"{bundled_skill.get('status', 'unknown')} "
-                f"({bundled_skill['expected_content_version']})\n"
-            )
-        for active_skill in provenance.get("host_skills", []):
-            if (
-                not isinstance(active_skill, Mapping)
-                or active_skill.get("host") != "codex"
-            ):
-                continue
-            version = active_skill.get("actual_content_version")
-            sys.stdout.write(
-                "Active Codex skill"
-                f" [{active_skill.get('scope', 'user')}]: "
-                f"{active_skill.get('status', 'unknown')}"
-            )
-            if version:
-                sys.stdout.write(f" ({version})")
-            sys.stdout.write("\n")
-        for issue in provenance.get("issues", []):
-            if not isinstance(issue, Mapping):
-                continue
-            component = issue.get("component", "installation")
-            reason_code = issue.get("reason_code", "provenance_issue")
-            path = issue.get("path")
-            actual = issue.get("actual")
-            expected = issue.get("expected")
-            sys.stdout.write(f"- {component}: {reason_code}")
-            if actual is not None or expected is not None:
-                sys.stdout.write(f" (actual={actual}, expected={expected})")
-            if path:
-                sys.stdout.write(f" — {path}")
-            sys.stdout.write("\n")
     for item in providers:
         if not isinstance(item, Mapping):
             continue
@@ -1913,7 +1577,6 @@ def _run_doctor_namespace(args: argparse.Namespace) -> int:
             group=args.group,
             detail=args.detail,
             env_file=args.env_file,
-            install_root=args.install_root,
         )
     except ValueError as error:
         args._command_parser.error(str(error))
@@ -1964,14 +1627,6 @@ def _register_doctor_subcommand(
         help="Explicit dotenv file used only for source-aware static diagnostics.",
     )
     doctor_parser.add_argument(
-        "--install-root",
-        type=Path,
-        help=(
-            "Verify one offline install root, its runtime manifest, and installed "
-            "Codex/Claude/Antigravity skill copies."
-        ),
-    )
-    doctor_parser.add_argument(
         "--json",
         action="store_true",
         dest="output_json",
@@ -1985,27 +1640,28 @@ def _register_doctor_subcommand(
 
 def build_parser(
     *,
-    manifest_registrar: SubcommandRegistrar | None = None,
     doctor_registrar: SubcommandRegistrar | None = None,
 ) -> argparse.ArgumentParser:
-    """Build the discoverable CLI while retaining root-level fetch flags."""
+    """Build the discoverable command-oriented CLI."""
     parser = argparse.ArgumentParser(
         prog="paper-fetch",
         description=(
             "Fetch AI-friendly paper full text and manage browser-backed provider access."
         ),
-        epilog=(
-            "Compatibility: root-level fetch flags remain available for one release cycle; "
-            "prefer `paper-fetch fetch ...`. Doctor performs static, network-free checks."
-        ),
-        parents=[_build_fetch_parent_parser(suppress_defaults=False)],
+        epilog="Doctor performs static, network-free checks.",
     )
-    parser.set_defaults(_command_parser=parser)
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"paper-fetch {package_version()}",
+        help="Show the installed paper-fetch version and exit.",
+    )
     subparsers = parser.add_subparsers(
         dest="_command",
         title="commands",
         description="Run `paper-fetch COMMAND --help` for command-specific options.",
     )
+    subparsers.required = True
 
     fetch_parser = subparsers.add_parser(
         "fetch",
@@ -2014,7 +1670,7 @@ def build_parser(
             "Fetch AI-friendly full text for a paper by DOI, URL, or title. "
             "Browser-backed providers use Camoufox when the browser extra is installed."
         ),
-        parents=[_build_fetch_parent_parser(suppress_defaults=True)],
+        parents=[_build_fetch_parent_parser(suppress_defaults=False)],
     )
     fetch_parser.set_defaults(
         _command_handler=_run_fetch_namespace,
@@ -2046,10 +1702,6 @@ def build_parser(
         _command_parser=preflight_parser,
     )
 
-    if manifest_registrar is None:
-        _register_manifest_subcommand(subparsers)
-    else:
-        manifest_registrar(subparsers)
     if doctor_registrar is None:
         _register_doctor_subcommand(subparsers)
     else:
@@ -2062,10 +1714,6 @@ def _write_auth_result(provider_key: str, provider_label: str, result) -> None:
     profile_dir = getattr(result, "profile_dir", None)
     if profile_dir is not None:
         sys.stdout.write(f"{provider_label} profile dir: {profile_dir}\n")
-    if result.env_written and result.env_file_path is not None:
-        sys.stdout.write(f"Environment updated: {result.env_file_path}\n")
-    else:
-        sys.stdout.write("Environment update skipped.\n")
     if result.verified:
         sys.stdout.write(f"{provider_label} verification detected: yes\n")
     else:
@@ -2089,22 +1737,6 @@ def _write_browser_preflight_results(results: list[BrowserPreflightResult]) -> N
             sys.stdout.write(f"  Final URL: {result.final_url}\n")
         if result.storage_state_path is not None:
             sys.stdout.write(f"  Storage state: {result.storage_state_path}\n")
-        trace = (result.diagnostics or {}).get("browser_runtime_trace")
-        external = (
-            trace.get("external_cdp_context") if isinstance(trace, dict) else None
-        )
-        if isinstance(external, dict) and external.get("external_cdp"):
-            borrowed = external.get("borrowed_existing_context")
-            sys.stdout.write(
-                "  External CDP: "
-                f"{'borrowed existing context' if borrowed else 'new context'}\n"
-            )
-            ignored = external.get("ignored_context_options") or []
-            if ignored:
-                sys.stdout.write(f"  Ignored context options: {', '.join(ignored)}\n")
-            cookie_count = external.get("storage_state_cookie_count")
-            if cookie_count is not None:
-                sys.stdout.write(f"  Injected storage cookies: {cookie_count}\n")
         if not result.ready:
             detail = result.message or "Browser preflight failed."
             sys.stdout.write(f"  Code: {result.reason_code}\n")
@@ -2117,7 +1749,7 @@ def _write_browser_preflight_results(results: list[BrowserPreflightResult]) -> N
                 sys.stdout.write(f"  Exit code: {exit_code}\n")
             stderr_summary = str(browser_failure.get("stderr_summary") or "").strip()
             if stderr_summary:
-                sys.stdout.write(f"  Chrome stderr: {stderr_summary}\n")
+                sys.stdout.write(f"  Browser runtime stderr: {stderr_summary}\n")
             diagnostic_path = str(browser_failure.get("diagnostic_path") or "").strip()
             if diagnostic_path:
                 sys.stdout.write(f"  Diagnostic artifact: {diagnostic_path}\n")
@@ -2163,37 +1795,8 @@ def _write_browser_preflight_failure_hints(
         )
 
 
-def _cli_browser_runtime_env(
-    *,
-    browser_auto_prepare: bool | None,
-) -> dict[str, str]:
-    try:
-        return apply_browser_auto_prepare_policy(
-            build_runtime_env(),
-            override=browser_auto_prepare,
-            default=True,
-        )
-    except ValueError as exc:
-        raise ProviderFailure(NOT_CONFIGURED, str(exc)) from exc
-
-
 def _run_auth_namespace(args: argparse.Namespace) -> int:
-    parser = args._command_parser
-    uses_direct_storage_args = bool(
-        args.state_json
-        or args.env_file
-        or args.no_env_write
-        or args.wait_seconds is not None
-    )
-    if uses_direct_storage_args:
-        parser.error(
-            "--state-json, --env-file, --no-env-write, and --wait-seconds are unsupported for provider auth; "
-            "auth saves provider-scoped storage-state. Use PAPER_FETCH_BROWSER_PROFILE_DIR "
-            "or PAPER_FETCH_BROWSER_USER_DATA_DIR to override that location."
-        )
-    runtime_env = _cli_browser_runtime_env(
-        browser_auto_prepare=args.browser_auto_prepare,
-    )
+    runtime_env = build_runtime_env()
     result = authenticate_provider_profile(
         provider=args.provider,
         target_url=args.url,
@@ -2206,9 +1809,7 @@ def _run_auth_namespace(args: argparse.Namespace) -> int:
 
 
 def _run_browser_preflight_namespace(args: argparse.Namespace) -> int:
-    runtime_env = _cli_browser_runtime_env(
-        browser_auto_prepare=args.browser_auto_prepare,
-    )
+    runtime_env = build_runtime_env()
     results = run_browser_provider_preflight(
         providers=args.provider,
         timeout_ms=args.timeout_ms,
@@ -2222,24 +1823,6 @@ def _run_browser_preflight_namespace(args: argparse.Namespace) -> int:
     _write_browser_preflight_results(results)
     _write_browser_preflight_failure_hints(results)
     return 1 if any(not result.ready for result in results) else 0
-
-
-def run_auth_command(raw_args: list[str]) -> int:
-    """Parse and run auth directly for callers that use the historical helper."""
-    parser = build_auth_parser()
-    args = parser.parse_args(raw_args)
-    args._command_parser = parser
-    with _browser_preparation_progress():
-        return _run_auth_namespace(args)
-
-
-def run_browser_preflight_command(raw_args: list[str]) -> int:
-    """Parse and run browser preflight directly for historical helper callers."""
-    parser = build_browser_preflight_parser()
-    args = parser.parse_args(raw_args)
-    args._command_parser = parser
-    with _browser_preparation_progress():
-        return _run_browser_preflight_namespace(args)
 
 
 def _write_single_cli_manifest(
@@ -2329,12 +1912,6 @@ def _run_fetch_namespace(args: argparse.Namespace) -> int:
         )
     if not batch_mode and args.batch_results:
         parser.error("--batch-results requires --query-file.")
-    if not batch_mode and args.run_manifest:
-        parser.error("--run-manifest requires --query-file.")
-    if not batch_mode and args.resume:
-        parser.error("--resume requires the original --query-file.")
-    if batch_mode and args.run_manifest and args.resume:
-        parser.error("--run-manifest cannot be combined with --resume.")
     args.primary_output_to_output_dir = (
         batch_mode or _should_write_primary_output_to_output_dir(args)
     )
@@ -2370,9 +1947,7 @@ def _run_fetch_namespace(args: argparse.Namespace) -> int:
     output_dir: Path | None = None
 
     try:
-        runtime_env = _cli_browser_runtime_env(
-            browser_auto_prepare=getattr(args, "browser_auto_prepare", None),
-        )
+        runtime_env = build_runtime_env()
         output_dir = (
             Path(args.output_dir)
             if args.output_dir
@@ -2433,7 +2008,6 @@ def _run_fetch_namespace(args: argparse.Namespace) -> int:
             and not isinstance(
                 exc,
                 (
-                    ManifestResumeError,
                     ManifestWriteError,
                     ManifestTargetConflict,
                     OutputOverwriteRequired,
@@ -2514,15 +2088,10 @@ def main(argv: list[str] | None = None) -> int:
     args._raw_args = raw_args
     handler = getattr(args, "_command_handler", None)
     if handler is None:
-        if getattr(args, "_command", None) is not None:
-            parser.error(
-                f"command {args._command!r} does not have a registered handler"
-            )
-        handler = _run_fetch_namespace
+        parser.error(f"command {args._command!r} does not have a registered handler")
 
     try:
-        with _browser_preparation_progress():
-            return handler(args)
+        return handler(args)
     except ProviderFailure as exc:
         sys.stderr.write(json.dumps(_error_payload(exc), ensure_ascii=False) + "\n")
         return exit_code_for_error(exc)

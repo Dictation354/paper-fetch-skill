@@ -64,85 +64,9 @@ metadata
 
 `artifact-storage` 是旁路诊断与落盘阶段，不改变规则本身的用户可见提取 / 渲染语义。
 
-### Owner 字段
+### 维护边界
 
-- `Owner` 写维护这条行为的主要模块、profile 或数据模型；能写完整 dotted path 时必须写完整路径。
-- 多模块共同维护时，写最小稳定边界，例如 `paper_fetch.extraction.html.figure_links + ArticleModel render_state`。
-- 没有单一 owner 的兼容锚点可以写“跨模块，见对应测试”，但新增规则应优先给出 owner。
-- owner 不是 public API 承诺；它是维护入口，帮助改代码时定位责任边界。
-
-### Fixture 使用约定
-
-- 代表性 HTML / XML 优先链接 `tests/fixtures/golden_criteria/` 下的真实 replay 样本。
-- `tests/fixtures/block/` 只用于 access gate、paywall、abstract-only 等需要保留页面状态的 block fixture。
-- `_scenarios/` 只能放最小结构场景；使用时必须说明它不是 DOI 级真实 replay，而是 contract scenario。
-- 文档里直接链接的 fixture 必须位于 canonical fixture root，且文件必须存在；新增 fixture 后同步 manifest / catalog。
-
-### 兼容锚点和重定向
-
-- 规则合并或拆分时不删除原 anchor；兼容锚点保留一个短条目，并链接当前规则。
-- manifest 可以逐步迁移到新 anchor，但原 anchor 必须继续可解析。
-- 属于本文档职责范围外的规则只保留重定向；实际行为规则放到对应文档。
-
-### 维护工作流
-
-1. 新增或改动用户可见提取 / 渲染行为时，先判断它属于现有规则、现有规则拆分，还是需要新规则；不要把单个 DOI 事故直接写成规则名。
-2. 为规则补齐 `Owner：`、对应阶段、代表 fixture、owner 测试、边界说明；如果当前没有稳定 DOI 样本，必须进入“无稳定 DOI 样本规则汇总表”。
-3. 长测试列表按 `Owner（generic/provider/models/cli）`、`Provider 覆盖`、`Service / live review 覆盖` 分组；只有一个测试函数锁住的规则，边界说明必须标注“测试覆盖度低”或等价风险。
-4. 新增 provider 适用项时，同步更新对应 provider 的“共享规则另见”和“不适用 / 部分适用说明”。
-5. 新增 canonical fixture 后，同步 `tests/fixtures/golden_criteria/manifest.json`、本文档的 fixture 反向索引，或“未直接挂规则 fixture 清单/用途说明”。
-6. 新增或移动站点 UI copy / chrome 文案、selector、heading、attr token、availability container rule 或 license link policy 时，必须进入 `paper_fetch.extraction.html.cleanup_policy.CleanupPolicy`、`paper_fetch.extraction.html.availability_policy.AvailabilityPolicy.container_rules` / provider cleanup policy；provider 文件里保留的 DOM hook 只能负责时序或结构修复，如需保留站点 UI 常量，必须在 hook 旁用 `STRUCTURAL_UI_COPY_HOOK` 说明它不是普通正文 denylist。
-7. 修改文档后运行 `python3 scripts/validate_extraction_rules.py`，再按变更范围运行 integration / unit / lint；常规 unit / integration 命令默认复用 `pyproject.toml` 的并行配置，只有 live / 外部共享状态测试或排查顺序问题时才加 `-n 0`，并在结果里说明原因。
-
-### 新增规则 checklist
-
-- 行为是否能用用户可见结果描述，而不是实现事故描述？
-- `Owner：` 是否指向完整 dotted path 或明确的跨模块边界？
-- 阶段是否来自“受控阶段清单”？
-- 代表 fixture 是否来自 canonical root，或已进入“无稳定 DOI 样本规则汇总表”？
-- 对应测试是否存在，且单测试规则是否标注覆盖风险？
-- provider “共享规则另见”是否需要新增链接？
-- fixture 反向索引或未挂规则清单是否已同步？
-- `python3 scripts/validate_extraction_rules.py` 是否通过？
-- 常规 unit / integration 验证是否保持并行，live 或外部状态验证如需 `-n 0` 是否已注明原因？
-
-### 规则条目模板
-
-- 规则名
-  - 用行为级表述命名，不把 DOI 写进规则名。
-- 通俗解释
-  - 固定说明三件事：这条规则约束的是……；如果违反，用户会看到……；它对应的阶段是……。
-- 代表性 HTML / XML
-  - 优先列 repo 内稳定的真实样本，不展开 incident 复盘。
-  - 如果当前只有最小复现测试，就直接写“当前无稳定 DOI 样本，直接见对应测试”，不要为了凑样本编造 DOI 级证据。
-- 对应测试
-  - 列出直接锁住该行为的 owner 测试；长列表用“Owner 测试”和“辅助覆盖测试”分组。
-- 边界说明
-  - 说明这条规则不约束什么，避免把样本现象误读成长期接口承诺。
-
-### 无稳定 DOI 样本规则汇总表
-
-<!-- SCAFFOLD: extraction-rules-unstable-doi -->
-| 规则 | 当前证据状态 | 后续补样本触发 | 下一步候选 fixture |
-| --- | --- | --- | --- |
-| [通用元数据边界](#rule-generic-metadata-boundaries) | 无 DOI 级 replay；已有 `_scenarios/generic_metadata_boundaries`。 | 出现真实 redirect stub 或站点 description 污染回归。 | redirect stub HTML，优先 Elsevier linkinghub / ScienceDirect 跳转页。 |
-| [Provider 自有作者与摘要信号](#rule-provider-owned-authors) | DOM abstract 恢复首段分支无 DOI 级 replay；已有 `_scenarios/provider_dom_abstract_fallback`。 | 某 provider 的 DOM abstract fallback 需要 replay 锁定。 | 缺 datalayer / schema.org 但 DOM abstract 可恢复的 provider HTML。 |
-| [图片和公式图片本地链接改写](#rule-rewrite-inline-figure-links) | 跨阶段链路无单一 DOI replay；已有 `_scenarios/inline_figure_link_rewrite`。 | 有完整“远程图 -> 下载资产 -> 相对 Markdown 链接”回放样本。 | 带 `body_assets/` 下载产物和原始远程图 URL 的完整 replay。 |
-| [Markdown 图片 alt 只保留短标签](#rule-short-markdown-image-alt-labels) | 无 DOI 级 replay；已有 models/CLI/provider unit 覆盖。 | 某 provider 再次把 caption 或未平衡方括号写进 `![alt]`。 | 带复杂 caption、方括号和本地资产改写的完整 replay。 |
-| [下载资产诊断字段](#rule-asset-download-diagnostic-fields) | 无 DOI 级 replay；已有 `_scenarios/asset_download_diagnostics`。 | 某 provider 诊断字段在真实回放中丢失。 | 含 accepted preview、失败 snippet 和 content type 的 provider asset replay。 |
-| [表格展平或列表降级](#rule-table-flatten-or-list) | 共享 table helper 无 DOI 级 replay；已有 `_scenarios/table_flatten_or_list`。 | 新增 publisher 真实复杂表 replay。 | 非 Elsevier / Springer 的 rowspan、colspan 或无法展平 table HTML。 |
-| [Availability section contract](#rule-keep-data-availability-once) | body metrics 与 section hints 分支已有 `_scenarios/availability_body_metrics` 和 `_scenarios/section_hints_availability`；无单一 DOI replay 覆盖全部形态。 | 真实页面只含 availability 却被误判全文，或 provider 产出非 literal heading 的 section hint 回归。 | 只含 Data / Code Availability、正文为空或极短的 HTML replay；或带 section hint 的 provider extraction replay。 |
-| [LaTeX normalization](#rule-formula-latex-normalization) | normalize 分支无 DOI 级 replay；已有 `_scenarios/formula_latex_normalization`。 | 真实 MathML 转换产出新 KaTeX 不兼容宏。 | 包含 publisher-specific MathML 宏或 mtext 转义的 XML / HTML。 |
-| [HTML bytes 解码和清洗 fallback 边界](#rule-html-byte-decoding-and-cleanup-bounds) | 当前无稳定 DOI 样本；已有 unit tests 锁定 charset 顺序、provider raw HTML 解码、no-root cheap cleanup、raw trafilatura 上限和 ORCID 常量。 | 真实 publisher HTML 出现非 UTF-8 charset、无内容根大页面或 raw fallback 性能回归。 | 带 HTTP charset/meta charset 的原始 HTML replay，或 no-root 大 HTML replay。 |
-| `royalsocietypublishing` docs sync | manifest docs.extraction_rules_summary is null; no unstable DOI rule row required yet. | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/royalsocietypublishing.yml` |
-| `annualreviews` | HTML fixture replay 已覆盖 `#html_fulltext` / `#itemFullTextId` 全文容器、`.articleSection` 正文段落、Annual Reviews figure/table 节点和 references；`10.1146/annurev.pp.19.060168.001235` 另覆盖空 `#html_fulltext` 加 Most Read/Most Cited 卡片的真实落地页。 | Annual Reviews 需要 provider-owned HTML extraction：选择动态全文容器，保留原始 container scope，移除导航、访问 UI、PDF/PPT 操作、section menu、reference resolver、Most Read/Most Cited/推荐模块和动态 shell/comment 噪声，并在渲染前规范化章节标题、figure caption 与 table caption；通用 Atypon 抽取不足以维护这些结构。 | 继续补充稳定 table/formula/supplementary DOI 样本；PowerPoint 链接明确排除在 supplementary scope 之外。 |
-| `plos` docs sync | manifest docs.extraction_rules_summary is null; no unstable DOI rule row required yet. | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/plos.yml` |
-| `frontiers` docs sync | Frontiers 复用 shared JATS rendering，并把 XML graphic 文件名重写为 `/files/Articles/{id}/xml-images/*.webp` 资产 URL。 | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/frontiers.yml` |
-| `oxfordacademic` docs sync | Oxford Academic cleanup should preserve article abstract, body headings, figures, body tables, Silverchair formula paragraph text, supplementary data links, and visible `.ref-list` references while removing Oxford Academic navigation, metrics, author search links, slide/download chrome, citation widgets, and raw `citation_*` meta key strings. | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/oxfordacademic.yml` |
-| `acs` docs sync | ACS 当前 Silverchair replay 以 `.article-body` 为正文根，覆盖 body section/table、`.fig.fig-section`、MathML formula、`.ref-list .ref` 和 `.widget-ArticleDataSupplements`；稳定 `/article-supplement/` 链接与 Figshare viewer 分离，PDF fixture 捕获复用 selected-browser runtime。 | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/acs.yml` |
-| `iop` docs sync | IOP browser HTML must target articleBody/body sections and remove IOPScience download, metrics, citation, navigation, and challenge-page chrome. Supplementary discovery is two-stage and bounded to a same-DOI /data index followed by supplementarydata SM-numbered attachments; figure controls, QR images, mismatched DOI pages, and empty/challenge indexes cannot be accepted as supplementary files. | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/iop.yml` |
-| `aip` docs sync | AIP 接入复用 Atypon browser workflow，provider-owned 清理移除 AIP article navigation、citation/download、metrics chrome，并保留正文 figures、Markdown tables、LaTeX equations、SUPPLEMENTARY MATERIAL 与 references。 | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/aip.yml` |
-| `tandf` docs sync | Taylor & Francis reuses the shared Atypon browser workflow; provider-owned cleanup removes article tools, metrics, related-content, modal controls, and citation chrome while preserving article-scoped figures, bounded CSV or same-page-payload tables, MathML formulas, supplements, and references. | Provider fixture replay or Markdown review exposes a docs-rule gap. | `onboarding/manifests/tandf.yml` |
+规则只描述用户可见的提取与渲染语义。实现 owner 由代码和 provider-local 测试负责，fixture 身份与预期由 `tests/fixtures/golden_criteria/manifest.json` 负责；本文不维护测试文件清单、兼容锚点治理、unstable DOI 表或 fixture 反向索引。
 
 ## Generic
 
@@ -196,7 +120,7 @@ metadata
   - [`../tests/fixtures/golden_criteria/10.1126_sciadv.aax6869/original.html`](../tests/fixtures/golden_criteria/10.1126_sciadv.aax6869/original.html)
   - [`../tests/fixtures/golden_criteria/10.1126_science.abb3021/original.html`](../tests/fixtures/golden_criteria/10.1126_science.abb3021/original.html)
   - [`../tests/fixtures/golden_criteria/10.48550_arxiv.2605.06667v1/original.html`](../tests/fixtures/golden_criteria/10.48550_arxiv.2605.06667v1/original.html)
-  - 这些样本分别覆盖 Wiley root-cause 回放、早期 Nature HTML、新 Nature HTML、Science live review 中“正文已有相对本地图片链接但资产模型里仍是绝对路径”的场景，以及 arXiv official HTML 中正文 figure 图片应原位内联、尾部 `Figures` 只作为未消费图片 fallback 的场景。
+  - 这些样本分别覆盖 Wiley root-cause 回放、早期 Nature HTML、新 Nature HTML、Science 回归中“正文已有相对本地图片链接但资产模型里仍是绝对路径”的场景，以及 arXiv official HTML 中正文 figure 图片应原位内联、尾部 `Figures` 只作为未消费图片 fallback 的场景。
 - 边界说明：
   - 这条规则只约束 `asset_profile='body'` / `asset_profile='all'` 的正文图渲染结果。
   - 它不是说系统永远不能输出 figure 附录，而是说正文 figure 已经内联时，不能再重复追加一个用户可见的尾部 Figures 块。
@@ -253,7 +177,7 @@ metadata
 - 边界说明：
   - 这条规则过滤的是站点 UI 和操作噪声，不是过滤所有出现在图题或正文里的英文短语。
   - Markdown promo contains token 只删除短的孤立 UI 行，例如独立 `Learn more`、短标签后的标点或短 `To learn more, ...` 提示；正文自然句里出现 `learn more` 不能被删除。
-  - 代码中带 `SITE_UI_COPY_REGRESSION_MARKER` 的整句站点文案和 chrome selector / heading / attr 常量是易受站点改版影响的回归点；`scripts/validate_extraction_rules.py` 会要求 provider promo / post-content / chrome / fatal-error 常量带 marker，并要求这些规则能归入 `CleanupPolicy`、`AvailabilityPolicy.container_rules` / provider cleanup policy 或显式 `STRUCTURAL_UI_COPY_HOOK`，更新这些规则时必须回看本规则和对应 provider fixture。
+  - 整句站点文案和 chrome selector / heading / attr 常量是易受站点改版影响的回归点；更新这些规则时必须回看对应 provider fixture，并用用户可见提取结果验证，而不是锁定源码 marker。
   - provider 专用 DOM hook 可以保留在 provider 文件中处理必须晚于结构归一化的逻辑，例如先读取 AMS gallery / full-size 图片链接再删除 gallery chrome；普通 chrome 数据本身仍应来自 provider cleanup policy。
   - `download` 不是全局噪声词；`Source Data Fig. 1 (Download xlsx)`、supplementary file、figure/table asset download 这类有效材料入口必须保留。
   - `preview sentence` 和 AI alt disclaimer 也会被过滤，但它们属于 [Springer 访问提示规则](#rule-springer-access-hint-disclaimer)，不混在本条里定义。
@@ -409,7 +333,7 @@ metadata
 ### 图片下载必须验证真实图片内容
 
 - 这条规则约束的是：正文图片下载不能把 Cloudflare challenge HTML、Chrome 图片查看器壳或过小的站点图标当成论文图片保存；preview 图只有尺寸达标或 provider 明确接受，并在 `Asset.preview_accepted` 中保存该事实时，才算可接受结果。publisher 只提供的规范公式位图属于显式 accepted preview，不要求伪造 full-size tier。下载后的统一审计必须用 `filetype` 读取真实 MIME、用 `imagesize` 读取尺寸，并记录文件实际字节数和 `SHA256`，不能信任扩展名、响应头或 provider 声明值代替文件事实。
-- 如果违反，用户会看到：正文缺图，或本地图片文件其实是 HTML / 站点图标，后续渲染和 live review 都无法解释失败原因。
+- 如果违反，用户会看到：正文缺图，或本地图片文件其实是 HTML / 站点图标，最终诊断无法解释失败原因。
 - 它对应的阶段是：`asset-download`、`asset-validation`、`availability-quality`。
 - Owner：`paper_fetch.extraction.html.assets` 与 `paper_fetch.providers.browser_workflow.fetchers`。
 - 代表性 HTML / XML：
@@ -423,10 +347,8 @@ metadata
     - [`../tests/unit/test_atypon_browser_workflow_provider_asset_failures.py`](../tests/unit/test_atypon_browser_workflow_provider_asset_failures.py) 中的 `test_science_provider_replay_for_adz3492_saves_svg_body_asset`
     - [`../tests/unit/test_atypon_browser_workflow_provider_asset_failures.py`](../tests/unit/test_atypon_browser_workflow_provider_asset_failures.py) 中的 `test_science_provider_records_asset_failure_when_shared_browser_preview_fails`
     - [`../tests/unit/test_html_shared_helpers.py`](../tests/unit/test_html_shared_helpers.py) 中的 `test_formula_bitmap_download_is_an_accepted_preview`
-  - Service / live review 覆盖：
+  - Service / acceptance 覆盖：
     - [`../tests/unit/test_service_probe_and_assets.py`](../tests/unit/test_service_probe_and_assets.py) 中的 `test_fetch_paper_accepts_preview_images_with_sufficient_dimensions`
-    - [`../tests/devtools/test_golden_criteria_live.py`](../tests/devtools/test_golden_criteria_live.py) 中的 `test_science_preview_accepted_is_not_an_asset_issue`
-    - [`../tests/devtools/test_golden_criteria_live.py`](../tests/devtools/test_golden_criteria_live.py) 中的 `test_fallback_preview_uses_fidelity_issue_code`
     - [`../tests/unit/test_asset_quality.py`](../tests/unit/test_asset_quality.py) 中的 `test_accepted_preview_is_complete_and_fallback_preview_is_fidelity_only`
   - 统一真实性审计：
     - [`../tests/unit/test_asset_quality.py`](../tests/unit/test_asset_quality.py) 中的 `test_valid_png_jpeg_svg_and_pseudo_extension_record_real_facts`
@@ -446,7 +368,7 @@ metadata
 ### 下载资产必须保留诊断字段
 
 - 这条规则约束的是：成功或失败的资产下载都要保留足够诊断信息；成功图片记录请求 profile、逻辑 kind、`download_tier`、路径、下载 URL、原始 full-size / preview 候选 URL、声明 content type、真实 MIME、实际字节数、尺寸、`SHA256` 和 provenance，失败资产保留 failure code、status、content type、snippet、reason 和 recovery 轨迹。结构化摘要必须同时给出 `requested`、`total`、`full_size`、`preview`、`failed`、`placeholder_suspected`、`not_requested`、`not_archived`，以及按 kind 的同类计数。
-- 如果违反，用户会看到：live review 只能笼统报 `asset_download_failure`，看不出是 full-size 被拦截、preview 可接受、supplementary 失败，还是图片真的缺失。
+- 如果违反，用户只会看到笼统的 `asset_download_failure`，看不出是 full-size 被拦截、preview 可接受、supplementary 失败，还是图片真的缺失。
 - 它对应的阶段是：`asset-validation`、`article-assembly`、`final-rendering`。
 - Owner：`paper_fetch.extraction.html.assets.download`、`paper_fetch.extraction.html.assets.state`、`paper_fetch.models.Asset` / `paper_fetch.models.Quality` 与 `paper_fetch.mcp.schemas`。
 - 代表性 HTML / XML：
@@ -1101,7 +1023,7 @@ metadata
 - 这条规则约束的是：任何 fulltext provider 从 HTML / XML / 出版社 REST 成功抽取非空 references 时，文章模型和最终 Markdown 的 references 必须以这些全文/出版社 references 为准。metadata / Crossref references 只能在 provider references 为空、失败或不可用时兜底，不能在全文 refs 非空时追加未匹配的 title-only 或 DOI-only 条目。
 - 如果违反，用户会看到：编号完整的全文 references 后面混入 `- ...` fallback bullet，或出版社 references 被 Crossref metadata 条目污染。
 - 它对应的阶段是：`references-rendering`、`article-assembly`、`final-rendering`。
-- Owner：`paper_fetch.models.builders`、`paper_fetch.providers.ieee` 与 `paper_fetch_devtools.golden_criteria.live`。
+- Owner：`paper_fetch.models.builders` 与 `paper_fetch.providers.ieee`。
 - Provider 差异表：
 
 | Provider | 全文 reference 来源 | Provider 小节只保留的差异 |
@@ -1414,7 +1336,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
   - IOP PDF fallback 只接受真实 PDF magic bytes 或 `application/pdf` payload；Radware/hCaptcha HTML wrapper 必须被拒绝。
   - IOP `math/tex` 公式已经渲染成 Markdown LaTeX 时，公式 GIF fallback 不作为 body asset 下载；正文 `_online` figure preview 作为已接受的 figure 资产诊断处理。
   - IOP Appendix figure caption 已经出现在正文时，尾部 fallback `Figures` 可以保留图片，但不能重复整段 caption；已原位内联的正文 figure 资产仍保留其 caption 诊断字段。
-  - IOP TDM delivery 当前按 SFTP 形态记录在 onboarding 证据中，本 provider 不实现未授权的 XML/PDF TDM route。
+  - 本 provider 不实现未授权的 IOP XML/PDF TDM route。
 - 共享规则另见：
   - [出版社站点 UI 噪声不能泄漏进最终 markdown](#rule-filter-publisher-ui-noise)
   - [全文 references 优先于 metadata/Crossref fallback](#rule-fulltext-reference-priority)
@@ -1547,102 +1469,6 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
   - 单测试规则：当前 owner 测试使用最小 JATS fixture 锁住结构渲染 contract，并用合法但正文为空、无正文段落或正文过短的 JATS fixture 锁住 XML route 必须降级到 PDF；8 篇真实 Copernicus XML golden fixture 锁住 XML 主路径 corpus 级别回归；4 篇早期 abstract-only XML + PDF fixture 锁住 route fallback，不扩大本 XML 结构规则的适用范围。后续新增 JATS 变体时应扩充该单测或新增 provider-specific 规则。
   - 这条规则不承诺所有复杂表格布局都能零损失复原；复杂表格降级语义仍归 [表格能展平就转 Markdown 表，展不平就退成可读列表](#rule-table-flatten-or-list)。
   - PDF fallback 的正文 Markdown 走共享 PDF 转换，不适用本 XML 结构规则；PDF 图片只作为导出正文 asset 记录。
-
-## Fixture 反向索引
-
-本表覆盖本文档直接链接的 fixture。一个 fixture 可锁住多条规则；替换 fixture 时必须同步检查这些规则。
-
-| Fixture | 关联规则 |
-| --- | --- |
-| [`../tests/fixtures/block/10.1007_s00382-018-4286-0/raw.html`](../tests/fixtures/block/10.1007_s00382-018-4286-0/raw.html) | [HTML availability](#rule-html-availability-contract), [Springer access hint](#rule-springer-access-hint-disclaimer) |
-| [`../tests/fixtures/block/10.1073_pnas.2509692123/raw.html`](../tests/fixtures/block/10.1073_pnas.2509692123/raw.html) | [HTML availability](#rule-html-availability-contract), [Supplementary explicit scope](#rule-supplementary-discovery-explicit-scope) |
-| [`../tests/fixtures/block/10.1111_gcb.16414/raw.html`](../tests/fixtures/block/10.1111_gcb.16414/raw.html) | [HTML availability](#rule-html-availability-contract) |
-| [`../tests/fixtures/block/10.1126_science.aeg3511/raw.html`](../tests/fixtures/block/10.1126_science.aeg3511/raw.html) | [HTML availability](#rule-html-availability-contract) |
-| [`../tests/fixtures/golden_criteria/10.1007_s10584-011-0143-4/article.html`](../tests/fixtures/golden_criteria/10.1007_s10584-011-0143-4/article.html) | [Springer chrome](#rule-springer-article-root-chrome-pruning), [Springer numbered heading spacing](#rule-springer-numbered-heading-spacing), [Springer inline table](#rule-springer-inline-table) |
-| [`../tests/fixtures/golden_criteria/10.1007_s13158-025-00473-x/bilingual.html`](../tests/fixtures/golden_criteria/10.1007_s13158-025-00473-x/bilingual.html) | [Multilingual abstracts](#rule-keep-parallel-multilingual-abstracts), [Springer chrome](#rule-springer-article-root-chrome-pruning) |
-| [`../tests/fixtures/golden_criteria/10.1016_S1575-1813(18)30261-4/bilingual.xml`](<../tests/fixtures/golden_criteria/10.1016_S1575-1813(18)30261-4/bilingual.xml>) | [Multilingual abstracts](#rule-keep-parallel-multilingual-abstracts) |
-| [`../tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/original.xml) | [Elsevier formula rendering](#rule-elsevier-formula-rendering), [Elsevier inline figure/table placement](#rule-elsevier-inline-figure-table-placement), [Elsevier references](#rule-elsevier-xml-references) |
-| [`../tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/original.xml) | [XML table groups](#rule-xml-table-groups) |
-| [`../tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/original.xml) | [Elsevier supplementary materials](#rule-elsevier-supplementary-materials) |
-| [`../tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/original.xml) | [XML table groups](#rule-xml-table-groups) |
-| [`../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml) | [Elsevier inline figure/table placement](#rule-elsevier-inline-figure-table-placement), [Elsevier complex span normalization](#rule-elsevier-complex-table-span-degradation) |
-| [`../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/original.xml) | [Elsevier formula rendering](#rule-elsevier-formula-rendering), [Elsevier consumed table dedup](#rule-elsevier-consumed-figure-table-dedup) |
-| [`../tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/original.xml) | [Elsevier complex span normalization](#rule-elsevier-complex-table-span-degradation) |
-| [`../tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/original.xml) | [Availability section contract](#rule-keep-data-availability-once) |
-| [`../tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/original.xml) | [Elsevier appendix context](#rule-elsevier-appendix-context) |
-| [`../tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/original.xml) | [Elsevier graphical abstract](#rule-elsevier-graphical-abstract) |
-| [`../tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/original.xml) | [Elsevier formula rendering](#rule-elsevier-formula-rendering) |
-| [`../tests/fixtures/golden_criteria/10.1029_2004gb002273/original.html`](../tests/fixtures/golden_criteria/10.1029_2004gb002273/original.html) | [No trailing figures](#rule-no-trailing-figures-appendix), [Publisher UI noise](#rule-filter-publisher-ui-noise) |
-| [`../tests/fixtures/golden_criteria/10.1038_nature12915/original.html`](../tests/fixtures/golden_criteria/10.1038_nature12915/original.html) | [Formula image fallback](#rule-preserve-formula-image-fallbacks), [Springer caption precedence](#rule-springer-caption-precedence), [Springer methods summary](#rule-springer-methods-summary) |
-| [`../tests/fixtures/golden_criteria/10.1038_nature13376/original.html`](../tests/fixtures/golden_criteria/10.1038_nature13376/original.html) | [No trailing figures](#rule-no-trailing-figures-appendix), [Formula image fallback](#rule-preserve-formula-image-fallbacks), [Springer caption precedence](#rule-springer-caption-precedence), [Springer inline table](#rule-springer-inline-table) |
-| [`../tests/fixtures/golden_criteria/10.1038_s41561-022-00983-6/original.html`](../tests/fixtures/golden_criteria/10.1038_s41561-022-00983-6/original.html) | [No trailing figures](#rule-no-trailing-figures-appendix) |
-| [`../tests/fixtures/golden_criteria/10.1038_s41586-020-1941-5/original.html`](../tests/fixtures/golden_criteria/10.1038_s41586-020-1941-5/original.html) | [Springer / Nature main-content](#rule-springer-main-content-direct-children), [Springer inline table](#rule-springer-inline-table) |
-| [`../tests/fixtures/golden_criteria/10.1038_s41558-022-01584-2/original.html`](../tests/fixtures/golden_criteria/10.1038_s41558-022-01584-2/original.html) | [Supplementary explicit scope](#rule-supplementary-discovery-explicit-scope) |
-| [`../tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/original.html`](../tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/original.html) | [Supplementary explicit scope](#rule-supplementary-discovery-explicit-scope) |
-| [`../tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/original.html`](../tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/original.html) | [Springer inline table](#rule-springer-inline-table) |
-| [`../tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/table1.html`](../tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/table1.html) | [Springer inline table](#rule-springer-inline-table) |
-| [`../tests/fixtures/golden_criteria/10.1038_s43247-024-01270-5/original.html`](../tests/fixtures/golden_criteria/10.1038_s43247-024-01270-5/original.html) | [Supplementary explicit scope](#rule-supplementary-discovery-explicit-scope) |
-| [`../tests/fixtures/golden_criteria/10.1038_s43247-024-01885-8/original.html`](../tests/fixtures/golden_criteria/10.1038_s43247-024-01885-8/original.html) | [Availability section contract](#rule-keep-data-availability-once) |
-| [`../tests/fixtures/golden_criteria/10.1038_s44221-022-00024-x/original.html`](../tests/fixtures/golden_criteria/10.1038_s44221-022-00024-x/original.html) | [Springer access hint](#rule-springer-access-hint-disclaimer) |
-| [`../tests/fixtures/golden_criteria/10.1073_pnas.2309123120/original.html`](../tests/fixtures/golden_criteria/10.1073_pnas.2309123120/original.html) | [Provider metadata](#rule-provider-owned-authors), [Publisher UI noise](#rule-filter-publisher-ui-noise), [Image validation](#rule-image-download-validates-real-images), [Browser image path](#rule-browser-primary-image-download-path), [Availability section contract](#rule-keep-data-availability-once) |
-| [`../tests/fixtures/golden_criteria/10.1073_pnas.2406303121/original.html`](../tests/fixtures/golden_criteria/10.1073_pnas.2406303121/original.html) | [Inline semantics](#rule-preserve-inline-semantics-in-body-and-tables) |
-| [`../tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/landing.html`](../tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/landing.html) | [IEEE landing metadata/references](#rule-ieee-landing-metadata-references) |
-| [`../tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/original.html`](../tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/original.html) | [IEEE HTML structure](#rule-ieee-html-structure) |
-| [`../tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/references.json`](../tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/references.json) | [IEEE landing metadata/references](#rule-ieee-landing-metadata-references) |
-| [`../tests/fixtures/golden_criteria/10.1109_CICTN64563.2025.10932570/original.html`](../tests/fixtures/golden_criteria/10.1109_CICTN64563.2025.10932570/original.html) | [IEEE HTML structure](#rule-ieee-html-structure), [IEEE mediastore body assets](#rule-ieee-mediastore-body-assets) |
-| [`../tests/fixtures/golden_criteria/10.1109_RITA.2026.3668995/landing.html`](../tests/fixtures/golden_criteria/10.1109_RITA.2026.3668995/landing.html) | [Supplementary explicit scope](#rule-supplementary-discovery-explicit-scope) |
-| [`../tests/fixtures/golden_criteria/10.1109_RITA.2026.3668995/multimedia.json`](../tests/fixtures/golden_criteria/10.1109_RITA.2026.3668995/multimedia.json) | [Supplementary explicit scope](#rule-supplementary-discovery-explicit-scope) |
-| [`../tests/fixtures/golden_criteria/10.1109_RITA.2026.3668995/original.html`](../tests/fixtures/golden_criteria/10.1109_RITA.2026.3668995/original.html) | [Supplementary explicit scope](#rule-supplementary-discovery-explicit-scope) |
-| [`../tests/fixtures/golden_criteria/10.1109_TBME.2024.3434477/original.html`](../tests/fixtures/golden_criteria/10.1109_TBME.2024.3434477/original.html) | [IEEE HTML structure](#rule-ieee-html-structure), [IEEE mediastore body assets](#rule-ieee-mediastore-body-assets) |
-| [`../tests/fixtures/golden_criteria/10.1109_TCOMM.2024.3395332/original.html`](../tests/fixtures/golden_criteria/10.1109_TCOMM.2024.3395332/original.html) | [IEEE HTML structure](#rule-ieee-html-structure) |
-| [`../tests/fixtures/golden_criteria/10.1109_TDEI.2024.3373549/original.html`](../tests/fixtures/golden_criteria/10.1109_TDEI.2024.3373549/original.html) | [IEEE HTML structure](#rule-ieee-html-structure) |
-| [`../tests/fixtures/golden_criteria/10.1109_TE.2024.3376795/original.html`](../tests/fixtures/golden_criteria/10.1109_TE.2024.3376795/original.html) | [IEEE HTML structure](#rule-ieee-html-structure) |
-| [`../tests/fixtures/golden_criteria/10.1109_TIM.2024.3509573/original.html`](../tests/fixtures/golden_criteria/10.1109_TIM.2024.3509573/original.html) | [IEEE HTML structure](#rule-ieee-html-structure) |
-| [`../tests/fixtures/golden_criteria/10.1111_cas.16395/original.html`](../tests/fixtures/golden_criteria/10.1111_cas.16395/original.html) | [Wiley abbreviations](#rule-wiley-abbreviations-trailing) |
-| [`../tests/fixtures/golden_criteria/10.1111_gcb.15322/original.html`](../tests/fixtures/golden_criteria/10.1111_gcb.15322/original.html) | [Formula image fallback](#rule-preserve-formula-image-fallbacks), [Wiley references](#rule-wiley-reference-text) |
-| [`../tests/fixtures/golden_criteria/10.1111_gcb.16386/bilingual.html`](../tests/fixtures/golden_criteria/10.1111_gcb.16386/bilingual.html) | [Multilingual abstracts](#rule-keep-parallel-multilingual-abstracts) |
-| [`../tests/fixtures/golden_criteria/10.1111_gcb.16414/original.html`](../tests/fixtures/golden_criteria/10.1111_gcb.16414/original.html) | [Supplementary explicit scope](#rule-supplementary-discovery-explicit-scope) |
-| [`../tests/fixtures/golden_criteria/10.1111_gcb.16998/original.html`](../tests/fixtures/golden_criteria/10.1111_gcb.16998/original.html) | [HTML availability](#rule-html-availability-contract), [Provider metadata](#rule-provider-owned-authors), [Wiley references](#rule-wiley-reference-text) |
-| [`../tests/fixtures/golden_criteria/10.1126_sciadv.aax6869/original.html`](../tests/fixtures/golden_criteria/10.1126_sciadv.aax6869/original.html) | [No trailing figures](#rule-no-trailing-figures-appendix), [Image validation](#rule-image-download-validates-real-images) |
-| [`../tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/original.html`](../tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/original.html) | [Semantic parent heading](#rule-keep-semantic-parent-heading), [Supplementary explicit scope](#rule-supplementary-discovery-explicit-scope) |
-| [`../tests/fixtures/golden_criteria/10.1126_science.abb3021/original.html`](../tests/fixtures/golden_criteria/10.1126_science.abb3021/original.html) | [No trailing figures](#rule-no-trailing-figures-appendix), [Image validation](#rule-image-download-validates-real-images) |
-| [`../tests/fixtures/golden_criteria/10.1126_science.abp8622/original.html`](../tests/fixtures/golden_criteria/10.1126_science.abp8622/original.html) | [Stable frontmatter](#rule-stable-frontmatter-order), [Inline semantics](#rule-preserve-inline-semantics-in-body-and-tables) |
-| [`../tests/fixtures/golden_criteria/10.1126_science.adp0212/original.html`](../tests/fixtures/golden_criteria/10.1126_science.adp0212/original.html) | [Provider metadata](#rule-provider-owned-authors), [Equation spacing](#rule-readable-equation-caption-spacing) |
-| [`../tests/fixtures/golden_criteria/10.1126_science.adz3492/original.html`](../tests/fixtures/golden_criteria/10.1126_science.adz3492/original.html) | [Image validation](#rule-image-download-validates-real-images) |
-| [`../tests/fixtures/golden_criteria/10.1126_science.adz3492/body_assets/science.adz3492-f1.svg`](../tests/fixtures/golden_criteria/10.1126_science.adz3492/body_assets/science.adz3492-f1.svg) | [Image validation](#rule-image-download-validates-real-images) |
-| [`../tests/fixtures/golden_criteria/10.1126_science.aeg3511/original.html`](../tests/fixtures/golden_criteria/10.1126_science.aeg3511/original.html) | [Headingless body](#rule-keep-headingless-body-flat) |
-| [`../tests/fixtures/golden_criteria/10.1175_aies-d-23-0093.1/original.html`](../tests/fixtures/golden_criteria/10.1175_aies-d-23-0093.1/original.html) | [Inline semantics](#rule-preserve-inline-semantics-in-body-and-tables), [AMS HTML body/assets/formulas](#rule-ams-html-body-assets-formulas) |
-| [`../tests/fixtures/golden_criteria/10.1175_bams-d-24-0223.1/original.html`](../tests/fixtures/golden_criteria/10.1175_bams-d-24-0223.1/original.html) | [AMS HTML body/assets/formulas](#rule-ams-html-body-assets-formulas), [AMS footnotes](#rule-ams-footnotes-stay-linked-to-body-markers) |
-| [`../tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/original.html`](../tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/original.html) | [Inline semantics](#rule-preserve-inline-semantics-in-body-and-tables), [AMS HTML body/assets/formulas](#rule-ams-html-body-assets-formulas) |
-| [`../tests/fixtures/golden_criteria/10.1175_jpo-d-23-0234.1/original.html`](../tests/fixtures/golden_criteria/10.1175_jpo-d-23-0234.1/original.html) | [Inline semantics](#rule-preserve-inline-semantics-in-body-and-tables), [AMS HTML body/assets/formulas](#rule-ams-html-body-assets-formulas) |
-| [`../tests/fixtures/golden_criteria/10.1175_mwr-d-24-0060.1/original.html`](../tests/fixtures/golden_criteria/10.1175_mwr-d-24-0060.1/original.html) | [Inline semantics](#rule-preserve-inline-semantics-in-body-and-tables), [AMS HTML body/assets/formulas](#rule-ams-html-body-assets-formulas) |
-| [`../tests/fixtures/golden_criteria/10.1175_jtech-d-24-0028.1/original.html`](../tests/fixtures/golden_criteria/10.1175_jtech-d-24-0028.1/original.html) | [AMS HTML body/assets/formulas](#rule-ams-html-body-assets-formulas) |
-| [`../tests/fixtures/golden_criteria/10.1175_waf-d-24-0019.1/original.html`](../tests/fixtures/golden_criteria/10.1175_waf-d-24-0019.1/original.html) | [Inline semantics](#rule-preserve-inline-semantics-in-body-and-tables), [AMS HTML body/assets/formulas](#rule-ams-html-body-assets-formulas) |
-| [`../tests/fixtures/golden_criteria/10.48550_arxiv.2605.06556v1/original.html`](../tests/fixtures/golden_criteria/10.48550_arxiv.2605.06556v1/original.html) | [Table flatten/list](#rule-table-flatten-or-list), [HTML list markers](#rule-html-list-marker-rendering), [arXiv artifact cleanup](#rule-arxiv-html-artifact-cleanup) |
-| [`../tests/fixtures/golden_criteria/10.48550_arxiv.2605.06598v1/original.html`](../tests/fixtures/golden_criteria/10.48550_arxiv.2605.06598v1/original.html) | [arXiv panel figure alt labels](#rule-arxiv-figure-panel-alt-labels), [arXiv artifact cleanup](#rule-arxiv-html-artifact-cleanup) |
-| [`../tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/original.html`](../tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/original.html) | [Table flatten/list](#rule-table-flatten-or-list), [HTML list markers](#rule-html-list-marker-rendering), [arXiv multi-image figures](#rule-arxiv-multi-image-figure-captions), [arXiv artifact cleanup](#rule-arxiv-html-artifact-cleanup) |
-| [`../tests/fixtures/golden_criteria/10.48550_arxiv.2605.06667v1/original.html`](../tests/fixtures/golden_criteria/10.48550_arxiv.2605.06667v1/original.html) | [No trailing figures](#rule-no-trailing-figures-appendix), [HTML list markers](#rule-html-list-marker-rendering), [arXiv multi-image figures](#rule-arxiv-multi-image-figure-captions), [arXiv article DOM body heading hints](#rule-arxiv-article-dom-body-heading-hints) |
-| [`../tests/fixtures/golden_criteria/10.5194_acp-24-1-2024/original.xml`](../tests/fixtures/golden_criteria/10.5194_acp-24-1-2024/original.xml) | [Copernicus XML/JATS rendering](#rule-copernicus-xml-jats-rendering) |
-| [`../tests/fixtures/golden_criteria/_scenarios/asset_download_diagnostics/article_payload.json`](../tests/fixtures/golden_criteria/_scenarios/asset_download_diagnostics/article_payload.json) | [Asset diagnostics](#rule-asset-download-diagnostic-fields) |
-| [`../tests/fixtures/golden_criteria/_scenarios/availability_body_metrics/code_availability.md`](../tests/fixtures/golden_criteria/_scenarios/availability_body_metrics/code_availability.md) | [Availability section contract](#rule-keep-data-availability-once) |
-| [`../tests/fixtures/golden_criteria/_scenarios/elsevier_author_groups_minimal/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_author_groups_minimal/original.xml) | [Provider metadata](#rule-provider-owned-authors) |
-| [`../tests/fixtures/golden_criteria/_scenarios/elsevier_complex_table_span/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_complex_table_span/original.xml) | [Elsevier complex span normalization](#rule-elsevier-complex-table-span-degradation) |
-| [`../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_inline_display/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_inline_display/original.xml) | [Elsevier formula rendering](#rule-elsevier-formula-rendering) |
-| [`../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_missing/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_formula_missing/original.xml) | [Elsevier formula rendering](#rule-elsevier-formula-rendering) |
-| [`../tests/fixtures/golden_criteria/_scenarios/elsevier_supplementary_asset_only/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_supplementary_asset_only/original.xml) | [Elsevier supplementary materials](#rule-elsevier-supplementary-materials) |
-| [`../tests/fixtures/golden_criteria/_scenarios/elsevier_supplementary_display/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_supplementary_display/original.xml) | [Elsevier supplementary materials](#rule-elsevier-supplementary-materials) |
-| [`../tests/fixtures/golden_criteria/_scenarios/formula_latex_normalization/samples.json`](../tests/fixtures/golden_criteria/_scenarios/formula_latex_normalization/samples.json) | [LaTeX normalization](#rule-formula-latex-normalization) |
-| [`../tests/fixtures/golden_criteria/_scenarios/generic_metadata_boundaries/generic_description.html`](../tests/fixtures/golden_criteria/_scenarios/generic_metadata_boundaries/generic_description.html) | [Generic metadata boundaries](#rule-generic-metadata-boundaries) |
-| [`../tests/fixtures/golden_criteria/_scenarios/generic_metadata_boundaries/redirect_stub.html`](../tests/fixtures/golden_criteria/_scenarios/generic_metadata_boundaries/redirect_stub.html) | [Generic metadata boundaries](#rule-generic-metadata-boundaries) |
-| [`../tests/fixtures/golden_criteria/_scenarios/inline_figure_link_rewrite/article.md`](../tests/fixtures/golden_criteria/_scenarios/inline_figure_link_rewrite/article.md) | [Inline figure link rewrite](#rule-rewrite-inline-figure-links) |
-| [`../tests/fixtures/golden_criteria/_scenarios/inline_figure_link_rewrite/assets.json`](../tests/fixtures/golden_criteria/_scenarios/inline_figure_link_rewrite/assets.json) | [Inline figure link rewrite](#rule-rewrite-inline-figure-links) |
-| [`../tests/fixtures/golden_criteria/_scenarios/provider_dom_abstract_fallback/payload.json`](../tests/fixtures/golden_criteria/_scenarios/provider_dom_abstract_fallback/payload.json) | [Provider metadata](#rule-provider-owned-authors) |
-| [`../tests/fixtures/golden_criteria/_scenarios/section_hints_availability/article.md`](../tests/fixtures/golden_criteria/_scenarios/section_hints_availability/article.md) | [Availability section contract](#rule-keep-data-availability-once) |
-| [`../tests/fixtures/golden_criteria/_scenarios/section_hints_availability/section_hints.json`](../tests/fixtures/golden_criteria/_scenarios/section_hints_availability/section_hints.json) | [Availability section contract](#rule-keep-data-availability-once) |
-| [`../tests/fixtures/golden_criteria/_scenarios/springer_main_content_direct_children/original.html`](../tests/fixtures/golden_criteria/_scenarios/springer_main_content_direct_children/original.html) | [Springer / Nature main-content](#rule-springer-main-content-direct-children) |
-| [`../tests/fixtures/golden_criteria/_scenarios/table_flatten_or_list/complex_table.html`](../tests/fixtures/golden_criteria/_scenarios/table_flatten_or_list/complex_table.html) | [Table flatten/list](#rule-table-flatten-or-list) |
-| [`../tests/fixtures/golden_criteria/_scenarios/wiley_abbreviations_trailing/original.html`](../tests/fixtures/golden_criteria/_scenarios/wiley_abbreviations_trailing/original.html) | [Wiley abbreviations](#rule-wiley-abbreviations-trailing) |
-
 
 ## 使用建议
 

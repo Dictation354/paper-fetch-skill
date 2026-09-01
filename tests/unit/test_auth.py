@@ -89,7 +89,6 @@ class _FakeAuthBrowserManager:
     def __init__(self) -> None:
         self.context = _FakeAuthContext()
         self.binary_path: str | None = None
-        self.cdp_endpoint: str | None = None
         self.profile_dir: Path | None = None
         self.user_data_dir: Path | None = None
         self.new_context_kwargs: dict[str, object] = {}
@@ -112,19 +111,15 @@ def _install_fake_browser_manager(monkeypatch) -> type[_FakeAuthBrowserManager]:
             self,
             *,
             binary_path: str | None = None,
-            cdp_endpoint: str | None = None,
             profile_dir: Path | None = None,
             user_data_dir: Path | None = None,
             headless: bool = True,
-            auto_prepare: bool = False,
         ) -> None:
             super().__init__()
             self.binary_path = binary_path
-            self.cdp_endpoint = cdp_endpoint
             self.profile_dir = profile_dir
             self.user_data_dir = user_data_dir
             self.headless = headless
-            self.auto_prepare = auto_prepare
 
     monkeypatch.setattr(auth, "CamoufoxPersistentContextManager", FakeManager)
     return FakeManager
@@ -133,10 +128,7 @@ def _install_fake_browser_manager(monkeypatch) -> type[_FakeAuthBrowserManager]:
 def _patch_auth_runtime(
     monkeypatch, tmp_path, env: dict[str, str] | None = None
 ) -> None:
-    runtime_env = {
-        "PAPER_FETCH_BROWSER_BACKEND": "camoufox",
-        XDG_DATA_HOME_ENV_VAR: str(tmp_path / "xdg"),
-    }
+    runtime_env = {XDG_DATA_HOME_ENV_VAR: str(tmp_path / "xdg")}
     if env is not None:
         runtime_env.update(env)
     monkeypatch.setattr(auth, "build_runtime_env", lambda: dict(runtime_env))
@@ -148,31 +140,6 @@ def _patch_auth_runtime(
             target_url,
             f"{provider_label} Article",
         ),
-    )
-
-
-def test_upsert_env_file_updates_existing_values(tmp_path) -> None:
-    env_file = tmp_path / ".env"
-    env_file.write_text(
-        "# existing\n"
-        'export PAPER_FETCH_AMS_STORAGE_STATE_JSON="/old/state.json"\n'
-        "KEEP=value\n",
-        encoding="utf-8",
-    )
-
-    auth.upsert_env_file(
-        env_file,
-        {
-            "PAPER_FETCH_AMS_STORAGE_STATE_JSON": "/tmp/with space/state.json",
-            "NEW_KEY": 'quoted"value',
-        },
-    )
-
-    assert env_file.read_text(encoding="utf-8") == (
-        "# existing\n"
-        'PAPER_FETCH_AMS_STORAGE_STATE_JSON="/tmp/with space/state.json"\n'
-        "KEEP=value\n"
-        'NEW_KEY="quoted\\"value"\n'
     )
 
 
@@ -267,11 +234,8 @@ def test_authenticate_provider_profile_uses_sample_headed_profile_and_storage(
     assert result.provider == "wiley"
     assert result.profile_dir == profile_dir
     assert result.storage_state_path == storage_state_path
-    assert result.env_written is False
-    assert result.env_file_path is None
     assert result.final_url == auth.AUTH_TARGETS["wiley"].url
     manager = fake_manager.instances[0]
-    assert manager.cdp_endpoint is None
     assert manager.user_data_dir == str(profile_dir)
     assert manager.closed is True
     assert "storage_state" not in manager.new_context_kwargs

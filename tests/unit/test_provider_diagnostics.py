@@ -237,44 +237,15 @@ def test_configuration_sources_never_expose_secret_values(tmp_path: Path) -> Non
     )
 
 
-def test_doctor_includes_install_provenance_without_live_checks(tmp_path: Path) -> None:
-    provenance = {
-        "status": "not_applicable",
-        "reason_code": "source_development_without_offline_manifest",
-    }
-    with (
-        mock.patch(
-            "paper_fetch.diagnostics.provider_status_payload",
-            return_value=_payload(tmp_path, provider="crossref", detail="compact"),
-        ),
-        mock.patch(
-            "paper_fetch.diagnostics.install_provenance_payload",
-            return_value=provenance,
-        ) as build_provenance,
+def test_doctor_reports_only_runtime_health_without_install_provenance(
+    tmp_path: Path,
+) -> None:
+    with mock.patch(
+        "paper_fetch.diagnostics.provider_status_payload",
+        return_value=_payload(tmp_path, provider="crossref", detail="compact"),
     ):
         report = doctor_payload(provider="crossref", detail="compact")
 
     assert report["status"] == "ready"
     assert report["live_network_checked"] is False
-    assert report["install_provenance"] == provenance
-    build_provenance.assert_called_once_with(install_root=None)
-
-
-def test_doctor_promotes_provenance_drift_to_degraded(tmp_path: Path) -> None:
-    with (
-        mock.patch(
-            "paper_fetch.diagnostics.provider_status_payload",
-            return_value=_payload(tmp_path, provider="crossref", detail="compact"),
-        ),
-        mock.patch(
-            "paper_fetch.diagnostics.install_provenance_payload",
-            return_value={"status": "drift", "reason_code": "version_mismatch"},
-        ),
-    ):
-        report = doctor_payload(
-            provider="crossref",
-            detail="compact",
-            install_root=tmp_path,
-        )
-
-    assert report["status"] == "degraded"
+    assert "install_provenance" not in report

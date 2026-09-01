@@ -690,13 +690,13 @@ verify_skill_bundle_integrity() {
   local runtime_root="$1"
   local skill_dir="$2"
   local phase="$3"
-  local verifier="$runtime_root/runtime/site-packages/paper_fetch/skill_integrity.py"
+  local verifier="$runtime_root/scripts/skill_integrity.py"
 
   require_file "$runtime_root/offline-manifest.json"
   require_file "$verifier"
   log "Verifying $phase skill bundle manifest"
   "$runtime_root/runtime/paper-fetch-python" -X utf8 \
-    -m paper_fetch.skill_integrity verify \
+    "$verifier" verify \
     --manifest "$runtime_root/offline-manifest.json" \
     --skill-dir "$skill_dir" >/dev/null
 }
@@ -1434,7 +1434,7 @@ EOF
 check_browser_runtime_package() {
   local runtime_python
   runtime_python="$(mcp_python_bin)"
-  "$runtime_python" -c 'import camoufox; import playwright; import pymupdf; from paper_fetch.runtime_browser import BrowserContextManager; assert hasattr(camoufox, "Camoufox"); assert BrowserContextManager is not None'
+  "$runtime_python" -c 'import camoufox; import playwright; import pymupdf; from paper_fetch.providers.browser_runtime.camoufox_manager import CamoufoxBrowserManager; assert hasattr(camoufox, "Camoufox"); assert CamoufoxBrowserManager is not None'
 }
 
 run_smoke_checks() {

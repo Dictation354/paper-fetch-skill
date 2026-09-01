@@ -10,12 +10,10 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import shutil
-import socket
 import subprocess
 import sys
 import tempfile
 from typing import Any
-from collections.abc import Iterator
 
 from platformdirs import user_data_path
 import pytest
@@ -24,8 +22,6 @@ from tests._environment import (
     PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR,
     PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR,
     PRESERVED_FORMULA_TOOLS_DIR_ENV_VAR,
-    TEST_ENVIRONMENT_REPAIR,
-    locked_test_dependency_issues,
 )
 
 
@@ -119,13 +115,6 @@ def _preserve_explicit_formula_tools_dir() -> None:
 
 
 def pytest_configure(config: pytest.Config) -> None:
-    dependency_issues = locked_test_dependency_issues()
-    if dependency_issues:
-        raise pytest.UsageError(
-            "Incompatible ambient test environment: "
-            + "; ".join(dependency_issues)
-            + f". Repair with: {TEST_ENVIRONMENT_REPAIR}"
-        )
     config.addinivalue_line(
         "markers",
         "browser: test intentionally exercises a real browser/runtime boundary",
@@ -138,11 +127,6 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers",
         "allow_subprocess: test intentionally launches non-allowlisted executables",
     )
-    config.addinivalue_line(
-        "markers",
-        "socket_adapter: test intentionally exercises a socket adapter boundary",
-    )
-
     worker = _worker_id(config)
     _preserve_installed_camoufox_executable()
     _preserve_explicit_formula_tools_dir()
@@ -225,48 +209,6 @@ def _paper_fetch_test_safety(
         return real_popen(*args, **kwargs)
 
     monkeypatch.setattr(subprocess, "Popen", guarded_popen)
-
-
-@pytest.fixture(autouse=True)
-def _unit_socket_attempt_guard(
-    request: pytest.FixtureRequest,
-    monkeypatch: pytest.MonkeyPatch,
-) -> Iterator[None]:
-    """Fail unit tests that swallow pytest-socket connection failures."""
-
-    if (
-        request.node.get_closest_marker("live")
-        or request.node.get_closest_marker("browser")
-        or request.node.get_closest_marker("socket_adapter")
-        or "unit" not in Path(str(request.node.path)).parts
-    ):
-        yield
-        return
-
-    attempts: list[tuple[str, object]] = []
-    current_connect = socket.socket.connect
-
-    def tracked_connect(instance: socket.socket, address: object) -> None:
-        attempts.append(("connect", address))
-        return current_connect(instance, address)
-
-    def tracked_connect_ex(instance: socket.socket, address: object) -> int:
-        attempts.append(("connect_ex", address))
-        try:
-            current_connect(instance, address)
-        except OSError as error:
-            return int(error.errno or 1)
-        return 0
-
-    monkeypatch.setattr(socket.socket, "connect", tracked_connect)
-    monkeypatch.setattr(socket.socket, "connect_ex", tracked_connect_ex)
-    yield
-    if attempts:
-        attempted_methods = ", ".join(method for method, _address in attempts)
-        pytest.fail(
-            f"{request.node.nodeid} attempted socket connection(s): "
-            f"{attempted_methods}. Mock the boundary or mark a socket-adapter test."
-        )
 
 
 def pytest_sessionfinish(

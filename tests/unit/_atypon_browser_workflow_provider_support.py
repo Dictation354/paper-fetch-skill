@@ -10,7 +10,6 @@ from collections.abc import Mapping
 from unittest import mock
 
 from paper_fetch.http import RequestFailure
-from paper_fetch_devtools.quality_issues import collect_issue_flags
 from paper_fetch.extraction.html import assets as html_assets
 from paper_fetch.extraction.image_payloads import image_mime_type_from_bytes
 from paper_fetch.providers import (
@@ -39,7 +38,7 @@ from tests.unit._browser_workflow_deps import (
     browser_workflow_deps,
     install_browser_workflow_deps,
 )
-from tests.unit._paper_fetch_support import build_envelope, fulltext_pdf_bytes
+from tests.unit._paper_fetch_support import fulltext_pdf_bytes
 
 
 SCIENCE_SAMPLE = provider_benchmark_sample("science")
@@ -172,7 +171,12 @@ class AssetTransport:
         retry_on_transient=False,
         transient_retries=2,
         transient_backoff_base_seconds=0.5,
+        request_policy=None,
     ):
+        if request_policy is not None:
+            timeout = request_policy.timeout_seconds
+            retry_on_rate_limit = request_policy.retry_on_rate_limit
+            retry_on_transient = request_policy.retry_on_transient
         self.calls.append(
             {
                 "method": method,
@@ -277,7 +281,6 @@ class AtyponBrowserWorkflowProviderTestCase(unittest.TestCase):
             artifact_dir=tmp / "artifacts",
             headless=True,
             user_agent="paper-fetch-test/1",
-            backend="camoufox",
         )
 
     def _build_browser_html_raw_payload(
@@ -333,13 +336,6 @@ class AtyponBrowserWorkflowProviderTestCase(unittest.TestCase):
         )
         return article, extraction, raw_payload
 
-    def _assert_issue_flag_absent(
-        self, provider: str, article, flag: str, *, status: str = "fulltext"
-    ) -> None:
-        self.assertNotIn(
-            flag, collect_issue_flags(provider, build_envelope(article), status=status)
-        )
-
     def _assert_provider_owned_author_case(
         self,
         *,
@@ -360,7 +356,6 @@ class AtyponBrowserWorkflowProviderTestCase(unittest.TestCase):
         self.assertEqual(
             article.metadata.authors[: len(expected_authors)], expected_authors
         )
-        self._assert_issue_flag_absent(client.name, article, "empty_authors")
 
 
 __all__ = [name for name in globals() if not name.startswith("__")]

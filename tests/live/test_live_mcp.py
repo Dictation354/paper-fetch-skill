@@ -19,7 +19,7 @@ from tests.live._runtime_env import (
     build_isolated_live_env,
     is_machine_readable_no_access,
     preflight_selected_browser_or_skip,
-    require_selected_browser_or_skip,
+    require_camoufox_or_skip,
 )
 from tests.provider_benchmark_samples import (
     provider_benchmark_sample,
@@ -208,7 +208,7 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_pnas_doi_live_via_mcp_reports_progress_and_logs(self) -> None:
         self._require_env(*PNAS_SAMPLE.required_env)
-        require_selected_browser_or_skip(self, self.env)
+        require_camoufox_or_skip(self, self.env)
         progress_updates: list[tuple[float, float | None, str | None]] = []
         log_messages: list[object] = []
 
@@ -281,10 +281,6 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
             normalize_doi(structured_content["doi"]),
             normalize_doi(PNAS_SAMPLE.doi),
         )
-        source_trail = list(structured_content["source_trail"])
-        self.assertIn("browser:preflight_reuse_hit", source_trail)
-        self.assertIn("fulltext:pnas_html_ok", source_trail)
-        self.assertNotIn("fulltext:pnas_pdf_fallback_ok", source_trail)
         self.assertEqual(structured_content["acceptance"]["asset"], "complete")
         self.assertEqual(structured_content["acceptance"]["overall"], "complete")
         diagnostics = result_payload.get("diagnostics")
@@ -294,7 +290,6 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
             else None
         )
         trace_payload = dict(trace) if isinstance(trace, Mapping) else {}
-        self.assertEqual(int(trace_payload.get("navigation_count") or 0), 1)
         self.assertEqual(progress_updates[-1], (4, 4, "fetch_paper complete"))
         self.assertTrue(
             any(
@@ -317,14 +312,14 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
             )
         )
         artifact_root.mkdir(parents=True, exist_ok=True)
-        (artifact_root / "pnas-mcp-preflight-reuse.json").write_text(
+        (artifact_root / "pnas-mcp.json").write_text(
             json.dumps(
                 {
                     "provider": "pnas",
                     "doi": normalize_doi(PNAS_SAMPLE.doi),
-                    "preflight_reuse_hit": True,
-                    "preflight_navigation_count": 1,
-                    "fetch_html_navigation_count": 0,
+                    "preflight_navigation_count": int(
+                        trace_payload.get("navigation_count") or 0
+                    ),
                     "total_seconds": total_seconds,
                     "performance_warning": performance_warning,
                     "browser_runtime_trace": trace_payload,

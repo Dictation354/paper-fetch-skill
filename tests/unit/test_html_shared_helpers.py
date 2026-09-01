@@ -88,16 +88,6 @@ class _DelayedAssetTransport(HttpTransport):
                 self.active -= 1
 
 
-class _InjectedAssetRequesterTransport:
-    """Exercise the explicitly injected legacy requester without real network I/O."""
-
-    _streaming_ready = False
-    cancelled = False
-
-    def request(self, *_args, **_kwargs):
-        raise AssertionError("injected opener requester should own this test boundary")
-
-
 class _StaticAssetTransport(HttpTransport):
     def __init__(self, responses: dict[tuple[str, str], dict[str, object]]) -> None:
         self.responses = responses
@@ -887,20 +877,20 @@ class SharedHtmlHelperTests(unittest.TestCase):
             "doi=10.1111%2Fgcb.16414&file=gcb16414-sup-0001-FigureS1.docx"
         )
 
-        def opener_requester(opener, url, **kwargs):
-            del opener, kwargs
-            self.assertEqual(url, supplement_url)
-            return {
-                "status_code": 200,
-                "headers": {"content-type": "application/octet-stream"},
-                "body": b"supplementary-docx",
-                "url": "https://onlinelibrary.wiley.com/action/downloadSupplement",
+        transport = _StaticAssetTransport(
+            {
+                ("GET", supplement_url): {
+                    "status_code": 200,
+                    "headers": {"content-type": "application/octet-stream"},
+                    "body": b"supplementary-docx",
+                    "url": "https://onlinelibrary.wiley.com/action/downloadSupplement",
+                }
             }
-
+        )
         with tempfile.TemporaryDirectory() as tmpdir:
             result = html_assets.download_assets(
                 html_assets.SUPPLEMENTARY_KIND,
-                _InjectedAssetRequesterTransport(),
+                transport,
                 article_id="10.1111/gcb.16414",
                 assets=[
                     {
@@ -914,8 +904,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
                 output_dir=Path(tmpdir),
                 user_agent="paper-fetch-test",
                 asset_profile="all",
-                cookie_opener_builder=lambda *args, **kwargs: object(),
-                opener_requester=opener_requester,
             )
 
         self.assertEqual(result["asset_failures"], [])
@@ -942,14 +930,14 @@ class SharedHtmlHelperTests(unittest.TestCase):
             },
         }
 
-        def opener_requester(opener, url, **kwargs):
-            del opener, kwargs
-            return responses[url]
+        transport = _StaticAssetTransport(
+            {("GET", url): response for url, response in responses.items()}
+        )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             result = html_assets.download_assets(
                 html_assets.SUPPLEMENTARY_KIND,
-                _InjectedAssetRequesterTransport(),
+                transport,
                 article_id="10.1000/example",
                 assets=[
                     {
@@ -969,8 +957,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
                 output_dir=Path(tmpdir),
                 user_agent="paper-fetch-test",
                 asset_profile="all",
-                cookie_opener_builder=lambda *args, **kwargs: object(),
-                opener_requester=opener_requester,
             )
 
             asset_paths = [Path(asset["path"]) for asset in result["assets"]]
@@ -987,26 +973,28 @@ class SharedHtmlHelperTests(unittest.TestCase):
     ) -> None:
         """rule: rule-springer-supplementary-scope"""
 
-        def opener_requester(opener, url, **kwargs):
-            del opener, kwargs
-            return {
-                "status_code": 200,
-                "headers": {"content-type": "text/csv"},
-                "body": b"source-data-only",
-                "url": url,
+        source_url = "https://example.test/source-data-only.csv"
+        transport = _StaticAssetTransport(
+            {
+                ("GET", source_url): {
+                    "status_code": 200,
+                    "headers": {"content-type": "text/csv"},
+                    "body": b"source-data-only",
+                    "url": source_url,
+                }
             }
-
+        )
         with tempfile.TemporaryDirectory() as tmpdir:
             output_dir = Path(tmpdir)
             result = html_assets.download_assets(
                 html_assets.SUPPLEMENTARY_KIND,
-                _InjectedAssetRequesterTransport(),
+                transport,
                 article_id="10.1000/source-only",
                 assets=[
                     {
                         "kind": "supplementary",
                         "heading": "Source Data Fig. 1",
-                        "url": "https://example.test/source-data-only.csv",
+                        "url": source_url,
                         "section": "supplementary",
                         "asset_kind": "source_data",
                     }
@@ -1014,8 +1002,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
                 output_dir=output_dir,
                 user_agent="paper-fetch-test",
                 asset_profile="all",
-                cookie_opener_builder=lambda *args, **kwargs: object(),
-                opener_requester=opener_requester,
             )
 
             asset_root = output_dir / "10.1000_source-only_assets"
@@ -1307,7 +1293,9 @@ class SharedHtmlHelperTests(unittest.TestCase):
                 output_dir=Path(tmpdir),
                 user_agent="paper-fetch-test",
                 asset_profile="all",
-                image_document_fetcher=image_document_fetcher,
+                options=html_assets.AssetDownloadOptions(
+                    image_document_fetcher=image_document_fetcher
+                ),
             )
 
             self.assertEqual([call["url"] for call in transport.calls], [source_url])
@@ -1504,7 +1492,7 @@ class SharedHtmlHelperTests(unittest.TestCase):
                 output_dir=Path(tmpdir),
                 user_agent="paper-fetch-test",
                 asset_profile="all",
-                asset_download_concurrency=1,
+                options=html_assets.AssetDownloadOptions(asset_download_concurrency=1),
             )
 
         self.assertEqual(transport.max_active, 1)
@@ -1517,25 +1505,7 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self,
     ) -> None:
         urls = [f"https://example.test/supp{i}.pdf" for i in range(4)]
-        state = {"active": 0, "max_active": 0}
-        lock = threading.Lock()
-
-        def opener_requester(opener, url, **kwargs):
-            del opener, kwargs
-            with lock:
-                state["active"] += 1
-                state["max_active"] = max(state["max_active"], state["active"])
-            try:
-                time.sleep(0.05)
-                return {
-                    "status_code": 200,
-                    "headers": {"content-type": "application/pdf"},
-                    "body": f"payload:{url}".encode(),
-                    "url": url,
-                }
-            finally:
-                with lock:
-                    state["active"] -= 1
+        transport = _DelayedAssetTransport({url: 0.05 for url in urls})
 
         assets = [
             {
@@ -1550,17 +1520,15 @@ class SharedHtmlHelperTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             result = html_assets.download_assets(
                 html_assets.SUPPLEMENTARY_KIND,
-                _InjectedAssetRequesterTransport(),
+                transport,
                 article_id="10.5555/parallel",
                 assets=assets,
                 output_dir=Path(tmpdir),
                 user_agent="paper-fetch-test",
                 asset_profile="all",
-                cookie_opener_builder=lambda *args, **kwargs: object(),
-                opener_requester=opener_requester,
             )
 
-        self.assertGreater(state["max_active"], 1)
+        self.assertGreater(transport.max_active, 1)
         self.assertEqual(
             [asset["heading"] for asset in result["assets"]],
             [asset["heading"] for asset in assets],
@@ -1571,25 +1539,7 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self,
     ) -> None:
         urls = [f"https://example.test/serial-supp{i}.pdf" for i in range(3)]
-        state = {"active": 0, "max_active": 0}
-        lock = threading.Lock()
-
-        def opener_requester(opener, url, **kwargs):
-            del opener, kwargs
-            with lock:
-                state["active"] += 1
-                state["max_active"] = max(state["max_active"], state["active"])
-            try:
-                time.sleep(0.01)
-                return {
-                    "status_code": 200,
-                    "headers": {"content-type": "application/pdf"},
-                    "body": f"payload:{url}".encode(),
-                    "url": url,
-                }
-            finally:
-                with lock:
-                    state["active"] -= 1
+        transport = _DelayedAssetTransport({url: 0.01 for url in urls})
 
         assets = [
             {
@@ -1604,18 +1554,16 @@ class SharedHtmlHelperTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             result = html_assets.download_assets(
                 html_assets.SUPPLEMENTARY_KIND,
-                _InjectedAssetRequesterTransport(),
+                transport,
                 article_id="10.5555/serial",
                 assets=assets,
                 output_dir=Path(tmpdir),
                 user_agent="paper-fetch-test",
                 asset_profile="all",
-                cookie_opener_builder=lambda *args, **kwargs: object(),
-                opener_requester=opener_requester,
-                asset_download_concurrency=1,
+                options=html_assets.AssetDownloadOptions(asset_download_concurrency=1),
             )
 
-        self.assertEqual(state["max_active"], 1)
+        self.assertEqual(transport.max_active, 1)
         self.assertEqual(
             [asset["heading"] for asset in result["assets"]],
             [asset["heading"] for asset in assets],

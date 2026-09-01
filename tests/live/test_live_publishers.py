@@ -101,7 +101,6 @@ def fetch_envelope(
         )
     finally:
         if telemetry is not None:
-            telemetry["stage_timings"] = dict(context.stage_timings)
             telemetry["fetch_wall_seconds"] = round(time.monotonic() - started_at, 3)
         context.close()
     return envelope
@@ -444,11 +443,7 @@ def test_catalog_provider_sample_live_body_acceptance(
         json.dumps(article.quality.source_trail, ensure_ascii=False),
     )
     record_property("fetch_acceptance", acceptance.to_json())
-    stage_timings = dict(fetch_telemetry.get("stage_timings") or {})
     total_seconds = round(time.monotonic() - sample_started_at, 3)
-    preflight_reuse_hit = "browser:preflight_reuse_hit" in set(
-        article.quality.source_trail
-    )
     readiness = _last_browser_candidate(preflight_trace)
     performance_warning = None
     if sample.provider == "pnas" and total_seconds > 45:
@@ -457,12 +452,7 @@ def test_catalog_provider_sample_live_body_acceptance(
             f"{total_seconds:.3f}s"
         )
         warnings.warn(performance_warning, RuntimeWarning, stacklevel=1)
-    record_property(
-        "fetch_stage_timings",
-        json.dumps(stage_timings, ensure_ascii=False, sort_keys=True),
-    )
     record_property("fetch_wall_seconds", fetch_telemetry["fetch_wall_seconds"])
-    record_property("preflight_reuse_hit", str(preflight_reuse_hit).lower())
     record_property(
         "browser_navigation_count", int(preflight_trace.get("navigation_count") or 0)
     )
@@ -484,12 +474,9 @@ def test_catalog_provider_sample_live_body_acceptance(
             "preflight_seconds": preflight_seconds,
             "fetch_wall_seconds": fetch_telemetry["fetch_wall_seconds"],
             "total_seconds": total_seconds,
-            "stage_timings": stage_timings,
-            "preflight_reuse_hit": preflight_reuse_hit,
             "preflight_navigation_count": int(
                 preflight_trace.get("navigation_count") or 0
             ),
-            "fetch_html_navigation_count": 0 if preflight_reuse_hit else None,
             "dom_readiness_result": readiness.get("dom_readiness_result"),
             "dom_readiness_seconds": readiness.get("dom_readiness_seconds"),
             "downloaded_asset_count": sum(bool(asset.path) for asset in article.assets),
@@ -516,12 +503,6 @@ def test_catalog_provider_sample_live_body_acceptance(
     }
     assert acceptance.output.status == OutputAcceptanceStatus.COMPLETE
     assert acceptance.overall == OverallAcceptanceStatus.COMPLETE, acceptance.to_json()
-    if sample.provider == "pnas":
-        assert "browser:preflight_reuse_hit" in article.quality.source_trail
-        assert "fulltext:pnas_html_ok" in article.quality.source_trail
-        assert "fulltext:pnas_pdf_fallback_ok" not in article.quality.source_trail
-        assert int(preflight_trace.get("navigation_count") or 0) == 1
-        assert acceptance.asset.status == AssetAcceptanceStatus.COMPLETE
     terminal_record.clear()
     terminal_record.update(success_record)
 

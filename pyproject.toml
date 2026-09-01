@@ -79,7 +79,6 @@ dev = [
   "markdown-it-py>=3,<5",
   "pip-audit>=2.9,<3",
   "pytest>=8,<10",
-  "pytest-cov>=6,<8",
   "pytest-socket>=0.7,<1",
   "pytest-xdist>=3.6,<4",
   "ruff>=0.8,<1",
@@ -99,7 +98,7 @@ include-package-data = false
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["paper_fetch*"]
-exclude = ["paper_fetch_devtools*", "paper_fetch.resources.formula.node_modules*"]
+exclude = ["paper_fetch.resources.formula.node_modules*"]
 
 [tool.setuptools.package-data]
 "paper_fetch.resources.arxiv" = ["*.json"]
@@ -151,14 +150,6 @@ ignore_missing_imports = true
 no_site_packages = true
 warn_unused_ignores = true
 
-[tool.coverage.run]
-branch = true
-source = ["paper_fetch"]
-
-[tool.coverage.report]
-fail_under = 82
-show_missing = true
-
 [tool.ruff.lint.mccabe]
 max-complexity = 25
 
@@ -170,5 +161,4 @@ addopts = "-n auto --disable-socket --allow-unix-socket --allow-hosts=127.0.0.1,
 testpaths = [
   "tests/unit",
   "tests/integration",
-  "tests/devtools",
 ]

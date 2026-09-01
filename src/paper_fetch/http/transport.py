@@ -4,9 +4,7 @@ from __future__ import annotations
 
 import contextlib
 from contextlib import nullcontext
-from contextlib import contextmanager
-from contextvars import ContextVar
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 import logging
 import os
 from pathlib import Path
@@ -16,7 +14,7 @@ from typing import Any
 import urllib.error
 import urllib.parse
 import zlib
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Mapping
 
 from cachetools import TTLCache
 import urllib3
@@ -28,12 +26,8 @@ from ..reason_codes import (
 )
 from .body import BodyMixin, DEFAULT_MAX_RESPONSE_BYTES
 from .cache import (
-    CACHE_STAT_KEYS,
     DEFAULT_CACHE_CAPACITY,
     DEFAULT_CACHE_TTL_SECONDS,
-    DEFAULT_DISK_CACHE_MAX_AGE_SECONDS,
-    DEFAULT_DISK_CACHE_MAX_BYTES,
-    DEFAULT_DISK_CACHE_MAX_ENTRIES,
     DEFAULT_MAX_CACHEABLE_BODY_BYTES,
     DEFAULT_MAX_TOTAL_CACHE_BYTES,
     CacheMixin,
@@ -72,9 +66,6 @@ _SENSITIVE_REDIRECT_HEADERS = frozenset(
     {"authorization", "cookie", "proxy-authorization", "referer"}
 )
 logger = logging.getLogger("paper_fetch.http")
-_HTTP_TIMING_COLLECTOR: ContextVar[Callable[[str, float], None] | None] = ContextVar(
-    "paper_fetch_http_timing_collector", default=None
-)
 
 
 def _parsed_content_length(headers: Mapping[str, Any]) -> int | None:
@@ -106,27 +97,6 @@ def _header_values(headers: Any, name: str) -> tuple[str, ...]:
         if str(key).lower() == name.lower() and str(value)
     ]
     return tuple(values)
-
-
-@contextmanager
-def http_timing_collector(
-    collector: Callable[[str, float], None] | None,
-) -> Iterator[None]:
-    """Collect request and retry wall-clock durations for the active fetch."""
-
-    token = _HTTP_TIMING_COLLECTOR.set(collector)
-    try:
-        yield
-    finally:
-        _HTTP_TIMING_COLLECTOR.reset(token)
-
-
-def _record_http_timing(stage: str, elapsed: float) -> None:
-    collector = _HTTP_TIMING_COLLECTOR.get()
-    if collector is None:
-        return
-    with contextlib.suppress(Exception):
-        collector(stage, max(0.0, elapsed))
 
 
 @dataclass(frozen=True)
@@ -167,9 +137,6 @@ class HttpRequestPolicy:
     retry_on_transient: bool | None = None
     transient_retries: int | None = None
     minimum_interval_seconds: float = 0.0
-    route_concurrency_cap: int | None = None
-    acceptance_policy: str | None = None
-    asset_scope: str | None = None
 
 
 @dataclass(frozen=True)
@@ -208,22 +175,6 @@ class _PreparedStreamRequest:
     transient_policy: Any
 
 
-def _coerce_http_stream_options(
-    options: HttpStreamOptions | None,
-    legacy_options: Mapping[str, Any],
-) -> HttpStreamOptions:
-    """Preserve keyword compatibility while new callers use one request model."""
-
-    if not legacy_options:
-        return options or HttpStreamOptions()
-    known = frozenset(HttpStreamOptions.__dataclass_fields__)
-    unexpected = sorted(set(legacy_options) - known)
-    if unexpected:
-        joined = ", ".join(unexpected)
-        raise TypeError(f"unexpected stream_to_file option(s): {joined}")
-    return replace(options or HttpStreamOptions(), **dict(legacy_options))
-
-
 @dataclass(frozen=True)
 class _HttpRequestInput:
     method: str
@@ -246,7 +197,6 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         self,
         *,
         cache_ttl: int = DEFAULT_CACHE_TTL_SECONDS,
-        metadata_cache_ttl: int | None = None,
         cache_capacity: int = DEFAULT_CACHE_CAPACITY,
         max_cacheable_body_bytes: int = DEFAULT_MAX_CACHEABLE_BODY_BYTES,
         max_total_cache_bytes: int = DEFAULT_MAX_TOTAL_CACHE_BYTES,
@@ -254,17 +204,10 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         pool_num_pools: int | None = None,
         pool_maxsize: int | None = None,
         per_host_concurrency: int | None = None,
-        disk_cache_dir: str | os.PathLike[str] | None = None,
-        disk_cache_max_entries: int | None = None,
-        disk_cache_max_bytes: int | None = None,
-        disk_cache_max_age_seconds: int | None = None,
         options: HttpTransportOptions | None = None,
     ) -> None:
         transport_options = options or HttpTransportOptions()
         self.cache_ttl = max(0, int(cache_ttl))
-        self.metadata_cache_ttl = max(
-            0, int(metadata_cache_ttl if metadata_cache_ttl is not None else cache_ttl)
-        )
         self.cache_capacity = max(0, int(cache_capacity))
         self.max_cacheable_body_bytes = max(0, int(max_cacheable_body_bytes))
         self.max_total_cache_bytes = max(0, int(max_total_cache_bytes))
@@ -273,33 +216,6 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         self.pool_maxsize = max(1, int(pool_maxsize or DEFAULT_POOL_MAXSIZE))
         self.per_host_concurrency = max(
             1, int(per_host_concurrency or DEFAULT_PER_HOST_CONCURRENCY)
-        )
-        self.disk_cache_dir = (
-            Path(disk_cache_dir).expanduser() if disk_cache_dir else None
-        )
-        self.disk_cache_max_entries = max(
-            0,
-            int(
-                disk_cache_max_entries
-                if disk_cache_max_entries is not None
-                else DEFAULT_DISK_CACHE_MAX_ENTRIES
-            ),
-        )
-        self.disk_cache_max_bytes = max(
-            0,
-            int(
-                disk_cache_max_bytes
-                if disk_cache_max_bytes is not None
-                else DEFAULT_DISK_CACHE_MAX_BYTES
-            ),
-        )
-        self.disk_cache_max_age_seconds = max(
-            0,
-            int(
-                disk_cache_max_age_seconds
-                if disk_cache_max_age_seconds is not None
-                else DEFAULT_DISK_CACHE_MAX_AGE_SECONDS
-            ),
         )
         self._cancel_check = transport_options.cancel_check
         self.remote_url_policy = (
@@ -318,15 +234,6 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         )
         self._cache_body_bytes = 0
         self._cache_lock = threading.RLock()
-        self._cache_stats_lock = threading.Lock()
-        self._cache_stats = {key: 0 for key in CACHE_STAT_KEYS}
-        self._disk_cache_lock = threading.RLock()
-        self._disk_cache_entries: dict[Path, Any] = {}
-        self._disk_cache_total_bytes = 0
-        self._disk_cache_index_initialized = False
-        self._disk_cache_writes_since_reconcile = 0
-        self._disk_cache_last_reconcile = 0.0
-        self._disk_cache_last_prune = 0.0
         self._host_semaphores: dict[str, threading.BoundedSemaphore] = {}
         self._host_semaphores_lock = threading.Lock()
         self._cooldown_until: dict[str, float] = {}
@@ -693,58 +600,51 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         request_policy: HttpRequestPolicy | None = None,
     ) -> dict[str, Any]:
         policy = request_policy or HttpRequestPolicy()
-        started_at = time.monotonic()
-        try:
-            return self._request_impl(
-                _HttpRequestInput(
-                    method=method,
-                    url=url,
-                    headers=headers,
-                    query=query,
-                    timeout=int(
-                        timeout
-                        if timeout is not None
-                        else policy.timeout_seconds or DEFAULT_TIMEOUT_SECONDS
-                    ),
-                    retry_on_rate_limit=(
-                        retry_on_rate_limit
-                        if retry_on_rate_limit is not None
-                        else bool(policy.retry_on_rate_limit)
-                    ),
-                    rate_limit_retries=int(
-                        rate_limit_retries
-                        if rate_limit_retries is not None
-                        else policy.rate_limit_retries
-                        if policy.rate_limit_retries is not None
-                        else 1
-                    ),
-                    max_rate_limit_wait_seconds=int(
-                        max_rate_limit_wait_seconds
-                        if max_rate_limit_wait_seconds is not None
-                        else policy.max_rate_limit_wait_seconds
-                        if policy.max_rate_limit_wait_seconds is not None
-                        else 5
-                    ),
-                    retry_on_transient=(
-                        retry_on_transient
-                        if retry_on_transient is not None
-                        else bool(policy.retry_on_transient)
-                    ),
-                    transient_retries=int(
-                        transient_retries
-                        if transient_retries is not None
-                        else policy.transient_retries
-                        if policy.transient_retries is not None
-                        else DEFAULT_TRANSIENT_RETRIES
-                    ),
-                    request_policy=policy,
-                )
+        return self._request_impl(
+            _HttpRequestInput(
+                method=method,
+                url=url,
+                headers=headers,
+                query=query,
+                timeout=int(
+                    timeout
+                    if timeout is not None
+                    else policy.timeout_seconds or DEFAULT_TIMEOUT_SECONDS
+                ),
+                retry_on_rate_limit=(
+                    retry_on_rate_limit
+                    if retry_on_rate_limit is not None
+                    else bool(policy.retry_on_rate_limit)
+                ),
+                rate_limit_retries=int(
+                    rate_limit_retries
+                    if rate_limit_retries is not None
+                    else policy.rate_limit_retries
+                    if policy.rate_limit_retries is not None
+                    else 1
+                ),
+                max_rate_limit_wait_seconds=int(
+                    max_rate_limit_wait_seconds
+                    if max_rate_limit_wait_seconds is not None
+                    else policy.max_rate_limit_wait_seconds
+                    if policy.max_rate_limit_wait_seconds is not None
+                    else 5
+                ),
+                retry_on_transient=(
+                    retry_on_transient
+                    if retry_on_transient is not None
+                    else bool(policy.retry_on_transient)
+                ),
+                transient_retries=int(
+                    transient_retries
+                    if transient_retries is not None
+                    else policy.transient_retries
+                    if policy.transient_retries is not None
+                    else DEFAULT_TRANSIENT_RETRIES
+                ),
+                request_policy=policy,
             )
-        finally:
-            _record_http_timing(
-                "http_seconds",
-                time.monotonic() - started_at,
-            )
+        )
 
     def _prepare_stream_request(
         self,
@@ -886,8 +786,7 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         destination: Path,
         *,
         headers: Mapping[str, str] | None = None,
-        options: HttpStreamOptions | None = None,
-        **legacy_options: Any,
+        options: HttpStreamOptions,
     ) -> dict[str, Any]:
         """Stream one policy-validated response into an already unique path.
 
@@ -896,11 +795,7 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         the shared hostname-keyed urllib3 pool opens or reuses a connection.
         """
 
-        started_at = time.monotonic()
-        stream_options = _coerce_http_stream_options(options, legacy_options)
-        stream_request = self._prepare_stream_request(
-            method, url, headers, stream_options
-        )
+        stream_request = self._prepare_stream_request(method, url, headers, options)
         policy = stream_request.policy
         effective_timeout = stream_request.timeout
         effective_rate_limit_wait = stream_request.max_rate_limit_wait_seconds
@@ -1040,8 +935,8 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                         return
                     # Let a shared AssetBudget classify per-file versus aggregate
                     # exhaustion before the transport's local safety ceiling.
-                    if stream_options.on_chunk is not None:
-                        stream_options.on_chunk(len(chunk))
+                    if options.on_chunk is not None:
+                        options.on_chunk(len(chunk))
                     if written + len(chunk) > response_limit:
                         raise RequestFailure(
                             status_code,
@@ -1172,99 +1067,6 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                     self._release_response(response)
                 else:
                     self._close_response(response)
-            _record_http_timing("http_seconds", time.monotonic() - started_at)
-
-    def request_preview(
-        self,
-        method: str,
-        url: str,
-        *,
-        headers: Mapping[str, str] | None = None,
-        timeout: int | None = None,
-        preview_bytes: int = STREAM_PREVIEW_BYTES,
-        request_policy: HttpRequestPolicy | None = None,
-        on_response_headers: Callable[[str, Any], None] | None = None,
-        request_headers_provider: (
-            Callable[[str, Mapping[str, str]], Mapping[str, str]] | None
-        ) = None,
-    ) -> dict[str, Any]:
-        """Read only a bounded prefix while retaining uncached raw headers."""
-
-        policy = request_policy or HttpRequestPolicy()
-        effective_timeout = int(
-            timeout
-            if timeout is not None
-            else policy.timeout_seconds or DEFAULT_TIMEOUT_SECONDS
-        )
-        request_headers = {
-            key: value for key, value in (headers or {}).items() if value is not None
-        }
-        request_headers.setdefault("Accept-Encoding", "identity")
-        prepared = _PreparedRequest(
-            method=method.upper(),
-            full_url=url,
-            headers=request_headers,
-            follow_redirects=policy.follow_redirects,
-            max_redirects=max(0, int(policy.max_redirects)),
-            allowed_hosts=policy.allowed_hosts,
-            sensitive_headers=policy.sensitive_headers,
-            response_headers_observer=on_response_headers,
-            request_headers_provider=request_headers_provider,
-        )
-        response = None
-        host_semaphore = self._host_semaphore_for_url(url)
-        cooldown_key = self._cooldown_key_for_url(url, policy.cooldown_scope)
-        try:
-            with host_semaphore if host_semaphore is not None else nullcontext():
-                self._wait_for_rate_slot(
-                    cooldown_key,
-                    policy.minimum_interval_seconds,
-                    host_semaphore,
-                )
-                response = self._perform_request(prepared, timeout=effective_timeout)
-                response_url = (
-                    getattr(response, "_paper_fetch_final_url", None)
-                    or response.geturl()
-                    or url
-                )
-                response_headers = response.headers
-                headers_map = {
-                    str(key).lower(): str(value)
-                    for key, value in response_headers.items()
-                }
-                prefix = self._read_raw_bytes(response, max(0, int(preview_bytes)))
-                return {
-                    "status_code": int(response.status),
-                    "headers": headers_map,
-                    "body_preview": bytes(prefix or b""),
-                    "url": redact_url_for_cache(response_url),
-                    "_paper_fetch_header_values": {
-                        "set-cookie": list(
-                            _header_values(response_headers, "set-cookie")
-                        )
-                    },
-                }
-        except RequestFailure:
-            raise
-        except (
-            urllib3.exceptions.HTTPError,
-            urllib.error.URLError,
-            TimeoutError,
-        ) as exc:
-            raise RequestFailure(
-                None,
-                (
-                    f"Network error for {redact_url_for_cache(url)}: "
-                    f"{build_network_error_detail(exc)}"
-                ),
-                url=redact_url_for_cache(url),
-                error_category=classify_network_error(exc),
-            ) from exc
-        finally:
-            if response is not None:
-                # The remainder is intentionally not read, so this connection
-                # cannot be returned as a reusable pooled response.
-                self._close_response(response)
 
     def _request_impl(
         self,
@@ -1303,8 +1105,6 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         if not any(str(key).lower() == "accept-encoding" for key in request_headers):
             request_headers["Accept-Encoding"] = "gzip"
         cache_key = self._build_cache_key(method, url, request_headers)
-        if cache_key is None:
-            self._increment_cache_stat("bypass")
         cached_response = self._load_cached_response(cache_key)
         if cached_response is not None:
             self._enforce_response_limit(
@@ -1312,31 +1112,7 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                 max_response_bytes=response_limit,
                 url=str(cached_response.get("url") or url),
             )
-            self._increment_cache_stat("memory_hit")
             return cached_response
-        disk_cache_entry = self._load_disk_cached_entry(cache_key)
-        stale_disk_response: dict[str, Any] | None = None
-        if disk_cache_entry is not None:
-            disk_response = self._clone_response(disk_cache_entry["response"])
-            if disk_cache_entry["fresh"]:
-                self._enforce_response_limit(
-                    disk_response,
-                    max_response_bytes=response_limit,
-                    url=str(disk_response.get("url") or url),
-                )
-                self._increment_cache_stat("disk_fresh_hit")
-                if self._store_cached_response(cache_key, disk_response):
-                    self._increment_cache_stat("store")
-                return disk_response
-            stale_disk_response = disk_response
-            self._increment_cache_stat("disk_stale_revalidate")
-            for (
-                header_name,
-                header_value,
-            ) in self._conditional_headers_from_cached_response(disk_response).items():
-                request_headers.setdefault(header_name, header_value)
-        elif cache_key is not None:
-            self._increment_cache_stat("miss")
         self._check_cancelled()
         transient_backoff_base_seconds = max(
             0.0,
@@ -1407,37 +1183,6 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                         max_compressed_response_bytes=compressed_response_limit,
                     )
                     response_reusable = True
-                    if int(response.status) == 304 and stale_disk_response is not None:
-                        response_payload = self._response_from_not_modified(
-                            stale_disk_response,
-                            response_url=response_url,
-                            headers_map=headers_map,
-                        )
-                        emit_structured_log(
-                            logger,
-                            logging.DEBUG,
-                            "http_request_success",
-                            method=method.upper(),
-                            url=response_payload["url"],
-                            status=int(response.status),
-                            elapsed_ms=round(
-                                (time.monotonic() - request_started_at) * 1000, 3
-                            ),
-                            attempt=attempt,
-                        )
-                        self._increment_cache_stat("disk_304_refresh")
-                        stored = self._store_cached_response(
-                            cache_key, response_payload
-                        )
-                        stored = (
-                            self._store_disk_cached_response(
-                                cache_key, response_payload
-                            )
-                            or stored
-                        )
-                        if stored:
-                            self._increment_cache_stat("store")
-                        return response_payload
                     if int(response.status) >= 400:
                         status_code = int(response.status)
                         self._release_response(response)
@@ -1464,10 +1209,6 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                                 host_semaphore=host_semaphore,
                             ),
                         )
-                        _record_http_timing(
-                            "retry_seconds",
-                            time.monotonic() - request_started_at,
-                        )
                         continue
                     set_cookie_values = list(
                         _header_values(response.headers, "set-cookie")
@@ -1490,13 +1231,7 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                         ),
                         attempt=attempt,
                     )
-                    stored = self._store_cached_response(cache_key, response_payload)
-                    stored = (
-                        self._store_disk_cached_response(cache_key, response_payload)
-                        or stored
-                    )
-                    if stored:
-                        self._increment_cache_stat("store")
+                    self._store_cached_response(cache_key, response_payload)
                     if set_cookie_values:
                         # Multi-value Set-Cookie is request-local capability
                         # state. Attach it only after both cache stores have
@@ -1541,10 +1276,6 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                                 host_semaphore=host_semaphore,
                             ),
                         )
-                        _record_http_timing(
-                            "retry_seconds",
-                            time.monotonic() - request_started_at,
-                        )
                         continue
                     finally:
                         exc.close()
@@ -1576,10 +1307,6 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                             ),
                         )
                         transient_attempts_made += 1
-                        _record_http_timing(
-                            "retry_seconds",
-                            time.monotonic() - request_started_at,
-                        )
                         continue
                     emit_structured_log(
                         logger,
@@ -1627,10 +1354,6 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                             ),
                         )
                         transient_attempts_made += 1
-                        _record_http_timing(
-                            "retry_seconds",
-                            time.monotonic() - request_started_at,
-                        )
                         continue
                     emit_structured_log(
                         logger,

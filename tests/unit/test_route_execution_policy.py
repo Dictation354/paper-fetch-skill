@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import ast
 from dataclasses import replace
-from pathlib import Path
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from types import SimpleNamespace
@@ -12,6 +10,7 @@ import pytest
 
 from paper_fetch.http import (
     HttpRequestPolicy,
+    HttpStreamOptions,
     HttpTransport,
     HttpTransportOptions,
     RequestCancelledError,
@@ -19,7 +18,11 @@ from paper_fetch.http import (
 from paper_fetch.http.provider_policy import provider_request_policy
 import paper_fetch.provider_catalog as provider_catalog_module
 from paper_fetch.asset_budget import AssetBudget
-from paper_fetch.extraction.html.assets import FIGURE_KIND, download_assets
+from paper_fetch.extraction.html.assets import (
+    FIGURE_KIND,
+    AssetDownloadOptions,
+    download_assets,
+)
 from paper_fetch.provider_catalog import (
     compile_route_execution_policy,
     effective_route_asset_scope,
@@ -30,9 +33,6 @@ from paper_fetch.providers import _arxiv_assets
 from paper_fetch.providers.oxfordacademic import OxfordAcademicClient
 from paper_fetch.providers.plos import PlosClient, _fetch_plos_redirected_response
 from paper_fetch.providers.browser_runtime.types import BrowserRuntimeConfig
-
-
-REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 class _FakeClock:
@@ -102,38 +102,7 @@ def test_compiler_unifies_hosts_and_runtime_route_fields() -> None:
     assert arxiv.retry_on_transient is True
 
 
-def test_provider_owned_network_calls_do_not_inline_raw_request_policy() -> None:
-    violations: list[str] = []
-    roots = (
-        REPO_ROOT / "src/paper_fetch/providers",
-        REPO_ROOT / "src/paper_fetch/metadata",
-        REPO_ROOT / "src/paper_fetch/extraction",
-    )
-    for path in (path for root in roots for path in root.rglob("*.py")):
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Call):
-                continue
-            function_name = (
-                node.func.attr if isinstance(node.func, ast.Attribute) else ""
-            )
-            if function_name not in {"request", "request_preview", "stream_to_file"}:
-                continue
-            for keyword in node.keywords:
-                if keyword.arg != "request_policy" or not isinstance(
-                    keyword.value, ast.Call
-                ):
-                    continue
-                policy_factory = keyword.value.func
-                if isinstance(policy_factory, ast.Name) and (
-                    policy_factory.id == "HttpRequestPolicy"
-                ):
-                    violations.append(f"{path.relative_to(REPO_ROOT)}:{node.lineno}")
-
-    assert violations == []
-
-
-def test_provider_request_policy_projects_compiled_execution_fields() -> None:
+def test_provider_request_policy_projects_http_execution_fields() -> None:
     policy = provider_request_policy(
         "arxiv",
         "atom_metadata",
@@ -146,7 +115,6 @@ def test_provider_request_policy_projects_compiled_execution_fields() -> None:
     assert policy.transient_retries == 2
     assert policy.minimum_interval_seconds == 3.0
     assert policy.cooldown_scope == "provider:arxiv:atom_metadata"
-    assert policy.acceptance_policy == "metadata_identity"
 
 
 def test_shared_rate_slots_space_concurrent_workers_without_real_sleep() -> None:
@@ -277,7 +245,6 @@ def test_browser_runtime_caps_deadline_from_compiled_route_policy(
         headless=True,
         user_agent=None,
         timeout_ms=120_000,
-        backend="camoufox",
     )
 
     with pytest.raises(_playwright_browser.PlaywrightBrowserFailure) as captured:
@@ -341,7 +308,7 @@ def test_pdf_direct_provider_compiles_non_authorizing_route_policy() -> None:
         result = _pdf_fallback.fetch_pdf_over_http(
             transport,
             [candidate],
-            provider_name="iop",
+            request=_pdf_fallback.PdfRequestContext(provider_name="iop"),
         )
 
     assert result.pdf_bytes == expected.pdf_bytes
@@ -363,7 +330,6 @@ def test_pdf_browser_route_context_binds_timeout_and_provider_without_catalog_ho
         headless=True,
         user_agent=None,
         timeout_ms=999_000,
-        backend="camoufox",
     )
     monkeypatch.setattr(_pdf_fallback.time, "monotonic", lambda: 12.0)
 
@@ -447,7 +413,6 @@ def test_plos_asset_redirect_request_consumes_exact_compiled_policy() -> None:
     assert "retry_on_transient" not in kwargs
     assert kwargs["request_policy"].timeout_seconds == compiled.timeout_seconds
     assert kwargs["request_policy"].allowed_hosts is None
-    assert kwargs["request_policy"].asset_scope == "body"
 
 
 def test_plos_doi_resolver_consumes_xml_route_hosts_and_retries() -> None:
@@ -486,8 +451,12 @@ def test_arxiv_source_stream_consumes_compiled_route_policy(tmp_path) -> None:
     reservation = budget.reserve()
 
     def stream(_method, _url, path, **kwargs):
-        kwargs["on_content_length"](4)
-        kwargs["on_chunk"](4)
+        options = kwargs["options"]
+        assert isinstance(options, HttpStreamOptions)
+        assert options.on_content_length is not None
+        assert options.on_chunk is not None
+        options.on_content_length(4)
+        options.on_chunk(4)
         path.write_bytes(b"data")
         return {"status_code": 200, "url": source_url, "headers": {}}
 
@@ -504,8 +473,11 @@ def test_arxiv_source_stream_consumes_compiled_route_policy(tmp_path) -> None:
     kwargs = transport.stream_to_file.call_args.kwargs
     assert "timeout" not in kwargs
     assert "retry_on_transient" not in kwargs
-    assert kwargs["request_policy"].minimum_interval_seconds == 3.0
-    assert kwargs["request_policy"].allowed_hosts is None
+    options = kwargs["options"]
+    assert isinstance(options, HttpStreamOptions)
+    assert options.request_policy is not None
+    assert options.request_policy.minimum_interval_seconds == 3.0
+    assert options.request_policy.allowed_hosts is None
     reservation.rollback()
 
 
@@ -541,7 +513,7 @@ def test_compiled_asset_scope_selects_unset_profile_and_catalog_mutation_stops_w
         output_dir=tmp_path,
         user_agent="paper-fetch-test",
         asset_profile=None,
-        provider_name="plos",
+        options=AssetDownloadOptions(provider_name="plos"),
     )
 
     assert result == {"assets": [], "asset_failures": []}

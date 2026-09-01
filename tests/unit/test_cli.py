@@ -7,13 +7,15 @@ import logging
 import os
 import sys
 import tempfile
+import threading
+import time
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
 from paper_fetch import cli as paper_fetch_cli
-from paper_fetch.config import BROWSER_AUTO_PREPARE_ENV_VAR, DOWNLOAD_DIR_ENV_VAR
+from paper_fetch.config import DOWNLOAD_DIR_ENV_VAR
 from paper_fetch.logging_utils import emit_structured_log
 from paper_fetch import service as paper_fetch
 from paper_fetch.models import ArticleModel, Asset, Metadata, RenderOptions
@@ -23,55 +25,71 @@ from ._paper_fetch_support import build_envelope, sample_article
 
 
 class CliTests(unittest.TestCase):
-    def test_cli_browser_auto_prepare_defaults_on_and_allows_both_overrides(
+    def test_batch_jsonl_preserves_input_indices_after_out_of_order_completion(
         self,
     ) -> None:
-        with mock.patch.object(paper_fetch_cli, "build_runtime_env", return_value={}):
-            default_env = paper_fetch_cli._cli_browser_runtime_env(
-                browser_auto_prepare=None
-            )
-            disabled_env = paper_fetch_cli._cli_browser_runtime_env(
-                browser_auto_prepare=False
-            )
-            enabled_env = paper_fetch_cli._cli_browser_runtime_env(
-                browser_auto_prepare=True
-            )
+        submitted: list[tuple[int, str]] = []
+        release_first = threading.Event()
 
-        self.assertEqual(default_env[BROWSER_AUTO_PREPARE_ENV_VAR], "true")
-        self.assertEqual(disabled_env[BROWSER_AUTO_PREPARE_ENV_VAR], "false")
-        self.assertEqual(enabled_env[BROWSER_AUTO_PREPARE_ENV_VAR], "true")
-
-    def test_cli_browser_auto_prepare_respects_global_disable(self) -> None:
-        with mock.patch.object(
-            paper_fetch_cli,
-            "build_runtime_env",
-            return_value={BROWSER_AUTO_PREPARE_ENV_VAR: "false"},
-        ):
-            runtime_env = paper_fetch_cli._cli_browser_runtime_env(
-                browser_auto_prepare=None
+        def run_item(item, *, deps, **_kwargs):
+            submitted.append((item.index, item.query))
+            started_at = deps.clock()
+            if item.index == 1:
+                self.assertTrue(release_first.wait(timeout=1))
+                time.sleep(0.03)
+            else:
+                release_first.set()
+            article = sample_article()
+            article.doi = item.query
+            return paper_fetch_cli.CliFetchOutcome(
+                started_at=started_at,
+                completed_at=deps.clock(),
+                result=paper_fetch_cli.SingleFetchResult(build_envelope(article)),
             )
 
-        self.assertEqual(runtime_env[BROWSER_AUTO_PREPARE_ENV_VAR], "false")
-
-    def test_cli_renders_camoufox_preparation_progress_on_stderr(self) -> None:
-        stderr = io.StringIO()
-
-        with (
-            contextlib.redirect_stderr(stderr),
-            paper_fetch_cli._browser_preparation_progress(),
-        ):
-            emit_structured_log(
-                logging.getLogger("paper_fetch.browser_runtime"),
-                logging.INFO,
-                "camoufox_runtime_prepare",
-                stage="starting",
-                message="Starting Camoufox runtime install.",
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir)
+            results_path = output_dir / "batch-results.jsonl"
+            args = SimpleNamespace(
+                batch_results=str(results_path),
+                batch_concurrency=2,
+                format="markdown",
+                asset_profile="none",
+                include_refs="all",
+                max_tokens="full_text",
+                no_download=True,
+                save_markdown_to_disk=False,
+                output="-",
             )
+            with (
+                mock.patch.object(
+                    paper_fetch_cli, "_run_batch_item", side_effect=run_item
+                ),
+                mock.patch.object(
+                    paper_fetch_cli,
+                    "build_http_transport_for_context",
+                    return_value=object(),
+                ),
+            ):
+                exit_code = paper_fetch_cli.run_batch_fetch(
+                    args,
+                    queries=["10.1000/first", "10.1000/second"],
+                    output_dir=output_dir,
+                    runtime_env={},
+                    artifact_mode="markdown-assets",
+                )
 
+            result_lines = [
+                json.loads(line)
+                for line in results_path.read_text(encoding="utf-8").splitlines()
+            ]
+
+        self.assertEqual(exit_code, 0)
         self.assertEqual(
-            stderr.getvalue(),
-            "Camoufox: Starting Camoufox runtime install.\n",
+            sorted(submitted),
+            [(1, "10.1000/first"), (2, "10.1000/second")],
         )
+        self.assertEqual([item["index"] for item in result_lines], [1, 2])
 
     def test_emit_structured_log_redacts_human_and_structured_secrets(self) -> None:
         logger = logging.getLogger("paper_fetch.test.redaction")
@@ -155,30 +173,18 @@ class CliTests(unittest.TestCase):
         help_text = paper_fetch_cli.build_parser().format_help()
         normalized_help = " ".join(help_text.split())
 
-        self.assertIn("{fetch,auth,browser-preflight,manifest,doctor}", help_text)
+        self.assertIn("{fetch,auth,browser-preflight,doctor}", help_text)
         self.assertIn("Fetch one paper or a query-file batch.", help_text)
         self.assertIn("Open a headed browser", help_text)
         self.assertIn("Live-check browser-backed providers", help_text)
-        self.assertIn(
-            "root-level fetch flags remain available for one release cycle",
-            normalized_help,
-        )
         self.assertIn("Doctor performs static, network-free checks", normalized_help)
-        self.assertIn("--include-refs {none,top10,all}", help_text)
-        self.assertIn("Reference rendering mode", help_text)
-        self.assertIn("--asset-profile {none,body,all}", help_text)
-        self.assertIn("Local content asset scope", help_text)
-        self.assertIn("--require-local-body-assets", help_text)
-        self.assertIn("--require-full-size-body-assets", help_text)
-        self.assertIn("--max-tokens MAX_TOKENS", help_text)
-        self.assertIn("Markdown rendering budget", help_text)
 
     def test_top_level_and_subcommand_help_contract_snapshot(self) -> None:
         expected_fragments = {
             (): (
                 "usage: paper-fetch",
                 "commands:",
-                "{fetch,auth,browser-preflight,manifest,doctor}",
+                "{fetch,auth,browser-preflight,doctor}",
                 "Doctor performs static, network-free checks.",
             ),
             ("fetch",): (
@@ -189,8 +195,6 @@ class CliTests(unittest.TestCase):
                 "default: markdown-assets",
                 "--asset-profile {none,body,all}",
                 "default: body",
-                "CLI artifact alias for --artifact-mode none",
-                "does not block explicit --output",
             ),
             ("auth",): (
                 "usage: paper-fetch auth",
@@ -203,11 +207,6 @@ class CliTests(unittest.TestCase):
                 "--provider {wiley,science,pnas,ieee,ams,mdpi",
                 "default: all browser-backed providers",
                 "save provider storage-state JSON on success",
-            ),
-            ("manifest",): (
-                "usage: paper-fetch manifest",
-                "{audit,reconcile}",
-                "without writing files or using network",
             ),
             ("doctor",): (
                 "usage: paper-fetch doctor",
@@ -235,12 +234,8 @@ class CliTests(unittest.TestCase):
                 for fragment in fragments:
                     self.assertIn(fragment, rendered)
 
-    def test_manifest_and_doctor_default_commands_remain_replaceable(self) -> None:
+    def test_doctor_default_command_remains_replaceable(self) -> None:
         registered: list[str] = []
-
-        def register_manifest(subparsers) -> None:
-            subparsers.add_parser("manifest", help="Injected manifest command.")
-            registered.append("manifest")
 
         def register_doctor(subparsers) -> None:
             subparsers.add_parser("doctor", help="Injected doctor command.")
@@ -248,18 +243,15 @@ class CliTests(unittest.TestCase):
 
         default_help = paper_fetch_cli.build_parser().format_help()
         injected_help = paper_fetch_cli.build_parser(
-            manifest_registrar=register_manifest,
             doctor_registrar=register_doctor,
         ).format_help()
 
-        self.assertEqual(registered, ["manifest", "doctor"])
-        self.assertNotIn("Injected manifest command.", default_help)
+        self.assertEqual(registered, ["doctor"])
         self.assertNotIn("Injected doctor command.", default_help)
         self.assertIn("Inspect static provider configuration and local", default_help)
-        self.assertIn("Injected manifest command.", injected_help)
         self.assertIn("Injected doctor command.", injected_help)
 
-    def test_doctor_json_is_static_machine_readable_and_includes_provenance(
+    def test_doctor_json_is_static_machine_readable_without_install_provenance(
         self,
     ) -> None:
         report = {
@@ -276,10 +268,6 @@ class CliTests(unittest.TestCase):
                         "suggested_action": "run the requested fetch",
                     }
                 ]
-            },
-            "install_provenance": {
-                "status": "not_applicable",
-                "reason_code": "source_development_without_offline_manifest",
             },
         }
         stdout = io.StringIO()
@@ -307,7 +295,6 @@ class CliTests(unittest.TestCase):
             group=None,
             detail="compact",
             env_file=None,
-            install_root=None,
         )
 
     def test_doctor_human_output_explains_static_preflight_auth_layers(self) -> None:
@@ -357,16 +344,14 @@ class CliTests(unittest.TestCase):
         self.assertEqual(raised.exception.code, 2)
         self.assertIn("does not belong to group", stderr.getvalue())
 
-    def test_fetch_subparser_preserves_root_defaults_and_pre_command_values(
-        self,
-    ) -> None:
+    def test_fetch_subparser_uses_current_fetch_defaults(self) -> None:
         args = paper_fetch_cli.build_parser().parse_args(
             [
+                "fetch",
                 "--artifact-mode",
                 "none",
                 "--asset-profile",
                 "all",
-                "fetch",
                 "--query",
                 "10.1000/example",
             ]
@@ -378,69 +363,10 @@ class CliTests(unittest.TestCase):
         self.assertEqual(args.format, "markdown")
         self.assertEqual(args.output, "-")
 
-    def test_explicit_fetch_and_legacy_root_fetch_have_same_contract(self) -> None:
-        def invoke(prefix: list[str], output_dir: Path):
-            captured: dict[str, object] = {}
-            article = sample_article()
-
-            def fake_fetch(*args, **kwargs):
-                captured.update(kwargs)
-                return paper_fetch.build_fetch_envelope(
-                    article, modes=kwargs["modes"], render=kwargs["render"]
-                )
-
-            stdout = io.StringIO()
-            stderr = io.StringIO()
-            with (
-                mock.patch.object(
-                    paper_fetch_cli, "build_runtime_env", return_value={}
-                ),
-                mock.patch.object(
-                    paper_fetch_cli,
-                    "resolve_cli_download_dir",
-                    return_value=output_dir,
-                ),
-                mock.patch.object(
-                    paper_fetch_cli, "fetch_paper", side_effect=fake_fetch
-                ),
-                contextlib.redirect_stdout(stdout),
-                contextlib.redirect_stderr(stderr),
-            ):
-                exit_code = paper_fetch_cli.main(
-                    [
-                        *prefix,
-                        "--query",
-                        "10.1016/test",
-                        "--output",
-                        "-",
-                        "--artifact-mode",
-                        "none",
-                        "--asset-profile",
-                        "none",
-                        "--require-full-size-body-assets",
-                    ]
-                )
-            return exit_code, stdout.getvalue(), stderr.getvalue(), captured
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            legacy = invoke([], Path(tmpdir) / "legacy")
-            explicit = invoke(["fetch"], Path(tmpdir) / "explicit")
-
-        self.assertEqual(legacy[:3], explicit[:3])
-        self.assertEqual(legacy[0], 0)
-        self.assertIn("# Example Article", legacy[1])
-        self.assertEqual(legacy[2], "")
-        for key in ("modes", "render", "strategy"):
-            self.assertEqual(legacy[3][key], explicit[3][key])
-        self.assertTrue(legacy[3]["strategy"].require_local_body_assets)
-        self.assertTrue(legacy[3]["strategy"].require_full_size_body_assets)
-        self.assertEqual(legacy[3]["context"].artifact_mode, "none")
-        self.assertEqual(explicit[3]["context"].artifact_mode, "none")
-
     def test_argparse_errors_use_command_specific_usage_and_stderr(self) -> None:
         cases = (
             (["unknown-command"], "usage: paper-fetch ", "invalid choice"),
-            (["--unknown-option"], "usage: paper-fetch ", "unrecognized arguments"),
+            (["--unknown-option"], "usage: paper-fetch ", "required: _command"),
             (
                 ["fetch", "--unknown-option"],
                 "usage: paper-fetch ",
@@ -490,8 +416,6 @@ class CliTests(unittest.TestCase):
         auth_result = SimpleNamespace(
             storage_state_path=Path("/tmp/ams-storage-state.json"),
             profile_dir=Path("/tmp/ams-camoufox"),
-            env_written=False,
-            env_file_path=None,
             verified=True,
             final_url="https://journals.ametsoc.org/view/example.xml",
         )
@@ -518,10 +442,6 @@ class CliTests(unittest.TestCase):
         self.assertIn("AMS storage state:", stdout.getvalue())
         authenticate.assert_called_once()
         self.assertEqual(authenticate.call_args.kwargs["provider"], "ams")
-        self.assertEqual(
-            authenticate.call_args.kwargs["env"][BROWSER_AUTO_PREPARE_ENV_VAR],
-            "true",
-        )
 
     def test_auth_wiley_subcommand_invokes_generic_auth_helper(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -531,8 +451,6 @@ class CliTests(unittest.TestCase):
             auth_result = SimpleNamespace(
                 storage_state_path=state_path,
                 profile_dir=profile_dir,
-                env_written=False,
-                env_file_path=None,
                 verified=True,
                 final_url=target_url,
             )
@@ -579,62 +497,6 @@ class CliTests(unittest.TestCase):
             self.assertEqual(kwargs["target_url"], target_url)
             self.assertEqual(kwargs["timeout_ms"], 45000)
             self.assertEqual(kwargs["browser_user_agent"], "Mozilla/5.0 auth-test")
-
-    def test_browser_preflight_can_disable_on_demand_runtime_preparation(self) -> None:
-        result = paper_fetch_cli.BrowserPreflightResult(
-            provider="wiley",
-            provider_label="Wiley",
-            status="ready",
-            reason_code="browser_preflight_ready",
-        )
-        with mock.patch.object(
-            paper_fetch_cli,
-            "run_browser_provider_preflight",
-            return_value=[result],
-        ) as run_preflight:
-            exit_code = paper_fetch_cli.main(
-                [
-                    "browser-preflight",
-                    "--provider",
-                    "wiley",
-                    "--no-browser-auto-prepare",
-                ]
-            )
-
-        self.assertEqual(exit_code, 0)
-        runtime_options = run_preflight.call_args.kwargs["runtime_options"]
-        self.assertEqual(
-            runtime_options.env[BROWSER_AUTO_PREPARE_ENV_VAR],
-            "false",
-        )
-
-    def test_auth_rejects_legacy_ams_only_args_for_all_providers(self) -> None:
-        cases = (
-            ("wiley", "--state-json", "state.json"),
-            ("wiley", "--env-file", ".env"),
-            ("wiley", "--no-env-write"),
-            ("wiley", "--wait-seconds", "30"),
-        )
-        for case in cases:
-            with self.subTest(case=case):
-                stderr = io.StringIO()
-                original_argv = sys.argv
-                sys.argv = ["paper_fetch.py", "auth", *case]
-                try:
-                    with (
-                        mock.patch.object(
-                            paper_fetch_cli, "authenticate_provider_profile"
-                        ) as authenticate,
-                        contextlib.redirect_stderr(stderr),
-                        self.assertRaises(SystemExit) as raised,
-                    ):
-                        paper_fetch_cli.main()
-                finally:
-                    sys.argv = original_argv
-
-                self.assertEqual(raised.exception.code, 2)
-                self.assertIn("unsupported for provider auth", stderr.getvalue())
-                authenticate.assert_not_called()
 
     def test_auth_subcommand_reports_provider_failure(self) -> None:
         stdout = io.StringIO()
@@ -730,7 +592,6 @@ class CliTests(unittest.TestCase):
             message="Encountered an AWS WAF challenge page while loading publisher HTML.",
             diagnostics={
                 "challenge_provider": "aws_waf",
-                "legacy_reason_code": "cloudflare_challenge",
             },
         )
         stdout = io.StringIO()
@@ -761,12 +622,12 @@ class CliTests(unittest.TestCase):
             provider="wiley",
             provider_label="Wiley",
             status="runtime_error",
-            reason_code="managed_chrome_exited_before_cdp",
-            stage="managed_chrome_startup",
-            message="Managed Chrome exited before CDP was ready.",
+            reason_code="browser_runtime_prepare_failed",
+            stage="browser_runtime_prepare",
+            message="Camoufox runtime preparation failed.",
             diagnostics={
                 "browser_failure": {
-                    "stage": "managed_chrome_startup",
+                    "stage": "browser_runtime_prepare",
                     "exit_code": 12,
                     "stderr_summary": "profile startup failed",
                     "diagnostic_path": "/tmp/browser-diagnostic",
@@ -790,13 +651,15 @@ class CliTests(unittest.TestCase):
             )
 
         self.assertEqual(exit_code, 1)
-        self.assertIn("Code: managed_chrome_exited_before_cdp", stdout.getvalue())
-        self.assertIn("Stage: managed_chrome_startup", stdout.getvalue())
+        self.assertIn("Code: browser_runtime_prepare_failed", stdout.getvalue())
+        self.assertIn("Stage: browser_runtime_prepare", stdout.getvalue())
         self.assertIn("Exit code: 12", stdout.getvalue())
-        self.assertIn("Chrome stderr: profile startup failed", stdout.getvalue())
+        self.assertIn(
+            "Browser runtime stderr: profile startup failed", stdout.getvalue()
+        )
         self.assertIn("Diagnostic artifact: /tmp/browser-diagnostic", stdout.getvalue())
         self.assertIn(
-            "[runtime_error/managed_chrome_exited_before_cdp]",
+            "[runtime_error/browser_runtime_prepare_failed]",
             stderr.getvalue(),
         )
         self.assertNotIn("paper-fetch auth", stderr.getvalue())
@@ -822,6 +685,7 @@ class CliTests(unittest.TestCase):
                 stderr = io.StringIO()
                 argv = [
                     "paper_fetch.py",
+                    "fetch",
                     "--query",
                     "10.1016/test",
                     "--format",
@@ -878,6 +742,7 @@ class CliTests(unittest.TestCase):
                 original_argv = sys.argv
                 sys.argv = [
                     "paper_fetch.py",
+                    "fetch",
                     "--query",
                     "10.1016/test",
                     "--output",
@@ -916,6 +781,7 @@ class CliTests(unittest.TestCase):
             original_argv = sys.argv
             sys.argv = [
                 "paper_fetch.py",
+                "fetch",
                 "--query",
                 "10.1016/test",
                 "--output",
@@ -971,6 +837,7 @@ class CliTests(unittest.TestCase):
             original_argv = sys.argv
             sys.argv = [
                 "paper_fetch.py",
+                "fetch",
                 "--query",
                 "10.1016/test",
                 "--asset-profile",
@@ -1035,6 +902,7 @@ class CliTests(unittest.TestCase):
             original_argv = sys.argv
             sys.argv = [
                 "paper_fetch.py",
+                "fetch",
                 "--query",
                 "10.1016/test",
                 "--format",
@@ -1089,6 +957,7 @@ class CliTests(unittest.TestCase):
             original_argv = sys.argv
             sys.argv = [
                 "paper_fetch.py",
+                "fetch",
                 "--query",
                 "10.1016/test",
                 "--output-dir",
@@ -1144,7 +1013,7 @@ class CliTests(unittest.TestCase):
                 contextlib.redirect_stdout(stdout),
                 contextlib.redirect_stderr(stderr),
             ):
-                exit_code = paper_fetch_cli.main(["--query", "10.1016/test"])
+                exit_code = paper_fetch_cli.main(["fetch", "--query", "10.1016/test"])
 
             self.assertEqual(exit_code, 0)
             self.assertEqual(stderr.getvalue(), "")
@@ -1171,7 +1040,13 @@ class CliTests(unittest.TestCase):
                 contextlib.redirect_stderr(stderr),
             ):
                 exit_code = paper_fetch_cli.main(
-                    ["--query", "10.1016/test", "--output-dir", str(output_dir)]
+                    [
+                        "fetch",
+                        "--query",
+                        "10.1016/test",
+                        "--output-dir",
+                        str(output_dir),
+                    ]
                 )
 
             self.assertEqual(exit_code, 1)
@@ -1212,7 +1087,7 @@ class CliTests(unittest.TestCase):
                 self.assertRaises(FileNotFoundError),
             ):
                 paper_fetch_cli.main(
-                    ["--query", "10.1016/test", "--output", str(output_path)]
+                    ["fetch", "--query", "10.1016/test", "--output", str(output_path)]
                 )
 
             self.assertEqual(calls, ["fetch"])
@@ -1245,6 +1120,7 @@ class CliTests(unittest.TestCase):
                 original_argv = sys.argv
                 sys.argv = [
                     "paper_fetch.py",
+                    "fetch",
                     "--query",
                     "10.1016/test",
                     "--artifact-mode",
@@ -1297,6 +1173,7 @@ class CliTests(unittest.TestCase):
             original_argv = sys.argv
             sys.argv = [
                 "paper_fetch.py",
+                "fetch",
                 "--query",
                 "10.1016/test",
                 "--output",
@@ -1339,7 +1216,13 @@ class CliTests(unittest.TestCase):
             stdout = io.StringIO()
             stderr = io.StringIO()
             original_argv = sys.argv
-            sys.argv = ["paper_fetch.py", "--query", "10.1016/test", "--save-markdown"]
+            sys.argv = [
+                "paper_fetch.py",
+                "fetch",
+                "--query",
+                "10.1016/test",
+                "--save-markdown",
+            ]
             try:
                 with (
                     mock.patch.object(
@@ -1503,6 +1386,7 @@ class CliTests(unittest.TestCase):
             original_argv = sys.argv
             sys.argv = [
                 "paper_fetch.py",
+                "fetch",
                 "--query",
                 "10.1016/test",
                 "--format",
@@ -2077,6 +1961,7 @@ class CliTests(unittest.TestCase):
             original_argv = sys.argv
             sys.argv = [
                 "paper_fetch.py",
+                "fetch",
                 "--query",
                 "10.1016/test",
                 "--format",
@@ -2128,7 +2013,7 @@ class CliTests(unittest.TestCase):
             stdout = io.StringIO()
             stderr = io.StringIO()
             original_argv = sys.argv
-            sys.argv = ["paper_fetch.py", "--query", "10.1016/test"]
+            sys.argv = ["paper_fetch.py", "fetch", "--query", "10.1016/test"]
             try:
                 with (
                     mock.patch.object(
@@ -2168,7 +2053,6 @@ class CliTests(unittest.TestCase):
             )
             self.assertEqual(captured["context"].artifact_mode, "markdown-assets")
             self.assertEqual(captured["context"].download_dir, output_dir)
-            self.assertIsNone(captured["context"].transport.disk_cache_dir)
             self.assertTrue(
                 (output_dir / "Example_et_al_2026_Example_Article.md").exists()
             )
@@ -2198,6 +2082,7 @@ class CliTests(unittest.TestCase):
                 original_argv = sys.argv
                 sys.argv = [
                     "paper_fetch.py",
+                    "fetch",
                     "--query",
                     "10.1016/test",
                     "--format",
@@ -2228,51 +2113,6 @@ class CliTests(unittest.TestCase):
                     (output_dir / "Example_et_al_2026_Example_Article.md").exists()
                 )
 
-    def test_main_no_download_is_deprecated_alias_for_artifact_mode_none(self) -> None:
-        article = sample_article()
-        captured: dict[str, object] = {}
-
-        def fake_fetch(*args, **kwargs):
-            captured.update(kwargs)
-            return build_envelope(article)
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            output_dir = Path(tmpdir) / "downloads"
-            stdout = io.StringIO()
-            stderr = io.StringIO()
-            original_argv = sys.argv
-            sys.argv = [
-                "paper_fetch.py",
-                "--query",
-                "10.1016/test",
-                "--output-dir",
-                str(output_dir),
-                "--no-download",
-            ]
-            try:
-                with (
-                    mock.patch.object(
-                        paper_fetch_cli, "build_runtime_env", return_value={}
-                    ),
-                    mock.patch.object(
-                        paper_fetch_cli, "fetch_paper", side_effect=fake_fetch
-                    ),
-                    contextlib.redirect_stdout(stdout),
-                    contextlib.redirect_stderr(stderr),
-                ):
-                    exit_code = paper_fetch_cli.main()
-            finally:
-                sys.argv = original_argv
-
-            self.assertEqual(exit_code, 0)
-            self.assertEqual(stdout.getvalue(), "")
-            self.assertEqual(stderr.getvalue(), "")
-            self.assertEqual(captured["context"].artifact_mode, "none")
-            self.assertIsNone(captured["context"].download_dir)
-            self.assertTrue(
-                (output_dir / "Example_et_al_2026_Example_Article.md").exists()
-            )
-
     def test_main_artifact_mode_none_still_writes_primary_output_dir_file(self) -> None:
         article = sample_article()
         captured: dict[str, object] = {}
@@ -2288,6 +2128,7 @@ class CliTests(unittest.TestCase):
             original_argv = sys.argv
             sys.argv = [
                 "paper_fetch.py",
+                "fetch",
                 "--query",
                 "10.1016/test",
                 "--artifact-mode",
@@ -2334,6 +2175,7 @@ class CliTests(unittest.TestCase):
             original_argv = sys.argv
             sys.argv = [
                 "paper_fetch.py",
+                "fetch",
                 "--query",
                 "10.1016/test",
                 "--artifact-mode",
@@ -2385,6 +2227,7 @@ class CliTests(unittest.TestCase):
                 original_argv = sys.argv
                 sys.argv = [
                     "paper_fetch.py",
+                    "fetch",
                     "--query",
                     "10.1016/test",
                     "--output-dir",
@@ -2449,7 +2292,13 @@ class CliTests(unittest.TestCase):
                 self.assertRaises(SystemExit) as raised,
             ):
                 paper_fetch_cli.main(
-                    ["--query", "10.1000/a", "--query-file", str(query_file)]
+                    [
+                        "fetch",
+                        "--query",
+                        "10.1000/a",
+                        "--query-file",
+                        str(query_file),
+                    ]
                 )
 
             self.assertEqual(raised.exception.code, 2)
@@ -2476,7 +2325,7 @@ class CliTests(unittest.TestCase):
                 contextlib.redirect_stderr(stderr),
                 self.assertRaises(SystemExit) as raised,
             ):
-                paper_fetch_cli.main(["--query-file", str(query_file)])
+                paper_fetch_cli.main(["fetch", "--query-file", str(query_file)])
 
             self.assertEqual(raised.exception.code, 2)
             self.assertEqual(stdout.getvalue(), "")
@@ -2491,7 +2340,9 @@ class CliTests(unittest.TestCase):
             contextlib.redirect_stderr(stderr),
             self.assertRaises(SystemExit) as raised,
         ):
-            paper_fetch_cli.main(["--query", "10.1000/a", "--batch-concurrency", "9"])
+            paper_fetch_cli.main(
+                ["fetch", "--query", "10.1000/a", "--batch-concurrency", "9"]
+            )
 
         self.assertEqual(raised.exception.code, 2)
         self.assertEqual(stdout.getvalue(), "")
@@ -2547,7 +2398,13 @@ class CliTests(unittest.TestCase):
                 contextlib.redirect_stderr(stderr),
             ):
                 exit_code = paper_fetch_cli.main(
-                    ["--query-file", str(query_file), "--output-dir", str(output_dir)]
+                    [
+                        "fetch",
+                        "--query-file",
+                        str(query_file),
+                        "--output-dir",
+                        str(output_dir),
+                    ]
                 )
 
             self.assertEqual(exit_code, 0)
@@ -2588,11 +2445,17 @@ class CliTests(unittest.TestCase):
                 .read_text(encoding="utf-8")
                 .splitlines()
             ]
-            self.assertEqual([item["status"] for item in result_lines], ["ok", "ok"])
+            self.assertEqual(
+                [item["record_status"] for item in result_lines],
+                ["completed", "completed"],
+            )
             self.assertEqual([item["index"] for item in result_lines], [1, 2])
-            self.assertTrue(all(item["output_path"] for item in result_lines))
             self.assertTrue(
-                all(item["saved_markdown_path"] is None for item in result_lines)
+                all(
+                    [artifact["kind"] for artifact in item["output_artifacts"]]
+                    == ["primary_markdown"]
+                    for item in result_lines
+                )
             )
 
     def test_main_batch_disambiguates_metadata_poor_url_outputs(self) -> None:
@@ -2631,6 +2494,7 @@ class CliTests(unittest.TestCase):
             ):
                 exit_code = paper_fetch_cli.main(
                     [
+                        "fetch",
                         "--query-file",
                         str(query_file),
                         "--format",
@@ -2663,9 +2527,15 @@ class CliTests(unittest.TestCase):
                 .read_text(encoding="utf-8")
                 .splitlines()
             ]
-            self.assertEqual([item["status"] for item in result_lines], ["ok", "ok"])
             self.assertEqual(
-                {Path(item["output_path"]).name for item in result_lines},
+                [item["record_status"] for item in result_lines],
+                ["completed", "completed"],
+            )
+            self.assertEqual(
+                {
+                    Path(item["output_artifacts"][0]["path"]).name
+                    for item in result_lines
+                },
                 expected_names,
             )
 
@@ -2740,6 +2610,7 @@ class CliTests(unittest.TestCase):
             ):
                 exit_code = paper_fetch_cli.main(
                     [
+                        "fetch",
                         "--query-file",
                         str(query_file),
                         "--output-dir",
@@ -2772,8 +2643,10 @@ class CliTests(unittest.TestCase):
                 for line in results_path.read_text(encoding="utf-8").splitlines()
             ]
             self.assertEqual(
-                [item["status"] for item in result_lines], ["ok", "no_access", "ok"]
+                [item["record_status"] for item in result_lines],
+                ["completed", "failed", "completed"],
             )
+            self.assertEqual(result_lines[1]["error"]["status"], "no_access")
             self.assertEqual(result_lines[1]["warnings"], ["license required"])
             self.assertEqual(result_lines[1]["error"]["reason"], "Forbidden")
             self.assertEqual(result_lines[2]["index"], 3)
@@ -2847,6 +2720,7 @@ class CliTests(unittest.TestCase):
             ):
                 exit_code = paper_fetch_cli.main(
                     [
+                        "fetch",
                         "--query-file",
                         str(query_file),
                         "--output-dir",
@@ -2972,7 +2846,7 @@ class CliTests(unittest.TestCase):
             stdout = io.StringIO()
             stderr = io.StringIO()
             original_argv = sys.argv
-            sys.argv = ["paper_fetch.py", "--query", "ambiguous title"]
+            sys.argv = ["paper_fetch.py", "fetch", "--query", "ambiguous title"]
             try:
                 with (
                     contextlib.redirect_stdout(stdout),
@@ -3004,7 +2878,7 @@ class CliTests(unittest.TestCase):
                     _ for _ in ()
                 ).throw(ProviderFailure(_code, f"{_code} failure"))
                 original_argv = sys.argv
-                sys.argv = ["paper_fetch.py", "--query", "10.1016/test"]
+                sys.argv = ["paper_fetch.py", "fetch", "--query", "10.1016/test"]
                 try:
                     with (
                         contextlib.redirect_stdout(stdout),

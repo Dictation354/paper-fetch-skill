@@ -304,8 +304,8 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
                 "fulltext",
                 "template_html",
                 "fail",
-                code="managed_chrome_cdp_timeout",
-                message="CDP endpoint timed out.",
+                code="browser_runtime_prepare_timeout",
+                message="Camoufox runtime preparation timed out.",
             )
         ]
 
@@ -325,8 +325,8 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
             for event in result.trace
             if event.marker() == "fulltext:template_html_fail"
         )
-        self.assertEqual(html_event.code, "managed_chrome_cdp_timeout")
-        self.assertEqual(html_event.message, "CDP endpoint timed out.")
+        self.assertEqual(html_event.code, "browser_runtime_prepare_timeout")
+        self.assertEqual(html_event.message, "Camoufox runtime preparation timed out.")
 
 
 class _TemplateClient(ProviderClient):
@@ -457,12 +457,19 @@ class ProviderFetchResultTemplateTests(unittest.TestCase):
             body="<article>body</article>",
             parser="BeautifulSoup:html.parser",
         )
-        context.set_parse_cache(key, {"authors": ["Alice Example"]})
-
-        cached = context.get_parse_cache(key)
+        cached = context.get_or_set_parse_cache(
+            key,
+            lambda: {"authors": ["Alice Example"]},
+        )
         cached["authors"].append("Mutation")
 
-        self.assertEqual(context.get_parse_cache(key), {"authors": ["Alice Example"]})
+        self.assertEqual(
+            context.get_or_set_parse_cache(
+                key,
+                lambda: self.fail("cached parse factory should not run"),
+            ),
+            {"authors": ["Alice Example"]},
+        )
 
     def test_base_fetch_result_uses_asset_failure_warning_hook(self) -> None:
         client = _TemplateClient()

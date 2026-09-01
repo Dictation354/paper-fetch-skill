@@ -156,10 +156,6 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
         min_height: int = 80,
         runtime_context: RuntimeContext | None = None,
         use_runtime_shared_browser: bool = True,
-        binary_path: str | None = None,
-        cdp_endpoint: str | None = None,
-        profile_dir: Any = None,
-        user_data_dir: Any = None,
         browser_options: BrowserDocumentFetcherOptions | None = None,
     ) -> None:
         super().__init__(
@@ -169,10 +165,6 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
             headless=headless,
             runtime_context=runtime_context,
             use_runtime_shared_browser=use_runtime_shared_browser,
-            binary_path=binary_path,
-            cdp_endpoint=cdp_endpoint,
-            profile_dir=profile_dir,
-            user_data_dir=user_data_dir,
             browser_options=browser_options,
         )
         self._min_width = min_width
@@ -775,10 +767,6 @@ class _ThreadLocalSharedBrowserImageDocumentFetcher(_ThreadLocalSharedDocumentFe
         min_height: int = 80,
         runtime_context: RuntimeContext | None = None,
         use_runtime_shared_browser: bool = True,
-        binary_path: str | None = None,
-        cdp_endpoint: str | None = None,
-        profile_dir: Any = None,
-        user_data_dir: Any = None,
         browser_options: BrowserDocumentFetcherOptions | None = None,
     ) -> None:
         requires_caller_thread = (
@@ -797,10 +785,6 @@ class _ThreadLocalSharedBrowserImageDocumentFetcher(_ThreadLocalSharedDocumentFe
                 min_height=min_height,
                 runtime_context=runtime_context,
                 use_runtime_shared_browser=use_runtime_shared_browser,
-                binary_path=binary_path,
-                cdp_endpoint=cdp_endpoint,
-                profile_dir=profile_dir,
-                user_data_dir=user_data_dir,
                 browser_options=browser_options,
             ),
         )
@@ -816,10 +800,6 @@ def _build_shared_browser_image_fetcher(
     min_height: int = 80,
     runtime_context: RuntimeContext | None = None,
     use_runtime_shared_browser: bool = True,
-    binary_path: str | None = None,
-    cdp_endpoint: str | None = None,
-    profile_dir: Any = None,
-    user_data_dir: Any = None,
     browser_options: BrowserDocumentFetcherOptions | None = None,
 ) -> _ThreadLocalSharedBrowserImageDocumentFetcher:
     return _ThreadLocalSharedBrowserImageDocumentFetcher(
@@ -831,10 +811,6 @@ def _build_shared_browser_image_fetcher(
         min_height=min_height,
         runtime_context=runtime_context,
         use_runtime_shared_browser=use_runtime_shared_browser,
-        binary_path=binary_path,
-        cdp_endpoint=cdp_endpoint,
-        profile_dir=profile_dir,
-        user_data_dir=user_data_dir,
         browser_options=browser_options,
     )
 

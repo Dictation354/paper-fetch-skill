@@ -8,14 +8,14 @@
 
 - 所有 tool 成功/失败 JSON payload 顶层使用 `schema_version=2`。新 fetch/cache payload 的完整 trace 只在顶层出现；`quality.trace` 已删除。FetchEnvelope sidecar 当前为 version 5 并要求 acquisition；v4 及更旧 sidecar 明确失效后重新抓取，既有 Markdown 不删除。
 - `resolve_paper(query | title, authors, year)`: 在抓取前规范化 DOI、URL 或标题查询，并尽早暴露歧义。标题输入必须先解析出 DOI 或落地页，再交给 `fetch_paper(...)`。
-- `fetch_paper(..., browser_auto_prepare=None)`: 返回稳定 JSON 载荷；成功响应包含兼容态 `status="ok"`、原值不变的 `source`、可空的 `acquisition={provider,route,representation,transport,fallback_used}`、七分面紧凑 `acceptance`、溯源信息、`token_estimate_breakdown={abstract,body,refs}`，并按需附带 `article`、`markdown`、`metadata`。`acceptance.overall` 才是任务级结论；当 `save_markdown=true` 时，响应会改为紧凑结果，只保留路径、元数据、acceptance 和诊断字段。MCP managed runtime 准备默认关闭；需按需安装/修复/更新时显式传 `true`。
+- `fetch_paper(...)`: 返回稳定 JSON 载荷；成功响应包含兼容态 `status="ok"`、原值不变的 `source`、可空的 `acquisition={provider,route,representation,transport,fallback_used}`、七分面紧凑 `acceptance`、溯源信息、`token_estimate_breakdown={abstract,body,refs}`，并按需附带 `article`、`markdown`、`metadata`。`acceptance.overall` 才是任务级结论；当 `save_markdown=true` 时，响应会改为紧凑结果，只保留路径、元数据、acceptance 和诊断字段。browser route 只使用已准备的 Camoufox。
 - `acceptance.identity=resolved` 必须有 DOI，或同时具备 verified、unique 的 canonical landing identity；title、单一 publisher domain 或候选域本身不构成唯一身份。冲突 routing signal 下，weak provider 的 `no_access` 会保留诊断并继续 strong DOI/provider candidate，只有 strong identity 的 access boundary 才停止 waterfall。
-- `list_cached(cache_mode="index|refresh|rescan")` / `get_cached(doi, download_dir=..., detail="full|compact", preferred_only=false, modes=..., strategy=..., include_refs=..., max_tokens=...)`: 多轮会话重新抓取前，在同一个显式 cache scope 内检查缓存；已知 DOI 优先使用请求敏感的 `get_cached` compact 结果。
+- `list_cached(download_dir=..., detail="full|compact")` / `get_cached(doi, download_dir=..., detail="full|compact", preferred_only=false, modes=..., strategy=..., include_refs=..., max_tokens=...)`: 多轮会话重新抓取前，在同一个显式 cache scope 内读取当前索引；已知 DOI 优先使用请求敏感的 `get_cached` compact 结果。
 - `has_fulltext(query)`: 使用解析结果、Crossref 元数据、轻量 Elsevier 元数据探测和落地页 HTML meta 做低成本全文可用性探测，不触发完整抓取流程。
 - `provider_status(provider=None, group=None, detail="full|compact")`: 返回 catalog-backed 本地静态诊断，不调用远程出版商 API；已知 provider 时应筛选，避免把全 catalog checks 放入上下文。
-- `browser_preflight(provider=None, test_url=None, timeout_ms=None, browser_user_agent=None, storage_state_path=None, save_storage_state=true, detail="full|compact", browser_auto_prepare=None)`: 对一个或全部 browser provider 运行 live HTML 预检；会访问出版社页面，默认可能更新过滤后的 storage-state，但不运行 PDF fallback 或自动认证。MCP 默认不准备 managed runtime，传 `browser_auto_prepare=true` 才允许。
-- `batch_resolve(queries, concurrency)` / `batch_check(queries, mode, concurrency, browser_auto_prepare=None)`: 默认 `concurrency=1`，允许范围 `1..8`，每次最多 `50` 个查询；只有 article check 可能进入浏览器准备。
-- `batch_fetch(queries, concurrency, ..., browser_auto_prepare=None)`: 对 `1..50` 篇执行真实全文抓取，复用 `fetch_paper` 的 modes/strategy/cache/artifact/Markdown 参数；默认只返回按输入 index 排列的紧凑 manifest/acceptance 记录，不返回多篇完整正文。
+- `browser_preflight(provider=None, test_url=None, timeout_ms=None, browser_user_agent=None, storage_state_path=None, save_storage_state=true, detail="full|compact")`: 对一个或全部 browser provider 运行 live HTML 预检；会访问出版社页面，默认可能更新过滤后的 storage-state，但不运行 PDF fallback、自动认证或 runtime 安装。
+- `batch_resolve(queries, concurrency)` / `batch_check(queries, mode, concurrency)`: 默认 `concurrency=1`，允许范围 `1..8`，每次最多 `50` 个查询；article check 可能使用已准备的浏览器。
+- `batch_fetch(queries, concurrency, ...)`: 对 `1..50` 篇执行真实全文抓取，复用 `fetch_paper` 的 modes/strategy/cache/artifact/Markdown 参数；默认只返回按输入 index 排列的紧凑 manifest/acceptance 记录，不返回多篇完整正文。
 
 ## MCP Prompts（不是 Tools）
 
@@ -27,10 +27,9 @@
 
 - 固定顺序是 `provider_status` / CLI `doctor` 静态检查 → MCP `browser_preflight` / CLI `paper-fetch browser-preflight` live HTML 预检 → 仅在结果或实际 fetch 明确要求时由用户执行 `paper-fetch auth <provider>`。静态 `ready` 不是远端页面健康或访问授权证明。
 - MCP 与 CLI 直接共用 `run_browser_provider_preflight()` 和 provider HTML bootstrap。未传 `provider` 时，两者都按 browser runtime catalog 顺序检查全部 provider，并使用各自内置样例；不会默认执行该 live 工具。
-- MCP 同一服务进程中，PNAS、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、T&F 的成功 preflight 可把已验收 HTML 一次性交给紧随其后的正式 fetch；命中只减少重复导航，正式 metadata、Markdown/资产抽取和 acceptance 都会重新执行。该内部状态通过既有 `source_trail`/diagnostics 标记观察，不新增或改变公开工具 schema；CLI 跨进程以及 Wiley、IEEE、Science、AIP 不承诺这种复用。
 - `test_url` 和 `storage_state_path` 只允许与一个显式 `provider` 一起使用。`test_url` 必须是无内嵌凭据的 HTTP(S) URL；`timeout_ms` 范围为 `1..600000`。`save_storage_state=false` 只关闭本轮保存，仍可读取已有 storage-state；默认 `true` 可能创建或原子更新 provider storage-state 文件。
 - 工具 annotations 为 open-world、非只读、非 destructive、非 idempotent：它会使用 Camoufox runtime 打开出版社页面，也可能写 storage-state。它不调用 PDF fallback，且 `auth_attempted=false`；challenge、验证码、付费或登录边界不会被自动绕过。
-- `browser_auto_prepare` 未传时 MCP/库默认 `false`；显式 `true` 才允许官方 Camoufox CLI 在跨进程锁内安装、修复或做 24 小时更新检查。支持 logging 的宿主会收到阶段与命令输出；显式 custom binary 永不进入该维护路径。
+- 普通 MCP/CLI/library 调用不安装、修复或更新 Camoufox；缺失时返回 `not_configured` 与显式准备命令。
 - 每个 provider 独立返回 `ready`、`challenge`、`auth_required`、`network_timeout`、`extraction_error`、`runtime_error` 或 `cancelled`，并给出唯一 `status/reason_code/stage/message/next_action` 契约。前一个 provider 的 challenge/runtime failure 不会删除其它已完成结果；取消会保留取消前的结果，并停止调度后续 provider。
 - `detail="compact"` 的每项严格只有 `provider/status/reason_code/stage/message/next_action`；`full` 另含 provider label、脱敏目标/最终 URL、title、storage-state 保存诊断和 browser/page diagnostics。顶层始终显式报告 `pdf_fallback_attempted=false`、`auth_attempted=false` 和逐状态汇总。
 - browser runtime 失败沿用 fetch trace 的稳定 code，包括 `browser_runtime_prepare_cancelled`、`browser_runtime_prepare_failed`、`browser_runtime_prepare_timeout`、`browser_runtime_repair_failed`、`cdp_connect_failed`、`browser_context_create_failed`、`browser_page_create_failed`。full diagnostics 在可用时保留 stage、版本状态和有界命令输出；custom binary 不会被自动删除或更新。
@@ -42,7 +41,7 @@
 - 常规 cache-first 决策使用 `detail="compact"`，并显式传与随后 `fetch_paper` 相同的 `modes`、`strategy`、`include_refs`、`max_tokens` 和 `download_dir`。compact 不返回 `entries`、完整正文、sidecar payload 或资产数组，只返回优选 Markdown/primary entry、内容/置信度、acceptance/asset/warning 摘要、sidecar/request 状态与稳定 SHA-256 fingerprint。
 - 顶层 `status="hit"` 只表示该 DOI 在当前 scope 有身份可证明的 index entry，不表示 fetch-envelope 可复用。只有 `request_satisfied=true` 才表示 sidecar version、extraction revision、payload DOI 与 acquisition 均有效，既有 `cached_request_matches()` 严格匹配本次请求，且 payload 包含全部请求 modes。
 - `cached_request` / `cached_request_fingerprint` 描述被选中的 sidecar；`requested_request` / `requested_request_fingerprint` 描述本次查询。FetchEnvelope cache 以 DOI + request fingerprint 保存多版本 sidecar，同一 DOI 的 modes、strategy、`include_refs`、`max_tokens` 变体可以并存，不再由最后一次窄请求覆盖富请求。读取优先精确 fingerprint，再按质量/时间检查兼容候选；不兼容 entry 仍只能得到 `request_status="mismatch"`。
-- fingerprint 同时包含摘要化 `credential_scope`，不保存秘密或本地 state 内容。Browser scope 绑定实际 provider/backend、最终解析路径和内容摘要，并且只有成功注入的 state 才算 use；只配置空 profile/path 仍是 public。查询先尝试当前 runtime 的精确 scope；带 API token/storage-state capability 的调用在精确 sidecar 缺失或不满足请求时可以单向复用 public sidecar，public 调用绝不读取 private sidecar，不同 private scope 之间也不复用。loader、inspector 和 compact projection 使用同一个 variant selector，每个候选只解析一次；cache index/list/get、entry template 和 MCP resource 也应用同一可见性边界。非 sidecar artifact 保留自身可信 scope，不能由较新的 canonical sidecar 降级；legacy/多 scope 歧义 entry 不可见。已发布的 resource URI 每次读取都会重新验证当前 capability、index scope 与 scoped file integrity，撤销凭据或删除 storage state 后旧 URI 立即失效。
+- fingerprint 同时包含摘要化 `credential_scope`，不保存秘密或本地 state 内容。Browser scope 绑定实际 provider/backend、最终解析路径和内容摘要，并且只有成功注入的 state 才算 use；只配置空 profile/path 仍是 public。查询先尝试当前 runtime 的精确 scope；带 API token/storage-state capability 的调用在精确 sidecar 缺失或不满足请求时可以单向复用 public sidecar，public 调用绝不读取 private sidecar，不同 private scope 之间也不复用。loader、inspector 和 compact projection 使用同一个 variant selector，每个候选只解析一次；cache index、`list_cached` 和 `get_cached` 应用同一可见性边界。非 sidecar artifact 保留自身可信 scope，不能由较新的 canonical sidecar 降级；legacy/多 scope 歧义 entry 不可见。
 - `sidecar.status` 明确区分 `ready`、`missing`、`corrupt`、`unreadable`、`version_mismatch`、`extraction_revision_mismatch`、`doi_mismatch`、`invalid_scope` 等状态。损坏/旧版/错误 DOI sidecar 以及 `identity_status="no_proven_entries"` 都令 `request_satisfied=false`，但 cache miss 仍是正常路由结果，不是工具失败。
 - 查询始终限制在显式 `download_dir`，不跨 scope 搜索、不联网。compact acceptance 是当前索引/sidecar 快照的摘要；它不承诺满足未传入的未来请求，命中后仍进入统一 acceptance/report。
 
@@ -50,7 +49,7 @@
 
 - native MCPServer schema 与 Codex/stdio host-safe schema 分开验证。native schema 保留 `FetchStrategyInput` 的结构化 Pydantic 模型和运行时对象，不把 `strategy` 退化为无约束字典；host-safe schema 由同一组 Pydantic request model 生成并内联嵌套结构，不包含宿主无法解析的 `$ref`。
 - output schema 仍由 typed Pydantic/TypedDict contract 生成；发布到 `tools/list` 时只移除展示性 `title` 注解与可选字段的 `default: null`。真实 `properties.title` / `properties.default` 字段、`required`、枚举、范围及运行时结构化输出验证均保留。
-- `src/paper_fetch/mcp/schemas.py` 是枚举、范围和规范化的事实源：`modes=article|markdown|metadata`、`include_refs=none|top10|all`、`strategy.asset_profile=none|body|all`、`strategy.require_local_body_assets`、`strategy.require_full_size_body_assets`、`artifact_mode=markdown-assets|all|none`、batch `mode=article|metadata`、cache `mode=index|refresh|rescan`，以及 cache `detail=full|compact`。Full-size 自动隐含 local；两项默认关闭且只对 `body|all` 生效。工具只暴露当前已实现的字段。
+- `src/paper_fetch/mcp/schemas.py` 是枚举、范围和规范化的事实源：`modes=article|markdown|metadata`、`include_refs=none|top10|all`、`strategy.asset_profile=none|body|all`、`strategy.require_local_body_assets`、`strategy.require_full_size_body_assets`、`artifact_mode=markdown-assets|all|none`、batch `mode=article|metadata`，以及 cache `detail=full|compact`。Full-size 自动隐含 local；两项默认关闭且只对 `body|all` 生效。工具只暴露当前已实现的字段。
 - batch `queries` 的公开 schema 和运行时验证都要求 `1..50` 项，`concurrency` 要求 `1..8`；所有公开工具输入对象及嵌套 strategy/budget 对象均拒绝未知字段（`additionalProperties=false`）。
 - 兼容请求仍可使用既有 nested `strategy={...}`，包括 `inline_image_budget`；字符串枚举在 Pydantic validator 中继续做去空白和大小写规范化。规范化不是放宽值域，未知枚举、越界数字、过长数组和额外字段会在已注册工具函数执行前失败。
 
@@ -72,12 +71,11 @@
 - 默认 `detail="compact"`，每项只返回稳定 1-based `index`、attempt/完成序号、run/record ID、request fingerprint、DOI/source、统一 acceptance 摘要、结构化 error、warning/code 摘要和带 size/SHA-256 的输出文件快照；结果数组始终按输入 index 排列，`completion_order` 单独保留实际完成顺序。
 - `get_cached.asset_summary` 使用完整 v2 asset facet，含 audited/expected/discovered/attempted、accepted/fallback preview、failure/issue codes 与 remote-link facts；`batch_fetch.output_artifacts[]` 除 path/kind/hash 外还稳定声明 `route` 和 `failure_code`（不可用时为 `null`）。
 - 临时阅读需要少量正文时使用 `detail="bounded", content_max_chars=N`；`N` 是整批共享的 `1..100000` 字符上限，不是每篇上限。compact 不含 `article` 或 `markdown`，bounded 也只含受总上限约束的 Markdown 片段，不能用来无界回传多篇全文。
-- 默认不创建 run manifest。只有显式给出 `run_manifest`、`batch_results` 或 `resume` 才启用 PF-012 persistence；新 run 默认拒绝覆盖不同内容的同名摘要/事件文件，`overwrite=true` 才允许原子替换，相同内容是幂等成功。`resume=<run-manifest>` 不能同时传新的 manifest/event 路径，并要求有序输入、工具版本和 fetch/render/output semantic fingerprint 与原 run 一致。`execution_policy` 单列 concurrency、retry/rate wait 与 continue-on-error，可在 resume 时覆盖；已知旧格式会在验证后迁移。
-- 持久化 run 复用同一 `RunManifestStore`、append-only v2 attempts、只读 audit 和 shared runner。只有 audit 判定 reusable 的最新 attempt 会跳过；失败、stale、缺失或低于请求的 index 追加下一 attempt。任务取消写 `cancelled`，适配层意外中断写 `interrupted`；两者都尽力为完整 `1..N` index 集合写终态 record。
+- `batch_results=<path>` 可选；指定时只在整批结束后按输入顺序原子写一次最终 schema-v2 JSONL，每个输入一条终态记录。目标存在且内容不同时默认拒绝覆盖，`overwrite=true` 才允许替换。该文件不是 journal，不提供 audit、reconcile 或恢复语义。
 - runner 对 provider/resource lane 增量提交。一个 lane 限流后只停止该 lane 的新项，其他 lane 继续；普通单项失败默认 `continue_on_error=true`，设为 false 才停止新的全批提交。支持 progress 的宿主会收到开始、逐终态和最终通知；已在途 worker 通过同一 `cancel_check` 协作退出。
-- Resolve 后以规范 DOI 建 canonical target table；DOI、DOI URL、大小写变体及多个 title alias 只执行一个 representative，再按原 index/query/attempt 顺序 fan-out。重叠 MCP 单篇/批量请求使用同一个进程内 key：canonical DOI + 完整 `FetchPaperRequest` 语义 + capability scope + canonical cache/Markdown 目录。等待者取消不取消 owner；结果/异常以安全快照隔离；任何 request、scope 或目录差异都不合并。
+- Resolve 后以规范 DOI 建 canonical target table；DOI、DOI URL、大小写变体及多个 title alias 只在当前批次执行一个 representative，再按原 index/query 顺序 fan-out。不同请求之间不共享执行。
 - 单篇 async 与每个 batch worker 都用一个贯穿 fetch、sidecar、Markdown、index 和最终输出的 runtime context。取消先设置 cooperative event 与线性化 commit fence，再等待有界 grace；fence 返回后晚 worker 只能清理 staging，不能提交文件或发送错误的完成进度。
-- 归档成功项返回 `saved_markdown_path`、输出 hash 和可读的 cache `resource_uri`；服务器同步 default/scoped cache resources 后宿主可用 `resources/read` 读取。`save_markdown`/`no_download`/`prefer_cache`/artifact/asset 的实际写盘组合与下方 Fetch Notes 及 [`presets.md`](presets.md) 的 MCP 矩阵相同；显式持久化还会额外写 run summary 和 JSONL events，因此不能再宣称完全不落盘。
+- 批量归档成功项通过 `output_artifacts` 返回路径和输出 hash；需要查询 cache 时使用相同 scope 的 `get_cached` 或 `list_cached`。`save_markdown`/`no_download`/`prefer_cache`/artifact/asset 的实际写盘组合与下方 Fetch Notes及 [`presets.md`](presets.md) 的 MCP 矩阵相同；显式 `batch_results` 是额外预期写盘产物。
 
 ## Recommended Defaults
 
@@ -105,12 +103,11 @@
 
 - Artifact、fetch sidecar、Markdown 和 cache index 使用 path-scoped lock、唯一同目录 staging、flush/fsync 与原子 replace。`overwrite=false` 时相同字节幂等、不同字节冲突；`overwrite=true` 才允许串行替换。所有同请求提交使用同一个 runtime commit guard。
 - `prefer_cache=true` 对已经包含 DOI 的查询先做无网络规范化，再按 DOI + request fingerprint + credential scope 精确检查本地 FetchEnvelope variant；只有 cache miss 才进入 resolver/provider enrichment。标题等未知身份查询仍需先解析出 DOI。
-- `artifact_mode="none"` 会关闭 provider artifact 和资产落盘，但仍保留 MCP fetch-envelope sidecar/cache-index 用于 `prefer_cache`、`list_cached` 和资源暴露。
+- `artifact_mode="none"` 会关闭 provider artifact 和资产落盘，但仍保留 MCP fetch-envelope sidecar/cache-index 用于 `prefer_cache`、`list_cached` 和 `get_cached`。
 - `no_download=true` 会避免写入 provider 载荷、资源文件和 fetch-envelope sidecar。
 - MCP 只有 `save_markdown=false`、`no_download=true`、`prefer_cache=false`、`artifact_mode="none"`、`strategy.asset_profile="none"` 的临时阅读组合才承诺完全不落盘。`no_download=true` 不覆盖 `save_markdown=true` 的显式 Markdown 输出。
-- `save_markdown=true` 会把渲染后的全文 Markdown 写盘，并在成功时返回 `saved_markdown_path`。本轮 MCP 响应会设置 `markdown=null`、`article=null`，避免把全文正文放入上下文；仍保留 `metadata`、`quality`、`warnings`、`source_trail`、`trace` 和 `token_estimate_breakdown` 等诊断字段。
+- `save_markdown=true` 会把渲染后的全文 Markdown 写盘。本轮单篇 MCP 响应会设置 `markdown=null`、`article=null`，避免把全文正文放入上下文；仍保留 `metadata`、`quality`、`warnings`、`source_trail`、`trace` 和 `token_estimate_breakdown` 等诊断字段。文件位置由请求的输出目录/文件名确定，并可通过返回路径或 `get_cached` 验收。
 - 传入 `download_dir` 时，MCP 服务器还能在当前会话里暴露这个隔离目录对应的缓存资源。
-- 支持 MCP 资源列表通知的宿主，可能在 `fetch_paper(...)`、`list_cached()` 或 `get_cached()` 改变缓存资源 URI 时收到 `resources/list_changed`。
 - `strategy.asset_profile="body"` 或 `all` 时，可能额外返回少量关键本地图像，作为 `ImageContent` 输出；但 `save_markdown=true` 时不会附带 inline `ImageContent`。
 - `body`/`all` 的正文图与 supplementary 在同一篇请求中共享固定运行时安全预算：默认 128 文件、单文件 32 MiB、累计 256 MiB、64,000,000 像素、并发最多 4 且受 route cap 限制。Direct 下载使用 hostname 共享连接池；direct 401/403 最多进入一次真正的 browser-byte recovery，browser body/arrayBuffer/bodyB64/canvas/file/PDF bytes 仍经过 MIME、实际字节、像素、累计预算、staging、原子发布和取消检查。预算失败读取 `asset_failures[*].reason` 的稳定 `asset_file_limit_exceeded` / `asset_bytes_per_asset_exceeded` / `asset_bytes_total_exceeded` / `asset_pixel_limit_exceeded` / `asset_content_encoding_unsupported`，不要从 warning 文案推断。
 - Catalog host/sensitive-header 声明只服务 routing 和非授权执行策略，不自动成为 HTTP/PDF/body/supplementary allowlist。基础策略仍逐跳检查 HTTP(S)、标准端口、公网 DNS、userinfo、HTTPS downgrade 和跨域标准敏感头剥离；只有调用方显式传入 `allowed_hosts` 时才额外 fail closed。
@@ -123,12 +120,12 @@
 
 ## Local Markdown and Cache Identity
 
-- `download_dir` 是 cache scope。`get_cached`、refresh 和 rescan 只读该目录，不跨目录搜索，也不因 miss 联网。
-- 本地 Markdown 只有两种可信身份来源：`save_markdown=true` 后由已知 envelope DOI + 实际 `saved_markdown_path` 显式注册；或 YAML front matter 经结构化解析后同时含 `doi`、`source`、布尔 `has_fulltext` 和 `content_kind`。新文件另含 acquisition；旧文件缺少时仍可读但值为 `null`，不能据此宣称 provenance complete。文件名或正文里的 DOI 文本不能证明归属。
-- Cache refresh 只读取 Markdown 的 256 KiB 有界 front-matter 前缀；变化文件在锁外一次流式计算全文 SHA-256，未变化文件用 device/inode/size/mtime_ns 复用 index。50 DOI 批量或顺序 refresh 中，每个未变化 Markdown 最多打开一次；sidecar/Markdown 成功写入后走增量 upsert，不触发全目录重扫。
+- `download_dir` 是 cache scope。`get_cached` 和 `list_cached` 只读该目录中的当前索引，不跨目录搜索，也不因 miss 联网。
+- 本地 Markdown 只有两种可信身份来源：`save_markdown=true` 后由已知 envelope DOI + 实际写入路径显式注册；或 YAML front matter 经结构化解析后同时含 `doi`、`source`、布尔 `has_fulltext`、`content_kind` 和当前 acquisition。缺字段、旧版本或损坏 front matter 不能作为命中。文件名或正文里的 DOI 文本不能证明归属。
+- Sidecar、Markdown 或资产成功写入后，会在当前 scope 中显式增量注册并记录内容 SHA-256；读取 cache 不扫描 loose files，也不修复或迁移旧索引。
 - DOI URL、大小写和合法特殊字符都通过 `normalize_doi()` 后比较。错误 DOI、坏 YAML、metadata 缺字段和目录外路径不会作为命中返回。
 - `preferred.markdown` 优先有效 fulltext，再按 `completed_at`（缺失时按 mtime）选最新版本；entry 的 `identity_proof` 说明归属证据，Markdown entry 还返回 `source`、`has_fulltext`、`content_kind`、`completed_at` 与内容 SHA-256。
-- `cache_mode="index"` 只读当前 manifest，`list_cached(..., cache_mode="refresh")` 校验/修复现有 manifest，`get_cached(doi)` 才刷新单个 DOI；`rescan` 从可证明的 sidecar/front matter 重建整个 index。v1 会在 refresh 时迁移到 v2 并删除无法重新证明的旧 Markdown；未知版本使用 rescan。
+- `list_cached()` 与 `get_cached()` 只信任当前版本索引和仍通过 DOI、scope、stat/hash 校验的显式注册条目；旧版、未知版或损坏索引不会被静默迁移或信任。
 - fetch-envelope 是否满足当前请求仍唯一由 `cached_request_matches()` 按 modes、strategy、`include_refs` 和 `max_tokens` 严格判断；本地 Markdown 归属规则不会放宽该匹配。
 - 已知 DOI 的本地优先流程使用 `get_cached(doi, download_dir=<scope>, detail="compact", preferred_only=true, modes=..., strategy=..., include_refs=..., max_tokens=...)`；只有 DOI 未知且确需浏览 scope 时使用 `list_cached()`。只有 `request_satisfied=true` 才能把同一请求交给后续 prefer-cache fetch 复用，且继续传同一 `download_dir`。
 

@@ -16,10 +16,10 @@
 - 每次调用都显式选择引用范围：`none`、`top10` 或 `all`。以下完整阅读示例选择 `all`；任务不需要参考文献时改为 `none`，不要省略参数。
 - 每条 CLI fetch 命令都显式传 `--artifact-mode` 和 `--asset-profile`。`--output` / `--output-dir` 是主输出；`--save-markdown` 只是额外 Markdown 副本。
 - 文本归档使用 `artifact_mode=none`、`asset_profile=none`。用户明确要求正文图时使用 `artifact_mode=markdown-assets`、`asset_profile=body`；明确要求补充材料时使用 `artifact_mode=markdown-assets`、`asset_profile=all`。
-- 只在用户还要求原始 provider 载荷、HTTP disk cache 或调试 sidecar 时使用 `artifact_mode=all`。补充材料范围由 `asset_profile=all` 决定，不由 `artifact_mode=all` 决定。
+- 只在用户还要求原始 provider 载荷或调试 sidecar 时使用 `artifact_mode=all`。补充材料范围由 `asset_profile=all` 决定，不由 `artifact_mode=all` 决定。
 - `asset_profile=body|all` 始终受每篇共享预算约束（默认 128 文件、32 MiB/文件、256 MiB 累计、64 MP、最多 4 个资产 worker并受 route cap 限制）；不要通过把正文图和 supplementary 拆成两次调用来规避。超限时以 `asset_failures[*].reason` 的稳定 `asset_*` code 向用户说明未归档项。
 - 默认使用兼容的 provider-policy 资产验收。用户明确要求离线完整正文资产时，CLI 加 `--require-local-body-assets`、MCP strategy 加 `require_local_body_assets=true`；明确要求原尺寸时改用 `--require-full-size-body-assets` / `require_full_size_body_assets=true`，它会自动隐含 local。两项只适用于 `body|all`，不应加到纯文本预设。
-- MCP 的 `no_download` 控制 provider 载荷、资产和 fetch-envelope sidecar，不是 CLI `--no-download` 的同义替换。`save_markdown=true` 仍会写用户要求的 Markdown；PF-005 的 DOI 证明索引也会随显式保存更新。
+- MCP 的 `no_download` 控制 provider 载荷、资产和 fetch-envelope sidecar；CLI 使用 `--artifact-mode none`。`save_markdown=true` 仍会写用户要求的 Markdown；PF-005 的 DOI 证明索引也会随显式保存更新。
 - “不保存最终 Markdown”“不建立用户归档”“不写 provider artifact”“允许 cache”和“完全不落盘”是五个独立判断，不要互换。
 
 ## 五个预设
@@ -55,11 +55,10 @@
 CLI 没有同等的硬零写盘保证；它在 fetch 前会准备工作目录。只需要 stdout 且接受创建一个空工作目录时使用：
 
 ```bash
-paper-fetch --query "10.1186/1471-2105-11-421" \
+paper-fetch fetch --query "10.1186/1471-2105-11-421" \
   --format markdown \
   --output - \
   --output-dir ./.paper-fetch-tmp \
-  --no-download \
   --artifact-mode none \
   --asset-profile none \
   --include-refs all \
@@ -101,7 +100,7 @@ paper-fetch --query "10.1186/1471-2105-11-421" \
 默认只归档主 Markdown，不隐式下载图片：
 
 ```bash
-paper-fetch --query "10.1186/1471-2105-11-421" \
+paper-fetch fetch --query "10.1186/1471-2105-11-421" \
   --format markdown \
   --output ./papers/example.md \
   --output-dir ./papers \
@@ -135,7 +134,7 @@ MCP 文本归档显式把主 Markdown 与 cache scope 放在同一目录：
 }
 ```
 
-这个 MCP 组合写 `./papers/example.md` 和证明其 DOI 归属所需的 cache index，不写 fetch-envelope sidecar、provider artifact 或资产。响应会把 `article`、`markdown` 设为 `null`，改为返回 `saved_markdown_path` 和诊断字段。
+这个 MCP 组合写 `./papers/example.md` 和证明其 DOI 归属所需的 cache index，不写 fetch-envelope sidecar、provider artifact 或资产。响应会把 `article`、`markdown` 设为 `null`，保留诊断字段；文件位置由请求中的输出目录/文件名确定，并通过返回路径或批量 `output_artifacts` 验收。
 
 用户要求正文图时，把 CLI 改为 `--artifact-mode markdown-assets --asset-profile body`；把 MCP 改为 `no_download=false`、`artifact_mode="markdown-assets"`、`strategy.asset_profile="body"`。用户要求补充材料时把两个执行面的 asset profile 改为 `all`。不要同时保留 `no_download=true`，否则资产不会落盘。
 
@@ -163,7 +162,7 @@ MCP 文本归档显式把主 Markdown 与 cache scope 放在同一目录：
 默认使用 CLI 文本归档，并显式指定主输出、汇总、artifact 和资产策略：
 
 ```bash
-paper-fetch --query-file ./queries.txt \
+paper-fetch fetch --query-file ./queries.txt \
   --format markdown \
   --output-dir ./papers \
   --batch-concurrency 4 \
@@ -193,13 +192,12 @@ paper-fetch --query-file ./queries.txt \
   "markdown_output_dir": "./papers",
   "download_dir": "./papers",
   "detail": "compact",
-  "run_manifest": "./papers/run-manifest.json",
   "batch_results": "./papers/batch-results.jsonl",
   "overwrite": false
 }
 ```
 
-这个 MCP 组合为每篇返回 input-ordered compact record、实际完成序号、acceptance、输出 SHA-256、Markdown path 和 resource URI，并写可审计/可恢复的 run summary 与 append-only attempts。规范 DOI 重复项只抓取 representative 一次，再 fan-out 到原 index；重叠单篇/批量请求只有在完整 fetch 语义、capability scope 和 canonical cache/Markdown 目录一致时才 singleflight。已有不同内容路径默认拒绝覆盖，相同内容幂等；中断后用同一有序 queries 和抓取/渲染/输出语义传 `resume="./papers/run-manifest.json"`，不要同时再传 `run_manifest` / `batch_results`。Resume 可以降低 `concurrency` 或调整 continue/retry/rate policy，这些写入独立 `execution_policy`，不改变 semantic fingerprint。正文图和补充材料仍按上文分别改成 `no_download=false`、`artifact_mode="markdown-assets"`、`asset_profile="body|all"`。`batch_check` 仍不是归档工具，不能用 probe 结果替代 `batch_fetch`/CLI 的真实 fetch 和 acceptance。
+这个 MCP 组合为每篇返回 input-ordered compact record、实际完成序号、acceptance、输出 SHA-256 和 Markdown path，并在整批结束时按输入顺序原子写一次 `batch_results`。同批规范 DOI 重复项只抓取 representative 一次，再 fan-out 到原 index；不同请求之间不共享执行。已有不同内容路径默认拒绝覆盖；`batch_results` 不是 journal，也不提供恢复语义。正文图和补充材料仍按上文分别改成 `no_download=false`、`artifact_mode="markdown-assets"`、`asset_profile="body|all"`。`batch_check` 仍不是归档工具，不能用 probe 结果替代 `batch_fetch`/CLI 的真实 fetch 和 acceptance。
 
 ## CLI 输出/落盘矩阵
 
@@ -207,15 +205,15 @@ CLI 始终在 fetch 前准备显式 `--output-dir` 或解析后的默认下载�
 
 | 显式组合 | stdout | 主输出 | 额外 Markdown | provider/cache artifact | 本地资产 | 实际落盘结论 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `--output - --no-download --artifact-mode none --asset-profile none` | Markdown | 无 | 无 | 无 | 无 | 仅准备工作目录；无论文文件 |
+| `--output - --artifact-mode none --asset-profile none` | Markdown | 无 | 无 | 无 | 无 | 仅准备工作目录；无论文文件 |
 | `--output <paper.md> --artifact-mode none --asset-profile none` | 无 | `<paper.md>` | 无 | 无 | 无 | 只写主输出 |
 | `--output-dir <dir> --artifact-mode none --asset-profile none` | 无 | `<dir>/<paper-stem>.md` | 无 | 无 | 无 | 只写主输出；批量另写 JSONL 汇总 |
 | `--format json --output <paper.json> --output-dir <dir> --save-markdown --artifact-mode none --asset-profile none` | 无 | `<paper.json>` | `<dir>/<paper-stem>.md` | 无 | 无 | 显式写主 JSON 与额外 Markdown |
 | `--output <paper.md> --output-dir <dir> --artifact-mode markdown-assets --asset-profile body` | 无 | `<paper.md>` | 无重复副本 | PDF fallback 等保留型 artifact | 正文资产 | 主输出加正文归档 |
 | `--output <paper.md> --output-dir <dir> --artifact-mode markdown-assets --asset-profile all` | 无 | `<paper.md>` | 无重复副本 | PDF fallback 等保留型 artifact | 正文与补充资产 | 主输出加完整资产范围 |
-| `--output <paper.md> --output-dir <dir> --artifact-mode all --asset-profile body|all` | 无 | `<paper.md>` | 无重复副本 | 再加原始 provider 载荷、HTTP cache、调试 sidecar | 显式 profile 对应资产 | 仅用于用户要求调试/原始材料 |
+| `--output <paper.md> --output-dir <dir> --artifact-mode all --asset-profile body|all` | 无 | `<paper.md>` | 无重复副本 | 再加原始 provider 载荷、调试 sidecar | 显式 profile 对应资产 | 仅用于用户要求调试/原始材料 |
 
-`--no-download` 是 CLI 的 `--artifact-mode none` alias，不会禁止显式 `--output`、由 `--output-dir` 承接的主输出或 `--save-markdown`。CLI 不提供 cache-only `prefer_cache`。
+CLI 不提供 cache-only `prefer_cache`。`--artifact-mode none` 不会禁止显式 `--output`、由 `--output-dir` 承接的主输出或 `--save-markdown`。
 
 ## MCP 输出/落盘矩阵
 
@@ -226,12 +224,12 @@ CLI 始终在 fetch 前准备显式 `--output-dir` 或解析后的默认下载�
 | `save_markdown=true, no_download=true, prefer_cache=true, artifact_mode=none, asset_profile=none, markdown_output_dir=<dir>, download_dir=<dir>` | 紧凑响应，无正文 | 有 | 仅保存注册所需 index 与锁元数据；无 sidecar | 无 | 无 | 文本归档 |
 | `save_markdown=true, no_download=false, prefer_cache=true, artifact_mode=markdown-assets, asset_profile=body, markdown_output_dir=<dir>, download_dir=<dir>` | 紧凑响应，无正文 | 有 | sidecar + index + 锁元数据 | PDF fallback 等保留型 artifact | 正文资产 | 正文图归档 |
 | `save_markdown=true, no_download=false, prefer_cache=true, artifact_mode=markdown-assets, asset_profile=all, markdown_output_dir=<dir>, download_dir=<dir>` | 紧凑响应，无正文 | 有 | sidecar + index + 锁元数据 | PDF fallback 等保留型 artifact | 正文与补充资产 | 补充材料归档 |
-| `save_markdown=true, no_download=false, prefer_cache=true, artifact_mode=all, asset_profile=body|all, markdown_output_dir=<dir>, download_dir=<dir>` | 紧凑响应，无正文 | 有 | sidecar + index + 锁元数据 | 再加原始 provider 载荷、HTTP cache、调试 sidecar | 显式 profile 对应资产 | 调试/原始材料归档 |
-| `batch_fetch(..., run_manifest=<run>, batch_results=<events>)` | input-ordered compact；可选全批受限片段 | 由同一 `save_markdown` 参数决定 | 由同一 `no_download/prefer_cache` 参数决定 | 由同一 artifact mode 决定 | 由同一 asset profile 决定 | 另写 run summary 与 append-only attempts，可 resume |
+| `save_markdown=true, no_download=false, prefer_cache=true, artifact_mode=all, asset_profile=body|all, markdown_output_dir=<dir>, download_dir=<dir>` | 紧凑响应，无正文 | 有 | sidecar + index + 锁元数据 | 再加原始 provider 载荷、调试 sidecar | 显式 profile 对应资产 | 调试/原始材料归档 |
+| `batch_fetch(..., batch_results=<path>)` | input-ordered compact；可选全批受限片段 | 由同一 `save_markdown` 参数决定 | 由同一 `no_download/prefer_cache` 参数决定 | 由同一 artifact mode 决定 | 由同一 asset profile 决定 | 原子写最终 input-ordered JSONL，不可恢复 |
 
 `artifact_mode=none` 不等于 MCP 完全不落盘：只要 `no_download=false`，成功 fetch 仍会写 fetch-envelope sidecar 和 cache index。`no_download=true` 也不覆盖 `save_markdown=true` 的显式用户输出。
 
-`batch_fetch` 不传 `run_manifest`、`batch_results` 或 `resume` 时不写 durable run 状态；因此临时批量阅读仍可沿用第一行完全不落盘组合。默认 `detail="compact"` 不返回多篇正文；确需临时片段时显式用 `detail="bounded", content_max_chars=<全批上限>`。一旦显式启用 persistence，即使论文下载参数本身不落盘，run summary 和 event JSONL 仍是预期写盘产物。
+`batch_fetch` 不传 `batch_results` 时不写批量结果文件；因此临时批量阅读仍可沿用第一行完全不落盘组合。默认 `detail="compact"` 不返回多篇正文；确需临时片段时显式用 `detail="bounded", content_max_chars=<全批上限>`。显式传入 `batch_results` 时，即使论文下载参数本身不落盘，最终 JSONL 仍是预期写盘产物。
 
 ## 本地优先决策树
 

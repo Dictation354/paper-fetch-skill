@@ -21,99 +21,97 @@ from ..runtime import RuntimeContext
 from ..utils import empty_asset_results, normalize_text
 from . import _annualreviews_html, browser_workflow
 from ._pdf_candidates import build_direct_pdf_candidates
-from ._registry import ProviderBundle, register_provider_bundle
+from ._registry import ProviderBundle
 from .base import RawFulltextPayload
 
 
-register_provider_bundle(
-    ProviderBundle(
-        catalog=ProviderSpec(
-            name="annualreviews",
-            display_name="Annual Reviews",
-            official=True,
-            domains=("annualreviews.org", "www.annualreviews.org"),
-            doi_prefixes=("10.1146/",),
-            publisher_aliases=(
-                "annual reviews",
-                "annual reviews inc",
-                "annual reviews inc.",
+PROVIDER_BUNDLE = ProviderBundle(
+    catalog=ProviderSpec(
+        name="annualreviews",
+        display_name="Annual Reviews",
+        official=True,
+        domains=("annualreviews.org", "www.annualreviews.org"),
+        doi_prefixes=("10.1146/",),
+        publisher_aliases=(
+            "annual reviews",
+            "annual reviews inc",
+            "annual reviews inc.",
+        ),
+        asset_default="body",
+        probe_capability="routing_signal",
+        provider_managed_abstract_only=True,
+        client_factory_path="paper_fetch.providers.annualreviews:AnnualreviewsClient",
+        status_order=12,
+        base_domains=("www.annualreviews.org",),
+        html_path_templates=(
+            "/content/journals/{doi}",
+            "/doi/{doi}",
+        ),
+        pdf_path_templates=("/doi/pdf/{doi}",),
+        crossref_pdf_position=0,
+        body_text_thresholds=BodyTextThresholds(min_chars=1200),
+        routes=(
+            ProviderRouteSpec(name="metadata", kind="metadata"),
+            ProviderRouteSpec(
+                name="browser_html",
+                kind="html",
+                browser_required=True,
+                browser_preflight=True,
+                auth_supported=True,
+                requires_playwright=True,
+                concurrency=1,
             ),
-            asset_default="body",
-            probe_capability="routing_signal",
-            provider_managed_abstract_only=True,
-            client_factory_path="paper_fetch.providers.annualreviews:AnnualreviewsClient",
-            status_order=12,
-            base_domains=("www.annualreviews.org",),
-            html_path_templates=(
-                "/content/journals/{doi}",
-                "/doi/{doi}",
+            ProviderRouteSpec(
+                name="browser_pdf",
+                kind="pdf",
+                browser_required=True,
+                browser_preflight=True,
+                auth_supported=True,
+                requires_playwright=True,
+                requires_pdf_conversion=True,
+                concurrency=1,
             ),
-            pdf_path_templates=("/doi/pdf/{doi}",),
-            crossref_pdf_position=0,
-            body_text_thresholds=BodyTextThresholds(min_chars=1200),
-            routes=(
-                ProviderRouteSpec(name="metadata", kind="metadata"),
-                ProviderRouteSpec(
-                    name="browser_html",
-                    kind="html",
-                    browser_required=True,
-                    browser_preflight=True,
-                    auth_supported=True,
-                    requires_playwright=True,
-                    concurrency=1,
-                ),
-                ProviderRouteSpec(
-                    name="browser_pdf",
-                    kind="pdf",
-                    browser_required=True,
-                    browser_preflight=True,
-                    auth_supported=True,
-                    requires_playwright=True,
-                    requires_pdf_conversion=True,
-                    concurrency=1,
-                ),
-                ProviderRouteSpec(
-                    name="assets",
-                    kind="assets",
-                    concurrency=2,
-                    asset_scope="body",
-                ),
+            ProviderRouteSpec(
+                name="assets",
+                kind="assets",
+                concurrency=2,
+                asset_scope="body",
             ),
         ),
-        html_rules=ProviderHtmlRules(
-            name="annualreviews",
-            noise_profile=_annualreviews_html.ANNUALREVIEWS_NOISE_PROFILE,
-            cleanup=ProviderCleanupRules(
-                markdown_promo_tokens=_annualreviews_html.ANNUALREVIEWS_MARKDOWN_PROMO_TOKENS,
-                extraction_cleanup_selectors=_annualreviews_html.ANNUALREVIEWS_EXTRACTION_CLEANUP_SELECTORS,
-                post_content_break_tokens=_annualreviews_html.ANNUALREVIEWS_POST_CONTENT_BREAK_TOKENS,
-            ),
-            front_matter=ProviderFrontMatterRules(
-                exact_texts=_annualreviews_html.ANNUALREVIEWS_FRONT_MATTER_EXACT_TEXTS,
-                contains_tokens=_annualreviews_html.ANNUALREVIEWS_FRONT_MATTER_CONTAINS_TOKENS,
-                publication_keywords=("annual reviews",),
-            ),
-            assets=ProviderAssetRules(
-                supplementary_text_tokens=_annualreviews_html.ANNUALREVIEWS_SUPPLEMENTARY_TEXT_TOKENS,
-            ),
-            availability=AvailabilityPolicy(
-                name="annualreviews",
-                site_rule_overrides=_annualreviews_html.ANNUALREVIEWS_SITE_RULE_OVERRIDES,
-                no_signals=True,
-            ),
+    ),
+    html_rules=ProviderHtmlRules(
+        name="annualreviews",
+        noise_profile=_annualreviews_html.ANNUALREVIEWS_NOISE_PROFILE,
+        cleanup=ProviderCleanupRules(
+            markdown_promo_tokens=_annualreviews_html.ANNUALREVIEWS_MARKDOWN_PROMO_TOKENS,
+            extraction_cleanup_selectors=_annualreviews_html.ANNUALREVIEWS_EXTRACTION_CLEANUP_SELECTORS,
+            post_content_break_tokens=_annualreviews_html.ANNUALREVIEWS_POST_CONTENT_BREAK_TOKENS,
         ),
-        sources=("annualreviews_html", "annualreviews_pdf"),
-    )
+        front_matter=ProviderFrontMatterRules(
+            exact_texts=_annualreviews_html.ANNUALREVIEWS_FRONT_MATTER_EXACT_TEXTS,
+            contains_tokens=_annualreviews_html.ANNUALREVIEWS_FRONT_MATTER_CONTAINS_TOKENS,
+            publication_keywords=("annual reviews",),
+        ),
+        assets=ProviderAssetRules(
+            supplementary_text_tokens=_annualreviews_html.ANNUALREVIEWS_SUPPLEMENTARY_TEXT_TOKENS,
+        ),
+        availability=AvailabilityPolicy(
+            name="annualreviews",
+            site_rule_overrides=_annualreviews_html.ANNUALREVIEWS_SITE_RULE_OVERRIDES,
+            no_signals=True,
+        ),
+    ),
+    sources=("annualreviews_html", "annualreviews_pdf"),
 )
 
 
 ANNUALREVIEWS_BROWSER_PROFILE = browser_workflow.make_browser_profile(
     "annualreviews",
+    catalog=PROVIDER_BUNDLE.catalog,
     article_source_name="annualreviews_html",
     fallback_author_extractor=_annualreviews_html.extract_authors,
     policy=browser_workflow.BrowserWorkflowPolicy(
         blocked_resource_types=("image", "font", "media"),
-        preflight_html_reuse=True,
         direct_figure_page_fallback=True,
     ),
 )

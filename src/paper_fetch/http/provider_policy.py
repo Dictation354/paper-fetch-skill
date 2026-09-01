@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from ..provider_catalog import compile_route_execution_policy
 from .transport import HttpRequestPolicy
 
 
@@ -19,9 +18,11 @@ def _normalized_host(value: str | None) -> str:
 
 def provider_allowed_hosts(
     provider: str,
-    route_name: str | None = None,
+    route_name: str,
 ) -> tuple[str, ...]:
     """Return the declared publisher/API hosts for one provider route."""
+
+    from ..provider_catalog import compile_route_execution_policy
 
     try:
         compiled = compile_route_execution_policy(provider, route_name)
@@ -32,11 +33,13 @@ def provider_allowed_hosts(
 
 def provider_request_policy(
     provider: str,
-    route_name: str | None = None,
+    route_name: str,
     *,
     base: HttpRequestPolicy | None = None,
 ) -> HttpRequestPolicy:
     """Build a request policy without turning catalog data into authorization."""
+
+    from ..provider_catalog import compile_route_execution_policy
 
     compiled = compile_route_execution_policy(provider, route_name)
     active = base or HttpRequestPolicy()
@@ -50,12 +53,8 @@ def provider_request_policy(
         transient_retries=compiled.transient_retries,
         minimum_interval_seconds=compiled.minimum_interval_seconds,
         cooldown_scope=(
-            active.cooldown_scope
-            or f"provider:{compiled.provider}:{compiled.route or 'all'}"
+            active.cooldown_scope or f"provider:{compiled.provider}:{compiled.route}"
         ),
-        route_concurrency_cap=compiled.asset_concurrency_cap,
-        acceptance_policy=compiled.acceptance_policy,
-        asset_scope=compiled.asset_scope,
     )
 
 

@@ -45,6 +45,8 @@ from .supplementary import (
     supplementary_text_tokens_for_profile as supplementary_text_tokens_for_profile,
 )
 from .download import (
+    AssetDownloadOptions as AssetDownloadOptions,
+    AssetFetchPolicy as AssetFetchPolicy,
     browser_asset_recovery_allowed as browser_asset_recovery_allowed,
 )
 from .figures import FigurePageFetcher as FigurePageFetcher
@@ -62,14 +64,7 @@ _PUBLIC_MODULES = (
 for _module in _PUBLIC_MODULES:
     globals().update({name: getattr(_module, name) for name in _module.__all__})
 
-_build_cookie_seeded_opener = download._build_cookie_seeded_opener
-_request_with_opener = download._request_with_opener
-
-
-def download_assets(*args, **kwargs):
-    kwargs.setdefault("cookie_opener_builder", _build_cookie_seeded_opener)
-    kwargs.setdefault("opener_requester", _request_with_opener)
-    return download.download_assets(*args, **kwargs)
+download_assets = download.download_assets
 
 
 __all__ = list(

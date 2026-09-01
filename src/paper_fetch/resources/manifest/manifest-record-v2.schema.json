@@ -10,7 +10,7 @@
       "type": "string"
     },
     "AcquisitionProvenance": {
-      "description": "Exact final content-acquisition route alongside the legacy source label.",
+      "description": "Exact final content-acquisition route.",
       "properties": {
         "provider": {
           "title": "Provider",
@@ -569,15 +569,6 @@
       "type": "string"
     },
     "JsonValue": {},
-    "LegacyArtifactField": {
-      "description": "Legacy CLI field supplied by one output artifact.",
-      "enum": [
-        "output_path",
-        "saved_markdown_path"
-      ],
-      "title": "LegacyArtifactField",
-      "type": "string"
-    },
     "ManifestError": {
       "additionalProperties": true,
       "description": "Structured failure with transport-specific additive facts preserved.",
@@ -612,17 +603,6 @@
           "minLength": 1,
           "title": "Kind",
           "type": "string"
-        },
-        "legacy_field": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/LegacyArtifactField"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null
         },
         "route": {
           "anyOf": [
@@ -737,7 +717,7 @@
       "type": "object"
     },
     "ManifestSemanticLosses": {
-      "description": "Stable compatibility summary derived from acceptance content facets.",
+      "description": "Semantic-loss summary derived from acceptance content facets.",
       "properties": {
         "table_fallback_count": {
           "default": 0,
@@ -755,12 +735,6 @@
           "default": 0,
           "minimum": 0,
           "title": "Table Semantic Loss Count",
-          "type": "integer"
-        },
-        "table_legacy_lossy_count": {
-          "default": 0,
-          "minimum": 0,
-          "title": "Table Legacy Lossy Count",
           "type": "integer"
         },
         "formula_fallback_count": {
@@ -1185,19 +1159,13 @@
           "minimum": 0,
           "title": "Semantic Loss Count",
           "type": "integer"
-        },
-        "legacy_lossy_count": {
-          "default": 0,
-          "minimum": 0,
-          "title": "Legacy Lossy Count",
-          "type": "integer"
         }
       },
       "title": "TableAcceptanceFacet",
       "type": "object"
     }
   },
-  "description": "One versioned, append-only fetch attempt record.",
+  "description": "One versioned fetch result record.",
   "properties": {
     "schema_version": {
       "const": 2,
@@ -1248,11 +1216,6 @@
     },
     "record_status": {
       "$ref": "#/$defs/ManifestRecordStatus"
-    },
-    "status": {
-      "minLength": 1,
-      "title": "Status",
-      "type": "string"
     },
     "identity": {
       "$ref": "#/$defs/IdentityAcceptanceFacet"
@@ -1360,28 +1323,6 @@
       },
       "title": "Output Artifacts",
       "type": "array"
-    },
-    "output_path": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "title": "Output Path"
-    },
-    "saved_markdown_path": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "title": "Saved Markdown Path"
     }
   },
   "required": [
@@ -1396,7 +1337,6 @@
     "request",
     "request_fingerprint",
     "record_status",
-    "status",
     "identity",
     "doi",
     "started_at",
@@ -1411,9 +1351,7 @@
     "semantic_losses",
     "asset_summary",
     "error",
-    "output_artifacts",
-    "output_path",
-    "saved_markdown_path"
+    "output_artifacts"
   ],
   "title": "ManifestRecord",
   "type": "object",

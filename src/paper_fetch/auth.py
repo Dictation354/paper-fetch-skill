@@ -8,7 +8,6 @@ import os
 import tempfile
 import urllib.parse
 from dataclasses import dataclass, replace
-import re
 from pathlib import Path
 from typing import Any
 from collections.abc import Callable, Mapping
@@ -19,7 +18,6 @@ from .config import (
     BROWSER_TIMEOUT_MS_ENV_VAR,
     BROWSER_USER_AGENT_ENV_VAR,
     WILEY_STORAGE_STATE_JSON_ENV_VAR,
-    apply_browser_auto_prepare_policy,
     build_runtime_env,
 )
 from .extraction.html.signals import detect_html_block, summarize_html
@@ -42,7 +40,6 @@ from .providers.browser_runtime.paths import (
     stage_storage_state,
 )
 from .providers.browser_runtime.context import (
-    context_options_for_config,
     open_browser_context,
 )
 from .providers.browser_runtime.camoufox_manager import (
@@ -55,9 +52,7 @@ from .reason_codes import (
     AUTH_STATE_SAVE_FAILED,
     AUTH_STATE_STAGE_FAILED,
     ERROR,
-    NOT_CONFIGURED,
 )
-from .runtime_browser import BrowserContextManager
 from .utils import normalize_text, provider_display_name
 
 
@@ -129,8 +124,6 @@ class AuthResult:
     provider: str
     storage_state_path: Path
     profile_dir: Path | None
-    env_file_path: Path | None
-    env_written: bool
     verified: bool
     final_url: str | None
     title: str | None
@@ -176,31 +169,6 @@ def _auth_target_for_provider(
 
 def _provider_label(provider: str) -> str:
     return provider_display_name(provider)
-
-
-def _dotenv_quote(value: str) -> str:
-    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
-    return f'"{escaped}"'
-
-
-def upsert_env_file(path: Path, values: Mapping[str, str]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    existing_lines = (
-        path.read_text(encoding="utf-8").splitlines() if path.exists() else []
-    )
-    pending = dict(values)
-    output_lines: list[str] = []
-    assignment_pattern = re.compile(r"^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=")
-    for line in existing_lines:
-        match = assignment_pattern.match(line.strip())
-        if match and match.group(1) in pending:
-            key = match.group(1)
-            output_lines.append(f"{key}={_dotenv_quote(pending.pop(key))}")
-        else:
-            output_lines.append(line)
-    for key, value in pending.items():
-        output_lines.append(f"{key}={_dotenv_quote(value)}")
-    path.write_text("\n".join(output_lines).rstrip() + "\n", encoding="utf-8")
 
 
 def _manual_auth_prompt(
@@ -437,24 +405,13 @@ def authenticate_provider_profile(
     browser_user_agent: str | None = None,
     confirm: Callable[[str], object] | None = input,
     env: Mapping[str, str] | None = None,
-    browser_auto_prepare: bool | None = None,
 ) -> AuthResult:
     provider_key = _require_browser_auth_provider(provider)
     provider_label = _provider_label(provider_key)
     auth_target = _auth_target_for_provider(provider_key, target_url=target_url)
     active_url = target_url or auth_target.url
 
-    try:
-        base_runtime_env = (
-            build_runtime_env() if env is None else build_runtime_env(env)
-        )
-        runtime_env = apply_browser_auto_prepare_policy(
-            base_runtime_env,
-            override=browser_auto_prepare,
-            default=False,
-        )
-    except ValueError as exc:
-        raise ProviderFailure(NOT_CONFIGURED, str(exc)) from exc
+    runtime_env = build_runtime_env() if env is None else build_runtime_env(env)
     runtime_env[BROWSER_HEADLESS_ENV_VAR] = "0"
     legacy_storage_env_var = _LEGACY_AUTH_STORAGE_STATE_ENV_VARS.get(provider_key)
     if legacy_storage_env_var is not None:
@@ -486,36 +443,23 @@ def authenticate_provider_profile(
     staged_state: BrowserStagedStorageState | None = None
     previous_fingerprint = _storage_state_fingerprint(resolved_storage_state_path)
     try:
-        if runtime.backend == "camoufox":
-            if browser_user_agent:
-                raise ProviderFailure(
-                    ERROR,
-                    "--browser-user-agent cannot be used with Camoufox because it would make the generated Firefox fingerprint inconsistent.",
-                )
-            if profile_dir is None:
-                raise ProviderFailure(
-                    ERROR,
-                    "Camoufox authentication requires a provider profile directory.",
-                )
-            profile_dir.mkdir(parents=True, exist_ok=True)
-            manager = CamoufoxPersistentContextManager(
-                user_data_dir=str(profile_dir),
-                binary_path=runtime.binary_path,
-                headless=False,
-                auto_prepare=runtime.auto_prepare,
+        if browser_user_agent:
+            raise ProviderFailure(
+                ERROR,
+                "--browser-user-agent cannot be used with Camoufox because it would make the generated Firefox fingerprint inconsistent.",
             )
-            context = manager.new_context()
-        else:
-            manager = BrowserContextManager(
-                binary_path=runtime.binary_path,
-                cdp_endpoint=runtime.cdp_endpoint,
-                profile_dir=runtime.profile_dir,
-                user_data_dir=runtime.user_data_dir,
+        if profile_dir is None:
+            raise ProviderFailure(
+                ERROR,
+                "Camoufox authentication requires a provider profile directory.",
             )
-            context = manager.new_context(
-                headless=False,
-                **context_options_for_config(runtime),
-            )
+        profile_dir.mkdir(parents=True, exist_ok=True)
+        manager = CamoufoxPersistentContextManager(
+            user_data_dir=str(profile_dir),
+            binary_path=runtime.binary_path,
+            headless=False,
+        )
+        context = manager.new_context()
         page = context.new_page()
         page.goto(active_url, wait_until="domcontentloaded", timeout=runtime.timeout_ms)
         _wait_for_manual_completion(
@@ -593,8 +537,6 @@ def authenticate_provider_profile(
         provider=provider_key,
         storage_state_path=resolved_storage_state_path,
         profile_dir=profile_dir,
-        env_file_path=None,
-        env_written=False,
         verified=True,
         final_url=final_url,
         title=title,

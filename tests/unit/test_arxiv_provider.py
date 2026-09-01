@@ -41,7 +41,7 @@ from tests.golden_criteria import (
 )
 from tests.unit._paper_fetch_support import (
     RecordingTransport,
-    StubProvider,
+    FixtureProvider,
     http_response,
 )
 
@@ -490,14 +490,7 @@ class ArxivProviderTests(unittest.TestCase):
                 assets = set(sample["assets"])
                 self.assertTrue({"api.json", "original.html"} <= assets)
                 if "expected.json" in assets:
-                    self.assertTrue(
-                        {
-                            "extracted.md",
-                            "markdown-quality-prompt.md",
-                            "markdown-quality.json",
-                        }
-                        <= assets
-                    )
+                    self.assertIn("extracted.md", assets)
         for arxiv_id in PDF_FALLBACK_IDS:
             with self.subTest(arxiv_id=arxiv_id):
                 sample = golden_criteria_sample_for_doi(_doi(arxiv_id))
@@ -505,14 +498,7 @@ class ArxivProviderTests(unittest.TestCase):
                 assets = set(sample["assets"])
                 self.assertTrue({"api.json", "original.pdf"} <= assets)
                 if "expected.json" in assets:
-                    self.assertTrue(
-                        {
-                            "extracted.md",
-                            "markdown-quality-prompt.md",
-                            "markdown-quality.json",
-                        }
-                        <= assets
-                    )
+                    self.assertIn("extracted.md", assets)
 
     def test_arxiv_ar5iv_chrome_selectors_share_base_script_style_rules(self) -> None:
         self.assertEqual(_arxiv_html._ARXIV_BASE_CHROME_SELECTORS, ("script", "style"))
@@ -1647,11 +1633,6 @@ class ArxivProviderTests(unittest.TestCase):
 
         with (
             tempfile.TemporaryDirectory() as tmpdir,
-            mock.patch.object(
-                html_assets,
-                "_build_cookie_seeded_opener",
-                return_value=None,
-            ) as cookie_opener,
         ):
             result = client.fetch_result(
                 metadata["doi"], metadata, Path(tmpdir), asset_profile="body"
@@ -1666,7 +1647,6 @@ class ArxivProviderTests(unittest.TestCase):
             )
             markdown = result.article.to_ai_markdown(asset_profile="body")
             self.assertGreater(markdown.count("!["), 0)
-            cookie_opener.assert_not_called()
             non_asset_urls = {
                 canonical_arxiv_html_url(arxiv_id),
                 _arxiv_atom.ARXIV_API_URL,
@@ -1799,10 +1779,12 @@ class ArxivProviderTests(unittest.TestCase):
             result["asset_failures"], [non_retryable_failure, non_image_failure]
         )
         self.assertEqual(
-            downloader.call_args_list[0].kwargs["asset_download_concurrency"], 2
+            downloader.call_args_list[0].kwargs["options"].asset_download_concurrency,
+            2,
         )
         self.assertEqual(
-            downloader.call_args_list[1].kwargs["asset_download_concurrency"], 1
+            downloader.call_args_list[1].kwargs["options"].asset_download_concurrency,
+            1,
         )
         retried_request = downloader.call_args_list[1].kwargs["assets"]
         self.assertEqual(len(retried_request), 1)
@@ -1812,11 +1794,11 @@ class ArxivProviderTests(unittest.TestCase):
             retried_request[0]["provenance"],
         )
         for call in downloader.call_args_list:
-            self.assertNotIn("seed_urls", call.kwargs)
             self.assertEqual(
-                call.kwargs["headers"]["Accept"], _arxiv_assets.ARXIV_IMAGE_ACCEPT
+                call.kwargs["options"].headers["Accept"],
+                _arxiv_assets.ARXIV_IMAGE_ACCEPT,
             )
-            self.assertNotIn("text/html", call.kwargs["headers"]["Accept"])
+            self.assertNotIn("text/html", call.kwargs["options"].headers["Accept"])
 
     def test_html_route_asset_partial_failure_surfaces_quality_diagnostics(
         self,
@@ -2053,7 +2035,7 @@ class ArxivProviderTests(unittest.TestCase):
             env={},
             clients={
                 "arxiv": arxiv_client,
-                "crossref": StubProvider(
+                "crossref": FixtureProvider(
                     metadata=ProviderFailure("no_result", "Crossref not used.")
                 ),
             },
@@ -2087,7 +2069,7 @@ class ArxivProviderTests(unittest.TestCase):
             env={},
             clients={
                 "arxiv": arxiv_client,
-                "crossref": StubProvider(
+                "crossref": FixtureProvider(
                     metadata={
                         **metadata,
                         "provider": "crossref",
@@ -2124,7 +2106,7 @@ class ArxivProviderTests(unittest.TestCase):
                         {},
                         api_client=api_client,
                     ),
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata=ProviderFailure("no_result", "Crossref not used.")
                     ),
                 },
@@ -2153,7 +2135,7 @@ class ArxivProviderTests(unittest.TestCase):
                         {},
                         api_client=api_client,
                     ),
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata=ProviderFailure("no_result", "Crossref not used.")
                     ),
                 },

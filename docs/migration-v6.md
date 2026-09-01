@@ -12,9 +12,11 @@
 
 `tools/list` 不再包含 `outputSchema`。调用方应按工具文档发起请求，并从 `CallToolResult.structured_content` 读取既有 `schema_version`、`status`、内容和错误字段。不要依赖已删除的 `paper_fetch.mcp.output_schemas`。
 
-## 开发工具
+缓存索引和条目不再暴露为动态 MCP resources，也不再发送 `resources/list_changed` 通知。调用方应使用 `list_cached` / `get_cached` 并显式传递相同的 `download_dir` scope；`batch_fetch` 的 `resource_uri` 字段已删除，归档结果改用 `output_artifacts[*].path` 与 `sha256`。静态 `resource://paper-fetch/provider-catalog` 保持不变。
 
-Markdown quality/review helper 位于 `paper_fetch_devtools`，不随生产 wheel 安装。递归 onboarding coordinator、`onboard_from_manifests.py`、`provider_agent.py`、evidence sidecar 与 geography 专用入口已删除。使用现有 capture、scaffold、snapshot、sync-back、provider governance 和 `bootstrap_review_artifact.py`；最终签核使用 `--finalize --confirmed-final-quality`。
+## Provider 开发工具
+
+旧的 source-tree quality/review 包、provider manifest/review、capture/scaffold/snapshot/sync-back 和 drift/benchmark 入口均已删除。新增 provider 直接维护 runtime bundle、provider-local 测试与 golden fixture manifest；见 [`provider-development.md`](provider-development.md)。
 
 ## Release 资产
 

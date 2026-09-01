@@ -16,14 +16,6 @@ from rapidfuzz.fuzz import ratio
 
 from .normalize_journal_name import normalize_journal_name
 from .utils import normalize_text
-from .provider_catalog import (
-    identity_ordered_provider_specs,
-    provider_domain_matches,
-    provider_html_path_templates,
-    provider_landing_path_templates,
-    provider_pdf_path_templates,
-    provider_xml_path_templates,
-)
 
 PUBLISHER_PROVIDER_MAP: dict[str, str] | None = None
 DOI_PREFIX_PROVIDER_MAP: dict[str, str] | None = None
@@ -160,6 +152,13 @@ def _url_doi_extension_suffixes_from_template(template: str) -> frozenset[str]:
 
 
 def _provider_url_doi_templates(provider: str | None) -> tuple[str, ...]:
+    from .provider_catalog import (
+        provider_html_path_templates,
+        provider_landing_path_templates,
+        provider_pdf_path_templates,
+        provider_xml_path_templates,
+    )
+
     if not provider:
         return ()
     return (
@@ -239,9 +238,11 @@ def extract_doi_from_url(url: str | None) -> str | None:
 
 
 def infer_provider_from_doi(doi: str | None) -> str | None:
+    from .provider_catalog import identity_ordered_provider_specs
+
     normalized = normalize_doi(doi)
     matches = [
-        (spec.identity_priority or 0, len(prefix), -spec.status_order, spec.name)
+        (len(prefix), -spec.status_order, spec.name)
         for spec in identity_ordered_provider_specs()
         for raw_prefix in spec.doi_prefixes
         if (prefix := str(raw_prefix or "").strip().lower())
@@ -253,6 +254,8 @@ def infer_provider_from_doi(doi: str | None) -> str | None:
 
 
 def infer_provider_from_publisher(publisher: str | None) -> str | None:
+    from .provider_catalog import identity_ordered_provider_specs
+
     if not publisher:
         return None
     normalized = normalize_journal_name(publisher)
@@ -268,6 +271,11 @@ def infer_provider_from_publisher(publisher: str | None) -> str | None:
 
 
 def infer_provider_from_url(url: str | None) -> str | None:
+    from .provider_catalog import (
+        identity_ordered_provider_specs,
+        provider_domain_matches,
+    )
+
     if not url:
         return None
     hostname = (urllib.parse.urlparse(url).hostname or "").lower()

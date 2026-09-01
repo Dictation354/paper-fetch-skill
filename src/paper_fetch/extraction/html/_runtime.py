@@ -51,7 +51,6 @@ from ...extraction.html.signals import (
     contains_access_gate_text,
 )
 from ...models import normalize_markdown_text, normalize_text
-from ...provider_catalog import provider_body_text_thresholds
 from ...publisher_identity import normalize_doi
 from ...publisher_identity import extract_doi as extract_doi_from_text
 from .provider_rules import (
@@ -948,6 +947,8 @@ def has_sufficient_article_body(
         section_hints=section_hints,
         noise_profile=noise_profile,
     )
+    from ...provider_catalog import provider_body_text_thresholds
+
     thresholds = provider_body_text_thresholds(provider or noise_profile)
     if metrics["char_count"] < thresholds.short_body_min_chars:
         return False

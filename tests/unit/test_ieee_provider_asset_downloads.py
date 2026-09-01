@@ -201,9 +201,11 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
                 output_dir=Path(tmpdir),
                 user_agent="test-agent",
                 asset_profile="body",
-                candidate_builder=lambda *_args, **_kwargs: [large_url],
-                image_document_fetcher=fetcher,
-                fetch_policy="direct_then_browser",
+                options=html_assets.AssetDownloadOptions(
+                    candidate_builder=lambda *_args, **_kwargs: [large_url],
+                    image_document_fetcher=fetcher,
+                    fetch_policy="direct_then_browser",
+                ),
             )
 
         self.assertEqual(calls, [preview_url, large_url])
@@ -341,7 +343,7 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
                 recovery,
                 image_fetcher_factory=mock.Mock(return_value=image_fetcher),
                 file_fetcher_factory=mock.Mock(return_value=None),
-                opener_requester={
+                download_settings={
                     "transport": transport,
                     "asset_download_concurrency": 4,
                     "serial_browser_assets": True,
@@ -443,14 +445,9 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
                 for call in mocked_download.call_args_list
             )
         )
-        self.assertTrue(
-            all(
-                call.kwargs["seed_urls"] == [landing_url]
-                for call in mocked_download.call_args_list
-            )
-        )
         self.assertEqual(
-            mocked_download.call_args_list[0].kwargs["headers"]["Referer"], landing_url
+            mocked_download.call_args_list[0].kwargs["options"].headers["Referer"],
+            landing_url,
         )
         passed_assets = [
             asset
@@ -562,24 +559,16 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
             raise AssertionError(f"Unexpected supplementary request: {url}")
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            with (
-                mock.patch.object(
-                    html_assets, "_build_cookie_seeded_opener", return_value=object()
-                ) as mocked_opener,
-                mock.patch.object(
-                    html_assets, "_request_with_opener", side_effect=opener_requester
-                ) as mocked_request,
-            ):
-                result = client.download_related_assets(
-                    doi,
-                    {"doi": doi, "landing_page_url": landing_url},
-                    raw_payload,
-                    Path(tmpdir),
-                    asset_profile="all",
-                )
-                downloaded_paths_exist = all(
-                    Path(item["path"]).is_file() for item in result["assets"]
-                )
+            result = client.download_related_assets(
+                doi,
+                {"doi": doi, "landing_page_url": landing_url},
+                raw_payload,
+                Path(tmpdir),
+                asset_profile="all",
+            )
+            downloaded_paths_exist = all(
+                Path(item["path"]).is_file() for item in result["assets"]
+            )
 
         self.assertEqual(result["asset_failures"], [])
         self.assertEqual(
@@ -592,8 +581,6 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
         self.assertEqual(result["assets"][3]["download_tier"], "supplementary_file")
         self.assertEqual(result["assets"][3]["content_type"], "video/mp4")
         self.assertTrue(downloaded_paths_exist)
-        mocked_request.assert_not_called()
-        mocked_opener.assert_not_called()
 
     def test_ieee_download_related_assets_downloads_mediastore_gifs_without_support_icon_failure(
         self,
@@ -652,27 +639,19 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
             raise AssertionError(f"Unexpected asset request: {url}")
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            with (
-                mock.patch.object(
-                    html_assets, "_build_cookie_seeded_opener", return_value=object()
-                ) as mocked_opener,
-                mock.patch.object(
-                    html_assets, "_request_with_opener", side_effect=opener_requester
-                ) as mocked_request,
-            ):
-                result = client.download_related_assets(
-                    doi,
-                    {"doi": doi, "landing_page_url": landing_url},
-                    raw_payload,
-                    Path(tmpdir),
-                    asset_profile="body",
-                    context=RuntimeContext(
-                        env={"PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY": "1"}
-                    ),
-                )
-                self.assertTrue(
-                    all(Path(item["path"]).is_file() for item in result["assets"])
-                )
+            result = client.download_related_assets(
+                doi,
+                {"doi": doi, "landing_page_url": landing_url},
+                raw_payload,
+                Path(tmpdir),
+                asset_profile="body",
+                context=RuntimeContext(
+                    env={"PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY": "1"}
+                ),
+            )
+            self.assertTrue(
+                all(Path(item["path"]).is_file() for item in result["assets"])
+            )
 
         self.assertEqual(result["asset_failures"], [])
         self.assertEqual(len(result["assets"]), 2)
@@ -682,8 +661,6 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
         self.assertTrue(
             all(item["download_tier"] == "full_size" for item in result["assets"])
         )
-        mocked_request.assert_not_called()
-        mocked_opener.assert_not_called()
         self.assertFalse(
             any(
                 "/assets/img/icon.support.gif" in str(call["url"])
@@ -795,22 +772,14 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
         )
         self.addCleanup(runtime_context.close)
         with tempfile.TemporaryDirectory() as tmpdir:
-            with (
-                mock.patch.object(
-                    html_assets, "_build_cookie_seeded_opener", return_value=object()
-                ),
-                mock.patch.object(
-                    html_assets, "_request_with_opener", side_effect=opener_requester
-                ),
-            ):
-                result = client.download_related_assets(
-                    doi,
-                    {"doi": doi, "landing_page_url": landing_url},
-                    raw_payload,
-                    Path(tmpdir),
-                    asset_profile="all",
-                    context=runtime_context,
-                )
+            result = client.download_related_assets(
+                doi,
+                {"doi": doi, "landing_page_url": landing_url},
+                raw_payload,
+                Path(tmpdir),
+                asset_profile="all",
+                context=runtime_context,
+            )
 
         self.assertEqual(
             [item["kind"] for item in result["assets"]], ["figure", "table"]

@@ -320,8 +320,6 @@ class AtyponBrowserWorkflowProviderHtmlTests(AtyponBrowserWorkflowProviderTestCa
         self.assertEqual(rendered.count("## Abstract"), 1)
         self.assertIn("## Losing the Amazon", rendered)
         self.assertIn("## Structured Abstract", rendered)
-        self._assert_issue_flag_absent("science", article, "abstract_inflated")
-        self._assert_issue_flag_absent("science", article, "empty_authors")
 
     def test_science_provider_replay_for_adl6155_keeps_materials_and_methods_wrapper_heading(
         self,
@@ -390,7 +388,6 @@ class AtyponBrowserWorkflowProviderHtmlTests(AtyponBrowserWorkflowProviderTestCa
             ),
             1,
         )
-        self._assert_issue_flag_absent("wiley", article, "abstract_inflated")
 
     def test_wiley_provider_replay_for_2004gb002273_body_assets_avoid_trailing_figures_noise(
         self,

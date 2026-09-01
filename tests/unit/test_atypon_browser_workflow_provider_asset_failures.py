@@ -48,9 +48,11 @@ class AtyponBrowserWorkflowProviderAssetFailureTests(
                 output_dir=Path(tmpdir),
                 user_agent="test-agent",
                 asset_profile="body",
-                candidate_builder=lambda *_args, **_kwargs: [svg_url],
-                image_document_fetcher=fetcher,
-                asset_download_concurrency=1,
+                options=html_assets.AssetDownloadOptions(
+                    candidate_builder=lambda *_args, **_kwargs: [svg_url],
+                    image_document_fetcher=fetcher,
+                    asset_download_concurrency=1,
+                ),
             )
 
             self.assertEqual(result["asset_failures"], [])
@@ -144,26 +146,16 @@ class AtyponBrowserWorkflowProviderAssetFailureTests(
                 refresh_browser_context_seed=mocked_warm,
                 _build_shared_browser_image_fetcher=mocked_builder,
             )
-            with (
-                mock.patch.object(
-                    html_assets, "_build_cookie_seeded_opener"
-                ) as mocked_opener,
-                mock.patch.object(
-                    html_assets, "_request_with_opener"
-                ) as mocked_request,
-            ):
-                result = client.download_related_assets(
-                    SCIENCE_SAMPLE.doi,
-                    {"doi": SCIENCE_SAMPLE.doi, "title": SCIENCE_SAMPLE.title},
-                    raw_payload,
-                    Path(tmpdir),
-                    asset_profile="body",
-                )
+            result = client.download_related_assets(
+                SCIENCE_SAMPLE.doi,
+                {"doi": SCIENCE_SAMPLE.doi, "title": SCIENCE_SAMPLE.title},
+                raw_payload,
+                Path(tmpdir),
+                asset_profile="body",
+            )
 
         self.assertEqual(mocked_builder.call_count, 2)
         mocked_warm.assert_called_once()
-        mocked_opener.assert_not_called()
-        mocked_request.assert_not_called()
         self.assert_direct_asset_attempted(transport)
         self.assertEqual(result["assets"], [])
         self.assertEqual(len(result["asset_failures"]), 1)
@@ -309,26 +301,16 @@ class AtyponBrowserWorkflowProviderAssetFailureTests(
                 ),
                 _build_shared_browser_image_fetcher=mocked_builder,
             )
-            with (
-                mock.patch.object(
-                    html_assets, "_build_cookie_seeded_opener"
-                ) as mocked_opener,
-                mock.patch.object(
-                    html_assets, "_request_with_opener"
-                ) as mocked_request,
-            ):
-                result = client.download_related_assets(
-                    PNAS_SAMPLE.doi,
-                    {"doi": PNAS_SAMPLE.doi, "title": PNAS_SAMPLE.title},
-                    raw_payload,
-                    Path(tmpdir),
-                    asset_profile="body",
-                )
-                saved_bytes = Path(result["assets"][0]["path"]).read_bytes()
+            result = client.download_related_assets(
+                PNAS_SAMPLE.doi,
+                {"doi": PNAS_SAMPLE.doi, "title": PNAS_SAMPLE.title},
+                raw_payload,
+                Path(tmpdir),
+                asset_profile="body",
+            )
+            saved_bytes = Path(result["assets"][0]["path"]).read_bytes()
 
         mocked_builder.assert_called_once()
-        mocked_opener.assert_not_called()
-        mocked_request.assert_not_called()
         self.assert_direct_asset_attempted(transport)
         shared_fetcher.assert_called_once()
         self.assertEqual(shared_fetcher.call_args.args[0], preview_url)

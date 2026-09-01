@@ -652,7 +652,6 @@
     },
     "semantic_losses": {
       "table_fallback_count": 0,
-      "table_lossy_count": 0,
       "formula_fallback_count": 0,
       "formula_missing_count": 0
     },

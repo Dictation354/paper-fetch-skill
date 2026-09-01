@@ -7,7 +7,7 @@ import logging
 from pathlib import Path
 import time
 from typing import Any
-from collections.abc import Iterator, Mapping, Sequence, Set as AbstractSet
+from collections.abc import Mapping, Sequence
 
 from ..artifacts import ArtifactStore
 from ..failure import FailureDiagnostics
@@ -65,30 +65,6 @@ from .types import FetchStrategy, PaperFetchFailure
 logger = logging.getLogger("paper_fetch.service")
 
 
-def provider_managed_abstract_only_provider_set() -> frozenset[str]:
-    return provider_managed_abstract_only_names()
-
-
-class _ProviderManagedAbstractOnlyProviders(AbstractSet[str]):
-    def __contains__(self, value: object) -> bool:
-        return value in provider_managed_abstract_only_provider_set()
-
-    def __iter__(self) -> Iterator[str]:
-        return iter(provider_managed_abstract_only_provider_set())
-
-    def __len__(self) -> int:
-        return len(provider_managed_abstract_only_provider_set())
-
-
-PROVIDER_MANAGED_ABSTRACT_ONLY_PROVIDERS: AbstractSet[str] = (
-    _ProviderManagedAbstractOnlyProviders()
-)
-
-
-def _record_stage_timing(context: RuntimeContext, name: str, started_at: float) -> None:
-    context.record_stage_timing(name, started_at)
-
-
 def build_metadata_only_result(
     metadata: Mapping[str, Any],
     *,
@@ -137,22 +113,6 @@ def _apply_article_acquisition(
     )
 
 
-def maybe_save_provider_html_payload(
-    provider_name: str,
-    *,
-    content,
-    download_dir: Path | None,
-    doi: str | None,
-    metadata: Mapping[str, Any],
-) -> tuple[list[str], list[str]]:
-    return ArtifactStore.from_download_dir(download_dir).save_provider_html_payload(
-        provider_name,
-        content=content,
-        doi=doi,
-        metadata=metadata,
-    )
-
-
 def _provider_fetch_result(
     provider_client: FulltextProvider | RawFulltextProvider,
     *,
@@ -189,20 +149,14 @@ def _provider_fetch_result(
             and asset_profile != "none"
             and isinstance(provider_client, AssetProvider)
         ):
-            asset_started_at = time.monotonic()
-            try:
-                asset_results = provider_client.download_related_assets(
-                    doi,
-                    metadata,
-                    raw_payload,
-                    download_dir,
-                    asset_profile=asset_profile,
-                    context=context,
-                )
-            finally:
-                context.accumulate_stage_timing(
-                    "asset_seconds", started_at=asset_started_at
-                )
+            asset_results = provider_client.download_related_assets(
+                doi,
+                metadata,
+                raw_payload,
+                download_dir,
+                asset_profile=asset_profile,
+                context=context,
+            )
             downloaded_assets = list(asset_results.get("assets") or [])
             asset_failures = list(asset_results.get("asset_failures") or [])
         article = provider_client.to_article_model(
@@ -392,7 +346,7 @@ def _try_official_provider(
                 attempt=1,
             )
             extend_unique(source_trail, [fulltext_marker(provider_name, ABSTRACT_ONLY)])
-            if provider_name in provider_managed_abstract_only_provider_set():
+            if provider_name in provider_managed_abstract_only_names():
                 warnings.append(
                     "Official full text only contained abstract-level content; returning abstract-only provider result."
                 )
@@ -594,7 +548,6 @@ def fetch_article(
         active_transport = runtime.transport
         client_registry = dict(runtime.get_clients())
         resolver = resolve_paper_fn or resolve_paper
-        resolve_started_at = time.monotonic()
         resolved = resolve_query_with_session_cache(
             query,
             resolver=resolver,
@@ -602,7 +555,6 @@ def fetch_article(
             env=active_env,
             context=runtime,
         )
-        _record_stage_timing(runtime, "resolve_seconds", resolve_started_at)
         source_trail: list[str] = [resolve_marker(resolved.query_kind)]
         if resolved.doi:
             source_trail.append(resolve_marker("doi_selected"))
@@ -613,14 +565,12 @@ def fetch_article(
                 candidates=resolved.candidates,
             )
 
-        metadata_started_at = time.monotonic()
         metadata, provider_name, metadata_trail = fetch_metadata_for_resolved_query(
             resolved,
             clients=client_registry,
             strategy=strategy,
             context=runtime,
         )
-        _record_stage_timing(runtime, "metadata_seconds", metadata_started_at)
         extend_unique(source_trail, metadata_trail)
         from ..publisher_identity import normalize_doi
 
@@ -628,7 +578,6 @@ def fetch_article(
         warnings: list[str] = []
         trace: list[TraceEvent] = []
 
-        fulltext_started_at = time.monotonic()
         article = None
         provider_failures: list[ProviderFailure] = []
         provider_candidates = _ranked_fulltext_provider_candidates(
@@ -698,7 +647,6 @@ def fetch_article(
                         f"provider_candidate_{candidate_provider}_access_boundary_weak_continue"
                     )
                 )
-        _record_stage_timing(runtime, "fulltext_seconds", fulltext_started_at)
         if article is not None:
             return article
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from collections.abc import Callable, Mapping
 
 from ...provider_catalog import (
@@ -16,6 +16,9 @@ from ...provider_catalog import (
 from ...utils import provider_display_name
 from ..base import ProviderFailure, RawFulltextPayload
 from ..browser_runtime import BrowserHtmlReadiness
+
+if TYPE_CHECKING:
+    from ...provider_catalog import ProviderSpec
 
 
 @dataclass
@@ -41,9 +44,7 @@ class BrowserWorkflowPolicy:
     fast_html_attempt: bool = True
     html_readiness_budget_seconds: float | None = None
     blocked_resource_types: frozenset[str] | tuple[str, ...] = frozenset()
-    preflight_html_reuse: bool = False
     persistent_storage_state: bool = True
-    doi_route_hint: bool = False
     retry_incomplete_html_candidates: bool = False
     direct_figure_page_fallback: bool = False
 
@@ -87,6 +88,7 @@ class ProviderBrowserProfile:
 def make_browser_profile(
     name: str,
     *,
+    catalog: ProviderSpec,
     fallback_author_extractor: Callable[[str], list[str]],
     article_source_name: str | None = None,
     html_readiness: BrowserHtmlReadiness | None = None,
@@ -99,12 +101,12 @@ def make_browser_profile(
     return ProviderBrowserProfile(
         name=name,
         article_source_name=article_source_name,
-        label=provider_display_name(name),
-        hosts=provider_domains(name),
-        base_hosts=provider_base_domains(name),
-        html_path_templates=provider_html_path_templates(name),
-        pdf_path_templates=provider_pdf_path_templates(name),
-        crossref_pdf_position=provider_crossref_pdf_position(name),
+        label=catalog.display_name,
+        hosts=catalog.domains,
+        base_hosts=catalog.base_domains,
+        html_path_templates=catalog.html_path_templates,
+        pdf_path_templates=catalog.pdf_path_templates,
+        crossref_pdf_position=catalog.crossref_pdf_position,
         markdown_publisher=markdown_publisher or name,
         fallback_author_extractor=fallback_author_extractor,
         shared_browser_image_fetcher=shared_browser_image_fetcher,
@@ -116,6 +118,7 @@ def make_browser_profile(
 def make_atypon_browser_profile(
     name: str,
     *,
+    catalog: ProviderSpec,
     fallback_author_extractor: Callable[[str], list[str]],
     article_source_name: str | None = None,
     html_readiness: BrowserHtmlReadiness | None = None,
@@ -123,6 +126,7 @@ def make_atypon_browser_profile(
 ) -> ProviderBrowserProfile:
     return make_browser_profile(
         name,
+        catalog=catalog,
         article_source_name=article_source_name,
         fallback_author_extractor=fallback_author_extractor,
         html_readiness=html_readiness,

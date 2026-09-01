@@ -1355,7 +1355,6 @@ refers to the tie.</ce:para>
             )
         )
         self.assertEqual(article.quality.semantic_losses.table_layout_degraded_count, 0)
-        self.assertEqual(article.quality.semantic_losses.table_lossy_count, 0)
         self.assertNotIn("table_layout_degraded", article.quality.flags)
         self.assertNotIn("table_semantic_loss", article.quality.flags)
         self.assertNotIn("## Additional Tables", rendered)

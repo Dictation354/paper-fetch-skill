@@ -1,24 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
-
-import pytest
 
 from paper_fetch.extraction.html.assets import (
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
-    AssetDownloadKind,
 )
-
-
-def test_asset_download_kind_replace_round_trip_and_freezes_fields() -> None:
-    updated = replace(FIGURE_KIND, name="figure")
-
-    assert isinstance(updated, AssetDownloadKind)
-    assert updated == FIGURE_KIND
-    with pytest.raises(FrozenInstanceError):
-        updated.name = "supplementary"  # type: ignore[misc]
 
 
 def test_figure_kind_candidate_response_and_failure_template_round_trip() -> None:

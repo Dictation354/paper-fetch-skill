@@ -77,6 +77,7 @@ class FakeTransport:
         retry_on_transient=False,
         transient_retries=2,
         transient_backoff_base_seconds=0.5,
+        request_policy=None,
     ):
         del (
             headers,
@@ -86,7 +87,12 @@ class FakeTransport:
             rate_limit_retries,
             max_rate_limit_wait_seconds,
         )
-        del retry_on_transient, transient_retries, transient_backoff_base_seconds
+        del (
+            retry_on_transient,
+            transient_retries,
+            transient_backoff_base_seconds,
+            request_policy,
+        )
         key = str(url)
         if method != "GET":
             raise AssertionError(f"Unexpected method {method}")

@@ -7,9 +7,6 @@ from scripts import validate_macos_adaptation as validator
 
 
 class MacosAdaptationValidatorTests(unittest.TestCase):
-    def test_repository_contract_is_valid(self) -> None:
-        self.assertEqual(validator.validate_repository(), [])
-
     def test_support_matrix_drift_is_rejected(self) -> None:
         contract = validator.load_contract()
         contract["support"]["offline"]["python_versions"] = ["3.14"]
@@ -19,15 +16,6 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
 
         self.assertIn("python_versions must match", diagnostic)
         self.assertIn("architectures must match", diagnostic)
-
-    def test_portable_evidence_cannot_claim_native_equivalence(self) -> None:
-        contract = validator.load_contract()
-        contract["evidence"]["portable"]["native_equivalent"] = True
-
-        self.assertIn(
-            "portable evidence must not claim native equivalence",
-            validator.validate_contract(contract),
-        )
 
     def test_safety_invariants_fail_closed(self) -> None:
         contract = copy.deepcopy(validator.load_contract())
@@ -54,6 +42,15 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
 
         self.assertIn(
             "release.build_evidence_is_not_public must be true",
+            validator.validate_contract(contract),
+        )
+
+    def test_release_policy_requires_one_source_revision(self) -> None:
+        contract = validator.load_contract()
+        contract["release"]["single_source_revision"] = False
+
+        self.assertIn(
+            "release.single_source_revision must be true",
             validator.validate_contract(contract),
         )
 

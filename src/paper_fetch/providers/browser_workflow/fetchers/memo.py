@@ -10,7 +10,7 @@ from typing import Any
 
 from ....logging_utils import emit_structured_log
 from ....utils import normalize_text
-from ..reuse_cache import normalize_browser_cache_url
+from ..shared import normalize_browser_url
 from .diagnostics import _copy_failure_diagnostic
 from .image import _copy_image_payload
 
@@ -36,7 +36,7 @@ class _MemoizedImageDocumentFetcher:
         self, image_url: str, asset: Mapping[str, Any]
     ) -> dict[str, Any] | None:
         raw_url = normalize_text(image_url)
-        normalized_url = normalize_browser_cache_url(raw_url) or raw_url
+        normalized_url = normalize_browser_url(raw_url) or raw_url
         if not normalized_url:
             return self._fetcher(image_url, asset)
         with self._lock:
@@ -116,7 +116,7 @@ class _MemoizedImageDocumentFetcher:
 
     def failure_for(self, image_url: str) -> dict[str, Any] | None:
         raw_url = normalize_text(image_url)
-        normalized_url = normalize_browser_cache_url(raw_url) or raw_url
+        normalized_url = normalize_browser_url(raw_url) or raw_url
         with self._lock:
             cached_failure = self._failure_by_url.get(normalized_url)
             if cached_failure is not None:
@@ -148,7 +148,7 @@ class _MemoizedFigurePageFetcher:
 
     def __call__(self, figure_page_url: str) -> tuple[str, str] | None:
         raw_url = normalize_text(figure_page_url)
-        normalized_url = normalize_browser_cache_url(raw_url) or raw_url
+        normalized_url = normalize_browser_url(raw_url) or raw_url
         if not normalized_url:
             return None
         with self._lock:

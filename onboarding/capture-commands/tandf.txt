@@ -1,5 +1,0 @@
-# Capture commands for tandf
-
-python3 scripts/capture_fixture.py --from-manifest onboarding/manifests/tandf.yml --all
-
-# Null DOI purposes are skipped automatically by --all.

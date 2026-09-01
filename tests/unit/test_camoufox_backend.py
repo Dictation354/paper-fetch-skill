@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+import json
 from types import SimpleNamespace
+import subprocess
 import threading
 from unittest import mock
 
 import pytest
 
 from paper_fetch.config import (
-    BROWSER_BACKEND_ENV_VAR,
     BROWSER_BINARY_PATH_ENV_VAR,
     BROWSER_HEADLESS_ENV_VAR,
     BROWSER_PROFILE_DIR_ENV_VAR,
@@ -27,6 +28,7 @@ from paper_fetch.providers.browser_runtime.camoufox_manager import (
     _launch_executable_path,
     _launch_firefox_major_version,
 )
+from paper_fetch.providers.browser_runtime import preparation
 from paper_fetch.providers.browser_runtime.preparation import CamoufoxRuntimeProbe
 from paper_fetch.providers.browser_runtime.context import context_options_for_config
 from paper_fetch.providers.browser_runtime import context as browser_runtime_context
@@ -35,27 +37,6 @@ from paper_fetch.providers.browser_runtime.types import (
     BrowserRuntimeConfig,
 )
 from paper_fetch.runtime import RuntimeContext
-
-
-def test_backend_selection_defaults_to_camoufox_and_accepts_explicit_value() -> None:
-    assert browser_runtime.selected_browser_runtime_backend({}).name == "camoufox"
-    assert (
-        browser_runtime.selected_browser_runtime_backend(
-            {BROWSER_BACKEND_ENV_VAR: "CAMOUFOX"}
-        ).name
-        == "camoufox"
-    )
-
-
-def test_browser_runtime_config_requires_explicit_backend(tmp_path) -> None:
-    with pytest.raises(TypeError, match="backend"):
-        BrowserRuntimeConfig(  # type: ignore[call-arg]
-            provider="ieee",
-            doi="10.1109/example",
-            artifact_dir=tmp_path,
-            headless=True,
-            user_agent=None,
-        )
 
 
 def test_camoufox_context_failure_closes_at_backend_boundary(
@@ -74,7 +55,6 @@ def test_camoufox_context_failure_closes_at_backend_boundary(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        backend="camoufox",
     )
 
     with pytest.raises(RuntimeError, match="camoufox failed"):
@@ -83,21 +63,11 @@ def test_camoufox_context_failure_closes_at_backend_boundary(
     camoufox_manager.assert_called_once()
 
 
-def test_invalid_backend_is_strict() -> None:
-    with pytest.raises(ProviderFailure, match=BROWSER_BACKEND_ENV_VAR):
-        browser_runtime.load_runtime_config(
-            {BROWSER_BACKEND_ENV_VAR: "unknown"},
-            provider="wiley",
-            doi="10.1000/example",
-        )
-
-
 def test_camoufox_config_uses_generic_settings_and_separate_profile(tmp_path) -> None:
     executable = tmp_path / "camoufox"
     executable.write_text("runtime", encoding="utf-8")
     executable.chmod(0o755)
     env = {
-        BROWSER_BACKEND_ENV_VAR: "camoufox",
         BROWSER_BINARY_PATH_ENV_VAR: str(executable),
         BROWSER_HEADLESS_ENV_VAR: "false",
         BROWSER_TIMEOUT_MS_ENV_VAR: "45678",
@@ -111,7 +81,6 @@ def test_camoufox_config_uses_generic_settings_and_separate_profile(tmp_path) ->
         doi="10.1146/example",
     )
 
-    assert config.backend == "camoufox"
     assert config.binary_path == str(executable)
     assert config.headless is False
     assert config.timeout_ms == 45678
@@ -147,7 +116,6 @@ def test_camoufox_context_options_do_not_override_fingerprint(tmp_path) -> None:
         artifact_dir=tmp_path,
         headless=True,
         user_agent="must-not-be-used",
-        backend="camoufox",
     )
 
     options = context_options_for_config(config)
@@ -167,7 +135,6 @@ def test_open_context_records_successful_storage_state_injection(tmp_path) -> No
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        backend="camoufox",
         storage_state_path=state,
     )
     browser_context = object()
@@ -203,7 +170,6 @@ def test_open_context_failure_does_not_record_storage_state_use(tmp_path) -> Non
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        backend="camoufox",
         storage_state_path=state,
     )
     runtime = SimpleNamespace(
@@ -228,7 +194,6 @@ def test_open_wiley_context_without_storage_state_has_no_state_capability_use(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        backend="camoufox",
         profile_dir=None,
         user_data_dir=None,
         storage_state_path=None,
@@ -382,7 +347,7 @@ def test_camoufox_official_runtime_path_is_resolved_by_package(monkeypatch) -> N
     )
 
 
-def test_camoufox_manager_prepares_before_final_no_download_resolution(
+def test_camoufox_manager_only_resolves_prepared_runtime_without_downloading(
     monkeypatch,
 ) -> None:
     order: list[str] = []
@@ -405,19 +370,15 @@ def test_camoufox_manager_prepares_before_final_no_download_resolution(
         raise AssertionError(name)
 
     monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.preparation.ensure_camoufox_managed_runtime",
-        lambda: order.append("prepare"),
-    )
-    monkeypatch.setattr(
         "paper_fetch.providers.browser_runtime.camoufox_manager.importlib.import_module",
         import_module,
     )
 
-    manager = CamoufoxBrowserManager(headless=True, auto_prepare=True)
+    manager = CamoufoxBrowserManager(headless=True)
     assert manager.browser() is browser
     manager.close()
 
-    assert order == ["prepare", "resolve"]
+    assert order == ["resolve"]
     pkgman.camoufox_path.assert_called_once_with(download_if_missing=False)
 
 
@@ -626,76 +587,96 @@ def test_camoufox_static_probe_reads_runtime_without_fetching(
     assert details["runtime_path"] == str(runtime_path)
 
 
-def test_camoufox_runtime_readiness_auto_prepares_managed_runtime(
+def test_camoufox_probe_validates_managed_executable_without_fetching(
     monkeypatch, tmp_path
 ) -> None:
-    backend = CamoufoxBackend()
-    config = BrowserRuntimeConfig(
-        provider="science",
-        doi="10.1126/example",
-        artifact_dir=tmp_path,
-        headless=True,
-        user_agent=None,
-        backend="camoufox",
-        auto_prepare=True,
-    )
-    missing = {
-        "packages": {"playwright": True, "camoufox": True},
-        "package_ready": True,
-        "runtime_installed": False,
-        "runtime_valid": False,
-    }
-    ready = {**missing, "runtime_installed": True, "runtime_valid": True}
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.backends.camoufox._dependency_details",
-        mock.Mock(side_effect=(missing, ready)),
-    )
-    prepare = mock.Mock()
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.backends.camoufox.ensure_camoufox_managed_runtime",
-        prepare,
-    )
-
-    backend.ensure_runtime_ready(config)
-
-    prepare.assert_called_once_with()
-
-
-def test_explicit_camoufox_binary_never_invokes_managed_runtime_preparation(
-    monkeypatch, tmp_path
-) -> None:
-    executable = tmp_path / "custom-camoufox"
+    active_spec = "browsers/official/152.0.4-beta.28"
+    runtime_path = tmp_path / active_spec
+    executable = runtime_path / "camoufox"
+    executable.parent.mkdir(parents=True)
     executable.touch()
-    config = BrowserRuntimeConfig(
-        provider="science",
-        doi="10.1126/example",
-        artifact_dir=tmp_path,
-        headless=True,
-        user_agent=None,
-        binary_path=str(executable),
-        backend="camoufox",
-        auto_prepare=True,
+    config_path = tmp_path / "config.json"
+    config_path.write_text(
+        json.dumps({"active_version": active_spec}),
+        encoding="utf-8",
     )
+    version = SimpleNamespace(
+        full_string="152.0.4-beta.28",
+        is_supported=lambda: True,
+    )
+    version_type = SimpleNamespace(from_path=mock.Mock(return_value=version))
+    pkgman = SimpleNamespace(
+        INSTALL_DIR=tmp_path,
+        Version=version_type,
+        launch_path=mock.Mock(return_value=str(executable)),
+    )
+    multiversion = SimpleNamespace(CONFIG_FILE=config_path)
     monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.backends.camoufox._dependency_details",
-        lambda: {
-            "packages": {"playwright": True, "camoufox": True},
-            "package_ready": True,
-            "runtime_installed": False,
-            "runtime_valid": False,
-        },
-    )
-    prepare = mock.Mock(
-        side_effect=AssertionError("managed runtime must stay untouched")
-    )
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.backends.camoufox.ensure_camoufox_managed_runtime",
-        prepare,
+        preparation,
+        "import_module",
+        lambda name: pkgman if name == "camoufox.pkgman" else multiversion,
     )
 
-    CamoufoxBackend().ensure_runtime_ready(config)
+    probe = preparation.probe_camoufox_managed_runtime()
 
-    prepare.assert_not_called()
+    assert probe.valid is True
+    assert probe.runtime_path == runtime_path
+    assert probe.executable_path == executable
+    version_type.from_path.assert_called_once_with(runtime_path)
+    pkgman.launch_path.assert_called_once_with(runtime_path)
+
+
+def test_camoufox_probe_rejects_link_in_managed_runtime_path(
+    monkeypatch, tmp_path
+) -> None:
+    real_parent = tmp_path / "real-official"
+    real_parent.mkdir()
+    browsers = tmp_path / "browsers"
+    browsers.mkdir()
+    try:
+        (browsers / "official").symlink_to(real_parent, target_is_directory=True)
+    except OSError:
+        pytest.skip("symlink creation is unavailable on this platform")
+    (real_parent / "152.0.4-beta.28").mkdir()
+    config_path = tmp_path / "config.json"
+    config_path.write_text(
+        '{"active_version":"browsers/official/152.0.4-beta.28"}',
+        encoding="utf-8",
+    )
+    pkgman = SimpleNamespace(INSTALL_DIR=tmp_path)
+    multiversion = SimpleNamespace(CONFIG_FILE=config_path)
+    monkeypatch.setattr(
+        preparation,
+        "import_module",
+        lambda name: pkgman if name == "camoufox.pkgman" else multiversion,
+    )
+
+    probe = preparation.probe_camoufox_managed_runtime()
+
+    assert probe.valid is False
+    assert probe.managed_path_safe is False
+    assert probe.state == "corrupt"
+
+
+def test_camoufox_probe_rejects_reparse_attribute_without_isjunction(
+    monkeypatch,
+) -> None:
+    path = mock.Mock()
+    path.is_symlink.return_value = False
+    path.lstat.return_value = SimpleNamespace(st_file_attributes=0x400)
+    monkeypatch.setattr(preparation.os.path, "isjunction", None, raising=False)
+
+    assert preparation._is_link_or_reparse(path) is True
+
+
+def test_camoufox_probe_rejects_parent_traversal(tmp_path) -> None:
+    candidate, safe = preparation._managed_candidate(
+        tmp_path,
+        "browsers/../unexpected-runtime",
+    )
+
+    assert candidate == tmp_path / "browsers" / ".." / "unexpected-runtime"
+    assert safe is False
 
 
 def test_camoufox_runtime_readiness_rejects_missing_runtime_without_download(
@@ -708,7 +689,6 @@ def test_camoufox_runtime_readiness_rejects_missing_runtime_without_download(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        backend="camoufox",
     )
     monkeypatch.setattr(
         "paper_fetch.providers.browser_runtime.backends.camoufox._dependency_details",
@@ -718,6 +698,11 @@ def test_camoufox_runtime_readiness_rejects_missing_runtime_without_download(
             "runtime_installed": False,
             "download_required": True,
         },
+    )
+    monkeypatch.setattr(
+        subprocess,
+        "Popen",
+        mock.Mock(side_effect=AssertionError("readiness must not spawn a process")),
     )
 
     with pytest.raises(ProviderFailure, match="runtime is missing"):
@@ -864,7 +849,6 @@ def test_browser_candidate_uses_native_navigation_without_context_guard(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     open_context = mock.Mock(return_value=(None, context))
     monkeypatch.setattr(_playwright_browser, "open_browser_context", open_context)
@@ -892,7 +876,6 @@ def test_camoufox_html_retry_applies_provider_seed_before_page_creation(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -957,7 +940,6 @@ def test_camoufox_html_retry_rejects_invalid_seed_without_logging_cookie_value(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -1006,7 +988,6 @@ def test_camoufox_html_navigation_uses_commit_and_keeps_images(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -1118,7 +1099,6 @@ def test_main_document_diagnostics_distinguish_finished_response_from_loading_sh
             headless=True,
             user_agent=None,
             persist_storage_state=False,
-            backend="camoufox",
         )
         monkeypatch.setattr(
             _playwright_browser,
@@ -1260,7 +1240,6 @@ def test_camoufox_trace_reports_storage_state_was_loaded(monkeypatch, tmp_path) 
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
         storage_state_path=state,
     )
     monkeypatch.setattr(
@@ -1309,7 +1288,6 @@ def test_wiley_body_readiness_defers_login_navigation_paywall_text(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -1382,7 +1360,6 @@ def test_wiley_403_confirmed_body_and_identity_preserves_status(
         user_data_dir=None,
         storage_state_path=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -1543,7 +1520,6 @@ def test_wiley_403_review_rejects_unconfirmed_candidate(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     readiness_result = (
         _stable_wiley_readiness()
@@ -1617,7 +1593,6 @@ def test_wiley_403_failure_advances_to_next_candidate(monkeypatch, tmp_path) -> 
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     readiness = mock.Mock(return_value=_stable_wiley_readiness())
     monkeypatch.setattr(
@@ -1679,7 +1654,6 @@ def test_wiley_all_http_status_candidates_fail_with_reviews(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -1727,7 +1701,6 @@ def test_provider_resource_policy_blocks_only_configured_heavy_types(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -1783,7 +1756,6 @@ def test_pnas_body_readiness_uses_bounded_budget_and_keeps_final_html(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     captured_timeout: list[float] = []
 
@@ -1829,7 +1801,6 @@ def test_unconfigured_science_fast_policy_keeps_legacy_media_only_blocking(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -1871,7 +1842,6 @@ def test_figure_page_fetches_reuse_one_runtime_context_and_page(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     runtime_context = RuntimeContext(env={})
     readiness = browser_runtime.BrowserHtmlReadiness(wait_for_article_body=False)
@@ -1931,7 +1901,6 @@ def test_camoufox_provider_page_preparation_runs_before_html_capture(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -1983,7 +1952,6 @@ def test_camoufox_candidate_deadline_preserves_observed_access_boundary(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -2048,7 +2016,6 @@ def test_camoufox_candidate_transport_failure_preserves_observed_access_boundary
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -2142,7 +2109,6 @@ def test_lightweight_warm_rejects_unusable_navigation(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -2172,7 +2138,6 @@ def test_lightweight_warm_reports_no_cookie_change(monkeypatch, tmp_path) -> Non
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -2204,7 +2169,6 @@ def test_camoufox_figure_page_waits_for_image_selector_without_fixed_sleep(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     readiness = mock.Mock()
     monkeypatch.setattr(
@@ -2255,7 +2219,6 @@ def test_camoufox_figure_page_selector_timeout_is_best_effort(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -2293,7 +2256,6 @@ def test_camoufox_figure_page_without_selector_uses_fixed_wait(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     body_readiness = mock.Mock()
     monkeypatch.setattr(
@@ -2361,7 +2323,6 @@ def test_ieee_required_selector_waits_for_matching_article_number(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -2422,7 +2383,6 @@ def test_ieee_required_selector_preserves_aws_waf_timeout_diagnostic(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
-        backend="camoufox",
     )
     runtime = RuntimeContext(
         env={},
@@ -2453,7 +2413,6 @@ def test_ieee_required_selector_preserves_aws_waf_timeout_diagnostic(
         failure = raised.value
         assert failure.kind == "aws_waf_challenge"
         assert failure.details["challenge_provider"] == "aws_waf"
-        assert failure.details["legacy_reason_code"] == "cloudflare_challenge"
         assert failure.details["response_status"] == 202
         diagnostic = failure.details["failure_diagnostic"]
         assert diagnostic["raw_html"]["byte_count"] > 0

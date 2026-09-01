@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import FrozenInstanceError, replace
 import unittest
 
 from paper_fetch.provider_catalog import (
-    PROVIDER_CATALOG,
     provider_domains,
     provider_landing_path_templates,
     provider_pdf_path_templates,
@@ -36,20 +34,6 @@ class CopernicusProviderCatalogTests(unittest.TestCase):
         )
         self.assertEqual(provider_landing_path_templates("unknown"), ())
         self.assertEqual(provider_xml_path_templates(None), ())
-
-    def test_copernicus_provider_spec_round_trips_and_protects_fields(self) -> None:
-        spec = PROVIDER_CATALOG["copernicus"]
-
-        rebuilt = replace(
-            spec,
-            landing_path_templates=tuple(spec.landing_path_templates),
-            xml_path_templates=tuple(spec.xml_path_templates),
-            pdf_path_templates=tuple(spec.pdf_path_templates),
-        )
-
-        self.assertEqual(rebuilt, spec)
-        with self.assertRaises(FrozenInstanceError):
-            spec.xml_path_templates = ()  # type: ignore[misc]
 
     def test_copernicus_doi_templates_preserve_generated_urls(self) -> None:
         self.assertEqual(

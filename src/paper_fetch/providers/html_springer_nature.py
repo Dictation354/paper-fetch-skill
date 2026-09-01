@@ -420,6 +420,17 @@ def _remove_duplicate_title_headings(markdown_text: str, title_text: str) -> str
     return "\n".join(lines)
 
 
+def _normalize_springer_nature_inline_mathjax(root: Any) -> None:
+    if not isinstance(root, Tag):
+        return
+    for node in root.select(".mathjax-tex"):
+        if not isinstance(node, Tag):
+            continue
+        value = node.get_text("", strip=False).strip()
+        if value.startswith(r"\(") and value.endswith(r"\)") and len(value) > 4:
+            node.string = f"${value[2:-2]}$"
+
+
 def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
     if not is_springer_nature_url(source_url):
         return ""
@@ -433,6 +444,7 @@ def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
     if article is None:
         return ""
     _prune_springer_nature_chrome(article)
+    _normalize_springer_nature_inline_mathjax(article)
 
     lines: list[str] = []
     title_node = article.select_one("h1")

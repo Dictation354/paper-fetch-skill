@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from paper_fetch.mcp.fetch_tool import build_fetch_tool_result
@@ -16,7 +14,7 @@ from paper_fetch.models import (
     Section,
     SemanticLosses,
 )
-from paper_fetch.tracing import source_trail_from_trace, trace_event
+from paper_fetch.tracing import TraceContext, source_trail_from_trace, trace_event
 from tests.unit._mcp_support import assert_mcp_tool_omits_output_schema
 
 
@@ -27,8 +25,7 @@ def _successful_trace():
             "fulltext",
             "elsevier",
             "ok",
-            provider="elsevier",
-            route="xml",
+            context=TraceContext(provider="elsevier", route="xml"),
         ),
     ]
 
@@ -252,13 +249,11 @@ def test_saved_markdown_compaction_keeps_pre_compaction_acceptance() -> None:
             modes=["article", "markdown"],
             save_markdown=True,
         ),
-        saved_markdown_path=Path("/tmp/acceptance.md"),
     )
 
     payload = result.structured_content
     assert payload is not None
     assert payload["article"] is None
     assert payload["markdown"] is None
-    assert payload["saved_markdown_path"] == "/tmp/acceptance.md"
     assert payload["acceptance"]["overall"] == "complete"
     assert payload["acceptance"]["output"] == "complete"

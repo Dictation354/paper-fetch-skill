@@ -8,7 +8,7 @@ from ..http import HttpTransport
 from ..metadata.crossref import CrossrefLookupClient
 from ..metadata.types import CrossrefMetadata
 from ..provider_catalog import ProviderRouteSpec, ProviderSpec
-from ._registry import ProviderBundle, register_provider_bundle
+from ._registry import ProviderBundle
 from .base import (
     ProviderClient,
     ProviderStatusResult,
@@ -18,27 +18,25 @@ from .base import (
 from ..reason_codes import OK
 
 
-register_provider_bundle(
-    ProviderBundle(
-        catalog=ProviderSpec(
-            name="crossref",
-            display_name="Crossref",
-            official=False,
-            domains=(),
-            doi_prefixes=(),
-            publisher_aliases=(),
-            asset_default="none",
-            probe_capability="metadata_api",
-            provider_managed_abstract_only=False,
-            client_factory_path="paper_fetch.providers.crossref:CrossrefClient",
-            status_order=0,
-            html_capable=False,
-            api_hosts=("api.crossref.org",),
-            sensitive_headers=("cr-clickthrough-client-token",),
-            routes=(ProviderRouteSpec(name="metadata", kind="metadata"),),
-        ),
-        sources=("crossref_meta",),
-    )
+PROVIDER_BUNDLE = ProviderBundle(
+    catalog=ProviderSpec(
+        name="crossref",
+        display_name="Crossref",
+        official=False,
+        domains=(),
+        doi_prefixes=(),
+        publisher_aliases=(),
+        asset_default="none",
+        probe_capability="metadata_api",
+        provider_managed_abstract_only=False,
+        client_factory_path="paper_fetch.providers.crossref:CrossrefClient",
+        status_order=0,
+        html_capable=False,
+        api_hosts=("api.crossref.org",),
+        sensitive_headers=("cr-clickthrough-client-token",),
+        routes=(ProviderRouteSpec(name="metadata", kind="metadata"),),
+    ),
+    sources=("crossref_meta",),
 )
 
 

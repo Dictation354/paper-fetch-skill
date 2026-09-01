@@ -9,6 +9,7 @@ import pytest
 
 from paper_fetch.http import (
     HttpRequestPolicy,
+    HttpStreamOptions,
     HttpTransportOptions,
     HttpTransport,
     RequestErrorCategory,
@@ -439,10 +440,12 @@ def test_stream_honors_an_explicit_allowlist_and_standard_header_stripping(
             "Cookie": "manual=source-only",
             "Accept": "*/*",
         },
-        request_policy=HttpRequestPolicy(
-            allowed_hosts=("api.elsevier.com", "untrusted.example"),
-            max_response_bytes=16,
-            max_compressed_response_bytes=16,
+        options=HttpStreamOptions(
+            request_policy=HttpRequestPolicy(
+                allowed_hosts=("api.elsevier.com", "untrusted.example"),
+                max_response_bytes=16,
+                max_compressed_response_bytes=16,
+            ),
         ),
     )
 

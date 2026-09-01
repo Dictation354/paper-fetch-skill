@@ -252,7 +252,7 @@ def download_ieee_assets_with_browser(
                         "reason": "multimedia_discovery_failed",
                         "diagnostic": {
                             "stage": "multimedia_discovery",
-                            "browser_backend": browser_runtime_config.backend,
+                            "browser_backend": "camoufox",
                             "browser_attempted": True,
                             **(dict(failure) if isinstance(failure, Mapping) else {}),
                         },
@@ -318,16 +318,12 @@ def download_ieee_assets_with_browser(
                 headless=request.get("headless", True),
                 runtime_context=runtime_context,
                 use_runtime_shared_browser=True,
-                binary_path=request.get("binary_path"),
-                cdp_endpoint=request.get("cdp_endpoint"),
-                profile_dir=request.get("profile_dir"),
-                user_data_dir=request.get("user_data_dir"),
                 browser_options=BrowserDocumentFetcherOptions(
                     runtime_config=request.get("browser_config")
                 ),
             )
         )
-        memoized_fetcher.browser_backend = browser_runtime_config.backend
+        memoized_fetcher.browser_backend = "camoufox"
         return _IeeePreviewWarmImageFetcher(memoized_fetcher)
 
     def file_fetcher_factory(**request: Any):
@@ -340,16 +336,12 @@ def download_ieee_assets_with_browser(
             headless=request.get("headless", True),
             runtime_context=runtime_context,
             use_runtime_shared_browser=True,
-            binary_path=request.get("binary_path"),
-            cdp_endpoint=request.get("cdp_endpoint"),
-            profile_dir=request.get("profile_dir"),
-            user_data_dir=request.get("user_data_dir"),
             browser_options=BrowserDocumentFetcherOptions(
                 runtime_config=request.get("browser_config")
             ),
             thread_local=True,
         )
-        fetcher.browser_backend = browser_runtime_config.backend
+        fetcher.browser_backend = "camoufox"
         return fetcher
 
     try:
@@ -358,10 +350,10 @@ def download_ieee_assets_with_browser(
             recovery,
             image_fetcher_factory=image_fetcher_factory,
             file_fetcher_factory=file_fetcher_factory,
-            opener_requester={
+            download_settings={
                 "transport": transport,
                 "asset_download_concurrency": concurrency,
-                "serial_browser_assets": browser_runtime_config.backend == "camoufox",
+                "serial_browser_assets": True,
             },
             deps=deps,
         )

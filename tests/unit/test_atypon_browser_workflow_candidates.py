@@ -4,11 +4,7 @@ from dataclasses import fields
 import unittest
 import urllib.parse
 
-from paper_fetch.providers import (
-    _atypon_browser_workflow_profiles as atypon_profiles,
-    _script_json,
-    browser_workflow,
-)
+from paper_fetch.providers import _script_json, browser_workflow
 from paper_fetch.providers._atypon_browser_workflow_profiles import (
     ATYPON_BROWSER_WORKFLOW_PROVIDER_NAMES,
     build_html_candidates,
@@ -110,14 +106,6 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
 
         self.assertIsNotNone(publisher_profile("science").is_front_matter_teaser_figure)
         self.assertIsNone(publisher_profile("springer").scoped_asset_extractor)
-
-    def test_atypon_profile_modules_are_resolved_from_provider_names(self) -> None:
-        self.assertFalse(hasattr(atypon_profiles, "_PUBLISHER_MODULES"))
-        for name in ATYPON_BROWSER_WORKFLOW_PROVIDER_NAMES:
-            with self.subTest(provider=name):
-                module = atypon_profiles._publisher_module(name)
-                self.assertIsNotNone(module)
-                self.assertEqual(module.__name__, f"paper_fetch.providers._{name}_html")
 
     def test_site_rule_merges_default_and_publisher_overrides(self) -> None:
         cases = {
@@ -420,12 +408,6 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
                 self.assertIsInstance(
                     client.profile, browser_workflow.ProviderBrowserProfile
                 )
-
-    def test_atypon_browser_workflow_client_alias_is_removed(self) -> None:
-        self.assertFalse(hasattr(browser_workflow, "AtyponBrowserWorkflowClient"))
-        self.assertFalse(
-            hasattr(browser_workflow, "preferred_html_candidate_from_landing_page")
-        )
 
     def test_provider_profile_article_source_label_and_hooks(self) -> None:
         cases = (

@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-import pickle
 import unittest
-from dataclasses import FrozenInstanceError
 
 from paper_fetch.quality.html_signals import (
-    DatalayerFieldMatch,
     PNAS_SIGNAL_SET,
     SCIENCE_SIGNAL_SET,
     WILEY_SIGNAL_SET,
@@ -70,18 +67,6 @@ def _wiley_datalayer(
 
 
 class DatalayerSignalSetTests(unittest.TestCase):
-    def test_signal_set_dataclasses_are_frozen_and_round_trip(self) -> None:
-        match = DatalayerFieldMatch("user_access", "yes", negate=True)
-
-        with self.assertRaises(FrozenInstanceError):
-            match.field = "other"
-
-        self.assertEqual(pickle.loads(pickle.dumps(match)), match)
-        self.assertEqual(
-            pickle.loads(pickle.dumps(SCIENCE_SIGNAL_SET)),
-            SCIENCE_SIGNAL_SET,
-        )
-
     def test_science_blocking_rules_trigger_from_signal_set(self) -> None:
         denial_html = _science_datalayer(
             page_type="journal-article-denial",

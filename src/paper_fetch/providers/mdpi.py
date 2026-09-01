@@ -20,97 +20,95 @@ from ..reason_codes import PDF_FALLBACK
 from ..runtime import RuntimeContext
 from ..utils import empty_asset_results, normalize_text
 from . import _mdpi_html, browser_workflow
-from ._registry import ProviderBundle, ProviderRenderPolicy, register_provider_bundle
+from ._registry import ProviderBundle, ProviderRenderPolicy
 from .base import RawFulltextPayload
 from .browser_runtime import BrowserHtmlReadiness
 from .browser_workflow.shared import extract_pdf_url_from_crossref
 
 
-register_provider_bundle(
-    ProviderBundle(
-        catalog=ProviderSpec(
+PROVIDER_BUNDLE = ProviderBundle(
+    catalog=ProviderSpec(
+        name="mdpi",
+        display_name="MDPI",
+        official=True,
+        domains=("www.mdpi.com", "mdpi.com"),
+        doi_prefixes=("10.3390/",),
+        publisher_aliases=("mdpi", "mdpi ag"),
+        asset_default="body",
+        probe_capability="routing_signal",
+        provider_managed_abstract_only=False,
+        client_factory_path="paper_fetch.providers.mdpi:MdpiClient",
+        status_order=10,
+        base_domains=("www.mdpi.com",),
+        routes=(
+            ProviderRouteSpec(name="metadata", kind="metadata"),
+            ProviderRouteSpec(
+                name="browser_html",
+                kind="html",
+                browser_required=True,
+                browser_preflight=True,
+                auth_supported=True,
+                requires_playwright=True,
+                concurrency=1,
+            ),
+            ProviderRouteSpec(
+                name="browser_pdf",
+                kind="pdf",
+                browser_required=True,
+                browser_preflight=True,
+                auth_supported=True,
+                requires_playwright=True,
+                requires_pdf_conversion=True,
+                concurrency=1,
+            ),
+            ProviderRouteSpec(
+                name="assets",
+                kind="assets",
+                browser_optional=True,
+                requires_playwright=True,
+                timeout_seconds=20,
+                concurrency=2,
+                transient_retries=0,
+            ),
+        ),
+    ),
+    html_rules=ProviderHtmlRules(
+        name="mdpi",
+        noise_profile=_mdpi_html.MDPI_NOISE_PROFILE,
+        cleanup=ProviderCleanupRules(
+            markdown_promo_tokens=_mdpi_html.MDPI_MARKDOWN_PROMO_TOKENS,
+            extraction_cleanup_selectors=_mdpi_html.MDPI_EXTRACTION_CLEANUP_SELECTORS,
+            post_content_break_tokens=_mdpi_html.MDPI_POST_CONTENT_BREAK_TOKENS,
+        ),
+        front_matter=ProviderFrontMatterRules(
+            exact_texts=_mdpi_html.MDPI_FRONT_MATTER_EXACT_TEXTS,
+            contains_tokens=_mdpi_html.MDPI_FRONT_MATTER_CONTAINS_TOKENS,
+            publication_keywords=("mdpi",),
+        ),
+        assets=ProviderAssetRules(
+            supplementary_text_tokens=_mdpi_html.MDPI_SUPPLEMENTARY_TEXT_TOKENS,
+        ),
+        availability=AvailabilityPolicy(
             name="mdpi",
-            display_name="MDPI",
-            official=True,
-            domains=("www.mdpi.com", "mdpi.com"),
-            doi_prefixes=("10.3390/",),
-            publisher_aliases=("mdpi", "mdpi ag"),
-            asset_default="body",
-            probe_capability="routing_signal",
-            provider_managed_abstract_only=False,
-            client_factory_path="paper_fetch.providers.mdpi:MdpiClient",
-            status_order=10,
-            base_domains=("www.mdpi.com",),
-            routes=(
-                ProviderRouteSpec(name="metadata", kind="metadata"),
-                ProviderRouteSpec(
-                    name="browser_html",
-                    kind="html",
-                    browser_required=True,
-                    browser_preflight=True,
-                    auth_supported=True,
-                    requires_playwright=True,
-                    concurrency=1,
-                ),
-                ProviderRouteSpec(
-                    name="browser_pdf",
-                    kind="pdf",
-                    browser_required=True,
-                    browser_preflight=True,
-                    auth_supported=True,
-                    requires_playwright=True,
-                    requires_pdf_conversion=True,
-                    concurrency=1,
-                ),
-                ProviderRouteSpec(
-                    name="assets",
-                    kind="assets",
-                    browser_optional=True,
-                    requires_playwright=True,
-                    timeout_seconds=20,
-                    concurrency=2,
-                    transient_retries=0,
-                ),
-            ),
+            site_rule_overrides=_mdpi_html.MDPI_SITE_RULE_OVERRIDES,
+            no_signals=True,
         ),
-        html_rules=ProviderHtmlRules(
-            name="mdpi",
-            noise_profile=_mdpi_html.MDPI_NOISE_PROFILE,
-            cleanup=ProviderCleanupRules(
-                markdown_promo_tokens=_mdpi_html.MDPI_MARKDOWN_PROMO_TOKENS,
-                extraction_cleanup_selectors=_mdpi_html.MDPI_EXTRACTION_CLEANUP_SELECTORS,
-                post_content_break_tokens=_mdpi_html.MDPI_POST_CONTENT_BREAK_TOKENS,
-            ),
-            front_matter=ProviderFrontMatterRules(
-                exact_texts=_mdpi_html.MDPI_FRONT_MATTER_EXACT_TEXTS,
-                contains_tokens=_mdpi_html.MDPI_FRONT_MATTER_CONTAINS_TOKENS,
-                publication_keywords=("mdpi",),
-            ),
-            assets=ProviderAssetRules(
-                supplementary_text_tokens=_mdpi_html.MDPI_SUPPLEMENTARY_TEXT_TOKENS,
-            ),
-            availability=AvailabilityPolicy(
-                name="mdpi",
-                site_rule_overrides=_mdpi_html.MDPI_SITE_RULE_OVERRIDES,
-                no_signals=True,
-            ),
-        ),
-        sources=("mdpi_html", "mdpi_pdf"),
-        render_policy=ProviderRenderPolicy(
-            mark_inline_assets=_mdpi_html.mark_inline_assets,
-        ),
-    )
+    ),
+    sources=("mdpi_html", "mdpi_pdf"),
+    render_policy=ProviderRenderPolicy(
+        mark_inline_assets=_mdpi_html.mark_inline_assets,
+    ),
 )
 
 
 MDPI_BROWSER_PROFILE = browser_workflow.make_browser_profile(
     "mdpi",
+    catalog=PROVIDER_BUNDLE.catalog,
     article_source_name="mdpi_html",
     fallback_author_extractor=_mdpi_html.extract_authors,
     html_readiness=BrowserHtmlReadiness(wait_for_article_body=True),
     policy=browser_workflow.BrowserWorkflowPolicy(
         blocked_resource_types=("image", "font", "media"),
-        preflight_html_reuse=True,
         retry_incomplete_html_candidates=True,
     ),
 )

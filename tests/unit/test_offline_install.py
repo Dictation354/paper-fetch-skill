@@ -16,12 +16,11 @@ import unittest
 import pytest
 
 from ._installer_support import write_executable as _write_executable
-from paper_fetch.skill_integrity import build_skill_bundle_manifest
+from scripts.skill_integrity import build_skill_bundle_manifest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LINUX_INSTALLER = REPO_ROOT / "install-offline.sh"
-WINDOWS_INSTALLER = REPO_ROOT / "install-offline.ps1"
 WINDOWS_INSTALLER_HELPER = REPO_ROOT / "scripts" / "windows-installer-helper.ps1"
 LINUX_OFFLINE_BUILD = REPO_ROOT / "scripts" / "build-offline-package.sh"
 WINDOWS_OFFLINE_BUILD = REPO_ROOT / "scripts" / "build-offline-package-windows.ps1"
@@ -91,9 +90,7 @@ def _fake_python_script(
       shift 2
     done
 
-    if [[ "${{1:-}}" == "-m" && "${{2:-}}" == "paper_fetch.skill_integrity" ]]; then
-      RUNTIME_DIR="$(cd "$(dirname "$0")" && pwd)"
-      export PYTHONPATH="$RUNTIME_DIR/site-packages${{PYTHONPATH:+:$PYTHONPATH}}"
+    if [[ "${{1:-}}" == */scripts/skill_integrity.py ]]; then
       export PYTHONDONTWRITEBYTECODE=1
       exec "$REAL_PYTHON" "$@"
     fi
@@ -314,9 +311,10 @@ class OfflineInstallTests(unittest.TestCase):
         _write_file(
             bundle / "runtime" / "site-packages" / "paper_fetch" / "__init__.py", "\n"
         )
+        (bundle / "scripts").mkdir()
         shutil.copy2(
-            REPO_ROOT / "src" / "paper_fetch" / "skill_integrity.py",
-            bundle / "runtime" / "site-packages" / "paper_fetch" / "skill_integrity.py",
+            REPO_ROOT / "scripts" / "skill_integrity.py",
+            bundle / "scripts" / "skill_integrity.py",
         )
         _write_file(
             bundle / "runtime" / "site-packages" / "camoufox" / "__init__.py", "\n"
@@ -1880,17 +1878,17 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertIn("bundle requires CPython cp313", result.stderr)
             self.assertIn("detected Python 3.12.1 (cp312)", result.stderr)
 
-    def test_installers_do_not_call_playwright_browser_install(self) -> None:
+    def test_linux_installer_does_not_call_playwright_browser_install(self) -> None:
         linux_script = LINUX_INSTALLER.read_text(encoding="utf-8")
-        windows_script = WINDOWS_INSTALLER.read_text(encoding="utf-8")
 
-        combined = linux_script + windows_script
-        self.assertNotIn("python -m playwright install chromium", combined)
-        self.assertNotIn("-m playwright install chromium", combined)
-        self.assertNotIn("camoufox.ensure_runtime()", combined)
-        self.assertNotIn('assert hasattr(camoufox, "launch")', combined)
+        self.assertNotIn("python -m playwright install chromium", linux_script)
+        self.assertNotIn("-m playwright install chromium", linux_script)
+        self.assertNotIn("camoufox.ensure_runtime()", linux_script)
+        self.assertNotIn('assert hasattr(camoufox, "launch")', linux_script)
         self.assertIn(
-            "from paper_fetch.runtime_browser import BrowserContextManager", combined
+            "from paper_fetch.providers.browser_runtime.camoufox_manager import "
+            "CamoufoxBrowserManager",
+            linux_script,
         )
 
     def test_windows_installer_helper_uses_camoufox_runtime_smoke(self) -> None:
@@ -1916,7 +1914,9 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertIn("import camoufox", script)
         self.assertIn("import playwright", script)
         self.assertIn(
-            "from paper_fetch.runtime_browser import BrowserContextManager", script
+            "from paper_fetch.providers.browser_runtime.camoufox_manager import "
+            "CamoufoxBrowserManager",
+            script,
         )
         self.assertIn('assert hasattr(camoufox, "Camoufox")', script)
         self.assertNotIn('assert hasattr(camoufox, "launch")', script)
@@ -1942,29 +1942,9 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertNotIn("sessions.list", script)
         self.assertNotIn("playwright.sync_api", script)
         self.assertIn("function Test-SkillBundleIntegrity", script)
-        self.assertIn("from paper_fetch.skill_integrity import", script)
+        self.assertIn('Join-Path $InstallRoot "scripts/skill_integrity.py"', script)
         self.assertIn('Name "bundled skill integrity" -Required', script)
         self.assertIn('Name "skill installation" -Required', script)
-
-    def test_windows_offline_installer_declares_camoufox_env_without_playwright_runtime_path(
-        self,
-    ) -> None:
-        script = WINDOWS_INSTALLER.read_text(encoding="utf-8")
-
-        self.assertIn("Repo-local legacy Windows offline installer", script)
-        self.assertNotIn("CLOAKBROWSER_", script)
-        self.assertIn('"PAPER_FETCH_BROWSER_HEADLESS"', script)
-        self.assertIn('$env:PAPER_FETCH_BROWSER_HEADLESS = "true"', script)
-        self.assertIn('$env:PYTHONUTF8 = "1"', script)
-        self.assertIn('$env:PYTHONIOENCODING = "utf-8"', script)
-        self.assertIn("env_sets.offline_env_keys", script)
-        self.assertIn("Format-DotenvAssignment", script)
-        self.assertIn("MATHML_TO_LATEX_NODE_BIN", script)
-        self.assertIn("PAPER_FETCH_IMAGE_TOOLS_DIR", script)
-        self.assertIn("playwright/driver/node.exe", script)
-        self.assertIn("bundled node.exe --version failed", script)
-        self.assertIn("Test-BrowserRuntimePackage", script)
-        self.assertNotIn("PLAYWRIGHT_BROWSERS_PATH =", script)
 
     def test_windows_inno_installer_preserves_user_payload_and_restores_offline_env_before_helper(
         self,

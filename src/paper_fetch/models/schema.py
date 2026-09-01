@@ -268,7 +268,6 @@ class BodyQualityMetrics:
 @dataclass
 class SemanticLosses:
     table_fallback_count: int = 0
-    table_lossy_count: int = 0
     table_layout_degraded_count: int = 0
     table_semantic_loss_count: int = 0
     formula_fallback_count: int = 0
@@ -379,7 +378,7 @@ class RenderContext:
             self.warnings.append(TRUNCATION_WARNING)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class FetchEnvelope:
     doi: str | None
     source: str
@@ -398,7 +397,6 @@ class FetchEnvelope:
     markdown: str | None = None
     metadata: Metadata | None = None
     diagnostic_artifacts: list[dict[str, Any]] = field(default_factory=list)
-    # Additive field kept last so existing positional callers remain compatible.
     acquisition: AcquisitionProvenance | None = None
 
     def to_dict(self) -> dict[str, Any]:
@@ -463,7 +461,7 @@ class FetchEnvelope:
         self.token_estimate_breakdown = self.quality.token_estimate_breakdown
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ArticleModel:
     doi: str | None
     source: SourceKind
@@ -474,7 +472,6 @@ class ArticleModel:
     quality: Quality = field(
         default_factory=lambda: Quality(has_fulltext=False, token_estimate=0)
     )
-    # Additive field kept last so existing positional callers remain compatible.
     acquisition: AcquisitionProvenance | None = None
 
     def to_dict(self) -> dict[str, Any]:

@@ -50,7 +50,6 @@ paper-fetch fetch \
   --format markdown \
   --output - \
   --output-dir ./.paper-fetch-tmp \
-  --no-download \
   --artifact-mode none \
   --asset-profile none \
   --include-refs all \
@@ -137,7 +136,7 @@ paper-fetch fetch \
   --batch-concurrency 4
 ```
 
-批量结果会写入 `batch-results.jsonl` 和 run manifest；单篇失败会被记录，不会阻止其它条目继续。需要正文图时使用 `--artifact-mode markdown-assets --asset-profile body`，需要补充材料时将 asset profile 改为 `all`。
+批量结果会按输入顺序原子写入 `batch-results.jsonl`；单篇失败会被记录，不会阻止其它条目继续。需要正文图时使用 `--artifact-mode markdown-assets --asset-profile body`，需要补充材料时将 asset profile 改为 `all`。
 
 将本仓库接入 Agent：
 
@@ -172,7 +171,7 @@ paper-fetch auth wiley
 - 只访问用户本来就有权访问的内容，不绕过 challenge、付费墙或机构权限。
 - 官方 HTML/XML、浏览器路径和 PDF fallback 都受 provider、凭据和运行环境限制；“已找到论文”不等于“一定能取得完整全文”。
 - 结构化公式转换依赖源站提供 MathML/TeX；只有图片或 PDF 排版信息时，不承诺恢复可靠 LaTeX。
-- 用户可以按 [`onboarding/README.md`](onboarding/README.md) 添加 provider，但必须用真实样本和人工 Markdown review 验证全文及转换质量。
+- 新 provider 以 runtime bundle、provider-local 测试和代表性 golden replay 验证全文及转换质量；见 [`docs/adding-a-provider.md`](docs/adding-a-provider.md)。
 
 ## 文档
 
@@ -182,7 +181,7 @@ paper-fetch auth wiley
 - [`docs/browser-runtime.md`](docs/browser-runtime.md)：浏览器运行时、认证和预检。
 - [`docs/README.md`](docs/README.md)：完整文档导航。
 - [`docs/architecture/overview.md`](docs/architecture/overview.md)：架构边界和维护者视角。
-- [`onboarding/README.md`](onboarding/README.md)：自助添加新 provider。
+- [`docs/adding-a-provider.md`](docs/adding-a-provider.md)：添加新 provider。
 
 ## 免责声明
 

@@ -1,10 +1,112 @@
 # ruff: noqa: F403,F405
 from __future__ import annotations
 
+from unittest import mock
+
 from ._service_support import *
 
 
 class ServiceProbeAndAssetTests(unittest.TestCase):
+    def test_wiley_preview_assets_do_not_downgrade_successful_fulltext(self) -> None:
+        resolved = paper_fetch.ResolvedQuery(
+            query="10.1111/preview-contract",
+            query_kind="doi",
+            doi="10.1111/preview-contract",
+            landing_url=(
+                "https://onlinelibrary.wiley.com/doi/full/10.1111/preview-contract"
+            ),
+            provider_hint="wiley",
+            confidence=1.0,
+        )
+
+        for preview_accepted in (False, True):
+            with self.subTest(preview_accepted=preview_accepted):
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    output_dir = Path(tmpdir)
+                    preview_path = output_dir / "figure-preview.png"
+                    preview_path.write_bytes(b"preview")
+                    article = sample_article(resolved.doi)
+                    article.source = "wiley_browser"
+                    asset = {
+                        "kind": "figure",
+                        "heading": "Figure 1",
+                        "caption": "Wiley preview figure",
+                        "path": str(preview_path),
+                        "section": "body",
+                        "download_tier": "preview",
+                    }
+                    if preview_accepted:
+                        asset.update(width=640, height=480)
+
+                    clients = {
+                        "wiley": FixtureProvider(
+                            raw_payload=_typed_payload(
+                                provider="wiley",
+                                source_url=resolved.landing_url or "",
+                                content_type="text/html",
+                                body=b"<html></html>",
+                                route_kind="html",
+                                markdown_text="# Wiley Article\n\n## Results\n\n"
+                                + ("Body text " * 80),
+                                source_trail=["fulltext:wiley_html_ok"],
+                            ),
+                            article=article,
+                            related_assets={
+                                "assets": [asset],
+                                "asset_failures": [],
+                            },
+                        ),
+                        "crossref": FixtureProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "official_provider": False,
+                                "doi": resolved.doi,
+                                "title": "Wiley Article",
+                                "landing_page_url": resolved.landing_url,
+                                "authors": ["Alice Example"],
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                    }
+
+                    with mock.patch.object(
+                        paper_fetch, "resolve_paper", return_value=resolved
+                    ):
+                        envelope = _fetch_paper(
+                            resolved.query,
+                            modes={"article", "markdown"},
+                            strategy=paper_fetch.FetchStrategy(),
+                            download_dir=output_dir,
+                            clients=clients,
+                        )
+
+                self.assertTrue(envelope.has_fulltext)
+                self.assertEqual(envelope.content_kind, "fulltext")
+                self.assertIn("fulltext:wiley_article_ok", envelope.source_trail)
+                if preview_accepted:
+                    self.assertIn(
+                        "download:wiley_assets_preview_accepted",
+                        envelope.source_trail,
+                    )
+                    self.assertFalse(
+                        any(
+                            "fell back to preview images" in warning
+                            for warning in envelope.warnings
+                        )
+                    )
+                else:
+                    self.assertIn(
+                        "download:wiley_assets_preview_fallback",
+                        envelope.source_trail,
+                    )
+                    self.assertTrue(
+                        any(
+                            "fell back to preview images" in warning
+                            for warning in envelope.warnings
+                        )
+                    )
+
     def test_fetch_paper_omitted_asset_profile_defaults_to_body_for_scoped_html_providers(
         self,
     ) -> None:
@@ -41,7 +143,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                             strategy=paper_fetch.FetchStrategy(),
                             download_dir=Path(tmpdir),
                             clients={
-                                provider_name: StubProvider(
+                                provider_name: FixtureProvider(
                                     raw_payload=_typed_payload(
                                         provider=provider_name,
                                         source_url=landing_url,
@@ -62,7 +164,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                                         or {"assets": [], "asset_failures": []}
                                     ),
                                 ),
-                                "crossref": StubProvider(
+                                "crossref": FixtureProvider(
                                     metadata={
                                         "provider": "crossref",
                                         "official_provider": False,
@@ -103,7 +205,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                     strategy=paper_fetch.FetchStrategy(asset_profile="none"),
                     download_dir=Path(tmpdir),
                     clients={
-                        "science": StubProvider(
+                        "science": FixtureProvider(
                             raw_payload=_typed_payload(
                                 provider="science",
                                 source_url=resolved.landing_url,
@@ -123,7 +225,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                                 )
                             ),
                         ),
-                        "crossref": StubProvider(
+                        "crossref": FixtureProvider(
                             metadata={
                                 "provider": "crossref",
                                 "official_provider": False,
@@ -167,7 +269,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                     strategy=paper_fetch.FetchStrategy(),
                     download_dir=Path(tmpdir),
                     clients={
-                        "science": StubProvider(
+                        "science": FixtureProvider(
                             raw_payload=_typed_payload(
                                 provider="science",
                                 source_url=resolved.landing_url,
@@ -193,7 +295,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                                 "asset_failures": [],
                             },
                         ),
-                        "crossref": StubProvider(
+                        "crossref": FixtureProvider(
                             metadata={
                                 "provider": "crossref",
                                 "official_provider": False,
@@ -244,7 +346,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                     strategy=paper_fetch.FetchStrategy(),
                     download_dir=Path(tmpdir),
                     clients={
-                        "science": StubProvider(
+                        "science": FixtureProvider(
                             raw_payload=_typed_payload(
                                 provider="science",
                                 source_url=resolved.landing_url,
@@ -272,7 +374,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                                 "asset_failures": [],
                             },
                         ),
-                        "crossref": StubProvider(
+                        "crossref": FixtureProvider(
                             metadata={
                                 "provider": "crossref",
                                 "official_provider": False,
@@ -310,7 +412,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
             result = _probe_has_fulltext(
                 "10.1000/license",
                 clients={
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata={
                             "provider": "crossref",
                             "doi": "10.1000/license",
@@ -344,7 +446,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
             result = _probe_has_fulltext(
                 "10.1000/fulltext",
                 clients={
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata={
                             "provider": "crossref",
                             "doi": "10.1000/fulltext",
@@ -377,7 +479,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
             result = _probe_has_fulltext(
                 "10.1016/test",
                 clients={
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata={
                             "provider": "crossref",
                             "doi": "10.1016/test",
@@ -389,7 +491,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                             "references": [],
                         }
                     ),
-                    "elsevier": StubProvider(
+                    "elsevier": FixtureProvider(
                         metadata={
                             "provider": "elsevier",
                             "doi": "10.1016/test",
@@ -421,7 +523,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
             result = _probe_has_fulltext(
                 "10.48550/arxiv.2605.06663",
                 clients={
-                    "arxiv": StubProvider(
+                    "arxiv": FixtureProvider(
                         metadata={
                             "provider": "arxiv",
                             "doi": "10.48550/arxiv.2605.06663",
@@ -496,7 +598,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                     }
                 ),
                 clients={
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata={
                             "provider": "crossref",
                             "doi": "10.1007/test",
@@ -508,7 +610,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                             "references": [],
                         }
                     ),
-                    "springer": StubProvider(
+                    "springer": FixtureProvider(
                         metadata=paper_fetch.ProviderFailure(
                             "not_supported",
                             "Springer metadata probe should not be used.",

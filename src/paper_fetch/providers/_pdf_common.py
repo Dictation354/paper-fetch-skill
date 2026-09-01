@@ -10,7 +10,6 @@ import subprocess
 import tempfile
 import threading
 import contextlib
-import time
 from contextlib import nullcontext
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -1130,7 +1129,6 @@ def pdf_fetch_result_from_bytes(
                 )
 
         warnings: list[str] = []
-        render_started = time.monotonic()
         render_cache_status = "not_started"
         try:
             render_result, render_cache_status = _render_pdf_markdown_result_with_cache(
@@ -1152,7 +1150,6 @@ def pdf_fetch_result_from_bytes(
                 raise
             render_result = PdfMarkdownRenderResult(markdown_text="", assets=[])
             warnings.append(PDF_ONLY_MARKDOWN_WARNING)
-        render_seconds = max(0.0, time.monotonic() - render_started)
         markdown_text = render_result.markdown_text
         if not normalize_text(markdown_text):
             if allow_pdf_only:
@@ -1186,8 +1183,5 @@ def pdf_fetch_result_from_bytes(
                     }
                 ),
                 "pdf_markdown_cache": {"status": render_cache_status},
-                "stage_timings": {
-                    "pdf_markdown_seconds": round(render_seconds, 6),
-                },
             },
         )

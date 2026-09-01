@@ -21,8 +21,7 @@ try {
     try {
         $env:PYTHONPATH = Join-Path $repoRoot "src"
         & $Python -m pytest `
-            tests/unit/test_macos_adaptation_validator.py `
-            tests/integration/test_macos_adaptation_contract.py -q
+            tests/unit/test_macos_adaptation_validator.py -q
         if ($LASTEXITCODE -ne 0) {
             throw "Portable Windows macOS contract tests failed with exit code $LASTEXITCODE"
         }

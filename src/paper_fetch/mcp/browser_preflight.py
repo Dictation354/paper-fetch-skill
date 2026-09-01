@@ -12,7 +12,6 @@ from mcp.server.mcpserver import Context
 from mcp.types import CallToolResult
 
 from ..provider_catalog import browser_preflight_provider_names
-from ..config import apply_browser_auto_prepare_policy
 from ..browser_preflight import (
     BROWSER_PREFLIGHT_STATUSES,
     BrowserPreflightResult,
@@ -162,7 +161,6 @@ def browser_preflight_payload(
     storage_state_path: str | None = None,
     save_storage_state: bool = True,
     detail: str = "full",
-    browser_auto_prepare: bool | None = None,
     env: Mapping[str, str] | None = None,
     cancel_check: Callable[[], bool] | None = None,
     on_result: Callable[[BrowserPreflightResult, int, int], None] | None = None,
@@ -179,14 +177,9 @@ def browser_preflight_payload(
             "storage_state_path": storage_state_path,
             "save_storage_state": save_storage_state,
             "detail": detail,
-            "browser_auto_prepare": browser_auto_prepare,
         }
     )
-    runtime_env = apply_browser_auto_prepare_policy(
-        deps.build_runtime_env(env),
-        override=request.browser_auto_prepare,
-        default=False,
-    )
+    runtime_env = deps.build_runtime_env(env)
     results = deps.run_browser_provider_preflight(
         providers=[request.provider] if request.provider is not None else None,
         timeout_ms=request.timeout_ms,
@@ -215,7 +208,6 @@ async def browser_preflight_tool_async(
     storage_state_path: str | None = None,
     save_storage_state: bool = True,
     detail: str = "full",
-    browser_auto_prepare: bool | None = None,
     env: Mapping[str, str] | None = None,
     ctx: Context | None = None,
     deps: MCPDeps = default_mcp_deps(),
@@ -230,7 +222,6 @@ async def browser_preflight_tool_async(
                 "storage_state_path": storage_state_path,
                 "save_storage_state": save_storage_state,
                 "detail": detail,
-                "browser_auto_prepare": browser_auto_prepare,
             }
         )
     except Exception as error:
@@ -270,7 +261,6 @@ async def browser_preflight_tool_async(
                 storage_state_path=request.storage_state_path,
                 save_storage_state=request.save_storage_state,
                 detail=request.detail,
-                browser_auto_prepare=request.browser_auto_prepare,
                 env=env,
                 cancel_check=cancelled.is_set,
                 on_result=on_result,
@@ -288,7 +278,6 @@ async def browser_preflight_tool_async(
                     storage_state_path=request.storage_state_path,
                     save_storage_state=request.save_storage_state,
                     detail=request.detail,
-                    browser_auto_prepare=request.browser_auto_prepare,
                     env=env,
                     cancel_check=cancelled.is_set,
                     on_result=on_result,

@@ -26,6 +26,7 @@ from ..extraction.image_payloads import (
 from ..extraction.html import assets as html_assets
 from ..http import (
     HttpRequestPolicy,
+    HttpStreamOptions,
     HttpTransport,
     RequestFailure,
     provider_request_policy,
@@ -520,9 +521,11 @@ def _stage_arxiv_source_archive(
             source_archive_url,
             source_staging,
             headers={"Accept": ARXIV_SOURCE_ACCEPT, "User-Agent": user_agent},
-            request_policy=request_policy,
-            on_content_length=reservation.declare_content_length,
-            on_chunk=reservation.consume,
+            options=HttpStreamOptions(
+                request_policy=request_policy,
+                on_content_length=reservation.declare_content_length,
+                on_chunk=reservation.consume,
+            ),
         )
         reservation.reconcile_actual()
         return

@@ -12,13 +12,10 @@ import unittest
 import urllib.error
 import urllib.parse
 import warnings
-import tempfile
-from pathlib import Path
 from unittest import mock
 
 from paper_fetch import http as http_module
 from paper_fetch.providers import base as provider_base
-from paper_fetch.runtime import RuntimeContext
 import urllib3
 
 from ._logging_support import RecordCaptureHandler
@@ -96,115 +93,6 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertTrue(response.closed)
         self.assertTrue(response.released)
 
-    def test_runtime_metadata_cache_ttl_defaults_to_one_day_and_allows_env_override(
-        self,
-    ) -> None:
-        default_context = RuntimeContext(env={})
-        disabled_context = RuntimeContext(
-            env={"PAPER_FETCH_HTTP_METADATA_CACHE_TTL": "0"}
-        )
-        short_context = RuntimeContext(
-            env={"PAPER_FETCH_HTTP_METADATA_CACHE_TTL": "30"}
-        )
-
-        self.assertEqual(default_context.transport.metadata_cache_ttl, 86400)
-        self.assertEqual(disabled_context.transport.metadata_cache_ttl, 0)
-        self.assertEqual(short_context.transport.metadata_cache_ttl, 30)
-
-    def test_runtime_http_disk_cache_limits_have_defaults_and_env_overrides(
-        self,
-    ) -> None:
-        default_context = RuntimeContext(env={})
-        overridden_context = RuntimeContext(
-            env={
-                "PAPER_FETCH_HTTP_DISK_CACHE_MAX_ENTRIES": "12",
-                "PAPER_FETCH_HTTP_DISK_CACHE_MAX_BYTES": "3456",
-                "PAPER_FETCH_HTTP_DISK_CACHE_MAX_AGE_DAYS": "2",
-            }
-        )
-
-        self.assertEqual(
-            default_context.transport.disk_cache_max_entries,
-            http_module.DEFAULT_DISK_CACHE_MAX_ENTRIES,
-        )
-        self.assertEqual(
-            default_context.transport.disk_cache_max_bytes,
-            http_module.DEFAULT_DISK_CACHE_MAX_BYTES,
-        )
-        self.assertEqual(
-            default_context.transport.disk_cache_max_age_seconds,
-            http_module.DEFAULT_DISK_CACHE_MAX_AGE_SECONDS,
-        )
-        self.assertEqual(overridden_context.transport.disk_cache_max_entries, 12)
-        self.assertEqual(overridden_context.transport.disk_cache_max_bytes, 3456)
-        self.assertEqual(
-            overridden_context.transport.disk_cache_max_age_seconds, 2 * 24 * 60 * 60
-        )
-
-    def test_runtime_markdown_assets_artifact_mode_disables_download_dir_http_cache(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            all_context = RuntimeContext(
-                env={}, download_dir=Path(tmpdir), artifact_mode="all"
-            )
-            markdown_assets_context = RuntimeContext(
-                env={},
-                download_dir=Path(tmpdir),
-                artifact_mode="markdown-assets",
-            )
-
-        self.assertEqual(
-            all_context.transport.disk_cache_dir,
-            Path(tmpdir) / ".paper-fetch-http-cache",
-        )
-        self.assertIsNone(markdown_assets_context.transport.disk_cache_dir)
-
-    def test_sensitive_query_requests_are_not_written_to_disk_cache(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            first_transport = http_module.HttpTransport(
-                cache_ttl=30,
-                cache_capacity=128,
-                disk_cache_dir=Path(tmpdir),
-            )
-            second_transport = http_module.HttpTransport(
-                cache_ttl=30,
-                cache_capacity=128,
-                disk_cache_dir=Path(tmpdir),
-            )
-
-            def fake_urlopen(request, timeout=20):
-                return FakeHTTPResponse(
-                    b'{"message":{"DOI":"10.1234/example"}}',
-                    request.full_url,
-                    headers={
-                        "content-type": "application/vnd.crossref-api-message+json"
-                    },
-                )
-
-            with mock.patch.object(
-                first_transport, "_perform_request", side_effect=fake_urlopen
-            ):
-                first_transport.request(
-                    "GET",
-                    "https://api.crossref.org/works/10.1234%2Fexample",
-                    headers={"Accept": "application/json"},
-                    query={"mailto": "alice@example.test"},
-                )
-            with mock.patch.object(
-                second_transport, "_perform_request", side_effect=fake_urlopen
-            ) as mocked_request:
-                response = second_transport.request(
-                    "GET",
-                    "https://api.crossref.org/works/10.1234%2Fexample",
-                    headers={"Accept": "application/json"},
-                    query={"mailto": "bob@example.test"},
-                )
-
-        self.assertEqual(response["body"], b'{"message":{"DOI":"10.1234/example"}}')
-        mocked_request.assert_called_once()
-        self.assertEqual(list(Path(tmpdir).rglob("*.json")), [])
-
     def test_vendor_json_and_xml_content_types_are_cacheable_textual_payloads(
         self,
     ) -> None:
@@ -237,31 +125,6 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertEqual(call_count, 1)
         self.assertEqual(first["body"], b"ok")
         self.assertEqual(second["body"], b"ok")
-
-    def test_cache_stats_track_memory_hit_miss_store_and_bypass(self) -> None:
-        transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
-
-        def fake_urlopen(request, timeout=20):
-            return FakeHTTPResponse(
-                b"ok", request.full_url, headers={"content-type": "text/plain"}
-            )
-
-        with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
-            transport.request(
-                "GET", "https://example.test/article", headers={"Accept": "text/plain"}
-            )
-            transport.request(
-                "GET", "https://example.test/article", headers={"Accept": "text/plain"}
-            )
-            transport.request(
-                "POST", "https://example.test/article", headers={"Accept": "text/plain"}
-            )
-
-        stats = transport.cache_stats_snapshot()
-        self.assertEqual(stats["miss"], 1)
-        self.assertEqual(stats["memory_hit"], 1)
-        self.assertEqual(stats["store"], 1)
-        self.assertEqual(stats["bypass"], 1)
 
     def test_cached_get_expires_after_ttl(self) -> None:
         now = 100.0
@@ -452,116 +315,6 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertNotIn("second-token", rendered_keys)
         self.assertNotIn("Bearer", rendered_keys)
 
-    def test_sensitive_header_values_do_not_share_disk_cache_or_leak_to_payload(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            first_transport = http_module.HttpTransport(
-                cache_ttl=30,
-                cache_capacity=128,
-                disk_cache_dir=Path(tmpdir),
-            )
-            second_transport = http_module.HttpTransport(
-                cache_ttl=30,
-                cache_capacity=128,
-                disk_cache_dir=Path(tmpdir),
-            )
-            first_reader = http_module.HttpTransport(
-                cache_ttl=30,
-                cache_capacity=128,
-                disk_cache_dir=Path(tmpdir),
-            )
-            second_reader = http_module.HttpTransport(
-                cache_ttl=30,
-                cache_capacity=128,
-                disk_cache_dir=Path(tmpdir),
-            )
-
-            with mock.patch.object(
-                first_transport,
-                "_perform_request",
-                return_value=FakeHTTPResponse(
-                    b"payload-for-first",
-                    "https://example.test/article",
-                    headers={"content-type": "text/plain"},
-                ),
-            ):
-                first_transport.request(
-                    "GET",
-                    "https://example.test/article",
-                    headers={
-                        "Accept": "text/plain",
-                        "X-ELS-APIKey": "els-first-secret",
-                    },
-                )
-            with mock.patch.object(
-                second_transport,
-                "_perform_request",
-                return_value=FakeHTTPResponse(
-                    b"payload-for-second",
-                    "https://example.test/article",
-                    headers={"content-type": "text/plain"},
-                ),
-            ):
-                second_transport.request(
-                    "GET",
-                    "https://example.test/article",
-                    headers={
-                        "Accept": "text/plain",
-                        "X-ELS-APIKey": "els-second-secret",
-                    },
-                )
-            with mock.patch.object(
-                first_reader,
-                "_perform_request",
-                return_value=FakeHTTPResponse(
-                    b"fresh-first",
-                    "https://example.test/article",
-                    headers={"content-type": "text/plain"},
-                ),
-            ) as mocked_first_request:
-                first = first_reader.request(
-                    "GET",
-                    "https://example.test/article",
-                    headers={
-                        "Accept": "text/plain",
-                        "X-ELS-APIKey": "els-first-secret",
-                    },
-                )
-            with mock.patch.object(
-                second_reader,
-                "_perform_request",
-                return_value=FakeHTTPResponse(
-                    b"fresh-second",
-                    "https://example.test/article",
-                    headers={"content-type": "text/plain"},
-                ),
-            ) as mocked_second_request:
-                second = second_reader.request(
-                    "GET",
-                    "https://example.test/article",
-                    headers={
-                        "Accept": "text/plain",
-                        "X-ELS-APIKey": "els-second-secret",
-                    },
-                )
-
-            disk_files = list(Path(tmpdir).rglob("*.json"))
-            rendered_paths = "\n".join(str(path) for path in disk_files)
-            rendered_payloads = "\n".join(
-                path.read_text(encoding="utf-8") for path in disk_files
-            )
-
-        self.assertEqual(first["body"], b"fresh-first")
-        self.assertEqual(second["body"], b"fresh-second")
-        mocked_first_request.assert_called_once()
-        mocked_second_request.assert_called_once()
-        self.assertEqual(len(disk_files), 0)
-        self.assertNotIn("els-first-secret", rendered_paths)
-        self.assertNotIn("els-second-secret", rendered_paths)
-        self.assertNotIn("els-first-secret", rendered_payloads)
-        self.assertNotIn("els-second-secret", rendered_payloads)
-
     def test_sensitive_headers_do_not_leak_to_structured_http_logs(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
         http_logger = logging.getLogger("paper_fetch.http")
@@ -646,36 +399,27 @@ class HttpTransportCacheTests(unittest.TestCase):
             "?X-Goog-Credential=test-credential"
             "&X-Goog-Signature=test-signature"
         )
-        with tempfile.TemporaryDirectory() as disk_cache_dir:
-            transport = http_module.HttpTransport(
-                cache_ttl=30,
-                cache_capacity=128,
-                disk_cache_dir=disk_cache_dir,
+        transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
+        with mock.patch.object(
+            transport,
+            "_perform_request",
+            return_value=FakeHTTPResponse(
+                b"",
+                "https://journals.plos.org/plosone/article/file?id=test",
+                status=302,
+                headers={
+                    "content-type": "text/html",
+                    "location": signed_location,
+                },
+            ),
+        ):
+            response = transport.request(
+                "GET",
+                "https://journals.plos.org/plosone/article/file?id=test",
             )
-            with mock.patch.object(
-                transport,
-                "_perform_request",
-                return_value=FakeHTTPResponse(
-                    b"",
-                    "https://journals.plos.org/plosone/article/file?id=test",
-                    status=302,
-                    headers={
-                        "content-type": "text/html",
-                        "location": signed_location,
-                    },
-                ),
-            ):
-                response = transport.request(
-                    "GET",
-                    "https://journals.plos.org/plosone/article/file?id=test",
-                )
 
-            self.assertEqual(response["headers"]["location"], signed_location)
-            self.assertEqual(len(transport._cache), 0)
-            self.assertEqual(
-                list(Path(disk_cache_dir).rglob("*.json")),
-                [],
-            )
+        self.assertEqual(response["headers"]["location"], signed_location)
+        self.assertEqual(len(transport._cache), 0)
 
     def test_cache_key_redacts_sensitive_query_params(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
@@ -755,48 +499,38 @@ class HttpTransportCacheTests(unittest.TestCase):
             self.assertEqual(len(transport._cache), 0)
 
     def test_multi_set_cookie_values_are_return_only_and_never_cached(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            transport = http_module.HttpTransport(
-                cache_ttl=30,
-                cache_capacity=128,
-                disk_cache_dir=tmpdir,
-            )
-            responses = []
-            for body in (b"first", b"second"):
-                headers = urllib3._collections.HTTPHeaderDict()
-                headers.add("content-type", "text/plain")
-                headers.add("set-cookie", "one=secret-one; Path=/")
-                headers.add("set-cookie", "two=secret-two; Path=/article")
-                responses.append(
-                    FakeHTTPResponse(
-                        body,
-                        "https://example.test/article",
-                        headers=headers,  # type: ignore[arg-type]
-                    )
+        transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=128)
+        responses = []
+        for body in (b"first", b"second"):
+            headers = urllib3._collections.HTTPHeaderDict()
+            headers.add("content-type", "text/plain")
+            headers.add("set-cookie", "one=secret-one; Path=/")
+            headers.add("set-cookie", "two=secret-two; Path=/article")
+            responses.append(
+                FakeHTTPResponse(
+                    body,
+                    "https://example.test/article",
+                    headers=headers,  # type: ignore[arg-type]
                 )
-            with mock.patch.object(
-                transport,
-                "_perform_request",
-                side_effect=responses,
-            ) as request:
-                first = transport.request("GET", "https://example.test/article")
-                second = transport.request("GET", "https://example.test/article")
+            )
+        with mock.patch.object(
+            transport,
+            "_perform_request",
+            side_effect=responses,
+        ) as request:
+            first = transport.request("GET", "https://example.test/article")
+            second = transport.request("GET", "https://example.test/article")
 
-            self.assertEqual(request.call_count, 2)
-            self.assertEqual(len(transport._cache), 0)
-            self.assertEqual(
-                first["_paper_fetch_header_values"]["set-cookie"],
-                [
-                    "one=secret-one; Path=/",
-                    "two=secret-two; Path=/article",
-                ],
-            )
-            self.assertEqual(second["body"], b"second")
-            disk_bytes = b"".join(
-                path.read_bytes() for path in Path(tmpdir).rglob("*") if path.is_file()
-            )
-            self.assertNotIn(b"secret-one", disk_bytes)
-            self.assertNotIn(b"secret-two", disk_bytes)
+        self.assertEqual(request.call_count, 2)
+        self.assertEqual(len(transport._cache), 0)
+        self.assertEqual(
+            first["_paper_fetch_header_values"]["set-cookie"],
+            [
+                "one=secret-one; Path=/",
+                "two=secret-two; Path=/article",
+            ],
+        )
+        self.assertEqual(second["body"], b"second")
 
     def test_cache_key_distinguishes_accept_language_and_authorization_presence(
         self,
@@ -1228,7 +962,6 @@ class HttpTransportCacheTests(unittest.TestCase):
     def test_transient_http_5xx_is_retried_with_exponential_backoff(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
         call_count = 0
-        timings: list[tuple[str, float]] = []
 
         def fake_urlopen(request, timeout=20):
             nonlocal call_count
@@ -1241,24 +974,16 @@ class HttpTransportCacheTests(unittest.TestCase):
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
             with mock.patch.object(http_module.time, "sleep") as mocked_sleep:
-                with http_module.http_timing_collector(
-                    lambda stage, seconds: timings.append((stage, seconds))
-                ):
-                    response = transport.request(
-                        "GET",
-                        "https://example.test/article",
-                        headers={"Accept": "text/plain"},
-                        retry_on_transient=True,
-                    )
+                response = transport.request(
+                    "GET",
+                    "https://example.test/article",
+                    headers={"Accept": "text/plain"},
+                    retry_on_transient=True,
+                )
 
         self.assertEqual(call_count, 3)
         self.assertEqual(response["body"], b"ok")
         self.assertEqual(mocked_sleep.call_args_list, [mock.call(0.5), mock.call(1.0)])
-        self.assertEqual(
-            [stage for stage, _seconds in timings],
-            ["retry_seconds", "retry_seconds", "http_seconds"],
-        )
-        self.assertTrue(all(seconds >= 0 for _stage, seconds in timings))
 
     def test_urllib3_read_timeout_is_retried_with_exponential_backoff(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
@@ -1636,346 +1361,6 @@ class HttpTransportCacheTests(unittest.TestCase):
 
         self.assertEqual(max_active_by_host["same.test"], 2)
         self.assertGreaterEqual(max_global_active, 2)
-
-    def test_disk_textual_get_cache_is_reused_by_new_transport(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            first_transport = http_module.HttpTransport(
-                cache_ttl=30,
-                cache_capacity=128,
-                disk_cache_dir=Path(tmpdir),
-            )
-            second_transport = http_module.HttpTransport(
-                cache_ttl=30,
-                cache_capacity=128,
-                disk_cache_dir=Path(tmpdir),
-            )
-
-            def fake_urlopen(request, timeout=20):
-                return FakeHTTPResponse(
-                    b"cached body",
-                    request.full_url,
-                    headers={"content-type": "text/plain", "etag": '"v1"'},
-                )
-
-            with mock.patch.object(
-                first_transport, "_perform_request", side_effect=fake_urlopen
-            ):
-                first = first_transport.request(
-                    "GET",
-                    "https://example.test/article",
-                    headers={"Accept": "text/plain"},
-                )
-            with mock.patch.object(
-                second_transport, "_perform_request"
-            ) as mocked_request:
-                second = second_transport.request(
-                    "GET",
-                    "https://example.test/article",
-                    headers={"Accept": "text/plain"},
-                )
-
-        self.assertEqual(first["body"], b"cached body")
-        self.assertEqual(second["body"], b"cached body")
-        self.assertEqual(second_transport.cache_stats_snapshot()["disk_fresh_hit"], 1)
-        mocked_request.assert_not_called()
-
-    def test_disk_cache_writes_use_incremental_index_between_reconciliations(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            transport = http_module.HttpTransport(
-                cache_ttl=30,
-                cache_capacity=128,
-                disk_cache_dir=Path(tmpdir),
-                disk_cache_max_entries=100,
-                disk_cache_max_bytes=0,
-                disk_cache_max_age_seconds=0,
-            )
-
-            def fake_urlopen(request, timeout=20):
-                del timeout
-                return FakeHTTPResponse(
-                    request.full_url.encode("utf-8"),
-                    request.full_url,
-                    headers={"content-type": "text/plain"},
-                )
-
-            with (
-                mock.patch.object(
-                    transport,
-                    "_perform_request",
-                    side_effect=fake_urlopen,
-                ),
-                mock.patch.object(
-                    transport,
-                    "_iter_disk_cache_entries",
-                    wraps=transport._iter_disk_cache_entries,
-                ) as full_scan,
-            ):
-                for index in range(12):
-                    transport.request(
-                        "GET",
-                        f"https://example.test/incremental/{index}",
-                    )
-
-            self.assertEqual(full_scan.call_count, 1)
-            self.assertEqual(len(transport._disk_cache_entries), 12)
-
-    def test_disk_cache_periodic_reconcile_repairs_external_index_drift(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            transport = http_module.HttpTransport(
-                cache_ttl=30,
-                cache_capacity=128,
-                disk_cache_dir=Path(tmpdir),
-                disk_cache_max_entries=100,
-                disk_cache_max_bytes=0,
-                disk_cache_max_age_seconds=0,
-            )
-
-            def fake_urlopen(request, timeout=20):
-                del timeout
-                return FakeHTTPResponse(
-                    request.full_url.encode("utf-8"),
-                    request.full_url,
-                    headers={"content-type": "text/plain"},
-                )
-
-            with mock.patch.object(
-                transport,
-                "_perform_request",
-                side_effect=fake_urlopen,
-            ):
-                for suffix in ("one", "two"):
-                    transport.request("GET", f"https://example.test/{suffix}")
-
-            deleted = next(iter(transport._disk_cache_entries))
-            deleted.unlink()
-            transport._disk_cache_writes_since_reconcile = 10**9
-            transport._prune_disk_cache()
-
-            self.assertNotIn(deleted, transport._disk_cache_entries)
-            self.assertEqual(len(transport._disk_cache_entries), 1)
-            self.assertEqual(
-                transport._disk_cache_total_bytes,
-                sum(entry.size for entry in transport._disk_cache_entries.values()),
-            )
-
-    def test_disk_cache_prunes_oldest_entries_by_entry_cap(self) -> None:
-        now = 1000.0
-
-        def fake_time() -> float:
-            return now
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            transport = http_module.HttpTransport(
-                cache_ttl=30,
-                cache_capacity=128,
-                disk_cache_dir=Path(tmpdir),
-                disk_cache_max_entries=2,
-                disk_cache_max_bytes=0,
-                disk_cache_max_age_seconds=0,
-            )
-
-            def fake_urlopen(request, timeout=20):
-                return FakeHTTPResponse(
-                    request.full_url.encode("utf-8"),
-                    request.full_url,
-                    headers={"content-type": "text/plain"},
-                )
-
-            with mock.patch.object(http_module.time, "time", side_effect=fake_time):
-                with mock.patch.object(
-                    transport, "_perform_request", side_effect=fake_urlopen
-                ):
-                    for index, path in enumerate(["one", "two", "three"]):
-                        now = 1000.0 + index
-                        transport.request(
-                            "GET",
-                            f"https://example.test/{path}",
-                            headers={"Accept": "text/plain"},
-                        )
-
-            cache_files = list(Path(tmpdir).rglob("*.json"))
-            reader = http_module.HttpTransport(
-                cache_ttl=30,
-                cache_capacity=128,
-                disk_cache_dir=Path(tmpdir),
-                disk_cache_max_entries=2,
-                disk_cache_max_bytes=0,
-                disk_cache_max_age_seconds=0,
-            )
-            with mock.patch.object(reader, "_perform_request") as mocked_request:
-                now = 1003.0
-                with mock.patch.object(http_module.time, "time", side_effect=fake_time):
-                    second = reader.request(
-                        "GET",
-                        "https://example.test/two",
-                        headers={"Accept": "text/plain"},
-                    )
-
-        self.assertEqual(len(cache_files), 2)
-        self.assertEqual(second["body"], b"https://example.test/two")
-        mocked_request.assert_not_called()
-
-    def test_disk_cache_prunes_oldest_entries_by_byte_cap(self) -> None:
-        now = 2000.0
-
-        def fake_time() -> float:
-            return now
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            transport = http_module.HttpTransport(
-                cache_ttl=30,
-                cache_capacity=128,
-                disk_cache_dir=Path(tmpdir),
-                disk_cache_max_entries=0,
-                disk_cache_max_bytes=360,
-                disk_cache_max_age_seconds=0,
-            )
-
-            def fake_urlopen(request, timeout=20):
-                suffix = urllib.parse.urlparse(request.full_url).path.rsplit("/", 1)[-1]
-                return FakeHTTPResponse(
-                    (suffix * 40).encode("utf-8"),
-                    request.full_url,
-                    headers={"content-type": "text/plain"},
-                )
-
-            with mock.patch.object(http_module.time, "time", side_effect=fake_time):
-                with mock.patch.object(
-                    transport, "_perform_request", side_effect=fake_urlopen
-                ):
-                    for index, path in enumerate(["one", "two", "three"]):
-                        now = 2000.0 + index
-                        transport.request(
-                            "GET",
-                            f"https://example.test/{path}",
-                            headers={"Accept": "text/plain"},
-                        )
-
-            total_bytes = sum(
-                path.stat().st_size for path in Path(tmpdir).rglob("*.json")
-            )
-
-        self.assertLessEqual(total_bytes, 360)
-
-    def test_disk_cache_max_age_removes_expired_entries_instead_of_revalidating(
-        self,
-    ) -> None:
-        now = 3000.0
-
-        def fake_time() -> float:
-            return now
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            writer = http_module.HttpTransport(
-                cache_ttl=30,
-                cache_capacity=128,
-                disk_cache_dir=Path(tmpdir),
-                disk_cache_max_age_seconds=10,
-            )
-            reader = http_module.HttpTransport(
-                cache_ttl=30,
-                cache_capacity=128,
-                disk_cache_dir=Path(tmpdir),
-                disk_cache_max_age_seconds=10,
-            )
-
-            with mock.patch.object(http_module.time, "time", side_effect=fake_time):
-                with mock.patch.object(
-                    writer,
-                    "_perform_request",
-                    return_value=FakeHTTPResponse(
-                        b"old body",
-                        "https://example.test/article",
-                        headers={"content-type": "text/plain", "etag": '"v1"'},
-                    ),
-                ):
-                    writer.request(
-                        "GET",
-                        "https://example.test/article",
-                        headers={"Accept": "text/plain"},
-                    )
-
-                now = 3011.0
-                with mock.patch.object(
-                    reader,
-                    "_perform_request",
-                    return_value=FakeHTTPResponse(
-                        b"new body",
-                        "https://example.test/article",
-                        headers={"content-type": "text/plain", "etag": '"v2"'},
-                    ),
-                ) as mocked_request:
-                    response = reader.request(
-                        "GET",
-                        "https://example.test/article",
-                        headers={"Accept": "text/plain"},
-                    )
-
-        self.assertEqual(response["body"], b"new body")
-        mocked_request.assert_called_once()
-
-    def test_stale_disk_cache_uses_conditional_get_and_304_body(self) -> None:
-        captured_headers: list[dict[str, str]] = []
-        with tempfile.TemporaryDirectory() as tmpdir:
-            first_transport = http_module.HttpTransport(
-                cache_ttl=30,
-                cache_capacity=128,
-                disk_cache_dir=Path(tmpdir),
-                metadata_cache_ttl=30,
-            )
-            stale_transport = http_module.HttpTransport(
-                cache_ttl=30,
-                cache_capacity=128,
-                disk_cache_dir=Path(tmpdir),
-                metadata_cache_ttl=0,
-            )
-
-            def first_response(request, timeout=20):
-                return FakeHTTPResponse(
-                    b"cached body",
-                    request.full_url,
-                    headers={
-                        "content-type": "text/plain",
-                        "etag": '"v1"',
-                        "last-modified": "Mon, 01 Jan 2024 00:00:00 GMT",
-                    },
-                )
-
-            def not_modified(request, timeout=20):
-                captured_headers.append(dict(request.headers))
-                return FakeHTTPResponse(
-                    b"",
-                    request.full_url,
-                    status=304,
-                    headers={"content-type": "text/plain", "etag": '"v1"'},
-                )
-
-            with mock.patch.object(
-                first_transport, "_perform_request", side_effect=first_response
-            ):
-                first_transport.request(
-                    "GET",
-                    "https://example.test/article",
-                    headers={"Accept": "text/plain"},
-                )
-            with mock.patch.object(
-                stale_transport, "_perform_request", side_effect=not_modified
-            ):
-                response = stale_transport.request(
-                    "GET",
-                    "https://example.test/article",
-                    headers={"Accept": "text/plain"},
-                )
-
-        lowered = lower_header_map(captured_headers[0])
-        self.assertEqual(lowered["if-none-match"], '"v1"')
-        self.assertEqual(lowered["if-modified-since"], "Mon, 01 Jan 2024 00:00:00 GMT")
-        self.assertEqual(response["body"], b"cached body")
-        stats = stale_transport.cache_stats_snapshot()
-        self.assertEqual(stats["disk_stale_revalidate"], 1)
-        self.assertEqual(stats["disk_304_refresh"], 1)
 
     def test_map_request_failure_returns_rate_limited_provider_failure(self) -> None:
         failure = http_module.RequestFailure(

@@ -95,7 +95,7 @@ def test_build_clients_isolates_one_factory_failure(monkeypatch) -> None:
         ("domains", "domain conflict"),
     ],
 )
-def test_registration_conflicts_are_rejected_before_mutation(
+def test_fixed_catalog_conflicts_are_rejected(
     conflict_field: str,
     expected_message: str,
 ) -> None:
@@ -126,7 +126,24 @@ def test_registration_conflicts_are_rejected_before_mutation(
     candidate = ProviderBundle(catalog=catalog, sources=sources)
 
     with pytest.raises(ValueError, match=expected_message):
-        _registry._validate_registration_conflicts(
-            candidate,
-            name=catalog.name,
-        )
+        _registry.validate_provider_bundles((existing, candidate))
+
+
+def test_fixed_catalog_rejects_duplicate_sources_within_bundle() -> None:
+    existing = provider_bundle("elsevier")
+    candidate = ProviderBundle(
+        catalog=replace(
+            existing.catalog,
+            name="duplicate_sources",
+            display_name="Duplicate Sources",
+            publisher_aliases=(),
+            doi_prefixes=(),
+            domains=("duplicate-sources.example.test",),
+            status_order=10_000,
+            client_factory_path="test.factory:duplicate_sources",
+        ),
+        sources=("duplicate_source", "duplicate_source"),
+    )
+
+    with pytest.raises(ValueError, match="source declared more than once"):
+        _registry.validate_provider_bundles((candidate,))

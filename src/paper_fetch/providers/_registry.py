@@ -1,12 +1,10 @@
-"""Provider-owned bundle registration."""
+"""Provider bundle types and fixed-catalog validation."""
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from dataclasses import replace
-import threading
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
 from ..normalize_journal_name import normalize_journal_name
@@ -111,12 +109,6 @@ def _default_bundle_route_source(
     return route.name
 
 
-_REGISTERED_PROVIDERS: dict[str, ProviderBundle] = {}
-_REGISTRY_LOCK = threading.RLock()
-_ENSURING_PROVIDER_IMPORTS_THREAD: int | None = None
-_PROVIDER_IMPORT_EVENT: threading.Event | None = None
-
-
 def _identity_token(value: str | None) -> str:
     return str(value or "").strip().lower().rstrip(".")
 
@@ -199,18 +191,10 @@ def validate_provider_identity_conflicts(
     left: ProviderSpec,
     right: ProviderSpec,
 ) -> None:
-    """Reject ambiguous registry identities without explicit precedence."""
+    """Reject ambiguous identities in the fixed built-in provider catalog."""
 
     conflicts = _provider_identity_conflicts(left, right)
     if not conflicts:
-        return
-    declarations_complete = all(
-        spec.identity_priority is not None
-        and bool(str(spec.identity_conflict_reason or "").strip())
-        for spec in (left, right)
-    )
-    priorities_differ = left.identity_priority != right.identity_priority
-    if declarations_complete and priorities_differ:
         return
     details = ", ".join(conflicts)
     conflict_label = (
@@ -219,102 +203,60 @@ def validate_provider_identity_conflicts(
         else "identity conflict"
     )
     raise ValueError(
-        f"Provider {conflict_label} requires distinct identity_priority and "
-        "identity_conflict_reason declarations: "
-        f"{left.name} vs {right.name}: {details}."
+        f"Provider {conflict_label}: {left.name} vs {right.name}: {details}."
     )
 
 
-def _ensure_provider_entry_modules_imported() -> None:
-    global _ENSURING_PROVIDER_IMPORTS_THREAD, _PROVIDER_IMPORT_EVENT
-    current_thread = threading.get_ident()
-    wait_event: threading.Event | None = None
-    with _REGISTRY_LOCK:
-        if _ENSURING_PROVIDER_IMPORTS_THREAD == current_thread:
-            return
-        if _ENSURING_PROVIDER_IMPORTS_THREAD is not None:
-            wait_event = _PROVIDER_IMPORT_EVENT
-        else:
-            _ENSURING_PROVIDER_IMPORTS_THREAD = current_thread
-            _PROVIDER_IMPORT_EVENT = threading.Event()
-    if wait_event is not None:
-        wait_event.wait()
-        return
-    try:
-        import paper_fetch.providers as provider_entries
+def validate_provider_bundles(bundles: Iterable[ProviderBundle]) -> None:
+    """Validate fixed-catalog uniqueness and identity boundaries once."""
 
-        provider_entries.import_provider_entry_modules()
-    finally:
-        with _REGISTRY_LOCK:
-            _ENSURING_PROVIDER_IMPORTS_THREAD = None
-            completed_event = _PROVIDER_IMPORT_EVENT
-            _PROVIDER_IMPORT_EVENT = None
-            if completed_event is not None:
-                completed_event.set()
-
-
-def _validate_registration_conflicts(
-    bundle: ProviderBundle,
-    *,
-    name: str,
-) -> None:
-    for existing_name, existing in _REGISTERED_PROVIDERS.items():
-        if existing.catalog.status_order == bundle.catalog.status_order:
-            raise ValueError(
-                "Provider status_order conflict: "
-                f"{name} and {existing_name} both use {bundle.catalog.status_order}."
-            )
-        if (
-            bundle.catalog.client_factory_path
-            and existing.catalog.client_factory_path
-            == bundle.catalog.client_factory_path
-        ):
-            raise ValueError(
-                "Provider client factory conflict: "
-                f"{name} and {existing_name} both use "
-                f"{bundle.catalog.client_factory_path!r}."
-            )
-        duplicate_sources = set(bundle.sources) & set(existing.sources)
-        if duplicate_sources:
-            raise ValueError(
-                "Provider source conflict: "
-                f"{name} and {existing_name} both declare "
-                f"{', '.join(sorted(duplicate_sources))}."
-            )
-        validate_provider_identity_conflicts(bundle.catalog, existing.catalog)
-
-
-def register_provider_bundle(bundle: ProviderBundle) -> None:
-    name = bundle.catalog.name.strip().lower()
-    if not name:
-        raise ValueError("Provider bundle catalog name is required.")
-    with _REGISTRY_LOCK:
-        existing = _REGISTERED_PROVIDERS.get(name)
-        if existing is not None:
-            if existing == bundle:
-                return
-            raise ValueError(f"Provider bundle already registered: {name}")
-        _validate_registration_conflicts(bundle, name=name)
-        _REGISTERED_PROVIDERS[name] = bundle
+    seen: dict[str, ProviderBundle] = {}
+    for bundle in bundles:
+        name = bundle.catalog.name.strip().lower()
+        if not name:
+            raise ValueError("Provider bundle catalog name is required.")
+        if name in seen:
+            raise ValueError(f"Provider bundle declared more than once: {name}")
+        if len(bundle.sources) != len(set(bundle.sources)):
+            raise ValueError(f"Provider source declared more than once: {name}")
+        for existing_name, existing in seen.items():
+            if existing.catalog.status_order == bundle.catalog.status_order:
+                raise ValueError(
+                    "Provider status_order conflict: "
+                    f"{name} and {existing_name} both use {bundle.catalog.status_order}."
+                )
+            if (
+                bundle.catalog.client_factory_path
+                and existing.catalog.client_factory_path
+                == bundle.catalog.client_factory_path
+            ):
+                raise ValueError(
+                    "Provider client factory conflict: "
+                    f"{name} and {existing_name} both use "
+                    f"{bundle.catalog.client_factory_path!r}."
+                )
+            duplicate_sources = set(bundle.sources) & set(existing.sources)
+            if duplicate_sources:
+                raise ValueError(
+                    "Provider source conflict: "
+                    f"{name} and {existing_name} both declare "
+                    f"{', '.join(sorted(duplicate_sources))}."
+                )
+            validate_provider_identity_conflicts(bundle.catalog, existing.catalog)
+        seen[name] = bundle
 
 
 def iter_provider_bundles() -> Iterator[ProviderBundle]:
-    _ensure_provider_entry_modules_imported()
-    with _REGISTRY_LOCK:
-        snapshot = tuple(
-            sorted(
-                MappingProxyType(dict(_REGISTERED_PROVIDERS)).values(),
-                key=lambda bundle: bundle.catalog.status_order,
-            )
-        )
-    yield from snapshot
+    from ..provider_catalog import PROVIDER_BUNDLES
+
+    return iter(PROVIDER_BUNDLES)
 
 
 def provider_bundle(name: str) -> ProviderBundle:
-    _ensure_provider_entry_modules_imported()
+    from ..provider_catalog import PROVIDER_BUNDLE_MAP
+
     normalized = str(name or "").strip().lower()
-    with _REGISTRY_LOCK:
-        try:
-            return _REGISTERED_PROVIDERS[normalized]
-        except KeyError as exc:
-            raise KeyError(f"Unknown provider bundle: {name!r}") from exc
+    try:
+        return PROVIDER_BUNDLE_MAP[normalized]
+    except KeyError as exc:
+        raise KeyError(f"Unknown provider bundle: {name!r}") from exc

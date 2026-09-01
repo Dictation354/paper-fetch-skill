@@ -28,7 +28,6 @@ from ...provider_catalog import (
     provider_domain_matches,
     provider_domains,
 )
-from ...runtime_browser import is_borrowed_browser_context
 from ...utils import normalize_text, sanitize_filename
 from .seed import filter_browser_cookies_for_url
 from .types import BrowserRuntimeConfig, BrowserStagedStorageState
@@ -107,7 +106,7 @@ def runtime_with_default_storage_profile(
     return replace(
         runtime,
         user_data_dir=default_provider_user_data_dir(
-            env, provider=provider, backend=runtime.backend
+            env, provider=provider, backend="camoufox"
         ),
     )
 
@@ -365,7 +364,7 @@ def stage_storage_state(
         "saved": False,
         "path": str(path) if path is not None else None,
         "filtered": False,
-        "borrowed_context": bool(is_borrowed_browser_context(context)),
+        "borrowed_context": False,
     }
     if context is None or path is None:
         result["reason"] = "no_context_or_path"

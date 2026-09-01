@@ -3,7 +3,6 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-import yaml
 from tests.golden_criteria import golden_criteria_asset
 
 from paper_fetch.http import HttpTransport
@@ -19,7 +18,6 @@ from tests.unit._paper_fetch_support import FixtureHtmlTransport, http_response
 HTML_DOI = "10.1093/bioinformatics/btaa161"
 FIGURE_DOI = "10.1093/bioinformatics/btaa823"
 PDF_DOI = "10.1093/bioinformatics/btaa153"
-REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _render_markdown_for_fixture(doi: str) -> str:
@@ -182,11 +180,6 @@ def test_markdown_contract_structure_fixture() -> None:
 
 def test_article_html_route_contract_fixture_meets_minimum_body_shape() -> None:
     # route-contract: article_html public article container, metadata and body sections
-    manifest = yaml.safe_load(
-        (REPO_ROOT / "onboarding" / "manifests" / "oxfordacademic.yml").read_text(
-            encoding="utf-8"
-        )
-    )
     html_text = golden_criteria_asset(HTML_DOI, "original.html").read_text(
         encoding="utf-8",
         errors="ignore",
@@ -196,13 +189,11 @@ def test_article_html_route_contract_fixture_meets_minimum_body_shape() -> None:
         "https://academic.oup.com/bioinformatics/article/36/11/3409/5802463",
         metadata={"doi": HTML_DOI},
     )
-    article_contract = manifest["route_contract"]["article_html"]
-
     assert ".article-body" in html_text or "widget-ArticleFulltext" in html_text
     assert extraction.metadata.get("title") or extraction.metadata.get("doi")
-    assert len(extraction.markdown_text) >= article_contract["min_body_chars"]
+    assert len(extraction.markdown_text) >= 1200
     assert extraction.section_hints
-    for blocked in article_contract["reject_if_any"]:
+    for blocked in ("challenge page", "access gate only", "site navigation only"):
         assert blocked not in extraction.markdown_text.lower()
 
 
@@ -254,21 +245,12 @@ def test_markdown_contract_figure_fixture() -> None:
 
 
 def test_figure_fixture_stage_asset_contract_is_inline_body_image() -> None:
-    manifest = yaml.safe_load(
-        (REPO_ROOT / "onboarding" / "manifests" / "oxfordacademic.yml").read_text(
-            encoding="utf-8"
-        )
-    )
-    figure_contract = manifest["asset_contract"]["figures"]
     markdown = _render_markdown_for_fixture(FIGURE_DOI)
     body_before_references = markdown.split("## References", 1)[0]
     image_match = re.search(
         r"!\[(?:Figure|Image)[^\]]*\]\(([^)]+)\)", body_before_references
     )
 
-    assert figure_contract["inline"] == "body"
-    assert figure_contract["download"] == "not_applicable"
-    assert figure_contract["exception_reason"]
     assert not (
         golden_criteria_asset(FIGURE_DOI, "extracted.md").parent / "body_assets"
     ).exists()
@@ -343,16 +325,8 @@ def test_oxford_reference_meta_fallback_strips_citation_keys() -> None:
 
 def test_pdf_fallback_fixture_is_captured_pdf() -> None:
     # fixture-capture: purpose=pdf_fallback doi=10.1093/bioinformatics/btaa153
-    manifest = yaml.safe_load(
-        (REPO_ROOT / "onboarding" / "manifests" / "oxfordacademic.yml").read_text(
-            encoding="utf-8"
-        )
-    )
-    pdf_contract = manifest["route_contract"]["pdf_fallback"]
     body = golden_criteria_asset(PDF_DOI, "original.pdf").read_bytes()
 
-    assert pdf_contract["require_pdf_magic"] is True
-    assert pdf_contract["reject_html_wrapper"] is True
     assert body.startswith(b"%PDF-")
     assert len(body) > 100_000
 
@@ -366,17 +340,3 @@ def test_markdown_contract_pdf_fallback_fixture() -> None:
     assert "# Untitled Article" not in markdown
     assert "Google Scholar" not in markdown
     assert "View Article Abstract" not in markdown
-
-
-def test_metadata_only_route_contract_is_declared() -> None:
-    # route-contract: metadata_only metadata fallback fabricated body text
-    manifest = yaml.safe_load(
-        (REPO_ROOT / "onboarding" / "manifests" / "oxfordacademic.yml").read_text(
-            encoding="utf-8"
-        )
-    )
-    assert "metadata_only" in manifest["main_path"]
-    assert (
-        "fabricated body text"
-        in manifest["route_contract"]["metadata_only"]["reject_if_any"]
-    )

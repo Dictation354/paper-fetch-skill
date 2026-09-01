@@ -425,84 +425,6 @@ def test_acs_silverchair_formula_fixture_preserves_mathml_and_tables() -> None:
     assert extraction["references"][0]["year"] == "2015"
 
 
-def test_acs_markdown_review_contract_markers() -> None:
-    markdown = """
-    # Functionalized Metal-Free Carbon Nanosphere Catalyst for the Selective C-N Bond Formation under Open-Air Conditions
-
-    ## Abstract
-
-    Functionalized metal-free carbon nanosphere catalyst smoke fixture.
-
-    **Figure 1.** Representative carbon nanosphere catalyst workflow.
-
-    **Table 1.**
-
-    | s. no. | catalyst | OPD conversion (%) |
-    | ------ | -------- | ------------------ |
-    | 1      | ANCS     | 96                 |
-
-    ## Supporting Information
-
-    The Supporting Information is available free of charge at https://pubs.acs.org/doi/10.1021/acsomega.4c03987.
-
-    ao4c03987_si_001.pdf
-
-    ## References
-
-    1. Representative ACS Omega reference for DOI 10.1021/acsomega.4c03987.
-    """
-
-    # markdown-review: purpose=structure doi=10.1021/acsomega.4c03987
-    assert "## Abstract" in markdown
-    assert "Download Citation" not in markdown
-
-    # markdown-review: purpose=figure doi=10.1021/acsomega.4c03987
-    assert "Figure" in markdown
-    assert "Article Views" not in markdown
-
-    # markdown-review: purpose=table doi=10.1021/acsomega.4c03987
-    assert "Table 1" in markdown
-    assert "| s. no. | catalyst | OPD conversion (%) |" in markdown
-    assert "Google Scholar" not in markdown
-
-    formula_markdown = """
-    # General Equation to Estimate the Physicochemical Properties of Aliphatic Amines
-
-    The NPOH equation uses the sum of carbon number effects.
-
-    $$
-    {\\ln{(P_{(n)})}}{= {a + b{(n - 1)} + cS_{CNE}}}
-    $$
-    """
-
-    # markdown-review: purpose=formula doi=10.1021/acsomega.3c06992
-    assert "NPOH equation" in formula_markdown
-    assert "S_{CNE}" in formula_markdown
-    assert formula_markdown.count("$$") >= 2
-    assert "[Formula unavailable]" not in formula_markdown
-    assert "Download Citation" not in formula_markdown
-
-    # markdown-review: purpose=supplementary doi=10.1021/acsomega.4c03987
-    assert "Supporting Information" in markdown
-    assert "ao4c03987_si_001.pdf" in markdown
-    assert "Download Citation" not in markdown
-
-    pdf_markdown = """
-    # General Equation to Express Changes in the Physicochemical Properties of Organic Homologues
-
-    This PDF fallback baseline includes the NPOH equation body text.
-    """
-
-    # markdown-review: purpose=pdf_fallback doi=10.1021/acsomega.2c02828
-    assert "General Equation to Express Changes" in pdf_markdown
-    assert "NPOH equation" in pdf_markdown
-    assert "Download Citation" not in pdf_markdown
-
-    # markdown-review: purpose=references doi=10.1021/acsomega.4c03987
-    assert "References" in markdown
-    assert "Google Scholar" not in markdown
-
-
 def test_acs_probe_status_uses_browser_runtime_requirements() -> None:
     with mock.patch.object(
         camoufox_backend,
@@ -512,10 +434,7 @@ def test_acs_probe_status_uses_browser_runtime_requirements() -> None:
             "packages": {"playwright": True, "camoufox": True},
         },
     ):
-        result = AcsClient(
-            transport=None,
-            env={"PAPER_FETCH_BROWSER_BACKEND": "camoufox"},
-        ).probe_status()
+        result = AcsClient(transport=None, env={}).probe_status()
 
     checks = {check.name: check for check in result.checks}
     assert result.status == "ready"

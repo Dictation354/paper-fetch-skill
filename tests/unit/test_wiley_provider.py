@@ -92,7 +92,6 @@ def test_wiley_browser_workflow_does_not_force_default_http_user_agent(
         fetch_html_with_browser=fake_fetch_html_with_browser,
     )
     env = {
-        config.BROWSER_BACKEND_ENV_VAR: "camoufox",
         config.XDG_DATA_HOME_ENV_VAR: str(tmp_path),
     }
     client = wiley_provider.WileyClient(transport=None, env=env, deps=deps)
@@ -132,7 +131,6 @@ def test_wiley_camoufox_workflow_ignores_explicit_browser_user_agent(
         fetch_html_with_browser=fake_fetch_html_with_browser,
     )
     env = {
-        config.BROWSER_BACKEND_ENV_VAR: "camoufox",
         config.XDG_DATA_HOME_ENV_VAR: str(tmp_path),
         config.BROWSER_USER_AGENT_ENV_VAR: chrome_user_agent,
     }
@@ -168,7 +166,6 @@ def test_wiley_confirmed_403_html_passes_markdown_and_availability(
         artifact_dir=tmp_path / "artifacts",
         headless=True,
         user_agent=None,
-        backend="camoufox",
         profile_dir=None,
         user_data_dir=None,
         storage_state_path=None,
@@ -261,7 +258,6 @@ def test_wiley_confirmed_403_extraction_failure_continues_next_candidate(
         artifact_dir=tmp_path / "artifacts",
         headless=True,
         user_agent=None,
-        backend="camoufox",
         profile_dir=None,
         user_data_dir=None,
         storage_state_path=None,

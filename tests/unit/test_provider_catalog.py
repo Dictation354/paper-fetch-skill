@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import get_args
 import unittest
+from unittest import mock
 import xml.etree.ElementTree as ET
 
 from paper_fetch import publisher_identity
@@ -48,7 +49,6 @@ from paper_fetch.extraction.html.provider_rules import (
     SPRINGER_NATURE_FORMULA_CONTAINER_TOKENS,
 )
 from paper_fetch.quality.html_profiles import site_rule_for_publisher
-from paper_fetch_devtools.quality_issues import EXPECTED_FULLTEXT_SOURCES_BY_PROVIDER
 from paper_fetch.models.schema import SourceKind
 from paper_fetch.providers import _pdf_candidates, html_springer_nature
 from paper_fetch import utils
@@ -214,14 +214,7 @@ class ProviderCatalogTests(unittest.TestCase):
             },
         )
 
-    def test_runtime_provider_order_constants_are_catalog_derived(self) -> None:
-        self.assertEqual(
-            set(routing.OFFICIAL_PROVIDER_NAMES), set(official_provider_names())
-        )
-        self.assertEqual(
-            set(fulltext.PROVIDER_MANAGED_ABSTRACT_ONLY_PROVIDERS),
-            set(provider_managed_abstract_only_names()),
-        )
+    def test_runtime_provider_order_is_catalog_derived(self) -> None:
         self.assertEqual(_PROVIDER_STATUS_ORDER, provider_names())
         self.assertEqual(_PROVIDER_STATUS_ORDER, provider_status_order())
 
@@ -276,7 +269,6 @@ class ProviderCatalogTests(unittest.TestCase):
             sources_by_provider(),
             {provider: frozenset(sources) for provider, sources in expected.items()},
         )
-        self.assertEqual(EXPECTED_FULLTEXT_SOURCES_BY_PROVIDER, sources_by_provider())
 
     def test_every_declared_source_maps_to_catalog_provider(self) -> None:
         for source, provider in SOURCE_PROVIDER_MAP.items():
@@ -491,11 +483,10 @@ class ProviderCatalogTests(unittest.TestCase):
     def test_fulltext_provider_attempt_skips_non_official_catalog_provider(
         self,
     ) -> None:
-        class ExplodingProvider:
-            def fetch_result(self, *args, **kwargs):
-                raise AssertionError(
-                    "non-official providers should not enter fulltext provider attempts"
-                )
+        provider = mock.Mock()
+        provider.fetch_result.side_effect = AssertionError(
+            "non-official providers should not enter fulltext provider attempts"
+        )
 
         warnings: list[str] = []
         source_trail: list[str] = []
@@ -507,7 +498,7 @@ class ProviderCatalogTests(unittest.TestCase):
             strategy=fulltext.FetchStrategy(),
             artifact_store=object(),
             context=object(),
-            clients={"crossref": ExplodingProvider()},
+            clients={"crossref": provider},
             outputs=fulltext._ProviderAttemptOutputs(
                 warnings=warnings,
                 source_trail=source_trail,
@@ -515,6 +506,7 @@ class ProviderCatalogTests(unittest.TestCase):
         )
 
         self.assertIsNone(article)
+        provider.fetch_result.assert_not_called()
         self.assertEqual(warnings, [])
         self.assertEqual(source_trail, [])
 

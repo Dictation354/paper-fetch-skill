@@ -387,7 +387,6 @@ def save_markdown_to_disk(
         ),
         encoding="utf-8",
         overwrite=overwrite,
-        use_lock=True,
         commit_guard=commit_guard,
     )
     message = f"Markdown full text was saved to {target}."

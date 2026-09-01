@@ -20,7 +20,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
             paper_fetch.fetch_metadata_for_resolved_query(
                 resolved,
                 clients={
-                    "elsevier": StubProvider(
+                    "elsevier": FixtureProvider(
                         metadata={
                             "provider": "elsevier",
                             "official_provider": True,
@@ -32,7 +32,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                             "references": [],
                         }
                     ),
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata={
                             "provider": "crossref",
                             "official_provider": False,
@@ -79,12 +79,12 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
             paper_fetch.fetch_metadata_for_resolved_query(
                 resolved,
                 clients={
-                    "springer": StubProvider(
+                    "springer": FixtureProvider(
                         metadata=paper_fetch.ProviderFailure(
                             "not_supported", "Springer metadata probe is not supported."
                         )
                     ),
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata={
                             "provider": "crossref",
                             "official_provider": False,
@@ -129,7 +129,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                     preferred_providers=["elsevier"],
                 ),
                 clients={
-                    "elsevier": StubProvider(
+                    "elsevier": FixtureProvider(
                         metadata={
                             "provider": "elsevier",
                             "official_provider": True,
@@ -147,7 +147,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                         ),
                         article=official_article,
                     ),
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata={
                             "provider": "crossref",
                             "official_provider": False,
@@ -190,7 +190,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
             article = fetch_paper_model(
                 "10.1006/jaer.1996.0085",
                 clients={
-                    "elsevier": StubProvider(
+                    "elsevier": FixtureProvider(
                         metadata=paper_fetch.ProviderFailure(
                             "no_result", "Elsevier metadata probe missed."
                         ),
@@ -202,7 +202,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                         ),
                         article=official_article,
                     ),
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata={
                             "provider": "crossref",
                             "official_provider": False,
@@ -244,7 +244,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                     preferred_providers=["crossref"],
                 ),
                 clients={
-                    "elsevier": StubProvider(
+                    "elsevier": FixtureProvider(
                         metadata={
                             "provider": "elsevier",
                             "official_provider": True,
@@ -262,7 +262,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                         ),
                         article=sample_article(),
                     ),
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata={
                             "provider": "crossref",
                             "official_provider": False,
@@ -310,7 +310,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                 modes={"markdown"},
                 strategy=paper_fetch.FetchStrategy(),
                 clients={
-                    "wiley": StubProvider(
+                    "wiley": FixtureProvider(
                         metadata=paper_fetch.ProviderFailure(
                             "not_supported", "No official metadata."
                         ),
@@ -322,7 +322,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                         ),
                         article=official_article,
                     ),
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata={
                             "provider": "crossref",
                             "official_provider": False,
@@ -383,7 +383,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                 modes={"article"},
                 strategy=paper_fetch.FetchStrategy(),
                 clients={
-                    "elsevier": StubProvider(
+                    "elsevier": FixtureProvider(
                         metadata={
                             "provider": "elsevier",
                             "official_provider": True,
@@ -401,7 +401,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                         ),
                         article=official_article,
                     ),
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata={
                             "provider": "crossref",
                             "official_provider": False,
@@ -419,7 +419,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                 modes={"article", "metadata"},
                 strategy=paper_fetch.FetchStrategy(),
                 clients={
-                    "elsevier": StubProvider(
+                    "elsevier": FixtureProvider(
                         metadata={
                             "provider": "elsevier",
                             "official_provider": True,
@@ -437,7 +437,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                         ),
                         article=official_article,
                     ),
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata={
                             "provider": "crossref",
                             "official_provider": False,
@@ -476,7 +476,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
             article = fetch_paper_model(
                 "10.1000/test",
                 clients={
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata={
                             "provider": "crossref",
                             "official_provider": False,
@@ -519,7 +519,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                         allow_metadata_only_fallback=False,
                     ),
                     clients={
-                        "elsevier": StubProvider(
+                        "elsevier": FixtureProvider(
                             metadata={
                                 "provider": "elsevier",
                                 "official_provider": True,
@@ -533,7 +533,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                                 "no_result", "No full text."
                             ),
                         ),
-                        "crossref": StubProvider(
+                        "crossref": FixtureProvider(
                             metadata={
                                 "provider": "crossref",
                                 "official_provider": False,
@@ -571,7 +571,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
             article = fetch_paper_model(
                 doi,
                 clients={
-                    "elsevier": StubProvider(
+                    "elsevier": FixtureProvider(
                         metadata={
                             "provider": "elsevier",
                             "official_provider": True,
@@ -583,7 +583,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                             "Elsevier did not expose this migrated article.",
                         ),
                     ),
-                    "springer": StubProvider(
+                    "springer": FixtureProvider(
                         metadata={
                             "provider": "springer",
                             "official_provider": True,
@@ -616,7 +616,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
     def test_weak_conflicting_access_boundary_continues_to_strong_doi_provider(
         self,
     ) -> None:
-        class CountingProvider(StubProvider):
+        class CountingProvider(FixtureProvider):
             def __init__(self, **kwargs):
                 super().__init__(**kwargs)
                 self.raw_calls = 0
@@ -662,7 +662,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
             article = fetch_paper_model(
                 doi,
                 clients={
-                    "elsevier": StubProvider(
+                    "elsevier": FixtureProvider(
                         metadata={
                             "provider": "elsevier",
                             "official_provider": True,
@@ -692,7 +692,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
         )
 
     def test_strong_doi_provider_access_boundary_stops_weaker_candidate(self) -> None:
-        class CountingProvider(StubProvider):
+        class CountingProvider(FixtureProvider):
             def __init__(self, **kwargs):
                 super().__init__(**kwargs)
                 self.raw_calls = 0
@@ -720,7 +720,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
             article = fetch_paper_model(
                 doi,
                 clients={
-                    "elsevier": StubProvider(
+                    "elsevier": FixtureProvider(
                         metadata={
                             "provider": "elsevier",
                             "official_provider": True,

@@ -91,7 +91,6 @@ def _runtime_config(tmpdir: str, doi: str) -> browser_runtime.BrowserRuntimeConf
         artifact_dir=tmp / "artifacts",
         headless=True,
         user_agent="paper-fetch-test/1",
-        backend="camoufox",
     )
 
 

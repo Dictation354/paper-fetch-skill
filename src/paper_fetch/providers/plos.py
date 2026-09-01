@@ -15,6 +15,7 @@ from ..failure import FailureDiagnostics
 from ..extraction.html.assets import (
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
+    AssetDownloadOptions,
     download_assets,
     filter_assets_for_profile,
     merge_extracted_and_downloaded_assets,
@@ -60,7 +61,7 @@ from ._pdf_common import (
     pdf_fetch_result_warnings,
 )
 from ._pdf_fallback import PdfFallbackStrategy, PdfFetchFailure, fetch_pdf_over_http
-from ._registry import ProviderBundle, register_provider_bundle
+from ._registry import ProviderBundle
 from .base import (
     ProviderArtifacts,
     ProviderClient,
@@ -75,68 +76,62 @@ from .base import (
 from ..reason_codes import NO_RESULT, OK, PDF_FALLBACK
 
 
-register_provider_bundle(
-    ProviderBundle(
-        catalog=ProviderSpec(
-            name="plos",
-            display_name="PLOS",
-            official=True,
-            domains=("journals.plos.org",),
-            doi_prefixes=("10.1371/",),
-            publisher_aliases=(
-                "plos",
-                "public library of science",
-                "public library of science (plos)",
+PROVIDER_BUNDLE = ProviderBundle(
+    catalog=ProviderSpec(
+        name="plos",
+        display_name="PLOS",
+        official=True,
+        domains=("journals.plos.org",),
+        doi_prefixes=("10.1371/",),
+        publisher_aliases=(
+            "plos",
+            "public library of science",
+            "public library of science (plos)",
+        ),
+        asset_default="body",
+        probe_capability="routing_signal",
+        provider_managed_abstract_only=False,
+        client_factory_path="paper_fetch.providers.plos:PlosClient",
+        status_order=13,
+        domain_suffixes=("plos.org",),
+        xml_path_templates=("/{journal_path}/article/file?id={doi}&type=manuscript",),
+        pdf_path_templates=("/{journal_path}/article/file?id={doi}&type=printable",),
+        emits_html_managed_marker=False,
+        html_capable=False,
+        xml_root_tags=("article",),
+        xml_file_tokens=("10.1371", "plos"),
+        body_text_thresholds=BodyTextThresholds(min_chars=1200),
+        routes=(
+            ProviderRouteSpec(name="metadata", kind="metadata"),
+            ProviderRouteSpec(
+                name="xml",
+                kind="xml",
+                hosts=("plos.org", "doi.org", "storage.googleapis.com"),
             ),
-            asset_default="body",
-            probe_capability="routing_signal",
-            provider_managed_abstract_only=False,
-            client_factory_path="paper_fetch.providers.plos:PlosClient",
-            status_order=13,
-            domain_suffixes=("plos.org",),
-            xml_path_templates=(
-                "/{journal_path}/article/file?id={doi}&type=manuscript",
+            ProviderRouteSpec(
+                name="direct_pdf",
+                kind="pdf",
+                hosts=("plos.org", "storage.googleapis.com"),
+                requires_pdf_conversion=True,
             ),
-            pdf_path_templates=(
-                "/{journal_path}/article/file?id={doi}&type=printable",
-            ),
-            emits_html_managed_marker=False,
-            html_capable=False,
-            xml_root_tags=("article",),
-            xml_file_tokens=("10.1371", "plos"),
-            body_text_thresholds=BodyTextThresholds(min_chars=1200),
-            routes=(
-                ProviderRouteSpec(name="metadata", kind="metadata"),
-                ProviderRouteSpec(
-                    name="xml",
-                    kind="xml",
-                    hosts=("plos.org", "doi.org", "storage.googleapis.com"),
-                ),
-                ProviderRouteSpec(
-                    name="direct_pdf",
-                    kind="pdf",
-                    hosts=("plos.org", "storage.googleapis.com"),
-                    requires_pdf_conversion=True,
-                ),
-                ProviderRouteSpec(
-                    name="assets",
-                    kind="assets",
-                    hosts=("plos.org", "storage.googleapis.com"),
-                    asset_scope="body",
-                ),
+            ProviderRouteSpec(
+                name="assets",
+                kind="assets",
+                hosts=("plos.org", "storage.googleapis.com"),
+                asset_scope="body",
             ),
         ),
-        html_rules=ProviderHtmlRules(
-            name="plos",
-            front_matter=ProviderFrontMatterRules(
-                exact_texts=(),
-                contains_tokens=(),
-                publication_keywords=("plos", "public library of science"),
-            ),
-            availability=AvailabilityPolicy(name="plos", no_signals=True),
+    ),
+    html_rules=ProviderHtmlRules(
+        name="plos",
+        front_matter=ProviderFrontMatterRules(
+            exact_texts=(),
+            contains_tokens=(),
+            publication_keywords=("plos", "public library of science"),
         ),
-        sources=("plos_xml", "plos_pdf"),
-    )
+        availability=AvailabilityPolicy(name="plos", no_signals=True),
+    ),
+    sources=("plos_xml", "plos_pdf"),
 )
 
 
@@ -741,19 +736,23 @@ class PlosClient(ProviderClient):
                 output_dir=output_dir,
                 user_agent=self.user_agent,
                 asset_profile=asset_profile,
-                headers=self._asset_headers(),
-                candidate_builder=_plos_figure_candidates,
-                document_fetcher=lambda url, _asset: _fetch_plos_redirected_response(
-                    self.transport,
-                    url,
+                options=AssetDownloadOptions(
                     headers=self._asset_headers(),
-                    route_name="assets",
+                    candidate_builder=_plos_figure_candidates,
+                    document_fetcher=lambda url, _asset: (
+                        _fetch_plos_redirected_response(
+                            self.transport,
+                            url,
+                            headers=self._asset_headers(),
+                            route_name="assets",
+                        )
+                    ),
+                    asset_download_concurrency=resolve_asset_download_concurrency(
+                        context.env
+                    ),
+                    provider_name="plos",
+                    runtime_context=context,
                 ),
-                asset_download_concurrency=resolve_asset_download_concurrency(
-                    context.env
-                ),
-                provider_name="plos",
-                runtime_context=context,
             )
             if body_image_assets
             else empty_asset_results()
@@ -770,12 +769,14 @@ class PlosClient(ProviderClient):
                 output_dir=output_dir,
                 user_agent=self.user_agent,
                 asset_profile=asset_profile,
-                headers=self._asset_headers(),
-                asset_download_concurrency=resolve_asset_download_concurrency(
-                    context.env
+                options=AssetDownloadOptions(
+                    headers=self._asset_headers(),
+                    asset_download_concurrency=resolve_asset_download_concurrency(
+                        context.env
+                    ),
+                    provider_name="plos",
+                    runtime_context=context,
                 ),
-                provider_name="plos",
-                runtime_context=context,
             )
             if normalized_supplementary and asset_profile == "all"
             else empty_asset_results()

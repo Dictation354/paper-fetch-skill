@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import FrozenInstanceError, replace
-
 import pytest
 
 from paper_fetch.providers import _arxiv_assets, _ieee_html, elsevier, springer
@@ -158,13 +156,6 @@ def test_provider_asset_retry_policies_round_trip_merge_and_retry(
     failure,
     retry_failure,
 ) -> None:
-    round_tripped = replace(policy, name=f"{policy.name}-round-trip")
-
-    assert round_tripped.name == f"{policy.name}-round-trip"
-    assert round_tripped.key_fn is policy.key_fn
-    with pytest.raises(FrozenInstanceError):
-        policy.name = "changed"  # type: ignore[misc]
-
     assert assets_for_network_retry([asset], [failure], policy=policy) == [asset]
 
     merged_assets = merge_asset_retry_results([asset], [retry_asset], policy=policy)

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Validate and flatten release assets before checksumming or publication.
+"""Validate and flatten stable release assets before publication.
 
-Both stable and rolling releases publish a flat GitHub asset namespace.  This
-module keeps that namespace explicit, rejects missing/extra/colliding inputs,
-and writes a basename-only ``SHA256SUMS`` that remains usable after download.
+The release uses a flat GitHub asset namespace. This module keeps that
+namespace explicit, rejects missing/extra/colliding inputs, and writes a
+basename-only ``SHA256SUMS`` that remains usable after download.
 """
 
 from __future__ import annotations
@@ -96,7 +96,6 @@ def stable_input_names(version: str) -> frozenset[str]:
     python_assets = {
         f"paper_fetch_skill-{normalized_version}-py3-none-any.whl",
         f"paper_fetch_skill-{normalized_version}.tar.gz",
-        "python-distribution-inventory.json",
     }
     return frozenset(
         {
@@ -108,10 +107,6 @@ def stable_input_names(version: str) -> frozenset[str]:
     )
 
 
-def rolling_asset_names() -> frozenset[str]:
-    return frozenset({"dependency-manifest.json", *installer_asset_names()})
-
-
 def stable_input_mapping(version: str) -> dict[Path, str]:
     normalized_version = version.strip()
     mapping = {
@@ -120,9 +115,6 @@ def stable_input_mapping(version: str) -> dict[Path, str]:
         ),
         Path("python", f"paper_fetch_skill-{normalized_version}.tar.gz"): (
             f"paper_fetch_skill-{normalized_version}.tar.gz"
-        ),
-        Path("python", "python-distribution-inventory.json"): (
-            "python-distribution-inventory.json"
         ),
         Path("dependencies", "dependency-manifest.json"): ("dependency-manifest.json"),
     }
@@ -136,15 +128,6 @@ def stable_input_mapping(version: str) -> dict[Path, str]:
         raise AssertionError(
             "Stable release source mapping drifted from asset inventory"
         )
-    return mapping
-
-
-def rolling_input_mapping() -> dict[Path, str]:
-    mapping = {
-        Path("dependencies", "dependency-manifest.json"): "dependency-manifest.json"
-    }
-    for name in sorted({*installer_asset_names(), *target_evidence_names()}):
-        mapping[Path("offline", name)] = name
     return mapping
 
 
@@ -292,36 +275,6 @@ def prepare_stable_release(
     return expected_names
 
 
-def prepare_rolling_release(*, input_root: Path, output_dir: Path) -> frozenset[str]:
-    source_files = _regular_files(input_root)
-    _assert_unique_basenames(source_files)
-    expected_mapping = rolling_input_mapping()
-    actual = {str(relative) for relative in source_files}
-    expected = {str(relative) for relative in expected_mapping}
-    if actual != expected:
-        raise ValueError(
-            "Rolling release inputs are not the exact expected nested set: "
-            + _format_set_difference(expected, actual)
-        )
-    if output_dir.exists():
-        raise ValueError(f"Release output directory already exists: {output_dir}")
-
-    output_dir.mkdir(parents=True, mode=0o755)
-    try:
-        public_names = rolling_asset_names()
-        for relative, basename in sorted(
-            expected_mapping.items(), key=lambda item: item[1]
-        ):
-            if basename in public_names:
-                _copy_exclusive(source_files[relative], output_dir / basename)
-        write_checksums(output_dir, public_names)
-        _fsync_directory_best_effort(output_dir)
-    except BaseException:
-        shutil.rmtree(output_dir, ignore_errors=True)
-        raise
-    return public_names
-
-
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -333,28 +286,16 @@ def _parser() -> argparse.ArgumentParser:
     stable.add_argument("--output-dir", type=Path, required=True)
     stable.add_argument("--version", required=True)
 
-    rolling = subparsers.add_parser(
-        "prepare-rolling",
-        help="validate rolling inputs and publish installers plus dependency manifest",
-    )
-    rolling.add_argument("--input-root", type=Path, required=True)
-    rolling.add_argument("--output-dir", type=Path, required=True)
     return parser
 
 
 def main() -> int:
     args = _parser().parse_args()
-    if args.command == "prepare-stable":
-        expected = prepare_stable_release(
-            input_root=args.input_root,
-            output_dir=args.output_dir,
-            version=args.version,
-        )
-    else:
-        expected = prepare_rolling_release(
-            input_root=args.input_root,
-            output_dir=args.output_dir,
-        )
+    expected = prepare_stable_release(
+        input_root=args.input_root,
+        output_dir=args.output_dir,
+        version=args.version,
+    )
     print(f"Validated {len(expected)} release assets and wrote SHA256SUMS.")
     return 0
 

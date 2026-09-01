@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 from contextvars import copy_context
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import partial
 from pathlib import Path
 import threading
@@ -14,6 +14,8 @@ from collections.abc import Callable, Mapping
 from ...extraction.html.assets import (
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
+    AssetDownloadOptions,
+    AssetFetchPolicy,
     extract_scoped_html_assets,
 )
 from ...extraction.html.assets.download import browser_asset_recovery_allowed
@@ -52,7 +54,7 @@ class BrowserAssetDownloadPlan:
     asset_profile: AssetProfile
     body_assets: list[dict[str, Any]]
     supplementary_assets: list[dict[str, Any]]
-    fetch_policy: str = "direct_then_browser"
+    fetch_policy: AssetFetchPolicy = "direct_then_browser"
     candidate_builder: Any | None = None
 
 
@@ -120,7 +122,7 @@ def run_browser_asset_download_attempt(
     *,
     image_fetcher_factory,
     file_fetcher_factory,
-    opener_requester,
+    download_settings: Mapping[str, Any],
     deps: BrowserWorkflowDeps,
 ) -> BrowserAssetDownloadResult:
     _raise_if_cancelled(recovery.runtime_context)
@@ -132,7 +134,7 @@ def run_browser_asset_download_attempt(
         attempt_supplementary_assets=plan.supplementary_assets,
         image_fetcher_factory=image_fetcher_factory,
         file_fetcher_factory=file_fetcher_factory,
-        opener_requester=opener_requester,
+        download_settings=download_settings,
         deps=deps,
     )
 
@@ -144,7 +146,7 @@ def retry_failed_browser_assets(
     *,
     image_fetcher_factory,
     file_fetcher_factory,
-    opener_requester,
+    download_settings: Mapping[str, Any],
     deps: BrowserWorkflowDeps,
 ) -> BrowserAssetDownloadResult:
     _raise_if_cancelled(recovery.runtime_context)
@@ -183,7 +185,7 @@ def retry_failed_browser_assets(
         attempt_supplementary_assets=failed_supplementary_assets,
         image_fetcher_factory=image_fetcher_factory,
         file_fetcher_factory=file_fetcher_factory,
-        opener_requester=opener_requester,
+        download_settings=download_settings,
         deps=deps,
     )
     merged = _merge_download_attempt_results(
@@ -199,7 +201,7 @@ def download_browser_backed_related_assets(
     *,
     image_fetcher_factory,
     file_fetcher_factory,
-    opener_requester,
+    download_settings: Mapping[str, Any],
     deps: BrowserWorkflowDeps,
     refresh_once: bool = True,
 ) -> dict[str, list[dict[str, Any]]]:
@@ -210,7 +212,7 @@ def download_browser_backed_related_assets(
         recovery,
         image_fetcher_factory=image_fetcher_factory,
         file_fetcher_factory=file_fetcher_factory,
-        opener_requester=opener_requester,
+        download_settings=download_settings,
         deps=deps,
     )
     recovery_allowed = bool(
@@ -232,7 +234,7 @@ def download_browser_backed_related_assets(
             recovery,
             image_fetcher_factory=image_fetcher_factory,
             file_fetcher_factory=file_fetcher_factory,
-            opener_requester=opener_requester,
+            download_settings=download_settings,
             deps=deps,
         )
     return {
@@ -578,7 +580,7 @@ def _run_browser_asset_download_attempt(
     attempt_supplementary_assets: list[dict[str, Any]],
     image_fetcher_factory,
     file_fetcher_factory,
-    opener_requester,
+    download_settings: Mapping[str, Any],
     deps: BrowserWorkflowDeps,
 ) -> BrowserAssetDownloadResult:
     _raise_if_cancelled(recovery.runtime_context)
@@ -587,7 +589,7 @@ def _run_browser_asset_download_attempt(
         current_seed,
     )
     attempt_seed_lock = threading.Lock()
-    attempt_settings = _attempt_settings(opener_requester)
+    attempt_settings = dict(download_settings)
 
     def attempt_seed_snapshot() -> dict[str, Any]:
         with attempt_seed_lock:
@@ -612,7 +614,7 @@ def _run_browser_asset_download_attempt(
         return {"Referer": referer} if referer else {}
 
     def seeded_asset_user_agent(seed_snapshot: Mapping[str, Any]) -> str:
-        if recovery.runtime is not None and recovery.runtime.backend == "camoufox":
+        if recovery.runtime is not None:
             return normalize_text(
                 str(seed_snapshot.get("browser_user_agent") or "")
             ) or normalize_text(recovery.user_agent)
@@ -672,27 +674,31 @@ def _run_browser_asset_download_attempt(
                 "output_dir": plan.output_dir,
                 "user_agent": seeded_asset_user_agent(seed_snapshot),
                 "asset_profile": plan.asset_profile,
-                "headers": seeded_asset_headers(seed_snapshot),
-                "browser_context_seed": seed_snapshot,
-                "seed_urls": _seed_urls_for(recovery, seed_snapshot),
-                "figure_page_fetcher": figure_page_fetcher,
-                "asset_budget": getattr(recovery.runtime_context, "asset_budget", None),
-                "artifact_store": getattr(
+            }
+            common_options = AssetDownloadOptions(
+                headers=seeded_asset_headers(seed_snapshot),
+                browser_context_seed=seed_snapshot,
+                figure_page_fetcher=figure_page_fetcher,
+                asset_budget=getattr(recovery.runtime_context, "asset_budget", None),
+                artifact_store=getattr(
                     recovery.runtime_context, "artifact_store", None
                 ),
-                "provider_name": recovery.provider,
-                "runtime_context": recovery.runtime_context,
-                "host_recovery_circuit": host_recovery_circuit,
-            }
+                provider_name=recovery.provider,
+                runtime_context=recovery.runtime_context,
+                host_recovery_circuit=host_recovery_circuit,
+            )
             if plan.fetch_policy != "direct_then_browser" or not serial_browser_assets:
                 return deps.download_assets(
                     FIGURE_KIND,
                     attempt_settings.get("transport"),
                     assets=body_assets,
-                    candidate_builder=base_candidate_builder,
-                    image_document_fetcher=image_document_fetcher,
-                    asset_download_concurrency=body_asset_download_concurrency,
-                    fetch_policy=plan.fetch_policy,
+                    options=replace(
+                        common_options,
+                        candidate_builder=base_candidate_builder,
+                        image_document_fetcher=image_document_fetcher,
+                        asset_download_concurrency=body_asset_download_concurrency,
+                        fetch_policy=plan.fetch_policy,
+                    ),
                     **common_kwargs,
                 )
 
@@ -708,10 +714,13 @@ def _run_browser_asset_download_attempt(
                 FIGURE_KIND,
                 attempt_settings.get("transport"),
                 assets=body_assets[:1],
-                candidate_builder=full_candidate_builder,
-                image_document_fetcher=image_document_fetcher,
-                asset_download_concurrency=1,
-                fetch_policy="direct_then_browser",
+                options=replace(
+                    common_options,
+                    candidate_builder=full_candidate_builder,
+                    image_document_fetcher=image_document_fetcher,
+                    asset_download_concurrency=1,
+                    fetch_policy="direct_then_browser",
+                ),
                 **common_kwargs,
             )
             probe_used_browser = any(
@@ -736,10 +745,13 @@ def _run_browser_asset_download_attempt(
                         FIGURE_KIND,
                         attempt_settings.get("transport"),
                         assets=remaining_body_assets,
-                        candidate_builder=full_candidate_builder,
-                        image_document_fetcher=image_document_fetcher,
-                        asset_download_concurrency=body_asset_download_concurrency,
-                        fetch_policy="direct_then_browser",
+                        options=replace(
+                            common_options,
+                            candidate_builder=full_candidate_builder,
+                            image_document_fetcher=image_document_fetcher,
+                            asset_download_concurrency=body_asset_download_concurrency,
+                            fetch_policy="direct_then_browser",
+                        ),
                         **common_kwargs,
                     )
                     if remaining_body_assets
@@ -764,10 +776,13 @@ def _run_browser_asset_download_attempt(
                         FIGURE_KIND,
                         attempt_settings.get("transport"),
                         assets=remaining_body_assets,
-                        candidate_builder=full_candidate_builder,
-                        image_document_fetcher=None,
-                        asset_download_concurrency=body_asset_download_concurrency,
-                        fetch_policy="direct_then_browser",
+                        options=replace(
+                            common_options,
+                            candidate_builder=full_candidate_builder,
+                            image_document_fetcher=None,
+                            asset_download_concurrency=body_asset_download_concurrency,
+                            fetch_policy="direct_then_browser",
+                        ),
                         **common_kwargs,
                     )
                     if remaining_body_assets
@@ -796,10 +811,13 @@ def _run_browser_asset_download_attempt(
                         FIGURE_KIND,
                         attempt_settings.get("transport"),
                         assets=browser_assets,
-                        candidate_builder=full_candidate_builder,
-                        image_document_fetcher=image_document_fetcher,
-                        asset_download_concurrency=1,
-                        fetch_policy="browser_first",
+                        options=replace(
+                            common_options,
+                            candidate_builder=full_candidate_builder,
+                            image_document_fetcher=image_document_fetcher,
+                            asset_download_concurrency=1,
+                            fetch_policy="browser_first",
+                        ),
                         **common_kwargs,
                     )
                     browser_failures = [
@@ -839,17 +857,20 @@ def _run_browser_asset_download_attempt(
                 FIGURE_KIND,
                 attempt_settings.get("transport"),
                 assets=preview_assets,
-                candidate_builder=_tier_candidate_builder(
-                    base_candidate_builder, preview=True
-                ),
-                image_document_fetcher=image_document_fetcher,
-                asset_download_concurrency=1,
-                fetch_policy=(
-                    "browser_first"
-                    if is_ieee_recovery
-                    and image_document_fetcher is not None
-                    and browser_failures
-                    else "direct_then_browser"
+                options=replace(
+                    common_options,
+                    candidate_builder=_tier_candidate_builder(
+                        base_candidate_builder, preview=True
+                    ),
+                    image_document_fetcher=image_document_fetcher,
+                    asset_download_concurrency=1,
+                    fetch_policy=(
+                        "browser_first"
+                        if is_ieee_recovery
+                        and image_document_fetcher is not None
+                        and browser_failures
+                        else "direct_then_browser"
+                    ),
                 ),
                 **common_kwargs,
             )
@@ -865,42 +886,36 @@ def _run_browser_asset_download_attempt(
             _raise_if_cancelled(recovery.runtime_context)
             if not attempt_supplementary_assets:
                 return empty_asset_results()
-            supplementary_kwargs: dict[str, Any] = {}
-            if callable(attempt_settings.get("cookie_opener_builder")):
-                supplementary_kwargs["cookie_opener_builder"] = attempt_settings[
-                    "cookie_opener_builder"
-                ]
-            if callable(attempt_settings.get("opener_requester")):
-                supplementary_kwargs["opener_requester"] = attempt_settings[
-                    "opener_requester"
-                ]
             seed_snapshot = attempt_seed_snapshot()
             common_kwargs = {
                 "article_id": plan.article_id,
                 "output_dir": plan.output_dir,
                 "user_agent": seeded_asset_user_agent(seed_snapshot),
                 "asset_profile": plan.asset_profile,
-                "headers": seeded_asset_headers(seed_snapshot),
-                "browser_context_seed": seed_snapshot,
-                "seed_urls": _seed_urls_for(recovery, seed_snapshot),
-                "asset_budget": getattr(recovery.runtime_context, "asset_budget", None),
-                "artifact_store": getattr(
+            }
+            common_options = AssetDownloadOptions(
+                headers=seeded_asset_headers(seed_snapshot),
+                browser_context_seed=seed_snapshot,
+                asset_budget=getattr(recovery.runtime_context, "asset_budget", None),
+                artifact_store=getattr(
                     recovery.runtime_context, "artifact_store", None
                 ),
-                "provider_name": recovery.provider,
-                "runtime_context": recovery.runtime_context,
-                **supplementary_kwargs,
-            }
+                provider_name=recovery.provider,
+                runtime_context=recovery.runtime_context,
+            )
             if plan.fetch_policy != "direct_then_browser" or not serial_browser_assets:
                 return deps.download_assets(
                     SUPPLEMENTARY_KIND,
                     attempt_settings.get("transport"),
                     assets=attempt_supplementary_assets,
-                    file_document_fetcher=file_document_fetcher,
-                    asset_download_concurrency=attempt_settings.get(
-                        "asset_download_concurrency"
+                    options=replace(
+                        common_options,
+                        file_document_fetcher=file_document_fetcher,
+                        asset_download_concurrency=attempt_settings.get(
+                            "asset_download_concurrency"
+                        ),
+                        fetch_policy=plan.fetch_policy,
                     ),
-                    fetch_policy=plan.fetch_policy,
                     **common_kwargs,
                 )
 
@@ -908,11 +923,14 @@ def _run_browser_asset_download_attempt(
                 SUPPLEMENTARY_KIND,
                 attempt_settings.get("transport"),
                 assets=attempt_supplementary_assets,
-                file_document_fetcher=None,
-                asset_download_concurrency=attempt_settings.get(
-                    "asset_download_concurrency"
+                options=replace(
+                    common_options,
+                    file_document_fetcher=None,
+                    asset_download_concurrency=attempt_settings.get(
+                        "asset_download_concurrency"
+                    ),
+                    fetch_policy="direct_then_browser",
                 ),
-                fetch_policy="direct_then_browser",
                 **common_kwargs,
             )
             eligible_failures = [
@@ -931,9 +949,12 @@ def _run_browser_asset_download_attempt(
                 SUPPLEMENTARY_KIND,
                 attempt_settings.get("transport"),
                 assets=browser_assets,
-                file_document_fetcher=file_document_fetcher,
-                asset_download_concurrency=1,
-                fetch_policy="browser_first",
+                options=replace(
+                    common_options,
+                    file_document_fetcher=file_document_fetcher,
+                    asset_download_concurrency=1,
+                    fetch_policy="browser_first",
+                ),
                 **common_kwargs,
             )
             browser_result = _annotate_split_browser_recovery(
@@ -1014,10 +1035,6 @@ def _build_attempt_document_fetcher(
         browser_user_agent=attempt_seed.get("browser_user_agent")
         or getattr(recovery.runtime, "user_agent", None),
         headless=getattr(recovery.runtime, "headless", True),
-        binary_path=getattr(recovery.runtime, "binary_path", None),
-        cdp_endpoint=getattr(recovery.runtime, "cdp_endpoint", None),
-        profile_dir=getattr(recovery.runtime, "profile_dir", None),
-        user_data_dir=getattr(recovery.runtime, "user_data_dir", None),
         browser_config=recovery.runtime,
     )
 
@@ -1036,24 +1053,6 @@ def _seed_urls_for(
             normalize_text(str(current_seed.get("browser_final_url") or "")),
         ]
     )
-
-
-def _attempt_settings(opener_requester: Any) -> dict[str, Any]:
-    if isinstance(opener_requester, Mapping):
-        return dict(opener_requester)
-    settings: dict[str, Any] = {}
-    if callable(opener_requester):
-        settings["opener_requester"] = opener_requester
-    for name in (
-        "transport",
-        "asset_download_concurrency",
-        "figure_page_fetcher_factory",
-        "cookie_opener_builder",
-    ):
-        value = getattr(opener_requester, name, None)
-        if value is not None:
-            settings[name] = value
-    return settings
 
 
 def _result_mapping(

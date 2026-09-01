@@ -324,14 +324,14 @@ function Test-SkillBundleIntegrity {
     if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
         throw "Missing offline manifest: $manifestPath"
     }
-    Invoke-RuntimePythonScript -Script @'
-from pathlib import Path
-import sys
-
-from paper_fetch.skill_integrity import require_valid_skill_bundle
-
-require_valid_skill_bundle(Path(sys.argv[1]), skill_dir=Path(sys.argv[2]))
-'@ -Arguments @($manifestPath, $SkillDir)
+    $verifier = Join-Path $InstallRoot "scripts/skill_integrity.py"
+    if (-not (Test-Path -LiteralPath $verifier -PathType Leaf)) {
+        throw "Missing Skill verifier: $verifier"
+    }
+    Invoke-Checked -FilePath (ConvertTo-FullPath (Get-RuntimePython)) -Arguments @(
+        "-X", "utf8", $verifier, "verify", "--manifest", $manifestPath,
+        "--skill-dir", $SkillDir
+    )
 }
 
 function Get-AntigravityHome {
@@ -667,10 +667,10 @@ assert "providers" in payload
 import camoufox
 import playwright
 import pymupdf
-from paper_fetch.runtime_browser import BrowserContextManager
+from paper_fetch.providers.browser_runtime.camoufox_manager import CamoufoxBrowserManager
 
 assert hasattr(camoufox, "Camoufox")
-assert BrowserContextManager is not None
+assert CamoufoxBrowserManager is not None
 '@
     Invoke-RuntimePythonScript -Script $browserRuntimeCheck
     Invoke-Checked -FilePath $texmath -Arguments @("--help")

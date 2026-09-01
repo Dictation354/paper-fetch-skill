@@ -124,15 +124,8 @@ def validate_contract(
         )
 
     verify = _workflow("verify.yml", repo_root=repo_root).get("jobs", {})
-    portable = verify.get("macos-contract-portable", {})
     native = verify.get("macos-native", {})
-    portable_contract = contract.get("evidence", {}).get("portable", {})
     native_contract = contract.get("evidence", {}).get("native", {})
-    portable_runners = portable.get("strategy", {}).get("matrix", {}).get("os", [])
-    if portable_contract.get("runners") != portable_runners:
-        errors.append("evidence.portable.runners must match verify workflow")
-    if portable_contract.get("native_equivalent") is not False:
-        errors.append("portable evidence must not claim native equivalence")
     if native_contract.get("runner") != native.get("runs-on"):
         errors.append("evidence.native.runner must match verify workflow")
     native_text = (repo_root / ".github" / "workflows" / "verify.yml").read_text(
@@ -168,11 +161,11 @@ def validate_contract(
     for key in (
         "runtime_bundle_built_in",
         "install_downloads_runtime",
-        "explicit_binary_auto_prepare",
+        "managed_runtime_preparation",
     ):
         if browser.get(key) is not False:
             errors.append(f"browser.{key} must be false")
-    for key in ("managed_runtime_preparation", "native_bundle_gate"):
+    for key in ("native_bundle_gate",):
         if browser.get(key) is not True:
             errors.append(f"browser.{key} must be true")
 
@@ -181,6 +174,8 @@ def validate_contract(
         errors.append("release.installer_manifest must identify the installer owner")
     if release.get("asset_owner") != "scripts/prepare_release_assets.py":
         errors.append("release.asset_owner must identify the release asset owner")
+    if release.get("single_source_revision") is not True:
+        errors.append("release.single_source_revision must be true")
     if release.get("public_assets_are_installers_only") is not True:
         errors.append("release.public_assets_are_installers_only must be true")
     if release.get("build_evidence_is_not_public") is not True:

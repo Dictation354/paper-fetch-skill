@@ -44,10 +44,7 @@ from ..reason_codes import (
     BROWSER_CONTEXT_CREATE_FAILED,
     BROWSER_PAGE_CREATE_FAILED,
 )
-from ..runtime_browser import (
-    ManagedBrowserError,
-    browser_page_user_agent,
-)
+from ..runtime_browser import browser_page_user_agent
 from ..utils import normalize_text
 from ._atypon_browser_workflow_profiles import publisher_profile
 from .browser_runtime.context import open_browser_context
@@ -76,10 +73,6 @@ from .browser_workflow.fetchers.readiness import (
 )
 from .browser_workflow.fetchers.scripts import _LOADED_IMAGE_CANVAS_EXPORT_SCRIPT
 from .browser_workflow.shared import BROWSER_HTML_BLOCKED_RESOURCE_TYPES
-from .browser_workflow.reuse_cache import (
-    browser_runtime_fingerprint,
-    browser_storage_state_fingerprint,
-)
 
 if TYPE_CHECKING:
     from ..runtime import RuntimeContext
@@ -1068,14 +1061,6 @@ def _wait_for_browser_html_readiness(
             readiness_elapsed,
             3,
         )
-        if runtime_context is not None and hasattr(
-            runtime_context, "accumulate_stage_timing"
-        ):
-            with contextlib.suppress(Exception):
-                runtime_context.accumulate_stage_timing(
-                    "dom_readiness_seconds",
-                    elapsed=readiness_elapsed,
-                )
     return body_readiness
 
 
@@ -1126,12 +1111,7 @@ def _browser_page_failure_details(
         "page_summary": (request.summary or "")[:1000] or None,
     }
     if request.failure_code == "aws_waf_challenge":
-        details.update(
-            {
-                "challenge_provider": "aws_waf",
-                "legacy_reason_code": "cloudflare_challenge",
-            }
-        )
+        details.update({"challenge_provider": "aws_waf"})
     if runtime_context is None:
         return details
     diagnostic = capture_page_diagnostic(runtime_context, request)
@@ -1340,35 +1320,12 @@ def _open_browser_html_context(
             )
         trace["runtime_page_reused"] = reused
         trace["browser_connect_seconds"] = round(time.monotonic() - connect_started, 3)
-        external_diagnostics = getattr(
-            browser_context, "_paper_fetch_external_cdp_diagnostics", None
-        )
-        if isinstance(external_diagnostics, Mapping):
-            trace["external_cdp_context"] = dict(external_diagnostics)
-        elif config.cdp_endpoint:
-            trace["external_cdp_context"] = {
-                "external_cdp": True,
-                "borrowed_existing_context": None,
-                "ignored_context_options": [],
-                "storage_state_cookie_count": None,
-            }
         return manager, browser_context, page
     except PlaywrightBrowserFailure:
         if not reused:
             _safe_close(browser_context)
             _safe_close(manager)
         raise
-    except ManagedBrowserError as exc:
-        trace["browser_connect_seconds"] = round(time.monotonic() - connect_started, 3)
-        trace["browser_failure"] = dict(exc.details)
-        if not reused:
-            _safe_close(browser_context)
-            _safe_close(manager)
-        raise PlaywrightBrowserFailure(
-            exc.code,
-            exc.message,
-            details={"trace": trace, "browser_failure": dict(exc.details)},
-        ) from exc
     except Exception as exc:
         trace["browser_connect_seconds"] = round(time.monotonic() - connect_started, 3)
         message = normalize_text(str(exc)) or "Browser context creation failed."
@@ -1656,7 +1613,7 @@ def fetch_html_with_playwright(
         raise PlaywrightBrowserFailure(
             "empty_html_attempts", "No publisher HTML candidates were attempted."
         )
-    backend_name = normalize_text(config.backend).lower()
+    backend_name = "camoufox"
     active_blocked_resource_types = _active_browser_resource_types(
         backend_name=backend_name,
         disable_media=disable_media,
@@ -1674,22 +1631,12 @@ def fetch_html_with_playwright(
         publisher,
         configured_timeout_ms=caller_timeout_ms,
     )
-    if backend_name != "camoufox":
-        raise PlaywrightBrowserFailure(
-            "browser_backend_invalid",
-            f"Unsupported browser backend {config.backend!r}.",
-        )
     artifact_dir = config.artifact_dir / backend_name
     configured_user_agent = normalize_text(config.user_agent)
     normalized_wait_for_selector = normalize_text(readiness.selector)
     configured_storage_state_path = _storage_state_path(config)
     trace: dict[str, Any] = {
         "backend": backend_name,
-        "profile_fingerprint": browser_runtime_fingerprint(config),
-        "storage_state_fingerprint": browser_storage_state_fingerprint(
-            config,
-            browser_context_seed,
-        ),
         "candidate_count": len(candidate_urls),
         "candidates": [],
         "navigation_count": 0,
@@ -1703,7 +1650,6 @@ def fetch_html_with_playwright(
         "article_body_wait_enabled": bool(readiness.wait_for_article_body),
         "selector_wait_enabled": bool(normalized_wait_for_selector),
         "wait_for_selector": normalized_wait_for_selector or None,
-        "external_cdp": bool(config.cdp_endpoint),
         "storage_state_path": str(configured_storage_state_path or ""),
         "storage_state_load": {
             "path": str(configured_storage_state_path or "") or None,
@@ -1903,12 +1849,6 @@ def fetch_html_with_playwright(
                             "diagnostics": {"browser_backend": backend_name},
                         },
                     )
-                    candidate_trace["storage_state_fingerprint"] = (
-                        browser_storage_state_fingerprint(
-                            config,
-                            browser_context_seed,
-                        )
-                    )
                     candidate_trace["duration_seconds"] = round(
                         time.monotonic() - candidate_started, 3
                     )
@@ -2026,12 +1966,6 @@ def fetch_html_with_playwright(
                         "paper_fetch_html_fetcher": backend_name,
                         "diagnostics": {"browser_backend": backend_name},
                     },
-                )
-                candidate_trace["storage_state_fingerprint"] = (
-                    browser_storage_state_fingerprint(
-                        config,
-                        browser_context_seed,
-                    )
                 )
                 if browser_context_seed.get(
                     "browser_cookies"
@@ -2176,7 +2110,7 @@ def fetch_html_with_playwright(
                                 doi=config.doi,
                                 target_url=normalized_url,
                                 final_url=final_url,
-                                backend=config.backend,
+                                backend="camoufox",
                                 response_status=status,
                                 title=title or "",
                                 summary=summary,
@@ -2227,7 +2161,7 @@ def fetch_html_with_playwright(
                                 doi=config.doi,
                                 target_url=normalized_url,
                                 final_url=final_url,
-                                backend=config.backend,
+                                backend="camoufox",
                                 response_status=status,
                                 title=title or "",
                                 summary=summary,
@@ -2313,14 +2247,6 @@ def fetch_html_with_playwright(
             }
         trace["duration_seconds"] = round(time.monotonic() - overall_started, 3)
         trace["remaining_ms"] = remaining_timeout_ms()
-        if runtime_context is not None and hasattr(
-            runtime_context, "accumulate_stage_timing"
-        ):
-            with contextlib.suppress(Exception):
-                runtime_context.accumulate_stage_timing(
-                    "browser_seconds",
-                    elapsed=time.monotonic() - overall_started,
-                )
         _remove_page_diagnostic_listeners(page, page_diagnostic_listeners)
         if (
             shared_page_session is None

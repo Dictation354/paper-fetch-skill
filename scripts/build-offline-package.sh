@@ -11,7 +11,6 @@ PYTHON_BIN="${PYTHON_BIN:-python3}"
 INSTALLER_MANIFEST_FILE="$REPO_DIR/installer/manifest.json"
 MACOS_MINIMUM_OS_VERSION="15.0"
 CAMOUFOX_PYTHON_PACKAGE_VERSION=""
-PAPER_FETCH_OFFLINE_TOOLING_REVISION="${PAPER_FETCH_OFFLINE_TOOLING_REVISION:-}"
 STAGING_OWNERSHIP_MARKER_NAME=".paper-fetch-offline-staging-owner"
 STAGING_OWNERSHIP_MARKER_MAGIC="paper-fetch-offline-staging-v1"
 
@@ -152,12 +151,6 @@ validate_package_name() {
   esac
 }
 
-validate_tooling_revision() {
-  [ -z "$PAPER_FETCH_OFFLINE_TOOLING_REVISION" ] && return 0
-  [[ "$PAPER_FETCH_OFFLINE_TOOLING_REVISION" =~ ^[0-9A-Fa-f]{40}$ ]] \
-    || die "PAPER_FETCH_OFFLINE_TOOLING_REVISION must be a 40-character hexadecimal Git revision."
-}
-
 canonical_path() {
   "$PYTHON_BIN" -c \
     'from pathlib import Path; import sys; print(Path(sys.argv[1]).expanduser().resolve(strict=False))' \
@@ -264,7 +257,6 @@ prepare_owned_staging() {
 }
 
 [ -z "$PACKAGE_NAME" ] || validate_package_name "$PACKAGE_NAME"
-validate_tooling_revision
 
 project_version() {
   "$PYTHON_BIN" -c 'import pathlib, sys, tomllib; print(tomllib.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))["project"]["version"])' "$REPO_DIR/pyproject.toml"
@@ -286,12 +278,13 @@ print(value)
 copy_runtime_assets() {
   local staging="$1"
   log "Copying runtime installer assets"
-  mkdir -p "$staging/installer" "$staging/skills"
+  mkdir -p "$staging/installer" "$staging/scripts" "$staging/skills"
   cp "$REPO_DIR/install-offline.sh" "$staging/install-offline.sh"
   chmod +x "$staging/install-offline.sh"
   cp "$REPO_DIR/.env.example" "$staging/.env.example"
   cp "$REPO_DIR/LICENSE" "$staging/LICENSE"
   cp "$INSTALLER_MANIFEST_FILE" "$staging/installer/manifest.json"
+  cp "$REPO_DIR/scripts/skill_integrity.py" "$staging/scripts/skill_integrity.py"
   cp -a "$REPO_DIR/skills/paper-fetch-skill" "$staging/skills/"
 }
 
@@ -400,7 +393,7 @@ PY
   "$PYTHON_BIN" -m compileall -q "$site_packages"
 
   PYTHONPATH="$site_packages${PYTHONPATH:+:$PYTHONPATH}" \
-    "$PYTHON_BIN" -X utf8 -c 'import camoufox; import playwright; import pymupdf; import paper_fetch; import paper_fetch.mcp.server; from paper_fetch.runtime_browser import BrowserContextManager; assert hasattr(camoufox, "Camoufox"); assert BrowserContextManager is not None'
+    "$PYTHON_BIN" -X utf8 -c 'import camoufox; import playwright; import pymupdf; import paper_fetch; import paper_fetch.mcp.server; from paper_fetch.providers.browser_runtime.camoufox_manager import CamoufoxBrowserManager; assert hasattr(camoufox, "Camoufox"); assert CamoufoxBrowserManager is not None'
 
   staging_is_owned "$staging" "$package_name" \
     || die "Offline staging ownership changed during runtime assembly: $staging"
@@ -775,14 +768,14 @@ write_manifest_and_checksums() {
   git_revision="$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null || true)"
   skill_name="$(installer_manifest_value skill.name)"
   skill_bundle_json="$(
-    "$PYTHON_BIN" "$REPO_DIR/src/paper_fetch/skill_integrity.py" build \
+    "$PYTHON_BIN" "$REPO_DIR/scripts/skill_integrity.py" build \
       --skill-dir "$staging/skills/$skill_name" \
       --name "$skill_name" \
       --root "skills/$skill_name"
   )"
 
   log "Writing manifest and checksums"
-  "$PYTHON_BIN" - "$staging" "$version" "$git_revision" "$target_platform" "$target_arch" "$python_tag" "$minimum_os_version" "$INSTALLER_MANIFEST_FILE" "$skill_bundle_json" "$PAPER_FETCH_OFFLINE_TOOLING_REVISION" "$CAMOUFOX_PYTHON_PACKAGE_VERSION" <<'PY'
+  "$PYTHON_BIN" - "$staging" "$version" "$git_revision" "$target_platform" "$target_arch" "$python_tag" "$minimum_os_version" "$INSTALLER_MANIFEST_FILE" "$skill_bundle_json" "$CAMOUFOX_PYTHON_PACKAGE_VERSION" <<'PY'
 from __future__ import annotations
 
 from importlib.metadata import distributions
@@ -801,8 +794,7 @@ python_tag = sys.argv[6]
 minimum_os_version = sys.argv[7] or None
 installer_manifest = json.loads(Path(sys.argv[8]).read_text(encoding="utf-8"))
 skill_bundle = json.loads(sys.argv[9])
-tooling_revision = sys.argv[10] or None
-resolved_camoufox_version = sys.argv[11]
+resolved_camoufox_version = sys.argv[10]
 site_packages = staging / "runtime" / "site-packages"
 installed_packages = sorted(path.name for path in site_packages.glob("*.dist-info"))
 camoufox_distributions = [
@@ -830,11 +822,6 @@ payload = {
     "version": version,
     "built_at_utc": datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
     "git_revision": git_revision,
-    **(
-        {"tooling_revision": tooling_revision}
-        if tooling_revision is not None
-        else {}
-    ),
     "target": {
         "platform": target_platform,
         "arch": target_arch,

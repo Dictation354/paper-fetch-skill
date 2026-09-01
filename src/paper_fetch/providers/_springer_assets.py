@@ -12,6 +12,7 @@ from ..extraction.html.assets import (
     FULL_SIZE_IMAGE_ATTRS,
     FIGURE_KIND,
     PREVIEW_IMAGE_ATTRS,
+    AssetDownloadOptions,
     FigurePageFetcher,
     SUPPLEMENTARY_KIND,
     _soup_attr_url,
@@ -560,13 +561,14 @@ def download_assets_for_springer(
         output_dir=output_dir,
         user_agent=user_agent,
         asset_profile=asset_profile,
-        figure_page_fetcher=figure_page_fetcher,
-        browser_context_seed=browser_context_seed,
-        seed_urls=seed_urls,
-        candidate_builder=figure_download_candidates,
-        asset_download_concurrency=asset_download_concurrency,
-        provider_name="springer",
-        runtime_context=runtime_context,
+        options=AssetDownloadOptions(
+            figure_page_fetcher=figure_page_fetcher,
+            browser_context_seed=browser_context_seed,
+            candidate_builder=figure_download_candidates,
+            asset_download_concurrency=asset_download_concurrency,
+            provider_name="springer",
+            runtime_context=runtime_context,
+        ),
     )
     supplementary_result = download_assets(
         SUPPLEMENTARY_KIND,
@@ -576,11 +578,12 @@ def download_assets_for_springer(
         output_dir=output_dir,
         user_agent=user_agent,
         asset_profile=asset_profile,
-        browser_context_seed=browser_context_seed,
-        seed_urls=seed_urls,
-        asset_download_concurrency=asset_download_concurrency,
-        provider_name="springer",
-        runtime_context=runtime_context,
+        options=AssetDownloadOptions(
+            browser_context_seed=browser_context_seed,
+            asset_download_concurrency=asset_download_concurrency,
+            provider_name="springer",
+            runtime_context=runtime_context,
+        ),
     )
     return {
         "assets": [

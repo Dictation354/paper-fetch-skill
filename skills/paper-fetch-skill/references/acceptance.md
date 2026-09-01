@@ -35,12 +35,12 @@ MCP 单篇 `fetch_paper` 成功响应直接返回紧凑 `acceptance`；`batch_fe
 
 ## 文件、路径与 hash 验收
 
-任务要求写盘时，对每个返回的 `output_path`、`saved_markdown_path` 或 `output_artifacts[*].path` 执行以下检查：
+任务要求写盘时，对 CLI `output_path`、批量 `output_artifacts[*].path`，或由单篇 MCP 请求参数确定的 Markdown 目标执行以下检查：
 
 1. 路径位于用户选择/推断的目标目录，文件存在、可读且非空。
 2. Markdown front matter 或 manifest identity 与规范目标一致；文件名和正文里偶然出现的 DOI 不能证明归属。
 3. 内容级别满足意图；`abstract_only` / `metadata_only` 文件仍不能当作 fulltext archive。
-4. 当前文件 size/SHA-256 与 manifest snapshot 一致；`paper-fetch manifest audit <path>` / `reconcile <path>` 的 stale 结果必须保留为未通过。
+4. 当前文件 size/SHA-256 与返回的输出快照一致；没有输出快照时直接计算并报告实际值。
 5. 资产 profile 与实际本地文件、MIME/尺寸/hash、remote-only 或 missing 事实一致。
 
 文件被 `.gitignore` 忽略、`git status` 没有变化或位于仓库外，都不影响上述验收。需要独立复核单个产物时可用标准库计算实际 size/hash，不依赖 `jq`：
@@ -58,12 +58,11 @@ print(json.dumps({"path": str(path.resolve()), "size": len(payload), "sha256": s
 PY
 ```
 
-## 批量与恢复验收
+## 批量验收
 
-- 结果必须覆盖原始规范目标的完整 1-based index 集合；`results` 按 input index，`completion_order`/JSONL 行序只表示完成顺序。
-- 每个 index 的最新 attempt 都有 terminal record、run/record ID、request fingerprint、acceptance 和结构化 error/输出 hash；取消、限流和未调度项不能静默消失。
-- Resume 前先只读 audit。只有 reusable 的最新 attempt 可跳过；missing、stale、失败或低于请求质量的项追加下一 attempt。输入顺序、工具版本或关键请求 fingerprint 不一致时新建 run，不改写旧状态。
-- 持久化 summary/JSONL、主输出和额外 Markdown 分别验收；某一类文件存在不证明其它类已经完成。
+- 结果必须覆盖原始规范目标的完整 1-based index 集合；响应 `results` 和最终 JSONL 都按 input index，`completion_order` 只在响应中表示实际完成顺序。
+- 每个 index 都有 terminal record、request fingerprint、acceptance 和结构化 error/输出 hash；取消、限流和未调度项不能静默消失。
+- 最终 JSONL、主输出和额外 Markdown 分别验收；某一类文件存在不证明其它类已经完成。JSONL 是一次性最终结果，不作为恢复状态。
 
 ## 最终报告
 

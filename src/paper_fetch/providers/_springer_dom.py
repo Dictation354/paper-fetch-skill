@@ -362,6 +362,10 @@ def _normalized_root_html(html_text: str) -> tuple[str, Any]:
     if root is None:
         root = soup.body or soup
     active_root = copy.deepcopy(root)
+    for expandable_box in active_root.select(
+        '[data-expandable-box="true"][aria-hidden="true"]'
+    ):
+        del expandable_box["aria-hidden"]
     prune_html_tree(active_root)
     _remove_springer_ai_alt_disclaimers(active_root)
     return str(active_root), active_root

@@ -17,7 +17,6 @@ from .cache_index import (
     list_cache_entries,
     preferred_cached_entries,
     register_markdown_entry,
-    refresh_cache_index_for_doi,
 )
 
 
@@ -28,7 +27,6 @@ class MCPDeps:
     service_probe_has_fulltext: Callable[..., Any]
     service_resolve_paper: Callable[..., Any]
     build_clients: Callable[..., Any]
-    refresh_cache_index_for_doi: Callable[..., Any]
     fetch_paper_envelope: Callable[..., Any]
     write_cached_fetch_envelope: Callable[..., Any]
     resolve_mcp_download_dir: Callable[..., Any]
@@ -58,7 +56,6 @@ def default_mcp_deps() -> MCPDeps:
         service_probe_has_fulltext=service_probe_has_fulltext,
         service_resolve_paper=service_resolve_paper,
         build_clients=build_clients,
-        refresh_cache_index_for_doi=refresh_cache_index_for_doi,
         fetch_paper_envelope=_fetch_paper_envelope,
         write_cached_fetch_envelope=_write_cached_fetch_envelope,
         resolve_mcp_download_dir=resolve_mcp_download_dir,

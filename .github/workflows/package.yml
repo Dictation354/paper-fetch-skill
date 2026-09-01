@@ -39,13 +39,11 @@ jobs:
           python-version: "3.11"
       - name: Build wheel and sdist
         run: uv build
-      - name: Verify exact distribution inventory
+      - name: Verify Python archive trust boundary
         run: |
           uv run python scripts/verify_python_distribution.py \
-            --inventory quality/python-distribution-inventory.json \
             --wheel dist/*.whl \
-            --sdist dist/*.tar.gz \
-            --repo-root .
+            --sdist dist/*.tar.gz
       - name: Install and smoke wheel and sdist independently
         shell: bash
         run: |
@@ -84,8 +82,6 @@ jobs:
           assert skill.joinpath("references/tool-contract.md").is_file()
           PY
           done
-          cp quality/python-distribution-inventory.json \
-            dist/python-distribution-inventory.json
       - name: Scan Python distribution artifacts for secret values
         id: secret_scan_python_distributions
         env:

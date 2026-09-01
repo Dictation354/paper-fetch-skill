@@ -5,7 +5,6 @@ from .convert import (
     convert_mathml_element_to_latex,
     convert_mathml_string,
     formula_runtime_env,
-    formula_timing_collector,
 )
 
 __all__ = [
@@ -13,5 +12,4 @@ __all__ = [
     "convert_mathml_element_to_latex",
     "convert_mathml_string",
     "formula_runtime_env",
-    "formula_timing_collector",
 ]

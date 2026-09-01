@@ -1,8 +1,6 @@
 # ruff: noqa: F403,F405
 from __future__ import annotations
 
-from dataclasses import replace
-
 from ._atypon_browser_workflow_provider_support import *
 from paper_fetch.runtime import RuntimeContext
 
@@ -77,11 +75,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
             }
         )
         with tempfile.TemporaryDirectory() as tmpdir:
-            cdp_endpoint = "ws://127.0.0.1:9222/devtools/browser/ams-assets"
-            runtime = replace(
-                self._runtime_config(tmpdir, "ams", "10.1175/jcli-d-23-0738.1"),
-                cdp_endpoint=cdp_endpoint,
-            )
+            runtime = self._runtime_config(tmpdir, "ams", "10.1175/jcli-d-23-0738.1")
             raw_payload = _typed_raw_payload(
                 provider="ams",
                 source_url=landing_url,
@@ -103,38 +97,27 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
                 ensure_runtime_ready=mock.Mock(),
                 _build_shared_browser_image_fetcher=mocked_builder,
             )
-            with (
-                mock.patch.object(
-                    html_assets, "_build_cookie_seeded_opener"
-                ) as mocked_opener,
-                mock.patch.object(
-                    html_assets, "_request_with_opener"
-                ) as mocked_request,
-            ):
-                result = client.download_related_assets(
-                    "10.1175/jcli-d-23-0738.1",
-                    {"doi": "10.1175/jcli-d-23-0738.1", "title": "AMS Figure"},
-                    raw_payload,
-                    Path(tmpdir),
-                    asset_profile="body",
-                )
-                saved_path = Path(result["assets"][0]["path"])
-                saved_exists = saved_path.is_file()
-                saved_bytes = saved_path.read_bytes()
-                article = client.to_article_model(
-                    {"doi": "10.1175/jcli-d-23-0738.1", "title": "AMS Figure"},
-                    raw_payload,
-                    downloaded_assets=result["assets"],
-                    asset_failures=result["asset_failures"],
-                )
-                rendered = article.to_ai_markdown(
-                    asset_profile="body", max_tokens="full_text"
-                )
+            result = client.download_related_assets(
+                "10.1175/jcli-d-23-0738.1",
+                {"doi": "10.1175/jcli-d-23-0738.1", "title": "AMS Figure"},
+                raw_payload,
+                Path(tmpdir),
+                asset_profile="body",
+            )
+            saved_path = Path(result["assets"][0]["path"])
+            saved_exists = saved_path.is_file()
+            saved_bytes = saved_path.read_bytes()
+            article = client.to_article_model(
+                {"doi": "10.1175/jcli-d-23-0738.1", "title": "AMS Figure"},
+                raw_payload,
+                downloaded_assets=result["assets"],
+                asset_failures=result["asset_failures"],
+            )
+            rendered = article.to_ai_markdown(
+                asset_profile="body", max_tokens="full_text"
+            )
 
         mocked_builder.assert_called_once()
-        self.assertEqual(mocked_builder.call_args.kwargs["cdp_endpoint"], cdp_endpoint)
-        mocked_opener.assert_not_called()
-        mocked_request.assert_not_called()
         shared_fetcher.assert_called_once()
         self.assertEqual(shared_fetcher.call_args.args[0], figure_url)
         self.assert_direct_asset_attempted(transport)
@@ -235,33 +218,25 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
                 fetch_html_with_browser=mocked_fetch,
                 _build_shared_browser_image_fetcher=mocked_builder,
             )
-            with (
-                mock.patch.object(
-                    html_assets, "_build_cookie_seeded_opener"
-                ) as mocked_opener,
-                mock.patch.object(
-                    html_assets, "_request_with_opener"
-                ) as mocked_request,
-            ):
-                result = client.download_related_assets(
-                    "10.1021/acsomega.4c03987",
-                    {"doi": "10.1021/acsomega.4c03987", "title": "ACS Figure"},
-                    raw_payload,
-                    Path(tmpdir),
-                    asset_profile="body",
-                )
-                saved_path = Path(result["assets"][0]["path"])
-                saved_exists = saved_path.is_file()
-                saved_bytes = saved_path.read_bytes()
-                article = client.to_article_model(
-                    {"doi": "10.1021/acsomega.4c03987", "title": "ACS Figure"},
-                    raw_payload,
-                    downloaded_assets=result["assets"],
-                    asset_failures=result["asset_failures"],
-                )
-                rendered = article.to_ai_markdown(
-                    asset_profile="body", max_tokens="full_text"
-                )
+            result = client.download_related_assets(
+                "10.1021/acsomega.4c03987",
+                {"doi": "10.1021/acsomega.4c03987", "title": "ACS Figure"},
+                raw_payload,
+                Path(tmpdir),
+                asset_profile="body",
+            )
+            saved_path = Path(result["assets"][0]["path"])
+            saved_exists = saved_path.is_file()
+            saved_bytes = saved_path.read_bytes()
+            article = client.to_article_model(
+                {"doi": "10.1021/acsomega.4c03987", "title": "ACS Figure"},
+                raw_payload,
+                downloaded_assets=result["assets"],
+                asset_failures=result["asset_failures"],
+            )
+            rendered = article.to_ai_markdown(
+                asset_profile="body", max_tokens="full_text"
+            )
 
         mocked_fetch.assert_called_once()
         self.assertEqual(mocked_fetch.call_args.args[0], [figure_page_url])
@@ -274,8 +249,6 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
         self.assertEqual(mocked_fetch.call_args.kwargs["wait_seconds"], 2)
         self.assertTrue(mocked_fetch.call_args.kwargs["options"].reuse_runtime_page)
         mocked_builder.assert_called_once()
-        mocked_opener.assert_not_called()
-        mocked_request.assert_not_called()
         shared_fetcher.assert_called_once()
         self.assertEqual(shared_fetcher.call_args.args[0], figure_url)
         self.assert_direct_asset_attempted(transport)
@@ -339,28 +312,18 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
                 fetch_html_with_browser=mocked_fetch,
                 _build_shared_browser_image_fetcher=mocked_builder,
             )
-            with (
-                mock.patch.object(
-                    html_assets, "_build_cookie_seeded_opener"
-                ) as mocked_opener,
-                mock.patch.object(
-                    html_assets, "_request_with_opener"
-                ) as mocked_request,
-            ):
-                result = client.download_related_assets(
-                    SCIENCE_SAMPLE.doi,
-                    {"doi": SCIENCE_SAMPLE.doi, "title": SCIENCE_SAMPLE.title},
-                    raw_payload,
-                    Path(tmpdir),
-                    asset_profile="body",
-                )
-                saved_path = Path(result["assets"][0]["path"])
-                saved_bytes = saved_path.read_bytes()
+            result = client.download_related_assets(
+                SCIENCE_SAMPLE.doi,
+                {"doi": SCIENCE_SAMPLE.doi, "title": SCIENCE_SAMPLE.title},
+                raw_payload,
+                Path(tmpdir),
+                asset_profile="body",
+            )
+            saved_path = Path(result["assets"][0]["path"])
+            saved_bytes = saved_path.read_bytes()
 
         mocked_fetch.assert_not_called()
         mocked_builder.assert_called_once()
-        mocked_opener.assert_not_called()
-        mocked_request.assert_not_called()
         self.assert_direct_asset_attempted(transport)
         shared_fetcher.assert_called_once()
         self.assertEqual(shared_fetcher.call_args.args[0], figure_url)
@@ -405,22 +368,9 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
                 "url": supplementary_url,
             }
         )
-        challenge_html = {
-            "status_code": 403,
-            "headers": {"content-type": "text/html; charset=utf-8"},
-            "body": (
-                b"<html><head><title>Just a moment...</title></head>"
-                b"<body>Checking your browser before accessing</body></html>"
-            ),
-            "url": supplementary_url,
-        }
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            cdp_endpoint = "ws://127.0.0.1:9222/devtools/browser/science-assets"
-            runtime = replace(
-                self._runtime_config(tmpdir, "science", SCIENCE_SAMPLE.doi),
-                cdp_endpoint=cdp_endpoint,
-            )
+            runtime = self._runtime_config(tmpdir, "science", SCIENCE_SAMPLE.doi)
             raw_payload = _typed_raw_payload(
                 provider="science",
                 source_url=SCIENCE_SAMPLE.landing_url,
@@ -440,27 +390,17 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
                 _build_shared_browser_image_fetcher=mocked_image_builder,
                 _build_shared_browser_file_fetcher=mocked_file_builder,
             )
-            with (
-                mock.patch.object(
-                    html_assets, "_build_cookie_seeded_opener", return_value=object()
-                ) as mocked_opener,
-                mock.patch.object(
-                    html_assets, "_request_with_opener", return_value=challenge_html
-                ) as mocked_request,
-            ):
-                result = client.download_related_assets(
-                    SCIENCE_SAMPLE.doi,
-                    {"doi": SCIENCE_SAMPLE.doi, "title": SCIENCE_SAMPLE.title},
-                    raw_payload,
-                    Path(tmpdir),
-                    asset_profile="all",
-                )
+            result = client.download_related_assets(
+                SCIENCE_SAMPLE.doi,
+                {"doi": SCIENCE_SAMPLE.doi, "title": SCIENCE_SAMPLE.title},
+                raw_payload,
+                Path(tmpdir),
+                asset_profile="all",
+            )
 
         # A direct 403 is followed by one real browser-byte recovery. The
         # cookie opener would repeat the same URL/session direct request and is
         # therefore intentionally skipped.
-        mocked_opener.assert_not_called()
-        mocked_request.assert_not_called()
         mocked_image_builder.assert_called_once()
         mocked_file_builder.assert_called_once()
         self.assertTrue(
@@ -468,12 +408,6 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
         )
         self.assertTrue(
             mocked_file_builder.call_args.kwargs["use_runtime_shared_browser"]
-        )
-        self.assertEqual(
-            mocked_image_builder.call_args.kwargs["cdp_endpoint"], cdp_endpoint
-        )
-        self.assertEqual(
-            mocked_file_builder.call_args.kwargs["cdp_endpoint"], cdp_endpoint
         )
         self.assertTrue(mocked_file_builder.call_args.kwargs["thread_local"])
         self.assert_direct_asset_attempted(transport)
@@ -507,15 +441,6 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
             transport=transport,
             env={"PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY": "2"},
         )
-        challenge_html = {
-            "status_code": 403,
-            "headers": {"content-type": "text/html; charset=utf-8"},
-            "body": (
-                b"<html><head><title>Just a moment...</title></head>"
-                b"<body>Checking your browser before accessing</body></html>"
-            ),
-            "url": supplementary_url,
-        }
         private_contexts: list[_ProviderFakeBrowserContext] = []
 
         def new_private_context(_manager, **_kwargs):
@@ -575,12 +500,6 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
                         "body": b"%PDF-1.7 supplementary",
                         "url": supplementary_url,
                     },
-                ),
-                mock.patch.object(
-                    html_assets, "_build_cookie_seeded_opener", return_value=object()
-                ),
-                mock.patch.object(
-                    html_assets, "_request_with_opener", return_value=challenge_html
                 ),
             ):
                 result = client.download_related_assets(
@@ -696,29 +615,19 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
                 fetch_html_with_browser=mocked_fetch,
                 _build_shared_browser_image_fetcher=mocked_builder,
             )
-            with (
-                mock.patch.object(
-                    html_assets, "_build_cookie_seeded_opener"
-                ) as mocked_opener,
-                mock.patch.object(
-                    html_assets, "_request_with_opener"
-                ) as mocked_request,
-            ):
-                result = client.download_related_assets(
-                    PNAS_SAMPLE.doi,
-                    {"doi": PNAS_SAMPLE.doi, "title": PNAS_SAMPLE.title},
-                    raw_payload,
-                    Path(tmpdir),
-                    asset_profile="body",
-                )
-                saved_path = Path(result["assets"][0]["path"])
-                saved_bytes = saved_path.read_bytes()
+            result = client.download_related_assets(
+                PNAS_SAMPLE.doi,
+                {"doi": PNAS_SAMPLE.doi, "title": PNAS_SAMPLE.title},
+                raw_payload,
+                Path(tmpdir),
+                asset_profile="body",
+            )
+            saved_path = Path(result["assets"][0]["path"])
+            saved_bytes = saved_path.read_bytes()
 
         mocked_fetch.assert_called_once()
         self.assertEqual(mocked_fetch.call_args.args[0], [figure_page_url])
         mocked_builder.assert_called_once()
-        mocked_opener.assert_not_called()
-        mocked_request.assert_not_called()
         self.assert_direct_asset_attempted(transport)
         self.assertEqual(
             [call.args[0] for call in shared_fetcher.call_args_list],
@@ -808,27 +717,17 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
                 ),
             )
             mocked_builder = client.deps._build_shared_browser_image_fetcher
-            with (
-                mock.patch.object(
-                    html_assets, "_build_cookie_seeded_opener"
-                ) as mocked_opener,
-                mock.patch.object(
-                    html_assets, "_request_with_opener"
-                ) as mocked_request,
-            ):
-                result = client.download_related_assets(
-                    PNAS_SAMPLE.doi,
-                    {"doi": PNAS_SAMPLE.doi, "title": PNAS_SAMPLE.title},
-                    raw_payload,
-                    Path(tmpdir),
-                    asset_profile="body",
-                )
-                saved_path = Path(result["assets"][0]["path"])
-                saved_bytes = saved_path.read_bytes()
+            result = client.download_related_assets(
+                PNAS_SAMPLE.doi,
+                {"doi": PNAS_SAMPLE.doi, "title": PNAS_SAMPLE.title},
+                raw_payload,
+                Path(tmpdir),
+                asset_profile="body",
+            )
+            saved_path = Path(result["assets"][0]["path"])
+            saved_bytes = saved_path.read_bytes()
 
         mocked_builder.assert_called_once()
-        mocked_opener.assert_not_called()
-        mocked_request.assert_not_called()
         self.assert_direct_asset_attempted(transport)
         shared_fetcher.assert_called_once()
         self.assertEqual(shared_fetcher.call_args.args[0], full_size_url)
@@ -1058,26 +957,16 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
                 fetch_html_with_browser=mocked_fetch,
                 _build_shared_browser_image_fetcher=mocked_builder,
             )
-            with (
-                mock.patch.object(
-                    html_assets, "_build_cookie_seeded_opener"
-                ) as mocked_opener,
-                mock.patch.object(
-                    html_assets, "_request_with_opener"
-                ) as mocked_request,
-            ):
-                result = client.download_related_assets(
-                    SCIENCE_SAMPLE.doi,
-                    {"doi": SCIENCE_SAMPLE.doi, "title": SCIENCE_SAMPLE.title},
-                    raw_payload,
-                    Path(tmpdir),
-                    asset_profile="body",
-                )
+            result = client.download_related_assets(
+                SCIENCE_SAMPLE.doi,
+                {"doi": SCIENCE_SAMPLE.doi, "title": SCIENCE_SAMPLE.title},
+                raw_payload,
+                Path(tmpdir),
+                asset_profile="body",
+            )
 
         mocked_fetch.assert_not_called()
         mocked_builder.assert_called_once()
-        mocked_opener.assert_not_called()
-        mocked_request.assert_not_called()
         self.assert_direct_asset_attempted(transport)
         shared_fetcher.assert_called_once()
         self.assertEqual(shared_fetcher.call_args.args[0], preview_url)

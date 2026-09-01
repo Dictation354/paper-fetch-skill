@@ -73,17 +73,6 @@ function Write-Log {
     Write-Host "==> $Message"
 }
 
-function Get-OfflineToolingRevision {
-    $revision = [string]$env:PAPER_FETCH_OFFLINE_TOOLING_REVISION
-    if ([string]::IsNullOrEmpty($revision)) {
-        return $null
-    }
-    if ($revision -cnotmatch '\A[0-9A-Fa-f]{40}\z') {
-        throw "PAPER_FETCH_OFFLINE_TOOLING_REVISION must be a 40-character hexadecimal Git revision."
-    }
-    return $revision.ToLowerInvariant()
-}
-
 function Invoke-Native {
     if ($args.Count -lt 1) {
         throw "Invoke-Native requires a command."
@@ -186,6 +175,7 @@ function Copy-RuntimeAssets {
 
     Copy-Item -LiteralPath $InstallerManifestPath -Destination (Join-Path $installerDir "manifest.json")
     Copy-Item -LiteralPath (Join-Path (Join-Path $RepoDir "scripts") "windows-installer-helper.ps1") -Destination (Join-Path $scriptsDir "windows-installer-helper.ps1")
+    Copy-Item -LiteralPath (Join-Path (Join-Path $RepoDir "scripts") "skill_integrity.py") -Destination (Join-Path $scriptsDir "skill_integrity.py")
 
     $sourceSkill = Join-Path (Join-Path $RepoDir "skills") $SkillName
     if (-not (Test-Path -LiteralPath (Join-Path $sourceSkill "SKILL.md") -PathType Leaf)) {
@@ -455,7 +445,7 @@ function Write-OfflineReadme {
 
 This installer includes the embedded Python runtime, installed Python packages, formula tools, and image-tools configuration for optional conversion tools.
 The offline build does not bundle Ghostscript/libvips from the build host PATH; AMS EPS/TIFF source figure conversion falls back to webpage JPG/PNG candidates when those tools are unavailable.
-It does not redistribute or install a browser binary for browser-backed providers. CLI browser requests may prepare managed Camoufox on demand with visible progress; MCP/library requests default to no automatic preparation. Fully offline hosts must preinstall the complete Camoufox runtime while online.
+It does not redistribute or install a browser binary for browser-backed providers. CLI, MCP, and library requests only use an already prepared Camoufox runtime. Fully offline hosts must explicitly preinstall the complete Camoufox runtime while online.
 Formula conversion uses the bundled Playwright driver Node via `MATHML_TO_LATEX_NODE_BIN`; do not rely on a bare `node` from PATH in Codex Desktop sessions.
 
 Browser-backed providers use native Camoufox.
@@ -469,8 +459,7 @@ function Write-ManifestAndChecksums {
         [string]$Staging,
         [string]$Version,
         [string]$PythonTag,
-        [string]$SetupBaseName,
-        [AllowNull()][string]$ToolingRevision
+        [string]$SetupBaseName
     )
 
     Write-Log "Writing standalone manifest and checksums"
@@ -481,7 +470,7 @@ function Write-ManifestAndChecksums {
         $gitRevision = $null
     }
 
-    $skillManifestTool = Join-Path (Join-Path (Join-Path $RepoDir "src") "paper_fetch") "skill_integrity.py"
+    $skillManifestTool = Join-Path (Join-Path $RepoDir "scripts") "skill_integrity.py"
     $skillRoot = Join-Path (Join-Path $Staging "skills") $SkillName
     $skillBundleOutput = & $PythonBin $skillManifestTool build --skill-dir $skillRoot --name $SkillName --root "skills/$SkillName"
     if ($LASTEXITCODE -ne 0) {
@@ -549,9 +538,6 @@ function Write-ManifestAndChecksums {
             }
         }
     }
-    if (-not [string]::IsNullOrEmpty($ToolingRevision)) {
-        $payload["tooling_revision"] = $ToolingRevision
-    }
     $payload | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $Staging "offline-manifest.json") -Encoding UTF8
 
     Invoke-Native $PythonBin (Join-Path $RepoDir "scripts/generate_offline_evidence.py") `
@@ -608,7 +594,8 @@ function Assert-RuntimeOnlyStaging {
         "bin/paper-fetch-install-image-tools.cmd",
         "skills/$SkillName/SKILL.md",
         "installer/manifest.json",
-        "scripts/windows-installer-helper.ps1"
+        "scripts/windows-installer-helper.ps1",
+        "scripts/skill_integrity.py"
     )) {
         if (-not (Test-Path -LiteralPath (Join-Path $Staging $relative))) {
             throw "Windows runtime staging is missing required path: $relative"
@@ -677,7 +664,6 @@ function Build-InnoInstaller {
     Write-Host $setupPath
 }
 
-$toolingRevision = Get-OfflineToolingRevision
 $pythonTag = Assert-Target
 $uninsisDigests = Get-VerifiedUninsISDigests
 $UninsISActualSha256 = $uninsisDigests.Dll
@@ -702,6 +688,6 @@ Write-CmdWrappers $staging
 Write-DefaultOfflineEnv $staging
 Write-OfflineReadme $staging
 Assert-RuntimeOnlyStaging $staging
-Write-ManifestAndChecksums -Staging $staging -Version $version -PythonTag $pythonTag -SetupBaseName $PackageName -ToolingRevision $toolingRevision
+Write-ManifestAndChecksums -Staging $staging -Version $version -PythonTag $pythonTag -SetupBaseName $PackageName
 Build-InnoInstaller -Staging $staging -Version $version -SetupBaseName $PackageName
 Publish-DependencyEvidence -Staging $staging -Target "windows-x86_64-$pythonTag"

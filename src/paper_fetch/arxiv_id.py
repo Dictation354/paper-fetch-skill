@@ -14,7 +14,6 @@ ARXIV_ID_BODY_PATTERN = (
     rf"(?:{NEW_STYLE_ARXIV_ID_PATTERN}|{OLD_STYLE_ARXIV_ID_PATTERN})(?:v\d+)?"
 )
 ARXIV_ID_RE = re.compile(rf"^{ARXIV_ID_BODY_PATTERN}$", flags=re.IGNORECASE)
-ARXIV_ID_SEARCH_RE = re.compile(ARXIV_ID_BODY_PATTERN, flags=re.IGNORECASE)
 
 
 def normalize_arxiv_id(value: str | None) -> str:
@@ -34,11 +33,6 @@ def normalize_arxiv_id(value: str | None) -> str:
     if not ARXIV_ID_RE.fullmatch(candidate):
         return ""
     return candidate
-
-
-def versionless_arxiv_id(arxiv_id: str | None) -> str:
-    normalized = normalize_arxiv_id(arxiv_id)
-    return re.sub(r"v\d+$", "", normalized, flags=re.IGNORECASE)
 
 
 def canonical_arxiv_abs_url(arxiv_id: str | None) -> str:
@@ -94,14 +88,6 @@ def arxiv_id_from_query(value: str | None) -> str:
     )
 
 
-def contains_arxiv_id(value: str | None) -> str:
-    candidate = normalize_text(value)
-    if not candidate:
-        return ""
-    match = ARXIV_ID_SEARCH_RE.search(candidate)
-    return normalize_arxiv_id(match.group(0)) if match else ""
-
-
 __all__ = [
     "ARXIV_DOI_PREFIX",
     "arxiv_id_from_doi",
@@ -111,7 +97,5 @@ __all__ = [
     "canonical_arxiv_doi",
     "canonical_arxiv_html_url",
     "canonical_arxiv_pdf_url",
-    "contains_arxiv_id",
     "normalize_arxiv_id",
-    "versionless_arxiv_id",
 ]

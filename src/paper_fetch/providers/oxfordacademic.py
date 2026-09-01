@@ -15,6 +15,7 @@ from ..config import (
 from ..extraction.html.assets import (
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
+    AssetDownloadOptions,
     download_assets,
     html_asset_identity_key,
     split_body_and_supplementary_assets,
@@ -64,7 +65,7 @@ from ._pdf_common import (
     pdf_fetch_result_warnings,
     pdf_fetch_result_from_response,
 )
-from ._registry import ProviderBundle, register_provider_bundle
+from ._registry import ProviderBundle
 from ._waterfall import (
     DEFAULT_WATERFALL_CONTINUE_CODES,
     ProviderWaterfallState,
@@ -84,75 +85,73 @@ from .base import (
 )
 
 
-register_provider_bundle(
-    ProviderBundle(
-        catalog=ProviderSpec(
-            name="oxfordacademic",
-            display_name="Oxford Academic",
-            official=True,
-            domains=("academic.oup.com",),
-            doi_prefixes=("10.1093/",),
-            publisher_aliases=(
-                "oxford academic",
-                "oxford university press",
-                "oxford university press (oup)",
-                "oup",
+PROVIDER_BUNDLE = ProviderBundle(
+    catalog=ProviderSpec(
+        name="oxfordacademic",
+        display_name="Oxford Academic",
+        official=True,
+        domains=("academic.oup.com",),
+        doi_prefixes=("10.1093/",),
+        publisher_aliases=(
+            "oxford academic",
+            "oxford university press",
+            "oxford university press (oup)",
+            "oup",
+        ),
+        asset_default="body",
+        probe_capability="routing_signal",
+        provider_managed_abstract_only=False,
+        client_factory_path="paper_fetch.providers.oxfordacademic:OxfordAcademicClient",
+        status_order=14,
+        base_domains=("academic.oup.com",),
+        pdf_path_templates=(
+            "/doi/pdf/{doi}",
+            "/doi/epdf/{doi}",
+        ),
+        body_text_thresholds=BodyTextThresholds(min_chars=1200),
+        routes=(
+            ProviderRouteSpec(name="metadata", kind="metadata"),
+            ProviderRouteSpec(
+                name="direct_html",
+                kind="html",
+                timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
             ),
-            asset_default="body",
-            probe_capability="routing_signal",
-            provider_managed_abstract_only=False,
-            client_factory_path="paper_fetch.providers.oxfordacademic:OxfordAcademicClient",
-            status_order=14,
-            base_domains=("academic.oup.com",),
-            pdf_path_templates=(
-                "/doi/pdf/{doi}",
-                "/doi/epdf/{doi}",
+            ProviderRouteSpec(
+                name="direct_pdf",
+                kind="pdf",
+                requires_pdf_conversion=True,
             ),
-            body_text_thresholds=BodyTextThresholds(min_chars=1200),
-            routes=(
-                ProviderRouteSpec(name="metadata", kind="metadata"),
-                ProviderRouteSpec(
-                    name="direct_html",
-                    kind="html",
-                    timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                ),
-                ProviderRouteSpec(
-                    name="direct_pdf",
-                    kind="pdf",
-                    requires_pdf_conversion=True,
-                ),
-                ProviderRouteSpec(
-                    name="assets",
-                    kind="assets",
-                    timeout_seconds=20,
-                    concurrency=2,
-                    transient_retries=2,
-                ),
+            ProviderRouteSpec(
+                name="assets",
+                kind="assets",
+                timeout_seconds=20,
+                concurrency=2,
+                transient_retries=2,
             ),
         ),
-        html_rules=ProviderHtmlRules(
-            name="oxfordacademic",
-            noise_profile=oxford_html.OXFORDACADEMIC_NOISE_PROFILE,
-            cleanup=ProviderCleanupRules(
-                markdown_promo_tokens=oxford_html.OXFORDACADEMIC_MARKDOWN_PROMO_TOKENS,
-                extraction_cleanup_selectors=oxford_html.OXFORDACADEMIC_EXTRACTION_CLEANUP_SELECTORS,
-            ),
-            front_matter=ProviderFrontMatterRules(
-                exact_texts=oxford_html.OXFORDACADEMIC_FRONT_MATTER_EXACT_TEXTS,
-                contains_tokens=oxford_html.OXFORDACADEMIC_FRONT_MATTER_CONTAINS_TOKENS,
-                publication_keywords=oxford_html.OXFORDACADEMIC_FRONT_MATTER_PUBLICATION_KEYWORDS,
-            ),
-            assets=ProviderAssetRules(
-                supplementary_text_tokens=oxford_html.OXFORDACADEMIC_SUPPLEMENTARY_TEXT_TOKENS,
-            ),
-            availability=AvailabilityPolicy(
-                name="oxfordacademic",
-                site_rule_overrides=oxford_html.OXFORDACADEMIC_SITE_RULE_OVERRIDES,
-                no_signals=True,
-            ),
+    ),
+    html_rules=ProviderHtmlRules(
+        name="oxfordacademic",
+        noise_profile=oxford_html.OXFORDACADEMIC_NOISE_PROFILE,
+        cleanup=ProviderCleanupRules(
+            markdown_promo_tokens=oxford_html.OXFORDACADEMIC_MARKDOWN_PROMO_TOKENS,
+            extraction_cleanup_selectors=oxford_html.OXFORDACADEMIC_EXTRACTION_CLEANUP_SELECTORS,
         ),
-        sources=("oxfordacademic_html", "oxfordacademic_pdf"),
-    )
+        front_matter=ProviderFrontMatterRules(
+            exact_texts=oxford_html.OXFORDACADEMIC_FRONT_MATTER_EXACT_TEXTS,
+            contains_tokens=oxford_html.OXFORDACADEMIC_FRONT_MATTER_CONTAINS_TOKENS,
+            publication_keywords=oxford_html.OXFORDACADEMIC_FRONT_MATTER_PUBLICATION_KEYWORDS,
+        ),
+        assets=ProviderAssetRules(
+            supplementary_text_tokens=oxford_html.OXFORDACADEMIC_SUPPLEMENTARY_TEXT_TOKENS,
+        ),
+        availability=AvailabilityPolicy(
+            name="oxfordacademic",
+            site_rule_overrides=oxford_html.OXFORDACADEMIC_SITE_RULE_OVERRIDES,
+            no_signals=True,
+        ),
+    ),
+    sources=("oxfordacademic_html", "oxfordacademic_pdf"),
 )
 
 
@@ -576,7 +575,7 @@ class OxfordAcademicClient(ProviderClient):
                 source_url=source_url,
                 html_text=html_text,
                 html_failure_message=html_failure_message,
-                html_trace_markers=state.source_markers(),
+                html_trace_markers=state.source_trail,
                 context=runtime_context,
             )
 
@@ -600,7 +599,7 @@ class OxfordAcademicClient(ProviderClient):
                 combined.code,
                 "Oxford Academic full text could not be retrieved. " + combined.message,
                 warnings=state.warnings,
-                source_trail=state.source_markers(),
+                source_trail=state.source_trail,
             )
 
         return run_provider_waterfall(
@@ -772,11 +771,13 @@ class OxfordAcademicClient(ProviderClient):
                 output_dir=output_dir,
                 user_agent=self.user_agent,
                 asset_profile=asset_profile,
-                headers=self._asset_headers(),
-                asset_download_concurrency=concurrency,
-                fetch_policy="direct_then_browser",
-                provider_name="oxfordacademic",
-                runtime_context=context,
+                options=AssetDownloadOptions(
+                    headers=self._asset_headers(),
+                    asset_download_concurrency=concurrency,
+                    fetch_policy="direct_then_browser",
+                    provider_name="oxfordacademic",
+                    runtime_context=context,
+                ),
             )
             if body_images
             else empty_asset_results()
@@ -790,11 +791,13 @@ class OxfordAcademicClient(ProviderClient):
                 output_dir=output_dir,
                 user_agent=self.user_agent,
                 asset_profile=asset_profile,
-                headers=self._asset_headers(),
-                asset_download_concurrency=concurrency,
-                fetch_policy="direct_then_browser",
-                provider_name="oxfordacademic",
-                runtime_context=context,
+                options=AssetDownloadOptions(
+                    headers=self._asset_headers(),
+                    asset_download_concurrency=concurrency,
+                    fetch_policy="direct_then_browser",
+                    provider_name="oxfordacademic",
+                    runtime_context=context,
+                ),
             )
             if supplementary_assets and asset_profile == "all"
             else empty_asset_results()

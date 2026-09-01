@@ -287,7 +287,6 @@ def fetch_ieee_browser_html_payload(
                     **(
                         {
                             "challenge_provider": "aws_waf",
-                            "legacy_reason_code": "cloudflare_challenge",
                         }
                         if detected.reason == "aws_waf_challenge"
                         else {}
@@ -302,8 +301,8 @@ def fetch_ieee_browser_html_payload(
                 active_browser_context,
                 final_url=browser_final_url,
                 user_agent=browser_page_user_agent(page) or browser_user_agent,
-                backend=runtime_config.backend,
-                fetcher=f"{runtime_config.backend}_ieee_html",
+                backend="camoufox",
+                fetcher="camoufox_ieee_html",
             ),
         )
         return build_ieee_browser_payload(
@@ -318,8 +317,8 @@ def fetch_ieee_browser_html_payload(
                 response_headers=response_headers,
                 browser_context_seed=browser_context_seed,
                 browser_diagnostics={
-                    "fetcher": f"{runtime_config.backend}_ieee_html",
-                    "backend": runtime_config.backend,
+                    "fetcher": "camoufox_ieee_html",
+                    "backend": "camoufox",
                     "payload_source": payload_source,
                     "final_url": redact_url_for_diagnostics(browser_final_url),
                     "navigation_status": navigation_status,
@@ -336,7 +335,7 @@ def fetch_ieee_browser_html_payload(
                 },
                 reason=(
                     "Downloaded full text from the IEEE Xplore "
-                    f"{runtime_config.backend} HTML fallback route."
+                    "Camoufox HTML fallback route."
                 ),
             ),
         )

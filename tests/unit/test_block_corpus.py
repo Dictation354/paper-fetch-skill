@@ -1,31 +1,27 @@
 from __future__ import annotations
 
-import unittest
+import pytest
 
-from tests.block_fixtures import execute_block_fixture, iter_block_samples
-
-
-class BlockCorpusTests(unittest.TestCase):
-    def test_block_raw_responses_match_current_extractor_rejection_contract(
-        self,
-    ) -> None:
-        for fixture in iter_block_samples():
-            result = execute_block_fixture(fixture)
-
-            with self.subTest(
-                provider=fixture.provider,
-                doi=fixture.doi,
-                route=fixture.provider_route,
-                content_kind=result.content_kind,
-            ):
-                self.assertFalse(result.accepted)
-                self.assertEqual(result.reason, fixture.expected_reason)
-                self.assertEqual(result.failure_code, fixture.expected_failure_code)
-                self.assertEqual(result.content_kind, fixture.expected_content_kind)
-                self.assertEqual(result.provider_route, fixture.provider_route)
-                self.assertEqual(result.source_identity, fixture.source_identity)
-                self.assertNotEqual(result.content_kind, "fulltext")
+from tests.block_fixtures import BlockFixture, execute_block_fixture, iter_block_samples
 
 
-if __name__ == "__main__":
-    unittest.main()
+BLOCK_FIXTURES = iter_block_samples()
+
+
+def _fixture_id(fixture: BlockFixture) -> str:
+    return f"{fixture.provider}:{fixture.doi}:{fixture.provider_route}"
+
+
+@pytest.mark.parametrize("fixture", BLOCK_FIXTURES, ids=_fixture_id)
+def test_block_raw_response_matches_current_extractor_rejection_contract(
+    fixture: BlockFixture,
+) -> None:
+    result = execute_block_fixture(fixture)
+
+    assert result.accepted is False
+    assert result.reason == fixture.expected_reason
+    assert result.failure_code == fixture.expected_failure_code
+    assert result.content_kind == fixture.expected_content_kind
+    assert result.provider_route == fixture.provider_route
+    assert result.source_identity == fixture.source_identity
+    assert result.content_kind != "fulltext"

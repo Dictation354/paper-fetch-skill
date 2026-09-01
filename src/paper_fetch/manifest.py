@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from importlib.resources import files
 from pathlib import Path
-from typing import Any, Literal, Protocol, TypedDict, Unpack
+from typing import Any, Literal, Protocol
 from uuid import UUID, uuid4
 
 from pydantic import (
@@ -59,13 +59,6 @@ class ArtifactVerificationStatus(StrEnum):
     UNREADABLE = "unreadable"
 
 
-class LegacyArtifactField(StrEnum):
-    """Legacy CLI field supplied by one output artifact."""
-
-    OUTPUT_PATH = "output_path"
-    SAVED_MARKDOWN_PATH = "saved_markdown_path"
-
-
 class ArtifactStat(Protocol):
     """The stat attributes needed by the artifact snapshot builder."""
 
@@ -80,16 +73,6 @@ Clock = Callable[[], datetime]
 UuidFactory = Callable[[], UUID]
 
 
-class _ManifestAcceptanceOptions(TypedDict, total=False):
-    """Keyword-compatible acceptance inputs kept out of the broad builder API."""
-
-    requested_outputs: Collection[AcceptanceOutputKind | str] | None
-    asset_summary: AssetAcceptanceSummary | None
-    require_local_body_assets: bool | None
-    require_full_size_body_assets: bool | None
-
-
-_MANIFEST_ACCEPTANCE_OPTION_KEYS = frozenset(_ManifestAcceptanceOptions.__annotations__)
 ArtifactStatReader = Callable[[Path], ArtifactStat]
 ArtifactHasher = Callable[[Path], str]
 
@@ -179,12 +162,11 @@ class ManifestError(_ManifestModel):
 
 
 class ManifestSemanticLosses(_ManifestModel):
-    """Stable compatibility summary derived from acceptance content facets."""
+    """Semantic-loss summary derived from acceptance content facets."""
 
     table_fallback_count: int = Field(default=0, ge=0)
     table_layout_degraded_count: int = Field(default=0, ge=0)
     table_semantic_loss_count: int = Field(default=0, ge=0)
-    table_legacy_lossy_count: int = Field(default=0, ge=0)
     formula_fallback_count: int = Field(default=0, ge=0)
     formula_missing_count: int = Field(default=0, ge=0)
 
@@ -194,7 +176,6 @@ class ManifestOutputArtifactSpec(_ManifestModel):
 
     path: str = Field(min_length=1)
     kind: str = Field(min_length=1)
-    legacy_field: LegacyArtifactField | None = None
     route: str | None = None
     failure_code: str | None = None
     completed_at: AwareDatetime | None = None
@@ -210,7 +191,6 @@ class ManifestOutputArtifact(_ManifestModel):
 
     path: str = Field(min_length=1)
     kind: str = Field(min_length=1)
-    legacy_field: LegacyArtifactField | None = None
     route: str | None = None
     failure_code: str | None = None
     size: int | None = Field(default=None, ge=0)
@@ -232,25 +212,8 @@ class ManifestOutputArtifact(_ManifestModel):
         return self
 
 
-class LegacyManifestProjection(_ManifestModel):
-    """The exact nine top-level fields exposed by the pre-v2 CLI JSONL."""
-
-    index: int = Field(ge=1)
-    query: str
-    status: str
-    doi: str | None
-    source: str | None
-    output_path: str | None
-    saved_markdown_path: str | None
-    warnings: tuple[str, ...]
-    error: ManifestError | None
-
-    def to_dict(self) -> dict[str, Any]:
-        return self.model_dump(mode="json")
-
-
 class ManifestRecord(_ManifestModel):
-    """One versioned, append-only fetch attempt record."""
+    """One versioned fetch result record."""
 
     schema_version: Literal[2]
     minimum_reader_schema_version: Literal[2]
@@ -263,7 +226,6 @@ class ManifestRecord(_ManifestModel):
     request: ManifestRequest
     request_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
     record_status: ManifestRecordStatus
-    status: str = Field(min_length=1)
     identity: IdentityAcceptanceFacet
     doi: str | None
     started_at: AwareDatetime
@@ -280,8 +242,6 @@ class ManifestRecord(_ManifestModel):
     asset_summary: AssetAcceptanceFacet
     error: ManifestError | None
     output_artifacts: tuple[ManifestOutputArtifact, ...]
-    output_path: str | None
-    saved_markdown_path: str | None
 
     @model_validator(mode="after")
     def validate_derived_fields(self) -> ManifestRecord:
@@ -313,51 +273,19 @@ class ManifestRecord(_ManifestModel):
             raise ValueError("semantic_losses must come from acceptance content")
 
         if self.record_status == ManifestRecordStatus.COMPLETED:
-            if self.status != "ok" or self.error is not None:
-                raise ValueError("completed records require status=ok and no error")
+            if self.error is not None:
+                raise ValueError("completed records cannot contain an error")
             if not self.acceptance.fetch.completed:
                 raise ValueError("completed records require completed fetch acceptance")
         else:
-            if self.error is None or self.status != self.error.status:
+            if self.error is None:
                 raise ValueError(
                     "failed/aborted records require their structured error"
                 )
             if self.acceptance.fetch.completed:
                 raise ValueError("failed/aborted records cannot have completed fetch")
 
-        legacy_paths: dict[LegacyArtifactField, str] = {}
-        for artifact in self.output_artifacts:
-            if artifact.legacy_field is None:
-                continue
-            if artifact.legacy_field in legacy_paths:
-                raise ValueError(
-                    f"duplicate legacy artifact field: {artifact.legacy_field.value}"
-                )
-            legacy_paths[artifact.legacy_field] = artifact.path
-        if self.output_path != legacy_paths.get(LegacyArtifactField.OUTPUT_PATH):
-            raise ValueError("output_path must be derived from output_artifacts")
-        if self.saved_markdown_path != legacy_paths.get(
-            LegacyArtifactField.SAVED_MARKDOWN_PATH
-        ):
-            raise ValueError(
-                "saved_markdown_path must be derived from output_artifacts"
-            )
         return self
-
-    def legacy_projection(self) -> LegacyManifestProjection:
-        """Return the old nine-field JSONL shape without adapter-owned assembly."""
-
-        return LegacyManifestProjection(
-            index=self.index,
-            query=self.query,
-            status=self.status,
-            doi=self.doi,
-            source=self.source,
-            output_path=self.output_path,
-            saved_markdown_path=self.saved_markdown_path,
-            warnings=self.warnings,
-            error=self.error,
-        )
 
     def to_dict(self) -> dict[str, Any]:
         return self.model_dump(mode="json")
@@ -369,7 +297,7 @@ class ManifestRecord(_ManifestModel):
 def build_manifest_request_fingerprint(
     request: ManifestRequest | Mapping[str, Any],
 ) -> str:
-    """Hash canonical JSON request semantics for cache/resume comparisons."""
+    """Hash canonical JSON request semantics for cache comparisons."""
 
     model = (
         request
@@ -395,7 +323,6 @@ def _semantic_losses_from_acceptance(
         table_fallback_count=tables.fallback_count,
         table_layout_degraded_count=tables.layout_degraded_count,
         table_semantic_loss_count=tables.semantic_loss_count,
-        table_legacy_lossy_count=tables.legacy_lossy_count,
         formula_fallback_count=formulas.fallback_count,
         formula_missing_count=formulas.missing_count,
     )
@@ -478,7 +405,6 @@ def _snapshot_artifact(
         return ManifestOutputArtifact(
             path=spec.path,
             kind=spec.kind,
-            legacy_field=spec.legacy_field,
             route=spec.route,
             failure_code=spec.failure_code,
             completed_at=artifact_completed_at,
@@ -488,7 +414,6 @@ def _snapshot_artifact(
         return ManifestOutputArtifact(
             path=spec.path,
             kind=spec.kind,
-            legacy_field=spec.legacy_field,
             route=spec.route,
             failure_code=spec.failure_code,
             completed_at=artifact_completed_at,
@@ -503,7 +428,6 @@ def _snapshot_artifact(
         return ManifestOutputArtifact(
             path=spec.path,
             kind=spec.kind,
-            legacy_field=spec.legacy_field,
             route=spec.route,
             failure_code=spec.failure_code,
             size=size,
@@ -514,7 +438,6 @@ def _snapshot_artifact(
     return ManifestOutputArtifact(
         path=spec.path,
         kind=spec.kind,
-        legacy_field=spec.legacy_field,
         route=spec.route,
         failure_code=spec.failure_code,
         size=size,
@@ -548,22 +471,12 @@ def build_manifest_record(
     started_at: datetime | None = None,
     completed_at: datetime | None = None,
     deps: ManifestBuilderDependencies = DEFAULT_MANIFEST_BUILDER_DEPENDENCIES,
-    **acceptance_options: Unpack[_ManifestAcceptanceOptions],
+    requested_outputs: Collection[AcceptanceOutputKind | str] | None = None,
+    asset_summary: AssetAcceptanceSummary | None = None,
+    require_local_body_assets: bool | None = None,
+    require_full_size_body_assets: bool | None = None,
 ) -> ManifestRecord:
     """Build one immutable record without writing any file or manifest."""
-
-    unknown_acceptance_options = (
-        set(acceptance_options) - _MANIFEST_ACCEPTANCE_OPTION_KEYS
-    )
-    if unknown_acceptance_options:
-        unknown = ", ".join(sorted(unknown_acceptance_options))
-        raise TypeError(f"unexpected manifest acceptance option(s): {unknown}")
-    requested_outputs = acceptance_options.get("requested_outputs")
-    asset_summary = acceptance_options.get("asset_summary")
-    require_local_body_assets = acceptance_options.get("require_local_body_assets")
-    require_full_size_body_assets = acceptance_options.get(
-        "require_full_size_body_assets"
-    )
 
     if envelope is not None and error is not None:
         raise ValueError("envelope and error are mutually exclusive")
@@ -621,27 +534,14 @@ def build_manifest_record(
         )
         for spec in output_artifacts
     )
-    legacy_paths = {
-        artifact.legacy_field: artifact.path
-        for artifact in artifacts
-        if artifact.legacy_field is not None
-    }
-    if len(legacy_paths) != sum(
-        artifact.legacy_field is not None for artifact in artifacts
-    ):
-        raise ValueError("each legacy artifact field may be assigned only once")
-
     if envelope is not None:
         record_status = ManifestRecordStatus.COMPLETED
-        legacy_status = "ok"
     elif aborted:
         record_status = ManifestRecordStatus.ABORTED
         assert manifest_error is not None
-        legacy_status = manifest_error.status
     else:
         record_status = ManifestRecordStatus.FAILED
         assert manifest_error is not None
-        legacy_status = manifest_error.status
 
     return ManifestRecord(
         schema_version=MANIFEST_RECORD_SCHEMA_VERSION,
@@ -655,7 +555,6 @@ def build_manifest_record(
         request=request,
         request_fingerprint=build_manifest_request_fingerprint(request),
         record_status=record_status,
-        status=legacy_status,
         identity=acceptance.identity,
         doi=acceptance.identity.doi,
         started_at=effective_started_at,
@@ -672,8 +571,6 @@ def build_manifest_record(
         asset_summary=acceptance.asset,
         error=manifest_error,
         output_artifacts=artifacts,
-        output_path=legacy_paths.get(LegacyArtifactField.OUTPUT_PATH),
-        saved_markdown_path=legacy_paths.get(LegacyArtifactField.SAVED_MARKDOWN_PATH),
     )
 
 
@@ -709,8 +606,6 @@ __all__ = [
     "MANIFEST_RECORD_SCHEMA_VERSION",
     "ArtifactStat",
     "ArtifactVerificationStatus",
-    "LegacyArtifactField",
-    "LegacyManifestProjection",
     "ManifestBuilderDependencies",
     "ManifestError",
     "ManifestOutputArtifact",

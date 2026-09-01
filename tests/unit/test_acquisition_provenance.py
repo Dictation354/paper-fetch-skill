@@ -18,8 +18,6 @@ from paper_fetch.provider_catalog import (
 )
 from paper_fetch.providers._payloads import build_provider_payload
 from paper_fetch.providers._waterfall import WaterfallStep, run_provider_waterfall
-from paper_fetch.providers.base import ProviderContent
-from paper_fetch.tracing import fulltext_marker, source_trail_from_trace
 
 
 def _wiley_article() -> ArticleModel:
@@ -44,29 +42,6 @@ def _wiley_article() -> ArticleModel:
             fallback_used=True,
         ),
     )
-
-
-def test_source_remains_legacy_scalar_while_acquisition_is_structured() -> None:
-    article = _wiley_article()
-    payload = article.to_dict()
-
-    assert payload["source"] == "wiley_browser"
-    assert payload["acquisition"] == {
-        "provider": "wiley",
-        "route": "tdm_pdf",
-        "representation": "pdf",
-        "transport": "api",
-        "fallback_used": True,
-    }
-
-    envelope = FetchEnvelope(
-        doi=article.doi,
-        source=article.source,
-        has_fulltext=True,
-        article=article,
-    )
-    assert envelope.source == "wiley_browser"
-    assert envelope.acquisition == article.acquisition
 
 
 def test_envelope_rejects_conflicting_article_acquisition() -> None:
@@ -140,22 +115,24 @@ def test_catalog_maps_every_content_route_to_exact_acquisition() -> None:
 
 
 def test_provider_route_transport_defaults_are_explicit_and_validated() -> None:
-    assert ProviderRouteSpec("metadata", "metadata").transport == "api"
-    assert ProviderRouteSpec("direct_html", "html").transport == "http"
+    assert ProviderRouteSpec(name="metadata", kind="metadata").transport == "api"
+    assert ProviderRouteSpec(name="direct_html", kind="html").transport == "http"
     assert (
-        ProviderRouteSpec("browser_html", "html", browser_required=True).transport
+        ProviderRouteSpec(
+            name="browser_html", kind="html", browser_required=True
+        ).transport
         == "browser"
     )
     with pytest.raises(ValueError, match="Browser-backed"):
         ProviderRouteSpec(
-            "browser_html",
-            "html",
+            name="browser_html",
+            kind="html",
             browser_required=True,
             transport="http",
         )
 
 
-def test_waterfall_stamps_exact_route_without_changing_legacy_trace_marker() -> None:
+def test_waterfall_stamps_exact_route_in_structured_trace() -> None:
     class _Client:
         name = "wiley"
 
@@ -174,7 +151,6 @@ def test_waterfall_stamps_exact_route_without_changing_legacy_trace_marker() -> 
                 label="pdf_api",
                 run=_tdm_payload,
                 route_name="tdm_pdf",
-                success_markers=(fulltext_marker("wiley", "ok", route="pdf_api"),),
             )
         ],
         client=_Client(),
@@ -182,7 +158,6 @@ def test_waterfall_stamps_exact_route_without_changing_legacy_trace_marker() -> 
 
     assert payload.content is not None
     assert payload.content.route_name == "tdm_pdf"
-    assert "fulltext:wiley_pdf_api_ok" in source_trail_from_trace(payload.trace)
     assert any(
         event.stage == "fulltext" and event.outcome == "ok" and event.route == "tdm_pdf"
         for event in payload.trace
@@ -222,7 +197,7 @@ def test_waterfall_success_trace_prefers_payload_route_over_step_default() -> No
     )
 
 
-def test_markdown_front_matter_round_trips_acquisition_and_reads_legacy_files() -> None:
+def test_markdown_front_matter_requires_current_acquisition() -> None:
     article = _wiley_article()
     front_matter = parse_markdown_front_matter(article.to_ai_markdown())
 
@@ -230,7 +205,7 @@ def test_markdown_front_matter_round_trips_acquisition_and_reads_legacy_files() 
     assert front_matter.source == "wiley_browser"
     assert front_matter.acquisition == article.acquisition
 
-    legacy = parse_markdown_front_matter(
+    missing_acquisition = parse_markdown_front_matter(
         """---
 doi: "10.1029/98wr02522"
 source: "wiley_browser"
@@ -238,11 +213,10 @@ has_fulltext: true
 content_kind: "fulltext"
 ---
 
-# Legacy cache
+# Incomplete cache
 """
     )
-    assert legacy is not None
-    assert legacy.acquisition is None
+    assert missing_acquisition is None
 
     invalid = parse_markdown_front_matter(
         """---
@@ -260,22 +234,3 @@ content_kind: "fulltext"
 """
     )
     assert invalid is None
-
-
-def test_additive_provider_fields_preserve_positional_constructor_order() -> None:
-    content = ProviderContent(
-        "html",
-        "https://example.test/article",
-        "text/html",
-        b"<article />",
-        "# Existing positional Markdown",
-    )
-    route = ProviderRouteSpec("direct_html", "html", "legacy_source", 7)
-    step = WaterfallStep("html", lambda _state: None, "legacy_failure_marker")
-
-    assert content.markdown_text == "# Existing positional Markdown"
-    assert content.route_name is None
-    assert route.order == 7
-    assert route.transport == "http"
-    assert step.failure_marker == "legacy_failure_marker"
-    assert step.route_name is None

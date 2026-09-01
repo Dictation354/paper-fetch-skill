@@ -73,7 +73,6 @@ from tests.golden_corpus_adapters import (
     ProviderGoldenContract,
     golden_corpus_adapter,
     register_golden_corpus_adapter,
-    representative_golden_corpus_dois,
 )
 from tests.golden_criteria import (
     golden_criteria_asset,
@@ -207,13 +206,6 @@ def golden_corpus_fixture_for_doi(doi: str) -> GoldenCorpusFixture:
             f"Golden corpus fixture is missing expected.json: {doi}"
         )
     return GoldenCorpusFixture(sample_id=str(sample["sample_id"]), sample=sample)
-
-
-def iter_golden_corpus_representative_fixtures() -> tuple[GoldenCorpusFixture, ...]:
-    return tuple(
-        golden_corpus_fixture_for_doi(doi)
-        for doi in representative_golden_corpus_dois()
-    )
 
 
 def _base_metadata(fixture: GoldenCorpusFixture) -> dict[str, Any]:
@@ -1324,12 +1316,6 @@ def _lightweight_oxfordacademic_summary(fixture: GoldenCorpusFixture) -> dict[st
     )
 
 
-def lightweight_positive_summary_from_fixture(
-    fixture: GoldenCorpusFixture,
-) -> dict[str, Any]:
-    return golden_corpus_adapter(fixture.provider).lightweight_summary(fixture)
-
-
 def golden_contract_for_fixture(fixture: GoldenCorpusFixture) -> ProviderGoldenContract:
     return golden_corpus_adapter(fixture.provider).contract_for_fixture(fixture)
 
@@ -1459,7 +1445,6 @@ def _register_golden_corpus_adapters() -> None:
                     primary_marker="fulltext:acs_pdf_fallback_ok",
                 ),
             },
-            representative_doi="10.1021/acsomega.4c03987",
         )
     )
     register_golden_corpus_adapter(
@@ -1481,7 +1466,6 @@ def _register_golden_corpus_adapters() -> None:
                     primary_marker="fulltext:ams_pdf_fallback_ok",
                 ),
             },
-            representative_doi="10.1175/jcli-d-23-0738.1",
         )
     )
     register_golden_corpus_adapter(
@@ -1503,12 +1487,6 @@ def _register_golden_corpus_adapters() -> None:
                     primary_marker="fulltext:aip_pdf_fallback_ok",
                 ),
             },
-            representative_doi="10.1063/5.0129134",
-            representative_count_fields=(
-                "sections",
-                "abstract_sections",
-                "body_sections",
-            ),
         )
     )
     register_golden_corpus_adapter(
@@ -1530,12 +1508,6 @@ def _register_golden_corpus_adapters() -> None:
                     primary_marker="fulltext:annualreviews_pdf_fallback_ok",
                 ),
             },
-            representative_doi="10.1146/annurev-control-030123-013355",
-            representative_count_fields=(
-                "sections",
-                "abstract_sections",
-                "body_sections",
-            ),
         )
     )
     register_golden_corpus_adapter(
@@ -1557,12 +1529,6 @@ def _register_golden_corpus_adapters() -> None:
                     primary_marker="fulltext:tandf_pdf_fallback_ok",
                 ),
             },
-            representative_doi="10.1080/15481603.2026.2667034",
-            representative_count_fields=(
-                "sections",
-                "abstract_sections",
-                "body_sections",
-            ),
         )
     )
     register_golden_corpus_adapter(
@@ -1576,7 +1542,6 @@ def _register_golden_corpus_adapters() -> None:
                 source="elsevier_xml",
                 primary_marker="fulltext:elsevier_xml_ok",
             ),
-            representative_doi="10.1016/j.rse.2025.114648",
         )
     )
     register_golden_corpus_adapter(
@@ -1590,7 +1555,6 @@ def _register_golden_corpus_adapters() -> None:
                 source="springer_html",
                 primary_marker="fulltext:springer_html_ok",
             ),
-            representative_doi="10.1038/s43247-024-01295-w",
         )
     )
     register_golden_corpus_adapter(
@@ -1604,7 +1568,6 @@ def _register_golden_corpus_adapters() -> None:
                 source="science",
                 primary_marker="fulltext:science_html_ok",
             ),
-            representative_doi="10.1126/science.adp0212",
         )
     )
     register_golden_corpus_adapter(
@@ -1618,7 +1581,6 @@ def _register_golden_corpus_adapters() -> None:
                 source="wiley_browser",
                 primary_marker="fulltext:wiley_html_ok",
             ),
-            representative_doi="10.1111/gcb.16414",
         )
     )
     register_golden_corpus_adapter(
@@ -1632,7 +1594,6 @@ def _register_golden_corpus_adapters() -> None:
                 source="pnas",
                 primary_marker="fulltext:pnas_html_ok",
             ),
-            representative_doi="10.1073/pnas.2309123120",
         )
     )
     register_golden_corpus_adapter(
@@ -1646,7 +1607,6 @@ def _register_golden_corpus_adapters() -> None:
                 source="ieee_html",
                 primary_marker="fulltext:ieee_html_ok",
             ),
-            representative_doi="10.1109/TIM.2024.3509573",
         )
     )
     register_golden_corpus_adapter(
@@ -1668,12 +1628,6 @@ def _register_golden_corpus_adapters() -> None:
                     primary_marker="fulltext:iop_pdf_fallback_ok",
                 ),
             },
-            representative_doi="10.1088/1748-9326/ab7d02",
-            representative_count_fields=(
-                "sections",
-                "abstract_sections",
-                "body_sections",
-            ),
         )
     )
     register_golden_corpus_adapter(
@@ -1695,7 +1649,6 @@ def _register_golden_corpus_adapters() -> None:
                     primary_marker="fulltext:copernicus_pdf_fallback_ok",
                 ),
             },
-            representative_doi="10.5194/acp-24-1-2024",
         )
     )
     register_golden_corpus_adapter(
@@ -1717,12 +1670,6 @@ def _register_golden_corpus_adapters() -> None:
                     primary_marker="fulltext:mdpi_pdf_fallback_ok",
                 ),
             },
-            representative_doi="10.3390/membranes15030093",
-            representative_count_fields=(
-                "sections",
-                "abstract_sections",
-                "body_sections",
-            ),
         )
     )
     register_golden_corpus_adapter(
@@ -1744,7 +1691,6 @@ def _register_golden_corpus_adapters() -> None:
                     primary_marker="fulltext:arxiv_pdf_fallback_ok",
                 ),
             },
-            representative_doi="10.48550/arxiv.2605.06663v1",
         )
     )
     register_golden_corpus_adapter(
@@ -1766,12 +1712,6 @@ def _register_golden_corpus_adapters() -> None:
                     primary_marker="fulltext:royalsocietypublishing_pdf_fallback_ok",
                 ),
             },
-            representative_doi="10.1098/rsta.2019.0558",
-            representative_count_fields=(
-                "sections",
-                "abstract_sections",
-                "body_sections",
-            ),
         )
     )
     register_golden_corpus_adapter(
@@ -1793,13 +1733,6 @@ def _register_golden_corpus_adapters() -> None:
                     primary_marker="fulltext:oxfordacademic_pdf_fallback_ok",
                 ),
             },
-            representative_doi="10.1093/bioinformatics/btaa161",
-            representative_count_fields=(
-                "sections",
-                "abstract_sections",
-                "body_sections",
-                "references",
-            ),
         )
     )
     register_golden_corpus_adapter(
@@ -1821,12 +1754,6 @@ def _register_golden_corpus_adapters() -> None:
                     primary_marker="fulltext:plos_pdf_fallback_ok",
                 ),
             },
-            representative_doi="10.1371/journal.pone.0263725",
-            representative_count_fields=(
-                "sections",
-                "abstract_sections",
-                "body_sections",
-            ),
         )
     )
     register_golden_corpus_adapter(
@@ -1848,13 +1775,6 @@ def _register_golden_corpus_adapters() -> None:
                     primary_marker="fulltext:frontiers_pdf_fallback_ok",
                 ),
             },
-            representative_doi="10.3389/fmars.2023.1101972",
-            representative_count_fields=(
-                "sections",
-                "abstract_sections",
-                "body_sections",
-                "references",
-            ),
         )
     )
 

@@ -112,5 +112,4 @@ fi
 log "Running portable WSL/Linux macOS contract tests"
 PYTHONPATH="$REPO_DIR/src${PYTHONPATH:+:$PYTHONPATH}" \
   "$PYTHON_BIN" -m pytest \
-    tests/unit/test_macos_adaptation_validator.py \
-    tests/integration/test_macos_adaptation_contract.py -q
+    tests/unit/test_macos_adaptation_validator.py -q

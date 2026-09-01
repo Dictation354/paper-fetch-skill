@@ -20,21 +20,17 @@ python -m pip install "paper-fetch-skill[full]"
 
 离线安装包始终按 `full` 构建，但不重新分发浏览器 binary。完全离线环境需提前
 准备 Camoufox active runtime，包括相邻配置、addons 和字体；只复制可执行文件
-不足以组成可用 runtime。联网时可显式运行 `python -m camoufox fetch`；CLI 的实际
-browser fetch/auth/preflight 也默认会显示进度并首次按需准备。MCP 与库默认不允许
-该联网副作用，须按请求或环境显式开启。
+不足以组成可用 runtime。联网时须显式运行 `python -m camoufox fetch`；普通 fetch、
+auth 和 preflight 只读探测并使用已准备的 runtime。
 
 ## 选择与配置
 
-`PAPER_FETCH_BROWSER_BACKEND` 可以省略或设置为 `camoufox`。其它值会以结构化
-`not_configured`/runtime failure 拒绝，不会自动回退到其它浏览器。
+browser backend 固定为 Camoufox，不再提供单值选择配置。
 
 通用变量如下：
 
 | 变量 | 含义 |
 |---|---|
-| `PAPER_FETCH_BROWSER_BACKEND` | 唯一合法值为 `camoufox` |
-| `PAPER_FETCH_BROWSER_AUTO_PREPARE` | managed runtime 按需安装/修复/更新策略；CLI 未设置时默认开，MCP/库默认关，接受 `true/false`、`1/0`、`yes/no`、`on/off` |
 | `PAPER_FETCH_BROWSER_HEADLESS` | managed runtime 是否 headless |
 | `PAPER_FETCH_BROWSER_BINARY_PATH` | 仅用于自行维护、且支持 Camoufox custom-executable metadata 语义的 executable 覆盖 |
 | `PAPER_FETCH_BROWSER_PROFILE_DIR` | provider storage-state/profile 目录覆盖 |
@@ -53,9 +49,6 @@ managed bundle 错当成 custom executable。官方 runtime 应保持该变量�
 由 `python -m camoufox fetch` 和 Camoufox active-version 配置共同管理。只有自定义
 runtime 明确实现 Camoufox 的 custom-path metadata 布局时才使用该覆盖。
 
-低层 `PAPER_FETCH_CDP_EXTERNAL_NEW_CONTEXT` 只影响显式传入 CDP endpoint 的
-开发/测试调用，不选择生产 backend，也不提供旧后端兼容。
-
 ## 生命周期
 
 一个 `RuntimeContext` 在 owning thread 内复用一个 Camoufox process，每次操作
@@ -63,16 +56,14 @@ runtime 明确实现 Camoufox 的 custom-path metadata 布局时才使用该覆�
 配置及 provider storage-state，但 Playwright sync 对象不会跨线程共享。
 
 `doctor` 和 `provider_status` 只做静态依赖/配置检查，不启动浏览器、不下载
-runtime、不访问出版社页面。CLI `browser-preflight` 是显式 live 操作，默认允许在
-runtime 缺失时先按需准备，并打开页面、保存过滤后的 storage-state；MCP
-`browser_preflight` 默认禁止准备，传 `browser_auto_prepare=true` 才允许。两者都不会
+runtime、不访问出版社页面。CLI 与 MCP `browser_preflight` 都只使用已准备的
+runtime，并打开页面、按请求保存过滤后的 storage-state。两者都不会
 自动认证、绕过 challenge/paywall，也不会调用 PDF fallback。
 
-Preflight 以 provider、规范 DOI、实际 target URL 和 runtime fingerprint 建短期 key；
-Royal Society 等允许的同一样例 HTML 可被同进程下一次 fetch 一次性消费，AIP 仍保持
-跨 `RuntimeContext` 隔离。图片、附件或 PDF 的 direct 401/403 只允许一次 browser-byte
-恢复；`response.body()`、page `arrayBuffer()`、canvas 或 download/file bytes 都会先
-进入统一 MIME、大小、像素、预算、staging 与原子发布检查。
+Preflight 只报告本次 live 检查；正式 fetch 独立导航并重新执行身份、阻断与正文验收。
+图片、附件或 PDF 的 direct 401/403 只允许一次 browser-byte 恢复；
+`response.body()`、page `arrayBuffer()`、canvas 或 download/file bytes 都会先进入统一
+MIME、大小、像素、预算、staging 与原子发布检查。
 
 ## 4.0 迁移
 

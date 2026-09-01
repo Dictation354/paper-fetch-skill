@@ -15,6 +15,7 @@ from ..extraction.html._metadata import merge_html_metadata
 from ..extraction.html.assets import (
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
+    AssetDownloadOptions,
     download_assets,
     filter_assets_for_profile,
     merge_extracted_and_downloaded_assets,
@@ -73,7 +74,7 @@ from ._pdf_common import (
     pdf_fetch_result_warnings,
 )
 from ._pdf_fallback import PdfFallbackStrategy, PdfFetchFailure, fetch_pdf_over_http
-from ._registry import ProviderBundle, register_provider_bundle
+from ._registry import ProviderBundle
 from ._waterfall import (
     DEFAULT_WATERFALL_CONTINUE_CODES,
     ProviderWaterfallState,
@@ -97,52 +98,50 @@ from .base import (
 from bs4 import BeautifulSoup, Tag
 
 
-register_provider_bundle(
-    ProviderBundle(
-        catalog=ProviderSpec(
-            name="copernicus",
-            display_name="Copernicus",
-            official=True,
-            domains=(),
-            doi_prefixes=("10.5194/",),
-            publisher_aliases=(
-                "copernicus",
-                "copernicus publications",
-                "copernicus gmbh",
+PROVIDER_BUNDLE = ProviderBundle(
+    catalog=ProviderSpec(
+        name="copernicus",
+        display_name="Copernicus",
+        official=True,
+        domains=(),
+        doi_prefixes=("10.5194/",),
+        publisher_aliases=(
+            "copernicus",
+            "copernicus publications",
+            "copernicus gmbh",
+        ),
+        asset_default="body",
+        probe_capability="routing_signal",
+        provider_managed_abstract_only=False,
+        client_factory_path="paper_fetch.providers.copernicus:CopernicusClient",
+        status_order=8,
+        domain_suffixes=("copernicus.org",),
+        xml_path_templates=("/articles/{volume}/{page}/{year}/{suffix}.xml",),
+        landing_path_templates=("/articles/{volume}/{page}/{year}/",),
+        pdf_path_templates=("/articles/{volume}/{page}/{year}/{suffix}.pdf",),
+        emits_html_managed_marker=False,
+        html_capable=False,
+        xml_root_tags=("article",),
+        xml_file_tokens=("copernicus", "10.5194"),
+        body_text_thresholds=BodyTextThresholds(min_chars=500),
+        routes=(
+            ProviderRouteSpec(name="metadata", kind="metadata"),
+            ProviderRouteSpec(name="xml", kind="xml"),
+            ProviderRouteSpec(
+                name="direct_pdf",
+                kind="pdf",
+                requires_pdf_conversion=True,
             ),
-            asset_default="body",
-            probe_capability="routing_signal",
-            provider_managed_abstract_only=False,
-            client_factory_path="paper_fetch.providers.copernicus:CopernicusClient",
-            status_order=8,
-            domain_suffixes=("copernicus.org",),
-            xml_path_templates=("/articles/{volume}/{page}/{year}/{suffix}.xml",),
-            landing_path_templates=("/articles/{volume}/{page}/{year}/",),
-            pdf_path_templates=("/articles/{volume}/{page}/{year}/{suffix}.pdf",),
-            emits_html_managed_marker=False,
-            html_capable=False,
-            xml_root_tags=("article",),
-            xml_file_tokens=("copernicus", "10.5194"),
-            body_text_thresholds=BodyTextThresholds(min_chars=500),
-            routes=(
-                ProviderRouteSpec(name="metadata", kind="metadata"),
-                ProviderRouteSpec(name="xml", kind="xml"),
-                ProviderRouteSpec(
-                    name="direct_pdf",
-                    kind="pdf",
-                    requires_pdf_conversion=True,
-                ),
-                ProviderRouteSpec(
-                    name="assets",
-                    kind="assets",
-                    timeout_seconds=20,
-                    concurrency=2,
-                    transient_retries=2,
-                ),
+            ProviderRouteSpec(
+                name="assets",
+                kind="assets",
+                timeout_seconds=20,
+                concurrency=2,
+                transient_retries=2,
             ),
         ),
-        sources=("copernicus_xml", "copernicus_pdf"),
-    )
+    ),
+    sources=("copernicus_xml", "copernicus_pdf"),
 )
 
 MIN_BODY_CHARS = 500
@@ -752,7 +751,6 @@ class CopernicusClient(ProviderClient):
             or normalize_text(str(metadata.get("title") or ""))
             or raw_payload.source_url
         )
-        seed_urls: list[str] = []
         body_result = (
             download_assets(
                 FIGURE_KIND,
@@ -762,13 +760,14 @@ class CopernicusClient(ProviderClient):
                 output_dir=output_dir,
                 user_agent=self.user_agent,
                 asset_profile=asset_profile,
-                headers=self._html_headers(),
-                seed_urls=seed_urls,
-                asset_download_concurrency=resolve_asset_download_concurrency(
-                    context.env
+                options=AssetDownloadOptions(
+                    headers=self._html_headers(),
+                    asset_download_concurrency=resolve_asset_download_concurrency(
+                        context.env
+                    ),
+                    provider_name="copernicus",
+                    runtime_context=context,
                 ),
-                provider_name="copernicus",
-                runtime_context=context,
             )
             if downloadable_body_assets
             else empty_asset_results()
@@ -782,13 +781,14 @@ class CopernicusClient(ProviderClient):
                 output_dir=output_dir,
                 user_agent=self.user_agent,
                 asset_profile=asset_profile,
-                headers=self._html_headers(),
-                seed_urls=seed_urls,
-                asset_download_concurrency=resolve_asset_download_concurrency(
-                    context.env
+                options=AssetDownloadOptions(
+                    headers=self._html_headers(),
+                    asset_download_concurrency=resolve_asset_download_concurrency(
+                        context.env
+                    ),
+                    provider_name="copernicus",
+                    runtime_context=context,
                 ),
-                provider_name="copernicus",
-                runtime_context=context,
             )
             if supplementary_assets and asset_profile == "all"
             else empty_asset_results()

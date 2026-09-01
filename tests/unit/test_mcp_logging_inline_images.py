@@ -1,13 +1,38 @@
-# ruff: noqa: F403,F405
 from __future__ import annotations
 
-from ._mcp_support import *
+import logging
+import tempfile
+import unittest
+from pathlib import Path
+from unittest import mock
+
+from paper_fetch.mcp.fetch_cache import FetchCache
+from paper_fetch.mcp.fetch_tool import (
+    _inline_image_contents,
+    build_fetch_tool_result,
+    fetch_paper_payload,
+    resolve_paper_tool,
+)
+from paper_fetch.mcp.log_bridge import (
+    parse_structured_log_message,
+    structured_log_payload_from_record,
+)
+from paper_fetch.mcp.schemas import FetchPaperRequest
+from paper_fetch.models import Asset, FetchEnvelope
 from paper_fetch.runtime import RuntimeContext
+
+from ._mcp_support import (
+    create_cached_fetch_envelope,
+    mcp_test_deps,
+    sample_article,
+    sample_resolved_query,
+    write_binary,
+)
 
 
 class McpLoggingInlineImageTests(unittest.TestCase):
     def test_parse_structured_log_message_extracts_fields(self) -> None:
-        payload = mcp_tools.parse_structured_log_message(
+        payload = parse_structured_log_message(
             "http_request_success method=GET status=200 elapsed_ms=12.5 attempt=1",
             logger_name="paper_fetch.http",
         )
@@ -42,7 +67,7 @@ class McpLoggingInlineImageTests(unittest.TestCase):
             "request_headers": {"Authorization": "Bearer secret"},
         }
 
-        payload = mcp_tools.structured_log_payload_from_record(record)
+        payload = structured_log_payload_from_record(record)
 
         self.assertEqual(
             payload,
@@ -70,7 +95,7 @@ class McpLoggingInlineImageTests(unittest.TestCase):
             exc_info=None,
         )
 
-        payload = mcp_tools.structured_log_payload_from_record(record)
+        payload = structured_log_payload_from_record(record)
 
         self.assertNotIn("private-token", str(payload))
         self.assertNotIn("token=private", str(payload))
@@ -139,9 +164,9 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                 ),
             ]
 
-            contents, warnings = mcp_tools._inline_image_contents(
+            contents, warnings = _inline_image_contents(
                 article,
-                budget=mcp_tools.FetchPaperRequest(
+                budget=FetchPaperRequest(
                     query="10.1000/example"
                 ).strategy.resolved_inline_image_budget(),
                 download_dir=root,
@@ -180,12 +205,12 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                     section="body",
                 ),
             ]
-            budget = mcp_tools.FetchPaperRequest(
+            budget = FetchPaperRequest(
                 query="10.1000/example",
                 strategy={"inline_image_budget": {"max_total_bytes": 40}},
             ).strategy.resolved_inline_image_budget()
 
-            contents, warnings = mcp_tools._inline_image_contents(
+            contents, warnings = _inline_image_contents(
                 article, budget=budget, download_dir=root
             )
 
@@ -208,12 +233,12 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                     section="body",
                 )
             ]
-            budget = mcp_tools.FetchPaperRequest(
+            budget = FetchPaperRequest(
                 query="10.1000/example",
                 strategy={"inline_image_budget": {"max_images": 0}},
             ).strategy.resolved_inline_image_budget()
 
-            contents, warnings = mcp_tools._inline_image_contents(
+            contents, warnings = _inline_image_contents(
                 article, budget=budget, download_dir=Path(tmpdir)
             )
 
@@ -233,7 +258,7 @@ class McpLoggingInlineImageTests(unittest.TestCase):
             symlink.symlink_to(outside)
             in_scope = scope / "figure.png"
             write_binary(in_scope, size=32)
-            budget = mcp_tools.FetchPaperRequest(
+            budget = FetchPaperRequest(
                 query="10.1000/example"
             ).strategy.resolved_inline_image_budget()
 
@@ -252,7 +277,7 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                         downloaded_bytes=recorded_size,
                     )
                 ]
-                contents, warnings = mcp_tools._inline_image_contents(
+                contents, warnings = _inline_image_contents(
                     article, budget=budget, download_dir=scope
                 )
                 self.assertEqual(contents, [])
@@ -309,22 +334,21 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                 download_dir, "10.1000/example", modes=["markdown"]
             )
 
-            with (
-                mock.patch.object(mcp_tools, "build_runtime_env", return_value={}),
-                mock.patch.object(
-                    mcp_tools,
-                    "service_resolve_paper",
-                    return_value=sample_resolved_query("10.1000/example"),
+            mocked_fetch = mock.Mock()
+            payload = fetch_paper_payload(
+                query="10.1000/example",
+                modes=["markdown"],
+                strategy={"inline_image_budget": {"max_images": 1}},
+                prefer_cache=True,
+                download_dir=download_dir,
+                deps=mcp_test_deps(
+                    build_runtime_env=lambda _env=None: {},
+                    service_resolve_paper=lambda *_args, **_kwargs: (
+                        sample_resolved_query("10.1000/example")
+                    ),
+                    service_fetch_paper=mocked_fetch,
                 ),
-                mock.patch.object(mcp_tools, "service_fetch_paper") as mocked_fetch,
-            ):
-                payload = mcp_tools.fetch_paper_payload(
-                    query="10.1000/example",
-                    modes=["markdown"],
-                    strategy={"inline_image_budget": {"max_images": 1}},
-                    prefer_cache=True,
-                    download_dir=download_dir,
-                )
+            )
 
         self.assertEqual(payload["doi"], "10.1000/example")
         self.assertEqual(payload["markdown"], "# Example Article\n\nExample body.\n")
@@ -368,7 +392,7 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                 markdown="# Example Article\n\nExample body.\n",
                 metadata=None,
             )
-            request = mcp_tools.FetchPaperRequest(
+            request = FetchPaperRequest(
                 query="10.1000/example",
                 modes=["markdown"],
                 strategy={
@@ -377,7 +401,7 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                 },
             )
 
-            result = mcp_tools.build_fetch_tool_result(
+            result = build_fetch_tool_result(
                 envelope, request, download_dir=Path(tmpdir)
             )
 
@@ -416,7 +440,7 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                 markdown="# Example Article\n\nExample body.\n",
                 metadata=None,
             )
-            request = mcp_tools.FetchPaperRequest(
+            request = FetchPaperRequest(
                 query="10.1000/example",
                 modes=["markdown"],
                 save_markdown=True,
@@ -426,7 +450,7 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                 },
             )
 
-            result = mcp_tools.build_fetch_tool_result(
+            result = build_fetch_tool_result(
                 envelope, request, download_dir=Path(tmpdir)
             )
 
@@ -467,7 +491,7 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                 markdown="# Example Article\n\n![Figure 1](https://example.test/figure-1.png)\n\nBody text.\n",
                 metadata=None,
             )
-            request = mcp_tools.FetchPaperRequest(
+            request = FetchPaperRequest(
                 query="10.1000/example",
                 modes=["markdown"],
                 strategy={
@@ -476,7 +500,7 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                 },
             )
 
-            result = mcp_tools.build_fetch_tool_result(
+            result = build_fetch_tool_result(
                 envelope, request, download_dir=Path(tmpdir)
             )
 
@@ -517,13 +541,13 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                 markdown="# Example Article\n\nExample body.\n",
                 metadata=None,
             )
-            request = mcp_tools.FetchPaperRequest(
+            request = FetchPaperRequest(
                 query="10.1000/example",
                 modes=["markdown"],
                 strategy={"inline_image_budget": {"max_images": 1}},
             )
 
-            result = mcp_tools.build_fetch_tool_result(
+            result = build_fetch_tool_result(
                 envelope, request, download_dir=Path(tmpdir)
             )
 
@@ -535,10 +559,12 @@ class McpLoggingInlineImageTests(unittest.TestCase):
     def test_resolve_paper_tool_serializes_resolved_query(self) -> None:
         resolved = sample_resolved_query("10.1000/example")
 
-        with mock.patch.object(
-            mcp_tools, "service_resolve_paper", return_value=resolved
-        ):
-            result = mcp_tools.resolve_paper_tool(query="10.1000/example")
+        result = resolve_paper_tool(
+            query="10.1000/example",
+            deps=mcp_test_deps(
+                service_resolve_paper=lambda *_args, **_kwargs: resolved
+            ),
+        )
 
         self.assertFalse(result.is_error)
         self.assertEqual(result.structured_content["doi"], "10.1000/example")

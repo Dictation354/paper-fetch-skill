@@ -6,6 +6,42 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+### 破坏性变更——命令、批处理与 manifest 接口
+
+- CLI 现在只支持子命令形式：请使用 `paper-fetch fetch ...`。删除根级 fetch 参数兼容层、CLI `--no-download`、持久化 `--run-manifest` / `--resume` 以及 `manifest audit|reconcile` 命令；不保留 provider artifact 与资产时改用 `--artifact-mode none`。
+- CLI 与 MCP 批处理可以写入一份最终 `batch-results.jsonl`；只有全部输入取得终态后，才按输入顺序组装并原子提交。删除 append-only attempt、run summary、audit/reconcile 与 resume 语义，同时保留单批次内按 canonical DOI fan-out。目标结果文件已存在且内容不同时，仍需显式传入 `--overwrite` / `overwrite=true`。
+- Schema-v2 manifest record 现在只公开当前 `record_status`、`acceptance` 与 `output_artifacts` 契约。删除旧顶层 `status`、`output_path`、`saved_markdown_path` projection 以及旧 acceptance/cache 迁移 shim；旧版、未知或不完整记录不再猜测或升级，而是 fail closed。
+
+### 变更——浏览器与 transport 运行时
+
+- Camoufox 现在是唯一 browser backend。删除 backend selector、通用 Chrome/CDP runtime 路径、浏览器自动安装/修复/更新，以及 CLI/MCP/环境中的 `browser_auto_prepare` 控制。Fetch、auth 与 preflight 只使用已经准备好的 runtime；需要安装时显式运行 `python -m camoufox fetch`。
+- Browser preflight 不再向后续 fetch 发布短期 HTML 或 route hint。每次 fetch 都独立导航，并重新执行 identity、access boundary、正文与资产验收；storage state 仍是有意保留的可复用浏览器能力。
+- 删除基于 `download_dir` 的 HTTP 文本磁盘缓存、条件式磁盘 revalidation、cache stat/timing collector 及其环境变量。HTTP GET 现在只在当前进程内有界复用，request safety、redirect 检查、retry policy 与资产限制继续执行。
+
+### 变更——MCP cache 访问
+
+- 删除动态 cache index/entry resource、cache resource-list notification 与 `batch_fetch` cache `resource_uri` 字段。Cache 访问现在通过显式 `download_dir` scope 内的 `list_cached` / `get_cached` 完成；静态 provider catalog resource 继续保留。
+- 删除 cache `refresh` / `rescan` 模式与 loose-file discovery。Sidecar、Markdown 和资产在写入时增量注册；读取只信任当前 scoped index 以及当前 DOI、capability scope、stat 与 hash 证据，不再静默迁移旧版或损坏的 index。
+
+### 变更——provider 与库契约
+
+- 内置 provider 现在从一份固定且经过验证的 bundle 列表加载。删除动态注册、依赖 import order 的优先级、identity overlap priority、route-union 编译以及生成式 provider catalog/route governance 层；运行时网络策略只从精确声明的 route 编译。
+- 删除仅用于兼容的 positional constructor、宽泛 keyword adapter、旧 urllib asset request 注入、通用 browser/PDF launch 参数、跨请求 singleflight 与其它私有 wrapper import。当前 typed request/options object 与单批次 DOI 去重仍是支持路径。
+
+### 变更——维护工具与验证
+
+- 用更小的 `docs/adding-a-provider.md` 流程取代 manifest/review/scaffold onboarding tree：定义 runtime bundle，添加 provider-local test，并加入代表性 golden replay 证据。删除 provider governance/drift/canary generator、递归 onboarding 自动化、Markdown review sidecar、live benchmark tooling 与生成式 route 文档。
+- 删除仓库 coverage-focus、complexity-budget gate 与打包的 `paper_fetch_devtools` 质量层。确定性的 unit、integration、provider replay、package、platform 与 live-test 入口继续保留在各自范围内。
+- 将静态 Skill 完整性验证从 runtime package 移至 `scripts/skill_integrity.py`。离线 builder/installer 直接验证 bundle 与已安装的宿主副本；`doctor` 现在只报告 runtime/provider 健康状态，不再接受 `--install-root` 或输出 installation-provenance 状态。
+
+### 变更——发布与依赖 CI
+
+- 删除可变的 `dependency-latest` 滚动发布、专用 token 路径和跨 revision release tooling overlay。稳定 `v*` 发布继续公开九个离线安装器与 `SHA256SUMS`，并保留冻结依赖证据、SBOM、secret scan 和 provenance attestation。
+- 删除不 gate 的 provider canary 状态机；经合法授权的显式检查继续保留在 `tests/live`。
+- 锁定依赖审计现在导出全部 extras，并让每个 `pip-audit` finding 直接失败，不再保留空的例外框架。
+- Python 3.11 与 3.14 boundary job 现在每个 Python 版本只构建一次 wheel，并分别 smoke 隔离的 core/full 安装。
+- Python distribution verification 现在检查 archive safety、必需 package/Skill payload、metadata、entry point 与完整 wheel `RECORD` 覆盖，不再维护签入仓库的精确源码 inventory。删除仓库根目录的旧 Windows PowerShell bundle installer；受支持的 Windows release artifact 仍是原生 setup executable。
+
 ## 6.0.4 - 2026-08-29
 
 ### 修复——发布质量门禁

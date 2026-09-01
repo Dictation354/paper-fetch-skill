@@ -71,7 +71,7 @@ from ._pdf_common import (
     pdf_fetch_result_from_response,
 )
 from ._payloads import build_provider_payload
-from ._registry import ProviderBundle, register_provider_bundle
+from ._registry import ProviderBundle
 from ._retry_categories import (
     DEFAULT_RETRYABLE_ASSET_ERROR_CATEGORIES,
     NETWORK_RETRYABLE_REASON_TOKENS,
@@ -98,7 +98,12 @@ from ..quality.html_availability import (
 )
 from ..quality.html_signals import ELSEVIER_AVAILABILITY_OVERRIDES
 from ..extraction.html.provider_rules import ProviderHtmlRules
-from ..extraction.html.assets import FIGURE_KIND, SUPPLEMENTARY_KIND, download_assets
+from ..extraction.html.assets import (
+    FIGURE_KIND,
+    SUPPLEMENTARY_KIND,
+    AssetDownloadOptions,
+    download_assets,
+)
 from ..extraction.html.signals import ASSET_BLOCKING_REASON_TOKENS
 from .base import (
     ProviderArtifacts,
@@ -112,55 +117,53 @@ from .base import (
 )
 
 
-register_provider_bundle(
-    ProviderBundle(
-        catalog=ProviderSpec(
-            name="elsevier",
-            display_name="Elsevier",
-            official=True,
-            domains=("sciencedirect.com", "elsevier.com"),
-            doi_prefixes=("10.1016/",),
-            publisher_aliases=(
-                "elsevier",
-                "elsevier bv",
-                "elsevier ltd",
-                "elsevier masson sas",
-            ),
-            asset_default="none",
-            probe_capability="metadata_api",
-            provider_managed_abstract_only=False,
-            client_factory_path="paper_fetch.providers.elsevier:ElsevierClient",
-            status_order=1,
-            api_hosts=("scopus.com", "www.scopus.com"),
-            sensitive_headers=("x-els-apikey",),
-            env_requirements=("ELSEVIER_API_KEY",),
-            xml_root_tags=("full-text-retrieval-response",),
-            xml_file_tokens=("elsevier", "10.1016"),
-            routes=(
-                ProviderRouteSpec(name="metadata_api", kind="metadata"),
-                ProviderRouteSpec(
-                    name="xml_api",
-                    kind="xml",
-                    timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                ),
-                ProviderRouteSpec(
-                    name="pdf_api",
-                    kind="pdf",
-                    requires_pdf_conversion=True,
-                    timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-                ),
-                ProviderRouteSpec(name="object_assets", kind="assets", transport="api"),
-            ),
+PROVIDER_BUNDLE = ProviderBundle(
+    catalog=ProviderSpec(
+        name="elsevier",
+        display_name="Elsevier",
+        official=True,
+        domains=("sciencedirect.com", "elsevier.com"),
+        doi_prefixes=("10.1016/",),
+        publisher_aliases=(
+            "elsevier",
+            "elsevier bv",
+            "elsevier ltd",
+            "elsevier masson sas",
         ),
-        html_rules=ProviderHtmlRules(
-            name="elsevier",
-            availability=AvailabilityPolicy(
-                name="elsevier",
-                overrides=ELSEVIER_AVAILABILITY_OVERRIDES,
+        asset_default="none",
+        probe_capability="metadata_api",
+        provider_managed_abstract_only=False,
+        client_factory_path="paper_fetch.providers.elsevier:ElsevierClient",
+        status_order=1,
+        api_hosts=("scopus.com", "www.scopus.com"),
+        sensitive_headers=("x-els-apikey",),
+        env_requirements=("ELSEVIER_API_KEY",),
+        xml_root_tags=("full-text-retrieval-response",),
+        xml_file_tokens=("elsevier", "10.1016"),
+        routes=(
+            ProviderRouteSpec(name="metadata_api", kind="metadata"),
+            ProviderRouteSpec(
+                name="xml_api",
+                kind="xml",
+                timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
             ),
+            ProviderRouteSpec(
+                name="pdf_api",
+                kind="pdf",
+                requires_pdf_conversion=True,
+                timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+            ),
+            ProviderRouteSpec(name="object_assets", kind="assets", transport="api"),
         ),
-        sources=("elsevier_xml", "elsevier_pdf"),
-    )
+    ),
+    html_rules=ProviderHtmlRules(
+        name="elsevier",
+        availability=AvailabilityPolicy(
+            name="elsevier",
+            overrides=ELSEVIER_AVAILABILITY_OVERRIDES,
+        ),
+    ),
+    sources=("elsevier_xml", "elsevier_pdf"),
 )
 
 
@@ -626,14 +629,16 @@ def download_elsevier_related_assets(
             output_dir=output_dir,
             user_agent=headers.get("User-Agent", ""),
             asset_profile=asset_profile,
-            headers=headers,
-            candidate_builder=lambda _transport, *, asset, **_kwargs: [
-                normalize_text(str(asset.get("source_url") or ""))
-            ],
-            asset_download_concurrency=concurrency,
-            fetch_policy="direct_then_browser",
-            provider_name="elsevier",
-            runtime_context=context,
+            options=AssetDownloadOptions(
+                headers=headers,
+                candidate_builder=lambda _transport, *, asset, **_kwargs: [
+                    normalize_text(str(asset.get("source_url") or ""))
+                ],
+                asset_download_concurrency=concurrency,
+                fetch_policy="direct_then_browser",
+                provider_name="elsevier",
+                runtime_context=context,
+            ),
         )
         for asset in result.get("assets") or []:
             asset["download_tier"] = "object_reference"
@@ -694,10 +699,12 @@ def download_elsevier_related_assets(
         output_dir=output_dir,
         user_agent=headers.get("User-Agent", ""),
         asset_profile=asset_profile,
-        headers=headers,
-        asset_download_concurrency=active_asset_download_concurrency,
-        provider_name="elsevier",
-        runtime_context=context,
+        options=AssetDownloadOptions(
+            headers=headers,
+            asset_download_concurrency=active_asset_download_concurrency,
+            provider_name="elsevier",
+            runtime_context=context,
+        ),
     )
     downloads.extend(list(supplementary_result.get("assets") or []))
     failures.extend(list(supplementary_result.get("asset_failures") or []))

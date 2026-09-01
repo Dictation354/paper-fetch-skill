@@ -282,17 +282,15 @@ def table_conversion_note(status: TableConversionStatus) -> str | None:
 def table_entry_semantic_count(
     entry: Mapping[str, Any],
     field: str,
-    *,
-    fallback: bool = False,
 ) -> int:
-    """Read a non-negative internal table quality count with legacy fallback."""
+    """Read a current non-negative internal table quality count."""
 
     value = entry.get(field)
     if isinstance(value, bool):
         return int(value)
     if isinstance(value, int):
         return max(value, 0)
-    return int(fallback)
+    return 0
 
 
 def normalize_lines(lines: list[str]) -> str:

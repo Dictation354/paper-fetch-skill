@@ -704,38 +704,31 @@ test "$(
 )" = '\sum\limits_{i}^{n}x^{i}'
 paper-fetch-install-image-tools --target-dir "$INSTALL_ROOT/image-tools" >/dev/null
 
-log "Verifying installed version and skill provenance"
-PROVENANCE_JSON="$TMP_ROOT/install-provenance.json"
+log "Verifying runtime diagnostics and installed Skill integrity"
+DOCTOR_JSON="$TMP_ROOT/doctor.json"
 paper-fetch doctor \
   --provider crossref \
   --detail compact \
-  --install-root "$INSTALL_ROOT" \
-  --json > "$PROVENANCE_JSON"
-"$RUNTIME_PYTHON" - "$PROVENANCE_JSON" <<'PY'
+  --json > "$DOCTOR_JSON"
+"$RUNTIME_PYTHON" - "$DOCTOR_JSON" <<'PY'
 import json
 import sys
 from pathlib import Path
 
 report = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
-provenance = report["install_provenance"]
-assert provenance["status"] == "ready", provenance
-assert provenance["offline_manifest"]["schema_version"] == 3, provenance
-assert provenance["offline_manifest"]["git_revision"], provenance
-assert provenance["offline_manifest"]["target"]["python_tag"], provenance
-expected = provenance["consistency"]["expected_version"]
-assert expected, provenance
-for component in (
-    "current_distribution",
-    "default_user_agent",
-    "offline_manifest",
-    "installed_runtime",
-    "active_cli",
-):
-    assert provenance[component]["version"] == expected, (component, provenance)
-assert provenance["bundled_skill"]["expected_file_count"] > 1, provenance
-assert len(provenance["host_skills"]) == 3, provenance
-assert all(item["status"] == "ready" for item in provenance["host_skills"]), provenance
+assert "provider_status" in report, report
+assert "install_provenance" not in report, report
 PY
+for skill_dir in \
+  "$INSTALL_ROOT/skills/paper-fetch-skill" \
+  "$FAKE_HOME/.codex/skills/paper-fetch-skill" \
+  "$FAKE_HOME/.claude/skills/paper-fetch-skill" \
+  "$FAKE_HOME/.gemini/antigravity-cli/skills/paper-fetch-skill"
+do
+  "$RUNTIME_PYTHON" -X utf8 "$INSTALL_ROOT/scripts/skill_integrity.py" verify \
+    --manifest "$INSTALL_ROOT/offline-manifest.json" \
+    --skill-dir "$skill_dir" >/dev/null
+done
 
 log "Verifying browser runtime package entrypoint"
 "$RUNTIME_PYTHON" - <<'PY'
@@ -743,10 +736,10 @@ import camoufox
 import playwright
 import pymupdf
 
-from paper_fetch.runtime_browser import BrowserContextManager
+from paper_fetch.providers.browser_runtime.camoufox_manager import CamoufoxBrowserManager
 
 assert hasattr(camoufox, "Camoufox")
-assert BrowserContextManager is not None
+assert CamoufoxBrowserManager is not None
 PY
 
 log "Verifying provider_status payload entrypoint"

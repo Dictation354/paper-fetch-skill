@@ -6,7 +6,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from paper_fetch import runtime as runtime_module
 from paper_fetch import service as paper_fetch
 from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.runtime import RuntimeContext
@@ -28,7 +27,7 @@ from paper_fetch.workflow.fulltext import _provider_fetch_result
 from ._logging_support import RecordCaptureHandler
 from ._paper_fetch_support import (
     FixtureHtmlTransport,
-    StubProvider,
+    FixtureProvider,
     fetch_paper_model,
     fulltext_pdf_bytes,
     sample_article,

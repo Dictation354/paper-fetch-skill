@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import replace
 from functools import cache
 from pathlib import Path
 import tempfile
@@ -166,50 +165,6 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
                 {"url": MDPI_PDF_URL, "content_type": "application/pdf"},
             ],
         }
-
-    def test_mdpi_without_cdp_endpoint_uses_auto_managed_browser_runtime(self) -> None:
-        client = MdpiClient(transport=None, env={})
-        with tempfile.TemporaryDirectory() as tmpdir:
-            runtime = replace(
-                self._runtime_config(tmpdir, "mdpi", MDPI_STRUCTURE_DOI),
-                cdp_endpoint=None,
-            )
-            mocked_html = mock.Mock(
-                return_value=browser_runtime.BrowserFetchedHtml(
-                    source_url=MDPI_LANDING_URL,
-                    final_url=MDPI_LANDING_URL,
-                    html=(
-                        "<html><head><meta name='citation_author' content='Ada Example'>"
-                        f"<meta name='citation_title' content='{MDPI_TITLE}'></head>"
-                        "<body><article><div id='article-contents'>"
-                        "<section class='html-abstract'><h2>Abstract</h2><p>Abstract text.</p></section>"
-                        "<section><h2>1. Introduction</h2>"
-                        + (
-                            "<p>Body text with enough words for MDPI extraction.</p>"
-                            * 80
-                        )
-                        + "</section></div></article></body></html>"
-                    ),
-                    response_status=200,
-                    response_headers={"content-type": "text/html"},
-                    title=MDPI_TITLE,
-                    summary="MDPI full text",
-                    browser_context_seed={},
-                )
-            )
-            install_browser_workflow_deps(
-                client,
-                load_runtime_config=mock.Mock(return_value=runtime),
-                ensure_runtime_ready=mock.Mock(),
-                fetch_html_with_browser=mocked_html,
-            )
-
-            raw_payload = client.fetch_raw_fulltext(
-                MDPI_STRUCTURE_DOI, self._metadata()
-            )
-
-        self.assertEqual(_payload_route(raw_payload), "html")
-        self.assertIsNone(mocked_html.call_args.kwargs["config"].cdp_endpoint)
 
     def test_mdpi_html_route_uses_browser_landing_page_and_ignores_xml_url(
         self,

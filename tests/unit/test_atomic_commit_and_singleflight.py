@@ -10,12 +10,8 @@ import pytest
 
 from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.http import RequestCancelledError
-from paper_fetch.mcp.schemas import FetchPaperRequest
 from paper_fetch.runtime import RuntimeContext
-from paper_fetch.workflow.singleflight import (
-    RequestSingleFlight,
-    fetch_request_singleflight_key,
-)
+from paper_fetch.workflow.singleflight import RequestSingleFlight
 
 
 def _process_artifact_write(path: str, body: bytes) -> None:
@@ -257,37 +253,3 @@ def test_singleflight_waiter_never_reuses_uncopyable_exception() -> None:
 
     assert owner_failure.value is error
     assert waiter.value is not error
-
-
-def test_fetch_singleflight_key_canonicalizes_output_directories(
-    tmp_path: Path,
-) -> None:
-    cache_dir = tmp_path / "cache"
-    markdown_dir = tmp_path / "markdown"
-    first = FetchPaperRequest(
-        query="10.1000/Example",
-        save_markdown=True,
-        markdown_output_dir=str(tmp_path / "nested" / ".." / "markdown"),
-    )
-    second = FetchPaperRequest(
-        query="https://doi.org/10.1000/example",
-        save_markdown=True,
-        markdown_output_dir=str(markdown_dir.resolve(strict=False)),
-    )
-
-    first_key = fetch_request_singleflight_key(
-        "10.1000/example",
-        request=first,
-        capability_scope={"kind": "public"},
-        cache_dir=tmp_path / "nested" / ".." / "cache",
-        markdown_dir=tmp_path / "nested" / ".." / "markdown",
-    )
-    second_key = fetch_request_singleflight_key(
-        "10.1000/example",
-        request=second,
-        capability_scope={"kind": "public"},
-        cache_dir=cache_dir.resolve(strict=False),
-        markdown_dir=markdown_dir.resolve(strict=False),
-    )
-
-    assert first_key == second_key

@@ -22,20 +22,6 @@ def _parse_cache_key(context: RuntimeContext, role: str) -> tuple[Any, ...]:
 
 
 class RuntimeParseCacheTests(unittest.TestCase):
-    def test_parse_cache_accessors_copy_mutable_values_by_default(self) -> None:
-        context = RuntimeContext(env={})
-        key = _parse_cache_key(context, "copy-accessors")
-
-        original = {"authors": ["Alice Example"]}
-        stored = context.set_parse_cache(key, original)
-        stored["authors"].append("Returned Mutation")
-        original["authors"].append("Original Mutation")
-
-        cached = context.get_parse_cache(key)
-        cached["authors"].append("Cached Mutation")
-
-        self.assertEqual(context.get_parse_cache(key), {"authors": ["Alice Example"]})
-
     def test_get_or_set_parse_cache_is_atomic_and_returns_copies(self) -> None:
         context = RuntimeContext(env={})
         key = _parse_cache_key(context, "atomic-copy")
@@ -69,7 +55,10 @@ class RuntimeParseCacheTests(unittest.TestCase):
 
         self.assertEqual(factory_calls, 1)
         self.assertEqual(
-            context.get_parse_cache(key),
+            context.get_or_set_parse_cache(
+                key,
+                lambda: self.fail("cached parse factory should not run"),
+            ),
             {"authors": ["Alice Example"]},
         )
         self.assertEqual(len({id(result) for result in results}), WORKER_COUNT)
@@ -112,7 +101,14 @@ class RuntimeParseCacheTests(unittest.TestCase):
 
         self.assertEqual(factory_calls, 1)
         self.assertTrue(all(result is shared_payload for result in results))
-        self.assertIs(context.get_parse_cache(key, copy_value=False), shared_payload)
+        self.assertIs(
+            context.get_or_set_parse_cache(
+                key,
+                lambda: self.fail("cached parse factory should not run"),
+                copy_value=False,
+            ),
+            shared_payload,
+        )
 
 
 if __name__ == "__main__":

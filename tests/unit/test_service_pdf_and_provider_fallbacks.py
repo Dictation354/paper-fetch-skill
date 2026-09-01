@@ -20,7 +20,7 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
             article = fetch_paper_model(
                 "10.1016/test",
                 clients={
-                    "elsevier": StubProvider(
+                    "elsevier": FixtureProvider(
                         metadata={
                             "provider": "elsevier",
                             "official_provider": True,
@@ -36,7 +36,7 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
                             retry_after_seconds=3,
                         ),
                     ),
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata={
                             "provider": "crossref",
                             "official_provider": False,
@@ -133,7 +133,7 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
                     "10.1111/test",
                     output_dir=Path(tmpdir),
                     clients={
-                        "wiley": StubProvider(
+                        "wiley": FixtureProvider(
                             metadata=paper_fetch.ProviderFailure(
                                 "not_supported", "No official metadata."
                             ),
@@ -166,7 +166,7 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
                                 HttpTransport(), {}
                             ).to_article_model,
                         ),
-                        "crossref": StubProvider(
+                        "crossref": FixtureProvider(
                             metadata={
                                 "provider": "crossref",
                                 "official_provider": False,
@@ -221,7 +221,7 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
                     "10.1111/scanned",
                     output_dir=Path(tmpdir),
                     clients={
-                        "wiley": StubProvider(
+                        "wiley": FixtureProvider(
                             metadata=paper_fetch.ProviderFailure(
                                 "not_supported", "No official metadata."
                             ),
@@ -246,7 +246,7 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
                                 HttpTransport(), {}
                             ).to_article_model,
                         ),
-                        "crossref": StubProvider(
+                        "crossref": FixtureProvider(
                             metadata={
                                 "provider": "crossref",
                                 "official_provider": False,
@@ -335,7 +335,7 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
                     "10.1016/test",
                     output_dir=Path(tmpdir),
                     clients={
-                        "elsevier": StubProvider(
+                        "elsevier": FixtureProvider(
                             metadata={
                                 "provider": "elsevier",
                                 "official_provider": True,
@@ -356,7 +356,7 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
                             ),
                             article=official_article,
                         ),
-                        "crossref": StubProvider(
+                        "crossref": FixtureProvider(
                             metadata={
                                 "provider": "crossref",
                                 "official_provider": False,
@@ -397,7 +397,7 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
                     allow_downloads=False,
                     output_dir=Path(tmpdir),
                     clients={
-                        "wiley": StubProvider(
+                        "wiley": FixtureProvider(
                             metadata=paper_fetch.ProviderFailure(
                                 "not_supported", "No official metadata."
                             ),
@@ -425,7 +425,7 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
                                 HttpTransport(), {}
                             ).to_article_model,
                         ),
-                        "crossref": StubProvider(
+                        "crossref": FixtureProvider(
                             metadata={
                                 "provider": "crossref",
                                 "official_provider": False,
@@ -448,7 +448,10 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
         self.assertTrue(article.quality.has_fulltext)
         self.assertIn("download:wiley_skipped", article.quality.source_trail)
         self.assertTrue(
-            any("--no-download" in warning for warning in article.quality.warnings)
+            any(
+                "artifact mode is none" in warning
+                for warning in article.quality.warnings
+            )
         )
 
     def test_wiley_provider_skips_generic_html_fallback_after_provider_failure(
@@ -469,7 +472,7 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
                 "10.1111/test",
                 allow_downloads=False,
                 clients={
-                    "wiley": StubProvider(
+                    "wiley": FixtureProvider(
                         metadata=paper_fetch.ProviderFailure(
                             "not_supported", "No official metadata."
                         ),
@@ -477,7 +480,7 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
                             "no_result", "Browser workflow failed."
                         ),
                     ),
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata={
                             "provider": "crossref",
                             "official_provider": False,
@@ -587,7 +590,7 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
                         "springer": paper_fetch.build_clients(transport, {})[
                             "springer"
                         ],
-                        "crossref": StubProvider(
+                        "crossref": FixtureProvider(
                             metadata={
                                 "provider": "crossref",
                                 "official_provider": False,

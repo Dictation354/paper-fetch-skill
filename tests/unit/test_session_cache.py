@@ -1,25 +1,16 @@
 from __future__ import annotations
 
 import unittest
-from dataclasses import FrozenInstanceError
 
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.workflow.session_cache import (
     RESOLVED_QUERY_KEY,
-    SessionCacheKey,
     cached_call,
     get_cached,
 )
 
 
 class SessionCacheTests(unittest.TestCase):
-    def test_session_cache_key_materializes_namespace_and_args(self) -> None:
-        key = SessionCacheKey("example")
-        self.assertEqual(key.materialize("alpha", "beta"), ("example", "alpha", "beta"))
-
-        with self.assertRaises(FrozenInstanceError):
-            key.namespace = "changed"  # type: ignore[misc]
-
     def test_cached_call_misses_then_hits_cached_value(self) -> None:
         context = RuntimeContext(env={})
         calls = {"count": 0}

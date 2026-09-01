@@ -52,7 +52,7 @@
 3. [`provider-development.md`](provider-development.md)
 4. [`extraction-rules.md`](extraction-rules.md)
 5. [`architecture/probe-semantics.md`](architecture/probe-semantics.md)
-6. [`onboarding/README.md`](../onboarding/README.md)
+6. [`adding-a-provider.md`](adding-a-provider.md)
 
 主要在 Windows / WSL 开发、但会改 Unix 安装器、离线发布、平台目录、公式工具
 或 Camoufox / Playwright 边界的维护者，还应继续阅读：
@@ -82,18 +82,15 @@
   - 讲 Camoufox 安装、抓取、headed 认证、离线准备和 publisher live matrix。
 - [`provider-development.md`](provider-development.md)
   - 讲新增出版社 provider 的标准开发流程、typed contract、waterfall、资产语义、测试和文档验收标准。
-- [`publisher-performance-image-quality-20260826.md`](publisher-performance-image-quality-20260826.md)
-  - 归档 19 家资源链路优化、四家 strict/full-size 三轮结果、并发 benchmark、保留/撤回决策及尚未通过的 Wiley/AIP live 门槛。
-- [`onboarding/README.md`](../onboarding/README.md)
-  - Provider manifest、访问审核、fixture、scaffold、review、sync-back 与确定性本地验收入口。
+- [`adding-a-provider.md`](adding-a-provider.md)
+  - 讲以 runtime bundle、provider-local 测试和 golden replay 添加 provider 的最小流程。
 - [`extraction-rules.md`](extraction-rules.md)
   - 讲当前提取 / 组装 / 渲染规则、真实样本证据和对应测试，不负责运行时路由和部署说明。
-  - 修改后运行 `python3 scripts/validate_extraction_rules.py` 校验 anchor、Owner、fixture、测试名、manifest 引用和未挂规则 fixture 清单。
 - [`deployment.md`](deployment.md)
   - 讲安装、配置入口、MCP 注册、更新和最小验证。
   - 讲 Wiley / Science / PNAS / AMS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI / Taylor & Francis Online 的 repo-local 浏览器工作流、本地 `scripts/dev-preflight.sh` 门禁和 CI 测试耗时信号。
 - [`macos-adaptation-audit.md`](macos-adaptation-audit.md)
-  - 说明 macOS 支持矩阵、安全不变量，以及 Windows / Linux / WSL portable 证据与原生 macOS 证据的区别。
+  - 说明 macOS 支持矩阵、安全不变量，以及 Windows / Linux / WSL 本地预检查与原生 macOS 证据的区别。
 - [`macos-adaptation-contract.toml`](macos-adaptation-contract.toml)
   - Mac 适配的机器可读事实源；修改 Unix 安装、离线构建/验证、平台目录、公式工具、Camoufox / Playwright 边界或 release CI 时必须同步 validator、测试和人类文档。
 - [`architecture/overview.md`](architecture/overview.md)
@@ -162,7 +159,7 @@
 - `preview` 不是天然错误；当宽高满足阈值且 `source_trail` 有 preview accepted 轨迹时，是可接受降级。
 - preview 降级仍必须导出自包含 Markdown；如果正文图片链接能映射到已下载本地资产，最终 `.md` 不应残留远端图片 URL。
 - `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` / `tandf` 的 challenge 恢复链路会先复用预热正文页中目标 `<img>` 的 canvas 导出；目标图存在但尚未加载时，会先在同一正文页执行带凭据的 `fetch()` 拉取原图字节，再退回图片 URL 直连候选；只接受能识别为图片的 selected-browser image payload，包括浏览器导出的 PNG 和原始 SVG；图片文档 screenshot 和 challenge HTML 不能作为正文图片资产。
-- live review 中，只有公式图片发生 preview fallback 时不自动归为 `asset_download_failure`；figure/table preview fallback 仍需要 accepted 轨迹或其它证据才能降噪。资产下载 warning、`asset_failures` 轨迹或 `quality.asset_failures` 会归为 `asset_download_failure`。
+- acceptance 中，只有公式图片发生 preview fallback 时不自动归为 `asset_download_failure`；figure/table preview fallback 仍需要 accepted 轨迹或其它证据才能降噪。资产下载 warning、`asset_failures` 轨迹或 `quality.asset_failures` 会归为 `asset_download_failure`。
 
 ### `semantic_losses`
 
@@ -189,26 +186,17 @@
 ### `download_dir`
 
 - 抓取时的落盘目录。
-- 可覆盖默认下载目录，也会影响 MCP scoped cache resources。
-- `RuntimeContext` / `ArtifactStore` 通过 `artifact_mode` 控制 provider payload、原始 HTML、Markdown 保存、资产诊断、HTTP textual cache 与 provider structured sidecar 的落盘范围；CLI/MCP fetch 默认 `markdown-assets`，Python API/runtime 未显式设置时默认是 `all`。
+- 可覆盖默认下载目录，并限定 `list_cached` / `get_cached` 的 cache scope。
+- `RuntimeContext` / `ArtifactStore` 通过 `artifact_mode` 控制 provider payload、原始 HTML、Markdown 保存、资产诊断与 provider structured sidecar 的落盘范围；CLI/MCP fetch 默认 `markdown-assets`，Python API/runtime 未显式设置时默认是 `all`。
 - CLI/MCP fetch 入口通过 `FetchPipeline` 创建运行时并调用 service，MCP 的 fetch-envelope sidecar 和 cache index 仍由 `FetchCache` 管理语义，但原子 JSON 写入复用 `ArtifactStore`。
-- MCP 本地 Markdown cache 只接受保存时的 DOI+实际路径显式注册，或包含 DOI/source/fulltext 字段的结构化 YAML front matter；index/refresh/rescan、scope 和 preferred 选择规则见 [`providers.md`](providers.md#mcp-download-and-markdown-save)。
+- MCP 本地 Markdown cache 只接受保存时的 DOI+实际路径显式注册；当前 index、scope 和 preferred 选择规则见 [`providers.md`](providers.md#mcp-download-and-markdown-save)。
 - Python service API 接收显式 `context=`；外层调用方需要先构造 `RuntimeContext(...)`，再传给 service / pipeline。
 - 未显式设置时，CLI / MCP 优先使用用户数据目录下的 `paper-fetch/downloads`；CLI 创建失败才退回 `live-downloads`。
-- `download_dir` 派生的 HTTP textual disk cache 只在 artifact mode 为 `all` 时启用，默认按 `4096` 条、`512 MiB`、`30` 天清理；详见 provider 文档中的 HTTP 缓存环境变量。
+- HTTP GET cache 仅在当前进程内按 TTL、条数和总字节上限复用，不写入 `download_dir`。
 
 ### MCP 下载和 Markdown 保存
 
 `artifact_mode`、`prefer_cache`、`no_download`、`save_markdown`、`markdown_output_dir` 和 `markdown_filename` 的完整语义见 [`providers.md`](providers.md#mcp-download-and-markdown-save)。
-
-### Live review timings
-
-- 2026-08-26 的全出版社性能与图片质量 A/B 结果、证据限制和未通过项见 [`publisher-performance-image-quality-20260826.md`](publisher-performance-image-quality-20260826.md)；不得把 Wiley 访问拒绝或 AIP 补跑成功计作原计划三轮全胜。
-- golden criteria live review 的 `stage_timings` 包含 `fetch_seconds`、`materialize_seconds`、`total_seconds`、`resolve_seconds`、`metadata_seconds`、`fulltext_seconds`、`asset_seconds`、`formula_seconds`、`render_seconds`。
-- 每个 sample 的 `http_cache_stats` 表示该 sample 执行前后差值；最终汇总日志仍可查看 `HttpTransport.cache_stats_snapshot()` 的累计快照。
-- `scripts/run_parallel_live_benchmark.py` 复用 golden live acceptance/timings，对同一组直连与 browser 样本运行 `1/2/4` 并发对照；输出 wall time、吞吐、加速比、结果漂移和结构化失败点。该 runner 默认每档一轮、禁用 HTTP 缓存但复用 browser storage-state，只能解释为本次 live 对照。
-- `scripts/run_parallel_live_benchmark.py --same-provider-probe wiley` 是额外的显式 opt-in 能力探测：固定选择 `10.1111/gcb.16414`、`10.1111/gcb.16998`、`10.1111/gcb.15322`，按并发 `1/2` 各跑两轮，并仅在该 devtools 运行中把 Wiley lane 上限临时提升到 `2`。报告以 worker 时间区间和每轮 provider 峰值确认真实重叠；加速比仅供观察，不是成功条件。该结论只适用于本机、本次访问状态，不修改 CLI/MCP 或 provider catalog 的生产默认限流。
-- live runner supported provider 从 runtime `official_provider_names()` 派生，当前包含 `elsevier`、`springer`、`wiley`、`science`、`pnas`、`ieee`、`arxiv`、`copernicus`、`ams`、`mdpi`、`royalsocietypublishing`、`annualreviews`、`plos`、`oxfordacademic`、`acs`、`iop`、`aip`、`tandf`、`frontiers`；provider 路径和资产语义见 [`providers.md`](providers.md)。
 
 ## 一句话阅读建议
 

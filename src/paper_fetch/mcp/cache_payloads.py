@@ -10,12 +10,7 @@ from mcp.types import CallToolResult
 
 from ..capability_scope import capability_scopes_for_query
 from ._deps import MCPDeps, default_mcp_deps
-from .cache_index import (
-    CACHE_INDEX_MODE_INDEX,
-    CACHE_INDEX_MODE_RESCAN,
-    CACHE_INDEX_MODE_REFRESH,
-    cache_entry_visible_for_scopes,
-)
+from .cache_index import cache_entry_visible_for_scopes
 from .fetch_cache import (
     FetchCache,
     FetchCacheDependencies,
@@ -24,11 +19,6 @@ from .results import _tool_result, error_payload_from_exception, with_schema_ver
 from .schemas import FetchStrategyInput, GetCachedRequest
 
 _MCP_DEFAULT_DOWNLOAD_DIR = object()
-_CACHE_MODES = {
-    CACHE_INDEX_MODE_INDEX,
-    CACHE_INDEX_MODE_REFRESH,
-    CACHE_INDEX_MODE_RESCAN,
-}
 
 
 def _entry_visible_in_runtime_env(
@@ -58,17 +48,14 @@ def list_cached_payload(
     *,
     env: Mapping[str, str] | None = None,
     download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
-    cache_mode: str = CACHE_INDEX_MODE_INDEX,
     deps: MCPDeps = default_mcp_deps(),
 ) -> dict[str, Any]:
-    if cache_mode not in _CACHE_MODES:
-        raise ValueError("cache_mode must be one of: index, refresh, rescan.")
     runtime_env = deps.build_runtime_env(env)
     effective_download_dir = _resolve_download_dir(runtime_env, download_dir, deps=deps)
     payload = FetchCache(
         effective_download_dir,
         dependencies=FetchCacheDependencies(list_entries=deps.list_cache_entries),
-    ).list_payload(cache_mode=cache_mode, _filter_entries=False)
+    ).list_payload(_filter_entries=False)
     payload["entries"] = [
         entry
         for entry in payload.get("entries", [])
@@ -109,7 +96,6 @@ def get_cached_payload(
     payload = FetchCache(
         effective_download_dir,
         dependencies=FetchCacheDependencies(
-            refresh_for_doi=deps.refresh_cache_index_for_doi,
             preferred_entries=deps.preferred_cached_entries,
         ),
         credential_scope=read_scopes[0],
@@ -148,7 +134,6 @@ def list_cached_tool(
     *,
     env: Mapping[str, str] | None = None,
     download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
-    cache_mode: str = CACHE_INDEX_MODE_INDEX,
     deps: MCPDeps = default_mcp_deps(),
 ) -> CallToolResult:
     try:
@@ -156,7 +141,6 @@ def list_cached_tool(
             list_cached_payload(
                 env=env,
                 download_dir=download_dir,
-                cache_mode=cache_mode,
                 deps=deps,
             ),
             is_error=False,

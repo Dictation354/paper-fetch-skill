@@ -113,7 +113,7 @@ def build_ieee_browser_payload(
             },
         },
         reason=source.reason,
-        fetcher=f"{request.runtime_config.backend}_ieee_html",
+        fetcher="camoufox_ieee_html",
         browser_context_seed=dict(source.browser_context_seed),
         extracted_assets=request.extraction_assets(extraction, landing_attempt),
         trace_markers=[

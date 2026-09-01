@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from io import BytesIO
 from pathlib import Path
 import gzip
@@ -20,12 +21,13 @@ from paper_fetch.asset_budget import (
     DEFAULT_ASSET_MAX_FILES,
     DEFAULT_ASSET_MAX_PIXELS,
 )
-from paper_fetch.http import HttpRequestPolicy, HttpTransport
+from paper_fetch.http import HttpRequestPolicy, HttpStreamOptions, HttpTransport
 from paper_fetch.http.errors import RequestFailure
 from paper_fetch.image_tools import SourceImagePathConversion
 from paper_fetch.extraction.html.assets import (
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
+    AssetDownloadOptions,
     download_assets,
 )
 from paper_fetch.extraction.html.assets.state import (
@@ -314,8 +316,10 @@ def test_stream_unknown_length_counts_actual_bytes_and_cleans_partial_file(
                 "GET",
                 "https://assets.example/file.bin",
                 destination,
-                on_content_length=reservation.declare_content_length,
-                on_chunk=reservation.consume,
+                options=HttpStreamOptions(
+                    on_content_length=reservation.declare_content_length,
+                    on_chunk=reservation.consume,
+                ),
             )
 
     assert raised.value.reason_code == ASSET_BYTES_PER_ASSET_EXCEEDED
@@ -337,8 +341,10 @@ def test_stream_content_length_rejected_before_destination_creation(
                 "GET",
                 "https://assets.example/file.bin",
                 destination,
-                on_content_length=reservation.declare_content_length,
-                on_chunk=reservation.consume,
+                options=HttpStreamOptions(
+                    on_content_length=reservation.declare_content_length,
+                    on_chunk=reservation.consume,
+                ),
             )
 
     assert raised.value.reason_code == ASSET_BYTES_PER_ASSET_EXCEEDED
@@ -366,9 +372,11 @@ def test_stream_gzip_expansion_is_bounded_by_decoded_bytes(
             "GET",
             "https://assets.example/file.bin",
             destination,
-            request_policy=HttpRequestPolicy(
-                max_response_bytes=8,
-                max_compressed_response_bytes=128,
+            options=HttpStreamOptions(
+                request_policy=HttpRequestPolicy(
+                    max_response_bytes=8,
+                    max_compressed_response_bytes=128,
+                ),
             ),
         )
 
@@ -394,8 +402,10 @@ def _download_one_streamed_supplementary(
         output_dir=output_dir,
         user_agent="test",
         asset_profile="all",
-        asset_budget=budget,
-        allowed_hosts=("assets.example",),
+        options=AssetDownloadOptions(
+            asset_budget=budget,
+            allowed_hosts=("assets.example",),
+        ),
     )
 
 
@@ -533,9 +543,11 @@ def test_compressed_length_budget_failure_cancels_pending_asset_work(
         output_dir=tmp_path,
         user_agent="test",
         asset_profile="all",
-        asset_budget=budget,
-        asset_download_concurrency=2,
-        allowed_hosts=("assets.example",),
+        options=AssetDownloadOptions(
+            asset_budget=budget,
+            asset_download_concurrency=2,
+            allowed_hosts=("assets.example",),
+        ),
     )
 
     assert result["assets"] == []
@@ -884,7 +896,12 @@ def test_stream_rejects_truncated_gzip_and_preserves_existing_destination(
     destination = tmp_path / "asset.part"
 
     with pytest.raises(RequestFailure, match="Truncated gzip"):
-        transport.stream_to_file("GET", "https://assets.example/file.bin", destination)
+        transport.stream_to_file(
+            "GET",
+            "https://assets.example/file.bin",
+            destination,
+            options=HttpStreamOptions(),
+        )
     assert not destination.exists()
 
     destination.write_bytes(b"existing")
@@ -895,7 +912,12 @@ def test_stream_rejects_truncated_gzip_and_preserves_existing_destination(
         lambda _request, *, timeout: fresh_response,
     )
     with pytest.raises(FileExistsError):
-        transport.stream_to_file("GET", "https://assets.example/file.bin", destination)
+        transport.stream_to_file(
+            "GET",
+            "https://assets.example/file.bin",
+            destination,
+            options=HttpStreamOptions(),
+        )
     assert destination.read_bytes() == b"existing"
 
 
@@ -940,9 +962,11 @@ def test_stream_retries_before_body_with_one_final_budget_accounting(
             "GET",
             "https://assets.example/file.bin",
             destination,
-            on_content_length=reservation.declare_content_length,
-            on_chunk=reservation.consume,
-            **retry_kwargs,
+            options=HttpStreamOptions(
+                on_content_length=reservation.declare_content_length,
+                on_chunk=reservation.consume,
+                **retry_kwargs,
+            ),
         )
         reservation.unregister_staging(destination)
         reservation.commit()
@@ -983,8 +1007,12 @@ def test_download_assets_publishes_streamed_file_and_commits_budget(
         output_dir=tmp_path,
         user_agent="test",
         asset_profile="body",
-        asset_budget=budget,
-        candidate_builder=lambda *_args, **_kwargs: ["https://assets.example/file.png"],
+        options=AssetDownloadOptions(
+            asset_budget=budget,
+            candidate_builder=lambda *_args, **_kwargs: [
+                "https://assets.example/file.png"
+            ],
+        ),
     )
 
     assert result["asset_failures"] == []
@@ -1048,8 +1076,10 @@ class _SessionReuseTransport:
         payload = (
             _SMALL_PNG if url.endswith(".png") else url.rsplit("/", 1)[-1].encode()
         )
-        content_length = kwargs["on_content_length"]
-        on_chunk = kwargs["on_chunk"]
+        options = kwargs["options"]
+        assert isinstance(options, HttpStreamOptions)
+        content_length = options.on_content_length
+        on_chunk = options.on_chunk
         assert callable(content_length)
         assert callable(on_chunk)
         content_length(len(payload))
@@ -1071,9 +1101,10 @@ class _SessionReuseTransport:
         }
 
 
-def test_streaming_assets_do_not_replay_seed_urls(tmp_path: Path) -> None:
+def test_streaming_assets_use_transport_without_replaying_article_urls(
+    tmp_path: Path,
+) -> None:
     transport = _SessionReuseTransport()
-    seed_urls = ["https://publisher.example/article", "https://publisher.example/auth"]
     assets = [
         {
             "kind": "supplementary",
@@ -1091,10 +1122,11 @@ def test_streaming_assets_do_not_replay_seed_urls(tmp_path: Path) -> None:
         output_dir=tmp_path,
         user_agent="test",
         asset_profile="all",
-        seed_urls=seed_urls,
-        asset_download_concurrency=1,
-        fetch_policy="browser_first",
-        allowed_hosts=("publisher.example",),
+        options=AssetDownloadOptions(
+            asset_download_concurrency=1,
+            fetch_policy="browser_first",
+            allowed_hosts=("publisher.example",),
+        ),
     )
 
     assert len(result["assets"]) == 3
@@ -1113,22 +1145,26 @@ def test_runtime_streaming_does_not_replay_seed_across_asset_kinds(
         "article_id": "10.1234/cross-kind",
         "output_dir": tmp_path,
         "user_agent": "test",
-        "seed_urls": ["https://publisher.example/article"],
-        "allowed_hosts": ("publisher.example",),
-        "runtime_context": runtime_context,
-        "asset_budget": runtime_context.asset_budget,
-        "asset_download_concurrency": 1,
-        "fetch_policy": "browser_first",
     }
+    common_options = AssetDownloadOptions(
+        allowed_hosts=("publisher.example",),
+        runtime_context=runtime_context,
+        asset_budget=runtime_context.asset_budget,
+        asset_download_concurrency=1,
+        fetch_policy="browser_first",
+    )
 
     figure = download_assets(
         FIGURE_KIND,
         transport,  # type: ignore[arg-type]
         assets=[{"kind": "figure", "url": "https://publisher.example/file.png"}],
         asset_profile="body",
-        candidate_builder=lambda *_args, **_kwargs: [
-            "https://publisher.example/file.png"
-        ],
+        options=replace(
+            common_options,
+            candidate_builder=lambda *_args, **_kwargs: [
+                "https://publisher.example/file.png"
+            ],
+        ),
         **common,
     )
     supplementary = download_assets(
@@ -1141,6 +1177,7 @@ def test_runtime_streaming_does_not_replay_seed_across_asset_kinds(
             }
         ],
         asset_profile="all",
+        options=common_options,
         **common,
     )
 
@@ -1164,8 +1201,12 @@ def test_shared_budget_spans_figure_and_supplementary_calls(tmp_path: Path) -> N
         output_dir=tmp_path,
         user_agent="test",
         asset_profile="body",
-        asset_budget=budget,
-        candidate_builder=lambda *_args, **_kwargs: ["https://assets.example/file.png"],
+        options=AssetDownloadOptions(
+            asset_budget=budget,
+            candidate_builder=lambda *_args, **_kwargs: [
+                "https://assets.example/file.png"
+            ],
+        ),
     )
     second = download_assets(
         SUPPLEMENTARY_KIND,
@@ -1180,7 +1221,7 @@ def test_shared_budget_spans_figure_and_supplementary_calls(tmp_path: Path) -> N
         output_dir=tmp_path,
         user_agent="test",
         asset_profile="all",
-        asset_budget=budget,
+        options=AssetDownloadOptions(asset_budget=budget),
     )
 
     assert len(first["assets"]) == 1
@@ -1249,11 +1290,15 @@ def test_parallel_figure_and_supplementary_calls_share_worker_slots(
             output_dir=tmp_path,
             user_agent="test",
             asset_profile="body",
-            candidate_builder=lambda _transport, *, asset, **_kwargs: [asset["url"]],
-            asset_download_concurrency=4,
-            fetch_policy="direct_then_browser",
-            runtime_context=runtime,
-            allowed_hosts=("assets.example",),
+            options=AssetDownloadOptions(
+                candidate_builder=lambda _transport, *, asset, **_kwargs: [
+                    asset["url"]
+                ],
+                asset_download_concurrency=4,
+                fetch_policy="direct_then_browser",
+                runtime_context=runtime,
+                allowed_hosts=("assets.example",),
+            ),
         )
 
     def supplementary() -> None:
@@ -1272,10 +1317,12 @@ def test_parallel_figure_and_supplementary_calls_share_worker_slots(
             output_dir=tmp_path,
             user_agent="test",
             asset_profile="all",
-            asset_download_concurrency=4,
-            fetch_policy="direct_then_browser",
-            runtime_context=runtime,
-            allowed_hosts=("assets.example",),
+            options=AssetDownloadOptions(
+                asset_download_concurrency=4,
+                fetch_policy="direct_then_browser",
+                runtime_context=runtime,
+                allowed_hosts=("assets.example",),
+            ),
         )
 
     threads = [threading.Thread(target=body), threading.Thread(target=supplementary)]
@@ -1302,7 +1349,9 @@ class _EmptyStreamTransport(_SessionReuseTransport):
         destination: Path,
         **kwargs: object,
     ) -> dict[str, object]:
-        content_length = kwargs["on_content_length"]
+        options = kwargs["options"]
+        assert isinstance(options, HttpStreamOptions)
+        content_length = options.on_content_length
         assert callable(content_length)
         content_length(0)
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -1332,8 +1381,10 @@ def test_empty_streamed_staging_is_rolled_back(tmp_path: Path) -> None:
         output_dir=tmp_path,
         user_agent="test",
         asset_profile="all",
-        asset_budget=budget,
-        allowed_hosts=("assets.example",),
+        options=AssetDownloadOptions(
+            asset_budget=budget,
+            allowed_hosts=("assets.example",),
+        ),
     )
 
     assert result["assets"] == []
@@ -1354,8 +1405,10 @@ class _TiffStreamTransport(_SessionReuseTransport):
         destination: Path,
         **kwargs: object,
     ) -> dict[str, object]:
-        content_length = kwargs["on_content_length"]
-        on_chunk = kwargs["on_chunk"]
+        options = kwargs["options"]
+        assert isinstance(options, HttpStreamOptions)
+        content_length = options.on_content_length
+        on_chunk = options.on_chunk
         assert callable(content_length)
         assert callable(on_chunk)
         content_length(len(self.source_payload))
@@ -1414,11 +1467,13 @@ def test_streamed_tiff_conversion_publishes_source_and_png_with_one_budget(
         output_dir=tmp_path,
         user_agent="test",
         asset_profile="body",
-        asset_budget=budget,
-        allowed_hosts=("assets.example",),
-        candidate_builder=lambda *_args, **_kwargs: [
-            "https://assets.example/source.tif"
-        ],
+        options=AssetDownloadOptions(
+            asset_budget=budget,
+            allowed_hosts=("assets.example",),
+            candidate_builder=lambda *_args, **_kwargs: [
+                "https://assets.example/source.tif"
+            ],
+        ),
     )
 
     assert result["asset_failures"] == []

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from importlib import import_module
-import sys
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from ._registry import ProviderBundle
 
 _EXPORTS: dict[str, tuple[str, str]] = {
     "AcsClient": (".acs", "AcsClient"),
@@ -58,27 +60,19 @@ _BUILTIN_PROVIDER_ENTRY_MODULES = (
     ".tandf",
     ".wiley",
 )
-_IMPORTED_PROVIDER_ENTRY_MODULES: set[str] = set()
-_PROVIDER_ENTRY_MODULES = _BUILTIN_PROVIDER_ENTRY_MODULES
-_PROVIDER_ENTRY_IMPORTS_COMPLETE = False
 
 
-def import_provider_entry_modules() -> tuple[str, ...]:
-    global _PROVIDER_ENTRY_IMPORTS_COMPLETE
-    imported: list[str] = []
-    for module_name in _PROVIDER_ENTRY_MODULES:
-        if module_name in _IMPORTED_PROVIDER_ENTRY_MODULES:
-            continue
-        import_module(module_name, __name__)
-        _IMPORTED_PROVIDER_ENTRY_MODULES.add(module_name)
-        imported.append(module_name)
-    if imported:
-        provider_catalog = sys.modules.get("paper_fetch.provider_catalog")
-        if provider_catalog is not None:
-            provider_catalog.__dict__["_PROVIDER_CATALOG_CACHE"] = None
-            provider_catalog.__dict__["_SOURCE_PROVIDER_MAP_CACHE"] = None
-    _PROVIDER_ENTRY_IMPORTS_COMPLETE = True
-    return tuple(imported)
+def load_builtin_provider_bundles() -> tuple[ProviderBundle, ...]:
+    """Import the fixed built-in modules and return their exported bundles."""
+
+    bundles = tuple(
+        import_module(module_name, __name__).PROVIDER_BUNDLE
+        for module_name in _BUILTIN_PROVIDER_ENTRY_MODULES
+    )
+    from ._registry import validate_provider_bundles
+
+    validate_provider_bundles(bundles)
+    return bundles
 
 
 __all__ = sorted(_EXPORTS)

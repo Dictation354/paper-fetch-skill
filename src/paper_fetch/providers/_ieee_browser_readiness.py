@@ -26,7 +26,7 @@ def _playwright_timeout_error(runtime_config: BrowserRuntimeConfig) -> type[Exce
     except Exception as exc:  # pragma: no cover - missing dependency deployment
         raise ProviderFailure(
             ERROR,
-            f"{runtime_config.backend} browser runtime requires Playwright; "
+            "Camoufox browser runtime requires Playwright; "
             "cannot use IEEE selected-browser HTML fallback.",
         ) from exc
     return PlaywrightTimeoutError
@@ -207,7 +207,7 @@ def _capture_failure_page_diagnostics(
                 doi=failure_context.landing_attempt.normalized_doi,
                 target_url=failure_context.rest_url,
                 final_url=invalid_rest.source_url,
-                backend=failure_context.runtime_config.backend,
+                backend="camoufox",
                 response_status=invalid_rest.status,
                 summary=summarize_visible_html(invalid_rest.html_text),
                 details={"selectors": {"article": False}},
@@ -231,7 +231,7 @@ def _capture_failure_page_diagnostics(
                 doi=failure_context.landing_attempt.normalized_doi,
                 target_url=failure_context.document_url,
                 final_url=failure_context.final_url,
-                backend=failure_context.runtime_config.backend,
+                backend="camoufox",
                 response_status=failure_context.navigation_status,
                 title=page_title,
                 summary=summarize_visible_html(page_html),
@@ -300,12 +300,7 @@ def _unready_browser_failure(
         details["status"] = status
         details["payload_source"] = payload_source
         if detected.reason == "aws_waf_challenge":
-            details.update(
-                {
-                    "challenge_provider": "aws_waf",
-                    "legacy_reason_code": "cloudflare_challenge",
-                }
-            )
+            details.update({"challenge_provider": "aws_waf"})
         return BrowserRuntimeFailure(
             detected.reason,
             detected.message,

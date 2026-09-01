@@ -182,24 +182,17 @@ class FormulaConversionTests(unittest.TestCase):
     def test_backend_registry_preserves_public_backend_groups(self) -> None:
         self.assertEqual(
             formula_conversion.SUPPORTED_BACKENDS,
-            {"auto", "texmath", "mathml-to-latex", "mml2tex", "legacy"},
+            {"auto", "texmath", "mathml-to-latex", "mml2tex"},
         )
         self.assertEqual(
             formula_conversion.AUTO_BACKENDS, ("texmath", "mathml-to-latex")
         )
 
-    def test_backend_registry_resolves_aliases_and_legacy_strategy(self) -> None:
+    def test_backend_registry_resolves_aliases(self) -> None:
         self.assertEqual(
             formula_conversion.resolve_backend(backend="mathml_to_latex"),
             "mathml-to-latex",
         )
-        with self.assertRaisesRegex(RuntimeError, "Legacy conversion is not available"):
-            formula_conversion.convert_mathml_string(
-                '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>',
-                display_mode=False,
-                env={},
-                backend="legacy",
-            )
 
     def test_auto_backend_uses_registry_order_without_texmath_default_fallback(
         self,
@@ -329,54 +322,6 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertEqual(first.latex, "x")
         self.assertEqual(second.latex, "x")
         self.assertEqual(second.duration_ms, 0)
-
-    def test_formula_timing_collector_records_uncached_and_cache_hit_calls(
-        self,
-    ) -> None:
-        raw_mathml = (
-            '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>'
-        )
-        durations: list[float] = []
-        original_texmath = formula_conversion.convert_with_texmath
-        original_monotonic = formula_conversion.time.monotonic
-        monotonic_values = iter([10.0, 10.125, 20.0, 20.05])
-        try:
-            formula_conversion.time.monotonic = lambda: next(monotonic_values)
-
-            def fake_texmath(*args, **kwargs):
-                return formula_conversion.FormulaConversionResult(
-                    backend="texmath",
-                    status="ok",
-                    latex="x",
-                    raw_mathml=raw_mathml,
-                    error=None,
-                    duration_ms=7,
-                    display_mode=False,
-                )
-
-            formula_conversion.convert_with_texmath = fake_texmath
-
-            with formula_conversion.formula_timing_collector(durations.append):
-                first = formula_conversion.convert_mathml_string(
-                    raw_mathml,
-                    display_mode=False,
-                    env={},
-                    backend="texmath",
-                )
-                second = formula_conversion.convert_mathml_string(
-                    raw_mathml,
-                    display_mode=False,
-                    env={},
-                    backend="texmath",
-                )
-        finally:
-            formula_conversion.convert_with_texmath = original_texmath
-            formula_conversion.time.monotonic = original_monotonic
-
-        self.assertEqual(first.status, "ok")
-        self.assertEqual(second.status, "ok")
-        self.assertEqual(second.duration_ms, 0)
-        self.assertEqual([round(duration, 3) for duration in durations], [0.125, 0.05])
 
     def test_texmath_cache_avoids_duplicate_subprocess_run(self) -> None:
         raw_mathml = (

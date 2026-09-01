@@ -22,28 +22,6 @@ def _jsonld(payload: object) -> str:
 
 
 @pytest.mark.parametrize(
-    ("pipeline", "expected_names"),
-    (
-        (_science_html._AUTHOR_PIPELINE, ["datalayer", "dom"]),
-        (_pnas_html._AUTHOR_PIPELINE, ["dom", "meta"]),
-        (_wiley_html._AUTHOR_PIPELINE, ["meta", "jsonld", "dom"]),
-        (_ams_html._AUTHOR_PIPELINE, ["meta", "property", "selector"]),
-        (_springer_html._AUTHOR_PIPELINE, ["meta", "jsonld", "dom"]),
-        (_arxiv_authors._AUTHOR_PIPELINE, ["creators", "person-names"]),
-        (_ieee_metadata._AUTHOR_PIPELINE, ["authors", "authorsList"]),
-        (
-            _ieee_metadata._AUTHOR_NAME_PIPELINE,
-            ["name-field", "first-last", "scalar"],
-        ),
-    ),
-)
-def test_provider_author_pipelines_use_named_steps(
-    pipeline: object, expected_names: list[str]
-) -> None:
-    assert [step.name for step in pipeline.steps] == expected_names
-
-
-@pytest.mark.parametrize(
     ("extract_authors", "html", "expected"),
     (
         (

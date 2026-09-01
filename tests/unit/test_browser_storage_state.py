@@ -34,7 +34,6 @@ def _config(tmp_path: Path) -> BrowserRuntimeConfig:
         artifact_dir=tmp_path / "artifacts",
         headless=True,
         user_agent=None,
-        backend="camoufox",
         storage_state_path=tmp_path / "wiley.json",
     )
 

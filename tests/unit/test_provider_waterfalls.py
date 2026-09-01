@@ -64,7 +64,6 @@ class PublisherWaterfallTests(unittest.TestCase):
             artifact_dir=tmp / "artifacts",
             headless=True,
             user_agent="paper-fetch-test/1",
-            backend="camoufox",
         )
 
     def test_elsevier_official_xml_success_keeps_elsevier_xml_source(self) -> None:

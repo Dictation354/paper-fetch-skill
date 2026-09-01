@@ -653,7 +653,6 @@ def _iop_supplementary_test_deps(index_fetcher):
         user_agent="UnitTestAgent/1.0",
         headless=True,
         binary_path=None,
-        cdp_endpoint=None,
         profile_dir=None,
         user_data_dir=None,
     )

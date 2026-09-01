@@ -1,6 +1,8 @@
 # ruff: noqa: F403,F405
 from __future__ import annotations
 
+from unittest import mock
+
 from ._service_support import *
 
 
@@ -23,7 +25,7 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                 "10.1111/test",
                 allow_downloads=False,
                 clients={
-                    "wiley": StubProvider(
+                    "wiley": FixtureProvider(
                         metadata=paper_fetch.ProviderFailure(
                             "not_supported", "No official metadata."
                         ),
@@ -31,7 +33,7 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                             "no_result", "Browser workflow failed."
                         ),
                     ),
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata={
                             "provider": "crossref",
                             "official_provider": False,
@@ -80,7 +82,7 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
             article = fetch_paper_model(
                 "10.1126/science.ady3136",
                 clients={
-                    "science": StubProvider(
+                    "science": FixtureProvider(
                         metadata=paper_fetch.ProviderFailure(
                             "not_supported", "Science metadata probe is route-only."
                         ),
@@ -88,7 +90,7 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                             "no_result", "Science provider failed."
                         ),
                     ),
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata={
                             "provider": "crossref",
                             "official_provider": False,
@@ -135,7 +137,7 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                     strategy=paper_fetch.FetchStrategy(asset_profile="body"),
                     download_dir=Path(tmpdir),
                     clients={
-                        "science": StubProvider(
+                        "science": FixtureProvider(
                             metadata=paper_fetch.ProviderFailure(
                                 "not_supported", "Science metadata probe is route-only."
                             ),
@@ -166,7 +168,7 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                                 "asset_failures": [],
                             },
                         ),
-                        "crossref": StubProvider(
+                        "crossref": FixtureProvider(
                             metadata={
                                 "provider": "crossref",
                                 "official_provider": False,
@@ -219,7 +221,7 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                     asset_profile="body",
                     output_dir=Path(tmpdir),
                     clients={
-                        "wiley": StubProvider(
+                        "wiley": FixtureProvider(
                             metadata=paper_fetch.ProviderFailure(
                                 "not_supported", "No official metadata."
                             ),
@@ -250,7 +252,7 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                                 "asset_failures": [],
                             },
                         ),
-                        "crossref": StubProvider(
+                        "crossref": FixtureProvider(
                             metadata={
                                 "provider": "crossref",
                                 "official_provider": False,
@@ -301,7 +303,7 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                     asset_profile="all",
                     output_dir=Path(tmpdir),
                     clients={
-                        "pnas": StubProvider(
+                        "pnas": FixtureProvider(
                             metadata=paper_fetch.ProviderFailure(
                                 "not_supported", "PNAS metadata probe is route-only."
                             ),
@@ -340,7 +342,7 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                                 "asset_failures": [],
                             },
                         ),
-                        "crossref": StubProvider(
+                        "crossref": FixtureProvider(
                             metadata={
                                 "provider": "crossref",
                                 "official_provider": False,
@@ -440,7 +442,7 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                             ),
                             download_dir=Path(tmpdir),
                             clients={
-                                case["provider_name"]: StubProvider(
+                                case["provider_name"]: FixtureProvider(
                                     metadata=paper_fetch.ProviderFailure(
                                         "not_supported",
                                         "Browser-workflow provider metadata is route-only.",
@@ -479,7 +481,7 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                                         "asset_failures": [],
                                     },
                                 ),
-                                "crossref": StubProvider(
+                                "crossref": FixtureProvider(
                                     metadata={
                                         "provider": "crossref",
                                         "official_provider": False,
@@ -505,7 +507,7 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
         finally:
             paper_fetch.resolve_paper = original_resolve
 
-    def test_browser_workflow_pdf_fallback_routes_still_skip_asset_downloads(
+    def test_browser_workflow_pdf_fallback_routes_skip_asset_downloads(
         self,
     ) -> None:
         cases = [
@@ -513,21 +515,21 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                 "wiley",
                 "10.1111/test",
                 "https://example.test/wiley",
-                WileyClient(HttpTransport(), {}).to_article_model,
+                WileyClient(HttpTransport(), {}),
                 "wiley_browser",
             ),
             (
                 "science",
                 "10.1126/science.test",
                 "https://www.science.org/doi/full/10.1126/science.test",
-                science_provider.ScienceClient(HttpTransport(), {}).to_article_model,
+                science_provider.ScienceClient(HttpTransport(), {}),
                 "science",
             ),
             (
                 "pnas",
                 "10.1073/pnas.test",
                 "https://www.pnas.org/doi/10.1073/pnas.test",
-                pnas_provider.PnasClient(HttpTransport(), {}).to_article_model,
+                pnas_provider.PnasClient(HttpTransport(), {}),
                 "pnas",
             ),
         ]
@@ -537,7 +539,7 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                 provider_name,
                 doi,
                 landing_url,
-                article_factory,
+                provider_client,
                 expected_source,
             ) in cases:
                 with self.subTest(provider=provider_name):
@@ -552,43 +554,55 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                     paper_fetch.resolve_paper = (
                         lambda *args, resolved=resolved, **kwargs: resolved
                     )
-                    with tempfile.TemporaryDirectory() as tmpdir:
+                    raw_payload = _typed_payload(
+                        provider=provider_name,
+                        source_url=f"{landing_url}.pdf",
+                        content_type="application/pdf",
+                        body=fulltext_pdf_bytes(),
+                        route_kind="pdf_fallback",
+                        markdown_text=f"# {provider_name.title()} PDF Article\n\n## Results\n\n"
+                        + ("Body text " * 80),
+                        warnings=[
+                            "Full text was extracted from PDF fallback after the HTML path was not usable."
+                        ],
+                        source_trail=[
+                            f"fulltext:{provider_name}_html_fail",
+                            f"fulltext:{provider_name}_pdf_fallback_ok",
+                        ],
+                        needs_local_copy=True,
+                    )
+                    asset_download = mock.Mock(
+                        side_effect=AssertionError(
+                            "PDF fallback routes should not attempt asset downloads."
+                        )
+                    )
+                    with (
+                        tempfile.TemporaryDirectory() as tmpdir,
+                        mock.patch.object(
+                            provider_client,
+                            "fetch_metadata",
+                            side_effect=paper_fetch.ProviderFailure(
+                                "not_supported", "Route-only provider metadata."
+                            ),
+                        ),
+                        mock.patch.object(
+                            provider_client,
+                            "fetch_raw_fulltext",
+                            return_value=raw_payload,
+                        ),
+                        mock.patch.object(
+                            provider_client,
+                            "download_related_assets",
+                            asset_download,
+                        ),
+                    ):
                         article = fetch_paper_model(
                             doi,
                             asset_profile="body",
                             output_dir=Path(tmpdir),
                             clients={
-                                provider_name: StubProvider(
-                                    metadata=paper_fetch.ProviderFailure(
-                                        "not_supported", "Route-only provider metadata."
-                                    ),
-                                    raw_payload=_typed_payload(
-                                        provider=provider_name,
-                                        source_url=f"{landing_url}.pdf",
-                                        content_type="application/pdf",
-                                        body=fulltext_pdf_bytes(),
-                                        route_kind="pdf_fallback",
-                                        markdown_text=f"# {provider_name.title()} PDF Article\n\n## Results\n\n"
-                                        + ("Body text " * 80),
-                                        warnings=[
-                                            "Full text was extracted from PDF fallback after the HTML path was not usable."
-                                        ],
-                                        source_trail=[
-                                            f"fulltext:{provider_name}_html_fail",
-                                            f"fulltext:{provider_name}_pdf_fallback_ok",
-                                        ],
-                                        needs_local_copy=True,
-                                    ),
-                                    article_factory=article_factory,
-                                    related_asset_factory=lambda *args, **kwargs: (
-                                        _ for _ in ()
-                                    ).throw(
-                                        AssertionError(
-                                            "PDF fallback routes should not attempt asset downloads."
-                                        )
-                                    ),
-                                ),
-                                "crossref": StubProvider(
+                                provider_name: provider_client,
+                                "crossref": FixtureProvider(
                                     metadata={
                                         "provider": "crossref",
                                         "official_provider": False,
@@ -603,16 +617,12 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                             },
                         )
 
+                    asset_download.assert_not_called()
+
                     self.assertEqual(article.source, expected_source)
                     self.assertIn(
                         f"download:{provider_name}_assets_skipped_text_only",
                         article.quality.source_trail,
-                    )
-                    self.assertTrue(
-                        any(
-                            "text-only full text" in warning
-                            for warning in article.quality.warnings
-                        )
                     )
         finally:
             paper_fetch.resolve_paper = original_resolve

@@ -4,16 +4,12 @@ from __future__ import annotations
 
 import logging
 import threading
-import time
 from dataclasses import dataclass
 from typing import Any
 from collections.abc import Callable, Mapping
 
-from pathlib import Path
-
 from ....logging_utils import emit_structured_log
 from ....runtime import RuntimeContext
-from ....runtime_browser import browser_context_options
 from ....utils import dedupe_normalized, normalize_text
 from ..._pdf_candidates import BROWSER_WORKFLOW_PDF_URL_TOKENS
 from ...browser_runtime.seed import parse_optional_int
@@ -232,110 +228,27 @@ def _new_browser_context(
     headless: bool,
     user_agent: str | None,
     use_runtime_shared_browser: bool = True,
-    binary_path: str | None = None,
-    cdp_endpoint: str | None = None,
-    profile_dir: str | Path | None = None,
-    user_data_dir: str | Path | None = None,
     browser_config: BrowserRuntimeConfig | None = None,
 ) -> tuple[Any | None, Any | None, Any]:
-    if browser_config is not None:
-        from dataclasses import replace
+    if browser_config is None:
+        raise RuntimeError("browser asset fetch requires a Camoufox runtime config")
+    from dataclasses import replace
 
-        active_config = replace(
-            browser_config,
-            headless=headless,
-            user_agent=None,
-            persist_storage_state=False,
-        )
-        manager, browser_context = open_browser_context(
-            active_config,
-            runtime_context=(
-                runtime_context
-                if runtime_context is not None and use_runtime_shared_browser
-                else None
-            ),
-        )
-        return manager, None, browser_context
-    context_kwargs = browser_context_options(user_agent=user_agent)
-    if runtime_context is not None and use_runtime_shared_browser:
-        if isinstance(runtime_context, RuntimeContext):
-            browser_env = _resolve_browser_env(
-                cdp_endpoint,
-                runtime_context=runtime_context,
-                binary_path=binary_path,
-                profile_dir=profile_dir,
-                user_data_dir=user_data_dir,
-            )
-            return (
-                None,
-                None,
-                runtime_context.new_browser_context_for_config(
-                    headless=headless,
-                    binary_path=browser_env["binary_path"],
-                    cdp_endpoint=browser_env["cdp_endpoint"],
-                    profile_dir=browser_env["profile_dir"],
-                    user_data_dir=browser_env["user_data_dir"],
-                    **context_kwargs,
-                ),
-            )
-        return (
-            None,
-            None,
-            runtime_context.new_browser_context(headless=headless, **context_kwargs),
-        )
-
-    from ....runtime_browser import BrowserContextManager
-
-    browser_env = _resolve_browser_env(
-        cdp_endpoint,
-        runtime_context=runtime_context,
-        binary_path=binary_path,
-        profile_dir=profile_dir,
-        user_data_dir=user_data_dir,
+    active_config = replace(
+        browser_config,
+        headless=headless,
+        user_agent=None,
+        persist_storage_state=False,
     )
-    manager = BrowserContextManager(
-        binary_path=browser_env["binary_path"],
-        cdp_endpoint=browser_env["cdp_endpoint"],
-        profile_dir=Path(browser_env["profile_dir"]).expanduser()
-        if browser_env["profile_dir"]
-        else None,
-        user_data_dir=Path(browser_env["user_data_dir"]).expanduser()
-        if browser_env["user_data_dir"]
-        else None,
-    )
-    try:
-        browser_context = manager.new_context(headless=headless, **context_kwargs)
-    except Exception:
-        manager.close()
-        raise
-    return manager, None, browser_context
-
-
-def _resolve_cdp_endpoint(
-    cdp_endpoint: str | None,
-    *,
-    runtime_context: RuntimeContext | None,
-) -> str | None:
-    del runtime_context
-    return normalize_text(cdp_endpoint) or None
-
-
-def _resolve_browser_env(
-    cdp_endpoint: str | None,
-    *,
-    runtime_context: RuntimeContext | None,
-    binary_path: str | Path | None = None,
-    profile_dir: str | Path | None = None,
-    user_data_dir: str | Path | None = None,
-) -> dict[str, str | None]:
-    return {
-        "binary_path": normalize_text(str(binary_path or "")) or None,
-        "cdp_endpoint": _resolve_cdp_endpoint(
-            cdp_endpoint, runtime_context=runtime_context
+    manager, browser_context = open_browser_context(
+        active_config,
+        runtime_context=(
+            runtime_context
+            if runtime_context is not None and use_runtime_shared_browser
+            else None
         ),
-        "profile_dir": normalize_text(str(profile_dir or "")) or None,
-        "user_data_dir": normalize_text(str(user_data_dir or "")) or None,
-    }
+    )
+    return manager, None, browser_context
 
 
 class _BaseBrowserDocumentFetcher:
@@ -348,10 +261,6 @@ class _BaseBrowserDocumentFetcher:
         headless: bool = True,
         runtime_context: RuntimeContext | None = None,
         use_runtime_shared_browser: bool = True,
-        binary_path: str | None = None,
-        cdp_endpoint: str | None = None,
-        profile_dir: str | Path | None = None,
-        user_data_dir: str | Path | None = None,
         browser_options: BrowserDocumentFetcherOptions | None = None,
     ) -> None:
         options = browser_options or BrowserDocumentFetcherOptions()
@@ -363,14 +272,6 @@ class _BaseBrowserDocumentFetcher:
         self._use_runtime_shared_browser = use_runtime_shared_browser
         self.requires_caller_thread = (
             runtime_context is not None and use_runtime_shared_browser
-        )
-        self._binary_path = normalize_text(binary_path) or None
-        self._cdp_endpoint = normalize_text(cdp_endpoint) or None
-        self._profile_dir = (
-            Path(profile_dir).expanduser() if profile_dir is not None else None
-        )
-        self._user_data_dir = (
-            Path(user_data_dir).expanduser() if user_data_dir is not None else None
         )
         self._browser_config = options.runtime_config
         self._shared_page_session = _runtime_shared_page_session(runtime_context)
@@ -391,19 +292,10 @@ class _BaseBrowserDocumentFetcher:
         raise NotImplementedError
 
     def close(self) -> None:
-        release_started_at = time.monotonic()
-        had_browser_state = any(
-            value is not None
-            for value in (self._page, self._context, self._browser_manager)
-        )
         if self._shared_page_session is not None:
             self._page = None
             self._context = None
             self._browser_manager = None
-            if had_browser_state:
-                self._record_asset_browser_stage(
-                    "asset_browser_release_seconds", release_started_at
-                )
             return
         if self._page is not None:
             with contextlib.suppress(Exception):
@@ -417,15 +309,6 @@ class _BaseBrowserDocumentFetcher:
             with contextlib.suppress(Exception):
                 self._browser_manager.close()
             self._browser_manager = None
-        if had_browser_state:
-            self._record_asset_browser_stage(
-                "asset_browser_release_seconds", release_started_at
-            )
-
-    def _record_asset_browser_stage(self, name: str, started_at: float) -> None:
-        recorder = getattr(self._runtime_context, "accumulate_stage_timing", None)
-        if callable(recorder):
-            recorder(name, started_at=started_at)
 
     def _current_seed(self) -> Mapping[str, Any]:
         seed = self._browser_context_seed_getter()
@@ -444,7 +327,6 @@ class _BaseBrowserDocumentFetcher:
         active_user_agent = normalize_text(
             self._current_seed().get("browser_user_agent")
         ) or normalize_text(self._browser_user_agent)
-        prepare_started_at = time.monotonic()
         try:
             browser_config_kwargs = (
                 {"browser_config": self._browser_config}
@@ -456,10 +338,6 @@ class _BaseBrowserDocumentFetcher:
                 headless=self._headless,
                 user_agent=active_user_agent,
                 use_runtime_shared_browser=self._use_runtime_shared_browser,
-                binary_path=self._binary_path,
-                cdp_endpoint=self._cdp_endpoint,
-                profile_dir=self._profile_dir,
-                user_data_dir=self._user_data_dir,
                 **browser_config_kwargs,
             )
             self._browser_manager = manager
@@ -498,10 +376,6 @@ class _BaseBrowserDocumentFetcher:
             else:
                 self.close()
             return None
-        finally:
-            self._record_asset_browser_stage(
-                "asset_browser_prepare_seconds", prepare_started_at
-            )
         return self._context
 
     def _ensure_page(self, source_url: str | None = None):

@@ -31,10 +31,6 @@ class _SharedBrowserFileDocumentFetcher(_BaseBrowserDocumentFetcher):
         headless: bool = True,
         runtime_context: RuntimeContext | None = None,
         use_runtime_shared_browser: bool = True,
-        binary_path: str | None = None,
-        cdp_endpoint: str | None = None,
-        profile_dir: Any = None,
-        user_data_dir: Any = None,
         browser_options: BrowserDocumentFetcherOptions | None = None,
     ) -> None:
         super().__init__(
@@ -44,10 +40,6 @@ class _SharedBrowserFileDocumentFetcher(_BaseBrowserDocumentFetcher):
             headless=headless,
             runtime_context=runtime_context,
             use_runtime_shared_browser=use_runtime_shared_browser,
-            binary_path=binary_path,
-            cdp_endpoint=cdp_endpoint,
-            profile_dir=profile_dir,
-            user_data_dir=user_data_dir,
             browser_options=browser_options,
         )
 
@@ -160,10 +152,6 @@ class _ThreadLocalSharedBrowserFileDocumentFetcher(_ThreadLocalSharedDocumentFet
         headless: bool = True,
         runtime_context: RuntimeContext | None = None,
         use_runtime_shared_browser: bool = True,
-        binary_path: str | None = None,
-        cdp_endpoint: str | None = None,
-        profile_dir: Any = None,
-        user_data_dir: Any = None,
         browser_options: BrowserDocumentFetcherOptions | None = None,
     ) -> None:
         requires_caller_thread = (
@@ -180,10 +168,6 @@ class _ThreadLocalSharedBrowserFileDocumentFetcher(_ThreadLocalSharedDocumentFet
                 headless=headless,
                 runtime_context=runtime_context,
                 use_runtime_shared_browser=use_runtime_shared_browser,
-                binary_path=binary_path,
-                cdp_endpoint=cdp_endpoint,
-                profile_dir=profile_dir,
-                user_data_dir=user_data_dir,
                 browser_options=browser_options,
             ),
         )
@@ -197,10 +181,6 @@ def _build_shared_browser_file_fetcher(
     headless: bool = True,
     runtime_context: RuntimeContext | None = None,
     use_runtime_shared_browser: bool = True,
-    binary_path: str | None = None,
-    cdp_endpoint: str | None = None,
-    profile_dir: Any = None,
-    user_data_dir: Any = None,
     thread_local: bool = False,
     browser_options: BrowserDocumentFetcherOptions | None = None,
 ) -> _ThreadLocalSharedBrowserFileDocumentFetcher | _SharedBrowserFileDocumentFetcher:
@@ -220,9 +200,5 @@ def _build_shared_browser_file_fetcher(
         headless=headless,
         runtime_context=runtime_context,
         use_runtime_shared_browser=use_runtime_shared_browser,
-        binary_path=binary_path,
-        cdp_endpoint=cdp_endpoint,
-        profile_dir=profile_dir,
-        user_data_dir=user_data_dir,
         browser_options=browser_options,
     )

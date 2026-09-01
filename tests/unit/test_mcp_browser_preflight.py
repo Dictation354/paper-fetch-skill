@@ -1,12 +1,25 @@
-# ruff: noqa: F403,F405
 from __future__ import annotations
+
+import asyncio
+import threading
+import time
+import unittest
+from dataclasses import replace
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
-from paper_fetch.config import BROWSER_AUTO_PREPARE_ENV_VAR
+from paper_fetch.browser_preflight import (
+    BrowserPreflightResult,
+    classify_browser_preflight_failure,
+)
+from paper_fetch.mcp.browser_preflight import (
+    browser_preflight_payload,
+    browser_preflight_tool_async,
+)
 
-from ._mcp_support import *
+from ._mcp_support import FakeContext, mcp_test_deps, wait_for_threading_event
 
 
 def _preflight_result(
@@ -72,7 +85,7 @@ def test_browser_preflight_payload_passes_scoped_live_and_storage_options(
         return [result]
 
     progress: list[tuple[str, int, int]] = []
-    payload = mcp_tools.browser_preflight_payload(
+    payload = browser_preflight_payload(
         provider=" WILEY ",
         test_url="https://onlinelibrary.wiley.com/doi/full/10.1111/example",
         timeout_ms=45000,
@@ -95,7 +108,7 @@ def test_browser_preflight_payload_passes_scoped_live_and_storage_options(
     assert captured["storage_state_path"] == state_path
     assert captured["save_storage_state"] is True
     assert captured["cancel_as_result"] is True
-    assert captured["runtime_options"].env[BROWSER_AUTO_PREPARE_ENV_VAR] == "false"
+    assert captured["runtime_options"].env == {}
     assert progress == [("wiley", 1, 1)]
     assert payload["status"] == "ready"
     assert payload["pdf_fallback_attempted"] is False
@@ -109,26 +122,6 @@ def test_browser_preflight_payload_passes_scoped_live_and_storage_options(
     }
 
 
-def test_browser_preflight_payload_allows_request_auto_prepare_override() -> None:
-    captured: dict[str, object] = {}
-
-    def fake_preflight(**kwargs):
-        captured.update(kwargs)
-        return [_preflight_result("wiley", ok=True)]
-
-    payload = mcp_tools.browser_preflight_payload(
-        provider="wiley",
-        browser_auto_prepare=True,
-        deps=mcp_test_deps(
-            build_runtime_env=lambda env=None: dict(env or {}),
-            run_browser_provider_preflight=fake_preflight,
-        ),
-    )
-
-    assert payload["status"] == "ready"
-    assert captured["runtime_options"].env[BROWSER_AUTO_PREPARE_ENV_VAR] == "true"
-
-
 def test_browser_preflight_payload_keeps_per_provider_action_states() -> None:
     results = [
         replace(
@@ -140,7 +133,6 @@ def test_browser_preflight_payload_keeps_per_provider_action_states() -> None:
             ),
             diagnostics={
                 "challenge_provider": "aws_waf",
-                "legacy_reason_code": "cloudflare_challenge",
             },
         ),
         _preflight_result(
@@ -152,13 +144,13 @@ def test_browser_preflight_payload_keeps_per_provider_action_states() -> None:
         _preflight_result(
             "pnas",
             ok=False,
-            reason="cdp_connect_failed",
-            message="CDP connection failed after Chrome startup.",
+            reason="browser_runtime_prepare_failed",
+            message="Camoufox runtime preparation failed.",
         ),
         _preflight_result("mdpi", ok=True),
     ]
 
-    payload = mcp_tools.browser_preflight_payload(
+    payload = browser_preflight_payload(
         detail="full",
         deps=mcp_test_deps(run_browser_provider_preflight=lambda **_kwargs: results),
     )
@@ -177,15 +169,11 @@ def test_browser_preflight_payload_keeps_per_provider_action_states() -> None:
     assert payload["results"][0]["next_action"] == "paper-fetch auth ieee"
     assert payload["results"][0]["reason_code"] == "aws_waf_challenge"
     assert payload["results"][0]["diagnostics"]["challenge_provider"] == "aws_waf"
-    assert (
-        payload["results"][0]["diagnostics"]["legacy_reason_code"]
-        == "cloudflare_challenge"
-    )
     assert payload["results"][3]["next_action"] == "run the requested fetch"
 
 
 def test_browser_preflight_compact_has_only_routing_fields() -> None:
-    payload = mcp_tools.browser_preflight_payload(
+    payload = browser_preflight_payload(
         provider="wiley",
         detail="compact",
         save_storage_state=False,
@@ -228,7 +216,7 @@ def test_browser_preflight_invalid_scoped_input_never_invokes_shared_core(
         raise AssertionError("invalid browser_preflight input reached the shared core")
 
     with pytest.raises(ValidationError):
-        mcp_tools.browser_preflight_payload(
+        browser_preflight_payload(
             **arguments,
             deps=mcp_test_deps(run_browser_provider_preflight=should_not_run),
         )
@@ -246,7 +234,7 @@ class McpBrowserPreflightAsyncTests(unittest.IsolatedAsyncioTestCase):
                 kwargs["on_result"](result, index, len(results))
             return results
 
-        result = await mcp_tools.browser_preflight_tool_async(
+        result = await browser_preflight_tool_async(
             provider="wiley",
             detail="compact",
             ctx=ctx,
@@ -286,7 +274,7 @@ class McpBrowserPreflightAsyncTests(unittest.IsolatedAsyncioTestCase):
             return [_preflight_result("wiley", ok=True)]
 
         task = asyncio.create_task(
-            mcp_tools.browser_preflight_tool_async(
+            browser_preflight_tool_async(
                 provider="wiley",
                 deps=mcp_test_deps(run_browser_provider_preflight=fake_preflight),
             )

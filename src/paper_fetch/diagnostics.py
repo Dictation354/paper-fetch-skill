@@ -9,15 +9,12 @@ from collections.abc import Callable, Mapping
 from .browser_preflight import static_browser_capabilities
 from .config import (
     AMS_STORAGE_STATE_JSON_ENV_VAR,
-    BROWSER_BACKEND_ENV_VAR,
-    BROWSER_AUTO_PREPARE_ENV_VAR,
     BROWSER_BINARY_PATH_ENV_VAR,
     BROWSER_HEADLESS_ENV_VAR,
     BROWSER_PROFILE_DIR_ENV_VAR,
     BROWSER_TIMEOUT_MS_ENV_VAR,
     BROWSER_USER_DATA_DIR_ENV_VAR,
     BROWSER_USER_AGENT_ENV_VAR,
-    CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR,
     DOWNLOAD_DIR_ENV_VAR,
     ENV_FILE_ENV_VAR,
     USER_AGENT_ENV_VAR,
@@ -48,7 +45,6 @@ from .providers.base import (
     build_provider_status_check,
 )
 from .providers.registry import build_clients
-from .provenance import install_provenance_payload
 from .redaction import is_sensitive_configuration_name
 from .reason_codes import ERROR, NOT_CONFIGURED, PARTIAL, READY
 from .utils import normalize_text
@@ -69,15 +65,12 @@ _STATIC_SCOPE = "static_configuration_and_local_dependencies"
 _GLOBAL_CONFIGURATION_NAMES = {
     "CROSSREF_MAILTO",
     AMS_STORAGE_STATE_JSON_ENV_VAR,
-    BROWSER_BACKEND_ENV_VAR,
-    BROWSER_AUTO_PREPARE_ENV_VAR,
     BROWSER_BINARY_PATH_ENV_VAR,
     BROWSER_HEADLESS_ENV_VAR,
     BROWSER_PROFILE_DIR_ENV_VAR,
     BROWSER_TIMEOUT_MS_ENV_VAR,
     BROWSER_USER_DATA_DIR_ENV_VAR,
     BROWSER_USER_AGENT_ENV_VAR,
-    CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR,
     DOWNLOAD_DIR_ENV_VAR,
     ENV_FILE_ENV_VAR,
     GHOSTSCRIPT_BIN_ENV_VAR,
@@ -91,15 +84,12 @@ _GLOBAL_CONFIGURATION_NAMES = {
     XDG_DATA_HOME_ENV_VAR,
 }
 _DEFAULT_CONFIGURATION_NAMES = {
-    BROWSER_BACKEND_ENV_VAR,
-    BROWSER_AUTO_PREPARE_ENV_VAR,
     BROWSER_BINARY_PATH_ENV_VAR,
     BROWSER_HEADLESS_ENV_VAR,
     BROWSER_PROFILE_DIR_ENV_VAR,
     BROWSER_TIMEOUT_MS_ENV_VAR,
     BROWSER_USER_DATA_DIR_ENV_VAR,
     BROWSER_USER_AGENT_ENV_VAR,
-    CDP_EXTERNAL_NEW_CONTEXT_ENV_VAR,
     DOWNLOAD_DIR_ENV_VAR,
     GHOSTSCRIPT_BIN_ENV_VAR,
     IMAGE_TOOLS_DIR_ENV_VAR,
@@ -402,15 +392,10 @@ def provider_status_payload(
     return payload
 
 
-def doctor_payload(
-    *,
-    install_root: Path | None = None,
-    **kwargs: Any,
-) -> dict[str, Any]:
-    """Wrap static diagnostics and local installation provenance for the CLI."""
+def doctor_payload(**kwargs: Any) -> dict[str, Any]:
+    """Wrap static runtime and provider diagnostics for the CLI."""
 
     provider_report = provider_status_payload(**kwargs)
-    install_provenance = install_provenance_payload(install_root=install_root)
     statuses = {
         normalize_text(str(item.get("status") or ERROR)).lower()
         for item in provider_report.get("providers", [])
@@ -422,17 +407,12 @@ def doctor_payload(
         status = "degraded"
     else:
         status = READY
-    if install_provenance["status"] == ERROR:
-        status = ERROR
-    elif install_provenance["status"] == "drift" and status == READY:
-        status = "degraded"
     return {
         "schema_version": 1,
         "status": status,
         "diagnostic_scope": _STATIC_SCOPE,
         "live_network_checked": False,
         "provider_status": provider_report,
-        "install_provenance": install_provenance,
     }
 
 

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import base64
-from dataclasses import FrozenInstanceError
 from pathlib import Path
 import threading
 import tempfile
@@ -11,6 +10,7 @@ from unittest import TestCase, mock
 from paper_fetch.extraction.html.assets import (
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
+    AssetDownloadOptions,
     browser_asset_recovery_allowed,
     download_assets,
 )
@@ -53,8 +53,10 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
                 output_dir=Path(tmpdir),
                 user_agent="test-agent",
                 asset_profile="body",
-                image_document_fetcher=browser_fetcher,
-                fetch_policy="direct_then_browser",
+                options=AssetDownloadOptions(
+                    image_document_fetcher=browser_fetcher,
+                    fetch_policy="direct_then_browser",
+                ),
             )
 
         self.assertEqual(len(result["assets"]), 1)
@@ -86,15 +88,18 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
                         output_dir=Path(tmpdir),
                         user_agent="test-agent",
                         asset_profile="body",
-                        image_document_fetcher=mock.Mock(),
-                        fetch_policy="direct_then_browser",
-                        provider_name=provider,
+                        options=AssetDownloadOptions(
+                            image_document_fetcher=mock.Mock(),
+                            fetch_policy="direct_then_browser",
+                            provider_name=provider,
+                        ),
                     )
 
                 self.assertEqual(result["asset_failures"], [])
                 request = transport.request.call_args.kwargs
-                self.assertEqual(request["timeout"], 20)
-                self.assertEqual(request["transient_retries"], 0)
+                policy = request["request_policy"]
+                self.assertEqual(policy.timeout_seconds, 20)
+                self.assertEqual(policy.transient_retries, 0)
 
     def test_direct_then_browser_recovers_401_403_and_html_challenge(self) -> None:
         url = "https://example.test/figure.png"
@@ -143,8 +148,10 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
                         output_dir=Path(tmpdir),
                         user_agent="test-agent",
                         asset_profile="body",
-                        image_document_fetcher=browser_fetcher,
-                        fetch_policy="direct_then_browser",
+                        options=AssetDownloadOptions(
+                            image_document_fetcher=browser_fetcher,
+                            fetch_policy="direct_then_browser",
+                        ),
                     )
 
                 self.assertEqual(len(result["assets"]), 1)
@@ -217,12 +224,14 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
                 output_dir=Path(tmpdir),
                 user_agent="test-agent",
                 asset_profile="body",
-                candidate_builder=lambda *_args, **kwargs: [kwargs["asset"]["url"]],
-                image_document_fetcher=browser_fetcher,
-                asset_download_concurrency=3,
-                fetch_policy="direct_then_browser",
-                provider_name="mdpi",
-                runtime_context=context,
+                options=AssetDownloadOptions(
+                    candidate_builder=lambda *_args, **kwargs: [kwargs["asset"]["url"]],
+                    image_document_fetcher=browser_fetcher,
+                    asset_download_concurrency=3,
+                    fetch_policy="direct_then_browser",
+                    provider_name="mdpi",
+                    runtime_context=context,
+                ),
             )
 
         try:
@@ -291,8 +300,10 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
                         output_dir=Path(tmpdir),
                         user_agent="test-agent",
                         asset_profile="body",
-                        image_document_fetcher=browser_fetcher,
-                        fetch_policy="direct_then_browser",
+                        options=AssetDownloadOptions(
+                            image_document_fetcher=browser_fetcher,
+                            fetch_policy="direct_then_browser",
+                        ),
                     )
 
                 self.assertEqual(result["assets"], [])
@@ -317,8 +328,10 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
                 output_dir=Path(tmpdir),
                 user_agent="test-agent",
                 asset_profile="body",
-                image_document_fetcher=browser_fetcher,
-                fetch_policy="direct_then_browser",
+                options=AssetDownloadOptions(
+                    image_document_fetcher=browser_fetcher,
+                    fetch_policy="direct_then_browser",
+                ),
             )
 
         self.assertEqual(result["assets"], [])
@@ -368,9 +381,14 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
                 output_dir=Path(tmpdir),
                 user_agent="test-agent",
                 asset_profile="body",
-                candidate_builder=lambda *_args, **_kwargs: [full_url, preview_url],
-                image_document_fetcher=browser_fetcher,
-                fetch_policy="direct_then_browser",
+                options=AssetDownloadOptions(
+                    candidate_builder=lambda *_args, **_kwargs: [
+                        full_url,
+                        preview_url,
+                    ],
+                    image_document_fetcher=browser_fetcher,
+                    fetch_policy="direct_then_browser",
+                ),
             )
 
         self.assertEqual(result["asset_failures"], [])
@@ -417,8 +435,10 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
                 output_dir=Path(tmpdir),
                 user_agent="test-agent",
                 asset_profile="all",
-                file_document_fetcher=file_fetcher,
-                fetch_policy="direct_then_browser",
+                options=AssetDownloadOptions(
+                    file_document_fetcher=file_fetcher,
+                    fetch_policy="direct_then_browser",
+                ),
             )
 
         self.assertEqual(result["asset_failures"], [])
@@ -539,7 +559,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
 
         self.assertIsNone(result)
 
-    def test_plan_browser_asset_download_splits_assets_and_freezes_fields(self) -> None:
+    def test_plan_browser_asset_download_splits_assets(self) -> None:
         figure_asset = {
             "kind": "figure",
             "heading": "Figure 1",
@@ -570,8 +590,6 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         self.assertEqual(plan.asset_profile, "all")
         self.assertEqual(plan.body_assets, [figure_asset])
         self.assertEqual(plan.supplementary_assets, [supplementary_asset])
-        with self.assertRaises(FrozenInstanceError):
-            plan.article_id = "changed"  # type: ignore[misc]
 
     def test_run_browser_asset_download_attempt_injects_fetchers_and_patch_points(
         self,
@@ -602,7 +620,6 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             runtime=SimpleNamespace(
                 backend="camoufox",
                 headless=False,
-                cdp_endpoint="ws://127.0.0.1:9222/devtools/browser/test",
             ),
             provider="science",
             user_agent="test-agent",
@@ -620,7 +637,6 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         file_fetcher.close = mock.Mock()
         image_fetcher_factory = mock.Mock(return_value=image_fetcher)
         file_fetcher_factory = mock.Mock(return_value=file_fetcher)
-        opener_requester = mock.Mock()
         figure_page_fetcher_factory = mock.Mock(side_effect=lambda fetcher: fetcher)
         body_result = {
             "assets": [{"kind": "figure", "download_url": "figure.png"}],
@@ -643,11 +659,10 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             recovery,
             image_fetcher_factory=image_fetcher_factory,
             file_fetcher_factory=file_fetcher_factory,
-            opener_requester={
+            download_settings={
                 "transport": object(),
                 "asset_download_concurrency": 3,
                 "figure_page_fetcher_factory": figure_page_fetcher_factory,
-                "opener_requester": opener_requester,
             },
             deps=deps,
         )
@@ -665,25 +680,19 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             file_fetcher_factory.call_args.kwargs["attempt_supplementary_assets"],
             plan.supplementary_assets,
         )
-        self.assertEqual(
-            image_fetcher_factory.call_args.kwargs["cdp_endpoint"],
-            "ws://127.0.0.1:9222/devtools/browser/test",
-        )
-        self.assertEqual(
-            file_fetcher_factory.call_args.kwargs["cdp_endpoint"],
-            "ws://127.0.0.1:9222/devtools/browser/test",
-        )
         self.assertEqual(mocked_download_assets.call_count, 2)
         calls_by_kind = {
             call.args[0]: call for call in mocked_download_assets.call_args_list
         }
         figure_call = calls_by_kind[FIGURE_KIND]
         supplementary_call = calls_by_kind[SUPPLEMENTARY_KIND]
+        figure_options = figure_call.kwargs["options"]
+        supplementary_options = supplementary_call.kwargs["options"]
         self.assertIs(figure_call.args[0], FIGURE_KIND)
-        self.assertIs(figure_call.kwargs["image_document_fetcher"], image_fetcher)
-        self.assertEqual(figure_call.kwargs["asset_download_concurrency"], 3)
+        self.assertIs(figure_options.image_document_fetcher, image_fetcher)
+        self.assertEqual(figure_options.asset_download_concurrency, 3)
         self.assertEqual(
-            figure_call.kwargs["browser_context_seed"],
+            figure_options.browser_context_seed,
             {
                 "browser_cookies": [
                     {
@@ -697,29 +706,17 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             },
         )
         self.assertEqual(
-            figure_call.kwargs["seed_urls"],
-            ["https://example.test/article", "https://example.test/final"],
-        )
-        self.assertEqual(
-            figure_call.kwargs["headers"],
+            figure_options.headers,
             {"Referer": "https://example.test/final"},
         )
         self.assertEqual(figure_call.kwargs["user_agent"], "seed-agent")
         self.assertIs(supplementary_call.args[0], SUPPLEMENTARY_KIND)
         self.assertIs(
-            supplementary_call.kwargs["file_document_fetcher"],
+            supplementary_options.file_document_fetcher,
             file_fetcher,
         )
-        self.assertIs(
-            supplementary_call.kwargs["opener_requester"],
-            opener_requester,
-        )
         self.assertEqual(
-            supplementary_call.kwargs["seed_urls"],
-            ["https://example.test/article", "https://example.test/final"],
-        )
-        self.assertEqual(
-            supplementary_call.kwargs["headers"],
+            supplementary_options.headers,
             {"Referer": "https://example.test/final"},
         )
         image_fetcher.close.assert_called_once()
@@ -757,7 +754,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             recovery,
             image_fetcher_factory=mock.Mock(return_value=None),
             file_fetcher_factory=mock.Mock(return_value=None),
-            opener_requester={"transport": object()},
+            download_settings={"transport": object()},
             deps=browser_workflow_deps(download_assets=download_assets),
         )
 
@@ -821,7 +818,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             recovery,
             image_fetcher_factory=mock.Mock(return_value=None),
             file_fetcher_factory=mock.Mock(return_value=None),
-            opener_requester={},
+            download_settings={},
             deps=browser_workflow_deps(download_assets=download_assets),
         )
 
@@ -886,7 +883,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             recovery,
             image_fetcher_factory=mock.Mock(return_value=None),
             file_fetcher_factory=mock.Mock(return_value=None),
-            opener_requester={"serial_browser_assets": True},
+            download_settings={"serial_browser_assets": True},
             deps=browser_workflow_deps(download_assets=download_assets),
         )
 
@@ -956,7 +953,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             recovery,
             image_fetcher_factory=mock.Mock(return_value=image_fetcher),
             file_fetcher_factory=mock.Mock(return_value=None),
-            opener_requester={},
+            download_settings={},
             deps=browser_workflow_deps(download_assets=download_assets),
         )
 
@@ -1050,7 +1047,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             recovery,
             image_fetcher_factory=mock.Mock(return_value=image_fetcher),
             file_fetcher_factory=mock.Mock(return_value=None),
-            opener_requester={
+            download_settings={
                 "transport": object(),
                 "asset_download_concurrency": 4,
                 "serial_browser_assets": True,
@@ -1060,16 +1057,18 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
 
         self.assertEqual(len(calls), 2)
         self.assertEqual(calls[0]["assets"], [figure])
-        self.assertIs(calls[0]["image_document_fetcher"], image_fetcher)
-        self.assertEqual(calls[0]["asset_download_concurrency"], 1)
-        self.assertEqual(calls[0]["fetch_policy"], "direct_then_browser")
-        self.assertIs(calls[1]["image_document_fetcher"], image_fetcher)
+        first_options = calls[0]["options"]
+        second_options = calls[1]["options"]
+        self.assertIs(first_options.image_document_fetcher, image_fetcher)
+        self.assertEqual(first_options.asset_download_concurrency, 1)
+        self.assertEqual(first_options.fetch_policy, "direct_then_browser")
+        self.assertIs(second_options.image_document_fetcher, image_fetcher)
         self.assertEqual(calls[1]["assets"], [second_figure])
-        self.assertEqual(calls[1]["asset_download_concurrency"], 4)
-        self.assertEqual(calls[1]["fetch_policy"], "direct_then_browser")
+        self.assertEqual(second_options.asset_download_concurrency, 4)
+        self.assertEqual(second_options.fetch_policy, "direct_then_browser")
         self.assertIs(
-            calls[0]["host_recovery_circuit"],
-            calls[1]["host_recovery_circuit"],
+            first_options.host_recovery_circuit,
+            second_options.host_recovery_circuit,
         )
         self.assertEqual(len(result.body_results), 2)
         self.assertEqual(
@@ -1135,7 +1134,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             recovery,
             image_fetcher_factory=mock.Mock(return_value=None),
             file_fetcher_factory=mock.Mock(return_value=None),
-            opener_requester={
+            download_settings={
                 "asset_download_concurrency": 4,
                 "figure_page_fetcher_factory": mock.Mock(
                     return_value=figure_page_fetcher
@@ -1144,7 +1143,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             deps=browser_workflow_deps(download_assets=mocked_download_assets),
         )
 
-        self.assertEqual(calls[0]["asset_download_concurrency"], 1)
+        self.assertEqual(calls[0]["options"].asset_download_concurrency, 1)
         self.assertEqual(calls[0]["assets"][0]["full_size_url"], discovered_url)
 
     def test_browser_workflow_asset_retry_policy_skips_deterministic_failures(
@@ -1363,7 +1362,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             recovery,
             image_fetcher_factory=mock.Mock(return_value=None),
             file_fetcher_factory=mock.Mock(return_value=None),
-            opener_requester={"transport": object()},
+            download_settings={"transport": object()},
             deps=deps,
         )
 
@@ -1437,7 +1436,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             recovery,
             image_fetcher_factory=mock.Mock(return_value=None),
             file_fetcher_factory=mock.Mock(return_value=None),
-            opener_requester={"transport": object()},
+            download_settings={"transport": object()},
             deps=deps,
         )
 

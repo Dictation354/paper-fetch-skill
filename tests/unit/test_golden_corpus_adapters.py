@@ -4,7 +4,6 @@ from tests.golden_corpus import (
     GOLDEN_CORPUS_SHARD_COUNT,
     golden_corpus_replay_inventory,
     iter_golden_corpus_fixtures,
-    iter_golden_corpus_representative_fixtures,
     plan_golden_corpus_shards,
 )
 from tests.golden_corpus_adapters import adapter_provider_names, golden_corpus_adapter
@@ -22,14 +21,6 @@ def test_golden_corpus_adapters_declare_contracts_for_all_fixture_routes() -> No
 
         assert fixture.route_kind == contract.route_kind
         assert fixture.content_type.startswith(contract.content_prefix)
-
-
-def test_golden_corpus_adapters_provide_one_representative_per_provider() -> None:
-    representatives = iter_golden_corpus_representative_fixtures()
-
-    assert {fixture.provider for fixture in representatives} == set(
-        adapter_provider_names()
-    )
 
 
 def test_golden_corpus_inventory_separates_non_replay_evidence() -> None:

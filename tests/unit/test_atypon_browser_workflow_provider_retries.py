@@ -422,27 +422,17 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
                 ensure_runtime_ready=mock.Mock(),
                 _build_shared_browser_image_fetcher=mocked_builder,
             )
-            with (
-                mock.patch.object(
-                    html_assets, "_build_cookie_seeded_opener"
-                ) as mocked_opener,
-                mock.patch.object(
-                    html_assets, "_request_with_opener"
-                ) as mocked_request,
-            ):
-                result = client.download_related_assets(
-                    "10.1111/gcb.16011",
-                    {"doi": "10.1111/gcb.16011", "title": "Title"},
-                    raw_payload,
-                    Path(tmpdir),
-                    asset_profile="body",
-                )
-                saved_bytes = Path(result["assets"][0]["path"]).read_bytes()
+            result = client.download_related_assets(
+                "10.1111/gcb.16011",
+                {"doi": "10.1111/gcb.16011", "title": "Title"},
+                raw_payload,
+                Path(tmpdir),
+                asset_profile="body",
+            )
+            saved_bytes = Path(result["assets"][0]["path"]).read_bytes()
 
         mocked_builder.assert_called_once()
         self.assertTrue(mocked_builder.call_args.kwargs["use_runtime_shared_browser"])
-        mocked_opener.assert_not_called()
-        mocked_request.assert_not_called()
         shared_fetcher.assert_called_once()
         self.assertEqual(shared_fetcher.call_args.args[0], full_size_url)
         self.assertEqual(len(result["assets"]), 1)
@@ -517,25 +507,15 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
                 ensure_runtime_ready=mock.Mock(),
                 _build_shared_browser_image_fetcher=mocked_builder,
             )
-            with (
-                mock.patch.object(
-                    html_assets, "_build_cookie_seeded_opener"
-                ) as mocked_opener,
-                mock.patch.object(
-                    html_assets, "_request_with_opener"
-                ) as mocked_request,
-            ):
-                result = client.download_related_assets(
-                    "10.1111/gcb.16011",
-                    {"doi": "10.1111/gcb.16011", "title": "Title"},
-                    raw_payload,
-                    Path(tmpdir),
-                    asset_profile="body",
-                )
+            result = client.download_related_assets(
+                "10.1111/gcb.16011",
+                {"doi": "10.1111/gcb.16011", "title": "Title"},
+                raw_payload,
+                Path(tmpdir),
+                asset_profile="body",
+            )
 
         mocked_builder.assert_called_once()
-        mocked_opener.assert_not_called()
-        mocked_request.assert_not_called()
         self.assertEqual(len(result["assets"]), 2)
         self.assertEqual(result["asset_failures"], [])
         self.assertEqual(shared_fetcher.call_count, 2)

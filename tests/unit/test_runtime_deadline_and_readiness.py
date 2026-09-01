@@ -25,7 +25,6 @@ def test_reset_request_deadline_preserves_item_state_and_shared_transport(
         deadline_monotonic=220.0,
     )
     context.set_session_cache(("resolved_query", "title"), {"doi": "10.1000/test"})
-    context.stage_timings["resolve_seconds"] = 3.0
     monkeypatch.setattr(runtime_module.time, "monotonic", lambda: 300.0)
 
     try:
@@ -39,7 +38,6 @@ def test_reset_request_deadline_preserves_item_state_and_shared_transport(
         assert context.get_session_cache(("resolved_query", "title")) == {
             "doi": "10.1000/test"
         }
-        assert context.stage_timings["resolve_seconds"] == 3.0
     finally:
         context.close()
 

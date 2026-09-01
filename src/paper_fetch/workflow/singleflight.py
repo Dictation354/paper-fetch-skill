@@ -5,10 +5,7 @@ from __future__ import annotations
 import copy
 from concurrent.futures import Future, TimeoutError as FutureTimeoutError
 from collections.abc import Callable, Hashable
-import hashlib
-import json
 import threading
-from pathlib import Path
 from typing import Generic, TypeVar, cast
 
 from ..http import RequestCancelledError
@@ -106,58 +103,6 @@ class RequestSingleFlight(Generic[ResultT]):
         raise RuntimeError(str(copied))
 
 
-def semantic_singleflight_fingerprint(payload: object) -> str:
-    encoded = json.dumps(
-        payload,
-        ensure_ascii=True,
-        allow_nan=False,
-        sort_keys=True,
-        separators=(",", ":"),
-    ).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()
-
-
-def _canonical_directory(value: Path | str | None) -> str | None:
-    if value is None:
-        return None
-    return str(Path(value).expanduser().resolve(strict=False))
-
-
-def fetch_request_singleflight_key(
-    canonical_doi: str,
-    *,
-    request: object,
-    capability_scope: object,
-    cache_dir: Path | str | None,
-    markdown_dir: Path | str | None,
-) -> tuple[str, str]:
-    """Build the one global fetch key shared by single and batch adapters."""
-
-    model_dump = getattr(request, "model_dump", None)
-    if not callable(model_dump):
-        raise TypeError("singleflight request must provide model_dump()")
-    request_semantics = dict(model_dump(mode="json"))
-    # Identity and output-directory spellings are normalized separately. Other
-    # FetchPaperRequest fields remain part of the complete fetch semantics.
-    request_semantics.pop("query", None)
-    request_semantics.pop("markdown_output_dir", None)
-    fingerprint = semantic_singleflight_fingerprint(
-        {
-            "fetch": request_semantics,
-            "capability_scope": capability_scope,
-            "cache_dir": _canonical_directory(cache_dir),
-            "markdown_dir": _canonical_directory(markdown_dir),
-        }
-    )
-    return canonical_doi, fingerprint
-
-
-FETCH_ENVELOPE_SINGLEFLIGHT: RequestSingleFlight[object] = RequestSingleFlight()
-
-
 __all__ = [
-    "FETCH_ENVELOPE_SINGLEFLIGHT",
     "RequestSingleFlight",
-    "fetch_request_singleflight_key",
-    "semantic_singleflight_fingerprint",
 ]

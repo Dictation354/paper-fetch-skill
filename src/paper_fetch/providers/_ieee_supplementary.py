@@ -15,6 +15,7 @@ from ..extraction.html import decode_html
 from ..extraction.html.assets import (
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
+    AssetDownloadOptions,
     download_assets,
     split_body_and_supplementary_assets,
 )
@@ -510,11 +511,12 @@ def download_ieee_related_assets(
             output_dir=output_dir,
             user_agent=user_agent,
             asset_profile=asset_profile,
-            headers={"User-Agent": user_agent, "Referer": canonical_landing_url},
-            seed_urls=seed_urls,
-            asset_download_concurrency=concurrency,
-            provider_name="ieee",
-            runtime_context=runtime_context,
+            options=AssetDownloadOptions(
+                headers={"User-Agent": user_agent, "Referer": canonical_landing_url},
+                asset_download_concurrency=concurrency,
+                provider_name="ieee",
+                runtime_context=runtime_context,
+            ),
         )
         if body_assets
         else empty_asset_results()
@@ -528,11 +530,12 @@ def download_ieee_related_assets(
             output_dir=output_dir,
             user_agent=user_agent,
             asset_profile=asset_profile,
-            headers={"User-Agent": user_agent, "Referer": canonical_landing_url},
-            seed_urls=seed_urls,
-            asset_download_concurrency=concurrency,
-            provider_name="ieee",
-            runtime_context=runtime_context,
+            options=AssetDownloadOptions(
+                headers={"User-Agent": user_agent, "Referer": canonical_landing_url},
+                asset_download_concurrency=concurrency,
+                provider_name="ieee",
+                runtime_context=runtime_context,
+            ),
         )
         if supplementary_assets and asset_profile == "all"
         else empty_asset_results()

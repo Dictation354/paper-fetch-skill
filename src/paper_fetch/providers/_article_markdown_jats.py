@@ -746,8 +746,6 @@ def parse_jats_xml(
             table_entry_semantic_count(
                 entry,
                 "_table_fallback_count",
-                fallback=normalize_text(str(entry.get("table_render_kind") or ""))
-                in {"fallback", "structured_list"},
             )
             for entry in table_entries
         ),
@@ -755,7 +753,6 @@ def parse_jats_xml(
             table_entry_semantic_count(
                 entry,
                 "_table_layout_degraded_count",
-                fallback=bool(normalize_text(str(entry.get("lossy_message") or ""))),
             )
             for entry in table_entries
         ),

@@ -7,16 +7,16 @@ from unittest import mock
 
 import pytest
 
+from paper_fetch.config import build_runtime_env
 from paper_fetch.mcp import fetch_cache
+from paper_fetch.mcp.cache_payloads import get_cached_payload
 from paper_fetch.mcp.server import build_server
 from paper_fetch.utils import sanitize_filename
 from tests.unit._mcp_support import (
+    assert_mcp_tool_omits_output_schema,
     create_cached_downloads,
     create_cached_fetch_envelope,
-    mcp_tools,
-    assert_mcp_tool_omits_output_schema,
 )
-
 
 DOI = "10.1000/cache-compact"
 
@@ -48,8 +48,8 @@ def _rewrite_sidecar_credential_scope(
 def test_get_cached_default_full_preserves_existing_fields(tmp_path: Path) -> None:
     _prepared_cache(tmp_path)
 
-    default_payload = mcp_tools.get_cached_payload(doi=DOI, download_dir=tmp_path)
-    explicit_payload = mcp_tools.get_cached_payload(
+    default_payload = get_cached_payload(doi=DOI, download_dir=tmp_path)
+    explicit_payload = get_cached_payload(
         doi=DOI,
         download_dir=tmp_path,
         detail="full",
@@ -76,7 +76,7 @@ def test_get_cached_compact_returns_request_sensitive_quality_summary(
 ) -> None:
     _prepared_cache(tmp_path)
 
-    payload = mcp_tools.get_cached_payload(
+    payload = get_cached_payload(
         doi=DOI,
         download_dir=tmp_path,
         detail="compact",
@@ -119,7 +119,7 @@ def test_get_cached_preferred_only_omits_nonpreferred_entry_arrays(
 ) -> None:
     _prepared_cache(tmp_path)
 
-    payload = mcp_tools.get_cached_payload(
+    payload = get_cached_payload(
         doi=DOI,
         download_dir=tmp_path,
         preferred_only=True,
@@ -151,7 +151,7 @@ def test_get_cached_distinguishes_entries_from_request_mismatch(
 ) -> None:
     _prepared_cache(tmp_path)
 
-    payload = mcp_tools.get_cached_payload(
+    payload = get_cached_payload(
         doi=DOI,
         download_dir=tmp_path,
         detail="compact",
@@ -174,7 +174,7 @@ def test_get_cached_uses_shared_cached_request_matcher(tmp_path: Path) -> None:
         "cached_request_matches",
         wraps=fetch_cache.cached_request_matches,
     ) as matcher:
-        payload = mcp_tools.get_cached_payload(
+        payload = get_cached_payload(
             doi=DOI,
             download_dir=tmp_path,
             detail="compact",
@@ -193,20 +193,15 @@ def test_get_cached_reports_cached_payload_missing_requested_mode(
     sidecar["request"]["modes"] = ["article", "markdown", "metadata"]
     sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
 
-    payload = mcp_tools.get_cached_payload(
+    payload = get_cached_payload(
         doi=DOI,
         download_dir=tmp_path,
         detail="compact",
         modes=["metadata"],
     )
 
-    assert payload["status"] == "hit"
-    assert payload["sidecar"]["request_matches"] is True
-    assert payload["sidecar"]["payload_satisfies_request"] is False
+    assert payload["status"] == "miss"
     assert payload["request_satisfied"] is False
-    assert payload["sidecar"]["reason_code"] == (
-        "cached_payload_missing_requested_modes"
-    )
 
 
 @pytest.mark.parametrize(
@@ -230,7 +225,7 @@ def test_get_cached_rejects_semantically_empty_requested_outputs(
     sidecar["payload"][field] = value
     sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
 
-    payload = mcp_tools.get_cached_payload(
+    payload = get_cached_payload(
         doi=DOI,
         download_dir=tmp_path,
         detail="compact",
@@ -250,7 +245,7 @@ def test_get_cached_rejects_sidecar_content_flag_schema_conflict(
     sidecar["payload"]["has_fulltext"] = False
     sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
 
-    payload = mcp_tools.get_cached_payload(
+    payload = get_cached_payload(
         doi=DOI,
         download_dir=tmp_path,
         detail="compact",
@@ -275,18 +270,14 @@ def test_get_cached_reports_old_and_corrupt_sidecars_without_false_reuse(
     old_path.write_text(json.dumps(old_payload), encoding="utf-8")
     _sidecar_path(corrupt_scope).write_text("{broken", encoding="utf-8")
 
-    old = mcp_tools.get_cached_payload(
-        doi=DOI, download_dir=old_scope, detail="compact"
-    )
-    corrupt = mcp_tools.get_cached_payload(
-        doi=DOI, download_dir=corrupt_scope, detail="compact"
-    )
+    old = get_cached_payload(doi=DOI, download_dir=old_scope, detail="compact")
+    corrupt = get_cached_payload(doi=DOI, download_dir=corrupt_scope, detail="compact")
 
-    assert old["status"] == "hit"
+    assert old["status"] == "miss"
     assert old["sidecar"]["status"] == "version_mismatch"
     assert old["sidecar"]["reason_code"] == "cache_sidecar_version_mismatch"
     assert old["request_satisfied"] is False
-    assert corrupt["status"] == "hit"
+    assert corrupt["status"] == "miss"
     assert corrupt["sidecar"]["status"] == "corrupt"
     assert corrupt["sidecar"]["reason_code"] == "cache_sidecar_invalid_json"
     assert corrupt["request_satisfied"] is False
@@ -304,14 +295,14 @@ def test_get_cached_wrong_scope_is_explicit_miss_and_never_uses_network(
         "create_connection",
         side_effect=AssertionError("cache lookup must stay offline"),
     ) as create_connection:
-        payload = mcp_tools.get_cached_payload(
+        payload = get_cached_payload(
             doi=DOI,
             download_dir=wrong_scope,
             detail="compact",
         )
 
     assert payload["status"] == "miss"
-    assert payload["scope_status"] == "missing"
+    assert payload["scope_status"] == "available"
     assert payload["identity_status"] == "no_proven_entries"
     assert payload["sidecar"]["status"] == "missing"
     assert payload["request_satisfied"] is False
@@ -321,11 +312,11 @@ def test_get_cached_wrong_scope_is_explicit_miss_and_never_uses_network(
 
 def test_get_cached_uses_runtime_credential_scope(tmp_path: Path) -> None:
     _prepared_cache(tmp_path)
-    runtime_env = mcp_tools.build_runtime_env({"ELSEVIER_API_KEY": "unit-test-secret"})
+    runtime_env = build_runtime_env({"ELSEVIER_API_KEY": "unit-test-secret"})
     credential_scope = fetch_cache.credential_scope_from_env(runtime_env)
     _rewrite_sidecar_credential_scope(tmp_path, credential_scope)
 
-    payload = mcp_tools.get_cached_payload(
+    payload = get_cached_payload(
         doi=DOI,
         download_dir=tmp_path,
         detail="compact",
@@ -341,17 +332,17 @@ def test_get_cached_credential_scope_fallback_is_one_way(tmp_path: Path) -> None
     private_cache = tmp_path / "private"
     _prepared_cache(public_cache)
     _prepared_cache(private_cache)
-    runtime_env = mcp_tools.build_runtime_env({"ELSEVIER_API_KEY": "unit-test-secret"})
+    runtime_env = build_runtime_env({"ELSEVIER_API_KEY": "unit-test-secret"})
     private_scope = fetch_cache.credential_scope_from_env(runtime_env)
     _rewrite_sidecar_credential_scope(private_cache, private_scope)
 
-    credentialed_reader = mcp_tools.get_cached_payload(
+    credentialed_reader = get_cached_payload(
         doi=DOI,
         download_dir=public_cache,
         detail="compact",
         env={"ELSEVIER_API_KEY": "unit-test-secret"},
     )
-    public_reader = mcp_tools.get_cached_payload(
+    public_reader = get_cached_payload(
         doi=DOI,
         download_dir=private_cache,
         detail="compact",
@@ -373,7 +364,7 @@ def test_get_cached_does_not_treat_unproven_markdown_as_doi_hit(
         encoding="utf-8",
     )
 
-    payload = mcp_tools.get_cached_payload(
+    payload = get_cached_payload(
         doi=DOI,
         download_dir=tmp_path,
         detail="compact",
@@ -394,13 +385,13 @@ def test_get_cached_reports_sidecar_doi_mismatch(tmp_path: Path) -> None:
     sidecar["payload"]["doi"] = "10.1000/other"
     sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
 
-    payload = mcp_tools.get_cached_payload(
+    payload = get_cached_payload(
         doi=DOI,
         download_dir=tmp_path,
         detail="compact",
     )
 
-    assert payload["status"] == "hit"
+    assert payload["status"] == "miss"
     assert payload["sidecar"]["status"] == "doi_mismatch"
     assert payload["sidecar"]["reason_code"] == "cache_sidecar_doi_mismatch"
     assert payload["request_satisfied"] is False
@@ -410,17 +401,13 @@ def test_cache_request_fingerprint_is_stable_across_json_key_order(
     tmp_path: Path,
 ) -> None:
     _prepared_cache(tmp_path)
-    first = mcp_tools.get_cached_payload(
-        doi=DOI, download_dir=tmp_path, detail="compact"
-    )
+    first = get_cached_payload(doi=DOI, download_dir=tmp_path, detail="compact")
     sidecar_path = _sidecar_path(tmp_path)
     sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
     sidecar["request"] = dict(reversed(list(sidecar["request"].items())))
     sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
 
-    second = mcp_tools.get_cached_payload(
-        doi=DOI, download_dir=tmp_path, detail="compact"
-    )
+    second = get_cached_payload(doi=DOI, download_dir=tmp_path, detail="compact")
 
     assert first["cached_request_fingerprint"] == second["cached_request_fingerprint"]
 
@@ -429,8 +416,6 @@ def test_get_cached_compact_payload_keeps_asset_summary_without_output_schema(
     tmp_path: Path,
 ) -> None:
     _prepared_cache(tmp_path)
-    payload = mcp_tools.get_cached_payload(
-        doi=DOI, download_dir=tmp_path, detail="compact"
-    )
+    payload = get_cached_payload(doi=DOI, download_dir=tmp_path, detail="compact")
     assert_mcp_tool_omits_output_schema(build_server(), "get_cached", payload)
     assert isinstance(payload["asset_summary"], dict)

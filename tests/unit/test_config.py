@@ -12,30 +12,6 @@ from paper_fetch.providers import browser_runtime
 
 
 class ConfigTests(unittest.TestCase):
-    def test_browser_auto_prepare_policy_is_strict_and_tri_state(self) -> None:
-        name = config.BROWSER_AUTO_PREPARE_ENV_VAR
-
-        self.assertFalse(config.resolve_browser_auto_prepare({}, default=False))
-        self.assertTrue(config.resolve_browser_auto_prepare({}, default=True))
-        self.assertTrue(config.resolve_browser_auto_prepare({name: "yes"}))
-        self.assertFalse(config.resolve_browser_auto_prepare({name: "OFF"}))
-        self.assertFalse(
-            config.resolve_browser_auto_prepare({name: "true"}, override=False)
-        )
-        with self.assertRaisesRegex(ValueError, name):
-            config.resolve_browser_auto_prepare({name: "sometimes"})
-
-    def test_apply_browser_auto_prepare_policy_copies_and_canonicalizes(self) -> None:
-        original = {"EXISTING": "value"}
-
-        resolved = config.apply_browser_auto_prepare_policy(
-            original,
-            override=True,
-        )
-
-        self.assertEqual(original, {"EXISTING": "value"})
-        self.assertEqual(resolved[config.BROWSER_AUTO_PREPARE_ENV_VAR], "true")
-
     def test_default_user_agent_matches_project_version(self) -> None:
         pyproject_path = Path(__file__).resolve().parents[2] / "pyproject.toml"
         project = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))["project"]
@@ -258,7 +234,6 @@ class ConfigTests(unittest.TestCase):
     def test_cli_default_download_dir_uses_xdg_user_data_home(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             env = {
-                config.BROWSER_BACKEND_ENV_VAR: "camoufox",
                 config.XDG_DATA_HOME_ENV_VAR: tmpdir,
             }
             expected = Path(tmpdir) / "paper-fetch" / "downloads"
@@ -326,7 +301,6 @@ class ConfigTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime_config = browser_runtime.load_runtime_config(
                 {
-                    config.BROWSER_BACKEND_ENV_VAR: "camoufox",
                     config.XDG_DATA_HOME_ENV_VAR: tmpdir,
                 },
                 provider="science",
@@ -344,7 +318,6 @@ class ConfigTests(unittest.TestCase):
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             env = {
-                config.BROWSER_BACKEND_ENV_VAR: "camoufox",
                 config.XDG_DATA_HOME_ENV_VAR: tmpdir,
             }
             science_runtime = browser_runtime.load_runtime_config(
@@ -373,7 +346,6 @@ class ConfigTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime_config = browser_runtime.load_runtime_config(
                 {
-                    config.BROWSER_BACKEND_ENV_VAR: "camoufox",
                     config.USER_AGENT_ENV_VAR: "paper-fetch-test/1",
                     config.XDG_DATA_HOME_ENV_VAR: tmpdir,
                 },
@@ -389,7 +361,6 @@ class ConfigTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime_config = browser_runtime.load_runtime_config(
                 {
-                    config.BROWSER_BACKEND_ENV_VAR: "camoufox",
                     config.USER_AGENT_ENV_VAR: "paper-fetch-test/1",
                     config.BROWSER_USER_AGENT_ENV_VAR: "Mozilla/5.0",
                     config.XDG_DATA_HOME_ENV_VAR: tmpdir,
@@ -407,7 +378,6 @@ class ConfigTests(unittest.TestCase):
             browser_binary.chmod(0o755)
             runtime_config = browser_runtime.load_runtime_config(
                 {
-                    config.BROWSER_BACKEND_ENV_VAR: "camoufox",
                     config.BROWSER_BINARY_PATH_ENV_VAR: str(browser_binary),
                     config.BROWSER_HEADLESS_ENV_VAR: "false",
                     config.BROWSER_TIMEOUT_MS_ENV_VAR: "12345",
@@ -432,21 +402,12 @@ class ConfigTests(unittest.TestCase):
             with self.assertRaisesRegex(Exception, config.BROWSER_BINARY_PATH_ENV_VAR):
                 browser_runtime.load_runtime_config(
                     {
-                        config.BROWSER_BACKEND_ENV_VAR: "camoufox",
                         config.BROWSER_BINARY_PATH_ENV_VAR: missing_binary_path,
                         config.XDG_DATA_HOME_ENV_VAR: tmpdir,
                     },
                     provider="science",
                     doi="10.1126/science.ady3136",
                 )
-
-    def test_removed_cloakbrowser_backend_is_rejected(self) -> None:
-        with self.assertRaisesRegex(Exception, "expected one of: camoufox"):
-            browser_runtime.load_runtime_config(
-                {config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser"},
-                provider="science",
-                doi="10.1126/science.ady3136",
-            )
 
 
 if __name__ == "__main__":

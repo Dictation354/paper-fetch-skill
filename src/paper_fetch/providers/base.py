@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field, replace
 import importlib.util
 from pathlib import Path
-import time
 from typing import TYPE_CHECKING, Any
 from collections.abc import Mapping
 
@@ -111,7 +110,7 @@ class ProviderFailure(Exception):
         return ProviderFailure(**values)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ProviderContent:
     route_kind: str
     source_url: str
@@ -128,8 +127,6 @@ class ProviderContent:
     html_failure_message: str | None = None
     extracted_assets: list[dict[str, Any]] = field(default_factory=list)
     needs_local_copy: bool = False
-    # Additive field kept last so positional construction by external providers
-    # retains the pre-acquisition argument order.
     route_name: str | None = None
 
 
@@ -532,20 +529,14 @@ class ProviderClient:
                 )
             ):
                 try:
-                    asset_started_at = time.monotonic()
-                    try:
-                        with use_asset_budget(context.asset_budget):
-                            asset_results = self.download_related_assets(
-                                doi,
-                                metadata,
-                                raw_payload,
-                                asset_output_dir,
-                                asset_profile=asset_profile,
-                                context=context,
-                            )
-                    finally:
-                        context.accumulate_stage_timing(
-                            "asset_seconds", started_at=asset_started_at
+                    with use_asset_budget(context.asset_budget):
+                        asset_results = self.download_related_assets(
+                            doi,
+                            metadata,
+                            raw_payload,
+                            asset_output_dir,
+                            asset_profile=asset_profile,
+                            context=context,
                         )
                     downloaded_assets = list(asset_results.get("assets") or [])
                     asset_failures = list(asset_results.get("asset_failures") or [])
@@ -938,7 +929,7 @@ class ProviderClient:
             )
 
         if has_browser_route:
-            from .browser_runtime import probe_runtime_status
+            from .browser_runtime.api import probe_runtime_status
 
             runtime_status = probe_runtime_status(env, provider=self.name)
             runtime_probe = "paper_fetch.providers.browser_runtime.probe_runtime_status"

@@ -19,14 +19,9 @@ from paper_fetch.config import (
     WILEY_PROFILE_DIR_ENV_VAR,
     WILEY_STORAGE_STATE_JSON_ENV_VAR,
     build_runtime_env,
-    configured_browser_backend,
 )
 from paper_fetch.formula.paths import FORMULA_TOOLS_DIR_ENV_VAR
-from paper_fetch.providers.browser_runtime import load_runtime_config
-from paper_fetch.providers.browser_workflow.reuse_cache import (
-    browser_runtime_fingerprint,
-    normalize_browser_cache_url,
-)
+from paper_fetch.providers.browser_workflow.shared import normalize_browser_url
 from paper_fetch.publisher_identity import normalize_doi
 from paper_fetch.reason_codes import NO_ACCESS
 from tests._environment import (
@@ -91,12 +86,11 @@ def build_isolated_live_env(
     return env, tempdir
 
 
-def require_selected_browser_or_skip(testcase, env: Mapping[str, str]) -> None:
+def require_camoufox_or_skip(testcase, env: Mapping[str, str]) -> None:
     if importlib.util.find_spec("playwright.sync_api") is None:
         testcase.skipTest("Playwright Python package is not installed.")
-    backend = configured_browser_backend(env)
-    if importlib.util.find_spec(backend) is None:
-        testcase.skipTest(f"Selected browser package {backend!r} is not installed.")
+    if importlib.util.find_spec("camoufox") is None:
+        testcase.skipTest("Camoufox Python package is not installed.")
 
 
 def is_machine_readable_no_access(payload: Mapping[str, object]) -> bool:
@@ -130,7 +124,7 @@ def preflight_selected_browser_or_skip(
 ) -> BrowserPreflightResult:
     """Run one provider preflight per shared live profile before its first fetch."""
 
-    require_selected_browser_or_skip(testcase, env)
+    require_camoufox_or_skip(testcase, env)
     static = static_browser_capabilities(env, provider=provider)
     runtime_capability = static.get("browser_runtime")
     if not isinstance(runtime_capability, Mapping):
@@ -154,20 +148,10 @@ def preflight_selected_browser_or_skip(
             f"{runtime_capability.get('message') or note_message or 'missing local dependency'}"
         )
     normalized_doi = normalize_doi(doi or "")
-    normalized_target = normalize_browser_cache_url(target_url)
+    normalized_target = normalize_browser_url(target_url)
     cache_key: object = provider
     if normalized_doi and normalized_target:
-        runtime = load_runtime_config(
-            env,
-            provider=provider,
-            doi=normalized_doi,
-        )
-        cache_key = (
-            provider,
-            normalized_doi,
-            normalized_target,
-            browser_runtime_fingerprint(runtime),
-        )
+        cache_key = (provider, normalized_doi, normalized_target)
     result = cache.get(cache_key)
     if result is None:
         preflight_kwargs = {

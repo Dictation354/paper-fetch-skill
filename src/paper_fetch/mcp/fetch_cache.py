@@ -19,7 +19,6 @@ from ..manifest import build_manifest_request_fingerprint
 from ..models import (
     ArticleModel,
     Asset,
-    EXTRACTION_REVISION,
     FetchEnvelope,
     Metadata,
     Quality,
@@ -53,9 +52,8 @@ from ..workflow.acceptance import (
 )
 from ..workflow.types import effective_asset_profile
 from .cache_index import (
-    CACHE_INDEX_MODE_INDEX,
-    CACHE_INDEX_MODE_RESCAN,
-    CACHE_INDEX_MODE_REFRESH,
+    FETCH_ENVELOPE_CACHE_VERSION,
+    FETCH_ENVELOPE_EXTRACTION_REVISION,
     CacheIndexResult,
     _scoped_file,
     cache_entry_visible_for_scopes,
@@ -67,14 +65,9 @@ from .cache_index import (
     read_scoped_file,
     register_cache_files_for_doi,
     register_markdown_entry,
-    refresh_cache_index_for_doi,
-    refresh_cache_index_for_doi_result,
-    rescan_cache_index,
 )
 from .schemas import FetchPaperRequest
 
-FETCH_ENVELOPE_CACHE_VERSION = 5
-FETCH_ENVELOPE_EXTRACTION_REVISION = EXTRACTION_REVISION
 PUBLIC_CREDENTIAL_SCOPE = PUBLIC_CAPABILITY_SCOPE
 _ENVELOPE_CAPABILITY_SCOPE_ATTRIBUTE = "_paper_fetch_capability_scope"
 
@@ -191,14 +184,7 @@ class CacheSidecarInspection:
 class FetchCacheDependencies:
     """Replaceable cache-index operations used by the MCP cache facade."""
 
-    refresh_for_doi: Callable[[Path, str], list[dict[str, Any]]] = (
-        refresh_cache_index_for_doi
-    )
-    refresh_for_doi_result: Callable[[Path, str], CacheIndexResult] = (
-        refresh_cache_index_for_doi_result
-    )
     read_index: Callable[..., CacheIndexResult] = read_cache_index
-    rescan_index: Callable[[Path], CacheIndexResult] = rescan_cache_index
     list_entries: Callable[[Path], list[dict[str, Any]]] = list_cache_entries
     preferred_entries: Callable[[list[dict[str, Any]]], dict[str, Any]] = (
         preferred_cached_entries
@@ -710,23 +696,7 @@ def envelope_from_payload(payload: Mapping[str, Any]) -> FetchEnvelope:
     quality_payload: Mapping[str, Any] | None = (
         raw_quality_payload if isinstance(raw_quality_payload, Mapping) else None
     )
-    raw_article_payload = payload.get("article")
-    article_payload: Mapping[str, Any] = (
-        raw_article_payload if isinstance(raw_article_payload, Mapping) else {}
-    )
-    raw_article_quality_payload = article_payload.get("quality")
-    article_quality_payload: Mapping[str, Any] = (
-        raw_article_quality_payload
-        if isinstance(raw_article_quality_payload, Mapping)
-        else {}
-    )
     trace = trace_from_payload(payload.get("trace"))
-    if not trace:
-        trace = trace_from_payload(
-            quality_payload.get("trace") if quality_payload is not None else None
-        )
-    if not trace:
-        trace = trace_from_payload(article_quality_payload.get("trace"))
     quality = quality_from_payload(quality_payload)
     if breakdown == TokenEstimateBreakdown():
         if article is not None:
@@ -858,10 +828,7 @@ class FetchCache:
             download_dir
         )
         self.download_dir = self._artifact_store.download_dir
-        self._refresh_cache_index_for_doi = cache_deps.refresh_for_doi
-        self._refresh_cache_index_for_doi_result = cache_deps.refresh_for_doi_result
         self._read_cache_index = cache_deps.read_index
-        self._rescan_cache_index = cache_deps.rescan_index
         self._list_cache_entries = cache_deps.list_entries
         self._preferred_cached_entries = cache_deps.preferred_entries
         self._register_markdown_entry = cache_deps.register_markdown
@@ -906,21 +873,8 @@ class FetchCache:
             )
             for scope in self.read_credential_scopes
         ]
-        base = sanitize_filename(doi)
-
-        def modified_at(path: Path) -> float:
-            try:
-                return path.stat().st_mtime
-            except OSError:
-                return 0.0
-
-        variants = sorted(
-            self.download_dir.glob(f"{base}.*.fetch-envelope.json"),
-            key=modified_at,
-            reverse=True,
-        )
         canonical = fetch_envelope_cache_path(self.download_dir, doi)
-        return list(dict.fromkeys([*exact_paths, *variants, canonical]))
+        return list(dict.fromkeys([*exact_paths, canonical]))
 
     def load_fetch_envelope(
         self,
@@ -1012,7 +966,10 @@ class FetchCache:
             self.download_dir,
             doi,
             credential_scope=self.credential_scope,
-            proven_artifact_paths=_envelope_proven_artifact_paths(envelope),
+            proven_artifact_paths=(
+                cache_path,
+                *_envelope_proven_artifact_paths(envelope),
+            ),
             commit_guard=commit_guard,
         )
 
@@ -1042,45 +999,21 @@ class FetchCache:
             commit_guard=commit_guard,
         )
 
-    def refresh_for_doi(self, doi: str) -> list[dict[str, Any]]:
-        if self.download_dir is None:
-            return []
-        normalized_doi = normalize_doi(doi)
-        if not normalized_doi:
-            return []
-        entries = self._refresh_cache_index_for_doi(self.download_dir, normalized_doi)
-        return [
-            entry
-            for entry in entries
-            if cache_entry_visible_for_scopes(entry, self.read_credential_scopes)
-        ]
-
     def list_payload(
         self,
         *,
-        cache_mode: str = CACHE_INDEX_MODE_INDEX,
         _filter_entries: bool = True,
     ) -> dict[str, Any]:
         if self.download_dir is None:
             return {
                 "download_dir": None,
                 "entries": [],
-                "cache_mode": cache_mode,
                 "index_status": "unavailable",
                 "index_version": None,
                 "expected_index_version": None,
                 "index_reason": "download directory is disabled",
             }
-        if cache_mode == CACHE_INDEX_MODE_RESCAN:
-            result = self._rescan_cache_index(self.download_dir)
-        elif cache_mode == CACHE_INDEX_MODE_REFRESH:
-            result = self._read_cache_index(
-                self.download_dir, refresh=True, cache_mode=CACHE_INDEX_MODE_REFRESH
-            )
-        else:
-            result = self._read_cache_index(
-                self.download_dir, refresh=False, cache_mode=CACHE_INDEX_MODE_INDEX
-            )
+        result = self._read_cache_index(self.download_dir)
         entries = result.entries
         if _filter_entries:
             entries = [
@@ -1335,81 +1268,26 @@ class FetchCache:
             envelope=envelope,
         )
 
-    @staticmethod
-    def _sidecar_quality_rank(inspection: CacheSidecarInspection) -> tuple[int, int]:
-        envelope = inspection.envelope
-        if envelope is None:
-            return (0, 0)
-        content_rank = {
-            "fulltext": 3,
-            "abstract_only": 2,
-            "metadata_only": 1,
-        }.get(str(envelope.content_kind), 0)
-        payload_modes = sum(
-            value is not None
-            for value in (envelope.article, envelope.markdown, envelope.metadata)
-        )
-        return content_rank, payload_modes
-
     def _select_sidecar_variant(
         self,
         doi: str,
         request: FetchPaperRequest,
     ) -> CacheSidecarInspection | None:
-        """Evaluate every variant once and select one for loader and inspectors."""
+        """Inspect only the exact current-scope sidecars and canonical sidecar."""
 
         if self.download_dir is None or not self.download_dir.exists():
             return None
-        requested_payload = request_cache_payload(request)
-        exact_paths = {
-            fetch_envelope_variant_path(
-                self.download_dir,
-                doi,
-                cache_request_fingerprint(
-                    doi,
-                    requested_payload,
-                    credential_scope=scope,
-                ),
-            )
-            for scope in self.read_credential_scopes
-        }
-        candidates: list[tuple[tuple[Any, ...], CacheSidecarInspection]] = []
+        first_inspection: CacheSidecarInspection | None = None
         with cache_file_lock(fetch_envelope_lock_path(self.download_dir, doi)):
             for path in self._candidate_sidecar_paths(doi, request):
                 if not path.exists():
                     continue
                 inspection = self._inspect_sidecar_path(doi, request, path)
-                summary = inspection.summary
-                content_rank, payload_modes = self._sidecar_quality_rank(inspection)
-                cached_scope = inspection.credential_scope
-                try:
-                    scope_rank = len(
-                        self.read_credential_scopes
-                    ) - self.read_credential_scopes.index(
-                        cached_scope or PUBLIC_CREDENTIAL_SCOPE
-                    )
-                except ValueError:
-                    scope_rank = 0
-                try:
-                    mtime = path.stat().st_mtime_ns
-                except OSError:
-                    mtime = 0
-                score = (
-                    summary.get("request_satisfied") is True,
-                    inspection.envelope is not None,
-                    scope_rank,
-                    path in exact_paths,
-                    summary.get("request_matches") is True,
-                    summary.get("payload_satisfies_request") is True,
-                    content_rank,
-                    payload_modes,
-                    mtime,
-                    str(path),
-                )
-                candidates.append((score, inspection))
-        if not candidates:
-            return None
-        return max(candidates, key=lambda item: item[0])[1]
+                if first_inspection is None:
+                    first_inspection = inspection
+                if inspection.summary.get("request_satisfied") is True:
+                    return inspection
+        return first_inspection
 
     def _inspect_fetch_envelope_sidecar(
         self,
@@ -1471,20 +1349,18 @@ class FetchCache:
         if self.download_dir is None:
             entries: list[dict[str, Any]] = []
             index_metadata: dict[str, Any] = {
-                "cache_mode": CACHE_INDEX_MODE_REFRESH,
                 "index_status": "unavailable",
                 "index_version": None,
                 "expected_index_version": None,
                 "index_reason": "download directory is disabled",
             }
         else:
-            result = self._refresh_cache_index_for_doi_result(
-                self.download_dir, normalized_doi
-            )
+            result = self._read_cache_index(self.download_dir)
             entries = [
                 entry
                 for entry in result.entries
-                if cache_entry_visible_for_scopes(entry, self.read_credential_scopes)
+                if entry.get("doi") == normalized_doi
+                and cache_entry_visible_for_scopes(entry, self.read_credential_scopes)
             ]
             index_metadata = result.metadata()
         preferred = self._preferred_cached_entries(entries)

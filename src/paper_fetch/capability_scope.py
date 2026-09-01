@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .config import resolve_browser_backend_selection
 from .provider_catalog import browser_preflight_provider_names
 from .providers.browser_runtime import paths as browser_paths
 from .publisher_identity import (
@@ -110,7 +109,7 @@ class CapabilityScopeBuilder:
         return self
 
     def _credential_values(self) -> list[tuple[str, str]]:
-        """Return the exact tuple sequence used by the legacy scope helper."""
+        """Return normalized credential facts for the current scope schema."""
 
         values: list[tuple[str, str]] = []
         for raw_name, raw_value in sorted(self._env.items()):
@@ -121,8 +120,7 @@ class CapabilityScopeBuilder:
             if any(token in name for token in _CREDENTIAL_ENV_TOKENS):
                 values.append((name, value))
                 continue
-            # Explicit storage-state variables remain supported by the compatibility
-            # wrapper. Runtime-aware callers add the resolved provider path below.
+            # Runtime-aware callers add the resolved provider path below.
             if "STORAGE_STATE" not in name:
                 continue
             path = Path(value).expanduser()
@@ -130,10 +128,7 @@ class CapabilityScopeBuilder:
                 if path.is_file():
                     values.append((name, hashlib.sha256(path.read_bytes()).hexdigest()))
             except OSError:
-                # This intentionally preserves the old fallback, including its
-                # raw configured value, so historical sidecar fingerprints remain
-                # addressable by the compatibility wrapper.
-                values.append((name, value))
+                continue
         return values
 
     def facts(self) -> dict[str, Any]:
@@ -174,17 +169,6 @@ class CapabilityScopeBuilder:
         facts = self.facts()
         if not facts["credentials"] and not facts["browser_states"]:
             return PUBLIC_CAPABILITY_SCOPE
-        if not facts["browser_states"]:
-            # Preserve the exact pre-CapabilityScopeBuilder digest so historical
-            # API-key private sidecars remain readable after the additive upgrade.
-            legacy_digest = hashlib.sha256(
-                json.dumps(
-                    facts["credentials"],
-                    ensure_ascii=True,
-                    separators=(",", ":"),
-                ).encode("utf-8")
-            ).hexdigest()
-            return f"credential:{legacy_digest}"
         digest = hashlib.sha256(
             json.dumps(
                 facts,
@@ -235,10 +219,7 @@ def capability_scopes_for_query(
     doi = extract_doi(query)
     inferred_provider = infer_provider_from_doi(doi) or infer_provider_from_url(query)
     browser_providers = frozenset(browser_preflight_provider_names())
-    try:
-        backend = resolve_browser_backend_selection(runtime_env).backend
-    except Exception:
-        backend = "camoufox"
+    backend = "camoufox"
     if inferred_provider in browser_providers:
         use = _provider_storage_state_use(
             runtime_env,

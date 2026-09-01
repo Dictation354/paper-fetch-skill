@@ -6,11 +6,18 @@ from pathlib import Path
 from unittest import mock
 
 from paper_fetch import service as paper_fetch
-from paper_fetch.providers import elsevier as elsevier_provider
-from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
+from paper_fetch.providers import (
+    elsevier as elsevier_provider,
+    springer as springer_provider,
+)
+from paper_fetch.providers.base import (
+    PreparedFetchResultPayload,
+    ProviderContent,
+    RawFulltextPayload,
+)
 from paper_fetch.tracing import trace_from_markers
 from ._paper_fetch_support import (
-    StubProvider,
+    FixtureProvider,
     fetch_paper_model,
     fulltext_pdf_bytes,
     sample_article,
@@ -19,7 +26,15 @@ from ._paper_fetch_support import (
 
 
 def _article_factory_with_source(source: str):
-    def factory(metadata, raw_payload, *, downloaded_assets=None, asset_failures=None):
+    def factory(
+        metadata,
+        raw_payload,
+        *,
+        downloaded_assets=None,
+        asset_failures=None,
+        context=None,
+    ):
+        del downloaded_assets, asset_failures, context
         article = sample_article()
         article.source = source
         article.doi = str(metadata.get("doi") or article.doi)
@@ -90,7 +105,7 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                 "10.1016/test",
                 allow_downloads=False,
                 clients={
-                    "elsevier": StubProvider(
+                    "elsevier": FixtureProvider(
                         metadata=paper_fetch.ProviderFailure(
                             "not_supported", "No official metadata."
                         ),
@@ -98,7 +113,7 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                             "no_result", "Elsevier provider failed."
                         ),
                     ),
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata={
                             "provider": "crossref",
                             "official_provider": False,
@@ -209,7 +224,7 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                     allow_downloads=False,
                     clients={
                         "elsevier": client,
-                        "crossref": StubProvider(metadata=metadata),
+                        "crossref": FixtureProvider(metadata=metadata),
                     },
                 )
         finally:
@@ -299,7 +314,7 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                     allow_downloads=False,
                     clients={
                         "elsevier": client,
-                        "crossref": StubProvider(metadata=metadata),
+                        "crossref": FixtureProvider(metadata=metadata),
                     },
                 )
         finally:
@@ -332,7 +347,7 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                 "10.1038/test",
                 allow_downloads=False,
                 clients={
-                    "springer": StubProvider(
+                    "springer": FixtureProvider(
                         metadata=paper_fetch.ProviderFailure(
                             "not_supported", "No official metadata."
                         ),
@@ -340,7 +355,7 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                             "no_result", "Springer provider failed."
                         ),
                     ),
-                    "crossref": StubProvider(
+                    "crossref": FixtureProvider(
                         metadata={
                             "provider": "crossref",
                             "official_provider": False,
@@ -441,7 +456,7 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                         resolved.doi or "",
                         allow_downloads=False,
                         clients={
-                            provider_name: StubProvider(
+                            provider_name: FixtureProvider(
                                 metadata=paper_fetch.ProviderFailure(
                                     "not_supported", "No official metadata."
                                 ),
@@ -450,7 +465,7 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                                     source_name
                                 ),
                             ),
-                            "crossref": StubProvider(metadata=metadata),
+                            "crossref": FixtureProvider(metadata=metadata),
                         },
                     )
                 finally:
@@ -543,7 +558,7 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                         resolved.doi or "",
                         allow_downloads=False,
                         clients={
-                            provider_name: StubProvider(
+                            provider_name: FixtureProvider(
                                 metadata=paper_fetch.ProviderFailure(
                                     "not_supported", "No official metadata."
                                 ),
@@ -552,7 +567,7 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                                     source_name
                                 ),
                             ),
-                            "crossref": StubProvider(metadata=metadata),
+                            "crossref": FixtureProvider(metadata=metadata),
                         },
                     )
                 finally:
@@ -566,7 +581,7 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                 )
                 self.assertIn("fallback:metadata_only", article.quality.source_trail)
 
-    def test_elsevier_pdf_route_skips_asset_downloads_with_warning(self) -> None:
+    def test_elsevier_pdf_route_skips_asset_downloads(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1016/test-pdf-assets",
             query_kind="doi",
@@ -608,48 +623,56 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
             needs_local_copy=True,
         )
         original_resolve = paper_fetch.resolve_paper
+        provider_client = elsevier_provider.ElsevierClient(
+            transport=mock.Mock(), env={}
+        )
+        asset_download = mock.Mock(
+            side_effect=AssertionError(
+                "Elsevier PDF fallback should skip asset downloads."
+            )
+        )
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
-            with tempfile.TemporaryDirectory() as tmpdir:
+            with (
+                tempfile.TemporaryDirectory() as tmpdir,
+                mock.patch.object(
+                    provider_client,
+                    "fetch_metadata",
+                    side_effect=paper_fetch.ProviderFailure(
+                        "not_supported", "No official metadata."
+                    ),
+                ),
+                mock.patch.object(
+                    provider_client, "fetch_raw_fulltext", return_value=raw_payload
+                ),
+                mock.patch.object(
+                    provider_client,
+                    "to_article_model",
+                    side_effect=_article_factory_with_source("elsevier_pdf"),
+                ),
+                mock.patch.object(
+                    provider_client, "download_related_assets", asset_download
+                ),
+            ):
                 article = fetch_paper_model(
                     "10.1016/test-pdf-assets",
                     asset_profile="body",
                     output_dir=Path(tmpdir),
                     clients={
-                        "elsevier": StubProvider(
-                            metadata=paper_fetch.ProviderFailure(
-                                "not_supported", "No official metadata."
-                            ),
-                            raw_payload=raw_payload,
-                            article_factory=_article_factory_with_source(
-                                "elsevier_pdf"
-                            ),
-                            related_asset_factory=lambda *args, **kwargs: (
-                                _ for _ in ()
-                            ).throw(
-                                AssertionError(
-                                    "Elsevier PDF fallback should skip asset downloads."
-                                )
-                            ),
-                        ),
-                        "crossref": StubProvider(metadata=metadata),
+                        "elsevier": provider_client,
+                        "crossref": FixtureProvider(metadata=metadata),
                     },
                 )
         finally:
             paper_fetch.resolve_paper = original_resolve
 
+        asset_download.assert_not_called()
         self.assertEqual(article.source, "elsevier_pdf")
         self.assertIn(
             "download:elsevier_assets_skipped_text_only", article.quality.source_trail
         )
-        self.assertTrue(
-            any(
-                "Elsevier PDF fallback currently returns text-only" in warning
-                for warning in article.quality.warnings
-            )
-        )
 
-    def test_springer_pdf_route_skips_asset_downloads_with_warning(self) -> None:
+    def test_springer_pdf_route_skips_asset_downloads(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
             query="10.1038/test-pdf",
             query_kind="doi",
@@ -687,45 +710,55 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
             needs_local_copy=True,
         )
         original_resolve = paper_fetch.resolve_paper
+        provider_client = springer_provider.SpringerClient(
+            transport=mock.Mock(), env={}
+        )
+        asset_download = mock.Mock(
+            side_effect=AssertionError(
+                "Springer PDF fallback should skip asset downloads."
+            )
+        )
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
-            with tempfile.TemporaryDirectory() as tmpdir:
+            with (
+                tempfile.TemporaryDirectory() as tmpdir,
+                mock.patch.object(
+                    provider_client,
+                    "fetch_metadata",
+                    side_effect=paper_fetch.ProviderFailure(
+                        "not_supported", "No official metadata."
+                    ),
+                ),
+                mock.patch.object(
+                    provider_client,
+                    "prepare_fetch_result_payload",
+                    return_value=PreparedFetchResultPayload(raw_payload=raw_payload),
+                ),
+                mock.patch.object(
+                    provider_client,
+                    "to_article_model",
+                    side_effect=_article_factory_with_source("springer_pdf"),
+                ),
+                mock.patch.object(
+                    provider_client, "download_related_assets", asset_download
+                ),
+            ):
                 article = fetch_paper_model(
                     "10.1038/test-pdf",
                     asset_profile="body",
                     output_dir=Path(tmpdir),
                     clients={
-                        "springer": StubProvider(
-                            metadata=paper_fetch.ProviderFailure(
-                                "not_supported", "No official metadata."
-                            ),
-                            raw_payload=raw_payload,
-                            article_factory=_article_factory_with_source(
-                                "springer_pdf"
-                            ),
-                            related_asset_factory=lambda *args, **kwargs: (
-                                _ for _ in ()
-                            ).throw(
-                                AssertionError(
-                                    "Springer PDF fallback should skip asset downloads."
-                                )
-                            ),
-                        ),
-                        "crossref": StubProvider(metadata=metadata),
+                        "springer": provider_client,
+                        "crossref": FixtureProvider(metadata=metadata),
                     },
                 )
         finally:
             paper_fetch.resolve_paper = original_resolve
 
+        asset_download.assert_not_called()
         self.assertEqual(article.source, "springer_pdf")
         self.assertIn(
             "download:springer_assets_skipped_text_only", article.quality.source_trail
-        )
-        self.assertTrue(
-            any(
-                "Springer PDF fallback currently returns text-only" in warning
-                for warning in article.quality.warnings
-            )
         )
 
 

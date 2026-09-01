@@ -172,7 +172,7 @@ def fetch_ieee_landing_attempt(
             exc.kind,
             (
                 "IEEE landing retrieval failed through direct HTTP and the selected "
-                f"{runtime_config.backend} browser ({exc.message})."
+                f"Camoufox browser ({exc.message})."
             ),
             diagnostics=FailureDiagnostics(
                 provider=client.name,
@@ -190,19 +190,19 @@ def fetch_ieee_landing_attempt(
         landing_url=landing_url,
         response_url=browser_result.final_url,
         html_text=browser_result.html,
-        acquisition_source=f"{runtime_config.backend}_browser",
+        acquisition_source="camoufox_browser",
         browser_context_seed=browser_result.browser_context_seed,
         diagnostics={
             "stage": "landing",
             **direct_diagnostics,
-            "browser_backend": runtime_config.backend,
+            "browser_backend": "camoufox",
             "browser_attempted": True,
             "browser_status": browser_result.response_status,
             "browser_content_type": header_value(
                 browser_result.response_headers, "content-type"
             ),
             "seed_source": "landing_browser",
-            "final_fetcher": runtime_config.backend,
+            "final_fetcher": "camoufox",
         },
     )
 

@@ -4,31 +4,16 @@ from __future__ import annotations
 
 from typing import Any
 from collections.abc import Mapping
-from dataclasses import replace
 
 from .. import _playwright_browser
-from ..base import ProviderFailure, ProviderStatusResult
-from ...config import (
-    BROWSER_BACKEND_ENV_VAR,
-    DEFAULT_BROWSER_BACKEND,
-    SUPPORTED_BROWSER_BACKENDS,
-    resolve_browser_backend_selection,
-)
-from ...reason_codes import NOT_CONFIGURED
+from ..base import ProviderStatusResult
 from .backends.camoufox import DEFAULT_CAMOUFOX_BACKEND
 from .types import (
     BrowserFetchedHtml,
-    BrowserRuntimeBackend,
     BrowserRuntimeConfig,
     BrowserWarmResult,
 )
 
-_BROWSER_RUNTIME_BACKENDS: dict[str, BrowserRuntimeBackend] = {
-    DEFAULT_CAMOUFOX_BACKEND.name: DEFAULT_CAMOUFOX_BACKEND,
-}
-DEFAULT_BROWSER_RUNTIME_BACKEND: BrowserRuntimeBackend = _BROWSER_RUNTIME_BACKENDS[
-    DEFAULT_BROWSER_BACKEND
-]
 DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS = (
     _playwright_browser.DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS
 )
@@ -40,35 +25,6 @@ DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS = (
 )
 
 
-def browser_runtime_backend(name: str) -> BrowserRuntimeBackend:
-    normalized = str(name or "").strip().lower()
-    try:
-        return _BROWSER_RUNTIME_BACKENDS[normalized]
-    except KeyError as exc:
-        supported = ", ".join(sorted(SUPPORTED_BROWSER_BACKENDS))
-        raise ProviderFailure(
-            NOT_CONFIGURED,
-            f"Invalid {BROWSER_BACKEND_ENV_VAR}={name!r}; expected one of: {supported}.",
-        ) from exc
-
-
-def selected_browser_runtime_backend(
-    env: Mapping[str, str],
-) -> BrowserRuntimeBackend:
-    selection = resolve_browser_backend_selection(env)
-    return browser_runtime_backend(selection.backend)
-
-
-def _backend_for_config(config: BrowserRuntimeConfig) -> BrowserRuntimeBackend:
-    backend_name = config.backend
-    if not isinstance(backend_name, str) or not backend_name.strip():
-        raise ProviderFailure(
-            NOT_CONFIGURED,
-            "BrowserRuntimeConfig.backend must explicitly name a supported backend.",
-        )
-    return browser_runtime_backend(backend_name)
-
-
 def load_runtime_config(
     env: Mapping[str, str],
     *,
@@ -76,7 +32,7 @@ def load_runtime_config(
     doi: str,
     require_storage_state: bool = False,
 ) -> BrowserRuntimeConfig:
-    return selected_browser_runtime_backend(env).load_runtime_config(
+    return DEFAULT_CAMOUFOX_BACKEND.load_runtime_config(
         env,
         provider=provider,
         doi=doi,
@@ -85,7 +41,7 @@ def load_runtime_config(
 
 
 def ensure_runtime_ready(config: BrowserRuntimeConfig) -> None:
-    _backend_for_config(config).ensure_runtime_ready(config)
+    DEFAULT_CAMOUFOX_BACKEND.ensure_runtime_ready(config)
 
 
 def probe_runtime_status(
@@ -95,14 +51,12 @@ def probe_runtime_status(
     doi: str = "probe://browser/status",
     deep: bool = False,
 ) -> ProviderStatusResult:
-    selection = resolve_browser_backend_selection(env)
-    result = selected_browser_runtime_backend(env).probe_runtime_status(
+    return DEFAULT_CAMOUFOX_BACKEND.probe_runtime_status(
         env,
         provider=provider,
         doi=doi,
         deep=deep,
     )
-    return replace(result, notes=[*result.notes, *selection.notes])
 
 
 def fetch_html_with_browser(
@@ -112,7 +66,7 @@ def fetch_html_with_browser(
     config: BrowserRuntimeConfig,
     **kwargs: Any,
 ) -> BrowserFetchedHtml:
-    return _backend_for_config(config).fetch_html(
+    return DEFAULT_CAMOUFOX_BACKEND.fetch_html(
         candidate_urls,
         publisher=publisher,
         config=config,
@@ -120,7 +74,7 @@ def fetch_html_with_browser(
     )
 
 
-fetch_html_with_browser.paper_fetch_html_fetcher_name = "selected_browser"  # type: ignore[attr-defined]
+fetch_html_with_browser.paper_fetch_html_fetcher_name = "camoufox"  # type: ignore[attr-defined]
 
 
 def warm_browser_context(
@@ -132,7 +86,7 @@ def warm_browser_context(
     runtime_context: Any | None = None,
     lightweight: bool = False,
 ) -> BrowserWarmResult:
-    return _backend_for_config(config).warm_context(
+    return DEFAULT_CAMOUFOX_BACKEND.warm_context(
         candidate_urls,
         publisher=publisher,
         config=config,
@@ -143,7 +97,7 @@ def warm_browser_context(
 
 
 def storage_state_path(config: BrowserRuntimeConfig):
-    return _backend_for_config(config).storage_state_path(config)
+    return DEFAULT_CAMOUFOX_BACKEND.storage_state_path(config)
 
 
 def save_storage_state(
@@ -152,7 +106,7 @@ def save_storage_state(
     *,
     filter_url: str | None = None,
 ):
-    return _backend_for_config(config).save_storage_state(
+    return DEFAULT_CAMOUFOX_BACKEND.save_storage_state(
         context,
         config,
         filter_url=filter_url,

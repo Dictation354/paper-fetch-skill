@@ -45,7 +45,6 @@ from ..utils import dedupe_authors
 IncludeRefsMode = Literal["none", "top10", "all"]
 BatchCheckMode = Literal["article", "metadata"]
 CacheDetail = Literal["full", "compact"]
-CacheMode = Literal["index", "refresh", "rescan"]
 BrowserPreflightDetail = Literal["full", "compact"]
 BatchFetchDetail = Literal["compact", "bounded"]
 
@@ -148,18 +147,6 @@ def _normalize_batch_check_mode(value: Any) -> str:
     return normalized
 
 
-def _normalize_cache_mode(value: Any) -> str:
-    normalized = normalize_text(value).lower()
-    allowed = set(get_args(CacheMode))
-    if normalized not in allowed:
-        raise ValueError(
-            f"unsupported cache_mode value: {value!r}. Expected one of: "
-            + ", ".join(sorted(allowed))
-            + "."
-        )
-    return normalized
-
-
 def _normalize_cache_detail(value: Any) -> str:
     normalized = normalize_text(value).lower()
     allowed = set(get_args(CacheDetail))
@@ -239,7 +226,6 @@ ArtifactModeInput: TypeAlias = Annotated[
 BatchCheckModeInput: TypeAlias = Annotated[
     BatchCheckMode, BeforeValidator(_normalize_batch_check_mode)
 ]
-CacheModeInput: TypeAlias = Annotated[CacheMode, BeforeValidator(_normalize_cache_mode)]
 CacheDetailInput: TypeAlias = Annotated[
     CacheDetail, BeforeValidator(_normalize_cache_detail)
 ]
@@ -530,7 +516,6 @@ class FetchPaperRequest(_RequiredQueryRequest):
     save_markdown: bool = False
     markdown_output_dir: str | None = None
     markdown_filename: str | None = None
-    browser_auto_prepare: bool | None = None
 
     @field_validator("modes", mode="before")
     @classmethod
@@ -623,7 +608,6 @@ class BatchCheckRequest(BaseModel):
     queries: BatchQueriesInput
     mode: BatchCheckModeInput = "metadata"
     concurrency: ConcurrencyInput = 1
-    browser_auto_prepare: bool | None = None
 
     @field_validator("queries", mode="before")
     @classmethod
@@ -657,11 +641,8 @@ class BatchFetchRequest(BaseModel):
     detail: BatchFetchDetailInput = "compact"
     content_max_chars: BatchContentMaxCharsInput = 20_000
     continue_on_error: bool = True
-    run_manifest: str | None = None
     batch_results: str | None = None
-    resume: str | None = None
     overwrite: bool = False
-    browser_auto_prepare: bool | None = None
 
     @field_validator("queries", mode="before")
     @classmethod
@@ -707,9 +688,7 @@ class BatchFetchRequest(BaseModel):
         "markdown_output_dir",
         "markdown_filename",
         "download_dir",
-        "run_manifest",
         "batch_results",
-        "resume",
         mode="before",
     )
     @classmethod
@@ -730,12 +709,6 @@ class BatchFetchRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_batch_contract(self) -> BatchFetchRequest:
-        if self.resume is not None and (
-            self.run_manifest is not None or self.batch_results is not None
-        ):
-            raise ValueError(
-                "resume cannot be combined with run_manifest or batch_results."
-            )
         if self.markdown_filename is not None and len(self.queries) != 1:
             raise ValueError(
                 "markdown_filename is only valid when batch_fetch has one query."
@@ -756,7 +729,6 @@ class BatchFetchRequest(BaseModel):
                 "save_markdown": self.save_markdown,
                 "markdown_output_dir": self.markdown_output_dir,
                 "markdown_filename": self.markdown_filename,
-                "browser_auto_prepare": self.browser_auto_prepare,
             }
         )
 
@@ -765,7 +737,6 @@ class ListCachedRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     download_dir: str | None = None
-    cache_mode: CacheModeInput = "index"
 
     @field_validator("download_dir", mode="before")
     @classmethod
@@ -774,11 +745,6 @@ class ListCachedRequest(BaseModel):
             return None
         normalized = str(value).strip()
         return normalized or None
-
-    @field_validator("cache_mode", mode="before")
-    @classmethod
-    def normalize_cache_mode(cls, value: Any) -> str:
-        return _normalize_cache_mode(value)
 
 
 class GetCachedRequest(BaseModel):
@@ -862,7 +828,6 @@ class BrowserPreflightRequest(BaseModel):
     storage_state_path: str | None = None
     save_storage_state: bool = True
     detail: BrowserPreflightDetailInput = "full"
-    browser_auto_prepare: bool | None = None
 
     @field_validator("test_url", "browser_user_agent", mode="before")
     @classmethod

@@ -36,7 +36,7 @@ from ...page_diagnostics import (
     capture_page_diagnostic,
     is_empty_article_shell,
 )
-from ...tracing import fulltext_marker, trace_event, trace_from_markers
+from ...tracing import fulltext_marker, trace_from_markers
 from ...utils import normalize_text
 from ..browser_runtime import (
     BrowserFetchedHtml,
@@ -57,14 +57,7 @@ from ..atypon_browser_workflow import (
     rewrite_inline_figure_links,
 )
 from ..base import ProviderContent, RawFulltextPayload
-from .reuse_cache import (
-    DEFAULT_BROWSER_DOI_ROUTE_HINT_CACHE,
-    DEFAULT_BROWSER_PREFLIGHT_REUSE_CACHE,
-    browser_preflight_producer,
-    browser_runtime_fingerprint,
-    browser_storage_state_fingerprint,
-    normalize_browser_cache_url,
-)
+from .shared import normalize_browser_url
 
 logger = logging.getLogger("paper_fetch.providers.browser_workflow")
 
@@ -149,11 +142,11 @@ def _finalize_http_access_status_review(
         for candidate in candidates_value
     ]
     updated = False
-    source_url = normalize_browser_cache_url(html_result.source_url)
+    source_url = normalize_browser_url(html_result.source_url)
     for candidate in reversed(candidates):
         if not isinstance(candidate, dict):
             continue
-        candidate_url = normalize_browser_cache_url(
+        candidate_url = normalize_browser_url(
             str(candidate.get("url") or candidate.get("final_url") or "")
         )
         if source_url and candidate_url and candidate_url != source_url:
@@ -280,11 +273,11 @@ def _remaining_wiley_review_candidates(
     if not confirmed_review:
         return []
 
-    failed_source = normalize_browser_cache_url(html_result.source_url)
+    failed_source = normalize_browser_url(html_result.source_url)
     if not failed_source:
         return []
     normalized_candidates = [
-        normalize_browser_cache_url(candidate) or normalize_text(candidate)
+        normalize_browser_url(candidate) or normalize_text(candidate)
         for candidate in html_candidates
     ]
     try:
@@ -295,42 +288,12 @@ def _remaining_wiley_review_candidates(
 
 
 def _browser_page_state(
-    runtime: BrowserRuntimeConfig,
     html_result: BrowserFetchedHtml,
-    *,
-    initial_seed: Mapping[str, Any] | None,
-    policy: BrowserHtmlFetchPolicy,
 ) -> dict[str, Any]:
     page_sha256 = hashlib.sha256(html_result.html.encode("utf-8")).hexdigest()
-    runtime_fingerprint = browser_runtime_fingerprint(runtime)
-    profile_material = "\0".join(
-        (
-            "browser_html_profile",
-            runtime_fingerprint,
-            str(bool(policy.disable_media)),
-            str(max(0, int(policy.wait_seconds))),
-            str(max(0, int(policy.warm_wait_seconds))),
-            str(max(0, int(policy.max_timeout_ms or 0))),
-        )
-    )
-    profile_fingerprint = hashlib.sha256(profile_material.encode("utf-8")).hexdigest()
-    storage_before = browser_storage_state_fingerprint(runtime, initial_seed)
-    storage_after = browser_storage_state_fingerprint(
-        runtime,
-        html_result.browser_context_seed,
-    )
-    state_material = "\0".join(
-        ("browser_html", profile_fingerprint, storage_after, page_sha256)
-    )
     return {
         "route": "browser_html",
         "page_sha256": page_sha256,
-        "runtime_fingerprint": runtime_fingerprint,
-        "profile_fingerprint": profile_fingerprint,
-        "storage_state_before_fingerprint": storage_before,
-        "storage_state_fingerprint": storage_after,
-        "storage_state_changed": storage_before != storage_after,
-        "state_fingerprint": hashlib.sha256(state_material.encode("utf-8")).hexdigest(),
     }
 
 
@@ -349,7 +312,6 @@ def _empty_shell_retry_decision(
         if normalize_text(candidate) and normalize_text(candidate) != failed_source
     ]
     candidate_changed = bool(remaining_candidates)
-    storage_changed = bool(page_state.get("storage_state_changed"))
     profile_changed = bool(policy.attempt == 1 and policy.disable_media)
     previous_state = next(
         (
@@ -361,124 +323,34 @@ def _empty_shell_retry_decision(
     )
     identical_page_state = bool(
         isinstance(previous_state, Mapping)
-        and previous_state.get("state_fingerprint")
-        == page_state.get("state_fingerprint")
+        and previous_state.get("page_sha256") == page_state.get("page_sha256")
     )
     retry = bool(
         policy.attempt == 1
         and not identical_page_state
-        and (candidate_changed or profile_changed or storage_changed)
+        and (candidate_changed or profile_changed)
     )
     if identical_page_state:
-        reason = "identical_route_profile_storage_and_page"
+        reason = "identical_page"
     elif policy.attempt != 1:
         reason = "state_change_retry_limit_reached"
     elif candidate_changed:
         reason = "candidate_url_changed"
-    elif storage_changed:
-        reason = "storage_state_changed"
     elif profile_changed:
         reason = "browser_fetch_profile_changed"
     else:
-        reason = "unchanged_route_profile_and_storage"
+        reason = "unchanged_route_and_profile"
     decision: dict[str, Any] = {
         "retry": retry,
         "reason": reason,
         "attempt": policy.attempt,
         "candidate_changed": candidate_changed,
         "profile_changed": profile_changed,
-        "storage_state_changed": storage_changed,
         "identical_page_state": identical_page_state,
     }
     if remaining_candidates:
         decision["next_candidate"] = diagnostic_url_payload(remaining_candidates[0])
     return decision
-
-
-def _annotate_browser_html_payload(
-    html_result: BrowserFetchedHtml,
-    payload: RawFulltextPayload,
-    *,
-    preflight_reuse: Mapping[str, Any] | None = None,
-    candidate_reorder: Mapping[str, Any] | None = None,
-    route_hint_write: Mapping[str, Any] | None = None,
-) -> tuple[BrowserFetchedHtml, RawFulltextPayload]:
-    """Keep internal browser diagnostics and source-trail events in sync."""
-
-    result_diagnostics = dict(html_result.diagnostics or {})
-    content = payload.content
-    content_diagnostics = dict(content.diagnostics or {}) if content is not None else {}
-    if preflight_reuse is not None:
-        value = dict(preflight_reuse)
-        result_diagnostics["preflight_reuse"] = value
-        content_diagnostics["preflight_reuse"] = value
-        state = normalize_text(str(value.get("state") or "miss")).lower() or "miss"
-        payload.trace.append(
-            trace_event(
-                "browser",
-                "preflight_reuse",
-                state,
-                provider=payload.provider,
-                route="html",
-            )
-        )
-    if candidate_reorder is not None:
-        value = dict(candidate_reorder)
-        result_diagnostics["candidate_reorder"] = value
-        content_diagnostics["candidate_reorder"] = value
-        state = normalize_text(str(value.get("state") or "miss")).lower() or "miss"
-        payload.trace.append(
-            trace_event(
-                "browser",
-                "candidate_reorder",
-                state,
-                provider=payload.provider,
-                route="html",
-            )
-        )
-    if route_hint_write is not None:
-        value = dict(route_hint_write)
-        result_diagnostics["doi_route_hint_write"] = value
-        content_diagnostics["doi_route_hint_write"] = value
-    if content is not None:
-        payload.content = replace(content, diagnostics=content_diagnostics)
-    return replace(html_result, diagnostics=result_diagnostics), payload
-
-
-def _payload_from_reused_browser_html(
-    client: BrowserWorkflowClient,
-    html_result: BrowserFetchedHtml,
-    *,
-    runtime: BrowserRuntimeConfig,
-    metadata: ProviderMetadata,
-    context: RuntimeContext,
-    warnings: list[str] | None,
-    preflight_reuse: Mapping[str, Any],
-    candidate_reorder: Mapping[str, Any] | None,
-) -> tuple[BrowserFetchedHtml, RawFulltextPayload]:
-    """Re-extract accepted cached HTML with the formal request metadata."""
-
-    markdown_text, extraction = _cached_browser_workflow_markdown(
-        client,
-        html_result.html,
-        html_result.final_url,
-        metadata=metadata,
-        context=context,
-    )
-    payload = _browser_workflow_html_payload(
-        client,
-        html_result,
-        markdown_text=markdown_text,
-        extraction=extraction,
-        fetcher=normalize_text(runtime.backend).lower() or "selected_browser",
-        warnings=warnings,
-    )
-    return _annotate_browser_html_payload(
-        html_result,
-        payload,
-        preflight_reuse=preflight_reuse,
-        candidate_reorder=candidate_reorder,
-    )
 
 
 def _commit_accepted_storage_state(
@@ -819,12 +691,7 @@ def _fetch_browser_html_payload(
         prior_state.browser_trace,
     )
     result_diagnostics = dict(html_result.diagnostics or {})
-    page_state = _browser_page_state(
-        runtime,
-        html_result,
-        initial_seed=browser_context_seed,
-        policy=policy,
-    )
+    page_state = _browser_page_state(html_result)
     result_diagnostics["page_state"] = page_state
     result_diagnostics["deadline"] = {
         "timeout_budget_ms": configured_timeout_ms,
@@ -894,7 +761,7 @@ def _fetch_browser_html_payload(
                 doi=normalize_text(str(metadata.get("doi") or "")) or None,
                 target_url=html_candidates[0] if html_candidates else None,
                 final_url=html_result.final_url,
-                backend=normalize_text(runtime.backend) or None,
+                backend="camoufox",
                 response_status=html_result.response_status,
                 title=html_result.title,
                 summary=summarize_html(html_result.html),
@@ -949,13 +816,9 @@ def _fetch_browser_html_payload(
         context=context,
     )
     fetcher_attr = getattr(html_fetcher, "paper_fetch_html_fetcher_name", None)
-    runtime_backend_value = runtime.backend
-    runtime_backend = normalize_text(runtime_backend_value)
-    if not runtime_backend:
-        raise RuntimeError("BrowserRuntimeConfig.backend must not be empty.")
-    fetcher_name = runtime_backend
+    fetcher_name = "camoufox"
     if isinstance(fetcher_attr, str) and normalize_text(fetcher_attr).endswith("_fast"):
-        fetcher_name = f"{runtime_backend}_fast"
+        fetcher_name = "camoufox_fast"
     payload = _browser_workflow_html_payload(
         client,
         html_result,
@@ -964,49 +827,6 @@ def _fetch_browser_html_payload(
         fetcher=fetcher_name,
         warnings=[*list(warnings or []), *storage_warnings],
     )
-    profile = client.require_profile()
-    normalized_doi = normalize_text(str(metadata.get("doi") or runtime.doi or ""))
-    producer = browser_preflight_producer(context)
-    preflight_diagnostic: dict[str, Any] | None = None
-    if producer is not None:
-        if profile.preflight_html_reuse:
-            stored = DEFAULT_BROWSER_PREFLIGHT_REUSE_CACHE.store(
-                provider=client.name,
-                doi=normalized_doi,
-                target_url=html_result.source_url,
-                runtime=runtime,
-                result=html_result,
-            )
-            preflight_diagnostic = {
-                "state": "miss",
-                "reason": "preflight_producer",
-                "stored": stored,
-                "one_shot": True,
-            }
-        else:
-            preflight_diagnostic = {
-                "state": "disabled",
-                "reason": "provider_runtime_fingerprint_boundary",
-                "stored": False,
-            }
-    route_hint_write: dict[str, Any] | None = None
-    if profile.doi_route_hint:
-        stored_hint = DEFAULT_BROWSER_DOI_ROUTE_HINT_CACHE.store(
-            provider=client.name,
-            doi=normalized_doi,
-            url=html_result.final_url,
-        )
-        route_hint_write = {
-            "stored": stored_hint,
-            "source": "accepted_final_url",
-        }
-    if preflight_diagnostic is not None or route_hint_write is not None:
-        html_result, payload = _annotate_browser_html_payload(
-            html_result,
-            payload,
-            preflight_reuse=preflight_diagnostic,
-            route_hint_write=route_hint_write,
-        )
     return html_result, payload
 
 

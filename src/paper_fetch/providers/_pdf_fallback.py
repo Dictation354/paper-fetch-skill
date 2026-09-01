@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
-from contextvars import copy_context
 import math
 import os
 import shutil
@@ -20,6 +17,7 @@ from collections.abc import Callable, Mapping
 from ..http import (
     DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
     HttpRequestPolicy,
+    HttpStreamOptions,
     HttpTransport,
     PDF_ACCEPT_HEADER,
     RequestCancelledError,
@@ -39,7 +37,6 @@ from ..extraction.html.assets.requester import (
 from ..extraction.html.shared import html_text_snippet, html_title_snippet
 from ..extraction.html.signals import detect_html_block, summarize_html
 from ..runtime import RuntimeContext
-from ..runtime_browser import browser_context_options
 from ..provider_catalog import compile_route_execution_policy_for_kind
 from ..utils import normalize_text
 from ._pdf_candidates import extract_pdf_candidate_urls_from_html
@@ -239,28 +236,6 @@ def _prepare_pdf_browser_route_request(
     )
 
 
-def _pdf_request_from_compatibility(
-    request: PdfRequestContext,
-    compatibility: Mapping[str, Any],
-) -> PdfRequestContext:
-    """Keep additive route-policy call shapes off the core signature."""
-
-    options = dict(compatibility)
-    provider_name = options.pop("provider_name", None)
-    allowed_hosts = options.pop("allowed_hosts", None)
-    if options:
-        unexpected = next(iter(options))
-        raise TypeError(
-            f"fetch_pdf_over_http() got an unexpected keyword argument {unexpected!r}"
-        )
-    active_request = (
-        request.with_provider(provider_name) if provider_name is not None else request
-    )
-    if allowed_hosts is not None:
-        active_request = replace(active_request, allowed_hosts=tuple(allowed_hosts))
-    return active_request
-
-
 def _compile_pdf_direct_route_policy(
     request: PdfRequestContext,
     *,
@@ -297,80 +272,28 @@ def _compile_pdf_direct_route_policy(
 @dataclass(frozen=True)
 class _PdfBrowserLaunch:
     runtime: RuntimeContext | None
-    browser_config: BrowserRuntimeConfig | None
-    use_runtime_browser: bool
-    headless: bool
-    binary_path: str | None
-    cdp_endpoint: str | None
-    external_new_context: bool
-    profile_dir: Path | str | None
-    user_data_dir: Path | str | None
+    browser_config: BrowserRuntimeConfig
 
 
 def _open_pdf_browser_context(
     launch: _PdfBrowserLaunch,
-    context_kwargs: Mapping[str, Any],
     *,
     sanitized_storage_state_path: Path | None,
     capability_storage_state_path: Path | None = None,
 ) -> tuple[Any | None, Any]:
-    if launch.browser_config is not None:
-        active_config = replace(
-            launch.browser_config,
-            storage_state_path=sanitized_storage_state_path,
-            persist_storage_state=False,
-            capability_storage_state_path=(
-                capability_storage_state_path
-                or launch.browser_config.capability_storage_state_path
-                or launch.browser_config.storage_state_path
-            ),
-        )
-        return open_browser_context(
-            active_config,
-            runtime_context=launch.runtime if launch.use_runtime_browser else None,
-        )
-    if launch.runtime is not None and launch.use_runtime_browser:
-        configured_paths = (
-            launch.binary_path,
-            launch.cdp_endpoint,
-            launch.profile_dir,
-            launch.user_data_dir,
-        )
-        if isinstance(launch.runtime, RuntimeContext) and any(
-            value is not None for value in configured_paths
-        ):
-            return None, launch.runtime.new_browser_context_for_config(
-                headless=launch.headless,
-                binary_path=launch.binary_path,
-                cdp_endpoint=launch.cdp_endpoint,
-                external_new_context=launch.external_new_context,
-                profile_dir=launch.profile_dir,
-                user_data_dir=launch.user_data_dir,
-                **dict(context_kwargs),
-            )
-        return None, launch.runtime.new_browser_context(
-            headless=launch.headless,
-            **dict(context_kwargs),
-        )
-
-    from ..runtime_browser import BrowserContextManager
-
-    active_profile_dir = normalize_text(str(launch.profile_dir or ""))
-    active_user_data_dir = normalize_text(str(launch.user_data_dir or ""))
-    manager = BrowserContextManager(
-        binary_path=normalize_text(launch.binary_path) or None,
-        cdp_endpoint=normalize_text(launch.cdp_endpoint) or None,
-        external_new_context=launch.external_new_context,
-        profile_dir=(
-            Path(active_profile_dir).expanduser() if active_profile_dir else None
-        ),
-        user_data_dir=(
-            Path(active_user_data_dir).expanduser() if active_user_data_dir else None
+    active_config = replace(
+        launch.browser_config,
+        storage_state_path=sanitized_storage_state_path,
+        persist_storage_state=False,
+        capability_storage_state_path=(
+            capability_storage_state_path
+            or launch.browser_config.capability_storage_state_path
+            or launch.browser_config.storage_state_path
         ),
     )
-    return manager, manager.new_context(
-        headless=launch.headless,
-        **dict(context_kwargs),
+    return open_browser_context(
+        active_config,
+        runtime_context=launch.runtime,
     )
 
 
@@ -888,82 +811,6 @@ def _download_to_pdf_result(
         download_path.unlink(missing_ok=True)
 
 
-def _running_asyncio_loop_active() -> bool:
-    try:
-        asyncio.get_running_loop()
-    except RuntimeError:
-        return False
-    return True
-
-
-@dataclass(frozen=True)
-class _PdfBrowserCompatibility:
-    provider_name: str | None = None
-    allow_thread_handoff: bool = True
-    use_runtime_browser: bool = True
-
-
-@dataclass(frozen=True)
-class _PdfBrowserResolvedConfig:
-    headless: bool
-    binary_path: str | None
-    cdp_endpoint: str | None
-    external_new_context: bool
-    profile_dir: Path | str | None
-    user_data_dir: Path | str | None
-    storage_state_path: Path | None
-
-
-def _pdf_browser_compatibility(
-    compatibility: Mapping[str, Any],
-) -> _PdfBrowserCompatibility:
-    options = dict(compatibility)
-    result = _PdfBrowserCompatibility(
-        provider_name=options.pop("provider_name", None),
-        allow_thread_handoff=bool(options.pop("_allow_thread_handoff", True)),
-        use_runtime_browser=bool(options.pop("_use_runtime_browser", True)),
-    )
-    if options:
-        unexpected = next(iter(options))
-        raise TypeError(
-            "fetch_pdf_with_browser() got an unexpected keyword argument "
-            f"{unexpected!r}"
-        )
-    return result
-
-
-def _resolved_pdf_browser_config(
-    browser_config: BrowserRuntimeConfig | None,
-    *,
-    headless: bool,
-    binary_path: str | None,
-    cdp_endpoint: str | None,
-    external_new_context: bool,
-    profile_dir: Path | str | None,
-    user_data_dir: Path | str | None,
-    storage_state_path: Path | None,
-) -> _PdfBrowserResolvedConfig:
-    if browser_config is None:
-        return _PdfBrowserResolvedConfig(
-            headless=headless,
-            binary_path=binary_path,
-            cdp_endpoint=cdp_endpoint,
-            external_new_context=external_new_context,
-            profile_dir=profile_dir,
-            user_data_dir=user_data_dir,
-            storage_state_path=storage_state_path,
-        )
-    return _PdfBrowserResolvedConfig(
-        headless=browser_config.headless,
-        binary_path=browser_config.binary_path,
-        cdp_endpoint=browser_config.cdp_endpoint,
-        external_new_context=browser_config.external_new_context,
-        profile_dir=browser_config.profile_dir,
-        user_data_dir=browser_config.user_data_dir,
-        storage_state_path=storage_state_path or browser_config.storage_state_path,
-    )
-
-
 def _playwright_pdf_error_types() -> tuple[Any, Any]:
     try:
         from playwright.sync_api import Error as PlaywrightError
@@ -1002,68 +849,27 @@ def fetch_pdf_with_browser(
     candidate_urls: list[str],
     *,
     artifact_dir: Path,
+    browser_config: BrowserRuntimeConfig,
     asset_profile: PdfAssetProfile = "none",
     asset_output_dir: Path | None = None,
     browser_cookies: list[dict[str, Any]] | None = None,
     browser_user_agent: str | None = None,
-    headless: bool = True,
     referer: str | None = None,
-    binary_path: str | None = None,
-    cdp_endpoint: str | None = None,
-    external_new_context: bool = False,
-    profile_dir: Path | str | None = None,
-    user_data_dir: Path | str | None = None,
-    storage_state_path: Path | None = None,
-    browser_config: BrowserRuntimeConfig | None = None,
     seed_urls: list[str] | None = None,
     allow_pdf_only: bool = False,
     request: PdfRequestContext = PdfRequestContext(),
-    **compatibility: Any,
 ) -> PdfFallbackResult:
-    browser_compatibility = _pdf_browser_compatibility(compatibility)
     context = request.runtime
     _raise_if_cancelled(context)
     route_request = _prepare_pdf_browser_route_request(
         request,
         browser_config=browser_config,
-        provider_name=browser_compatibility.provider_name,
+        provider_name=request.provider_name,
     )
     browser_budget_seconds = route_request.timeout_seconds
     request_started_at = route_request.started_monotonic
     request_deadline = route_request.deadline_monotonic
     active_request = route_request.request
-    if (
-        browser_compatibility.allow_thread_handoff
-        and _running_asyncio_loop_active()
-        and not (browser_config is not None and browser_config.backend == "camoufox")
-    ):
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            return executor.submit(
-                copy_context().run,
-                fetch_pdf_with_browser,
-                candidate_urls,
-                artifact_dir=artifact_dir,
-                asset_profile=asset_profile,
-                asset_output_dir=asset_output_dir,
-                browser_cookies=browser_cookies,
-                browser_user_agent=browser_user_agent,
-                headless=headless,
-                referer=referer,
-                binary_path=binary_path,
-                cdp_endpoint=cdp_endpoint,
-                external_new_context=external_new_context,
-                profile_dir=profile_dir,
-                user_data_dir=user_data_dir,
-                storage_state_path=storage_state_path,
-                browser_config=browser_config,
-                seed_urls=seed_urls,
-                allow_pdf_only=allow_pdf_only,
-                request=active_request,
-                provider_name=browser_compatibility.provider_name,
-                _allow_thread_handoff=False,
-                _use_runtime_browser=False,
-            ).result()
-
     if not candidate_urls:
         raise PdfFallbackFailure(
             "empty_pdf_attempts", "No PDF fallback candidates were attempted."
@@ -1075,18 +881,7 @@ def fetch_pdf_with_browser(
     artifact_dir.mkdir(parents=True, exist_ok=True)
     last_failure: PdfFallbackFailure | None = None
     sanitized_storage_state_path: Path | None = None
-    resolved_config = _resolved_pdf_browser_config(
-        browser_config,
-        headless=headless,
-        binary_path=binary_path,
-        cdp_endpoint=cdp_endpoint,
-        external_new_context=external_new_context,
-        profile_dir=profile_dir,
-        user_data_dir=user_data_dir,
-        storage_state_path=storage_state_path,
-    )
     active_user_agent = normalize_text(browser_user_agent)
-    declared_hosts = route_request.allowed_hosts
     normalized_seed_urls = [
         normalize_text(url) for url in seed_urls or [] if normalize_text(url)
     ]
@@ -1117,22 +912,16 @@ def fetch_pdf_with_browser(
                     active_request,
                     timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 ),
-                allowed_hosts=declared_hosts or None,
             )
         except PdfFallbackFailure as exc:
             last_failure = exc
 
     PlaywrightError, PlaywrightTimeoutError = _playwright_pdf_error_types()
 
-    context_kwargs: dict[str, Any] = browser_context_options(
-        user_agent=active_user_agent,
-        accept_downloads=True,
-    )
-    if resolved_config.storage_state_path is not None:
+    if browser_config.storage_state_path is not None:
         sanitized_storage_state_path = sanitize_storage_state(
-            resolved_config.storage_state_path
+            browser_config.storage_state_path
         )
-        context_kwargs["storage_state"] = str(sanitized_storage_state_path)
 
     manager = None
     browser_context = None
@@ -1141,17 +930,9 @@ def fetch_pdf_with_browser(
             _PdfBrowserLaunch(
                 runtime=context,
                 browser_config=browser_config,
-                use_runtime_browser=browser_compatibility.use_runtime_browser,
-                headless=resolved_config.headless,
-                binary_path=resolved_config.binary_path,
-                cdp_endpoint=resolved_config.cdp_endpoint,
-                external_new_context=resolved_config.external_new_context,
-                profile_dir=resolved_config.profile_dir,
-                user_data_dir=resolved_config.user_data_dir,
             ),
-            context_kwargs,
             sanitized_storage_state_path=sanitized_storage_state_path,
-            capability_storage_state_path=resolved_config.storage_state_path,
+            capability_storage_state_path=browser_config.storage_state_path,
         )
 
         page, seed_failure = _initialize_pdf_browser_page(
@@ -1289,7 +1070,6 @@ def fetch_pdf_with_browser(
                                 active_request,
                                 timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                             ),
-                            allowed_hosts=declared_hosts or None,
                         )
                     except PdfFallbackFailure as exc:
                         last_failure = exc
@@ -1431,13 +1211,15 @@ def _stream_pdf_candidate(
             url,
             staging_path,
             headers=headers,
-            timeout=timeout,
-            retry_on_transient=True,
-            request_policy=replace(
-                request_policy,
-                timeout_seconds=timeout,
-                max_response_bytes=maximum_pdf_bytes,
-                max_compressed_response_bytes=maximum_pdf_bytes,
+            options=HttpStreamOptions(
+                timeout=timeout,
+                retry_on_transient=True,
+                request_policy=replace(
+                    request_policy,
+                    timeout_seconds=timeout,
+                    max_response_bytes=maximum_pdf_bytes,
+                    max_compressed_response_bytes=maximum_pdf_bytes,
+                ),
             ),
         )
         # ``PdfFetchResult`` retains a bytes compatibility field.  This is the
@@ -1466,9 +1248,7 @@ def fetch_pdf_over_http(
     seed_urls: list[str] | None = None,
     browser_cookies: list[dict[str, Any]] | None = None,
     request: PdfRequestContext = PdfRequestContext(),
-    **compatibility: Any,
 ) -> PdfFetchResult:
-    request = _pdf_request_from_compatibility(request, compatibility)
     if not candidate_urls:
         raise PdfFetchFailure(
             "empty_pdf_attempts", "No PDF fallback candidates were attempted."

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
-from collections.abc import Iterator, Set as AbstractSet
 
 from ..failure import FailureDiagnostics
 from ..metadata.types import ProviderMetadata
@@ -22,20 +21,6 @@ from ..utils import normalize_text
 
 def allowed_preferred_providers() -> frozenset[str]:
     return frozenset(provider_names())
-
-
-class _AllowedPreferredProviders(AbstractSet[str]):
-    def __contains__(self, value: object) -> bool:
-        return value in allowed_preferred_providers()
-
-    def __iter__(self) -> Iterator[str]:
-        return iter(allowed_preferred_providers())
-
-    def __len__(self) -> int:
-        return len(allowed_preferred_providers())
-
-
-ALLOWED_PREFERRED_PROVIDERS: AbstractSet[str] = _AllowedPreferredProviders()
 
 
 def provider_default_asset_profile(provider_name: str | None) -> AssetProfile:

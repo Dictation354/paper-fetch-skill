@@ -87,15 +87,6 @@ def render_elsevier_table_results(
     return [_render_parsed_elsevier_table(parsed) for parsed in parsed_groups]
 
 
-def render_elsevier_table_result(table: ET.Element | None) -> ElsevierTableRenderResult:
-    """Return the first logical group for legacy internal callers."""
-
-    results = render_elsevier_table_results(table)
-    if results:
-        return results[0]
-    return ElsevierTableRenderResult(headers=[], rows=[], prefix_rows=[])
-
-
 def resolve_elsevier_table_locator(table: ET.Element | None) -> str:
     if table is None:
         return ""

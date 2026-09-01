@@ -18,7 +18,7 @@ _FAILURE_POLICY = (
     "validation errors, or deterministic parse failures; retry no-access only after "
     "auth state changes; honor Retry-After and stop new submissions to the same "
     "rate-limited provider; retry network or browser transients only after parameters, "
-    "state, or environment change; and resume cancellation only when requested. "
+    "state, or environment change; and retry cancellation only when requested. "
     "An unchanged `prefer_cache=false` rerun is not a cache bypass."
 )
 

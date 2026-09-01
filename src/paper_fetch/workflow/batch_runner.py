@@ -749,27 +749,22 @@ def run_batch(
 ) -> BatchRunResult[ItemT, ResultT]:
     """Convenience wrapper around :class:`BatchRunner.run`."""
 
-    from ..runtime import close_shared_browser_managers, retain_shared_browser_managers
-
-    escalation_callback = cancel_escalation_callback or close_shared_browser_managers
-
-    with retain_shared_browser_managers():
-        return BatchRunner(
-            worker,
-            max_workers=max_workers,
-            lane_key=lane_key,
-            lane_limits=lane_limits,
-            completion_callback=completion_callback,
-            progress_callback=progress_callback,
-            stop_predicate=stop_predicate,
-            cancel_event=cancel_event,
-            clock=clock,
-            failure_classifier=failure_classifier,
-            result_classifier=result_classifier,
-            default_rate_limit_cooldown_seconds=(default_rate_limit_cooldown_seconds),
-            cancel_grace_period_seconds=cancel_grace_period_seconds,
-            cancel_escalation_callback=escalation_callback,
-        ).run(items)
+    return BatchRunner(
+        worker,
+        max_workers=max_workers,
+        lane_key=lane_key,
+        lane_limits=lane_limits,
+        completion_callback=completion_callback,
+        progress_callback=progress_callback,
+        stop_predicate=stop_predicate,
+        cancel_event=cancel_event,
+        clock=clock,
+        failure_classifier=failure_classifier,
+        result_classifier=result_classifier,
+        default_rate_limit_cooldown_seconds=(default_rate_limit_cooldown_seconds),
+        cancel_grace_period_seconds=cancel_grace_period_seconds,
+        cancel_escalation_callback=cancel_escalation_callback,
+    ).run(items)
 
 
 async def run_batch_async(
@@ -792,27 +787,22 @@ async def run_batch_async(
 ) -> BatchRunResult[ItemT, ResultT]:
     """Convenience wrapper around :class:`BatchRunner.run_async`."""
 
-    from ..runtime import close_shared_browser_managers, retain_shared_browser_managers
-
-    escalation_callback = cancel_escalation_callback or close_shared_browser_managers
-
-    with retain_shared_browser_managers():
-        return await BatchRunner(
-            worker,
-            max_workers=max_workers,
-            lane_key=lane_key,
-            lane_limits=lane_limits,
-            completion_callback=completion_callback,
-            progress_callback=progress_callback,
-            stop_predicate=stop_predicate,
-            cancel_event=cancel_event,
-            clock=clock,
-            failure_classifier=failure_classifier,
-            result_classifier=result_classifier,
-            default_rate_limit_cooldown_seconds=(default_rate_limit_cooldown_seconds),
-            cancel_grace_period_seconds=cancel_grace_period_seconds,
-            cancel_escalation_callback=escalation_callback,
-        ).run_async(items)
+    return await BatchRunner(
+        worker,
+        max_workers=max_workers,
+        lane_key=lane_key,
+        lane_limits=lane_limits,
+        completion_callback=completion_callback,
+        progress_callback=progress_callback,
+        stop_predicate=stop_predicate,
+        cancel_event=cancel_event,
+        clock=clock,
+        failure_classifier=failure_classifier,
+        result_classifier=result_classifier,
+        default_rate_limit_cooldown_seconds=(default_rate_limit_cooldown_seconds),
+        cancel_grace_period_seconds=cancel_grace_period_seconds,
+        cancel_escalation_callback=cancel_escalation_callback,
+    ).run_async(items)
 
 
 __all__ = [

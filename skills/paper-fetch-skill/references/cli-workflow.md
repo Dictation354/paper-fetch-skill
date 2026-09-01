@@ -11,7 +11,6 @@ paper-fetch fetch --query "10.1186/1471-2105-11-421" \
   --format markdown \
   --output - \
   --output-dir ./.paper-fetch-tmp \
-  --no-download \
   --artifact-mode none \
   --asset-profile none \
   --include-refs all \
@@ -44,14 +43,13 @@ paper-fetch fetch --query-file ./queries.txt \
   --output-dir ./papers \
   --batch-concurrency 4 \
   --batch-results ./papers/batch-results.jsonl \
-  --run-manifest ./papers/run-manifest.json \
   --artifact-mode none \
   --asset-profile none \
   --include-refs all \
   --max-tokens full_text
 ```
 
-每篇主输出写入 `--output-dir`；batch JSONL 按完成顺序追加 schema-v2 terminal records，稳定 `index` 才对应原始输入顺序。不要用 `jq` 或行序重排；可用 Python 标准库读取每个 index 的最新 attempt：
+每篇主输出写入 `--output-dir`；batch JSONL 在整批结束时原子写入，每个输入恰好一个 schema-v2 terminal record，并按稳定 `index` 排列。可用 Python 标准库检查记录：
 
 ```bash
 python3 - ./papers/batch-results.jsonl <<'PY'
@@ -59,53 +57,23 @@ import json
 from pathlib import Path
 import sys
 
-latest = {}
 for line in Path(sys.argv[1]).read_text(encoding="utf-8").splitlines():
     record = json.loads(line)
-    index = int(record["index"])
-    if index not in latest or int(record["attempt"]) > int(latest[index]["attempt"]):
-        latest[index] = record
-for index in sorted(latest):
-    record = latest[index]
-    print(index, record["status"], record["acceptance"]["overall"], record.get("output_path"))
+    paths = [item["path"] for item in record["output_artifacts"]]
+    print(record["index"], record["record_status"], record["acceptance"]["overall"], paths)
 PY
 ```
 
-`status=ok` 只表示该次调用未抛异常；完成结论读取 acceptance，并按 [`acceptance.md`](acceptance.md) 检查真实路径/hash。每个输入都应有 terminal record，包括失败、限流、取消和未调度项。
-
-## Manifest 审计、reconcile 与 resume
-
-Audit/reconcile 都只读、不联网：
-
-```bash
-paper-fetch manifest audit ./papers/run-manifest.json
-paper-fetch manifest reconcile ./papers/run-manifest.json
-```
-
-恢复前先审计；然后传原 query file 和与原 run 完全相同的 fetch/output 选项，只用 `--resume` 指向摘要，不再传新的 `--run-manifest`：
-
-```bash
-paper-fetch fetch --query-file ./queries.txt \
-  --format markdown \
-  --output-dir ./papers \
-  --batch-concurrency 4 \
-  --resume ./papers/run-manifest.json \
-  --artifact-mode none \
-  --asset-profile none \
-  --include-refs all \
-  --max-tokens full_text
-```
-
-只有 audit 判定 reusable 的最新 attempt 会跳过。输入顺序、工具版本或关键请求参数不一致时新建 run；stale 但仍存在的输出默认拒绝替换，人工检查后才加 `--overwrite`。
+`record_status` 表示该输入的终态；内容完成结论读取 acceptance，并按 [`acceptance.md`](acceptance.md) 检查 `output_artifacts` 的真实路径/hash。每个输入都应有 terminal record，包括失败、限流、取消和未调度项。`--batch-results` 不提供恢复或 journal 语义；目标已存在且内容不同则保持拒绝，只有用户明确允许替换时才加 `--overwrite`。
 
 ## 输出和错误边界
 
 - `--format markdown|json|both` 控制 stdout、显式 `--output` 或默认主输出格式；`--save-markdown` 是额外 Markdown 副本，不是主输出开关。
-- `--no-download` 是 CLI 的 `--artifact-mode none` alias，不禁止显式主输出、`--output-dir` 默认主输出或 `--save-markdown`。
+- `--artifact-mode none` 不禁止显式主输出、`--output-dir` 默认主输出或 `--save-markdown`。
 - Runtime fetch failure 的结构化 JSON 写 stderr；argparse 参数错误仍使用标准 stderr/exit 2。歧义、访问、限流、网络和取消的重试只遵循 [`failure-handling.md`](failure-handling.md)。
-- 实际进入 browser 的 CLI fetch 默认按需准备 managed Camoufox，并在 stderr 显示阶段；受限网络或禁止本地 runtime 写入时传 `--no-browser-auto-prepare`。该 flag 不影响静态 doctor，也不改变论文产物的 `--no-download` 语义。
-- 使用 `paper-fetch --help` 和 `paper-fetch fetch|manifest|doctor|browser-preflight --help` 读取当前安装的有效枚举和默认值，不从旧安装或外部仓库文档猜测。
-- 安装/升级排查使用 `paper-fetch doctor --install-root <安装根目录> --json`；只有 `provenance_scope=installation` 且 `install_provenance.status=ready` 才证明 runtime、User-Agent、offline manifest、entrypoint 和三个宿主 skill 副本同版同 aggregate content hash。源码 checkout 默认是 `provenance_scope=source_development`，只审计 source bundle 与 active Codex project/user skill，不从 PATH 或环境文件推断旧安装根；真实 bundle/skill 漂移仍会降级。源码 installer 可用 `./scripts/install-codex-skill.sh [--project] --check` 做严格只读同步检查。
+- 实际进入 browser 的 CLI fetch 只使用已准备的 managed Camoufox；缺失时先显式运行 `python -m camoufox fetch`。该边界不影响静态 doctor，也不改变论文产物的 artifact mode。
+- 使用 `paper-fetch --help` 和 `paper-fetch fetch|doctor|browser-preflight --help` 读取当前安装的有效枚举和默认值，不从旧安装或外部仓库文档猜测。
+- 安装/升级完整性由安装器在复制前后及三个宿主目标上直接调用独立 verifier；源码 installer 可用 `./scripts/install-codex-skill.sh [--project] --check` 做严格只读同步检查。普通 `doctor` 只报告业务 runtime/provider readiness。
 
 ## 窄 fallback
 

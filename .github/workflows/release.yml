@@ -208,10 +208,7 @@ jobs:
     uses: ./.github/workflows/offline.yml
     with:
       ref: ${{ needs.verify-tag.outputs.source_sha }}
-      posix_tooling_ref: ${{ needs.verify-tag.outputs.source_sha }}
-      windows_tooling_ref: ${{ needs.verify-tag.outputs.source_sha }}
       frozen_dependencies: true
-      dependency_tooling_ref: ${{ needs.verify-tag.outputs.source_sha }}
 
   publish:
     needs: [verify-tag, package, merge-dependencies, offline]

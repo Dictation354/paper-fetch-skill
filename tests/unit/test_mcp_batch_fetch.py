@@ -1,40 +1,30 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import replace
-from pathlib import Path
+import json
 import threading
 import time
+from dataclasses import replace
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
 import pytest
 
-from paper_fetch.http import RequestCancelledError, RequestFailure
-from paper_fetch.config import BROWSER_AUTO_PREPARE_ENV_VAR
-from paper_fetch.manifest import ManifestRecordStatus
-from paper_fetch.manifest_writer import (
-    RunManifestState,
-    audit_manifest_path,
-    latest_manifest_records,
-    read_manifest_events,
-    read_run_manifest,
-    resolve_run_events_path,
-)
+from paper_fetch import runtime as runtime_module
+from paper_fetch.http import RequestFailure
 from paper_fetch.mcp import batch_fetch as batch_fetch_module
 from paper_fetch.mcp._deps import default_mcp_deps
 from paper_fetch.mcp.batch_fetch import batch_fetch_tool_async
-from paper_fetch.mcp.fetch_tool import build_fetch_tool_result, fetch_paper_tool_async
+from paper_fetch.mcp.fetch_tool import build_fetch_tool_result
 from paper_fetch.mcp.schemas import FetchPaperRequest
 from paper_fetch.mcp.server import build_server
 from paper_fetch.models import QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION
 from paper_fetch.reason_codes import RATE_LIMITED
-from paper_fetch import runtime as runtime_module
 from paper_fetch.runtime import RuntimeContext
-from paper_fetch.tracing import trace_event
-from tests.paths import REPO_ROOT, SKILL_DIR
+from paper_fetch.tracing import TraceContext, trace_event
 
-from ._mcp_support import sample_envelope, assert_mcp_tool_omits_output_schema
+from ._mcp_support import assert_mcp_tool_omits_output_schema, sample_envelope
 
 
 class RecordingContext:
@@ -80,39 +70,6 @@ def _temporary_kwargs(**overrides: Any) -> dict[str, Any]:
     return values
 
 
-@pytest.mark.parametrize(
-    ("override", "expected"),
-    ((None, "false"), (True, "true"), (False, "false")),
-)
-def test_batch_fetch_applies_per_request_browser_prepare_policy(
-    override: bool | None,
-    expected: str,
-) -> None:
-    observed: list[str] = []
-
-    def fetch(request, **kwargs):
-        observed.append(kwargs["env"][BROWSER_AUTO_PREPARE_ENV_VAR])
-        return _successful_fetch(request)
-
-    deps = replace(
-        _deps(fetch),
-        build_runtime_env=lambda env=None: dict(env or {}),
-    )
-    result = asyncio.run(
-        batch_fetch_tool_async(
-            **_temporary_kwargs(
-                queries=["10.1000/one"],
-                concurrency=1,
-                browser_auto_prepare=override,
-                deps=deps,
-            )
-        )
-    )
-
-    assert result.is_error is False
-    assert observed == [expected]
-
-
 def test_batch_fetch_preserves_input_order_and_completion_metadata_with_bounded_text() -> (
     None
 ):
@@ -149,7 +106,6 @@ def test_batch_fetch_preserves_input_order_and_completion_metadata_with_bounded_
     assert payload["execution_count"] == 2
     assert payload["deduplicated_count"] == 0
     assert payload["not_scheduled_count"] == 0
-    assert payload["reused_count"] == 0
     assert all(item["content_truncated"] for item in payload["results"])
     assert set(payload["results"][0]["acceptance"]) == {
         "overall",
@@ -232,15 +188,12 @@ def test_batch_fetch_propagates_strict_asset_strategy_to_every_item() -> None:
 def test_batch_fetch_uses_item_local_contexts_with_one_shared_transport() -> None:
     context_ids: list[int] = []
     transport_ids: list[int] = []
-    timing_ids: list[int] = []
     barrier = threading.Barrier(2)
 
     def fetch(request, *, context=None, **_kwargs):
         assert context is not None
         context_ids.append(id(context))
         transport_ids.append(id(context.transport))
-        timing_ids.append(id(context.stage_timings))
-        context.stage_timings[f"item:{request.query}"] = 1.0
         barrier.wait(timeout=2)
         return _successful_fetch(request)
 
@@ -250,7 +203,6 @@ def test_batch_fetch_uses_item_local_contexts_with_one_shared_transport() -> Non
 
     assert result.is_error is False
     assert len(set(context_ids)) == 2
-    assert len(set(timing_ids)) == 2
     assert len(set(transport_ids)) == 1
 
 
@@ -287,190 +239,6 @@ def test_batch_fetch_deduplicates_canonical_doi_and_fans_out_original_indices() 
     assert payload["deduplicated_count"] == 2
     assert payload["not_scheduled_count"] == 0
     assert len(payload["completion_order"]) == 3
-
-
-def test_overlapping_batch_fetch_requests_share_only_equal_semantics() -> None:
-    owner_started = threading.Event()
-    release_owner = threading.Event()
-    calls: list[tuple[str, tuple[str, ...]]] = []
-    calls_lock = threading.Lock()
-
-    def fetch(request, **_kwargs):
-        with calls_lock:
-            calls.append((request.query, tuple(request.modes)))
-        owner_started.set()
-        assert release_owner.wait(timeout=2)
-        return _successful_fetch(request)
-
-    async def run_equal_requests():
-        first = asyncio.create_task(
-            batch_fetch_tool_async(
-                **_temporary_kwargs(
-                    queries=["10.1000/singleflight"],
-                    concurrency=1,
-                    deps=_deps(fetch),
-                )
-            )
-        )
-        await asyncio.to_thread(owner_started.wait, 2)
-        second = asyncio.create_task(
-            batch_fetch_tool_async(
-                **_temporary_kwargs(
-                    queries=["https://doi.org/10.1000/singleflight"],
-                    concurrency=1,
-                    deps=_deps(fetch),
-                )
-            )
-        )
-        await asyncio.sleep(0.05)
-        release_owner.set()
-        return await asyncio.gather(first, second)
-
-    first, second = asyncio.run(run_equal_requests())
-
-    assert first.is_error is False
-    assert second.is_error is False
-    assert len(calls) == 1
-    assert first.structured_content is not second.structured_content
-
-
-def test_overlapping_single_and_batch_fetch_share_the_same_global_key() -> None:
-    owner_started = threading.Event()
-    release_owner = threading.Event()
-    calls: list[str] = []
-
-    def fetch(request, **_kwargs):
-        calls.append(request.query)
-        owner_started.set()
-        assert release_owner.wait(timeout=2)
-        return _successful_fetch(request)
-
-    deps = _deps(fetch)
-
-    async def run_requests():
-        single = asyncio.create_task(
-            fetch_paper_tool_async(
-                query="10.1000/cross-adapter",
-                strategy={"asset_profile": "none"},
-                no_download=True,
-                artifact_mode="none",
-                deps=deps,
-            )
-        )
-        assert await asyncio.to_thread(owner_started.wait, 2)
-        batch = asyncio.create_task(
-            batch_fetch_tool_async(
-                **_temporary_kwargs(
-                    queries=["https://doi.org/10.1000/cross-adapter"],
-                    concurrency=1,
-                    deps=deps,
-                )
-            )
-        )
-        await asyncio.sleep(0.05)
-        release_owner.set()
-        return await asyncio.gather(single, batch)
-
-    single_result, batch_result = asyncio.run(run_requests())
-
-    assert single_result.is_error is False
-    assert batch_result.is_error is False
-    assert calls == ["10.1000/cross-adapter"]
-
-
-@pytest.mark.parametrize("difference", ["request", "directory", "scope"])
-def test_single_and_batch_singleflight_never_merge_different_semantics(
-    difference: str,
-    tmp_path: Path,
-) -> None:
-    both_started = threading.Barrier(2)
-    calls: list[tuple[str, tuple[str, ...]]] = []
-    calls_lock = threading.Lock()
-
-    def fetch(request, **_kwargs):
-        with calls_lock:
-            calls.append((request.query, tuple(request.modes)))
-        both_started.wait(timeout=2)
-        return _successful_fetch(request)
-
-    deps = _deps(fetch)
-    query = "10.1016/cross-adapter-fingerprint"
-    single_kwargs: dict[str, Any] = {
-        "query": query,
-        "strategy": {"asset_profile": "none"},
-        "no_download": True,
-        "artifact_mode": "none",
-        "deps": deps,
-    }
-    batch_kwargs = _temporary_kwargs(
-        queries=[f"https://doi.org/{query}"],
-        concurrency=1,
-        deps=deps,
-    )
-    if difference == "request":
-        single_kwargs["modes"] = ["article"]
-        batch_kwargs["modes"] = ["metadata"]
-    elif difference == "directory":
-        single_kwargs.update(
-            no_download=False,
-            download_dir=tmp_path / "single-cache",
-        )
-        batch_kwargs.update(
-            no_download=False,
-            download_dir=str(tmp_path / "batch-cache"),
-        )
-    else:
-        single_kwargs["env"] = {"ELSEVIER_API_KEY": "scope-one"}
-        batch_kwargs["env"] = {"ELSEVIER_API_KEY": "scope-two"}
-
-    async def run_requests():
-        return await asyncio.gather(
-            fetch_paper_tool_async(**single_kwargs),
-            batch_fetch_tool_async(**batch_kwargs),
-        )
-
-    results = asyncio.run(run_requests())
-
-    assert all(result.is_error is False for result in results)
-    assert len(calls) == 2
-
-
-def test_overlapping_batch_fetch_requests_do_not_merge_different_modes() -> None:
-    both_started = threading.Barrier(2)
-    calls: list[tuple[str, ...]] = []
-    calls_lock = threading.Lock()
-
-    def fetch(request, **_kwargs):
-        with calls_lock:
-            calls.append(tuple(request.modes))
-        both_started.wait(timeout=2)
-        return _successful_fetch(request)
-
-    async def run_different_requests():
-        return await asyncio.gather(
-            batch_fetch_tool_async(
-                **_temporary_kwargs(
-                    queries=["10.1000/fingerprint"],
-                    concurrency=1,
-                    modes=["article"],
-                    deps=_deps(fetch),
-                )
-            ),
-            batch_fetch_tool_async(
-                **_temporary_kwargs(
-                    queries=["https://doi.org/10.1000/fingerprint"],
-                    concurrency=1,
-                    modes=["metadata"],
-                    deps=_deps(fetch),
-                )
-            ),
-        )
-
-    results = asyncio.run(run_different_requests())
-
-    assert all(result.is_error is False for result in results)
-    assert len(calls) == 2
-    assert set(calls) == {("article",), ("metadata",)}
 
 
 def test_batch_fetch_resolves_generic_queries_before_assigning_lanes() -> None:
@@ -616,10 +384,12 @@ def test_batch_fetch_cools_lane_after_recovered_rate_limit() -> None:
                 "provider-a_api",
                 RATE_LIMITED,
                 code=RATE_LIMITED,
-                provider="provider-a",
-                route="api",
-                http_status=429,
-                retry_after_seconds=11,
+                context=TraceContext(
+                    provider="provider-a",
+                    route="api",
+                    http_status=429,
+                    retry_after_seconds=11,
+                ),
             )
         )
         return envelope
@@ -747,7 +517,6 @@ def test_batch_fetch_continue_on_error_false_stops_new_submissions(
     assert payload["attempted_count"] == 1
     assert payload["execution_count"] == 1
     assert payload["not_scheduled_count"] == 2
-    assert payload["reused_count"] == 0
     assert created_children == closed_children
 
 
@@ -829,7 +598,7 @@ def test_batch_fetch_no_download_temporary_read_does_not_write_selected_scope(
     assert result.structured_content["persisted"] is False
 
 
-def test_batch_fetch_archive_returns_hash_path_and_scoped_resource_uri(
+def test_batch_fetch_archive_returns_verified_hash_and_path(
     tmp_path: Path,
 ) -> None:
     result = asyncio.run(
@@ -848,147 +617,36 @@ def test_batch_fetch_archive_returns_hash_path_and_scoped_resource_uri(
     assert payload is not None
     assert payload["summary"]["saved_markdown"] == 2
     for item in payload["results"]:
-        saved_path = Path(item["saved_markdown_path"])
         artifact = item["output_artifacts"][0]
+        saved_path = Path(artifact["path"])
         assert saved_path.is_file()
         assert artifact["path"] == str(saved_path)
         assert len(artifact["sha256"]) == 64
         assert artifact["verification_status"] == "verified"
         assert {"route", "failure_code"} <= set(artifact)
-        assert item["resource_uri"].startswith("resource://paper-fetch/cached-dir/")
-        assert artifact["resource_uri"] == item["resource_uri"]
+        assert "resource_uri" not in item
+        assert "resource_uri" not in artifact
     names = {path.name for path in tmp_path.iterdir()}
     assert not any(name.endswith(".fetch-envelope.json") for name in names)
     assert not any(name.endswith("_assets") for name in names)
 
 
-def test_batch_fetch_persistent_partial_run_resumes_only_retry_indices(
+def test_batch_fetch_atomically_writes_input_order_and_refuses_overwrite(
     tmp_path: Path,
 ) -> None:
-    manifest_path = tmp_path / "run.json"
-
-    def first_fetch(request, **_kwargs):
-        if request.query == "10.1000/two":
-            raise RuntimeError("retry me")
-        return _successful_fetch(request)
-
+    results_path = tmp_path / "results.jsonl"
     first = asyncio.run(
-        batch_fetch_tool_async(
-            **_temporary_kwargs(
-                deps=_deps(first_fetch),
-                run_manifest=str(manifest_path),
-            )
-        )
-    )
-    assert first.is_error is False
-    assert first.structured_content["persisted"] is True
-
-    resumed_calls: list[str] = []
-
-    def resumed_fetch(request, **_kwargs):
-        resumed_calls.append(request.query)
-        return _successful_fetch(request)
-
-    resumed = asyncio.run(
-        batch_fetch_tool_async(
-            **_temporary_kwargs(
-                deps=_deps(resumed_fetch),
-                resume=str(manifest_path),
-                concurrency=1,
-                continue_on_error=False,
-            )
-        )
-    )
-
-    assert resumed.is_error is False
-    payload = resumed.structured_content
-    assert payload is not None
-    assert resumed_calls == ["10.1000/two"]
-    assert payload["attempted_count"] == 1
-    assert payload["execution_count"] == 1
-    assert payload["deduplicated_count"] == 0
-    assert payload["not_scheduled_count"] == 0
-    assert payload["reused_count"] == 1
-    assert [item["attempt"] for item in payload["results"]] == [1, 2]
-    assert [item["reused"] for item in payload["results"]] == [True, False]
-    manifest = read_run_manifest(manifest_path)
-    events_path = resolve_run_events_path(manifest_path, manifest.events_path)
-    records = read_manifest_events(events_path)
-    latest = latest_manifest_records(records)
-    assert set(latest) == {1, 2}
-    assert latest[1].attempt == 1
-    assert latest[2].attempt == 2
-    assert manifest.state is RunManifestState.COMPLETED
-    assert manifest.execution_policy == {
-        "batch_concurrency": 1,
-        "continue_on_error": False,
-    }
-    assert "batch_concurrency" not in manifest.request_parameters
-    assert "continue_on_error" not in manifest.request_parameters
-    assert audit_manifest_path(manifest_path).reusable_indices == (1, 2)
-
-
-def test_batch_fetch_refuses_existing_persistence_without_overwrite(
-    tmp_path: Path,
-) -> None:
-    manifest_path = tmp_path / "run.json"
-    first = asyncio.run(
-        batch_fetch_tool_async(**_temporary_kwargs(run_manifest=str(manifest_path)))
+        batch_fetch_tool_async(**_temporary_kwargs(batch_results=str(results_path)))
     )
     second = asyncio.run(
-        batch_fetch_tool_async(**_temporary_kwargs(run_manifest=str(manifest_path)))
+        batch_fetch_tool_async(**_temporary_kwargs(batch_results=str(results_path)))
     )
 
     assert first.is_error is False
+    records = [json.loads(line) for line in results_path.read_text().splitlines()]
+    assert [record["index"] for record in records] == [1, 2]
     assert second.is_error is True
-    assert "already exists" in second.content[0].text
-
-
-def test_batch_fetch_task_cancellation_persists_cancelled_complete_index_set(
-    tmp_path: Path,
-) -> None:
-    manifest_path = tmp_path / "run.json"
-    started = threading.Event()
-
-    def fetch(_request, *, cancel_check=None, **_kwargs):
-        started.set()
-        while cancel_check is None or not cancel_check():
-            time.sleep(0.005)
-        raise RequestCancelledError("cancelled")
-
-    async def scenario() -> None:
-        task = asyncio.create_task(
-            batch_fetch_tool_async(
-                **_temporary_kwargs(
-                    concurrency=1,
-                    deps=_deps(fetch),
-                    run_manifest=str(manifest_path),
-                )
-            )
-        )
-        assert await asyncio.to_thread(started.wait, 2)
-        task.cancel()
-        with pytest.raises(asyncio.CancelledError):
-            await task
-
-    asyncio.run(scenario())
-
-    manifest = read_run_manifest(manifest_path)
-    events = read_manifest_events(
-        resolve_run_events_path(manifest_path, manifest.events_path)
-    )
-    latest = latest_manifest_records(events)
-    assert manifest.state is RunManifestState.CANCELLED
-    assert set(latest) == {1, 2}
-    assert all(
-        record.record_status is ManifestRecordStatus.ABORTED
-        for record in latest.values()
-    )
-    assert all(
-        record.error is not None
-        and (record.error.model_extra or {}).get("code") == "request_cancelled"
-        for record in latest.values()
-    )
+    assert "refusing to overwrite" in second.content[0].text
 
 
 def test_batch_fetch_cancellation_fences_late_markdown_commit(
@@ -1028,69 +686,10 @@ def test_batch_fetch_cancellation_fences_late_markdown_commit(
     assert not list(tmp_path.glob("*.fetch-envelope.json"))
 
 
-def test_batch_fetch_internal_interruption_persists_interrupted_terminal_records(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    manifest_path = tmp_path / "run.json"
-
-    async def fail_runner(*_args, **_kwargs):
-        raise RuntimeError("synthetic adapter interruption")
-
-    monkeypatch.setattr(batch_fetch_module, "run_batch_async", fail_runner)
-    result = asyncio.run(
-        batch_fetch_tool_async(**_temporary_kwargs(run_manifest=str(manifest_path)))
-    )
-
-    assert result.is_error is True
-    manifest = read_run_manifest(manifest_path)
-    events = read_manifest_events(
-        resolve_run_events_path(manifest_path, manifest.events_path)
-    )
-    latest = latest_manifest_records(events)
-    assert manifest.state is RunManifestState.INTERRUPTED
-    assert set(latest) == {1, 2}
-    assert all(
-        record.record_status is ManifestRecordStatus.ABORTED
-        for record in latest.values()
-    )
-
-
-def test_batch_fetch_validation_rejects_ambiguous_persistence_and_filename() -> None:
-    persistence = asyncio.run(
-        batch_fetch_tool_async(
-            **_temporary_kwargs(
-                resume="run.json",
-                run_manifest="other.json",
-            )
-        )
-    )
+def test_batch_fetch_validation_rejects_shared_filename() -> None:
     filename = asyncio.run(
         batch_fetch_tool_async(**_temporary_kwargs(markdown_filename="same.md"))
     )
 
-    assert persistence.is_error is True
-    assert "resume cannot be combined" in persistence.content[0].text
     assert filename.is_error is True
     assert "only valid when batch_fetch has one query" in filename.content[0].text
-
-
-def test_batch_fetch_contract_documents_selection_limit_and_compact_response() -> None:
-    contract = (SKILL_DIR / "references" / "tool-contract.md").read_text(
-        encoding="utf-8"
-    )
-    presets = (SKILL_DIR / "references" / "presets.md").read_text(encoding="utf-8")
-    architecture = (REPO_ROOT / "docs" / "architecture" / "overview.md").read_text(
-        encoding="utf-8"
-    )
-
-    assert "## Batch Fetch Contract" in contract
-    assert "`queries` 限 `1..50`" in contract
-    assert '`detail="compact"`' in contract
-    assert "`completion_order`" in contract
-    assert "仍优先 CLI" in contract
-    assert '"run_manifest": "./papers/run-manifest.json"' in presets
-    assert 'resume="./papers/run-manifest.json"' in presets
-    assert "workflow.batch_runner" in architecture
-    assert "manifest.build_manifest_record" in architecture
-    assert "manifest_writer.RunManifestStore" in architecture

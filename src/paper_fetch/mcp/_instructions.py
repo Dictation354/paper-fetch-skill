@@ -26,10 +26,6 @@ DEFAULT_FETCH_NOTES: tuple[str, ...] = (
 
 SKILL_ENVIRONMENT_VARIABLES: tuple[tuple[str, str], ...] = (
     (
-        "PAPER_FETCH_BROWSER_BACKEND",
-        "Selects the Camoufox browser backend; any other value is rejected.",
-    ),
-    (
         "PAPER_FETCH_BROWSER_HEADLESS",
         "Generic headed/headless setting for the selected managed browser backend.",
     ),
@@ -91,9 +87,7 @@ def server_instructions() -> str:
         "artifact_mode=markdown-assets. Fetch and batch calls may access remote services; "
         "fetch_paper and batch_fetch may write provider artifacts/cache or explicit outputs, "
         "while browser_preflight may open publisher pages and save filtered storage-state. "
-        "Managed Camoufox preparation is disabled by default for MCP; set "
-        "browser_auto_prepare=true on a browser-triggering request, or configure the "
-        "matching environment policy, to permit installation, repair, or update. "
+        "Browser routes only probe and use an already prepared Camoufox runtime. "
         "provider_status is local/static; "
         "browser_preflight is live and never performs PDF fallback or automatic auth. Do not "
         "bypass login, challenge, paywall, or entitlement boundaries. Read current provider, "
@@ -109,8 +103,7 @@ def fetch_tool_description() -> str:
         "quality, trace, and token estimates. Defaults are modes=article+markdown, "
         "provider-default assets, metadata-only fallback enabled, include_refs=null, "
         "max_tokens=full_text, prefer_cache=false, no_download=false, "
-        "artifact_mode=markdown-assets, save_markdown=false, and "
-        "browser_auto_prepare=null (MCP default disabled). The call may access remote "
+        "artifact_mode=markdown-assets and save_markdown=false. The call may access remote "
         "services and write provider artifacts, assets, and an MCP cache sidecar. "
         "no_download=true suppresses those writes; save_markdown=true is an explicit separate "
         "write and returns a path instead of inline full text. artifact_mode=none suppresses "

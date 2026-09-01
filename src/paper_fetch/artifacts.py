@@ -18,7 +18,6 @@ from platformdirs import user_runtime_path
 from .config import APP_NAME
 from .extraction.html.assets.dom import preview_dimensions_are_acceptable
 from .models import ArticleModel, AssetProfile, AssetQualitySummary
-from .provider_catalog import provider_persists_provider_html
 from .reason_codes import PDF_FALLBACK
 from .tracing import download_marker
 from .utils import (
@@ -78,10 +77,6 @@ class DownloadPolicy:
     @property
     def allows_auxiliary_artifacts(self) -> bool:
         return self.artifact_mode == "all" and self.download_dir is not None
-
-    @property
-    def allows_http_disk_cache(self) -> bool:
-        return self.artifact_mode == "all"
 
     @property
     def allows_structured_sidecars(self) -> bool:
@@ -250,10 +245,6 @@ class ArtifactStore:
         return self.policy.allows_auxiliary_artifacts
 
     @property
-    def allows_http_disk_cache(self) -> bool:
-        return self.policy.allows_http_disk_cache
-
-    @property
     def allows_structured_sidecars(self) -> bool:
         return self.policy.allows_structured_sidecars
 
@@ -264,13 +255,8 @@ class ArtifactStore:
         *,
         encoding: str = "utf-8",
         overwrite: bool = True,
-        use_lock: bool = False,
         commit_guard: Callable[[], None] | None = None,
     ) -> Path:
-        # ``use_lock`` is retained as a source-compatible argument. Every write is
-        # now path-locked because callers cannot safely predict who else owns the
-        # same DOI-derived output path.
-        del use_lock
         return self._write_bytes_atomic(
             path,
             text.encode(encoding),
@@ -336,7 +322,6 @@ class ArtifactStore:
         payload: Mapping[str, Any],
         *,
         overwrite: bool = True,
-        use_lock: bool = False,
         commit_guard: Callable[[], None] | None = None,
     ) -> Path:
         return self.write_text_file(
@@ -344,7 +329,6 @@ class ArtifactStore:
             json.dumps(dict(payload), ensure_ascii=False, indent=2),
             encoding="utf-8",
             overwrite=overwrite,
-            use_lock=use_lock,
             commit_guard=commit_guard,
         )
 
@@ -365,7 +349,7 @@ class ArtifactStore:
         provider_label = provider_display_name(provider_slug)
         if self.download_dir is None:
             return [
-                f"{provider_label} official PDF/binary was not written to disk because --no-download was set."
+                f"{provider_label} official PDF/binary was not written to disk because artifact mode is none."
             ], [download_marker(provider_slug, "skipped")]
         if not self.policy.allows_provider_payload(content):
             return [], []
@@ -396,6 +380,8 @@ class ArtifactStore:
         doi: str | None,
         metadata: Mapping[str, Any],
     ) -> Path | None:
+        from .provider_catalog import provider_persists_provider_html
+
         if (
             content is None
             or self.download_dir is None

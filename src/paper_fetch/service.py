@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import time
-
-from .formula.convert import formula_runtime_env, formula_timing_collector
-from .http import http_timing_collector
+from .formula.convert import formula_runtime_env
 from .models import FetchEnvelope, OutputMode, RenderOptions
 from .providers.base import ProviderFailure
 from .providers.registry import build_clients
@@ -83,24 +80,13 @@ def fetch_paper(
             max_tokens=active_render.max_tokens,
         )
 
-        def record_formula_timing(seconds: float) -> None:
-            runtime.accumulate_stage_timing("formula_seconds", elapsed=seconds)
-
-        def record_http_timing(stage: str, seconds: float) -> None:
-            runtime.accumulate_stage_timing(stage, elapsed=seconds)
-
-        with (
-            http_timing_collector(record_http_timing),
-            formula_timing_collector(record_formula_timing),
-            formula_runtime_env(runtime.env or {}),
-        ):
+        with formula_runtime_env(runtime.env or {}):
             article = fetch_article(
                 query,
                 strategy=active_strategy,
                 context=runtime,
                 resolve_paper_fn=resolve_paper,
             )
-            render_started_at = time.monotonic()
             envelope = build_fetch_envelope(
                 article,
                 modes=requested_modes,
@@ -108,7 +94,6 @@ def fetch_paper(
                 trace=list(runtime.fetch_trace),
                 diagnostic_artifacts=list(runtime.diagnostic_artifacts),
             )
-            runtime.record_stage_timing("render_seconds", render_started_at)
         return envelope
     finally:
         if owns_runtime:

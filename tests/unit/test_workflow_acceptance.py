@@ -29,6 +29,7 @@ from paper_fetch.models import (
 from paper_fetch.reason_codes import METADATA_ONLY, NO_ACCESS, RATE_LIMITED
 import paper_fetch.provider_catalog as provider_catalog_module
 from paper_fetch.tracing import (
+    TraceContext,
     acquisition_fallback_used,
     source_trail_from_trace,
     trace_event,
@@ -102,8 +103,7 @@ def _envelope(
                 "fulltext",
                 "elsevier",
                 "ok",
-                provider="elsevier",
-                route="xml",
+                context=TraceContext(provider="elsevier", route="xml"),
             ),
         ]
         if trace is None
@@ -519,6 +519,7 @@ def test_asset_summary_extension_preserves_preview_placeholder_and_archive_facts
         local=2,
         full_size=1,
         preview=1,
+        accepted_preview=1,
         placeholder_suspected=1,
         not_archived=1,
         remote_link_count=2,
@@ -534,57 +535,10 @@ def test_asset_summary_extension_preserves_preview_placeholder_and_archive_facts
     assert report.asset.placeholder_suspected == 1
     assert report.asset.not_archived == 1
     assert set(report.provenance.warning_codes) >= {
-        "asset_fidelity_degraded",
         "asset_placeholder_suspected",
         "asset_remote_only",
     }
-
-
-def test_audited_quality_asset_summary_matches_explicit_acceptance_adapter() -> None:
-    envelope = _envelope()
-    envelope.quality.asset_summary = AssetQualitySummary(
-        audited=True,
-        requested=True,
-        profile="body",
-        total=4,
-        local=2,
-        full_size=1,
-        preview=1,
-        failed=1,
-        placeholder_suspected=1,
-        not_archived=1,
-        remote_link_count=2,
-        remote_only_count=1,
-        failure_codes=["image_fetch_error"],
-    )
-    explicit = AssetAcceptanceSummary(
-        requested=True,
-        profile="body",
-        audited=True,
-        total=4,
-        local=2,
-        full_size=1,
-        preview=1,
-        failed=1,
-        placeholder_suspected=1,
-        not_archived=1,
-        remote_link_count=2,
-        remote_only_count=1,
-        failure_codes=("image_fetch_error",),
-    )
-
-    automatic_report = evaluate_fetch_acceptance(envelope, asset_profile="body")
-    explicit_report = evaluate_fetch_acceptance(
-        _envelope(), asset_profile="body", asset_summary=explicit
-    )
-
-    assert automatic_report.asset == explicit_report.asset
-    assert automatic_report.provenance.warning_codes == (
-        explicit_report.provenance.warning_codes
-    )
-    assert automatic_report.provenance.failure_codes == (
-        explicit_report.provenance.failure_codes
-    )
+    assert "asset_fidelity_degraded" not in report.provenance.warning_codes
 
 
 @pytest.mark.parametrize(
@@ -1030,15 +984,13 @@ def test_fallback_flag_must_match_structured_trace() -> None:
             "fulltext",
             "elsevier_xml",
             "fail",
-            provider="elsevier",
-            route="xml_api",
+            context=TraceContext(provider="elsevier", route="xml_api"),
         ),
         trace_event(
             "fulltext",
             "elsevier_pdf",
             "ok",
-            provider="elsevier",
-            route="pdf_api",
+            context=TraceContext(provider="elsevier", route="pdf_api"),
         ),
     ]
     envelope = _envelope(trace=events)
@@ -1068,17 +1020,18 @@ def test_recovered_rate_limit_remains_structured_degradation() -> None:
                     "elsevier_api",
                     RATE_LIMITED,
                     code=RATE_LIMITED,
-                    provider="elsevier",
-                    route="api",
-                    http_status=429,
-                    retry_after_seconds=7,
+                    context=TraceContext(
+                        provider="elsevier",
+                        route="api",
+                        http_status=429,
+                        retry_after_seconds=7,
+                    ),
                 ),
                 trace_event(
                     "fulltext",
                     "elsevier_pdf",
                     "ok",
-                    provider="elsevier",
-                    route="pdf",
+                    context=TraceContext(provider="elsevier", route="pdf"),
                 ),
             ]
         ),
@@ -1100,15 +1053,13 @@ def test_recovered_metadata_lookup_failure_does_not_degrade_fulltext() -> None:
                     "crossref",
                     "fail",
                     code="crossref_not_found",
-                    provider="crossref",
-                    route="api",
+                    context=TraceContext(provider="crossref", route="api"),
                 ),
                 trace_event(
                     "fulltext",
                     "arxiv_html",
                     "ok",
-                    provider="arxiv",
-                    route="html",
+                    context=TraceContext(provider="arxiv", route="html"),
                 ),
             ]
         ),

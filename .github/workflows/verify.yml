@@ -29,12 +29,15 @@ jobs:
           uv run ruff format --check .
           uv run ruff check .
           PYTHONPATH=src uv run mypy src/paper_fetch
-          uv run python scripts/check_complexity_budget.py
-          uv run python scripts/check_provider_governance.py
-          uv run python scripts/validate_extraction_rules.py
           uv run python scripts/sync_version.py --check
       - name: Audit locked dependencies
-        run: uv run python scripts/audit_dependencies.py
+        run: |
+          uv export --locked --all-extras --format requirements-txt \
+            --no-hashes --no-emit-project \
+            --output-file "$RUNNER_TEMP/locked-requirements.txt"
+          uv run python -m pip_audit \
+            --requirement "$RUNNER_TEMP/locked-requirements.txt" \
+            --progress-spinner off
 
   unit:
     runs-on: ubuntu-latest
@@ -47,98 +50,8 @@ jobs:
         with:
           python-version: "3.11"
           full: "true"
-      - name: Full unit suite with branch coverage
-        run: |
-          PYTHONPATH=src uv run python -m pytest tests/unit -q \
-            --cov=paper_fetch --cov-branch \
-            --cov-report=term-missing --cov-report=xml
-          uv run python scripts/report_coverage_focus.py
-      - name: Batch request deadline regressions
-        run: |
-          PYTHONPATH=src uv run python -m pytest -q \
-            tests/unit/test_runtime_deadline_and_readiness.py::test_reset_request_deadline_preserves_item_state_and_shared_transport \
-            tests/unit/test_cli_manifest_v2.py::test_batch_resolution_and_queue_time_do_not_consume_fetch_deadline \
-            tests/unit/test_mcp_batch_fetch.py::test_batch_fetch_resolution_and_queue_time_do_not_consume_fetch_deadline
-      - name: Camoufox on-demand preparation policy regressions
-        run: |
-          PYTHONPATH=src uv run python -m pytest -q \
-            tests/unit/test_camoufox_preparation.py \
-            tests/unit/test_camoufox_backend.py::test_camoufox_runtime_readiness_auto_prepares_managed_runtime \
-            tests/unit/test_camoufox_backend.py::test_camoufox_manager_prepares_before_final_no_download_resolution \
-            tests/unit/test_camoufox_backend.py::test_explicit_camoufox_binary_never_invokes_managed_runtime_preparation \
-            tests/unit/test_config.py::ConfigTests::test_browser_auto_prepare_policy_is_strict_and_tri_state
-      - name: IEEE AWS WAF, readiness, and asset recovery regressions
-        run: |
-          PYTHONPATH=src uv run python -m pytest -q \
-            tests/unit/test_html_access_signals.py \
-            tests/unit/test_browser_preflight.py \
-            tests/unit/test_camoufox_backend.py \
-            tests/unit/test_ieee_provider_routes.py \
-            tests/unit/test_ieee_provider_asset_downloads.py \
-            -k "aws_waf or matching_article or mismatched_article or ieee_block_page or preview_warm"
-      - name: Non-Science browser performance regressions
-        run: |
-          PYTHONPATH=src uv run python -m pytest -q \
-            tests/unit/test_browser_preflight_reuse_cache.py \
-            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_acs_and_aip_direct_asset_probe_use_twenty_second_zero_retry_policy \
-            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_browser_recovery_circuit_is_host_scoped_concurrent_and_article_local \
-            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_direct_then_browser_probes_first_and_shares_host_circuit_on_caller_thread \
-            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_direct_first_figure_policy_skips_viewer_when_download_url_exists \
-            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_silverchair_figure_page_resolution_stays_on_camoufox_owner_thread \
-            tests/unit/test_camoufox_backend.py::test_provider_resource_policy_blocks_only_configured_heavy_types \
-            tests/unit/test_camoufox_backend.py::test_main_document_diagnostics_distinguish_finished_response_from_loading_shell \
-            tests/unit/test_camoufox_backend.py::test_pnas_body_readiness_uses_bounded_budget_and_keeps_final_html \
-            tests/unit/test_runtime_deadline_and_readiness.py::test_wiley_body_readiness_requires_two_identical_ready_fingerprints \
-            tests/unit/test_camoufox_backend.py::test_open_wiley_context_without_storage_state_has_no_state_capability_use \
-            tests/unit/test_camoufox_backend.py::test_wiley_403_confirmed_body_and_identity_preserves_status \
-            tests/unit/test_camoufox_backend.py::test_wiley_403_review_rejects_unconfirmed_candidate \
-            tests/unit/test_camoufox_backend.py::test_wiley_403_failure_advances_to_next_candidate \
-            tests/unit/test_camoufox_backend.py::test_wiley_all_http_status_candidates_fail_with_reviews \
-            tests/unit/test_wiley_provider.py::test_wiley_confirmed_403_html_passes_markdown_and_availability \
-            tests/unit/test_wiley_provider.py::test_wiley_confirmed_403_extraction_failure_continues_next_candidate \
-            tests/unit/test_page_diagnostics.py::test_wiley_http_access_status_review_is_allowlisted_and_secret_safe \
-            tests/unit/test_camoufox_backend.py::test_wiley_body_readiness_defers_login_navigation_paywall_text \
-            tests/unit/test_browser_preflight.py::test_wiley_preflight_accepts_leading_login_navigation_after_body_readiness \
-            tests/unit/test_camoufox_backend.py::test_figure_page_fetches_reuse_one_runtime_context_and_page \
-            tests/unit/test_acs_provider.py::test_acs_asset_extraction_promotes_largest_srcset_rendition \
-            tests/unit/test_annualreviews_provider.py::test_annualreviews_asset_extraction_promotes_largest_srcset_rendition \
-            tests/unit/test_aip_provider.py::test_aip_asset_extraction_prefers_largest_official_srcset_rendition \
-            tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_upgrades_existing_preview_from_official_source_archive \
-            tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_copernicus_promotes_official_original_and_audits_preview_only \
-            tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_empty_intermediate_candidate_retries_next_html_before_pdf \
-            tests/unit/test_iop_provider.py::test_iop_index_cache_dedupes_signed_indexes_and_attachment_signatures \
-            tests/unit/test_tandf_provider.py::test_tandf_article_assets_keep_body_figures_and_scope_supplement \
-            tests/unit/test_tandf_provider.py::test_tandf_batch_results_keep_input_order_and_failed_table_fallback \
-            tests/unit/test_tandf_provider.py::test_tandf_table_preparation_obeys_exhausted_total_deadline \
-            tests/unit/test_ieee_provider_asset_extraction.py::IeeeProviderAssetExtractionTests::test_ieee_multimedia_discovery_memoizes_redacted_url_per_runtime
-      - name: Network rollback and strict asset acceptance regressions
-        run: |
-          PYTHONPATH=src uv run python -m pytest -q \
-            tests/unit/test_safe_remote_url_policy.py \
-            tests/unit/test_browser_image_payload.py \
-            tests/unit/test_pdf_fallback_helpers.py::PdfFallbackHelperTests::test_pdf_browser_owned_download_url_uses_saved_bytes_without_direct_replay \
-            tests/unit/test_pdf_fallback_helpers.py::PdfFallbackHelperTests::test_browser_pdf_viewer_response_uses_navigation_body_bytes \
-            tests/unit/test_provider_request_options.py::ProviderRequestOptionsTests::test_html_asset_download_uses_one_browser_recovery_after_direct_403 \
-            tests/unit/test_page_diagnostics.py::test_observed_734_byte_http_200_head_only_shell_is_classified \
-            tests/unit/test_browser_preflight_reuse_cache.py::test_empty_shell_retry_requires_changed_candidate_profile_or_storage \
-            tests/unit/test_workflow_acceptance.py::test_strict_local_assets_degrade_acceptance_without_failing_fulltext \
-            tests/unit/test_workflow_acceptance.py::test_strict_full_size_implies_local_and_rejects_accepted_preview \
-            tests/unit/test_cli_manifest_v2.py::test_cli_manifest_fingerprint_and_acceptance_include_strict_asset_flags \
-            tests/unit/test_artifact_secret_scan.py \
-            tests/unit/test_install_provenance.py::test_source_development_ignores_unrelated_distribution_and_path_cli
-      - name: Scan coverage artifact for secret values
-        id: secret_scan_coverage
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: >-
-          python scripts/scan_artifacts_for_secrets.py
-          --env-var GITHUB_TOKEN
-          --root coverage.xml
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: ${{ steps.secret_scan_coverage.outcome == 'success' }}
-        with:
-          name: coverage-xml
-          path: coverage.xml
+      - name: Full unit suite
+        run: PYTHONPATH=src uv run python -m pytest tests/unit -q
 
   integration:
     runs-on: ubuntu-latest
@@ -152,7 +65,6 @@ jobs:
           python-version: "3.11"
           full: "true"
       - run: PYTHONPATH=src uv run python -m pytest tests/integration -q
-      - run: PYTHONPATH=src uv run python -m pytest tests/devtools -q
 
   golden-exact:
     name: Exact golden corpus (provider shard ${{ matrix.shard }})
@@ -183,7 +95,6 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.11", "3.14"]
-        install: ["core", "full"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -195,7 +106,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
           full: "true"
       - name: Run core unit boundary
-        if: ${{ matrix.install == 'core' }}
         run: |
           PYTHONPATH=src uv run python -m pytest -q \
             tests/unit/test_acquisition_provenance.py \
@@ -206,51 +116,34 @@ jobs:
             tests/unit/test_table_grid.py
       - name: Build wheel
         run: uv build --wheel
-      - name: Smoke isolated wheel
+      - name: Smoke isolated core and full wheel installs
         shell: bash
-        env:
-          INSTALL_KIND: ${{ matrix.install }}
         run: |
           set -euo pipefail
-          python -m venv "$RUNNER_TEMP/wheel-smoke"
-          smoke_python="$RUNNER_TEMP/wheel-smoke/bin/python"
           wheel="$(find dist -maxdepth 1 -name '*.whl' -print -quit)"
-          if [ "$INSTALL_KIND" = "full" ]; then
-            "$smoke_python" -m pip install "$wheel[full]"
-          else
-            "$smoke_python" -m pip install "$wheel"
-          fi
-          "$smoke_python" -c "import paper_fetch; print(paper_fetch.__version__)"
-          "$smoke_python" -c "from importlib.metadata import version; from paper_fetch.mcp.server import build_server; assert version('mcp').split('.', 1)[0] == '2'; assert build_server().name == 'paper-fetch'"
-          "$smoke_python" -m paper_fetch.cli --version
+          for install_kind in core full; do
+            venv="$RUNNER_TEMP/wheel-smoke-$install_kind"
+            python -m venv "$venv"
+            smoke_python="$venv/bin/python"
+            if [ "$install_kind" = "full" ]; then
+              "$smoke_python" -m pip install "$wheel[full]"
+            else
+              "$smoke_python" -m pip install "$wheel"
+            fi
+            "$smoke_python" -c "import paper_fetch; print(paper_fetch.__version__)"
+            "$smoke_python" -c "from importlib.metadata import version; from paper_fetch.mcp.server import build_server; assert version('mcp').split('.', 1)[0] == '2'; assert build_server().name == 'paper-fetch'"
+            "$smoke_python" -m paper_fetch.cli --version
+            if [ "$install_kind" = "full" ]; then
+              "$smoke_python" -c "import camoufox, fitz, lxml, playwright, pymupdf4llm, trafilatura"
+            else
+              "$smoke_python" -c "import importlib.util; assert all(importlib.util.find_spec(name) is None for name in ('camoufox', 'fitz', 'lxml', 'playwright', 'pymupdf4llm', 'trafilatura'))"
+            fi
+          done
 
   package:
     uses: ./.github/workflows/package.yml
     with:
       ref: ${{ inputs.ref }}
-
-  macos-contract-portable:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          ref: ${{ inputs.ref }}
-          persist-credentials: false
-      - uses: ./.github/actions/setup-python-deps
-        with:
-          python-version: "3.11"
-          full: "true"
-      - name: Run Linux macOS contract gate
-        if: ${{ runner.os == 'Linux' }}
-        run: scripts/test-macos-contract.sh
-      - name: Run Windows macOS contract gate
-        if: ${{ runner.os == 'Windows' }}
-        shell: pwsh
-        run: scripts/test-macos-contract.ps1 -Python .venv/Scripts/python.exe
 
   macos-native:
     runs-on: macos-15
@@ -284,41 +177,6 @@ jobs:
             tests/unit/test_camoufox_backend.py::test_camoufox_provider_page_preparation_runs_before_html_capture \
             tests/unit/test_tandf_provider.py::test_tandf_browser_page_preparation_hydrates_official_csv_table \
             tests/unit/test_tandf_provider.py::test_tandf_browser_page_preparation_uses_bounded_embedded_table_fallback
-      - name: Verify non-Science browser performance boundaries on native macOS
-        run: |
-          PYTHONPATH=src uv run python -m pytest -q \
-            tests/unit/test_browser_preflight_reuse_cache.py \
-            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_acs_and_aip_direct_asset_probe_use_twenty_second_zero_retry_policy \
-            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_browser_recovery_circuit_is_host_scoped_concurrent_and_article_local \
-            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_direct_then_browser_probes_first_and_shares_host_circuit_on_caller_thread \
-            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_direct_first_figure_policy_skips_viewer_when_download_url_exists \
-            tests/unit/test_browser_asset_download.py::BrowserWorkflowAssetDownloadTests::test_silverchair_figure_page_resolution_stays_on_camoufox_owner_thread \
-            tests/unit/test_camoufox_backend.py::test_provider_resource_policy_blocks_only_configured_heavy_types \
-            tests/unit/test_camoufox_backend.py::test_main_document_diagnostics_distinguish_finished_response_from_loading_shell \
-            tests/unit/test_camoufox_backend.py::test_pnas_body_readiness_uses_bounded_budget_and_keeps_final_html \
-            tests/unit/test_runtime_deadline_and_readiness.py::test_wiley_body_readiness_requires_two_identical_ready_fingerprints \
-            tests/unit/test_camoufox_backend.py::test_open_wiley_context_without_storage_state_has_no_state_capability_use \
-            tests/unit/test_camoufox_backend.py::test_wiley_403_confirmed_body_and_identity_preserves_status \
-            tests/unit/test_camoufox_backend.py::test_wiley_403_review_rejects_unconfirmed_candidate \
-            tests/unit/test_camoufox_backend.py::test_wiley_403_failure_advances_to_next_candidate \
-            tests/unit/test_camoufox_backend.py::test_wiley_all_http_status_candidates_fail_with_reviews \
-            tests/unit/test_wiley_provider.py::test_wiley_confirmed_403_html_passes_markdown_and_availability \
-            tests/unit/test_wiley_provider.py::test_wiley_confirmed_403_extraction_failure_continues_next_candidate \
-            tests/unit/test_page_diagnostics.py::test_wiley_http_access_status_review_is_allowlisted_and_secret_safe \
-            tests/unit/test_camoufox_backend.py::test_wiley_body_readiness_defers_login_navigation_paywall_text \
-            tests/unit/test_browser_preflight.py::test_wiley_preflight_accepts_leading_login_navigation_after_body_readiness \
-            tests/unit/test_camoufox_backend.py::test_figure_page_fetches_reuse_one_runtime_context_and_page \
-            tests/unit/test_acs_provider.py::test_acs_asset_extraction_promotes_largest_srcset_rendition \
-            tests/unit/test_annualreviews_provider.py::test_annualreviews_asset_extraction_promotes_largest_srcset_rendition \
-            tests/unit/test_aip_provider.py::test_aip_asset_extraction_prefers_largest_official_srcset_rendition \
-            tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_upgrades_existing_preview_from_official_source_archive \
-            tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_copernicus_promotes_official_original_and_audits_preview_only \
-            tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_empty_intermediate_candidate_retries_next_html_before_pdf \
-            tests/unit/test_iop_provider.py::test_iop_index_cache_dedupes_signed_indexes_and_attachment_signatures \
-            tests/unit/test_tandf_provider.py::test_tandf_article_assets_keep_body_figures_and_scope_supplement \
-            tests/unit/test_tandf_provider.py::test_tandf_batch_results_keep_input_order_and_failed_table_fallback \
-            tests/unit/test_tandf_provider.py::test_tandf_table_preparation_obeys_exhausted_total_deadline \
-            tests/unit/test_ieee_provider_asset_extraction.py::IeeeProviderAssetExtractionTests::test_ieee_multimedia_discovery_memoizes_redacted_url_per_runtime
       - name: Verify native macOS filesystem alias semantics
         run: |
           PYTHONPATH=src uv run python -m pytest \

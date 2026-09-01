@@ -57,7 +57,7 @@ def test_provider_waterfall_state_failure_helpers_return_labelled_failures() -> 
     assert state.failure("pdf") is pdf_failure
     assert state.failure("abstract") is None
     assert state.last_failure() is pdf_failure
-    assert state.source_markers() == [
+    assert state.source_trail == [
         "fulltext:start",
         "fulltext:html_fail",
         "fulltext:pdf_fail",

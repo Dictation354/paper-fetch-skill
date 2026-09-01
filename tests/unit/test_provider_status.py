@@ -17,11 +17,8 @@ from paper_fetch.providers.science import ScienceClient
 from paper_fetch.providers.springer import SpringerClient
 from paper_fetch.providers.wiley import WILEY_TDM_CLIENT_TOKEN_ENV_VAR, WileyClient
 from paper_fetch.providers.browser_runtime.backends import camoufox as camoufox_backend
-from paper_fetch.providers.base import ProviderFailure
 
-CAMOUFOX_ENV = {
-    config.BROWSER_BACKEND_ENV_VAR: "camoufox",
-}
+CAMOUFOX_ENV = {}
 CAMOUFOX_DEPENDENCIES_READY = {
     "probe": "unit_test",
     "packages": {"playwright": True, "camoufox": True},
@@ -282,18 +279,6 @@ class ProviderStatusTests(unittest.TestCase):
         self.assertEqual(checks["runtime_env"].status, "not_configured")
         self.assertIn(config.BROWSER_BINARY_PATH_ENV_VAR, checks["runtime_env"].message)
         self.assertEqual(checks["playwright_dependency"].status, "ok")
-
-    def test_browser_workflow_provider_rejects_removed_backend(
-        self,
-    ) -> None:
-        env = {config.BROWSER_BACKEND_ENV_VAR: "cloakbrowser"}
-        with mock.patch.object(
-            camoufox_backend,
-            "_dependency_details",
-            return_value=CAMOUFOX_DEPENDENCIES_READY,
-        ):
-            with self.assertRaisesRegex(ProviderFailure, "expected one of: camoufox"):
-                ScienceClient(DummyTransport(), env).probe_status()
 
     def test_browser_workflow_providers_ignore_unrelated_rate_limit_env(self) -> None:
         for provider in ("science", "pnas", "acs", "aip", "royalsocietypublishing"):

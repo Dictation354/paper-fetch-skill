@@ -13,7 +13,6 @@ from pydantic import ValidationError
 from paper_fetch.manifest import (
     MANIFEST_RECORD_SCHEMA_VERSION,
     ArtifactVerificationStatus,
-    LegacyArtifactField,
     ManifestBuilderDependencies,
     ManifestOutputArtifactSpec,
     ManifestRecordStatus,
@@ -99,9 +98,7 @@ def _build_success(**overrides):
     return build_manifest_record(**values)
 
 
-def test_complete_record_derives_identity_acceptance_trace_and_legacy_projection() -> (
-    None
-):
+def test_complete_record_derives_identity_acceptance_trace_and_artifacts() -> None:
     primary = "/archive/论文-正文.md"
     saved = "/archive/论文-保存副本.md"
     record = _build_success(
@@ -115,12 +112,10 @@ def test_complete_record_derives_identity_acceptance_trace_and_legacy_projection
             ManifestOutputArtifactSpec(
                 path=primary,
                 kind="primary_markdown",
-                legacy_field=LegacyArtifactField.OUTPUT_PATH,
             ),
             ManifestOutputArtifactSpec(
                 path=saved,
                 kind="saved_markdown",
-                legacy_field=LegacyArtifactField.SAVED_MARKDOWN_PATH,
             ),
         ),
         deps=_deps(
@@ -131,7 +126,6 @@ def test_complete_record_derives_identity_acceptance_trace_and_legacy_projection
 
     assert record.schema_version == MANIFEST_RECORD_SCHEMA_VERSION == 2
     assert record.record_status == ManifestRecordStatus.COMPLETED
-    assert record.status == "ok"
     assert record.query == "  DOI:10.1000/ACCEPTANCE — 气候响应  "
     assert record.identity == record.acceptance.identity
     assert record.doi == "10.1000/acceptance"
@@ -157,30 +151,6 @@ def test_complete_record_derives_identity_acceptance_trace_and_legacy_projection
     assert all(
         artifact.completed_at == COMPLETED_AT for artifact in record.output_artifacts
     )
-
-    legacy = record.legacy_projection().to_dict()
-    assert list(legacy) == [
-        "index",
-        "query",
-        "status",
-        "doi",
-        "source",
-        "output_path",
-        "saved_markdown_path",
-        "warnings",
-        "error",
-    ]
-    assert legacy == {
-        "index": 1,
-        "query": "  DOI:10.1000/ACCEPTANCE — 气候响应  ",
-        "status": "ok",
-        "doi": "10.1000/acceptance",
-        "source": "elsevier_xml",
-        "output_path": primary,
-        "saved_markdown_path": saved,
-        "warnings": [],
-        "error": None,
-    }
 
 
 def test_degraded_record_reuses_structured_trace_and_never_classifies_warning_text() -> (
@@ -216,21 +186,20 @@ def test_degraded_record_reuses_structured_trace_and_never_classifies_warning_te
     assert METADATA_ONLY not in record.fallback_codes
 
 
-def test_limited_metadata_record_keeps_legacy_status_ok() -> None:
+def test_limited_metadata_record_is_completed() -> None:
     record = _build_success(
         envelope=_envelope("metadata_only", include_markdown=False),
         requested_outputs={"article"},
         request_parameters={"modes": ["article"]},
     )
 
-    assert record.status == "ok"
     assert record.record_status == ManifestRecordStatus.COMPLETED
     assert record.acceptance.overall == OverallAcceptanceStatus.LIMITED
     assert record.acceptance.content.status == "metadata_only"
     assert record.acceptance.content.has_fulltext is False
 
 
-def test_failed_record_preserves_structured_error_and_legacy_shape() -> None:
+def test_failed_record_preserves_structured_error() -> None:
     error = {
         "status": "error",
         "reason": "provider failed",
@@ -256,14 +225,12 @@ def test_failed_record_preserves_structured_error_and_legacy_shape() -> None:
     )
 
     assert record.record_status == ManifestRecordStatus.FAILED
-    assert record.status == "error"
     assert record.acceptance.overall == OverallAcceptanceStatus.FAILED
     assert record.failure_codes == ("provider_error",)
     assert record.warnings == ("重试稍后进行",)
     assert record.trace[0].stage == "fulltext"
     assert record.error is not None
     assert record.error.model_dump(mode="json") == error
-    assert record.legacy_projection().to_dict()["error"] == error
 
 
 def test_aborted_record_is_distinct_from_failure() -> None:
@@ -288,7 +255,6 @@ def test_aborted_record_is_distinct_from_failure() -> None:
     )
 
     assert record.record_status == ManifestRecordStatus.ABORTED
-    assert record.status == "aborted"
     assert record.acceptance.fetch.completed is False
     assert record.failure_codes == ("request_cancelled",)
 
@@ -297,8 +263,6 @@ def test_completed_in_memory_result_can_have_no_output_artifacts() -> None:
     record = _build_success(output_artifacts=())
 
     assert record.output_artifacts == ()
-    assert record.output_path is None
-    assert record.saved_markdown_path is None
     assert record.acceptance.output.status == "complete"
 
 

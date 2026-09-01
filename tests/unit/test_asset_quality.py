@@ -5,11 +5,9 @@ import hashlib
 from pathlib import Path
 
 from paper_fetch.artifacts import ArtifactStore
-from paper_fetch.mcp.fetch_cache import quality_from_payload
 from paper_fetch.models import (
     ArticleModel,
     Asset,
-    AssetQualitySummary,
     FetchEnvelope,
     Metadata,
     Quality,
@@ -581,20 +579,9 @@ def test_artifact_store_audit_records_policy_without_mutating_text_quality(
     ) == content_facts
 
 
-def test_asset_summary_model_and_legacy_cache_payloads_are_compatible() -> None:
+def test_asset_summary_round_trips_through_current_model() -> None:
     summary = build_asset_quality_summary(
         [], asset_profile="none", archive_enabled=False
     )
     restored = Quality(asset_summary=asdict(summary))  # type: ignore[arg-type]
-    legacy_model = Quality(asset_summary={})  # type: ignore[arg-type]
-    legacy_cache = quality_from_payload(
-        {
-            "has_fulltext": True,
-            "content_kind": "fulltext",
-            "has_abstract": True,
-        }
-    )
-
     assert restored.asset_summary == summary
-    assert legacy_model.asset_summary == AssetQualitySummary()
-    assert legacy_cache.asset_summary == AssetQualitySummary()

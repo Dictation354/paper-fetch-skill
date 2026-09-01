@@ -14,10 +14,6 @@ python_versions = ["3.11", "3.12", "3.13", "3.14"]
 runner = "macos-15"
 requires_admin = false
 
-[evidence.portable]
-runners = ["ubuntu-latest", "windows-latest"]
-native_equivalent = false
-
 [evidence.native]
 runner = "macos-15"
 python_version = "3.14"
@@ -37,12 +33,12 @@ validated_purge_paths = true
 [browser]
 runtime_bundle_built_in = false
 install_downloads_runtime = false
-managed_runtime_preparation = true
-explicit_binary_auto_prepare = false
+managed_runtime_preparation = false
 native_bundle_gate = true
 
 [release]
 installer_manifest = "installer/manifest.json"
 asset_owner = "scripts/prepare_release_assets.py"
+single_source_revision = true
 public_assets_are_installers_only = true
 build_evidence_is_not_public = true

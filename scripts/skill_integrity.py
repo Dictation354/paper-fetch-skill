@@ -1,17 +1,17 @@
-"""Build and verify the static skill bundle file manifest."""
+"""Build and verify the static Skill bundle file manifest for installers."""
 
 from __future__ import annotations
 
 import argparse
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 import hashlib
 import json
 import os
+from pathlib import Path, PurePosixPath
 import re
 import stat
 import sys
-from collections.abc import Mapping, Sequence
-from pathlib import Path, PurePosixPath
 from typing import Any
 
 
@@ -20,12 +20,10 @@ _SHA256_RE = re.compile(r"[0-9a-f]{64}\Z")
 
 
 class SkillManifestError(ValueError):
-    """Raised when a skill manifest is missing or structurally unsafe."""
+    """Raised when a Skill manifest is missing or structurally unsafe."""
 
 
 def sha256_file(path: Path) -> str:
-    """Return a streaming SHA256 digest for one regular file."""
-
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
@@ -88,9 +86,7 @@ def _inspect_skill_dir(skill_dir: Path) -> _SkillInventory:
 
     walk(skill_dir)
     return _SkillInventory(
-        tuple(regular_files),
-        tuple(symlink_files),
-        tuple(special_files),
+        tuple(regular_files), tuple(symlink_files), tuple(special_files)
     )
 
 
@@ -134,8 +130,6 @@ def build_skill_bundle_manifest(
     name: str,
     root: str,
 ) -> dict[str, Any]:
-    """Build the canonical complete file list for a staged skill directory."""
-
     safe_root = _safe_relative_path(root)
     file_digests = _build_file_digests(skill_dir)
     files = [
@@ -174,8 +168,6 @@ def _manifest_skill_bundle(manifest: Mapping[str, Any]) -> Mapping[str, Any]:
 
 
 def read_offline_manifest(path: Path) -> dict[str, Any]:
-    """Read an offline manifest as a JSON object."""
-
     try:
         payload = json.loads(path.read_text(encoding="utf-8-sig"))
     except OSError as error:
@@ -208,13 +200,15 @@ def _expected_files(skill_bundle: Mapping[str, Any]) -> dict[str, str]:
     if "SKILL.md" not in expected:
         raise SkillManifestError("skill_bundle.files is missing SKILL.md")
     expected_content_sha256 = _bundle_content_sha256(expected)
-    declared_content_sha256 = (
+    if (
         str(skill_bundle.get("content_sha256") or "").strip().lower()
-    )
-    declared_content_version = str(skill_bundle.get("content_version") or "").strip()
-    if declared_content_sha256 != expected_content_sha256:
+        != expected_content_sha256
+    ):
         raise SkillManifestError("skill_bundle content_sha256 does not match files")
-    if declared_content_version != f"sha256:{expected_content_sha256}":
+    if (
+        str(skill_bundle.get("content_version") or "").strip()
+        != f"sha256:{expected_content_sha256}"
+    ):
         raise SkillManifestError("skill_bundle content_version does not match files")
     return expected
 
@@ -225,8 +219,6 @@ def verify_skill_directory(
     skill_dir: Path,
     manifest_path: Path | None = None,
 ) -> dict[str, Any]:
-    """Verify one directory against a validated content-addressed definition."""
-
     expected = _expected_files(skill_bundle)
     skill_dir = Path(os.path.abspath(skill_dir.expanduser()))
     inventory = _inspect_skill_dir(skill_dir)
@@ -251,22 +243,22 @@ def verify_skill_directory(
             )
     ready = not (
         missing_files
-        or hash_mismatches
         or unexpected_files
+        or hash_mismatches
         or inventory.symlink_files
         or inventory.special_files
     )
     expected_content_sha256 = str(skill_bundle["content_sha256"])
     actual_content_sha256 = _bundle_content_sha256(actual_digests)
-    if not skill_dir.is_dir():
-        reason_code = "skill_bundle_missing"
-    elif ready:
-        reason_code = "skill_bundle_verified"
-    else:
-        reason_code = "skill_bundle_integrity_drift"
     return {
         "status": "ready" if ready else "drift",
-        "reason_code": reason_code,
+        "reason_code": (
+            "skill_bundle_missing"
+            if not skill_dir.is_dir()
+            else "skill_bundle_verified"
+            if ready
+            else "skill_bundle_integrity_drift"
+        ),
         "manifest_path": str(manifest_path) if manifest_path is not None else None,
         "skill_root": str(skill_dir),
         "skill_name": str(skill_bundle["name"]),
@@ -293,8 +285,6 @@ def compare_skill_directories(
     *,
     name: str = "paper-fetch-skill",
 ) -> dict[str, Any]:
-    """Compare source/staging/host directories with the manifest verifier."""
-
     bundle = build_skill_bundle_manifest(
         Path(os.path.abspath(expected_dir.expanduser())),
         name=name,
@@ -308,17 +298,13 @@ def verify_skill_bundle(
     *,
     skill_dir: Path | None = None,
 ) -> dict[str, Any]:
-    """Verify an exact skill directory against an offline manifest."""
-
     manifest_path = manifest_path.expanduser().resolve()
     manifest = read_offline_manifest(manifest_path)
     skill_bundle = _manifest_skill_bundle(manifest)
     if skill_dir is None:
         skill_dir = manifest_path.parent / _safe_relative_path(skill_bundle["root"])
     return verify_skill_directory(
-        skill_bundle,
-        skill_dir=skill_dir,
-        manifest_path=manifest_path,
+        skill_bundle, skill_dir=skill_dir, manifest_path=manifest_path
     )
 
 
@@ -327,8 +313,6 @@ def require_valid_skill_bundle(
     *,
     skill_dir: Path | None = None,
 ) -> dict[str, Any]:
-    """Verify a skill directory and raise a concise error on any drift."""
-
     result = verify_skill_bundle(manifest_path, skill_dir=skill_dir)
     if result["status"] != "ready":
         details: list[str] = []
@@ -338,13 +322,12 @@ def require_valid_skill_bundle(
             "symlink_files",
             "special_files",
         ):
-            values = result[key]
-            if values:
-                details.append(f"{key}={','.join(values)}")
-        mismatches = result["hash_mismatches"]
-        if mismatches:
+            if result[key]:
+                details.append(f"{key}={','.join(result[key])}")
+        if result["hash_mismatches"]:
             details.append(
-                "hash_mismatches=" + ",".join(str(item["path"]) for item in mismatches)
+                "hash_mismatches="
+                + ",".join(str(item["path"]) for item in result["hash_mismatches"])
             )
         raise SkillManifestError(
             f"skill bundle integrity check failed at {result['skill_root']}: "
@@ -356,19 +339,15 @@ def require_valid_skill_bundle(
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
-
-    build = subparsers.add_parser("build", help="Build a skill bundle manifest.")
+    build = subparsers.add_parser("build", help="Build a Skill bundle manifest.")
     build.add_argument("--skill-dir", required=True, type=Path)
     build.add_argument("--name", required=True)
     build.add_argument("--root", required=True)
-
-    verify = subparsers.add_parser("verify", help="Verify a skill bundle manifest.")
+    verify = subparsers.add_parser("verify", help="Verify a Skill bundle manifest.")
     verify.add_argument("--manifest", required=True, type=Path)
     verify.add_argument("--skill-dir", type=Path)
-
     compare = subparsers.add_parser(
-        "compare",
-        help="Compare an installed skill with the repository source bundle.",
+        "compare", help="Compare an installed Skill with the repository source bundle."
     )
     compare.add_argument("--expected-dir", required=True, type=Path)
     compare.add_argument("--skill-dir", required=True, type=Path)
@@ -381,20 +360,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         if args.command == "build":
             result = build_skill_bundle_manifest(
-                args.skill_dir,
-                name=args.name,
-                root=args.root,
+                args.skill_dir, name=args.name, root=args.root
             )
         elif args.command == "verify":
-            result = require_valid_skill_bundle(
-                args.manifest,
-                skill_dir=args.skill_dir,
-            )
+            result = require_valid_skill_bundle(args.manifest, skill_dir=args.skill_dir)
         else:
             result = compare_skill_directories(
-                args.expected_dir,
-                args.skill_dir,
-                name=args.name,
+                args.expected_dir, args.skill_dir, name=args.name
             )
     except SkillManifestError as error:
         sys.stderr.write(f"{error}\n")
@@ -407,17 +379,3 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
-
-__all__ = [
-    "SKILL_BUNDLE_SCHEMA_VERSION",
-    "SkillManifestError",
-    "build_skill_bundle_manifest",
-    "compare_skill_directories",
-    "main",
-    "read_offline_manifest",
-    "require_valid_skill_bundle",
-    "sha256_file",
-    "verify_skill_bundle",
-    "verify_skill_directory",
-]

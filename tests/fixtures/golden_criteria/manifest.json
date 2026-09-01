@@ -7,13 +7,12 @@
       "source_url": "https://arxiv.org/pdf/1406.2661v1",
       "origin_kind": "real_replay",
       "usage_kind": "content",
+      "purpose": "pdf_fallback",
       "assets": {
         "api.json": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/api.json",
         "original.pdf": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/original.pdf",
         "expected.json": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/extracted.md"
       },
       "fixture_family": "golden",
       "title": "Generative Adversarial Networks",
@@ -76,13 +75,12 @@
       "source_url": "https://arxiv.org/html/2605.06653v1",
       "origin_kind": "real_replay",
       "usage_kind": "content",
+      "purpose": "structure",
       "assets": {
         "api.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06653v1/api.json",
         "original.html": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06653v1/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06653v1/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06653v1/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06653v1/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06653v1/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06653v1/extracted.md"
       },
       "fixture_family": "golden",
       "title": "From Baby Universes to Narain Moduli: Topological Boundary Averaging in SymTFTs",
@@ -117,9 +115,7 @@
         "api.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/api.json",
         "original.html": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/extracted.md"
       },
       "fixture_family": "golden",
       "title": "EMO: Pretraining Mixture of Experts for Emergent Modularity",
@@ -170,9 +166,7 @@
         "api.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06667v1/api.json",
         "original.html": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06667v1/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06667v1/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06667v1/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06667v1/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06667v1/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06667v1/extracted.md"
       },
       "fixture_family": "golden",
       "title": "ActCam: Zero-Shot Joint Camera and 3D Motion Control for Video Generation",
@@ -187,13 +181,12 @@
       "source_url": "https://link.springer.com/article/10.1007/s10584-011-0143-4",
       "origin_kind": "real_replay",
       "usage_kind": "content",
+      "purpose": "table",
       "assets": {
         "article.html": "tests/fixtures/golden_criteria/10.1007_s10584-011-0143-4/article.html",
         "table1.html": "tests/fixtures/golden_criteria/10.1007_s10584-011-0143-4/table1.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1007_s10584-011-0143-4/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1007_s10584-011-0143-4/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1007_s10584-011-0143-4/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1007_s10584-011-0143-4/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1007_s10584-011-0143-4/extracted.md"
       },
       "fixture_family": "golden",
       "expected_outcome": "fulltext",
@@ -234,9 +227,7 @@
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/expected.json",
         "original.xml": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/original.xml",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/extracted.md"
       },
       "fixture_family": "golden",
       "title": "Optimal representation of spring phenology on photosynthetic productivity across the northern hemisphere forests",
@@ -254,9 +245,7 @@
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/expected.json",
         "original.xml": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/extracted.md"
       },
       "fixture_family": "golden",
       "title": "The interactions between hydrological drought evolution and precipitation-streamflow relationship",
@@ -274,9 +263,7 @@
       "assets": {
         "original.xml": "tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/original.xml",
         "expected.json": "tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/extracted.md"
       },
       "fixture_family": "golden",
       "expected_outcome": "fulltext",
@@ -340,9 +327,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.1038_nature12915/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1038_nature12915/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1038_nature12915/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1038_nature12915/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1038_nature12915/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1038_nature12915/extracted.md"
       },
       "fixture_family": "golden",
       "expected_outcome": "fulltext",
@@ -402,9 +387,7 @@
         "expected.json": "tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/expected.json",
         "original.html": "tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/original.html",
         "table1.html": "tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/table1.html",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/extracted.md"
       },
       "fixture_family": "golden",
       "title": "Hydrological drought forecasts using precipitation data depend on catchment properties and human activities",
@@ -438,9 +421,7 @@
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1073_pnas.2309123120/expected.json",
         "extracted.md": "tests/fixtures/golden_criteria/10.1073_pnas.2309123120/extracted.md",
-        "original.html": "tests/fixtures/golden_criteria/10.1073_pnas.2309123120/original.html",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1073_pnas.2309123120/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1073_pnas.2309123120/markdown-quality-prompt.md"
+        "original.html": "tests/fixtures/golden_criteria/10.1073_pnas.2309123120/original.html"
       },
       "fixture_family": "golden",
       "title": "Amazon deforestation causes strong regional warming",
@@ -476,9 +457,7 @@
         "abstract.html": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/abstract.html",
         "extracted.md": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/extracted.md",
         "original.html": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/original.html",
-        "expected.json": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/expected.json",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/markdown-quality-prompt.md"
+        "expected.json": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/expected.json"
       },
       "fixture_family": "golden",
       "expected_outcome": "fulltext",
@@ -500,9 +479,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/extracted.md"
       }
     },
     "10.1109_ACCESS.2024.3352924": {
@@ -511,14 +488,13 @@
       "source_url": "https://ieeexplore.ieee.org/rest/document/10388355/?logAccess=true",
       "origin_kind": "real_replay",
       "usage_kind": "content",
+      "purpose": "structure",
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/expected.json",
         "original.html": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/original.html",
         "landing.html": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/landing.html",
         "references.json": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/references.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/extracted.md"
       },
       "fixture_family": "golden",
       "title": "IEEE Access dynamic HTML sample",
@@ -543,9 +519,7 @@
         "original.html": "tests/fixtures/golden_criteria/10.1109_CICTN64563.2025.10932570/original.html",
         "landing.html": "tests/fixtures/golden_criteria/10.1109_CICTN64563.2025.10932570/landing.html",
         "references.json": "tests/fixtures/golden_criteria/10.1109_CICTN64563.2025.10932570/references.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1109_CICTN64563.2025.10932570/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1109_CICTN64563.2025.10932570/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1109_CICTN64563.2025.10932570/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1109_CICTN64563.2025.10932570/extracted.md"
       },
       "fixture_family": "golden",
       "title": "IEEE conference proceedings dynamic HTML sample",
@@ -570,9 +544,7 @@
         "landing.html": "tests/fixtures/golden_criteria/10.1109_RITA.2026.3668995/landing.html",
         "multimedia.json": "tests/fixtures/golden_criteria/10.1109_RITA.2026.3668995/multimedia.json",
         "expected.json": "tests/fixtures/golden_criteria/10.1109_RITA.2026.3668995/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1109_RITA.2026.3668995/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1109_RITA.2026.3668995/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1109_RITA.2026.3668995/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1109_RITA.2026.3668995/extracted.md"
       },
       "fixture_family": "golden",
       "title": "IEEE RITA supplementary multimedia sample",
@@ -595,9 +567,7 @@
       "assets": {
         "landing.html": "tests/fixtures/golden_criteria/10.1109_MPER.1985.5526567/landing.html",
         "extracted.md": "tests/fixtures/golden_criteria/10.1109_MPER.1985.5526567/extracted.md",
-        "expected.json": "tests/fixtures/golden_criteria/10.1109_MPER.1985.5526567/expected.json",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1109_MPER.1985.5526567/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1109_MPER.1985.5526567/markdown-quality-prompt.md"
+        "expected.json": "tests/fixtures/golden_criteria/10.1109_MPER.1985.5526567/expected.json"
       },
       "fixture_family": "golden",
       "title": "IEEE legacy PDF fallback sample",
@@ -620,9 +590,7 @@
       "assets": {
         "landing.html": "tests/fixtures/golden_criteria/10.1109_PGEC.1967.264619/landing.html",
         "extracted.md": "tests/fixtures/golden_criteria/10.1109_PGEC.1967.264619/extracted.md",
-        "expected.json": "tests/fixtures/golden_criteria/10.1109_PGEC.1967.264619/expected.json",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1109_PGEC.1967.264619/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1109_PGEC.1967.264619/markdown-quality-prompt.md"
+        "expected.json": "tests/fixtures/golden_criteria/10.1109_PGEC.1967.264619/expected.json"
       },
       "fixture_family": "golden",
       "title": "IEEE early legacy PDF fallback sample",
@@ -647,9 +615,7 @@
         "original.html": "tests/fixtures/golden_criteria/10.1109_TBME.2024.3434477/original.html",
         "landing.html": "tests/fixtures/golden_criteria/10.1109_TBME.2024.3434477/landing.html",
         "references.json": "tests/fixtures/golden_criteria/10.1109_TBME.2024.3434477/references.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1109_TBME.2024.3434477/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1109_TBME.2024.3434477/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1109_TBME.2024.3434477/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1109_TBME.2024.3434477/extracted.md"
       },
       "fixture_family": "golden",
       "title": "IEEE TBME dynamic HTML sample",
@@ -743,9 +709,7 @@
         "original.html": "tests/fixtures/golden_criteria/10.1109_TIM.2024.3509573/original.html",
         "landing.html": "tests/fixtures/golden_criteria/10.1109_TIM.2024.3509573/landing.html",
         "references.json": "tests/fixtures/golden_criteria/10.1109_TIM.2024.3509573/references.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1109_TIM.2024.3509573/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1109_TIM.2024.3509573/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1109_TIM.2024.3509573/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1109_TIM.2024.3509573/extracted.md"
       },
       "fixture_family": "golden",
       "title": "IEEE TIM dynamic HTML sample",
@@ -776,12 +740,11 @@
       "source_url": "https://onlinelibrary.wiley.com/doi/full/10.1111/cas.16395",
       "origin_kind": "real_replay",
       "usage_kind": "content",
+      "purpose": "structure",
       "assets": {
         "extracted.md": "tests/fixtures/golden_criteria/10.1111_cas.16395/extracted.md",
         "original.html": "tests/fixtures/golden_criteria/10.1111_cas.16395/original.html",
-        "expected.json": "tests/fixtures/golden_criteria/10.1111_cas.16395/expected.json",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1111_cas.16395/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1111_cas.16395/markdown-quality-prompt.md"
+        "expected.json": "tests/fixtures/golden_criteria/10.1111_cas.16395/expected.json"
       },
       "fixture_family": "golden",
       "expected_outcome": "fulltext",
@@ -798,9 +761,7 @@
         "bilingual.html": "tests/fixtures/golden_criteria/10.1111_gcb.16386/bilingual.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1111_gcb.16386/expected.json",
         "original.html": "tests/fixtures/golden_criteria/10.1111_gcb.16386/original.html",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1111_gcb.16386/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1111_gcb.16386/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1111_gcb.16386/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1111_gcb.16386/extracted.md"
       },
       "fixture_family": "golden",
       "title": "10.1111/gcb.16386",
@@ -818,9 +779,7 @@
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1111_gcb.16414/expected.json",
         "extracted.md": "tests/fixtures/golden_criteria/10.1111_gcb.16414/extracted.md",
-        "original.html": "tests/fixtures/golden_criteria/10.1111_gcb.16414/original.html",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1111_gcb.16414/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1111_gcb.16414/markdown-quality-prompt.md"
+        "original.html": "tests/fixtures/golden_criteria/10.1111_gcb.16414/original.html"
       },
       "fixture_family": "golden",
       "title": "Contrasting temperature effects on the velocity of early- versus late-stage vegetation green-up in the Northern Hemisphere",
@@ -854,9 +813,7 @@
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1111_gcb.16998/expected.json",
         "original.html": "tests/fixtures/golden_criteria/10.1111_gcb.16998/original.html",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1111_gcb.16998/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1111_gcb.16998/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1111_gcb.16998/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1111_gcb.16998/extracted.md"
       },
       "fixture_family": "golden",
       "title": "Drought thresholds that impact vegetation reveal the divergent responses of vegetation growth to drought across China",
@@ -915,9 +872,7 @@
         "body_assets/sciadv.adl6155-f7.jpg": "tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/body_assets/sciadv.adl6155-f7.jpg",
         "body_assets/sciadv.adl6155-f8.jpg": "tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/body_assets/sciadv.adl6155-f8.jpg",
         "expected.json": "tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/extracted.md"
       },
       "fixture_family": "golden",
       "expected_outcome": "fulltext",
@@ -949,9 +904,7 @@
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1126_science.abp8622/expected.json",
         "original.html": "tests/fixtures/golden_criteria/10.1126_science.abp8622/original.html",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1126_science.abp8622/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1126_science.abp8622/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1126_science.abp8622/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1126_science.abp8622/extracted.md"
       },
       "fixture_family": "golden",
       "title": "The drivers and impacts of Amazon forest degradation",
@@ -969,9 +922,7 @@
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1126_science.adp0212/expected.json",
         "extracted.md": "tests/fixtures/golden_criteria/10.1126_science.adp0212/extracted.md",
-        "original.html": "tests/fixtures/golden_criteria/10.1126_science.adp0212/original.html",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1126_science.adp0212/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1126_science.adp0212/markdown-quality-prompt.md"
+        "original.html": "tests/fixtures/golden_criteria/10.1126_science.adp0212/original.html"
       },
       "fixture_family": "golden",
       "title": "Anthropogenic amplification of precipitation variability over the past century",
@@ -990,9 +941,7 @@
         "expected.json": "tests/fixtures/golden_criteria/10.1126_science.adz3492/expected.json",
         "extracted.md": "tests/fixtures/golden_criteria/10.1126_science.adz3492/extracted.md",
         "original.html": "tests/fixtures/golden_criteria/10.1126_science.adz3492/original.html",
-        "body_assets/science.adz3492-f1.svg": "tests/fixtures/golden_criteria/10.1126_science.adz3492/body_assets/science.adz3492-f1.svg",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1126_science.adz3492/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1126_science.adz3492/markdown-quality-prompt.md"
+        "body_assets/science.adz3492-f1.svg": "tests/fixtures/golden_criteria/10.1126_science.adz3492/body_assets/science.adz3492-f1.svg"
       },
       "fixture_family": "golden",
       "title": "New demand goals for energy and climate resilience",
@@ -1022,9 +971,7 @@
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1126_science.aeg3511/expected.json",
         "extracted.md": "tests/fixtures/golden_criteria/10.1126_science.aeg3511/extracted.md",
-        "original.html": "tests/fixtures/golden_criteria/10.1126_science.aeg3511/original.html",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1126_science.aeg3511/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1126_science.aeg3511/markdown-quality-prompt.md"
+        "original.html": "tests/fixtures/golden_criteria/10.1126_science.aeg3511/original.html"
       },
       "fixture_family": "golden",
       "title": "Magma plumbing beneath Yellowstone",
@@ -1045,7 +992,7 @@
       "fixture_family": "golden",
       "expected_live_status": "skipped_unsupported_provider",
       "expected_review_status": "skipped",
-      "out_of_scope_reason": "Provider support for Sage is intentionally out of scope for this live review run."
+      "out_of_scope_reason": "Provider support for Sage is intentionally out of scope for this live publisher smoke."
     },
     "scenario_elsevier_author_groups_minimal": {
       "doi": "scenario:elsevier_author_groups_minimal",
@@ -1272,9 +1219,7 @@
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/expected.json",
         "original.xml": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/original.xml",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/extracted.md"
       },
       "expected_outcome": "fulltext"
     },
@@ -1324,9 +1269,7 @@
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/expected.json",
         "original.xml": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/original.xml",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/extracted.md"
       },
       "expected_outcome": "fulltext"
     },
@@ -1408,9 +1351,7 @@
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/expected.json",
         "original.html": "tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/original.html",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/extracted.md"
       },
       "expected_outcome": "fulltext"
     },
@@ -1476,9 +1417,7 @@
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1038_s43247-024-01885-8/expected.json",
         "original.html": "tests/fixtures/golden_criteria/10.1038_s43247-024-01885-8/original.html",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1038_s43247-024-01885-8/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1038_s43247-024-01885-8/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1038_s43247-024-01885-8/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1038_s43247-024-01885-8/extracted.md"
       },
       "expected_outcome": "fulltext"
     },
@@ -1492,6 +1431,7 @@
       "content_type": "text/html",
       "origin_kind": "real_replay",
       "usage_kind": "content",
+      "purpose": "structure",
       "fixture_family": "golden",
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1073_pnas.1915921117/expected.json",
@@ -1528,9 +1468,7 @@
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1073_pnas.2305050120/expected.json",
         "original.html": "tests/fixtures/golden_criteria/10.1073_pnas.2305050120/original.html",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1073_pnas.2305050120/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1073_pnas.2305050120/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1073_pnas.2305050120/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1073_pnas.2305050120/extracted.md"
       },
       "expected_outcome": "fulltext"
     },
@@ -1628,9 +1566,7 @@
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1111_gcb.15322/expected.json",
         "original.html": "tests/fixtures/golden_criteria/10.1111_gcb.15322/original.html",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1111_gcb.15322/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1111_gcb.15322/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1111_gcb.15322/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1111_gcb.15322/extracted.md"
       },
       "expected_outcome": "fulltext"
     },
@@ -1724,6 +1660,7 @@
       "content_type": "text/html",
       "origin_kind": "real_replay",
       "usage_kind": "content",
+      "purpose": "structure",
       "fixture_family": "golden",
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1126_sciadv.aax6869/expected.json",
@@ -1795,9 +1732,7 @@
       "assets": {
         "extracted.md": "tests/fixtures/block/10.1007_s00382-018-4286-0/extracted.md",
         "raw.html": "tests/fixtures/block/10.1007_s00382-018-4286-0/raw.html",
-        "expected.json": "tests/fixtures/block/10.1007_s00382-018-4286-0/expected.json",
-        "markdown-quality.json": "tests/fixtures/block/10.1007_s00382-018-4286-0/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/block/10.1007_s00382-018-4286-0/markdown-quality-prompt.md"
+        "expected.json": "tests/fixtures/block/10.1007_s00382-018-4286-0/expected.json"
       },
       "expected_outcome": "rejected",
       "route_kind": "html",
@@ -1886,9 +1821,7 @@
       "assets": {
         "extracted.md": "tests/fixtures/block/10.1073_pnas.2509692123/extracted.md",
         "raw.html": "tests/fixtures/block/10.1073_pnas.2509692123/raw.html",
-        "expected.json": "tests/fixtures/block/10.1073_pnas.2509692123/expected.json",
-        "markdown-quality.json": "tests/fixtures/block/10.1073_pnas.2509692123/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/block/10.1073_pnas.2509692123/markdown-quality-prompt.md"
+        "expected.json": "tests/fixtures/block/10.1073_pnas.2509692123/expected.json"
       },
       "expected_outcome": "rejected",
       "route_kind": "html",
@@ -2140,14 +2073,13 @@
       "source_url": "https://acp.copernicus.org/articles/1/1/2001/acp-1-1-2001.pdf",
       "origin_kind": "real_replay",
       "usage_kind": "content",
+      "purpose": "pdf_fallback",
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.5194_acp-1-1-2001/expected.json",
         "landing.html": "tests/fixtures/golden_criteria/10.5194_acp-1-1-2001/landing.html",
         "original.pdf": "tests/fixtures/golden_criteria/10.5194_acp-1-1-2001/original.pdf",
         "original.xml": "tests/fixtures/golden_criteria/10.5194_acp-1-1-2001/original.xml",
-        "extracted.md": "tests/fixtures/golden_criteria/10.5194_acp-1-1-2001/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.5194_acp-1-1-2001/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.5194_acp-1-1-2001/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.5194_acp-1-1-2001/extracted.md"
       },
       "fixture_family": "golden",
       "title": "298 K rate coefficients for the reaction of OH with i-C3H7I, n-C3H7I and C3H8",
@@ -2171,9 +2103,7 @@
         "landing.html": "tests/fixtures/golden_criteria/10.5194_bg-1-1-2004/landing.html",
         "original.pdf": "tests/fixtures/golden_criteria/10.5194_bg-1-1-2004/original.pdf",
         "original.xml": "tests/fixtures/golden_criteria/10.5194_bg-1-1-2004/original.xml",
-        "extracted.md": "tests/fixtures/golden_criteria/10.5194_bg-1-1-2004/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.5194_bg-1-1-2004/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.5194_bg-1-1-2004/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.5194_bg-1-1-2004/extracted.md"
       },
       "fixture_family": "golden",
       "title": "A field-based method for simultaneous measurements of the d18O and d13C of soil CO2 efflux",
@@ -2197,9 +2127,7 @@
         "landing.html": "tests/fixtures/golden_criteria/10.5194_cp-1-1-2005/landing.html",
         "original.pdf": "tests/fixtures/golden_criteria/10.5194_cp-1-1-2005/original.pdf",
         "original.xml": "tests/fixtures/golden_criteria/10.5194_cp-1-1-2005/original.xml",
-        "extracted.md": "tests/fixtures/golden_criteria/10.5194_cp-1-1-2005/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.5194_cp-1-1-2005/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.5194_cp-1-1-2005/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.5194_cp-1-1-2005/extracted.md"
       },
       "fixture_family": "golden",
       "title": "Quantifying the effect of vegetation dynamics on the climate of the Last Glacial Maximum",
@@ -2223,9 +2151,7 @@
         "landing.html": "tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/landing.html",
         "original.pdf": "tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/original.pdf",
         "original.xml": "tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/original.xml",
-        "extracted.md": "tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.5194_dwes-1-1-2008/extracted.md"
       },
       "fixture_family": "golden",
       "title": "Correlations between total cell concentration, total adenosine tri-phosphate concentration and heterotrophic plate counts during microbial monitoring of drinking water",
@@ -2244,12 +2170,11 @@
       "source_url": "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024.xml",
       "origin_kind": "real_replay",
       "usage_kind": "content",
+      "purpose": "structure",
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.5194_acp-24-1-2024/expected.json",
         "original.xml": "tests/fixtures/golden_criteria/10.5194_acp-24-1-2024/original.xml",
-        "extracted.md": "tests/fixtures/golden_criteria/10.5194_acp-24-1-2024/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.5194_acp-24-1-2024/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.5194_acp-24-1-2024/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.5194_acp-24-1-2024/extracted.md"
       },
       "fixture_family": "golden",
       "title": "Seasonal variations in photooxidant formation and light absorption in aqueous extracts of ambient particles",
@@ -2379,9 +2304,7 @@
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1175_jcli-d-23-0738.1/expected.json",
         "original.html": "tests/fixtures/golden_criteria/10.1175_jcli-d-23-0738.1/original.html",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1175_jcli-d-23-0738.1/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1175_jcli-d-23-0738.1/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1175_jcli-d-23-0738.1/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1175_jcli-d-23-0738.1/extracted.md"
       },
       "fixture_family": "golden",
       "title": "A Slower North Equatorial Countercurrent but Faster Equatorial Undercurrent in a Warming Climate",
@@ -2399,9 +2322,7 @@
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1175_bams-d-24-0223.1/expected.json",
         "original.html": "tests/fixtures/golden_criteria/10.1175_bams-d-24-0223.1/original.html",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1175_bams-d-24-0223.1/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1175_bams-d-24-0223.1/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1175_bams-d-24-0223.1/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1175_bams-d-24-0223.1/extracted.md"
       },
       "fixture_family": "golden",
       "title": "What Makes a Successful Community Model for Research and Operations? Lessons Learned from WAVEWATCH III\u00ae",
@@ -2451,9 +2372,7 @@
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/expected.json",
         "original.html": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/original.html",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/extracted.md"
       },
       "fixture_family": "golden",
       "title": "Retrieval of Boundary Layer Precipitable Water from GOES ABI Using Machine Learning Techniques",
@@ -2516,12 +2435,11 @@
       "source_url": "https://journals.ametsoc.org/view/journals/aies/3/4/AIES-D-23-0093.1.xml",
       "origin_kind": "real_replay",
       "usage_kind": "content",
+      "purpose": "structure",
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1175_aies-d-23-0093.1/expected.json",
         "original.html": "tests/fixtures/golden_criteria/10.1175_aies-d-23-0093.1/original.html",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1175_aies-d-23-0093.1/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1175_aies-d-23-0093.1/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1175_aies-d-23-0093.1/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1175_aies-d-23-0093.1/extracted.md"
       },
       "fixture_family": "golden",
       "title": "Evidential Deep Learning: Enhancing Predictive Uncertainty Estimation for Earth System Science Applications",
@@ -2536,13 +2454,12 @@
       "source_url": "https://journals.ametsoc.org/downloadpdf/view/journals/bams/aop/BAMS-D-24-0270.1/BAMS-D-24-0270.1.pdf",
       "origin_kind": "real_replay",
       "usage_kind": "content",
+      "purpose": "pdf_fallback",
       "assets": {
         "expected.json": "tests/fixtures/golden_criteria/10.1175_bams-d-24-0270.1/expected.json",
         "landing.html": "tests/fixtures/golden_criteria/10.1175_bams-d-24-0270.1/landing.html",
         "original.pdf": "tests/fixtures/golden_criteria/10.1175_bams-d-24-0270.1/original.pdf",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1175_bams-d-24-0270.1/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1175_bams-d-24-0270.1/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1175_bams-d-24-0270.1/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1175_bams-d-24-0270.1/extracted.md"
       },
       "fixture_family": "golden",
       "title": "Integrating High-Resolution Modeling with Diverse Field Campaign Observations through an Open Science Summer School",
@@ -2583,9 +2500,7 @@
       "assets": {
         "original.pdf": "tests/fixtures/golden_criteria/10.3390_en16186655/original.pdf",
         "expected.json": "tests/fixtures/golden_criteria/10.3390_en16186655/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.3390_en16186655/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.3390_en16186655/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.3390_en16186655/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.3390_en16186655/extracted.md"
       }
     },
     "10.3390_membranes15030093": {
@@ -2603,9 +2518,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.3390_membranes15030093/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.3390_membranes15030093/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.3390_membranes15030093/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.3390_membranes15030093/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.3390_membranes15030093/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.3390_membranes15030093/extracted.md"
       }
     },
     "10.3390_su12072826": {
@@ -2623,9 +2536,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.3390_su12072826/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.3390_su12072826/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.3390_su12072826/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.3390_su12072826/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.3390_su12072826/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.3390_su12072826/extracted.md"
       }
     },
     "10.3390_math11030657": {
@@ -2643,9 +2554,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.3390_math11030657/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.3390_math11030657/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.3390_math11030657/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.3390_math11030657/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.3390_math11030657/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.3390_math11030657/extracted.md"
       }
     },
     "10.3390_rs16010010": {
@@ -2663,9 +2572,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.3390_rs16010010/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.3390_rs16010010/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.3390_rs16010010/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.3390_rs16010010/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.3390_rs16010010/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.3390_rs16010010/extracted.md"
       }
     },
     "10.3390_foods10081757": {
@@ -2683,9 +2590,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.3390_foods10081757/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.3390_foods10081757/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.3390_foods10081757/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.3390_foods10081757/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.3390_foods10081757/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.3390_foods10081757/extracted.md"
       }
     },
     "10.3390_w15040758": {
@@ -2703,9 +2608,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.3390_w15040758/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.3390_w15040758/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.3390_w15040758/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.3390_w15040758/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.3390_w15040758/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.3390_w15040758/extracted.md"
       }
     },
     "10.3390_ijerph18094484": {
@@ -2723,9 +2626,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.3390_ijerph18094484/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.3390_ijerph18094484/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.3390_ijerph18094484/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.3390_ijerph18094484/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.3390_ijerph18094484/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.3390_ijerph18094484/extracted.md"
       }
     },
     "10.3390_s23010001": {
@@ -2743,9 +2644,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.3390_s23010001/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.3390_s23010001/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.3390_s23010001/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.3390_s23010001/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.3390_s23010001/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.3390_s23010001/extracted.md"
       }
     },
     "10.1098_rsos.150470": {
@@ -2763,9 +2662,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.1098_rsos.150470/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1098_rsos.150470/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1098_rsos.150470/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1098_rsos.150470/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1098_rsos.150470/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1098_rsos.150470/extracted.md"
       }
     },
     "10.1098_rsos.201188": {
@@ -2783,9 +2680,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.1098_rsos.201188/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1098_rsos.201188/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1098_rsos.201188/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1098_rsos.201188/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1098_rsos.201188/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1098_rsos.201188/extracted.md"
       }
     },
     "10.1098_rsta.2020.0108": {
@@ -2803,9 +2698,7 @@
       "assets": {
         "original.pdf": "tests/fixtures/golden_criteria/10.1098_rsta.2020.0108/original.pdf",
         "expected.json": "tests/fixtures/golden_criteria/10.1098_rsta.2020.0108/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1098_rsta.2020.0108/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1098_rsta.2020.0108/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1098_rsta.2020.0108/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1098_rsta.2020.0108/extracted.md"
       }
     },
     "10.1098_rsos.201200": {
@@ -2823,9 +2716,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.1098_rsos.201200/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1098_rsos.201200/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1098_rsos.201200/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1098_rsos.201200/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1098_rsos.201200/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1098_rsos.201200/extracted.md"
       }
     },
     "10.1098_rsta.2019.0558": {
@@ -2843,9 +2734,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.1098_rsta.2019.0558/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1098_rsta.2019.0558/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1098_rsta.2019.0558/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1098_rsta.2019.0558/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1098_rsta.2019.0558/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1098_rsta.2019.0558/extracted.md"
       }
     },
     "10.1098_rsif.2019.0334": {
@@ -2863,9 +2752,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.1098_rsif.2019.0334/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1098_rsif.2019.0334/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1098_rsif.2019.0334/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1098_rsif.2019.0334/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1098_rsif.2019.0334/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1098_rsif.2019.0334/extracted.md"
       }
     },
     "10.1098_rspb.2020.0097": {
@@ -2883,9 +2770,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.1098_rspb.2020.0097/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1098_rspb.2020.0097/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1098_rspb.2020.0097/extracted.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1098_rspb.2020.0097/markdown-quality.json",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1098_rspb.2020.0097/markdown-quality-prompt.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1098_rspb.2020.0097/extracted.md"
       }
     },
     "10.1146_annurev-control-030123-013355": {
@@ -2904,8 +2789,6 @@
         "original.html": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/expected.json",
         "extracted.md": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/markdown-quality.json",
         "body_assets/annualreviews-figure-1.png": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/body_assets/annualreviews-figure-1.png",
         "body_assets/annualreviews-figure-2.png": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/body_assets/annualreviews-figure-2.png",
         "body_assets/annualreviews-figure-3.png": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/body_assets/annualreviews-figure-3.png",
@@ -2928,9 +2811,7 @@
       "assets": {
         "original.pdf": "tests/fixtures/golden_criteria/10.1146_annurev-med-120811-171056/original.pdf",
         "expected.json": "tests/fixtures/golden_criteria/10.1146_annurev-med-120811-171056/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1146_annurev-med-120811-171056/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1146_annurev-med-120811-171056/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1146_annurev-med-120811-171056/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1146_annurev-med-120811-171056/extracted.md"
       }
     },
     "10.1146_annurev-environ-102511-084654": {
@@ -2949,8 +2830,6 @@
         "original.html": "tests/fixtures/golden_criteria/10.1146_annurev-environ-102511-084654/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1146_annurev-environ-102511-084654/expected.json",
         "extracted.md": "tests/fixtures/golden_criteria/10.1146_annurev-environ-102511-084654/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1146_annurev-environ-102511-084654/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1146_annurev-environ-102511-084654/markdown-quality.json",
         "body_assets/annualreviews-figure-1.gif": "tests/fixtures/golden_criteria/10.1146_annurev-environ-102511-084654/body_assets/annualreviews-figure-1.gif",
         "body_assets/annualreviews-figure-2.gif": "tests/fixtures/golden_criteria/10.1146_annurev-environ-102511-084654/body_assets/annualreviews-figure-2.gif",
         "body_assets/annualreviews-figure-3.gif": "tests/fixtures/golden_criteria/10.1146_annurev-environ-102511-084654/body_assets/annualreviews-figure-3.gif",
@@ -2972,9 +2851,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.1146_annurev-neuro-062111-150343/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1146_annurev-neuro-062111-150343/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1146_annurev-neuro-062111-150343/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1146_annurev-neuro-062111-150343/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1146_annurev-neuro-062111-150343/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1146_annurev-neuro-062111-150343/extracted.md"
       }
     },
     "10.1371_journal.pone.0015338": {
@@ -2993,8 +2870,6 @@
         "original.xml": "tests/fixtures/golden_criteria/10.1371_journal.pone.0015338/original.xml",
         "expected.json": "tests/fixtures/golden_criteria/10.1371_journal.pone.0015338/expected.json",
         "extracted.md": "tests/fixtures/golden_criteria/10.1371_journal.pone.0015338/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1371_journal.pone.0015338/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1371_journal.pone.0015338/markdown-quality.json",
         "body_assets/pone.0015338.e001.png": "tests/fixtures/golden_criteria/10.1371_journal.pone.0015338/body_assets/pone.0015338.e001.png",
         "body_assets/pone.0015338.e002.png": "tests/fixtures/golden_criteria/10.1371_journal.pone.0015338/body_assets/pone.0015338.e002.png",
         "body_assets/pone.0015338.e003.png": "tests/fixtures/golden_criteria/10.1371_journal.pone.0015338/body_assets/pone.0015338.e003.png",
@@ -3025,9 +2900,7 @@
       "assets": {
         "original.xml": "tests/fixtures/golden_criteria/10.1371_journal.pone.0126635/original.xml",
         "expected.json": "tests/fixtures/golden_criteria/10.1371_journal.pone.0126635/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1371_journal.pone.0126635/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1371_journal.pone.0126635/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1371_journal.pone.0126635/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1371_journal.pone.0126635/extracted.md"
       }
     },
     "10.1371_journal.pbio.0040298": {
@@ -3045,9 +2918,7 @@
       "assets": {
         "original.pdf": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/original.pdf",
         "expected.json": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/extracted.md"
       }
     },
     "10.1371_journal.pone.0026949": {
@@ -3065,9 +2936,7 @@
       "assets": {
         "original.xml": "tests/fixtures/golden_criteria/10.1371_journal.pone.0026949/original.xml",
         "expected.json": "tests/fixtures/golden_criteria/10.1371_journal.pone.0026949/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1371_journal.pone.0026949/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1371_journal.pone.0026949/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1371_journal.pone.0026949/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1371_journal.pone.0026949/extracted.md"
       }
     },
     "10.1371_journal.pone.0263725": {
@@ -3085,9 +2954,7 @@
       "assets": {
         "original.xml": "tests/fixtures/golden_criteria/10.1371_journal.pone.0263725/original.xml",
         "expected.json": "tests/fixtures/golden_criteria/10.1371_journal.pone.0263725/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1371_journal.pone.0263725/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1371_journal.pone.0263725/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1371_journal.pone.0263725/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1371_journal.pone.0263725/extracted.md"
       }
     },
     "10.1371_journal.pone.0218513": {
@@ -3105,9 +2972,7 @@
       "assets": {
         "original.xml": "tests/fixtures/golden_criteria/10.1371_journal.pone.0218513/original.xml",
         "expected.json": "tests/fixtures/golden_criteria/10.1371_journal.pone.0218513/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1371_journal.pone.0218513/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1371_journal.pone.0218513/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1371_journal.pone.0218513/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1371_journal.pone.0218513/extracted.md"
       }
     },
     "10.1371_journal.pone.0304873": {
@@ -3125,9 +2990,7 @@
       "assets": {
         "original.xml": "tests/fixtures/golden_criteria/10.1371_journal.pone.0304873/original.xml",
         "expected.json": "tests/fixtures/golden_criteria/10.1371_journal.pone.0304873/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1371_journal.pone.0304873/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1371_journal.pone.0304873/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1371_journal.pone.0304873/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1371_journal.pone.0304873/extracted.md"
       }
     },
     "10.1371_journal.pcbi.1003118": {
@@ -3145,9 +3008,7 @@
       "assets": {
         "original.xml": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/original.xml",
         "expected.json": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/extracted.md"
       }
     },
     "10.1093_bioinformatics_btaa823": {
@@ -3165,9 +3026,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa823/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa823/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa823/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa823/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa823/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa823/extracted.md"
       }
     },
     "10.1093_bioinformatics_btaa161": {
@@ -3185,9 +3044,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa161/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa161/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa161/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa161/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa161/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa161/extracted.md"
       }
     },
     "10.1093_bioinformatics_btaa153": {
@@ -3206,9 +3063,7 @@
       "assets": {
         "original.pdf": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa153/original.pdf",
         "expected.json": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa153/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa153/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa153/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa153/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa153/extracted.md"
       },
       "diagnostics": {
         "browser_final_url": "https://watermark02.silverchair.com/bioinformatics_36_11_3401.pdf",
@@ -3231,9 +3086,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/extracted.md"
       }
     },
     "10.1021_acsomega.3c06992": {
@@ -3251,9 +3104,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.1021_acsomega.3c06992/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1021_acsomega.3c06992/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1021_acsomega.3c06992/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1021_acsomega.3c06992/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1021_acsomega.3c06992/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1021_acsomega.3c06992/extracted.md"
       }
     },
     "10.1021_acsomega.2c02828": {
@@ -3271,9 +3122,7 @@
       "assets": {
         "original.pdf": "tests/fixtures/golden_criteria/10.1021_acsomega.2c02828/original.pdf",
         "expected.json": "tests/fixtures/golden_criteria/10.1021_acsomega.2c02828/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1021_acsomega.2c02828/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1021_acsomega.2c02828/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1021_acsomega.2c02828/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1021_acsomega.2c02828/extracted.md"
       },
       "diagnostics": {
         "browser_final_url": "https://pubs.acs.org/acsodf/article-pdf/7/30/26670/3637446/ao2c02828.pdf",
@@ -3297,9 +3146,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/extracted.md"
       }
     },
     "10.1088_2058-9565_ac3460": {
@@ -3318,9 +3165,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.1088_2058-9565_ac3460/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1088_2058-9565_ac3460/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1088_2058-9565_ac3460/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1088_2058-9565_ac3460/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1088_2058-9565_ac3460/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1088_2058-9565_ac3460/extracted.md"
       }
     },
     "10.1088_1748-9326_aa9f73": {
@@ -3338,9 +3183,7 @@
       "assets": {
         "original.pdf": "tests/fixtures/golden_criteria/10.1088_1748-9326_aa9f73/original.pdf",
         "expected.json": "tests/fixtures/golden_criteria/10.1088_1748-9326_aa9f73/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1088_1748-9326_aa9f73/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1088_1748-9326_aa9f73/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1088_1748-9326_aa9f73/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1088_1748-9326_aa9f73/extracted.md"
       },
       "diagnostics": {
         "browser_final_url": "https://iopscience.iop.org/article/10.1088/1748-9326/aa9f73/pdf",
@@ -3372,9 +3215,7 @@
       "assets": {
         "original.xml": "tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/original.xml",
         "expected.json": "tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/extracted.md"
       }
     },
     "10.1063_5.0129134": {
@@ -3393,8 +3234,6 @@
         "original.html": "tests/fixtures/golden_criteria/10.1063_5.0129134/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1063_5.0129134/expected.json",
         "extracted.md": "tests/fixtures/golden_criteria/10.1063_5.0129134/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1063_5.0129134/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1063_5.0129134/markdown-quality.json",
         "body_assets/m_125205_1_f1.jpeg": "tests/fixtures/golden_criteria/10.1063_5.0129134/body_assets/m_125205_1_f1.jpeg",
         "body_assets/m_125205_1_f2.jpeg": "tests/fixtures/golden_criteria/10.1063_5.0129134/body_assets/m_125205_1_f2.jpeg",
         "body_assets/m_125205_1_f3.jpeg": "tests/fixtures/golden_criteria/10.1063_5.0129134/body_assets/m_125205_1_f3.jpeg",
@@ -3416,9 +3255,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.1063_5.0188905/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1063_5.0188905/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1063_5.0188905/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1063_5.0188905/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1063_5.0188905/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1063_5.0188905/extracted.md"
       }
     },
     "10.1146_annurev.pp.19.060168.001235": {
@@ -3461,9 +3298,7 @@
       "assets": {
         "original.xml": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/original.xml",
         "expected.json": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/extracted.md"
       }
     },
     "10.1016_j.uclim.2019.100528": {
@@ -3483,9 +3318,7 @@
       "assets": {
         "original.xml": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/original.xml",
         "expected.json": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/extracted.md"
       }
     },
     "10.1016_j.envres.2018.12.059": {
@@ -3505,9 +3338,7 @@
       "assets": {
         "original.xml": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/original.xml",
         "expected.json": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/extracted.md"
       }
     },
     "10.1080_15481603.2026.2667034": {
@@ -3527,8 +3358,6 @@
         "original.pdf": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.pdf",
         "expected.json": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/expected.json",
         "extracted.md": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/markdown-quality.json",
         "body_assets/tgrs_a_2667034_f0001_c.jpg": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/body_assets/tgrs_a_2667034_f0001_c.jpg",
         "body_assets/tgrs_a_2667034_f0002_c.jpg": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/body_assets/tgrs_a_2667034_f0002_c.jpg",
         "body_assets/tgrs_a_2667034_f0003_c.jpg": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/body_assets/tgrs_a_2667034_f0003_c.jpg",
@@ -3555,9 +3384,7 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/extracted.md"
       }
     },
     "10.1080_08839514.2024.2375110": {
@@ -3575,825 +3402,8 @@
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/extracted.md",
-        "markdown-quality-prompt.md": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/markdown-quality-prompt.md",
-        "markdown-quality.json": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/markdown-quality.json"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/extracted.md"
       }
     }
-  },
-  "tests": [
-    {
-      "test": "tests/unit/test_html_shared_helpers.py::test_parse_html_metadata_does_not_treat_generic_description_as_abstract",
-      "anchors": [
-        "rule-generic-metadata-boundaries"
-      ],
-      "samples": [
-        "scenario_generic_metadata_boundaries"
-      ]
-    },
-    {
-      "test": "tests/unit/test_html_shared_helpers.py::test_parse_html_metadata_uses_redirect_stub_lookup_title",
-      "anchors": [
-        "rule-generic-metadata-boundaries"
-      ],
-      "samples": [
-        "scenario_generic_metadata_boundaries"
-      ]
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_build_article_structure_extracts_authors_from_author_groups",
-      "anchors": [
-        "rule-provider-owned-authors"
-      ],
-      "samples": [
-        "scenario_elsevier_author_groups_minimal"
-      ]
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_real_display_formula_renders_as_formula_block",
-      "anchors": [
-        "rule-elsevier-formula-rendering"
-      ],
-      "samples": [
-        "10.1016_j.agrformet.2024.109975"
-      ]
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_inline_math_symbols_stay_inline",
-      "anchors": [
-        "rule-elsevier-formula-rendering"
-      ],
-      "samples": [
-        "scenario_elsevier_formula_inline_display"
-      ]
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_formula_placeholder_is_visible_when_conversion_fails",
-      "anchors": [
-        "rule-elsevier-formula-rendering"
-      ],
-      "samples": [
-        "scenario_elsevier_formula_missing"
-      ]
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_regression_32_preserves_independent_table_groups",
-      "anchors": [
-        "rule-xml-table-groups"
-      ],
-      "samples": [
-        "10.1016_j.apgeog.2012.04.006"
-      ]
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_regression_97_renders_wbgt_t_at_groups_in_order",
-      "anchors": [
-        "rule-xml-table-groups"
-      ],
-      "samples": [
-        "10.1016_j.envres.2018.12.059"
-      ]
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_regression_42_uses_two_official_formula_images",
-      "anchors": [
-        "rule-elsevier-formula-rendering"
-      ],
-      "samples": [
-        "10.1016_j.uclim.2019.100528"
-      ]
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_supplementary_display_is_omitted_from_body_and_listed_with_caption",
-      "anchors": [
-        "rule-elsevier-supplementary-materials"
-      ],
-      "samples": [
-        "scenario_elsevier_supplementary_display"
-      ]
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_supplementary_asset_without_display_is_listed_as_supplementary_material",
-      "anchors": [
-        "rule-elsevier-supplementary-materials"
-      ],
-      "samples": [
-        "scenario_elsevier_supplementary_asset_only"
-      ]
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_real_supplementary_e_component_from_golden_xml_is_listed",
-      "anchors": [
-        "rule-elsevier-supplementary-materials"
-      ],
-      "samples": [
-        "10.1016_j.ecolind.2024.112140"
-      ]
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_split_inline_variable_subscripts_are_rejoined_in_paragraphs",
-      "anchors": [
-        "rule-preserve-inline-semantics-in-body-and-tables"
-      ],
-      "samples": []
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_graphical_abstract_assets_do_not_appear_in_additional_figures",
-      "anchors": [
-        "rule-elsevier-graphical-abstract"
-      ],
-      "samples": []
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_graphical_abstract_only_document_does_not_create_additional_figures",
-      "anchors": [
-        "rule-elsevier-graphical-abstract"
-      ],
-      "samples": []
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_real_graphical_abstract_from_golden_xml_is_excluded_from_figures",
-      "anchors": [
-        "rule-elsevier-graphical-abstract"
-      ],
-      "samples": [
-        "10.1016_j.scitotenv.2022.158499"
-      ]
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_complex_table_spans_are_normalized_without_quality_loss",
-      "anchors": [
-        "rule-elsevier-complex-table-span-degradation"
-      ],
-      "samples": [
-        "scenario_elsevier_complex_table_span"
-      ]
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_real_complex_table_records_successful_normalization",
-      "anchors": [
-        "rule-elsevier-complex-table-span-degradation"
-      ],
-      "samples": [
-        "10.1016_j.jhydrol.2021.126210"
-      ]
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_table_placement_contracts",
-      "anchors": [
-        "rule-elsevier-table-placement"
-      ],
-      "samples": [
-        "10.1016_j.jhydrol.2021.126210"
-      ]
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_xml_multilingual_abstract_preserves_parallel_abstract_sections",
-      "anchors": [
-        "rule-keep-parallel-multilingual-abstracts"
-      ],
-      "samples": []
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_xml_non_english_only_article_is_preserved",
-      "anchors": [
-        "rule-keep-parallel-multilingual-abstracts"
-      ],
-      "samples": []
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_appendix_figure_renders_as_figure_block",
-      "anchors": [
-        "rule-elsevier-appendix-context"
-      ],
-      "samples": [
-        "10.1016_j.rse.2026.115369"
-      ]
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_appendix_reference_keeps_asset_in_appendix",
-      "anchors": [
-        "rule-elsevier-appendix-context"
-      ],
-      "samples": [
-        "10.1016_j.rse.2026.115369"
-      ]
-    },
-    {
-      "test": "tests/unit/test_elsevier_markdown.py::test_elsevier_appendix_table_renders_as_markdown_table",
-      "anchors": [
-        "rule-elsevier-appendix-context"
-      ],
-      "samples": [
-        "10.1016_j.rse.2026.115369"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_markdown.py::test_science_fixture_markdown_omits_frontmatter_and_collateral_noise",
-      "anchors": [
-        "rule-filter-publisher-ui-noise"
-      ],
-      "samples": [
-        "10.1126_science.ady3136"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_markdown.py::test_science_fixture_keeps_data_availability_but_filters_teaser_figure",
-      "anchors": [
-        "rule-keep-data-availability-once"
-      ],
-      "samples": [
-        "10.1126_science.ady3136"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_markdown.py::test_pnas_abstract_fixture_is_rejected",
-      "anchors": [
-        "rule-html-availability-contract"
-      ],
-      "samples": [
-        "10.1073_pnas.2406303121"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_markdown.py::test_pnas_full_fixture_omits_real_page_collateral_noise",
-      "anchors": [
-        "rule-filter-publisher-ui-noise"
-      ],
-      "samples": [
-        "10.1073_pnas.2406303121"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_markdown.py::test_pnas_full_fixture_keeps_data_availability_and_renders_table_markdown",
-      "anchors": [
-        "rule-keep-data-availability-once",
-        "rule-preserve-inline-semantics-in-body-and-tables"
-      ],
-      "samples": [
-        "10.1073_pnas.2406303121"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_markdown.py::test_pnas_collateral_data_availability_fixture_is_not_duplicated",
-      "anchors": [
-        "rule-keep-data-availability-once"
-      ],
-      "samples": [
-        "10.1073_pnas.2309123120"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_markdown.py::test_wiley_full_fixture_extracts_body_sections_from_real_html",
-      "anchors": [
-        "rule-keep-semantic-parent-heading",
-        "rule-preserve-inline-semantics-in-body-and-tables"
-      ],
-      "samples": [
-        "10.1111_gcb.16414"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_markdown.py::test_wiley_full_fixture_omits_real_page_collateral_noise",
-      "anchors": [
-        "rule-filter-publisher-ui-noise"
-      ],
-      "samples": [
-        "10.1111_gcb.16414"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_markdown.py::test_wiley_full_fixture_keeps_data_availability_but_filters_other_back_matter",
-      "anchors": [
-        "rule-keep-data-availability-once"
-      ],
-      "samples": [
-        "10.1111_gcb.16414"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_markdown.py::test_wiley_references_use_visible_citation_text_not_doi_only",
-      "anchors": [
-        "rule-wiley-reference-text"
-      ],
-      "samples": [
-        "10.1111_gcb.15322",
-        "10.1111_gcb.16998"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_markdown.py::test_science_perspective_fixture_extracts_fulltext_without_section_headings",
-      "anchors": [
-        "rule-keep-headingless-body-flat"
-      ],
-      "samples": [
-        "10.1126_science.aeg3511"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_markdown.py::test_science_adp0212_fixture_splits_display_equations_and_caption_sentences",
-      "anchors": [
-        "rule-readable-equation-caption-spacing"
-      ],
-      "samples": [
-        "10.1126_science.adp0212"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_postprocess.py::test_wiley_real_fixture_filters_frontmatter_and_viewer_noise",
-      "anchors": [
-        "rule-filter-publisher-ui-noise"
-      ],
-      "samples": [
-        "10.1111_gcb.16414"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_postprocess.py::test_wiley_real_fixture_appends_abbreviations_after_body_content",
-      "anchors": [
-        "rule-wiley-abbreviations-trailing"
-      ],
-      "samples": [
-        "10.1111_cas.16395"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_postprocess.py::test_wiley_abbreviations_scenario_moves_frontmatter_glossary_after_body",
-      "anchors": [
-        "rule-wiley-abbreviations-trailing"
-      ],
-      "samples": [
-        "scenario_wiley_abbreviations_trailing"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_postprocess.py::test_wiley_real_fixture_keeps_methods_subcontent_in_body",
-      "anchors": [
-        "rule-keep-semantic-parent-heading"
-      ],
-      "samples": [
-        "10.1111_gcb.16455"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_postprocess.py::test_pnas_real_fixture_keeps_significance_and_abstract_before_main_text",
-      "anchors": [
-        "rule-stable-frontmatter-order"
-      ],
-      "samples": [
-        "10.1073_pnas.2406303121"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_postprocess.py::test_pnas_real_fixture_preserves_figures_equations_and_heading_trimming",
-      "anchors": [
-        "rule-readable-equation-caption-spacing"
-      ],
-      "samples": [
-        "10.1073_pnas.2406303121"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_postprocess.py::test_pnas_real_fixture_renders_table_and_inline_cell_formatting",
-      "anchors": [
-        "rule-preserve-inline-semantics-in-body-and-tables"
-      ],
-      "samples": [
-        "10.1073_pnas.2406303121"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_postprocess.py::test_pnas_real_commentary_keeps_headingless_body_flat",
-      "anchors": [
-        "rule-keep-headingless-body-flat"
-      ],
-      "samples": [
-        "10.1073_pnas.2317456120"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_postprocess.py::test_science_real_fixture_keeps_formula_and_figure_caption_spacing",
-      "anchors": [
-        "rule-readable-equation-caption-spacing"
-      ],
-      "samples": [
-        "10.1126_science.adp0212"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_postprocess.py::test_shared_equation_normalization_handles_real_science_and_pnas_fixtures",
-      "anchors": [
-        "rule-readable-equation-caption-spacing"
-      ],
-      "samples": [
-        "10.1126_sciadv.abf8021",
-        "10.1126_sciadv.abg9690",
-        "10.1126_sciadv.adm9732",
-        "10.1073_pnas.2406303121"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_postprocess.py::test_science_real_frontmatter_fixture_preserves_structured_summaries_and_main_text",
-      "anchors": [
-        "rule-stable-frontmatter-order",
-        "rule-preserve-subscripts-in-headings"
-      ],
-      "samples": [
-        "10.1126_science.abp8622"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_postprocess.py::test_rewrite_inline_figure_links_prefers_local_paths_for_existing_science_image_blocks",
-      "anchors": [
-        "rule-rewrite-inline-figure-links"
-      ],
-      "samples": []
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_postprocess.py::test_rewrite_inline_figure_links_is_data_driven_for_non_legacy_publisher",
-      "anchors": [
-        "rule-rewrite-inline-figure-links"
-      ],
-      "samples": []
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_postprocess.py::test_rewrite_inline_figure_links_ignores_cross_references_in_asset_captions",
-      "anchors": [
-        "rule-rewrite-inline-figure-links"
-      ],
-      "samples": [
-        "scenario_inline_figure_link_rewrite"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_provider_html.py::test_science_provider_rewrites_inline_figure_links_to_downloaded_local_assets",
-      "anchors": [
-        "rule-rewrite-inline-figure-links"
-      ],
-      "samples": []
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_provider_html.py::test_science_provider_uses_extracted_dom_abstract_and_restores_lead_body_text",
-      "anchors": [
-        "rule-provider-owned-authors"
-      ],
-      "samples": [
-        "scenario_provider_dom_abstract_fallback"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_provider_html.py::test_provider_owned_html_signals_populate_final_article_authors",
-      "anchors": [
-        "rule-provider-owned-authors"
-      ],
-      "samples": [
-        "10.1126_science.adp0212",
-        "10.1111_gcb.16998",
-        "10.1073_pnas.2309123120"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_provider_html.py::test_science_provider_falls_back_to_dom_authors_when_datalayer_is_missing",
-      "anchors": [
-        "rule-provider-owned-authors"
-      ],
-      "samples": [
-        "10.1126_science.adp0212"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_provider_html.py::test_pnas_provider_renders_headingless_commentary_without_synthetic_title_section",
-      "anchors": [
-        "rule-keep-headingless-body-flat"
-      ],
-      "samples": [
-        "10.1073_pnas.2317456120"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_provider_html.py::test_science_provider_keeps_frontmatter_sections_but_only_one_abstract_in_final_article",
-      "anchors": [
-        "rule-stable-frontmatter-order"
-      ],
-      "samples": [
-        "10.1126_science.abp8622"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_provider_html.py::test_science_provider_replay_for_adl6155_keeps_materials_and_methods_wrapper_heading",
-      "anchors": [
-        "rule-keep-semantic-parent-heading"
-      ],
-      "samples": [
-        "10.1126_sciadv.adl6155"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_provider_html.py::test_wiley_provider_deduplicates_near_matching_abstract_in_final_article_render",
-      "anchors": [
-        "rule-stable-frontmatter-order"
-      ],
-      "samples": [
-        "10.1111_gcb.16998"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_provider_html.py::test_wiley_provider_replay_for_2004gb002273_body_assets_avoid_trailing_figures_noise",
-      "anchors": [
-        "rule-no-trailing-figures-appendix",
-        "rule-filter-publisher-ui-noise"
-      ],
-      "samples": [
-        "10.1029_2004gb002273"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_provider_html.py::test_pnas_provider_keeps_frontmatter_once_and_filters_collateral_noise_in_final_render",
-      "anchors": [
-        "rule-filter-publisher-ui-noise",
-        "rule-stable-frontmatter-order"
-      ],
-      "samples": [
-        "10.1073_pnas.2309123120"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_provider_asset_failures.py::test_science_provider_replay_for_adz3492_saves_svg_body_asset",
-      "anchors": [
-        "rule-image-download-validates-real-images"
-      ],
-      "samples": [
-        "10.1126_science.adz3492"
-      ]
-    },
-    {
-      "test": "tests/unit/test_springer_html_regressions.py::test_springer_paywall_article_markdown_strips_preview_sentence",
-      "anchors": [
-        "rule-filter-publisher-ui-noise"
-      ],
-      "samples": [
-        "10.1007_s00382-018-4286-0__block"
-      ]
-    },
-    {
-      "test": "tests/unit/test_springer_html_regressions.py::test_springernature_fulltext_markdown_strips_ai_alt_disclaimer",
-      "anchors": [
-        "rule-filter-publisher-ui-noise"
-      ],
-      "samples": [
-        "10.1038_s44221-022-00024-x"
-      ]
-    },
-    {
-      "test": "tests/unit/test_springer_html_regressions.py::test_old_nature_fixture_keeps_single_methods_summary_and_methods_sections",
-      "anchors": [
-        "rule-springer-methods-summary"
-      ],
-      "samples": [
-        "10.1038_nature12915"
-      ]
-    },
-    {
-      "test": "tests/unit/test_springer_html_regressions.py::test_old_nature_downloaded_body_figures_inline_without_trailing_figures_block",
-      "anchors": [
-        "rule-no-trailing-figures-appendix"
-      ],
-      "samples": [
-        "10.1038_nature13376"
-      ]
-    },
-    {
-      "test": "tests/unit/test_springer_html_regressions.py::test_new_nature_downloaded_body_figures_inline_without_trailing_figures_block",
-      "anchors": [
-        "rule-no-trailing-figures-appendix"
-      ],
-      "samples": [
-        "10.1038_s41561-022-00983-6"
-      ]
-    },
-    {
-      "test": "tests/unit/test_springer_html_regressions.py::test_springer_markdown_preserves_subscripts_in_section_headings",
-      "anchors": [
-        "rule-preserve-subscripts-in-headings"
-      ],
-      "samples": []
-    },
-    {
-      "test": "tests/unit/test_springer_html_regressions.py::test_springer_markdown_ignores_ai_alt_text_when_caption_exists",
-      "anchors": [
-        "rule-springer-caption-precedence"
-      ],
-      "samples": []
-    },
-    {
-      "test": "tests/unit/test_springer_html_regressions.py::test_nature_matters_arising_fixture_keeps_main_content_before_reporting_summary",
-      "anchors": [
-        "rule-springer-main-content-direct-children"
-      ],
-      "samples": [
-        "10.1038_s41586-020-1941-5"
-      ]
-    },
-    {
-      "test": "tests/unit/test_springer_html_regressions.py::test_springer_main_content_scenario_keeps_direct_child_order",
-      "anchors": [
-        "rule-springer-main-content-direct-children"
-      ],
-      "samples": [
-        "scenario_springer_main_content_direct_children"
-      ]
-    },
-    {
-      "test": "tests/unit/test_springer_html_tables.py::test_render_table_markdown_handles_real_springer_classic_table_page",
-      "anchors": [
-        "rule-springer-inline-table"
-      ],
-      "samples": [
-        "10.1007_s10584-011-0143-4"
-      ]
-    },
-    {
-      "test": "tests/unit/test_springer_html_tables.py::test_springer_html_injects_real_nature_inline_table_page_with_flattened_headers",
-      "anchors": [
-        "rule-springer-inline-table"
-      ],
-      "samples": [
-        "10.1038_s43247-024-01295-w"
-      ]
-    },
-    {
-      "test": "tests/unit/test_springer_html_tables.py::test_springer_html_keeps_article_success_when_inline_table_page_has_no_table",
-      "anchors": [
-        "rule-springer-inline-table"
-      ],
-      "samples": [
-        "10.1007_s10584-011-0143-4"
-      ]
-    },
-    {
-      "test": "tests/unit/test_html_availability.py::test_assess_html_rejects_science_paywall_sample_with_abstract",
-      "anchors": [
-        "rule-html-availability-contract"
-      ],
-      "samples": [
-        "10.1126_science.aeg3511__block"
-      ]
-    },
-    {
-      "test": "tests/unit/test_html_availability.py::test_assess_html_accepts_science_entitled_fulltext_fixture",
-      "anchors": [
-        "rule-html-availability-contract"
-      ],
-      "samples": [
-        "10.1126_science.aeg3511"
-      ]
-    },
-    {
-      "test": "tests/unit/test_html_availability.py::test_assess_html_rejects_springer_paywall_samples_without_promoting_ancillary_sections",
-      "anchors": [
-        "rule-html-availability-contract"
-      ],
-      "samples": [
-        "10.1007_s00382-018-4286-0__block",
-        "10.1007_s11430-021-9892-6__block",
-        "10.1007_s12652-019-01399-8__block",
-        "10.1007_s13351-020-9829-8__block"
-      ]
-    },
-    {
-      "test": "tests/unit/test_html_availability.py::test_assess_html_rejects_wiley_paywall_metadata_with_abstract",
-      "anchors": [
-        "rule-html-availability-contract"
-      ],
-      "samples": [
-        "10.1111_gcb.16414__block"
-      ]
-    },
-    {
-      "test": "tests/unit/test_html_availability.py::test_assess_html_accepts_wiley_fulltext_fixture_despite_login_chrome",
-      "anchors": [
-        "rule-html-availability-contract"
-      ],
-      "samples": [
-        "10.1111_gcb.16998"
-      ]
-    },
-    {
-      "test": "tests/unit/test_html_availability.py::test_assess_html_rejects_pnas_paywall_metadata_with_abstract",
-      "anchors": [
-        "rule-html-availability-contract"
-      ],
-      "samples": [
-        "10.1073_pnas.2509692123__block"
-      ]
-    },
-    {
-      "test": "tests/unit/test_html_availability.py::test_assess_html_accepts_pnas_fulltext_fixture_despite_institutional_login_chrome",
-      "anchors": [
-        "rule-html-availability-contract"
-      ],
-      "samples": [
-        "10.1073_pnas.2309123120"
-      ]
-    },
-    {
-      "test": "tests/unit/test_mcp_payload_cache.py::test_article_payload_preserves_asset_download_diagnostics",
-      "anchors": [
-        "rule-asset-download-diagnostic-fields"
-      ],
-      "samples": [
-        "scenario_asset_download_diagnostics"
-      ]
-    },
-    {
-      "test": "tests/unit/test_atypon_browser_workflow_postprocess_units.py::test_extract_atypon_browser_workflow_markdown_falls_back_complex_table_to_bullets",
-      "anchors": [
-        "rule-table-flatten-or-list"
-      ],
-      "samples": [
-        "scenario_table_flatten_or_list"
-      ]
-    },
-    {
-      "test": "tests/unit/test_models_render.py::test_article_from_markdown_keeps_code_availability_without_counting_it_as_fulltext",
-      "anchors": [
-        "rule-availability-excluded-from-body-metrics"
-      ],
-      "samples": [
-        "scenario_availability_body_metrics"
-      ]
-    },
-    {
-      "test": "tests/unit/test_models_render.py::test_article_from_markdown_coerces_dict_object_and_section_hint_in_declared_order",
-      "anchors": [
-        "rule-section-hints-normalize-availability"
-      ],
-      "samples": [
-        "scenario_section_hints_availability"
-      ]
-    },
-    {
-      "test": "tests/unit/test_formula_conversion.py::test_normalize_latex_repairs_identifier_escaped_underscores",
-      "anchors": [
-        "rule-formula-latex-normalization"
-      ],
-      "samples": [
-        "scenario_formula_latex_normalization"
-      ]
-    },
-    {
-      "test": "tests/unit/test_formula_conversion.py::test_normalize_latex_scenario_samples_are_katex_compatible",
-      "anchors": [
-        "rule-formula-latex-normalization"
-      ],
-      "samples": [
-        "scenario_formula_latex_normalization"
-      ]
-    },
-    {
-      "test": "tests/unit/test_regression_samples.py::test_wiley_bilingual_fixture_preserves_parallel_abstract_sections",
-      "anchors": [
-        "rule-keep-parallel-multilingual-abstracts"
-      ],
-      "samples": [
-        "10.1111_gcb.16386"
-      ]
-    },
-    {
-      "test": "tests/unit/test_regression_samples.py::test_springer_bilingual_fixture_preserves_parallel_abstract_sections",
-      "anchors": [
-        "rule-keep-parallel-multilingual-abstracts"
-      ],
-      "samples": [
-        "10.1007_s13158-025-00473-x"
-      ]
-    },
-    {
-      "test": "tests/unit/test_regression_samples.py::test_elsevier_bilingual_fixture_preserves_parallel_abstract_sections",
-      "anchors": [
-        "rule-keep-parallel-multilingual-abstracts"
-      ],
-      "samples": [
-        "10.1016_S1575-1813(18)30261-4"
-      ]
-    },
-    {
-      "test": "tests/unit/test_regression_samples.py::test_sage_bilingual_fixture_preserves_parallel_abstract_sections",
-      "anchors": [
-        "rule-keep-parallel-multilingual-abstracts"
-      ],
-      "samples": [
-        "10.1345_aph.1M379"
-      ]
-    },
-    {
-      "test": "tests/unit/test_tandf_provider.py::test_tandf_multilingual_fixture_is_authentic_and_keeps_parallel_abstracts",
-      "anchors": [
-        "rule-keep-parallel-multilingual-abstracts"
-      ],
-      "samples": [
-        "10.1080_19455224.2025.2547671"
-      ]
-    }
-  ]
+  }
 }

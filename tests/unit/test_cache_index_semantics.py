@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import platform
 import socket
@@ -12,13 +13,21 @@ import yaml
 
 from paper_fetch.mcp.cache_index import (
     IDENTITY_PROOF_MARKDOWN_REGISTRATION,
-    INDEX_VERSION,
     cache_index_path,
+    read_scoped_file,
     register_markdown_entry,
 )
-from paper_fetch.publisher_identity import normalize_doi
+from paper_fetch.mcp.cache_payloads import get_cached_payload, list_cached_payload
+from paper_fetch.models import AcquisitionProvenance
 from paper_fetch.utils import sanitize_filename
-from tests.unit._mcp_support import create_cached_downloads, mcp_tools
+from tests.unit._mcp_support import create_cached_downloads
+
+TEST_ACQUISITION = AcquisitionProvenance(
+    provider="crossref",
+    route="metadata",
+    representation="metadata",
+    transport="api",
+)
 
 
 def _write_markdown(
@@ -35,6 +44,13 @@ def _write_markdown(
         "source": source,
         "has_fulltext": has_fulltext,
         "content_kind": content_kind,
+        "acquisition": {
+            "provider": TEST_ACQUISITION.provider,
+            "route": TEST_ACQUISITION.route,
+            "representation": TEST_ACQUISITION.representation,
+            "transport": TEST_ACQUISITION.transport,
+            "fallback_used": TEST_ACQUISITION.fallback_used,
+        },
     }
     if completed_at is not None:
         metadata["completed_at"] = completed_at
@@ -58,93 +74,16 @@ class CacheIndexSemanticsTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            listed = mcp_tools.list_cached_payload(download_dir=download_dir)
-            cached = mcp_tools.get_cached_payload(doi=doi, download_dir=download_dir)
+            listed = list_cached_payload(download_dir=download_dir)
+            cached = get_cached_payload(doi=doi, download_dir=download_dir)
             index_after = json.loads(index_path.read_text(encoding="utf-8"))
 
         self.assertEqual(listed["entries"], [])
         self.assertEqual(listed["index_status"], "version_mismatch")
-        self.assertEqual(cached["status"], "hit")
+        self.assertEqual(cached["status"], "miss")
         self.assertEqual(cached["index_status"], "version_mismatch")
-        # Only the self-identifying Markdown remains public. DOI-local binary
-        # artifacts without a trusted scope or sidecar proof fail closed.
-        self.assertEqual(len(cached["entries"]), 1)
+        self.assertEqual(cached["entries"], [])
         self.assertEqual(index_after["version"], 0)
-
-    def test_list_cached_rescan_rebuilds_index_from_fetch_envelope_sidecars(
-        self,
-    ) -> None:
-        doi = "10.1000/sidecar"
-        with tempfile.TemporaryDirectory() as tmpdir:
-            download_dir = Path(tmpdir)
-            download_dir.mkdir(parents=True, exist_ok=True)
-            sidecar_path = (
-                download_dir / f"{sanitize_filename(doi)}.fetch-envelope.json"
-            )
-            sidecar_path.write_text(
-                json.dumps({"payload": {"doi": doi}}),
-                encoding="utf-8",
-            )
-            index_path = cache_index_path(download_dir)
-            index_path.write_text(
-                json.dumps({"version": 0, "entries": []}),
-                encoding="utf-8",
-            )
-
-            listed = mcp_tools.list_cached_payload(
-                download_dir=download_dir,
-                cache_mode="rescan",
-            )
-            index_after = json.loads(index_path.read_text(encoding="utf-8"))
-
-        self.assertEqual(listed["index_status"], "ok")
-        self.assertEqual(listed["cache_mode"], "rescan")
-        self.assertEqual(index_after["version"], INDEX_VERSION)
-        self.assertEqual(
-            [entry["kind"] for entry in listed["entries"]], ["fetch_envelope"]
-        )
-        self.assertEqual(listed["entries"][0]["doi"], doi)
-
-    def test_refresh_only_attributes_structured_markdown_to_matching_doi(self) -> None:
-        doi_a = "10.1000/ABC+Def(1)"
-        doi_b = "10.1000/other:paper"
-        with tempfile.TemporaryDirectory() as tmpdir:
-            download_dir = Path(tmpdir)
-            markdown_a = download_dir / "Smith_2025_First_Paper.md"
-            markdown_b = download_dir / "Jones_2024_Second_Paper.md"
-            unrelated = download_dir / "notes.md"
-            bad_yaml = download_dir / "broken.md"
-            _write_markdown(markdown_a, doi=doi_a)
-            _write_markdown(markdown_b, doi=doi_b)
-            unrelated.write_text("# Reading notes\n", encoding="utf-8")
-            bad_yaml.write_text(
-                "---\ndoi: [not: valid\n---\n# Broken\n", encoding="utf-8"
-            )
-
-            payload_a = mcp_tools.get_cached_payload(
-                doi="HTTPS://DOI.ORG/10.1000/ABC+DEF(1)",
-                download_dir=download_dir,
-            )
-            payload_b = mcp_tools.get_cached_payload(
-                doi=doi_b.upper(), download_dir=download_dir
-            )
-
-        self.assertEqual(payload_a["doi"], normalize_doi(doi_a))
-        self.assertEqual(
-            [Path(entry["path"]).name for entry in payload_a["entries"]],
-            [markdown_a.name],
-        )
-        self.assertEqual(
-            [entry["doi"] for entry in payload_a["entries"]],
-            [normalize_doi(doi_a)],
-        )
-        self.assertEqual(
-            [Path(entry["path"]).name for entry in payload_b["entries"]],
-            [markdown_b.name],
-        )
-        self.assertNotIn(markdown_b.name, str(payload_a))
-        self.assertNotIn(unrelated.name, str(payload_a))
-        self.assertNotIn(bad_yaml.name, str(payload_a))
 
     def test_preferred_markdown_prioritizes_fulltext_then_completion_time(self) -> None:
         doi = "10.1000/versions"
@@ -170,8 +109,23 @@ class CacheIndexSemanticsTests(unittest.TestCase):
                 doi=doi,
                 completed_at="2025-01-01T00:00:00Z",
             )
+            for path, has_fulltext, content_kind, completed_at in (
+                (metadata_only, False, "metadata_only", "2026-01-01T00:00:00Z"),
+                (fulltext_old, True, "fulltext", "2024-01-01T00:00:00Z"),
+                (fulltext_new, True, "fulltext", "2025-01-01T00:00:00Z"),
+            ):
+                register_markdown_entry(
+                    download_dir,
+                    doi,
+                    path,
+                    source="unit_test",
+                    acquisition=TEST_ACQUISITION,
+                    has_fulltext=has_fulltext,
+                    content_kind=content_kind,
+                    completed_at=completed_at,
+                )
 
-            payload = mcp_tools.get_cached_payload(doi=doi, download_dir=download_dir)
+            payload = get_cached_payload(doi=doi, download_dir=download_dir)
 
         self.assertEqual(len(payload["entries"]), 3)
         self.assertEqual(
@@ -180,78 +134,6 @@ class CacheIndexSemanticsTests(unittest.TestCase):
         )
         self.assertTrue(payload["preferred"]["markdown"]["has_fulltext"])
         self.assertEqual(payload["preferred"]["markdown"]["content_kind"], "fulltext")
-
-    def test_version_one_index_migration_discards_unproven_markdown_ownership(
-        self,
-    ) -> None:
-        doi_a = "10.1000/a"
-        doi_b = "10.1000/b"
-        with tempfile.TemporaryDirectory() as tmpdir:
-            download_dir = Path(tmpdir)
-            markdown_a = download_dir / "author-a.md"
-            markdown_b = download_dir / "author-b.md"
-            unproven = download_dir / "notes.md"
-            _write_markdown(markdown_a, doi=doi_a)
-            _write_markdown(markdown_b, doi=doi_b)
-            unproven.write_text("# Notes\n", encoding="utf-8")
-            index_path = cache_index_path(download_dir)
-            index_path.write_text(
-                json.dumps(
-                    {
-                        "version": 1,
-                        "entries": [
-                            {"doi": doi_a, "kind": "markdown", "path": str(markdown_a)},
-                            {"doi": doi_a, "kind": "markdown", "path": str(markdown_b)},
-                            {"doi": doi_a, "kind": "markdown", "path": str(unproven)},
-                        ],
-                    }
-                ),
-                encoding="utf-8",
-            )
-
-            payload = mcp_tools.get_cached_payload(doi=doi_a, download_dir=download_dir)
-            migrated = json.loads(index_path.read_text(encoding="utf-8"))
-
-        self.assertEqual(payload["index_status"], "repaired")
-        self.assertIn("migrated", payload["index_reason"])
-        self.assertEqual(migrated["version"], INDEX_VERSION)
-        self.assertEqual(
-            [Path(entry["path"]).name for entry in payload["entries"]],
-            [markdown_a.name],
-        )
-        self.assertNotIn(markdown_b.name, str(payload))
-        self.assertNotIn(unproven.name, str(migrated))
-
-    def test_rescan_discovers_frontmatter_markdown_without_sidecars(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            download_dir = Path(tmpdir)
-            markdown_a = download_dir / "paper-a.md"
-            markdown_b = download_dir / "paper-b.md"
-            _write_markdown(markdown_a, doi="10.1000/a")
-            _write_markdown(markdown_b, doi="10.1000/b")
-            (download_dir / "bad.md").write_text(
-                "---\ndoi: 10.1000/bad\nsource: x\nhas_fulltext: nope\n"
-                "content_kind: fulltext\n---\n",
-                encoding="utf-8",
-            )
-            cache_index_path(download_dir).write_text(
-                json.dumps({"version": 0, "entries": []}), encoding="utf-8"
-            )
-
-            payload = mcp_tools.list_cached_payload(
-                download_dir=download_dir, cache_mode="rescan"
-            )
-
-        self.assertEqual(payload["index_status"], "ok")
-        self.assertEqual(payload["index_version"], INDEX_VERSION)
-        self.assertEqual(
-            {entry["doi"] for entry in payload["entries"]},
-            {"10.1000/a", "10.1000/b"},
-        )
-        self.assertEqual(
-            {Path(entry["path"]).name for entry in payload["entries"]},
-            {markdown_a.name, markdown_b.name},
-        )
 
     def test_explicit_registration_tracks_saved_path_and_invalidates_on_change(
         self,
@@ -268,22 +150,14 @@ class CacheIndexSemanticsTests(unittest.TestCase):
                 f"https://doi.org/{doi_a.upper()}",
                 markdown,
                 source="unit_test",
+                acquisition=TEST_ACQUISITION,
                 has_fulltext=True,
                 content_kind="fulltext",
             )
-            payload_a = mcp_tools.get_cached_payload(
-                doi=doi_a, download_dir=download_dir
-            )
-            rescanned = mcp_tools.list_cached_payload(
-                download_dir=download_dir, cache_mode="rescan"
-            )
+            payload_a = get_cached_payload(doi=doi_a, download_dir=download_dir)
             _write_markdown(markdown, doi=doi_b)
-            changed_payload_a = mcp_tools.get_cached_payload(
-                doi=doi_a, download_dir=download_dir
-            )
-            payload_b = mcp_tools.get_cached_payload(
-                doi=doi_b, download_dir=download_dir
-            )
+            changed_payload_a = get_cached_payload(doi=doi_a, download_dir=download_dir)
+            payload_b = get_cached_payload(doi=doi_b, download_dir=download_dir)
 
         self.assertIsNotNone(registered)
         assert registered is not None
@@ -292,11 +166,6 @@ class CacheIndexSemanticsTests(unittest.TestCase):
         )
         self.assertEqual(
             payload_a["preferred"]["markdown"]["path"], str(markdown.resolve())
-        )
-        self.assertEqual(len(rescanned["entries"]), 1)
-        self.assertEqual(
-            rescanned["entries"][0]["identity_proof"],
-            IDENTITY_PROOF_MARKDOWN_REGISTRATION,
         )
         self.assertEqual(changed_payload_a["status"], "miss")
         # Editing an explicitly registered file invalidates both its DOI and its
@@ -350,10 +219,11 @@ class CacheIndexSemanticsTests(unittest.TestCase):
                 "10.1000/alias",
                 markdown,
                 source="unit_test",
+                acquisition=TEST_ACQUISITION,
                 has_fulltext=True,
                 content_kind="fulltext",
             )
-            payload = mcp_tools.get_cached_payload(
+            payload = get_cached_payload(
                 doi="10.1000/alias",
                 download_dir=aliased_download_dir,
             )
@@ -377,7 +247,7 @@ class CacheIndexSemanticsTests(unittest.TestCase):
                 json.dumps({"payload": {"doi": doi_b}}), encoding="utf-8"
             )
 
-            payload = mcp_tools.get_cached_payload(doi=doi_a, download_dir=download_dir)
+            payload = get_cached_payload(doi=doi_a, download_dir=download_dir)
 
         self.assertEqual(payload["status"], "miss")
         self.assertEqual(payload["entries"], [])
@@ -395,16 +265,54 @@ class CacheIndexSemanticsTests(unittest.TestCase):
                 "10.1000/outside",
                 outside_markdown,
                 source="unit_test",
+                acquisition=TEST_ACQUISITION,
                 has_fulltext=True,
                 content_kind="fulltext",
             )
-            payload = mcp_tools.get_cached_payload(
+            payload = get_cached_payload(
                 doi="10.1000/outside", download_dir=download_dir
             )
 
         self.assertIsNone(registered)
         self.assertEqual(payload["status"], "miss")
         self.assertEqual(payload["entries"], [])
+
+    def test_scoped_file_read_rejects_escape_symlink_and_integrity_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            download_dir = root / "cache"
+            download_dir.mkdir()
+            cached = download_dir / "paper.md"
+            payload = b"verified cache payload"
+            cached.write_bytes(payload)
+
+            self.assertEqual(
+                read_scoped_file(
+                    download_dir,
+                    str(cached),
+                    expected_size=len(payload),
+                    expected_sha256=hashlib.sha256(payload).hexdigest(),
+                ),
+                (cached.resolve(), payload),
+            )
+            self.assertIsNone(
+                read_scoped_file(
+                    download_dir, str(cached), expected_size=len(payload) + 1
+                )
+            )
+            self.assertIsNone(
+                read_scoped_file(download_dir, str(cached), expected_sha256="0" * 64)
+            )
+
+            outside = root / "outside.md"
+            outside.write_bytes(payload)
+            self.assertIsNone(read_scoped_file(download_dir, str(outside)))
+            linked = download_dir / "linked.md"
+            try:
+                linked.symlink_to(outside)
+            except OSError:
+                self.skipTest("filesystem does not support symlinks")
+            self.assertIsNone(read_scoped_file(download_dir, str(linked)))
 
     def test_cache_miss_does_not_open_network_connections(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -414,7 +322,7 @@ class CacheIndexSemanticsTests(unittest.TestCase):
                 "create_connection",
                 side_effect=AssertionError("cache lookup must stay offline"),
             ) as create_connection:
-                payload = mcp_tools.get_cached_payload(
+                payload = get_cached_payload(
                     doi="10.1000/missing", download_dir=download_dir
                 )
 

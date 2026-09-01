@@ -142,10 +142,12 @@ def download_arxiv_html_figure_assets(
         output_dir=plan.output_dir,
         user_agent=plan.user_agent,
         asset_profile=plan.asset_profile,
-        headers=plan.image_headers,
-        asset_download_concurrency=concurrency,
-        provider_name="arxiv",
-        runtime_context=plan.runtime_context,
+        options=html_assets.AssetDownloadOptions(
+            headers=plan.image_headers,
+            asset_download_concurrency=concurrency,
+            provider_name="arxiv",
+            runtime_context=plan.runtime_context,
+        ),
     )
     retry_assets = assets_for_network_retry(
         fallback_assets,
@@ -169,10 +171,12 @@ def download_arxiv_html_figure_assets(
         output_dir=plan.output_dir,
         user_agent=plan.user_agent,
         asset_profile=plan.asset_profile,
-        headers=plan.image_headers,
-        asset_download_concurrency=1,
-        provider_name="arxiv",
-        runtime_context=plan.runtime_context,
+        options=html_assets.AssetDownloadOptions(
+            headers=plan.image_headers,
+            asset_download_concurrency=1,
+            provider_name="arxiv",
+            runtime_context=plan.runtime_context,
+        ),
     )
     return {
         "assets": [

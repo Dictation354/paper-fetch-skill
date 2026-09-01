@@ -6,6 +6,42 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+### Breaking — command, batch, and manifest surfaces
+
+- The CLI is now command-only: use `paper-fetch fetch ...`. The legacy root-level fetch flags, CLI `--no-download`, durable `--run-manifest` / `--resume`, and the `manifest audit|reconcile` commands were removed. Use `--artifact-mode none` when provider artifacts and assets should not be retained.
+- CLI and MCP batches may write one final `batch-results.jsonl`; it is assembled in input order and committed atomically only after every input reaches a terminal state. Append-only attempts, run summaries, audit/reconcile, and resume semantics were removed, while in-batch canonical-DOI fan-out remains. Existing differing result files still require explicit `--overwrite` / `overwrite=true`.
+- Schema-v2 manifest records now expose only the current `record_status`, `acceptance`, and `output_artifacts` contract. The legacy top-level `status`, `output_path`, and `saved_markdown_path` projection and legacy acceptance/cache migration shims were removed; old, unknown, or incomplete records now fail closed instead of being guessed or upgraded.
+
+### Changed — browser and transport runtime
+
+- Camoufox is now the single browser backend. Removed the backend selector, generic Chrome/CDP runtime path, automatic browser installation/repair/update, and the CLI/MCP/environment `browser_auto_prepare` controls. Fetch, auth, and preflight only use an already prepared runtime; run `python -m camoufox fetch` explicitly when setup is needed.
+- Browser preflight no longer publishes short-lived HTML or route hints for a later fetch. Every fetch performs its own navigation and repeats identity, access-boundary, body, and asset acceptance; storage state remains the intentional reusable browser capability.
+- Removed the `download_dir`-backed HTTP text cache, conditional disk revalidation, cache-stat/timing collectors, and their environment controls. HTTP GET reuse is now bounded to the current process, while request safety, redirect checks, retry policy, and asset limits remain enforced.
+
+### Changed — MCP cache access
+
+- Removed dynamic cache index/entry resources, cache resource-list notifications, and `batch_fetch` cache `resource_uri` fields. Cache access now uses `list_cached` / `get_cached` within an explicit `download_dir` scope; the static provider catalog resource remains available.
+- Removed cache `refresh` / `rescan` modes and loose-file discovery. Sidecars, Markdown, and assets are registered incrementally when written; reads trust only the current scoped index plus current DOI, capability-scope, stat, and hash evidence, without silently migrating an old or damaged index.
+
+### Changed — provider and library contracts
+
+- Built-in providers now load from one fixed, validated bundle list. Dynamic registration, import-order precedence, overlapping identity priorities, route-union compilation, and the generated provider catalog/route governance layer were removed; runtime network policy is compiled from an exact declared route.
+- Removed compatibility-only positional constructors, broad keyword adapters, legacy urllib asset request injection, generic browser/PDF launch arguments, cross-request singleflight, and other private wrapper imports. Current typed request/options objects and one-batch DOI deduplication remain the supported paths.
+
+### Changed — maintainer tooling and verification
+
+- Replaced the manifest/review/scaffold onboarding tree with the smaller `docs/adding-a-provider.md` workflow: define a runtime bundle, add provider-local tests, and add representative golden replay evidence. Removed provider governance/drift/canary generators, recursive onboarding automation, Markdown-review sidecars, live benchmark tooling, and generated route documentation.
+- Removed the repository coverage-focus and complexity-budget gates and the packaged `paper_fetch_devtools` quality layer. Deterministic unit, integration, provider replay, package, platform, and live-test entry points remain in their respective scopes.
+- Moved static Skill integrity verification from the runtime package to `scripts/skill_integrity.py`. Offline builders/installers verify the bundled and installed host copies directly; `doctor` now reports runtime/provider health only and no longer accepts `--install-root` or emits installation-provenance status.
+
+### Changed — release and dependency CI
+
+- Removed the mutable `dependency-latest` rolling release, its dedicated token path, and cross-revision release-tooling overlays. Stable `v*` releases continue to publish the nine offline installers with `SHA256SUMS`, frozen dependency evidence, SBOMs, secret scanning, and provenance attestation.
+- Removed the non-gating provider canary state machine; explicit legally authorized checks remain available under `tests/live`.
+- Locked dependency audits now export all extras and fail directly on every `pip-audit` finding, without an empty waiver framework.
+- Python 3.11 and 3.14 boundary jobs now build one wheel per Python version and smoke both isolated core and full installs.
+- Python distribution verification now checks archive safety, required package/Skill payloads, metadata, entry points, and complete wheel `RECORD` coverage without maintaining a checked-in exact source inventory. The legacy repository-root Windows PowerShell bundle installer was removed; the supported Windows release artifact remains the native setup executable.
+
 ## 6.0.4 - 2026-08-29
 
 ### Fixed — release quality gates
