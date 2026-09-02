@@ -6,6 +6,8 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.1.0 - 2026-09-02
+
 ### Fixed — audit consistency
 
 - Batch MCP fetches now normalize optional string fields exactly like single fetches, including treating whitespace-only shared Markdown filenames as unspecified and recording the normalized request in manifests.

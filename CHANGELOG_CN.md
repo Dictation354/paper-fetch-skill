@@ -6,6 +6,8 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.1.0 - 2026-09-02
+
 ### 修复——审计一致性
 
 - 批量 MCP 抓取现在与单篇抓取一致地规范化可选字符串；仅含空白的共享 Markdown 文件名视为未指定，manifest 记录的也是规范化后的请求。
