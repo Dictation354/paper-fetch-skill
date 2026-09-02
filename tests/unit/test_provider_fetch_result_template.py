@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from collections.abc import Mapping
 
@@ -378,6 +379,40 @@ class _TemplateClient(ProviderClient):
 
 
 class ProviderFetchResultTemplateTests(unittest.TestCase):
+    def test_base_fetch_result_returns_content_updated_by_asset_hook(self) -> None:
+        final_markdown = "# Template Article\n\n## Results\n\nFinal body " * 80
+
+        class UpdatingAssetClient(_TemplateClient):
+            def download_related_assets(
+                self,
+                doi,
+                metadata,
+                raw_payload,
+                output_dir,
+                *,
+                asset_profile="all",
+                context=None,
+            ):
+                del doi, metadata, output_dir, asset_profile, context
+                raw_payload.content = replace(
+                    raw_payload.content,
+                    markdown_text=final_markdown,
+                    source_url="https://example.test/final",
+                )
+                return {"assets": [], "asset_failures": []}
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = UpdatingAssetClient().fetch_result(
+                "10.5555/template",
+                {"doi": "10.5555/template", "title": "Template Article"},
+                Path(tmpdir),
+                asset_profile="body",
+            )
+
+        self.assertEqual(result.content.source_url, "https://example.test/final")
+        self.assertEqual(result.content.markdown_text, final_markdown)
+        self.assertIn("Final body", result.article.to_ai_markdown())
+
     def test_base_fetch_result_auto_converts_html_fulltext_to_markdown(self) -> None:
         body = (
             "<html><body><article><h1>Auto HTML Article</h1><h2>Results</h2><p>"
@@ -414,7 +449,6 @@ class ProviderFetchResultTemplateTests(unittest.TestCase):
         self.assertIn("Automatic conversion works", result.article.to_ai_markdown())
 
     def test_base_fetch_result_decodes_html_with_payload_charset(self) -> None:
-        """rule: rule-html-byte-decoding-and-cleanup-bounds"""
         body = (
             "<html><body><article><h1>Charset Article</h1><h2>Results</h2><p>"
             + ("Café conversion works. " * 80)

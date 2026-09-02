@@ -10,6 +10,8 @@ from paper_fetch.providers._article_markdown_common import render_inline_text
 from paper_fetch.providers import (
     _article_markdown_elsevier_document as elsevier_document,
 )
+from paper_fetch.providers import _article_markdown_xml as article_markdown_xml
+from paper_fetch.providers import _elsevier_objects as elsevier_objects
 from paper_fetch.providers import _elsevier_xml_rules as elsevier_rules
 from paper_fetch.providers import _article_markdown_math as article_markdown_math
 from paper_fetch.providers import elsevier as elsevier_provider
@@ -111,6 +113,56 @@ def _assert_markdown_table_row(
 
 
 class ElsevierMarkdownTests(unittest.TestCase):
+    def test_xml_name_matching_preserves_provider_specific_name_forms(self) -> None:
+        self.assertEqual(article_markdown_xml.xml_local_name("title"), "title")
+        self.assertEqual(
+            article_markdown_xml.xml_local_name("{urn:paper-fetch:test}title"),
+            "title",
+        )
+        self.assertEqual(
+            article_markdown_xml.xml_local_name("ce:title"),
+            "ce:title",
+        )
+
+        colon_only = ET.Element("root")
+        colon_only.append(ET.Comment("non-element nodes must remain ignored"))
+        ET.SubElement(colon_only, "ce:title").text = "Colon title"
+        self.assertIsNone(article_markdown_xml.first_child(colon_only, "title"))
+
+        for style, prefix in (
+            ("plain", ""),
+            ("clark", "{urn:paper-fetch:test}"),
+            ("colon", "ce:"),
+        ):
+            with self.subTest(style=style):
+                root = ET.Element("root")
+                root.append(ET.Comment("non-element nodes must remain ignored"))
+                formula = ET.SubElement(root, f"{prefix}formula")
+                ET.SubElement(
+                    formula,
+                    f"{prefix}link",
+                    {"locator": "fx1"},
+                )
+                resource = ET.SubElement(
+                    root,
+                    f"{prefix}object",
+                    {
+                        "ref": "fx1_lrg.jpg",
+                        "type": "IMAGE-HIGH-RES",
+                        "mimetype": "image/jpeg",
+                    },
+                )
+                resource.text = f"https://example.test/{style}.jpg"
+
+                references = elsevier_objects.extract_elsevier_object_references(root)
+
+                self.assertEqual(len(references), 1)
+                self.assertEqual(references[0]["asset_type"], "image")
+                self.assertEqual(
+                    references[0]["source_url"],
+                    f"https://example.test/{style}.jpg",
+                )
+
     def test_elsevier_document_module_remains_importable(self) -> None:
         self.assertTrue(callable(elsevier_document.build_article_structure))
         self.assertTrue(callable(elsevier_document.build_markdown_document))
@@ -206,7 +258,6 @@ class ElsevierMarkdownTests(unittest.TestCase):
         )
 
     def test_build_article_structure_extracts_numbered_xml_references(self) -> None:
-        """rule: rule-elsevier-xml-references"""
         doi = "10.1016/j.agrformet.2024.109975"
         structure = elsevier_document.build_article_structure(
             provider="elsevier",
@@ -280,7 +331,6 @@ class ElsevierMarkdownTests(unittest.TestCase):
         self.assertEqual(references[2].raw, "3. [Reference text unavailable]")
 
     def test_article_from_structure_preserves_inline_elsevier_figures(self) -> None:
-        """rule: rule-elsevier-inline-figure-table-placement"""
         xml_body = b"""<?xml version="1.0"?>
 <full-text-retrieval-response xmlns="http://www.elsevier.com/xml/svapi/article/dtd" xmlns:ce="http://www.elsevier.com/xml/common/dtd">
   <body>
@@ -490,17 +540,14 @@ class ElsevierMarkdownTests(unittest.TestCase):
         )
 
     def test_elsevier_real_display_formula_renders_as_formula_block(self) -> None:
-        """rule: rule-elsevier-formula-rendering"""
         self._assert_real_elsevier_display_formula_renders_as_formula_block()
 
     def test_elsevier_inline_math_symbols_stay_inline(self) -> None:
-        """rule: rule-elsevier-formula-rendering"""
         self._assert_inline_math_symbols_in_paragraph_do_not_repeat_as_display_blocks()
 
     def test_elsevier_formula_placeholder_is_visible_when_conversion_fails(
         self,
     ) -> None:
-        """rule: rule-elsevier-formula-rendering"""
         self._assert_formula_placeholder_is_visible_and_counted_when_conversion_fails()
 
     def test_elsevier_formula_locator_uses_highest_priority_official_objects(
@@ -683,7 +730,6 @@ class ElsevierMarkdownTests(unittest.TestCase):
         self.assertEqual(structure.semantic_losses.table_layout_degraded_count, 1)
 
     def test_elsevier_regression_32_preserves_independent_table_groups(self) -> None:
-        """rule: rule-xml-table-groups"""
         doi = "10.1016/j.apgeog.2012.04.006"
         structure = _build_elsevier_golden_structure(doi)
 
@@ -737,7 +783,6 @@ class ElsevierMarkdownTests(unittest.TestCase):
         )
 
     def test_elsevier_regression_97_renders_wbgt_t_at_groups_in_order(self) -> None:
-        """rule: rule-xml-table-groups"""
         doi = "10.1016/j.envres.2018.12.059"
         structure = _build_elsevier_golden_structure(doi)
 
@@ -789,7 +834,6 @@ class ElsevierMarkdownTests(unittest.TestCase):
         )
 
     def test_elsevier_regression_42_uses_two_official_formula_images(self) -> None:
-        """rule: rule-elsevier-formula-rendering"""
         doi = "10.1016/j.uclim.2019.100528"
         structure = _build_elsevier_golden_structure(doi)
 
@@ -826,7 +870,6 @@ class ElsevierMarkdownTests(unittest.TestCase):
     def test_elsevier_complex_table_spans_are_normalized_without_quality_loss(
         self,
     ) -> None:
-        """rule: rule-elsevier-complex-table-span-degradation"""
         xml_body = _load_elsevier_scenario_xml("elsevier_complex_table_span")
 
         markdown = build_elsevier_markdown(xml_body)
@@ -908,7 +951,6 @@ class ElsevierMarkdownTests(unittest.TestCase):
     def test_elsevier_real_complex_table_records_successful_normalization(
         self,
     ) -> None:
-        """rule: rule-elsevier-complex-table-span-degradation"""
         doi = "10.1016/j.jhydrol.2021.126210"
         structure = elsevier_document.build_article_structure(
             provider="elsevier",
@@ -1023,21 +1065,17 @@ class ElsevierMarkdownTests(unittest.TestCase):
         )
 
     def test_elsevier_appendix_figure_renders_as_figure_block(self) -> None:
-        """rule: rule-elsevier-appendix-context"""
         self._assert_real_elsevier_appendix_figure_renders_as_figure_block()
 
     def test_elsevier_appendix_reference_keeps_asset_in_appendix(self) -> None:
-        """rule: rule-elsevier-appendix-context"""
         self._assert_real_elsevier_appendix_figure_stays_in_appendix_when_referenced_from_body()
 
     def test_elsevier_appendix_table_renders_as_markdown_table(self) -> None:
-        """rule: rule-elsevier-appendix-context"""
         self._assert_real_elsevier_appendix_table_renders_as_markdown_table()
 
     def test_supplementary_display_is_omitted_from_body_and_listed_with_caption(
         self,
     ) -> None:
-        """rule: rule-elsevier-supplementary-materials"""
         xml_body = _load_elsevier_scenario_xml("elsevier_supplementary_display")
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1063,7 +1101,6 @@ class ElsevierMarkdownTests(unittest.TestCase):
     def test_supplementary_asset_without_display_is_listed_as_supplementary_material(
         self,
     ) -> None:
-        """rule: rule-elsevier-supplementary-materials"""
         xml_body = _load_elsevier_scenario_xml("elsevier_supplementary_asset_only")
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1085,7 +1122,6 @@ class ElsevierMarkdownTests(unittest.TestCase):
         self.assertNotIn("## Additional Figures", markdown)
 
     def test_real_supplementary_e_component_from_golden_xml_is_listed(self) -> None:
-        """rule: rule-elsevier-supplementary-materials"""
         markdown = _render_elsevier_golden_markdown(
             "10.1016/j.ecolind.2024.112140",
             assets=[
@@ -1134,7 +1170,6 @@ refers to the tie.</ce:para>
     def test_graphical_abstract_assets_do_not_appear_in_additional_figures(
         self,
     ) -> None:
-        """rule: rule-elsevier-graphical-abstract"""
         xml_body = b"""<?xml version="1.0"?>
 <full-text-retrieval-response xmlns="http://www.elsevier.com/xml/svapi/article/dtd" xmlns:ce="http://www.elsevier.com/xml/common/dtd" xmlns:xlink="http://www.w3.org/1999/xlink">
   <abstract>
@@ -1198,7 +1233,6 @@ refers to the tie.</ce:para>
     def test_graphical_abstract_only_document_does_not_create_additional_figures(
         self,
     ) -> None:
-        """rule: rule-elsevier-graphical-abstract"""
         xml_body = b"""<?xml version="1.0"?>
 <full-text-retrieval-response xmlns="http://www.elsevier.com/xml/svapi/article/dtd" xmlns:ce="http://www.elsevier.com/xml/common/dtd" xmlns:xlink="http://www.w3.org/1999/xlink">
   <abstract>
@@ -1246,7 +1280,6 @@ refers to the tie.</ce:para>
     def test_real_graphical_abstract_from_golden_xml_is_excluded_from_figures(
         self,
     ) -> None:
-        """rule: rule-elsevier-graphical-abstract"""
         doi = "10.1016/j.scitotenv.2022.158499"
         structure = elsevier_document.build_article_structure(
             provider="elsevier",
@@ -1406,7 +1439,6 @@ refers to the tie.</ce:para>
     def test_elsevier_golden_fixture_classifies_data_and_code_availability_sections(
         self,
     ) -> None:
-        """rule: rule-availability-section-kind-mapping"""
         doi = "10.1016/j.rse.2025.114648"
         markdown = _render_elsevier_golden_markdown(doi)
         article = article_from_markdown(

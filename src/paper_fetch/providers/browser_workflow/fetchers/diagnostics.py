@@ -9,7 +9,6 @@ from ....extraction.html.signals import (
     CLOUDFLARE_CHALLENGE_TITLE_TOKENS as _CLOUDFLARE_CHALLENGE_TITLE_TOKENS,
 )
 from ....utils import normalize_text
-from ...browser_runtime.types import BrowserFetchedHtml
 
 BROWSER_CONTEXT_ERROR = "browser_context_error"
 
@@ -76,12 +75,3 @@ def _image_fetch_failure_reason(
     if timed_out or _is_timeout_error(error):
         return "image_fetch_timeout"
     return "image_fetch_error"
-
-
-def _browser_image_payload_failure_reason(result: BrowserFetchedHtml) -> str:
-    if not isinstance(result.image_payload, Mapping):
-        return "browser_image_payload_missing"
-    payload_reason = normalize_text(str(result.image_payload.get("reason") or ""))
-    if payload_reason:
-        return payload_reason
-    return "browser_image_payload_invalid"

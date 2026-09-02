@@ -85,7 +85,3 @@ def _iter_manifest_records() -> list[FixtureRecord]:
 @lru_cache(maxsize=1)
 def fixture_catalog() -> dict[str, FixtureRecord]:
     return {record.fixture_path: record for record in _iter_manifest_records()}
-
-
-def fixture_record_for_path(path: Path | str) -> FixtureRecord | None:
-    return fixture_catalog().get(_repo_relative(path))

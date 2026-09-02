@@ -1,4 +1,4 @@
-"""Shared quality and HTML extraction reason-code constants."""
+"""Compatibility exports for historical quality reason-code imports."""
 
 from __future__ import annotations
 

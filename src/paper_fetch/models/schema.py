@@ -378,6 +378,19 @@ class RenderContext:
             self.warnings.append(TRUNCATION_WARNING)
 
 
+_FETCH_ENVELOPE_QUALITY_FIELDS = frozenset(
+    {
+        "has_fulltext",
+        "content_kind",
+        "has_abstract",
+        "warnings",
+        "source_trail",
+        "token_estimate",
+        "token_estimate_breakdown",
+    }
+)
+
+
 @dataclass(kw_only=True)
 class FetchEnvelope:
     doi: str | None
@@ -399,6 +412,23 @@ class FetchEnvelope:
     diagnostic_artifacts: list[dict[str, Any]] = field(default_factory=list)
     acquisition: AcquisitionProvenance | None = None
 
+    def __getattribute__(self, name: str) -> Any:
+        if name in _FETCH_ENVELOPE_QUALITY_FIELDS:
+            state = object.__getattribute__(self, "__dict__")
+            quality = state.get("quality")
+            if quality is not None:
+                return getattr(quality, name)
+        return object.__getattribute__(self, name)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name in _FETCH_ENVELOPE_QUALITY_FIELDS:
+            state = object.__getattribute__(self, "__dict__")
+            quality = state.get("quality")
+            if quality is not None and name not in state:
+                setattr(quality, name, value)
+                return
+        object.__setattr__(self, name, value)
+
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
@@ -406,12 +436,20 @@ class FetchEnvelope:
         return json.dumps(self.to_dict(), ensure_ascii=False, indent=2)
 
     def __post_init__(self) -> None:
-        from .quality import _clone_quality, _dedupe_strings
+        from .quality import _dedupe_strings
         from .tokens import coerce_token_estimate_breakdown
 
+        state = object.__getattribute__(self, "__dict__")
+        has_fulltext = bool(state["has_fulltext"])
+        content_kind = state["content_kind"]
+        has_abstract = bool(state["has_abstract"])
+        warnings = state["warnings"]
+        source_trail = state["source_trail"]
+        token_estimate = int(state["token_estimate"])
+        token_estimate_breakdown = state["token_estimate_breakdown"]
         self.acquisition = coerce_acquisition_provenance(self.acquisition)
         if self.article is not None:
-            self.quality = _clone_quality(self.article.quality)
+            self.quality = self.article.quality
             if self.acquisition is None:
                 self.acquisition = self.article.acquisition
             elif self.article.acquisition is None:
@@ -420,45 +458,38 @@ class FetchEnvelope:
                 raise ValueError(
                     "FetchEnvelope and ArticleModel acquisition provenance must match."
                 )
-        if self.trace and not self.source_trail:
-            self.source_trail = source_trail_from_trace(self.trace)
-        elif self.source_trail and not self.trace:
-            self.trace = trace_from_markers(self.source_trail)
-        if self.content_kind == "fulltext":
-            self.has_fulltext = True
-        elif self.content_kind == "abstract_only":
-            self.has_fulltext = False
-            self.has_abstract = True
-        elif self.has_fulltext:
-            self.content_kind = "fulltext"
-        elif self.has_abstract:
-            self.content_kind = "abstract_only"
-        self.quality.has_fulltext = self.quality.has_fulltext or self.has_fulltext
-        if self.content_kind != "metadata_only":
-            self.quality.content_kind = self.content_kind
-        self.quality.has_abstract = self.quality.has_abstract or self.has_abstract
-        self.quality.warnings = _dedupe_strings(
-            [*self.quality.warnings, *self.warnings]
-        )
+        if self.trace and not source_trail:
+            source_trail = source_trail_from_trace(self.trace)
+        elif source_trail and not self.trace:
+            self.trace = trace_from_markers(source_trail)
+        if content_kind == "fulltext":
+            has_fulltext = True
+        elif content_kind == "abstract_only":
+            has_fulltext = False
+            has_abstract = True
+        elif has_fulltext:
+            content_kind = "fulltext"
+        elif has_abstract:
+            content_kind = "abstract_only"
+        self.quality.has_fulltext = self.quality.has_fulltext or has_fulltext
+        if content_kind != "metadata_only":
+            self.quality.content_kind = content_kind
+        self.quality.has_abstract = self.quality.has_abstract or has_abstract
+        self.quality.warnings = _dedupe_strings([*self.quality.warnings, *warnings])
         self.quality.source_trail = _dedupe_strings(
-            [*self.quality.source_trail, *self.source_trail]
+            [*self.quality.source_trail, *source_trail]
         )
-        if self.token_estimate and not self.quality.token_estimate:
-            self.quality.token_estimate = self.token_estimate
+        if token_estimate and not self.quality.token_estimate:
+            self.quality.token_estimate = token_estimate
         if (
-            self.token_estimate_breakdown != TokenEstimateBreakdown()
+            token_estimate_breakdown != TokenEstimateBreakdown()
             and self.quality.token_estimate_breakdown == TokenEstimateBreakdown()
         ):
             self.quality.token_estimate_breakdown = coerce_token_estimate_breakdown(
-                self.token_estimate_breakdown
+                token_estimate_breakdown
             )
-        self.has_fulltext = self.quality.has_fulltext
-        self.content_kind = self.quality.content_kind
-        self.has_abstract = self.quality.has_abstract
-        self.warnings = list(self.quality.warnings)
-        self.source_trail = list(self.quality.source_trail)
-        self.token_estimate = self.quality.token_estimate
-        self.token_estimate_breakdown = self.quality.token_estimate_breakdown
+        for name in _FETCH_ENVELOPE_QUALITY_FIELDS:
+            state.pop(name, None)
 
 
 @dataclass(kw_only=True)

@@ -40,7 +40,7 @@ def _structured_browser_failure_message(exc: BrowserRuntimeFailure) -> str:
     stderr_summary = str(failure_payload.get("stderr_summary") or "").strip()
     parts = [f"{stage}: {exc.message}" if stage else exc.message]
     if stderr_summary:
-        parts.append(f"Chrome stderr: {stderr_summary}")
+        parts.append(f"Camoufox stderr: {stderr_summary}")
     message = " ".join(part for part in parts if part).strip()
     if len(message) > _BROWSER_FAILURE_MESSAGE_MAX_CHARS:
         message = "..." + message[-_BROWSER_FAILURE_MESSAGE_MAX_CHARS:]

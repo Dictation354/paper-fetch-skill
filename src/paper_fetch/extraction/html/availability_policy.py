@@ -16,7 +16,6 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class AvailabilityContainerRules:
-    candidate_selectors: tuple[str, ...] = ()
     remove_selectors: tuple[str, ...] = ()
     drop_keywords: tuple[str, ...] = ()
     drop_texts: tuple[str, ...] = ()
@@ -45,5 +44,4 @@ class AvailabilityPolicy:
     datalayer_signal_set: DatalayerSignalSet | None = None
     text_marker_signal_set: TextMarkerSignalSet | None = None
     overrides: AvailabilityOverrides | None = None
-    no_signals: bool = False
     access_block_text_tokens: tuple[str, ...] = ()

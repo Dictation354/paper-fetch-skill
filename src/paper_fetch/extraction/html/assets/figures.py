@@ -15,6 +15,7 @@ from ....utils import dedupe_normalized
 from .._metadata import parse_html_metadata
 from .._runtime import decode_html
 from ..parsing import choose_parser
+from ..shared import class_tokens as _tag_class_tokens
 from ..formula_rules import (
     formula_image_url_from_node,
     looks_like_formula_image,
@@ -163,23 +164,6 @@ def _figure_caption_from_soup(node: Any, soup: Any) -> str:
                 if caption:
                     return caption
     return ""
-
-
-def _tag_class_tokens(node: Any) -> set[str]:
-    if not isinstance(node, Tag):
-        return set()
-    raw_classes = (getattr(node, "attrs", None) or {}).get("class") or []
-    if isinstance(raw_classes, str):
-        return {
-            normalize_text(value).lower()
-            for value in raw_classes.split()
-            if normalize_text(value)
-        }
-    return {
-        normalize_text(str(value)).lower()
-        for value in raw_classes
-        if normalize_text(str(value))
-    }
 
 
 def _silverchair_figure_heading_texts_from_soup(node: Any) -> list[str]:

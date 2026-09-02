@@ -563,30 +563,32 @@ def test_frontiers_asset_download_uses_landing_page_original_images(
         "landing_page_url": TARGET_CANONICAL_FULL_URL,
     }
 
-    raw_payload = client.fetch_raw_fulltext(TARGET_DOI, metadata)
-    assert [call["url"] for call in transport.calls] == [TARGET_XML_URL]
-
     # asset-download-contract: provider=frontiers
-    result = client.download_related_assets(
+    result = client.fetch_result(
         TARGET_DOI,
         metadata,
-        raw_payload,
         tmp_path,
         asset_profile="body",
     )
 
     requested_urls = [str(call["url"]) for call in transport.calls]
+    assert requested_urls[0] == TARGET_XML_URL
     assert requested_urls.count(TARGET_CANONICAL_FULL_URL) == 1
     assert set(TARGET_IMAGE_URLS).issubset(requested_urls)
     assert not set(TARGET_WRONG_IMAGE_URLS).intersection(requested_urls)
-    assert result["asset_failures"] == []
-    assert len(result["assets"]) == 5
-    assert {asset["download_url"] for asset in result["assets"]} == set(
+    assert result.content is not None
+    assert all(url in (result.content.markdown_text or "") for url in TARGET_IMAGE_URLS)
+    assert not any(
+        url in (result.content.markdown_text or "") for url in TARGET_WRONG_IMAGE_URLS
+    )
+    assert result.artifacts.asset_failures == []
+    assert len(result.artifacts.assets) == 5
+    assert {asset["download_url"] for asset in result.artifacts.assets} == set(
         TARGET_IMAGE_URLS
     )
 
     local_paths: list[Path] = []
-    for asset in result["assets"]:
+    for asset in result.artifacts.assets:
         assert asset["download_tier"] == "full_size"
         assert asset["full_size_url"] == asset["download_url"]
         path = Path(asset["path"])
@@ -595,12 +597,7 @@ def test_frontiers_asset_download_uses_landing_page_original_images(
         assert path.stat().st_size == len(WEBP_1X1)
         assert image_mime_type_from_bytes(path.read_bytes()) == "image/webp"
 
-    article = client.to_article_model(
-        metadata,
-        raw_payload,
-        downloaded_assets=result["assets"],
-    )
-    rendered = article.to_ai_markdown(
+    rendered = result.article.to_ai_markdown(
         include_refs="all",
         asset_profile="body",
         max_tokens="full_text",

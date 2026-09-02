@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup, Tag
 
 from ..extraction.html.parsing import choose_parser
 from ..models.markdown import NUMBERED_REFERENCE_PATTERN
-from ..utils import normalize_text
+from ..utils import extend_unique, normalize_text
 
 _REFERENCE_SELECTORS = (
     "#html-references_list li",
@@ -18,12 +18,6 @@ _REFERENCE_UI_BRACKET_TOKEN_RE = re.compile(
     r"\[\s*(?:Google Scholar|CrossRef|PubMed|Green Version)\s*\]",
     flags=re.IGNORECASE,
 )
-
-
-def _append_unique(values: list[str], candidate: str | None) -> None:
-    normalized = normalize_text(candidate)
-    if normalized and normalized not in values:
-        values.append(normalized)
 
 
 def _remove_reference_ui_tokens(text: str) -> str:
@@ -87,13 +81,12 @@ def extract_keywords(html_text: str) -> list[str]:
             title_node.decompose()
         for node in container.find_all("a"):
             if isinstance(node, Tag):
-                _append_unique(keywords, node.get_text(" ", strip=True))
+                extend_unique(keywords, [node.get_text(" ", strip=True)])
         if keywords:
             continue
         text = normalize_text(container.get_text(" ", strip=True))
         text = re.sub(r"^Keywords\s*:?\s*", "", text, flags=re.IGNORECASE)
-        for part in re.split(r"\s*;\s*", text):
-            _append_unique(keywords, part)
+        extend_unique(keywords, re.split(r"\s*;\s*", text))
     return keywords
 
 

@@ -28,7 +28,6 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
         )
 
     def test_ieee_figure_full_media_assets_are_body_assets(self) -> None:
-        """rule: rule-ieee-mediastore-body-assets"""
         article_number = "10388355"
         rest_url = f"https://ieeexplore.ieee.org/rest/document/{article_number}/?logAccess=true"
 
@@ -85,7 +84,6 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
     def test_ieee_supplementary_assets_ignore_unscoped_body_data_code_media_links(
         self,
     ) -> None:
-        """rule: rule-ieee-supplementary-scope"""
         article_number = "10388355"
         rest_url = f"https://ieeexplore.ieee.org/rest/document/{article_number}/?logAccess=true"
         paragraph = (
@@ -157,7 +155,6 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
     def test_real_ieee_multimedia_fixture_yields_supplementary_asset_from_explicit_scope(
         self,
     ) -> None:
-        """rule: rule-ieee-supplementary-scope"""
         fixture_root = (
             REPO_ROOT
             / "tests"
@@ -292,7 +289,6 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
     def test_ieee_html_payload_merges_multimedia_supplementary_assets_from_landing_scope(
         self,
     ) -> None:
-        """rule: rule-ieee-supplementary-scope"""
         fixture_root = (
             REPO_ROOT
             / "tests"
@@ -362,7 +358,6 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
         self.assertIn(multimedia_url, [str(call["url"]) for call in transport.calls])
 
     def test_ieee_table_asset_wins_over_shared_formula_candidate(self) -> None:
-        """rule: rule-ieee-mediastore-body-assets"""
         article_number = "10388355"
         rest_url = f"https://ieeexplore.ieee.org/rest/document/{article_number}/?logAccess=true"
 
@@ -397,7 +392,6 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
     def test_ieee_merge_prefers_table_download_when_formula_shares_preview_url(
         self,
     ) -> None:
-        """rule: rule-ieee-mediastore-body-assets"""
         article_number = "10388355"
         large_url = f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-table-1-large.gif"
         small_url = f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/{article_number}/{article_number}-table-1-small.gif"

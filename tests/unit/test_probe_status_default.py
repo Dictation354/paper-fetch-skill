@@ -27,7 +27,6 @@ def _catalog(
         asset_default="none",
         probe_capability="routing_signal",
         provider_managed_abstract_only=False,
-        client_factory_path="",
         status_order=999,
         env_requirements=env_requirements,
         routes=(
@@ -44,7 +43,15 @@ def _catalog(
 
 
 def _install_catalog(monkeypatch: Any, catalog: ProviderSpec) -> None:
-    bundle = ProviderBundle(catalog=catalog, sources=(catalog.name,))
+    def client_factory(transport: Any, env: Any) -> ProviderClient:
+        del transport, env
+        return ProviderClient()
+
+    bundle = ProviderBundle(
+        catalog=catalog,
+        client_factory=client_factory,
+        sources=(catalog.name,),
+    )
 
     def fake_provider_bundle(name: str) -> ProviderBundle:
         assert name == catalog.name

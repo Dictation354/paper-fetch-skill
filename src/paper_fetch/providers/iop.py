@@ -24,7 +24,7 @@ from ..provider_catalog import BodyTextThresholds, ProviderRouteSpec, ProviderSp
 from ..publisher_identity import normalize_doi
 from ..reason_codes import PDF_FALLBACK
 from ..runtime import RuntimeContext
-from ..utils import empty_asset_results, normalize_text
+from ..utils import empty_asset_results, extend_unique, normalize_text
 from . import _iop_html, browser_workflow
 from ._registry import ProviderBundle
 from .base import (
@@ -35,124 +35,79 @@ from .browser_runtime import BrowserRuntimeFailure
 from .browser_workflow.shared import normalize_browser_url
 from .browser_workflow.fetchers import BrowserDocumentFetcherOptions
 
-
-PROVIDER_BUNDLE = ProviderBundle(
-    catalog=ProviderSpec(
-        name="iop",
-        display_name="IOP Publishing",
-        official=True,
-        domains=("iopscience.iop.org",),
-        doi_prefixes=("10.1088/",),
-        publisher_aliases=(
-            "iop publishing",
-            "institute of physics publishing",
-            "iopscience",
+_PROVIDER_SPEC = ProviderSpec(
+    name="iop",
+    display_name="IOP Publishing",
+    official=True,
+    domains=("iopscience.iop.org",),
+    doi_prefixes=("10.1088/",),
+    publisher_aliases=(
+        "iop publishing",
+        "institute of physics publishing",
+        "iopscience",
+    ),
+    asset_default="body",
+    probe_capability="routing_signal",
+    provider_managed_abstract_only=True,
+    status_order=16,
+    base_domains=("iopscience.iop.org",),
+    html_path_templates=("/article/{doi}",),
+    pdf_path_templates=("/article/{doi}/pdf",),
+    crossref_pdf_position=0,
+    body_text_thresholds=BodyTextThresholds(min_chars=1200),
+    routes=(
+        ProviderRouteSpec(
+            name="metadata",
+            kind="metadata",
+            source="crossref_metadata",
+            concurrency=2,
         ),
-        asset_default="body",
-        probe_capability="routing_signal",
-        provider_managed_abstract_only=True,
-        client_factory_path="paper_fetch.providers.iop:IopClient",
-        status_order=16,
-        base_domains=("iopscience.iop.org",),
-        html_path_templates=("/article/{doi}",),
-        pdf_path_templates=("/article/{doi}/pdf",),
-        crossref_pdf_position=0,
-        body_text_thresholds=BodyTextThresholds(min_chars=1200),
-        routes=(
-            ProviderRouteSpec(
-                name="metadata",
-                kind="metadata",
-                source="crossref_metadata",
-                concurrency=2,
-            ),
-            ProviderRouteSpec(
-                name="browser_html",
-                kind="html",
-                source="iop_html",
-                browser_required=True,
-                browser_preflight=True,
-                auth_supported=True,
-                requires_playwright=True,
-                timeout_seconds=120,
-                concurrency=1,
-                acceptance_policy="provider_html_body",
-            ),
-            ProviderRouteSpec(
-                name="browser_pdf",
-                kind="pdf",
-                source="iop_pdf",
-                browser_required=True,
-                browser_preflight=True,
-                auth_supported=True,
-                requires_playwright=True,
-                requires_pdf_conversion=True,
-                timeout_seconds=120,
-                concurrency=1,
-                acceptance_policy="validated_pdf",
-            ),
-            ProviderRouteSpec(
-                name="assets",
-                kind="assets",
-                browser_optional=True,
-                requires_playwright=True,
-                timeout_seconds=20,
-                concurrency=2,
-                transient_retries=0,
-            ),
+        ProviderRouteSpec(
+            name="browser_html",
+            kind="html",
+            source="iop_html",
+            browser_required=True,
+            browser_preflight=True,
+            auth_supported=True,
+            requires_playwright=True,
+            timeout_seconds=120,
+            concurrency=1,
+            acceptance_policy="provider_html_body",
+        ),
+        ProviderRouteSpec(
+            name="browser_pdf",
+            kind="pdf",
+            source="iop_pdf",
+            browser_required=True,
+            browser_preflight=True,
+            auth_supported=True,
+            requires_playwright=True,
+            requires_pdf_conversion=True,
+            timeout_seconds=120,
+            concurrency=1,
+            acceptance_policy="validated_pdf",
+        ),
+        ProviderRouteSpec(
+            name="assets",
+            kind="assets",
+            browser_optional=True,
+            requires_playwright=True,
+            timeout_seconds=20,
+            concurrency=2,
+            transient_retries=0,
         ),
     ),
-    html_rules=ProviderHtmlRules(
-        name="iop",
-        noise_profile=_iop_html.IOP_NOISE_PROFILE,
-        cleanup=ProviderCleanupRules(
-            markdown_promo_tokens=_iop_html.IOP_MARKDOWN_PROMO_TOKENS,
-            extraction_cleanup_selectors=_iop_html.IOP_EXTRACTION_CLEANUP_SELECTORS,
-            post_content_break_tokens=_iop_html.IOP_POST_CONTENT_BREAK_TOKENS,
-            access_block_text_tokens=_iop_html.IOP_ACCESS_BLOCK_TEXT_TOKENS,
-        ),
-        front_matter=ProviderFrontMatterRules(
-            exact_texts=_iop_html.IOP_FRONT_MATTER_EXACT_TEXTS,
-            contains_tokens=_iop_html.IOP_FRONT_MATTER_CONTAINS_TOKENS,
-            publication_keywords=_iop_html.IOP_FRONT_MATTER_PUBLICATION_KEYWORDS,
-        ),
-        formula=ProviderFormulaRules(
-            container_tokens=_iop_html.IOP_FORMULA_CONTAINER_TOKENS,
-            display_selectors=_iop_html.IOP_DISPLAY_FORMULA_SELECTORS,
-        ),
-        assets=ProviderAssetRules(
-            supplementary_text_tokens=_iop_html.IOP_SUPPLEMENTARY_TEXT_TOKENS,
-        ),
-        availability=AvailabilityPolicy(
-            name="iop",
-            site_rule_overrides=_iop_html.IOP_SITE_RULE_OVERRIDES,
-            text_marker_signal_set=_iop_html.IOP_TEXT_MARKER_SIGNAL_SET,
-            access_block_text_tokens=_iop_html.IOP_ACCESS_BLOCK_TEXT_TOKENS,
-        ),
-        dom_hooks=DomHooks(
-            body_container=_iop_html.iop_body_container,
-            asset_body_container=_iop_html.iop_asset_body_container,
-            asset_figure_extraction=_iop_html.iop_asset_figure_extraction,
-        ),
-    ),
-    sources=("iop_html", "iop_pdf"),
 )
-
 
 IOP_BROWSER_PROFILE = browser_workflow.make_browser_profile(
     "iop",
-    catalog=PROVIDER_BUNDLE.catalog,
+    catalog=_PROVIDER_SPEC,
     article_source_name="iop_html",
     fallback_author_extractor=_iop_html.extract_authors,
     policy=browser_workflow.BrowserWorkflowPolicy(
         blocked_resource_types=("image", "font", "media"),
     ),
 )
-
-
-def _append_unique(values: list[str], candidate: str | None) -> None:
-    normalized = normalize_text(candidate)
-    if normalized and normalized not in values:
-        values.append(normalized)
 
 
 def _supplementary_index_failure(
@@ -239,10 +194,15 @@ class IopClient(browser_workflow.BrowserWorkflowClient):
         candidates: list[str] = []
         landing = normalize_text(str(metadata.get("landing_page_url") or ""))
         if _iop_html.is_iop_url(landing):
-            _append_unique(candidates, landing)
+            extend_unique(candidates, [landing])
         if normalized_doi:
-            _append_unique(candidates, _iop_html.direct_article_url(normalized_doi))
-            _append_unique(candidates, f"https://doi.org/{normalized_doi}")
+            extend_unique(
+                candidates,
+                [
+                    _iop_html.direct_article_url(normalized_doi),
+                    f"https://doi.org/{normalized_doi}",
+                ],
+            )
         return candidates
 
     def pdf_candidates(self, doi: str, metadata: Mapping[str, Any]) -> list[str]:
@@ -588,3 +548,43 @@ class IopClient(browser_workflow.BrowserWorkflowClient):
 
 
 __all__ = ["IopClient"]
+
+
+PROVIDER_BUNDLE = ProviderBundle(
+    client_factory=IopClient,
+    catalog=_PROVIDER_SPEC,
+    html_rules=ProviderHtmlRules(
+        name="iop",
+        noise_profile=_iop_html.IOP_NOISE_PROFILE,
+        cleanup=ProviderCleanupRules(
+            markdown_promo_tokens=_iop_html.IOP_MARKDOWN_PROMO_TOKENS,
+            extraction_cleanup_selectors=_iop_html.IOP_EXTRACTION_CLEANUP_SELECTORS,
+            post_content_break_tokens=_iop_html.IOP_POST_CONTENT_BREAK_TOKENS,
+            access_block_text_tokens=_iop_html.IOP_ACCESS_BLOCK_TEXT_TOKENS,
+        ),
+        front_matter=ProviderFrontMatterRules(
+            exact_texts=_iop_html.IOP_FRONT_MATTER_EXACT_TEXTS,
+            contains_tokens=_iop_html.IOP_FRONT_MATTER_CONTAINS_TOKENS,
+            publication_keywords=_iop_html.IOP_FRONT_MATTER_PUBLICATION_KEYWORDS,
+        ),
+        formula=ProviderFormulaRules(
+            container_tokens=_iop_html.IOP_FORMULA_CONTAINER_TOKENS,
+            display_selectors=_iop_html.IOP_DISPLAY_FORMULA_SELECTORS,
+        ),
+        assets=ProviderAssetRules(
+            supplementary_text_tokens=_iop_html.IOP_SUPPLEMENTARY_TEXT_TOKENS,
+        ),
+        availability=AvailabilityPolicy(
+            name="iop",
+            site_rule_overrides=_iop_html.IOP_SITE_RULE_OVERRIDES,
+            text_marker_signal_set=_iop_html.IOP_TEXT_MARKER_SIGNAL_SET,
+            access_block_text_tokens=_iop_html.IOP_ACCESS_BLOCK_TEXT_TOKENS,
+        ),
+        dom_hooks=DomHooks(
+            body_container=_iop_html.iop_body_container,
+            asset_body_container=_iop_html.iop_asset_body_container,
+            asset_figure_extraction=_iop_html.iop_asset_figure_extraction,
+        ),
+    ),
+    sources=("iop_html", "iop_pdf"),
+)

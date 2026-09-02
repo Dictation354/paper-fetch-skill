@@ -26,8 +26,7 @@ from ..provider_catalog import provider_status_order
 from ..resolve.query import StructuredResolveRequest
 from ..runtime import RuntimeContext
 from ..utils import extend_unique, normalize_text
-from ..workflow.pipeline import FetchPipeline, FetchPipelineCacheHooks
-from ..workflow.request_builder import build_fetch_pipeline_request
+from ..workflow.pipeline import FetchPipeline, FetchPipelineRequest
 from ..workflow.rendering import save_markdown_to_disk
 from ..workflow.types import effective_asset_profile
 from ..workflow.acceptance import evaluate_fetch_acceptance
@@ -44,7 +43,6 @@ from .fetch_cache import (
     FetchCacheDependencies,
     credential_scope_from_env,
     envelope_capability_scope,
-    fetch_envelope_cache_path,
     mark_envelope_capability_scope,
     payload_from_envelope as _payload_from_envelope,
 )
@@ -100,8 +98,6 @@ def _markdown_output_dir_for_fetch_request(
 @dataclass(frozen=True)
 class SavedMarkdownResult:
     path: Path
-    output_dir: Path
-    cache_entry: dict[str, Any] | None
 
 
 def _save_markdown_result_for_fetch_request(
@@ -139,7 +135,6 @@ def _save_markdown_result_for_fetch_request(
     )
     if saved_path is None:
         return None
-    cache_entry = None
     if envelope.doi:
         if context is not None:
             context.raise_if_cancelled()
@@ -150,7 +145,7 @@ def _save_markdown_result_for_fetch_request(
                 if context is not None
                 else credential_scope_from_env(runtime_env)
             )
-        cache_entry = FetchCache(
+        FetchCache(
             saved_path.parent,
             dependencies=FetchCacheDependencies(
                 register_markdown=deps.register_markdown_entry,
@@ -161,11 +156,7 @@ def _save_markdown_result_for_fetch_request(
             envelope,
             commit_guard=(context.commit_guard if context is not None else None),
         )
-    return SavedMarkdownResult(
-        path=saved_path,
-        output_dir=markdown_output_path,
-        cache_entry=cache_entry,
-    )
+    return SavedMarkdownResult(path=saved_path)
 
 
 def _save_markdown_for_fetch_request(
@@ -248,19 +239,12 @@ def _call_service_probe_has_fulltext(
 def _fetch_paper_envelope(
     request: FetchPaperRequest,
     *,
-    env: Mapping[str, str] | None,
     download_dir: Path | None | object,
-    transport: HttpTransport | None,
     include_article_for_assets: bool,
-    context: RuntimeContext | None = None,
-    cancel_check: Callable[[], bool] | None = None,
+    context: RuntimeContext,
     deps: MCPDeps = default_mcp_deps(),
 ) -> FetchEnvelope:
-    runtime_env = (
-        dict(context.env)
-        if context is not None and context.env is not None
-        else deps.build_runtime_env(env)
-    )
+    runtime_env = dict(context.env or {})
     cache_download_dir = (
         _resolve_download_dir(runtime_env, download_dir, deps=deps)
         if _needs_download_dir_for_fetch(request)
@@ -268,81 +252,40 @@ def _fetch_paper_envelope(
     )
     service_download_dir = None if request.no_download else cache_download_dir
 
-    active_runtime_context: RuntimeContext | None = context
+    cached_envelope = _load_cached_fetch_envelope(
+        request,
+        download_dir=cache_download_dir,
+        context=context,
+        deps=deps,
+    )
+    if cached_envelope is not None:
+        return cached_envelope
 
-    def load_cached(runtime_context: RuntimeContext) -> FetchEnvelope | None:
-        nonlocal active_runtime_context
-        active_runtime_context = runtime_context
-        return _load_cached_fetch_envelope(
+    envelope = FetchPipeline(deps.service_fetch_paper).run(
+        FetchPipelineRequest(
+            query=request.query,
+            modes=_service_modes_for_fetch_request(
+                request, include_article_for_assets=include_article_for_assets
+            ),  # type: ignore[arg-type]
+            strategy=request.strategy.to_service_strategy(),
+            render=request.to_render_options(),
+        ),
+        context=context,
+    )
+    context.raise_if_cancelled()
+    final_scope = capability_scope_from_runtime_context(context)
+    # Preserve the producer scope so Markdown registration cannot become public.
+    mark_envelope_capability_scope(envelope, final_scope)
+    if not request.no_download and service_download_dir is not None and envelope.doi:
+        deps.write_cached_fetch_envelope(
+            service_download_dir,
+            envelope,
             request,
-            download_dir=cache_download_dir,
-            context=runtime_context,
+            commit_guard=context.commit_guard,
+            credential_scope=final_scope,
             deps=deps,
         )
-
-    def write_cached(envelope: FetchEnvelope) -> None:
-        runtime_context = active_runtime_context
-        if runtime_context is not None:
-            runtime_context.raise_if_cancelled()
-        final_scope = (
-            capability_scope_from_runtime_context(runtime_context)
-            if runtime_context is not None
-            else credential_scope_from_env(runtime_env)
-        )
-        # The outer MCP adapter may save Markdown after the pipeline-owned runtime
-        # context has closed. Preserve the actual producer scope on the in-memory
-        # envelope so that later artifact registration cannot become public.
-        mark_envelope_capability_scope(envelope, final_scope)
-        if (
-            not request.no_download
-            and service_download_dir is not None
-            and envelope.doi
-        ):
-            deps.write_cached_fetch_envelope(
-                service_download_dir,
-                envelope,
-                request,
-                commit_guard=(
-                    runtime_context.commit_guard
-                    if runtime_context is not None
-                    else None
-                ),
-                credential_scope=final_scope,
-                deps=deps,
-            )
-
-    return (
-        FetchPipeline(deps.service_fetch_paper)
-        .run(
-            build_fetch_pipeline_request(
-                query=request.query,
-                modes=_service_modes_for_fetch_request(
-                    request, include_article_for_assets=include_article_for_assets
-                ),  # type: ignore[arg-type]
-                strategy=request.strategy.to_service_strategy(),
-                render=request.to_render_options(),
-                env=runtime_env,
-                transport=transport,
-                context=context,
-                cancel_check=cancel_check,
-                download_dir=cache_download_dir,
-                artifact_mode=request.artifact_mode,
-                no_download=request.no_download,
-                fetch_cache=FetchCache(
-                    service_download_dir,
-                    credential_scope=credential_scope_from_env(runtime_env),
-                ),
-                cache_hooks=FetchPipelineCacheHooks(
-                    load=load_cached, write=write_cached
-                ),
-            )
-        )
-        .envelope
-    )
-
-
-def _fetch_envelope_cache_path(download_dir: Path, doi: str) -> Path:
-    return fetch_envelope_cache_path(download_dir, doi)
+    return envelope
 
 
 def _resolve_request_from_inputs(
@@ -376,21 +319,9 @@ def _fetch_request_from_inputs(
     markdown_output_dir: str | None,
     markdown_filename: str | None,
 ) -> FetchPaperRequest:
-    return FetchPaperRequest.model_validate(
-        {
-            "query": query,
-            "modes": modes,
-            "strategy": strategy,
-            "include_refs": include_refs,
-            "max_tokens": max_tokens,
-            "prefer_cache": prefer_cache,
-            "no_download": no_download,
-            "artifact_mode": artifact_mode,
-            "save_markdown": save_markdown,
-            "markdown_output_dir": markdown_output_dir,
-            "markdown_filename": markdown_filename,
-        }
-    )
+    # The adapter signature intentionally mirrors the public tool. Strict model
+    # validation makes its parameter names the only remaining duplicated contract.
+    return FetchPaperRequest.model_validate(locals())
 
 
 def _response_payload_from_envelope(
@@ -525,9 +456,7 @@ def fetch_paper_payload(
     try:
         envelope = deps.fetch_paper_envelope(
             request,
-            env=runtime_env,
             download_dir=download_dir,
-            transport=transport,
             include_article_for_assets=False,
             context=runtime_context,
             deps=deps,
@@ -826,12 +755,9 @@ async def fetch_paper_tool_async(
             assert runtime_context is not None
             envelope = deps.fetch_paper_envelope(
                 request,
-                env=runtime_env,
                 download_dir=download_dir,
-                transport=None,
                 include_article_for_assets=True,
                 context=runtime_context,
-                cancel_check=cancelled.is_set,
                 deps=deps,
             )
             runtime_context.raise_if_cancelled()

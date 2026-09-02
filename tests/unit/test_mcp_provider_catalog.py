@@ -38,6 +38,8 @@ def test_provider_catalog_payload_exactly_reflects_runtime_catalog() -> None:
     payload = provider_catalog_resource_payload()
     specs = runtime_catalog.ordered_provider_specs()
 
+    assert "client_factory" not in json.dumps(payload)
+
     assert payload["schema_version"] == PROVIDER_CATALOG_SCHEMA_VERSION
     assert payload["tool_version"] == DEFAULT_USER_AGENT.removeprefix(
         "paper-fetch-skill/"

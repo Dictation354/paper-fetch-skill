@@ -752,7 +752,6 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         )
 
     def test_ams_table_images_are_extracted_and_rendered_inline(self) -> None:
-        """rule: rule-ams-html-body-assets-formulas"""
         cases = (
             (
                 "10.1175/jamc-d-24-0048.1",
@@ -798,7 +797,6 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
                 )
 
     def test_ams_aies_table_image_is_not_rewritten_to_next_figure(self) -> None:
-        """rule: rule-ams-html-body-assets-formulas"""
         markdown, _ = _extract_fixture_markdown("10.1175/aies-d-23-0093.1")
         table_image = "![Table 1](/view/journals/aies/3/4/full-AIES-D-23-0093.1-t1.jpg)"
         figure2_image = (
@@ -822,7 +820,6 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertLess(markdown.index(figure2_image), markdown.index("**Figure 2.**"))
 
     def test_ams_figures_are_inline_with_complete_caption_without_chrome(self) -> None:
-        """rule: rule-ams-html-body-assets-formulas"""
         markdown, _ = _extract_fixture_markdown("10.1175/jamc-d-24-0048.1")
         image = (
             "![Figure 2](https://journals.ametsoc.org/view/journals/apme/63/12/"
@@ -840,7 +837,6 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertNotIn("\n## Figures\n", markdown)
 
     def test_ams_formula_cleanup_removes_mathjax_fallback_noise(self) -> None:
-        """rule: rule-ams-html-body-assets-formulas"""
         markdown, _ = _extract_fixture_markdown("10.1175/waf-d-24-0019.1")
         jamc_markdown, _ = _extract_fixture_markdown("10.1175/jamc-d-24-0048.1")
 
@@ -860,7 +856,6 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
             self.assertNotIn(noise, markdown)
 
     def test_ams_numbered_display_equations_use_source_labels_only(self) -> None:
-        """rule: rule-ams-html-body-assets-formulas"""
         cases = (
             (
                 "10.1175/jpo-d-23-0234.1",
@@ -911,7 +906,6 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertEqual(jpo_markdown.count("**Equation 15.**"), 1)
 
     def test_ams_aies_fixture_preserves_inline_mathml_formulas(self) -> None:
-        """rule: rule-preserve-inline-semantics-in-body-and-tables"""
         markdown, _ = _extract_fixture_markdown("10.1175/aies-d-23-0093.1")
 
         for noise in (
@@ -946,7 +940,6 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertIn("*α*<sub>n,1</sub>", markdown)
 
     def test_ams_caption_inline_markup_is_preserved(self) -> None:
-        """rule: rule-preserve-inline-semantics-in-body-and-tables"""
         cases = (
             (
                 "10.1175/aies-d-23-0093.1",
@@ -993,7 +986,6 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
                         self.assertIn(expected, markdown)
 
     def test_ams_inline_renderer_preserves_body_subscripts_and_spacing(self) -> None:
-        """rule: rule-preserve-inline-semantics-in-body-and-tables"""
         cases = (
             (
                 "10.1175/waf-d-24-0019.1",
@@ -1075,7 +1067,6 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
                 self.assertNotIn(forbidden, rendered)
 
     def test_ams_data_availability_stays_before_appendix(self) -> None:
-        """rule: rule-ams-html-body-assets-formulas"""
         for doi in ("10.1175/jpo-d-23-0234.1", "10.1175/waf-d-24-0019.1"):
             with self.subTest(doi=doi):
                 markdown, extraction = _extract_fixture_markdown(doi)
@@ -1108,7 +1099,6 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
     def test_ams_normalize_markdown_moves_data_availability_before_appendix(
         self,
     ) -> None:
-        """rule: rule-ams-html-body-assets-formulas"""
         markdown = "\n\n".join(
             [
                 "# Title",
@@ -1139,7 +1129,6 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
     def test_ams_downloaded_inline_figure_and_table_assets_do_not_repeat_at_tail(
         self,
     ) -> None:
-        """rule: rule-ams-html-body-assets-formulas"""
         doi = "10.1175/jamc-d-24-0048.1"
         markdown, extraction = _extract_fixture_markdown(doi)
         assets = _ams_html.scoped_asset_extractor(

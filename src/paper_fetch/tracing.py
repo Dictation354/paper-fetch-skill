@@ -8,8 +8,7 @@ import math
 import urllib.parse
 from collections.abc import Iterable, Mapping
 
-from .reason_codes import NOT_CONFIGURED, OK, PARTIAL, RATE_LIMITED
-from .quality.reason_codes import ABSTRACT_ONLY
+from .reason_codes import ABSTRACT_ONLY, NOT_CONFIGURED, OK, PARTIAL, RATE_LIMITED
 from .utils import normalize_text
 
 _OUTCOMELESS_MARKER_OUTCOMES = {"", "info", "selected", "done"}

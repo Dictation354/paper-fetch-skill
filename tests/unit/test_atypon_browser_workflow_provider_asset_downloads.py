@@ -641,9 +641,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
     def test_pnas_provider_download_related_assets_uses_shared_browser_primary_path_before_preview(
         self,
     ) -> None:
-        """rule: rule-browser-primary-image-download-path
-        asset-download-contract: provider=pnas
-        """
+        """asset-download-contract: provider=pnas"""
         figure_page_url = "https://www.pnas.org/figures/figure-1"
         preview_url = "https://www.pnas.org/images/preview/figure1.png"
         full_size_url = "https://www.pnas.org/images/original/figure1.png"

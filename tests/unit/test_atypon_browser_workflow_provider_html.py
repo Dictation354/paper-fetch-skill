@@ -105,7 +105,6 @@ class AtyponBrowserWorkflowProviderHtmlTests(AtyponBrowserWorkflowProviderTestCa
     def test_science_provider_uses_extracted_dom_abstract_and_restores_lead_body_text(
         self,
     ) -> None:
-        """rule: rule-provider-owned-authors"""
         scenario = json.loads(
             golden_criteria_scenario_asset(
                 "provider_dom_abstract_fallback", "payload.json"
@@ -138,7 +137,6 @@ class AtyponBrowserWorkflowProviderHtmlTests(AtyponBrowserWorkflowProviderTestCa
         self.assertEqual(article.sections[1].heading, "Results")
 
     def test_provider_owned_html_signals_populate_final_article_authors(self) -> None:
-        """rule: rule-provider-owned-authors"""
         cases = (
             {
                 "provider": "science",

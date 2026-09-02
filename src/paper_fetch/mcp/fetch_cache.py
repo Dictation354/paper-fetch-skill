@@ -308,13 +308,35 @@ def _reported_cache_version(value: Any) -> int | str | None:
 
 
 def payload_from_envelope(
-    envelope: FetchEnvelope, request: FetchPaperRequest
+    envelope: FetchEnvelope,
+    request: FetchPaperRequest,
+    *,
+    retain_article_for_inline_assets: bool = False,
 ) -> dict[str, Any]:
     payload = envelope.to_dict()
     payload["schema_version"] = 2
-    if "article" not in request.requested_modes():
+    if (
+        "article" not in request.requested_modes()
+        and not retain_article_for_inline_assets
+    ):
         payload["article"] = None
     return payload
+
+
+def _request_needs_article_for_inline_assets(
+    request: FetchPaperRequest,
+    *,
+    source_name: str | None,
+) -> bool:
+    return (
+        not request.save_markdown
+        and not request.strategy.resolved_inline_image_budget().disabled
+        and effective_asset_profile(
+            request.strategy.asset_profile,
+            source_name=source_name,
+        )
+        in {"body", "all"}
+    )
 
 
 def cached_request_matches(
@@ -336,6 +358,14 @@ def cached_payload_satisfies_request(
 ) -> bool:
     requested_modes = request.requested_modes()
     if "article" in requested_modes and payload.get("article") is None:
+        return False
+    if (
+        _request_needs_article_for_inline_assets(
+            request,
+            source_name=normalize_text(payload.get("source")) or None,
+        )
+        and payload.get("article") is None
+    ):
         return False
     if "markdown" in requested_modes and payload.get("markdown") is None:
         return False
@@ -697,7 +727,11 @@ def envelope_from_payload(payload: Mapping[str, Any]) -> FetchEnvelope:
         raw_quality_payload if isinstance(raw_quality_payload, Mapping) else None
     )
     trace = trace_from_payload(payload.get("trace"))
-    quality = quality_from_payload(quality_payload)
+    quality = (
+        article.quality
+        if article is not None
+        else quality_from_payload(quality_payload)
+    )
     if breakdown == TokenEstimateBreakdown():
         if article is not None:
             breakdown = article.quality.token_estimate_breakdown
@@ -707,8 +741,6 @@ def envelope_from_payload(payload: Mapping[str, Any]) -> FetchEnvelope:
         quality.token_estimate_breakdown = breakdown
     if quality.token_estimate == 0:
         quality.token_estimate = int(payload.get("token_estimate") or 0)
-    if article is not None and not quality.flags and quality_payload is None:
-        quality = article.quality
     from ..models.schema import ContentKind, SourceKind
 
     return FetchEnvelope(
@@ -791,24 +823,6 @@ def mark_envelope_cached_with_current_revision(envelope: FetchEnvelope) -> None:
         [*envelope.quality.flags, QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION]
     )
     envelope.quality.extraction_revision = FETCH_ENVELOPE_EXTRACTION_REVISION
-    envelope.warnings = list(envelope.quality.warnings)
-    envelope.source_trail = list(envelope.quality.source_trail)
-    envelope.token_estimate = envelope.quality.token_estimate
-    envelope.token_estimate_breakdown = envelope.quality.token_estimate_breakdown
-    if envelope.article is not None:
-        envelope.article.quality.flags = dedupe_quality_flags(
-            [*envelope.article.quality.flags, QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION]
-        )
-        envelope.article.quality.extraction_revision = (
-            FETCH_ENVELOPE_EXTRACTION_REVISION
-        )
-        envelope.quality = envelope.article.quality
-        envelope.warnings = list(envelope.article.quality.warnings)
-        envelope.source_trail = list(envelope.article.quality.source_trail)
-        envelope.token_estimate = envelope.article.quality.token_estimate
-        envelope.token_estimate_breakdown = (
-            envelope.article.quality.token_estimate_breakdown
-        )
 
 
 class FetchCache:
@@ -947,7 +961,16 @@ class FetchCache:
             "request_fingerprint": request_fingerprint,
             "credential_scope": self.credential_scope,
             "request": request_payload,
-            "payload": payload_from_envelope(envelope, request),
+            "payload": payload_from_envelope(
+                envelope,
+                request,
+                retain_article_for_inline_assets=(
+                    _request_needs_article_for_inline_assets(
+                        request,
+                        source_name=envelope.source,
+                    )
+                ),
+            ),
         }
         with cache_file_lock(fetch_envelope_lock_path(self.download_dir, doi)):
             self._artifact_store.write_json_file(

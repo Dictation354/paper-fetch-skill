@@ -120,6 +120,21 @@ class FormulaInstallTests(unittest.TestCase):
         self.assertTrue(root.joinpath("package.json").is_file())
         self.assertTrue(root.joinpath("package-lock.json").is_file())
 
+    def test_checkout_uses_bundled_formula_scripts(self) -> None:
+        root = formula_paths.repo_root()
+        self.assertIsNotNone(root)
+        assert root is not None
+        resource_dir = root / "src" / "paper_fetch" / "resources" / "formula"
+
+        self.assertEqual(
+            formula_paths.mathml_to_latex_script_candidates({})[-1],
+            resource_dir / "mathml_to_latex_cli.mjs",
+        )
+        self.assertEqual(
+            formula_paths.mathml_to_latex_worker_script_candidates({})[-1],
+            resource_dir / "mathml_to_latex_worker.mjs",
+        )
+
     def test_stage_bundled_node_workspace_writes_expected_files(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             target_dir = Path(tmpdir) / "formula-tools"
@@ -129,6 +144,30 @@ class FormulaInstallTests(unittest.TestCase):
             self.assertTrue((target_dir / "mathml_to_latex_worker.mjs").exists())
             self.assertTrue((target_dir / "package.json").exists())
             self.assertTrue((target_dir / "package-lock.json").exists())
+
+    def test_existing_mathml_to_latex_does_not_require_katex_or_npm_install(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target_dir = Path(tmpdir) / "formula-tools"
+            (target_dir / "node_modules" / "mathml-to-latex").mkdir(parents=True)
+
+            with (
+                mock.patch.object(
+                    formula_install.shutil,
+                    "which",
+                    side_effect=lambda name: f"/usr/bin/{name}",
+                ),
+                mock.patch.object(formula_install, "_run_with_log") as run,
+            ):
+                self.assertTrue(
+                    formula_install.ensure_mathml_to_latex(
+                        target_dir,
+                        install_node=True,
+                    )
+                )
+
+            run.assert_not_called()
 
     def test_texmath_target_path_uses_exe_on_windows(self) -> None:
         target_dir = Path("tools")

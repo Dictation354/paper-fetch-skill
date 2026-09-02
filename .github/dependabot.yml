@@ -6,7 +6,7 @@ updates:
       interval: "weekly"
 
   - package-ecosystem: "npm"
-    directory: "/"
+    directory: "/src/paper_fetch/resources/formula"
     schedule:
       interval: "weekly"
 

@@ -10,15 +10,12 @@ from ..table_grid import (
     TableCell,
     TableConversionReason,
     TableRow,
-    expand_table_grid,
-    flatten_header_rows,
     normalize_table,
 )
 from ..markdown_render import table_format as markdown_table_format
 from ...models import normalize_markdown_text
 from ...utils import normalize_text
 from .inline import (
-    normalize_html_inline_text,
     render_html_inline_node,
     wrap_html_inline_text_fragment,
 )
@@ -30,10 +27,6 @@ TABLE_PLACEHOLDER_PREFIX = "PAPER_FETCH_TABLE_PLACEHOLDER_"
 
 RenderInlineTextFn = Callable[[Any], str]
 CleanMarkdownFn = Callable[[str], str]
-
-
-def normalize_table_inline_text(value: str) -> str:
-    return normalize_html_inline_text(value, policy="table_cell")
 
 
 def wrap_table_text_fragment(text: str, marker: str | None) -> str:
@@ -158,17 +151,6 @@ def _table_rows_to_ir(
     )
 
 
-def _table_cell_from_ir(cell: TableCell) -> dict[str, Any]:
-    return {
-        "text": cell.text,
-        "is_header": cell.is_header,
-        "is_header_candidate": cell.is_header_candidate,
-        "rowspan": 1,
-        "colspan": 1,
-        "span_valid": True,
-    }
-
-
 def table_header_row_count(table: Tag, rows: list[list[dict[str, Any]]]) -> int:
     thead = table.find("thead")
     if isinstance(thead, Tag):
@@ -225,40 +207,6 @@ def leading_full_width_spanner_rows(
         lifted.append(text)
         index += 1
     return lifted, rows[index:]
-
-
-def expanded_table_matrix(
-    rows: list[list[dict[str, Any]]],
-) -> list[list[dict[str, Any]]] | None:
-    grid = expand_table_grid(_table_rows_to_ir(rows))
-    if grid.matrix is None:
-        return None
-    return [[_table_cell_from_ir(cell) for cell in row] for row in grid.matrix]
-
-
-def flatten_table_header_rows(rows: list[list[dict[str, Any]]]) -> list[str]:
-    return list(
-        flatten_header_rows(
-            [tuple(_table_cell_to_ir(cell) for cell in row) for row in rows]
-        )
-    )
-
-
-def normalize_table_header_rows(
-    rows: list[list[dict[str, Any]]],
-) -> list[list[dict[str, Any]]]:
-    if len(rows) <= 1:
-        return rows
-    first_row = rows[0]
-    first_texts = [normalize_text(str(cell.get("text") or "")) for cell in first_row]
-    if not first_texts or any(not text for text in first_texts):
-        return rows
-    if len(set(first_texts)) != 1:
-        return rows
-    next_row_texts = [normalize_text(str(cell.get("text") or "")) for cell in rows[1]]
-    if not any(next_row_texts):
-        return rows
-    return rows[1:]
 
 
 def table_headers_and_data(

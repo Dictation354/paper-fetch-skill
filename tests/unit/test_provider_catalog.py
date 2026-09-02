@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import get_args
 import unittest
 from unittest import mock
@@ -8,6 +9,7 @@ import xml.etree.ElementTree as ET
 from paper_fetch import publisher_identity
 from paper_fetch.provider_catalog import (
     DEFAULT_BODY_TEXT_THRESHOLDS,
+    PROVIDER_BUNDLE_MAP,
     PROVIDER_CATALOG,
     ProviderRouteSpec,
     ProviderSpec,
@@ -66,6 +68,7 @@ class ProviderCatalogTests(unittest.TestCase):
         clients = build_clients(DummyTransport(), {})
 
         self.assertEqual(set(clients), set(PROVIDER_CATALOG))
+        self.assertEqual(tuple(clients), provider_status_order())
         for name, client in clients.items():
             self.assertEqual(client.name, name)
 
@@ -89,7 +92,7 @@ class ProviderCatalogTests(unittest.TestCase):
             self.assertEqual(
                 default_asset_profile_for_provider(spec.name), spec.asset_default
             )
-            self.assertTrue(spec.client_factory_path)
+            self.assertTrue(callable(PROVIDER_BUNDLE_MAP[spec.name].client_factory))
             self.assertEqual(
                 provider_supports_metadata_api_probe(spec.name),
                 spec.probe_capability == "metadata_api",
@@ -134,7 +137,6 @@ class ProviderCatalogTests(unittest.TestCase):
             asset_default="body",
             probe_capability="routing_signal",
             provider_managed_abstract_only=False,
-            client_factory_path="example:Client",
             status_order=99,
             routes=(
                 ProviderRouteSpec(
@@ -163,7 +165,6 @@ class ProviderCatalogTests(unittest.TestCase):
                 asset_default="body",
                 probe_capability="routing_signal",
                 provider_managed_abstract_only=False,
-                client_factory_path="invalid:Client",
                 status_order=100,
                 routes=(ProviderRouteSpec(name="direct_html", kind="html"),),
             )
@@ -380,6 +381,14 @@ class ProviderCatalogTests(unittest.TestCase):
         callback = provider_metadata_probe_short_circuit("arxiv")
 
         self.assertIsNotNone(callback)
+        self.assertIs(
+            callback,
+            PROVIDER_BUNDLE_MAP["arxiv"].metadata_probe_short_circuit,
+        )
+        self.assertNotIn(
+            "metadata_probe_short_circuit",
+            json.dumps(PROVIDER_CATALOG["arxiv"].to_dict()),
+        )
         result = routing.probe_official_provider(
             "arxiv",
             doi="10.48550/arxiv.2605.06663",

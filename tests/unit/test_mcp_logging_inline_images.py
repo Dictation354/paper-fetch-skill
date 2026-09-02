@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import tempfile
 import unittest
@@ -11,6 +12,7 @@ from paper_fetch.mcp.fetch_tool import (
     _inline_image_contents,
     build_fetch_tool_result,
     fetch_paper_payload,
+    fetch_paper_tool_async,
     resolve_paper_tool,
 )
 from paper_fetch.mcp.log_bridge import (
@@ -25,12 +27,140 @@ from ._mcp_support import (
     create_cached_fetch_envelope,
     mcp_test_deps,
     sample_article,
+    sample_envelope,
     sample_resolved_query,
     write_binary,
 )
 
 
 class McpLoggingInlineImageTests(unittest.TestCase):
+    def test_async_inline_images_match_on_fresh_fetch_and_cache_hit(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            download_dir = Path(tmpdir)
+            figure_path = download_dir / "figure-1.png"
+            write_binary(figure_path, size=32)
+            fetch = mock.Mock()
+
+            def fetch_paper(query, **kwargs):
+                envelope = sample_envelope(modes=set(kwargs["modes"]), doi=query)
+                assert envelope.article is not None
+                envelope.article.assets = [
+                    Asset(
+                        kind="figure",
+                        heading="Figure 1",
+                        caption="Body figure",
+                        path=str(figure_path),
+                        section="body",
+                        downloaded_bytes=32,
+                    )
+                ]
+                fetch(query, **kwargs)
+                return envelope
+
+            arguments = {
+                "query": "10.1000/inline-cache",
+                "modes": ["markdown"],
+                "strategy": {
+                    "asset_profile": "body",
+                    "inline_image_budget": {"max_images": 1},
+                },
+                "prefer_cache": True,
+                "download_dir": download_dir,
+                "deps": mcp_test_deps(
+                    build_runtime_env=lambda _env=None: {},
+                    service_fetch_paper=fetch_paper,
+                ),
+            }
+
+            fresh = asyncio.run(fetch_paper_tool_async(**arguments))
+            cached = asyncio.run(
+                fetch_paper_tool_async(
+                    **{
+                        **arguments,
+                        "strategy": {
+                            "asset_profile": "body",
+                            "inline_image_budget": {"max_images": 3},
+                        },
+                    }
+                )
+            )
+
+        self.assertEqual(
+            [content.type for content in fresh.content], ["text", "text", "image"]
+        )
+        self.assertEqual(
+            [content.type for content in cached.content], ["text", "text", "image"]
+        )
+        self.assertIsNone(fresh.structured_content["article"])
+        self.assertIsNone(cached.structured_content["article"])
+        self.assertEqual(fetch.call_count, 1)
+
+    def test_inline_image_request_misses_old_sidecar_without_article(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            download_dir = Path(tmpdir)
+            old_request = FetchPaperRequest(
+                query="10.1000/inline-old",
+                modes=["markdown"],
+                prefer_cache=True,
+                strategy={
+                    "asset_profile": "body",
+                    "inline_image_budget": {"max_images": 0},
+                },
+            )
+            old_envelope = sample_envelope(modes={"markdown"}, doi=old_request.query)
+            cache = FetchCache(download_dir)
+            cache.write_fetch_envelope(old_envelope, old_request)
+            active_request = FetchPaperRequest(
+                query=old_request.query,
+                modes=["markdown"],
+                prefer_cache=True,
+                strategy={
+                    "asset_profile": "body",
+                    "inline_image_budget": {"max_images": 2},
+                },
+            )
+
+            inspection = cache.get_payload(
+                old_request.query,
+                request=active_request,
+                detail="compact",
+            )
+            with RuntimeContext(env={}, download_dir=download_dir) as context:
+                loaded = cache.load_fetch_envelope(
+                    active_request,
+                    resolve_paper_fn=mock.Mock(),
+                    context=context,
+                )
+
+        self.assertFalse(inspection["request_satisfied"])
+        self.assertFalse(inspection["sidecar"]["payload_satisfies_request"])
+        self.assertIsNone(loaded)
+
+    def test_disabled_inline_budget_accepts_sidecar_without_article(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            download_dir = Path(tmpdir)
+            request = FetchPaperRequest(
+                query="10.1000/inline-disabled",
+                modes=["markdown"],
+                prefer_cache=True,
+                strategy={
+                    "asset_profile": "body",
+                    "inline_image_budget": {"max_images": 0},
+                },
+            )
+            cache = FetchCache(download_dir)
+            cache.write_fetch_envelope(
+                sample_envelope(modes={"markdown"}, doi=request.query), request
+            )
+
+            inspection = cache.get_payload(
+                request.query,
+                request=request,
+                detail="compact",
+            )
+
+        self.assertTrue(inspection["request_satisfied"])
+
     def test_parse_structured_log_message_extracts_fields(self) -> None:
         payload = parse_structured_log_message(
             "http_request_success method=GET status=200 elapsed_ms=12.5 attempt=1",

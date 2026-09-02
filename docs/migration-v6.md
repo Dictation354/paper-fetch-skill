@@ -8,6 +8,10 @@
 
 不要导入 `build_provider_registry`。使用标准 provider catalog / registry 入口。`RawFulltextPayload` 只接受并公开 typed 字段；原先通过 `metadata` 传递的 route、正文、诊断、资产与 trace 必须写入对应字段。
 
+Provider extension 不再声明 `ProviderSpec.client_factory_path`。在模块完成 client 类定义后，把该类或同模块 typed callable 传给 `ProviderBundle.client_factory`；运行 callable 不属于 catalog/MCP 序列化字段。内置 provider 仍由固定模块清单 eager import，单个 factory 构造失败仍由 registry 隔离为失败 client。
+
+`metadata_probe_short_circuit` 已从 `ProviderSpec` 移至 `ProviderBundle`；直接把 callable 传给 bundle。`ProviderBundle.asset_retry` 与 `ProviderBundle.metadata_merge` 已删除：资产重试由现有 provider/asset 下载路径负责，metadata 合并由 workflow 的既有 owner 负责，不再注册 bundle hook。
+
 ## MCP
 
 `tools/list` 不再包含 `outputSchema`。调用方应按工具文档发起请求，并从 `CallToolResult.structured_content` 读取既有 `schema_version`、`status`、内容和错误字段。不要依赖已删除的 `paper_fetch.mcp.output_schemas`。
@@ -20,4 +24,4 @@
 
 ## Release 资产
 
-Stable Release 只公开九个安装包和 checksum；Rolling prerelease 另含 `dependency-manifest.json`。依赖比较之外的构建 evidence 不再是公开下载接口。
+Stable Release 只公开九个安装包和 checksum。Merged dependency manifest 与逐目标构建 evidence 仅在构建期验证，不是公开下载接口。

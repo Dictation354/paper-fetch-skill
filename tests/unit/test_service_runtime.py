@@ -211,17 +211,21 @@ class ServiceRuntimeTests(unittest.TestCase):
             contextless_counter = {"count": 0}
             _probe_has_fulltext(
                 resolved.query,
-                transport=FixtureHtmlTransport(
-                    {resolved.landing_url: {"body": b"<html><body /></html>"}}
+                context=RuntimeContext(
+                    transport=FixtureHtmlTransport(
+                        {resolved.landing_url: {"body": b"<html><body /></html>"}}
+                    ),
+                    clients={"crossref": counting_crossref(contextless_counter)},
                 ),
-                clients={"crossref": counting_crossref(contextless_counter)},
             )
             _probe_has_fulltext(
                 resolved.query,
-                transport=FixtureHtmlTransport(
-                    {resolved.landing_url: {"body": b"<html><body /></html>"}}
+                context=RuntimeContext(
+                    transport=FixtureHtmlTransport(
+                        {resolved.landing_url: {"body": b"<html><body /></html>"}}
+                    ),
+                    clients={"crossref": counting_crossref(contextless_counter)},
                 ),
-                clients={"crossref": counting_crossref(contextless_counter)},
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -229,7 +233,7 @@ class ServiceRuntimeTests(unittest.TestCase):
         self.assertEqual(different_context_counter["count"], 2)
         self.assertEqual(contextless_counter["count"], 2)
 
-    def test_fetch_paper_uses_runtime_context_dependencies_when_legacy_keywords_are_omitted(
+    def test_fetch_paper_uses_runtime_context_dependencies(
         self,
     ) -> None:
         resolved = paper_fetch.ResolvedQuery(
@@ -246,8 +250,9 @@ class ServiceRuntimeTests(unittest.TestCase):
         runtime_env = {"CROSSREF_MAILTO": "runtime@example.test"}
         original_resolve = paper_fetch.resolve_paper
         try:
-            paper_fetch.resolve_paper = lambda query, *, transport=None, env=None: (
-                captured.update({"transport": transport, "env": env}) or resolved
+            paper_fetch.resolve_paper = lambda query, *, context=None: (
+                captured.update({"transport": context.transport, "env": context.env})
+                or resolved
             )
             with tempfile.TemporaryDirectory() as tmpdir:
                 context = RuntimeContext(

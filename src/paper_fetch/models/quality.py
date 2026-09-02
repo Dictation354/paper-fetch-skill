@@ -8,7 +8,7 @@ from typing import Any, cast
 from collections.abc import Mapping
 
 from ..utils import normalize_text
-from ..quality.reason_codes import (
+from ..reason_codes import (
     ABSTRACT_ONLY,
     ACCESS_PAGE_URL,
     CITATION_ABSTRACT_HTML_URL,
@@ -34,7 +34,6 @@ from .schema import (
     BodyQualityMetrics,
     ContentKind,
     EXTRACTION_REVISION,
-    Quality,
     QualityConfidence,
     Section,
     SemanticLosses,
@@ -48,7 +47,7 @@ from .sections import (
     first_abstract_text,
     renderable_body_sections,
 )
-from .tokens import build_token_estimate_breakdown, coerce_token_estimate_breakdown
+from .tokens import build_token_estimate_breakdown
 
 QUALITY_FLAG_ACCESS_GATE_DETECTED = "access_gate_detected"
 
@@ -653,27 +652,6 @@ def _diagnostics_require_downgrade(
     if reason == QUALITY_FLAG_INSUFFICIENT_BODY and body_metrics.word_count <= 40:
         return True
     return False
-
-
-def _clone_quality(quality: Quality) -> Quality:
-    return Quality(
-        has_fulltext=quality.has_fulltext,
-        token_estimate=quality.token_estimate,
-        content_kind=quality.content_kind,
-        has_abstract=quality.has_abstract,
-        warnings=list(quality.warnings),
-        source_trail=list(quality.source_trail),
-        token_estimate_breakdown=coerce_token_estimate_breakdown(
-            quality.token_estimate_breakdown
-        ),
-        confidence=quality.confidence,
-        flags=list(quality.flags),
-        body_metrics=coerce_body_quality_metrics(quality.body_metrics),
-        semantic_losses=coerce_semantic_losses(quality.semantic_losses),
-        asset_failures=coerce_asset_failure_diagnostics(quality.asset_failures),
-        asset_summary=coerce_asset_quality_summary(quality.asset_summary),
-        extraction_revision=quality.extraction_revision,
-    )
 
 
 def _refresh_article_quality(

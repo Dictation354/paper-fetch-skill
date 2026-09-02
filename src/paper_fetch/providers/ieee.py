@@ -96,44 +96,6 @@ from .base import (
 
 __all__ = ["IeeeClient"]
 
-PROVIDER_BUNDLE = ProviderBundle(
-    catalog=ProviderSpec(
-        name="ieee",
-        display_name="IEEE",
-        official=True,
-        domains=("ieeexplore.ieee.org",),
-        doi_prefixes=("10.1109/",),
-        publisher_aliases=(
-            "ieee",
-            "institute of electrical and electronics engineers",
-        ),
-        asset_default="body",
-        probe_capability="routing_signal",
-        provider_managed_abstract_only=True,
-        client_factory_path="paper_fetch.providers.ieee:IeeeClient",
-        status_order=6,
-        routes=IEEE_ROUTES,
-    ),
-    html_rules=ProviderHtmlRules(
-        name="ieee",
-        noise_profile="ieee",
-        cleanup=ProviderCleanupRules(
-            markdown_promo_tokens=IEEE_MARKDOWN_PROMO_TOKENS,
-            extraction_cleanup_selectors=IEEE_EXTRACTION_CLEANUP_SELECTORS,
-            extraction_drop_keywords=IEEE_AVAILABILITY_DROP_KEYWORDS,
-            access_block_text_tokens=IEEE_ACCESS_BLOCK_TEXT_TOKENS,
-        ),
-        availability=AvailabilityPolicy(
-            name="ieee",
-            site_rule_overrides=IEEE_SITE_RULE_OVERRIDES,
-            text_marker_signal_set=IEEE_TEXT_MARKER_SIGNAL_SET,
-            overrides=IEEE_AVAILABILITY_OVERRIDES,
-        ),
-    ),
-    asset_retry=ieee_html.IEEE_ASSET_RETRY_POLICY,
-    sources=("ieee_html", "ieee_pdf"),
-)
-
 _FETCH_PDF_WITH_BROWSER = fetch_pdf_with_playwright = fetch_pdf_with_browser
 
 
@@ -540,7 +502,7 @@ class IeeeClient(ProviderClient):
             ),
             suggested_filename=pdf_result.suggested_filename,
             html_failure_message=html_failure_message,
-            content_needs_local_copy=True,
+            needs_local_copy=True,
             warnings=[*payload_warnings, *pdf_fetch_result_warnings(pdf_result)],
             trace_markers=[
                 *list(
@@ -549,7 +511,6 @@ class IeeeClient(ProviderClient):
                 ),
                 fulltext_marker("ieee", "ok", route=PDF_FALLBACK),
             ],
-            needs_local_copy=True,
         )
 
     def _abstract_only_payload(
@@ -843,3 +804,41 @@ class IeeeClient(ProviderClient):
             text_only=not pdf_assets,
             skip_trace=skip_trace,
         )
+
+
+PROVIDER_BUNDLE = ProviderBundle(
+    client_factory=IeeeClient,
+    catalog=ProviderSpec(
+        name="ieee",
+        display_name="IEEE",
+        official=True,
+        domains=("ieeexplore.ieee.org",),
+        doi_prefixes=("10.1109/",),
+        publisher_aliases=(
+            "ieee",
+            "institute of electrical and electronics engineers",
+        ),
+        asset_default="body",
+        probe_capability="routing_signal",
+        provider_managed_abstract_only=True,
+        status_order=6,
+        routes=IEEE_ROUTES,
+    ),
+    html_rules=ProviderHtmlRules(
+        name="ieee",
+        noise_profile="ieee",
+        cleanup=ProviderCleanupRules(
+            markdown_promo_tokens=IEEE_MARKDOWN_PROMO_TOKENS,
+            extraction_cleanup_selectors=IEEE_EXTRACTION_CLEANUP_SELECTORS,
+            extraction_drop_keywords=IEEE_AVAILABILITY_DROP_KEYWORDS,
+            access_block_text_tokens=IEEE_ACCESS_BLOCK_TEXT_TOKENS,
+        ),
+        availability=AvailabilityPolicy(
+            name="ieee",
+            site_rule_overrides=IEEE_SITE_RULE_OVERRIDES,
+            text_marker_signal_set=IEEE_TEXT_MARKER_SIGNAL_SET,
+            overrides=IEEE_AVAILABILITY_OVERRIDES,
+        ),
+    ),
+    sources=("ieee_html", "ieee_pdf"),
+)

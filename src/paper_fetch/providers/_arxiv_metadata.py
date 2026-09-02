@@ -21,7 +21,6 @@ from ..extraction.html.semantics import SECTION_HEADING_PATTERN
 from ..failure import FailureDiagnostics
 from ..http import PDF_MIME_TYPE
 from ..metadata.types import MetadataMergeRule, ProviderMetadata, merge_metadata_layers
-from ..provider_catalog import register_metadata_probe_short_circuit
 from ..publisher_identity import validate_extracted_identity
 from ..reason_codes import IDENTITY_MISMATCH, NO_RESULT, NOT_SUPPORTED
 from ..utils import dedupe_authors, normalize_text
@@ -290,9 +289,6 @@ def arxiv_metadata_probe_short_circuit(doi: str) -> ProviderMetadata | None:
     if not arxiv_id:
         return None
     return minimal_arxiv_metadata(arxiv_id, doi=doi, metadata={})
-
-
-register_metadata_probe_short_circuit("arxiv", arxiv_metadata_probe_short_circuit)
 
 
 def _arxiv_date_to_iso(value: str | None) -> str | None:

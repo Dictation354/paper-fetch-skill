@@ -18,7 +18,7 @@ from ...extraction.html.signals import (
 from ...http import diagnostic_url_payload
 from ...metadata.types import ProviderMetadata
 from ...models import AssetProfile
-from ...quality.reason_codes import (
+from ...reason_codes import (
     ABSTRACT_ONLY,
     AWS_WAF_CHALLENGE,
     CLOUDFLARE_CHALLENGE,
@@ -582,9 +582,6 @@ def _browser_workflow_html_payload(
         diagnostics.update(dict(html_result.diagnostics))
     return RawFulltextPayload(
         provider=client.name,
-        source_url=html_result.final_url,
-        content_type="text/html",
-        body=html_bytes,
         content=ProviderContent(
             route_kind="html",
             source_url=html_result.final_url,
@@ -598,7 +595,6 @@ def _browser_workflow_html_payload(
         ),
         warnings=list(warnings or []),
         trace=trace_from_markers([fulltext_marker(client.name, "ok", route="html")]),
-        needs_local_copy=False,
     )
 
 

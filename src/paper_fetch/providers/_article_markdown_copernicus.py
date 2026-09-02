@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from pathlib import Path
 from typing import Any
 from collections.abc import Mapping
 import xml.etree.ElementTree as ET
@@ -12,17 +11,10 @@ from ..reason_codes import OFFICIAL_FULL_SIZE_NOT_EXPOSED
 
 from ._article_markdown_jats import (
     JatsExtraction,
-    build_jats_markdown_document,
-    extract_jats_authors,
-    extract_jats_metadata,
-    extract_jats_references,
     parse_jats_xml,
 )
 
 CopernicusExtraction = JatsExtraction
-extract_copernicus_authors = extract_jats_authors
-extract_copernicus_metadata = extract_jats_metadata
-extract_copernicus_references = extract_jats_references
 
 
 def _copernicus_full_size_score(alternative: Mapping[str, Any]) -> tuple[int, int]:
@@ -102,23 +94,7 @@ def parse_copernicus_xml(
     )
 
 
-def build_copernicus_markdown_document(
-    extraction: CopernicusExtraction,
-    *,
-    xml_path: Path | None = None,
-) -> str:
-    return build_jats_markdown_document(
-        extraction,
-        xml_path=xml_path,
-        provider_label="copernicus",
-    )
-
-
 __all__ = [
     "CopernicusExtraction",
-    "build_copernicus_markdown_document",
-    "extract_copernicus_authors",
-    "extract_copernicus_metadata",
-    "extract_copernicus_references",
     "parse_copernicus_xml",
 ]

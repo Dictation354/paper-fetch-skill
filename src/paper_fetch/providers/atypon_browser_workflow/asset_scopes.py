@@ -118,27 +118,6 @@ def _atypon_browser_workflow_supplementary_sections(container: Tag) -> list[Tag]
     return _dedupe_top_level_nodes(candidates)
 
 
-def _extract_atypon_browser_workflow_asset_html_scopes(
-    body_container: Tag,
-    supplementary_container: Tag,
-    *,
-    publisher: str,
-) -> tuple[str, str]:
-    for node in list(_atypon_browser_workflow_supplementary_sections(body_container)):
-        node.decompose()
-
-    supplementary_html = "\n".join(
-        str(node)
-        for node in _atypon_browser_workflow_supplementary_sections(
-            supplementary_container
-        )
-        if normalize_text(node.get_text(" ", strip=True))
-    )
-    return _content_fragment_html(
-        body_container, publisher=publisher
-    ), supplementary_html
-
-
 def _atypon_browser_workflow_supplementary_asset_is_supported(
     asset: Mapping[str, Any],
 ) -> bool:
@@ -223,23 +202,9 @@ def extract_browser_workflow_asset_html_scopes(
     )
 
 
-def extract_atypon_browser_workflow_supplementary_section_asset_html_scopes(
-    body_container: Tag,
-    supplementary_container: Tag,
-    *,
-    publisher: str,
-) -> tuple[str, str]:
-    return _extract_atypon_browser_workflow_asset_html_scopes(
-        body_container,
-        supplementary_container,
-        publisher=publisher,
-    )
-
-
 __all__ = [
     "ATYPON_BROWSER_WORKFLOW_SUPPLEMENTARY_HEADING_KEYS",
     "ATYPON_BROWSER_WORKFLOW_SUPPLEMENTARY_SECTION_SELECTORS",
-    "extract_atypon_browser_workflow_supplementary_section_asset_html_scopes",
     "extract_browser_workflow_asset_html_scopes",
     "extract_scoped_html_assets",
     "extract_supplementary_assets",

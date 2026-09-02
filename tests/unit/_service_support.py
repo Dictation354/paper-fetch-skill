@@ -67,39 +67,6 @@ def _typed_payload(
     )
 
 
-_RUNTIME_ARG_UNSET = object()
-
-
-def _runtime_context_from_args(
-    *,
-    context: RuntimeContext | None = None,
-    env=_RUNTIME_ARG_UNSET,
-    transport=_RUNTIME_ARG_UNSET,
-    clients=_RUNTIME_ARG_UNSET,
-    download_dir=_RUNTIME_ARG_UNSET,
-) -> RuntimeContext | None:
-    runtime_args = {
-        "env": env,
-        "transport": transport,
-        "clients": clients,
-        "download_dir": download_dir,
-    }
-    explicit = {
-        name: value
-        for name, value in runtime_args.items()
-        if value is not _RUNTIME_ARG_UNSET
-    }
-    if context is not None:
-        if explicit:
-            raise TypeError(
-                "test helper cannot combine context with runtime keyword arguments"
-            )
-        return context
-    if not explicit:
-        return None
-    return RuntimeContext(**explicit)
-
-
 def _fetch_paper(
     query: str,
     *,
@@ -107,24 +74,13 @@ def _fetch_paper(
     strategy=None,
     render=None,
     context: RuntimeContext | None = None,
-    env=_RUNTIME_ARG_UNSET,
-    transport=_RUNTIME_ARG_UNSET,
-    clients=_RUNTIME_ARG_UNSET,
-    download_dir=_RUNTIME_ARG_UNSET,
 ):
-    runtime_context = _runtime_context_from_args(
-        context=context,
-        env=env,
-        transport=transport,
-        clients=clients,
-        download_dir=download_dir,
-    )
     return paper_fetch.fetch_paper(
         query,
         modes=modes,
         strategy=strategy,
         render=render,
-        context=runtime_context,
+        context=context,
     )
 
 
@@ -132,17 +88,8 @@ def _probe_has_fulltext(
     query: str,
     *,
     context: RuntimeContext | None = None,
-    env=_RUNTIME_ARG_UNSET,
-    transport=_RUNTIME_ARG_UNSET,
-    clients=_RUNTIME_ARG_UNSET,
 ):
-    runtime_context = _runtime_context_from_args(
-        context=context,
-        env=env,
-        transport=transport,
-        clients=clients,
-    )
-    return paper_fetch.probe_has_fulltext(query, context=runtime_context)
+    return paper_fetch.probe_has_fulltext(query, context=context)
 
 
 __all__ = [name for name in globals() if not name.startswith("__")]

@@ -28,13 +28,11 @@ from ..reason_codes import (
     RATE_LIMITED,
 )
 from ..providers.protocols import MetadataProvider
-from ..runtime import RUNTIME_UNSET, RuntimeContext, resolve_runtime_context
+from ..runtime import RuntimeContext
 from ..tracing import route_marker
 from ..publisher_identity import (
     ProviderIdentityCandidate,
-    infer_provider_from_doi,
-    infer_provider_from_publisher,
-    infer_provider_from_url,
+    _ordered_provider_signals,
     normalize_doi,
     ordered_provider_candidates,
     ordered_provider_candidate_evidence,
@@ -89,17 +87,12 @@ def route_signal_markers(
     doi: str | None = None,
 ) -> list[str]:
     markers: list[str] = []
-    for url in landing_urls or []:
-        provider = infer_provider_from_url(url)
-        if provider:
-            extend_unique(markers, [route_marker(f"signal_domain_{provider}")])
-    for publisher in publishers or []:
-        provider = infer_provider_from_publisher(publisher)
-        if provider:
-            extend_unique(markers, [route_marker(f"signal_publisher_{provider}")])
-    provider = infer_provider_from_doi(doi)
-    if provider:
-        extend_unique(markers, [route_marker(f"signal_doi_{provider}")])
+    for provider, signal in _ordered_provider_signals(
+        landing_urls=landing_urls,
+        publishers=publishers,
+        doi=doi,
+    ):
+        extend_unique(markers, [route_marker(f"signal_{signal}_{provider}")])
     return markers
 
 
@@ -125,7 +118,7 @@ def build_official_provider_candidates(
 def build_official_provider_candidate_evidence(
     resolved, *, routing_metadata: Mapping[str, Any] | None, strategy: FetchStrategy
 ) -> list[ProviderIdentityCandidate]:
-    """Return filtered candidates while retaining signal strength/conflicts."""
+    """Return filtered candidates while retaining signal strength."""
 
     return [
         candidate
@@ -197,15 +190,13 @@ def resolve_query_with_session_cache(
     query: str,
     *,
     resolver,
-    transport: HttpTransport,
-    env: Mapping[str, str],
     context: RuntimeContext,
 ):
     return cached_call(
         RESOLVED_QUERY_KEY,
         (normalize_text(query) or str(query),),
         context,
-        lambda: resolver(query, transport=transport, env=env),
+        lambda: resolver(query, context=context),
     )
 
 
@@ -370,15 +361,10 @@ def select_route_probe(probes: list[RouteProbeResult]) -> RouteProbeResult | Non
 def probe_has_fulltext(
     query: str,
     *,
-    transport: HttpTransport | None | object = RUNTIME_UNSET,
-    env: Mapping[str, str] | None | object = RUNTIME_UNSET,
-    clients: Mapping[str, object] | None | object = RUNTIME_UNSET,
-    context: RuntimeContext | None = None,
+    context: RuntimeContext,
     resolve_paper_fn=None,
 ) -> HasFulltextProbeResult:
-    runtime = resolve_runtime_context(
-        context, env=env, transport=transport, clients=clients
-    )
+    runtime = context
     assert runtime.env is not None
     assert runtime.transport is not None
     active_env = runtime.env
@@ -388,8 +374,6 @@ def probe_has_fulltext(
     resolved = resolve_query_with_session_cache(
         query,
         resolver=resolver,
-        transport=active_transport,
-        env=active_env,
         context=runtime,
     )
     if resolved.candidates and not resolved.doi:

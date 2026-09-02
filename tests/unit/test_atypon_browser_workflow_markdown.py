@@ -195,7 +195,6 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         self.assertEqual(diagnostics["content_kind"], "fulltext")
 
     def test_pnas_full_fixture_omits_real_page_collateral_noise(self) -> None:
-        """rule: rule-filter-publisher-ui-noise"""
         markdown, _ = self._extract_sample_markdown(PNAS_SAMPLE)
 
         self.assertNotIn("Recommended articles", markdown)
@@ -639,7 +638,6 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         self.assertNotIn("<p>(1)</p>", rendered)
 
     def test_wiley_references_use_visible_citation_text_not_doi_only(self) -> None:
-        """rule: rule-wiley-reference-text"""
         cases = (
             (
                 "10.1111/gcb.15322",

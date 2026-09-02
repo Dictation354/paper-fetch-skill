@@ -136,51 +136,7 @@ def _fake_python_script(
         exit 0
       fi
       if [[ "$code" == *'installer_manifest_values'* ]]; then
-        cat <<'OUT'
-    installer_manifest_values
-    # BEGIN paper-fetch offline managed
-    # END paper-fetch offline managed
-    # BEGIN paper-fetch installer managed
-    # END paper-fetch installer managed
-    paper-fetch-skill
-    paper-fetch
-    [mcp.env_keys]
-    PYTHONUTF8
-    PYTHONIOENCODING
-    PAPER_FETCH_ENV_FILE
-    PAPER_FETCH_DOWNLOAD_DIR
-    PAPER_FETCH_FORMULA_TOOLS_DIR
-    PAPER_FETCH_IMAGE_TOOLS_DIR
-    MATHML_TO_LATEX_NODE_BIN
-    PAPER_FETCH_BROWSER_HEADLESS
-    [env_sets.offline_env_keys]
-    PAPER_FETCH_DOWNLOAD_DIR
-    PAPER_FETCH_FORMULA_TOOLS_DIR
-    PAPER_FETCH_IMAGE_TOOLS_DIR
-    MATHML_TO_LATEX_NODE_BIN
-    PAPER_FETCH_BROWSER_HEADLESS
-    PYTHONUTF8
-    PYTHONIOENCODING
-    [env_sets.shell_env_keys]
-    PAPER_FETCH_ENV_FILE
-    PAPER_FETCH_DOWNLOAD_DIR
-    PAPER_FETCH_FORMULA_TOOLS_DIR
-    PAPER_FETCH_IMAGE_TOOLS_DIR
-    MATHML_TO_LATEX_NODE_BIN
-    PAPER_FETCH_BROWSER_HEADLESS
-    PYTHONUTF8
-    PYTHONIOENCODING
-    [env_sets.activate_env_keys]
-    PAPER_FETCH_ENV_FILE
-    PAPER_FETCH_DOWNLOAD_DIR
-    PAPER_FETCH_FORMULA_TOOLS_DIR
-    PAPER_FETCH_IMAGE_TOOLS_DIR
-    MATHML_TO_LATEX_NODE_BIN
-    PAPER_FETCH_BROWSER_HEADLESS
-    PYTHONUTF8
-    PYTHONIOENCODING
-    OUT
-        exit 0
+        exec "$REAL_PYTHON" -I "$@"
       fi
       if [[ "$code" == *'camoufox'* ]]; then
         exit 0
@@ -482,6 +438,38 @@ class OfflineInstallTests(unittest.TestCase):
             )
             self.assertIn(
                 "Default browser backend: Camoufox (headless: true)", result.stdout
+            )
+
+    def test_schema_v1_legacy_env_sets_do_not_override_canonical_mcp_keys(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bundle, fake_bin, home = self._create_bundle(Path(tmpdir))
+            manifest_path = bundle / "installer" / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["env_sets"] = {
+                "offline_env_keys": ["LEGACY_UNUSED_ENV"],
+                "shell_env_keys": ["LEGACY_UNUSED_ENV"],
+                "activate_env_keys": ["LEGACY_UNUSED_ENV"],
+            }
+            manifest_path.write_text(
+                json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+            )
+            _write_checksums(bundle)
+
+            result = self._run_installer(bundle, fake_bin, home)
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertNotIn(
+                "LEGACY_UNUSED_ENV",
+                (bundle / "offline.env").read_text(encoding="utf-8"),
+            )
+            self.assertNotIn(
+                "LEGACY_UNUSED_ENV",
+                (bundle / "activate-offline.sh").read_text(encoding="utf-8"),
+            )
+            self.assertNotIn(
+                "LEGACY_UNUSED_ENV", (home / ".bashrc").read_text(encoding="utf-8")
             )
 
     def test_default_install_copies_runtime_to_user_data_dir(self) -> None:
@@ -1583,6 +1571,29 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertFalse(any(call[:3] == ["codex", "mcp", "add"] for call in calls))
             self.assertIn("Install directory was left in place", result.stdout)
 
+    def test_uninstall_without_installer_manifest_keeps_default_markers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bundle, fake_bin, home = self._create_bundle(Path(tmpdir))
+            managed = textwrap.dedent(
+                """
+                keep before
+                # BEGIN paper-fetch offline managed
+                export PAPER_FETCH_ENV_FILE="/old/offline.env"
+                # END paper-fetch offline managed
+                keep after
+                """
+            ).lstrip()
+            _write_file(home / ".bashrc", managed)
+            (bundle / "installer" / "manifest.json").unlink()
+
+            result = self._run_installer(bundle, fake_bin, home, "--uninstall")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            startup = (home / ".bashrc").read_text(encoding="utf-8")
+            self.assertIn("keep before", startup)
+            self.assertIn("keep after", startup)
+            self.assertNotIn("# BEGIN paper-fetch offline managed", startup)
+
     def test_purge_removes_install_directory_after_user_level_cleanup(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -1922,7 +1933,8 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertNotIn('assert hasattr(camoufox, "launch")', script)
         self.assertNotIn("PAPER_FETCH_BROWSER_USER_AGENT", script)
         self.assertIn("$OfflineEnvKeys = @(", script)
-        self.assertIn("env_sets.offline_env_keys", script)
+        self.assertIn("$manifest.mcp.env_keys", script)
+        self.assertIn('Where-Object { $_ -ne "PAPER_FETCH_ENV_FILE" }', script)
         self.assertIn("Format-DotenvAssignment", script)
         self.assertNotIn("CLOAKBROWSER_", script)
         self.assertNotIn("probe-launch", script)
@@ -1988,26 +2000,21 @@ class OfflineInstallTests(unittest.TestCase):
             "Paper Fetch Skill post-install helper failed with exit code", script
         )
 
-    def test_installer_manifest_declares_runtime_env_for_mcp_registration(self) -> None:
+    def test_installer_manifest_has_one_canonical_runtime_env_set(self) -> None:
         manifest = json.loads(
             (REPO_ROOT / "installer" / "manifest.json").read_text(encoding="utf-8")
         )
 
         mcp_env_keys = manifest["mcp"]["env_keys"]
+        self.assertEqual(manifest["schema_version"], 1)
+        self.assertEqual(manifest["skill"], {"name": "paper-fetch-skill"})
+        self.assertNotIn("env_sets", manifest)
         self.assertIn("MATHML_TO_LATEX_NODE_BIN", mcp_env_keys)
         self.assertIn("PAPER_FETCH_IMAGE_TOOLS_DIR", mcp_env_keys)
-        self.assertEqual(
-            set(manifest["env_sets"]["shell_env_keys"]),
-            set(mcp_env_keys),
-        )
-        self.assertEqual(
-            set(manifest["env_sets"]["activate_env_keys"]),
-            set(mcp_env_keys),
-        )
-        self.assertEqual(
-            set(manifest["env_sets"]["offline_env_keys"]),
-            set(mcp_env_keys) - {"PAPER_FETCH_ENV_FILE"},
-        )
+        installer = LINUX_INSTALLER.read_text(encoding="utf-8")
+        self.assertIn('SHELL_ENV_KEYS=("${MCP_ENV_KEYS[@]}")', installer)
+        self.assertIn('ACTIVATE_ENV_KEYS=("${MCP_ENV_KEYS[@]}")', installer)
+        self.assertIn('[ "$key" != "PAPER_FETCH_ENV_FILE" ]', installer)
 
     def test_windows_offline_build_writes_default_mathml_node_env(self) -> None:
         script = WINDOWS_OFFLINE_BUILD.read_text(encoding="utf-8")

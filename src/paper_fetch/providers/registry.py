@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import importlib
 from collections.abc import Iterable, Mapping
 
 from ..config import build_runtime_env
 from ..failure import FailureDiagnostics
 from ..http import HttpTransport
-from ..provider_catalog import ordered_provider_specs
+from ..provider_catalog import PROVIDER_BUNDLES
 from ..reason_codes import ERROR
 from .base import (
     ProviderClient,
@@ -68,14 +67,6 @@ class FailedProviderClient(ProviderClient):
         self._raise()
 
 
-def _client_factory(factory_path: str):
-    module_path, _, attribute = factory_path.partition(":")
-    if not module_path or not attribute:
-        raise ValueError(f"Invalid provider client factory path: {factory_path!r}")
-    module = importlib.import_module(module_path)
-    return getattr(module, attribute)
-
-
 def build_clients(
     transport: HttpTransport | None = None,
     env: Mapping[str, str] | None = None,
@@ -84,7 +75,7 @@ def build_clients(
 ) -> dict[str, ProviderClient]:
     active_transport = transport if transport is not None else HttpTransport()
     active_env = env if env is not None else build_runtime_env()
-    specs = ordered_provider_specs()
+    bundles = PROVIDER_BUNDLES
     selected = (
         None
         if provider_names is None
@@ -94,17 +85,17 @@ def build_clients(
             if str(name or "").strip()
         }
     )
-    known = {spec.name for spec in specs}
+    known = {bundle.catalog.name for bundle in bundles}
     unknown = sorted((selected or set()) - known)
     if unknown:
         raise ValueError(f"Unknown provider client(s): {', '.join(unknown)}")
     clients: dict[str, ProviderClient] = {}
-    for spec in specs:
+    for bundle in bundles:
+        spec = bundle.catalog
         if selected is not None and spec.name not in selected:
             continue
         try:
-            factory = _client_factory(spec.client_factory_path)
-            clients[spec.name] = factory(active_transport, active_env)
+            clients[spec.name] = bundle.client_factory(active_transport, active_env)
         except Exception as exc:  # noqa: BLE001 - isolate one provider factory.
             clients[spec.name] = FailedProviderClient(
                 name=spec.name,

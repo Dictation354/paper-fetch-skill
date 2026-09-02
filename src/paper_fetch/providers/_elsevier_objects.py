@@ -8,6 +8,7 @@ from typing import Any
 import urllib.parse
 import xml.etree.ElementTree as ET
 
+from ..extraction.xml_tables import _local_name
 from ..utils import normalize_text
 from ._elsevier_xml_rules import (
     ELSEVIER_IMAGE_ASSET_TYPES,
@@ -17,14 +18,6 @@ from ._elsevier_xml_rules import (
 
 
 XLINK_HREF = "{http://www.w3.org/1999/xlink}href"
-
-
-def _local_name(tag: str) -> str:
-    if "}" in tag:
-        return tag.rsplit("}", 1)[-1]
-    if ":" in tag:
-        return tag.rsplit(":", 1)[-1]
-    return tag
 
 
 def elsevier_asset_priority(

@@ -1012,6 +1012,10 @@ def _run_browser_asset_download_attempt(
 
 
 def _raise_if_cancelled(runtime_context: Any | None) -> None:
+    raise_if_cancelled = getattr(runtime_context, "raise_if_cancelled", None)
+    if callable(raise_if_cancelled):
+        raise_if_cancelled()
+        return
     cancel_check = getattr(runtime_context, "cancel_check", None)
     if callable(cancel_check) and cancel_check() is True:
         raise RequestCancelledError("Request cancelled.")

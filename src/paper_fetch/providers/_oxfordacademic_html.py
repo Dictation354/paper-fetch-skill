@@ -19,7 +19,7 @@ from ..extraction.html.semantics import collect_html_section_hints
 from ..extraction.html.tables import render_table_markdown
 from ..models import AssetProfile
 from ..publisher_identity import normalize_doi
-from ..utils import normalize_text
+from ..utils import extend_unique, normalize_text
 from ._html_section_markdown import (
     render_clean_text_from_html,
     render_container_markdown,
@@ -137,12 +137,6 @@ def is_oxfordacademic_url(value: str | None) -> bool:
     parsed = urlparse(normalize_text(value))
     host = normalize_text(parsed.hostname or "").lower()
     return host == "academic.oup.com" or host.endswith(".academic.oup.com")
-
-
-def _append_unique(values: list[str], candidate: str | None) -> None:
-    normalized = normalize_text(candidate)
-    if normalized and normalized not in values:
-        values.append(normalized)
 
 
 def _nodes_with_class(
@@ -446,7 +440,9 @@ def pdf_candidate_urls(
     doi: str | None = None,
 ) -> list[str]:
     candidates: list[str] = []
-    _append_unique(candidates, extract_pdf_url_from_metadata_links(metadata))
+    metadata_pdf_url = extract_pdf_url_from_metadata_links(metadata)
+    if metadata_pdf_url:
+        extend_unique(candidates, [metadata_pdf_url])
     for value in (
         source_url,
         str(metadata.get("source_url") or ""),
@@ -456,15 +452,19 @@ def pdf_candidate_urls(
         if normalized and (
             "/article-pdf/" in normalized.lower() or normalized.lower().endswith(".pdf")
         ):
-            _append_unique(candidates, normalized)
+            extend_unique(candidates, [normalized])
     if html_text and source_url:
-        for candidate in extract_pdf_candidate_urls_from_html(html_text, source_url):
-            _append_unique(candidates, candidate)
+        extend_unique(
+            candidates, extract_pdf_candidate_urls_from_html(html_text, source_url)
+        )
     normalized_doi = normalize_doi(str(doi or metadata.get("doi") or ""))
     if normalized_doi:
-        _append_unique(candidates, f"https://academic.oup.com/doi/pdf/{normalized_doi}")
-        _append_unique(
-            candidates, f"https://academic.oup.com/doi/epdf/{normalized_doi}"
+        extend_unique(
+            candidates,
+            [
+                f"https://academic.oup.com/doi/pdf/{normalized_doi}",
+                f"https://academic.oup.com/doi/epdf/{normalized_doi}",
+            ],
         )
     return candidates
 

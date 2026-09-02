@@ -12,6 +12,7 @@ from paper_fetch.capability_scope import (
     capability_scope_from_runtime_context,
     capability_scopes_for_query,
 )
+from paper_fetch.mcp.cache_index import list_cache_entries
 from paper_fetch.mcp.fetch_cache import (
     PUBLIC_CREDENTIAL_SCOPE,
     credential_scope_from_env,
@@ -318,9 +319,7 @@ def test_fetch_writer_uses_final_digest_of_actually_loaded_state(
     with RuntimeContext(env=env, download_dir=tmp_path) as context:
         _fetch_paper_envelope(
             request,
-            env=env,
             download_dir=tmp_path,
-            transport=None,
             include_article_for_assets=False,
             context=context,
             deps=mcp_test_deps(service_fetch_paper=fake_fetch),
@@ -371,9 +370,7 @@ def test_no_download_markdown_inherits_actual_browser_state_scope(
     with RuntimeContext(env=env, artifact_mode="none") as context:
         envelope = _fetch_paper_envelope(
             request,
-            env=env,
             download_dir=None,
-            transport=None,
             include_article_for_assets=False,
             context=context,
             deps=mcp_test_deps(service_fetch_paper=fake_fetch),
@@ -388,7 +385,8 @@ def test_no_download_markdown_inherits_actual_browser_state_scope(
         expected_scope = capability_scope_from_runtime_context(context)
 
     assert saved is not None
-    assert saved.cache_entry is not None
     assert expected_scope != PUBLIC_CREDENTIAL_SCOPE
     assert envelope_capability_scope(envelope) == expected_scope
-    assert saved.cache_entry["credential_scope"] == expected_scope
+    entries = list_cache_entries(markdown_dir)
+    saved_entry = next(entry for entry in entries if entry["path"] == str(saved.path))
+    assert saved_entry["credential_scope"] == expected_scope

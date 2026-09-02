@@ -6,6 +6,7 @@ from typing import Any
 from collections.abc import Mapping
 from urllib.parse import quote, urlparse
 
+from ..extraction.html.assets import filter_assets_for_profile
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.provider_rules import (
     ProviderAssetRules,
@@ -23,88 +24,64 @@ from ..quality.html_availability import (
 )
 from ..reason_codes import PDF_FALLBACK
 from ..runtime import RuntimeContext
-from ..utils import empty_asset_results, normalize_text
+from ..utils import empty_asset_results, extend_unique, normalize_text
 from . import _royalsocietypublishing_html as royal_html
 from . import browser_workflow
 from ._pdf_candidates import build_direct_pdf_candidates
 from ._registry import ProviderBundle
 from .base import RawFulltextPayload
 
-
-PROVIDER_BUNDLE = ProviderBundle(
-    catalog=ProviderSpec(
-        name="royalsocietypublishing",
-        display_name="Royal Society Publishing",
-        official=True,
-        domains=("royalsocietypublishing.org",),
-        doi_prefixes=("10.1098/",),
-        publisher_aliases=("the royal society", "royal society publishing"),
-        asset_default="body",
-        probe_capability="routing_signal",
-        provider_managed_abstract_only=False,
-        client_factory_path="paper_fetch.providers.royalsocietypublishing:RoyalsocietypublishingClient",
-        status_order=11,
-        base_domains=("royalsocietypublishing.org",),
-        html_path_templates=("/doi/{doi}",),
-        pdf_path_templates=("/doi/pdf/{doi}",),
-        body_text_thresholds=BodyTextThresholds(min_chars=800),
-        routes=(
-            ProviderRouteSpec(name="metadata", kind="metadata"),
-            ProviderRouteSpec(
-                name="browser_html",
-                kind="html",
-                browser_required=True,
-                browser_preflight=True,
-                auth_supported=True,
-                requires_playwright=True,
-                concurrency=1,
-            ),
-            ProviderRouteSpec(
-                name="browser_pdf",
-                kind="pdf",
-                browser_required=True,
-                browser_preflight=True,
-                auth_supported=True,
-                requires_playwright=True,
-                requires_pdf_conversion=True,
-                concurrency=1,
-            ),
-            ProviderRouteSpec(
-                name="assets",
-                kind="assets",
-                browser_optional=True,
-                requires_playwright=True,
-                timeout_seconds=20,
-                concurrency=2,
-                transient_retries=0,
-            ),
+_PROVIDER_SPEC = ProviderSpec(
+    name="royalsocietypublishing",
+    display_name="Royal Society Publishing",
+    official=True,
+    domains=("royalsocietypublishing.org",),
+    doi_prefixes=("10.1098/",),
+    publisher_aliases=("the royal society", "royal society publishing"),
+    asset_default="body",
+    probe_capability="routing_signal",
+    provider_managed_abstract_only=False,
+    status_order=11,
+    base_domains=("royalsocietypublishing.org",),
+    html_path_templates=("/doi/{doi}",),
+    pdf_path_templates=("/doi/pdf/{doi}",),
+    body_text_thresholds=BodyTextThresholds(min_chars=800),
+    routes=(
+        ProviderRouteSpec(name="metadata", kind="metadata"),
+        ProviderRouteSpec(
+            name="browser_html",
+            kind="html",
+            browser_required=True,
+            browser_preflight=True,
+            auth_supported=True,
+            requires_playwright=True,
+            concurrency=1,
+        ),
+        ProviderRouteSpec(
+            name="browser_pdf",
+            kind="pdf",
+            browser_required=True,
+            browser_preflight=True,
+            auth_supported=True,
+            requires_playwright=True,
+            requires_pdf_conversion=True,
+            concurrency=1,
+        ),
+        ProviderRouteSpec(
+            name="assets",
+            kind="assets",
+            browser_optional=True,
+            requires_playwright=True,
+            timeout_seconds=20,
+            concurrency=2,
+            transient_retries=0,
         ),
     ),
-    html_rules=ProviderHtmlRules(
-        name="royalsocietypublishing",
-        cleanup=ProviderCleanupRules(
-            markdown_promo_tokens=royal_html.ROYAL_SOCIETY_MARKDOWN_PROMO_TOKENS,
-            extraction_cleanup_selectors=royal_html.ROYAL_SOCIETY_EXTRACTION_CLEANUP_SELECTORS,
-        ),
-        front_matter=ProviderFrontMatterRules(
-            exact_texts=royal_html.ROYAL_SOCIETY_FRONT_MATTER_EXACT_TEXTS,
-            publication_keywords=("royal society", "royal society publishing"),
-        ),
-        assets=ProviderAssetRules(
-            supplementary_text_tokens=royal_html.ROYAL_SOCIETY_SUPPLEMENTARY_TEXT_TOKENS,
-        ),
-        availability=AvailabilityPolicy(
-            name="royalsocietypublishing",
-            no_signals=True,
-        ),
-    ),
-    sources=("royalsocietypublishing_html", "royalsocietypublishing_pdf"),
 )
-
 
 ROYAL_SOCIETY_BROWSER_PROFILE = browser_workflow.make_browser_profile(
     "royalsocietypublishing",
-    catalog=PROVIDER_BUNDLE.catalog,
+    catalog=_PROVIDER_SPEC,
     article_source_name="royalsocietypublishing_html",
     fallback_author_extractor=royal_html.extract_authors,
     policy=browser_workflow.BrowserWorkflowPolicy(
@@ -122,34 +99,6 @@ def _is_royal_society_url(value: str | None) -> bool:
     )
 
 
-def _append_unique(values: list[str], candidate: str | None) -> None:
-    normalized = normalize_text(candidate)
-    if normalized and normalized not in values:
-        values.append(normalized)
-
-
-def _filter_assets_for_profile(
-    assets: list[Mapping[str, Any]],
-    *,
-    asset_profile: AssetProfile,
-) -> list[dict[str, Any]]:
-    if asset_profile == "none":
-        return []
-    filtered: list[dict[str, Any]] = []
-    for item in assets:
-        asset = dict(item)
-        kind = normalize_text(
-            str(asset.get("kind") or asset.get("asset_type") or "")
-        ).lower()
-        section = normalize_text(str(asset.get("section") or "")).lower()
-        if asset_profile != "all" and (
-            kind == "supplementary" or section == "supplementary"
-        ):
-            continue
-        filtered.append(asset)
-    return filtered
-
-
 class RoyalsocietypublishingClient(browser_workflow.BrowserWorkflowClient):
     name = ROYAL_SOCIETY_BROWSER_PROFILE.name
     profile = ROYAL_SOCIETY_BROWSER_PROFILE
@@ -164,11 +113,16 @@ class RoyalsocietypublishingClient(browser_workflow.BrowserWorkflowClient):
         candidates: list[str] = []
         landing = normalize_text(str(metadata.get("landing_page_url") or ""))
         if _is_royal_society_url(landing):
-            _append_unique(candidates, landing)
+            extend_unique(candidates, [landing])
         if normalized_doi:
             quoted = quote(normalized_doi, safe="/")
-            _append_unique(candidates, royal_html.direct_article_url(normalized_doi))
-            _append_unique(candidates, f"https://doi.org/{quoted}")
+            extend_unique(
+                candidates,
+                [
+                    royal_html.direct_article_url(normalized_doi),
+                    f"https://doi.org/{quoted}",
+                ],
+            )
         return candidates
 
     def pdf_candidates(self, doi: str, metadata: Mapping[str, Any]) -> list[str]:
@@ -304,7 +258,7 @@ class RoyalsocietypublishingClient(browser_workflow.BrowserWorkflowClient):
         )
         if not isinstance(extracted_assets, list):
             return empty_asset_results()
-        assets = _filter_assets_for_profile(
+        assets = filter_assets_for_profile(
             [item for item in extracted_assets if isinstance(item, Mapping)],
             asset_profile=asset_profile,
         )
@@ -322,3 +276,27 @@ class RoyalsocietypublishingClient(browser_workflow.BrowserWorkflowClient):
 
 
 __all__ = ["RoyalsocietypublishingClient"]
+
+
+PROVIDER_BUNDLE = ProviderBundle(
+    client_factory=RoyalsocietypublishingClient,
+    catalog=_PROVIDER_SPEC,
+    html_rules=ProviderHtmlRules(
+        name="royalsocietypublishing",
+        cleanup=ProviderCleanupRules(
+            markdown_promo_tokens=royal_html.ROYAL_SOCIETY_MARKDOWN_PROMO_TOKENS,
+            extraction_cleanup_selectors=royal_html.ROYAL_SOCIETY_EXTRACTION_CLEANUP_SELECTORS,
+        ),
+        front_matter=ProviderFrontMatterRules(
+            exact_texts=royal_html.ROYAL_SOCIETY_FRONT_MATTER_EXACT_TEXTS,
+            publication_keywords=("royal society", "royal society publishing"),
+        ),
+        assets=ProviderAssetRules(
+            supplementary_text_tokens=royal_html.ROYAL_SOCIETY_SUPPLEMENTARY_TEXT_TOKENS,
+        ),
+        availability=AvailabilityPolicy(
+            name="royalsocietypublishing",
+        ),
+    ),
+    sources=("royalsocietypublishing_html", "royalsocietypublishing_pdf"),
+)

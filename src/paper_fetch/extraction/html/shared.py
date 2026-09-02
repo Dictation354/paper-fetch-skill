@@ -16,16 +16,21 @@ def direct_child_tags(node: Tag) -> list[Tag]:
     return [child for child in node.find_all(recursive=False) if isinstance(child, Tag)]
 
 
-def class_tokens(node: Tag) -> set[str]:
-    raw_value = (getattr(node, "attrs", None) or {}).get("class")
-    if isinstance(raw_value, (list, tuple, set)):
+def class_tokens(node: Any) -> set[str]:
+    if not isinstance(node, Tag):
+        return set()
+    raw_value = (getattr(node, "attrs", None) or {}).get("class") or []
+    if isinstance(raw_value, str):
         return {
-            normalize_text(str(item)).lower()
-            for item in raw_value
-            if normalize_text(str(item))
+            normalize_text(item).lower()
+            for item in raw_value.split()
+            if normalize_text(item)
         }
-    normalized = normalize_text(str(raw_value or "")).lower()
-    return {normalized} if normalized else set()
+    return {
+        normalize_text(str(item)).lower()
+        for item in raw_value
+        if normalize_text(str(item))
+    }
 
 
 def attr_text(value: Any) -> str:

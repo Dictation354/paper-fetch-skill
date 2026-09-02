@@ -135,54 +135,57 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                     "10.1126/science.aeg3511",
                     modes={"article", "markdown"},
                     strategy=paper_fetch.FetchStrategy(asset_profile="body"),
-                    download_dir=Path(tmpdir),
-                    clients={
-                        "science": FixtureProvider(
-                            metadata=paper_fetch.ProviderFailure(
-                                "not_supported", "Science metadata probe is route-only."
+                    context=RuntimeContext(
+                        download_dir=Path(tmpdir),
+                        clients={
+                            "science": FixtureProvider(
+                                metadata=paper_fetch.ProviderFailure(
+                                    "not_supported",
+                                    "Science metadata probe is route-only.",
+                                ),
+                                raw_payload=_typed_payload(
+                                    provider="science",
+                                    source_url=resolved.landing_url,
+                                    content_type="text/html",
+                                    body=b"<html />",
+                                    route_kind="html",
+                                    markdown_text="# Science Example\n\n## Results\n\n"
+                                    + ("Body text " * 80),
+                                    source_trail=["fulltext:science_html_ok"],
+                                ),
+                                article_factory=science_provider.ScienceClient(
+                                    HttpTransport(), {}
+                                ).to_article_model,
+                                related_assets={
+                                    "assets": [
+                                        {
+                                            "kind": "figure",
+                                            "heading": "Figure 1",
+                                            "caption": "Science figure",
+                                            "path": str(asset_path),
+                                            "source_url": "https://www.science.org/images/large/figure1.png",
+                                            "section": "body",
+                                        }
+                                    ],
+                                    "asset_failures": [],
+                                },
                             ),
-                            raw_payload=_typed_payload(
-                                provider="science",
-                                source_url=resolved.landing_url,
-                                content_type="text/html",
-                                body=b"<html />",
-                                route_kind="html",
-                                markdown_text="# Science Example\n\n## Results\n\n"
-                                + ("Body text " * 80),
-                                source_trail=["fulltext:science_html_ok"],
+                            "crossref": FixtureProvider(
+                                metadata={
+                                    "provider": "crossref",
+                                    "official_provider": False,
+                                    "doi": "10.1126/science.aeg3511",
+                                    "title": "Science Example",
+                                    "publisher": "American Association for the Advancement of Science",
+                                    "landing_page_url": resolved.landing_url,
+                                    "authors": ["Alice Example"],
+                                    "abstract": "Fallback abstract",
+                                    "fulltext_links": [],
+                                    "references": [],
+                                }
                             ),
-                            article_factory=science_provider.ScienceClient(
-                                HttpTransport(), {}
-                            ).to_article_model,
-                            related_assets={
-                                "assets": [
-                                    {
-                                        "kind": "figure",
-                                        "heading": "Figure 1",
-                                        "caption": "Science figure",
-                                        "path": str(asset_path),
-                                        "source_url": "https://www.science.org/images/large/figure1.png",
-                                        "section": "body",
-                                    }
-                                ],
-                                "asset_failures": [],
-                            },
-                        ),
-                        "crossref": FixtureProvider(
-                            metadata={
-                                "provider": "crossref",
-                                "official_provider": False,
-                                "doi": "10.1126/science.aeg3511",
-                                "title": "Science Example",
-                                "publisher": "American Association for the Advancement of Science",
-                                "landing_page_url": resolved.landing_url,
-                                "authors": ["Alice Example"],
-                                "abstract": "Fallback abstract",
-                                "fulltext_links": [],
-                                "references": [],
-                            }
-                        ),
-                    },
+                        },
+                    ),
                 )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -440,60 +443,62 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                             strategy=paper_fetch.FetchStrategy(
                                 asset_profile=case["asset_profile"]
                             ),
-                            download_dir=Path(tmpdir),
-                            clients={
-                                case["provider_name"]: FixtureProvider(
-                                    metadata=paper_fetch.ProviderFailure(
-                                        "not_supported",
-                                        "Browser-workflow provider metadata is route-only.",
-                                    ),
-                                    raw_payload=_typed_payload(
-                                        provider=case["provider_name"],
-                                        source_url=case["landing_url"],
-                                        content_type="text/html",
-                                        body=b"<html></html>",
-                                        route_kind="html",
-                                        markdown_text="\n\n".join(
-                                            [
-                                                f"# {case['title']}",
-                                                "## Results",
-                                                ("Body text " * 80).strip(),
-                                                f"![Figure 1]({case['remote_url']})",
-                                                "**Figure 1.** Caption body for the browser HTML figure.",
-                                            ]
+                            context=RuntimeContext(
+                                download_dir=Path(tmpdir),
+                                clients={
+                                    case["provider_name"]: FixtureProvider(
+                                        metadata=paper_fetch.ProviderFailure(
+                                            "not_supported",
+                                            "Browser-workflow provider metadata is route-only.",
                                         ),
-                                        source_trail=[
-                                            f"fulltext:{case['provider_name']}_html_ok"
-                                        ],
+                                        raw_payload=_typed_payload(
+                                            provider=case["provider_name"],
+                                            source_url=case["landing_url"],
+                                            content_type="text/html",
+                                            body=b"<html></html>",
+                                            route_kind="html",
+                                            markdown_text="\n\n".join(
+                                                [
+                                                    f"# {case['title']}",
+                                                    "## Results",
+                                                    ("Body text " * 80).strip(),
+                                                    f"![Figure 1]({case['remote_url']})",
+                                                    "**Figure 1.** Caption body for the browser HTML figure.",
+                                                ]
+                                            ),
+                                            source_trail=[
+                                                f"fulltext:{case['provider_name']}_html_ok"
+                                            ],
+                                        ),
+                                        article_factory=case["article_factory"],
+                                        related_assets={
+                                            "assets": [
+                                                {
+                                                    "kind": "figure",
+                                                    "heading": "Figure 1",
+                                                    "caption": "Caption body for the browser HTML figure.",
+                                                    "path": str(asset_path),
+                                                    "source_url": case["remote_url"],
+                                                    "section": "body",
+                                                }
+                                            ],
+                                            "asset_failures": [],
+                                        },
                                     ),
-                                    article_factory=case["article_factory"],
-                                    related_assets={
-                                        "assets": [
-                                            {
-                                                "kind": "figure",
-                                                "heading": "Figure 1",
-                                                "caption": "Caption body for the browser HTML figure.",
-                                                "path": str(asset_path),
-                                                "source_url": case["remote_url"],
-                                                "section": "body",
-                                            }
-                                        ],
-                                        "asset_failures": [],
-                                    },
-                                ),
-                                "crossref": FixtureProvider(
-                                    metadata={
-                                        "provider": "crossref",
-                                        "official_provider": False,
-                                        "doi": case["doi"],
-                                        "title": case["title"],
-                                        "landing_page_url": case["landing_url"],
-                                        "authors": ["Alice Example"],
-                                        "fulltext_links": [],
-                                        "references": [],
-                                    }
-                                ),
-                            },
+                                    "crossref": FixtureProvider(
+                                        metadata={
+                                            "provider": "crossref",
+                                            "official_provider": False,
+                                            "doi": case["doi"],
+                                            "title": case["title"],
+                                            "landing_page_url": case["landing_url"],
+                                            "authors": ["Alice Example"],
+                                            "fulltext_links": [],
+                                            "references": [],
+                                        }
+                                    ),
+                                },
+                            ),
                         )
 
                     self.assertEqual(envelope.source, case["expected_source"])

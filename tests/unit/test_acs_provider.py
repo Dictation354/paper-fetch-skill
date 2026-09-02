@@ -69,7 +69,6 @@ def test_acs_provider_bundle_declares_routing_and_browser_workflow() -> None:
     assert default_asset_profile_for_provider("acs") == "body"
     assert bundle.sources == ("acs",)
     assert bundle.html_rules is not None
-    assert bundle.html_rules.availability.no_signals is True
 
 
 def test_acs_provider_candidates_use_acs_publications_base_host() -> None:
@@ -354,7 +353,6 @@ def test_acs_silverchair_supplementary_widget_is_scoped_to_all_assets() -> None:
 
 
 def test_acs_silverchair_structure_fixture_extracts_complete_current_article() -> None:
-    """rule: rule-acs-silverchair-body-assets-references"""
 
     html = golden_criteria_asset(ACS_SAMPLE_DOI, "original.html").read_text(
         encoding="utf-8"

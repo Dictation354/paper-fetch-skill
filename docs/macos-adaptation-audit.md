@@ -11,7 +11,7 @@ macOS 的机器合同见 [`macos-adaptation-contract.toml`](macos-adaptation-con
 
 ## 安全不变量
 
-构建与安装必须继续拒绝错误架构、非标准 CPython ABI、未归属 staging、符号链接 payload 和未验证的 purge 路径。正式产物使用原子发布；quarantine 与 payload inventory 校验 fail closed。Camoufox 浏览器不打入离线包，安装过程不下载浏览器，受管 runtime 只能在显式准备或既有 auto-prepare 边界内获取。
+构建与安装必须继续拒绝错误架构、非标准 CPython ABI、未归属 staging、符号链接 payload 和未验证的 purge 路径。正式产物使用原子发布；quarantine 与 payload inventory 校验 fail closed。Camoufox 浏览器不打入离线包，安装过程不下载浏览器；需要受管 runtime 时由用户显式运行 `python -m camoufox fetch`，离线使用前必须在联网阶段预先准备。
 
 ## 证据等级
 

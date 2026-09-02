@@ -14,7 +14,6 @@ from unittest import mock
 import pytest
 
 from paper_fetch.formula import convert as formula_conversion
-from scripts import benchmark_formula_converters as formula_benchmark
 from tests.golden_criteria import golden_criteria_scenario_asset
 
 
@@ -73,28 +72,7 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertEqual(result.status, "ok")
         self.assertEqual(captured_env, runtime_env)
 
-    def test_extract_formula_samples_from_xml_strips_tail_text(self) -> None:
-        xml_body = """<?xml version="1.0"?>
-<article>
-  <body>
-    <p>Formula <math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math> trailing text.</p>
-  </body>
-</article>
-"""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            xml_path = Path(tmpdir) / "sample.xml"
-            xml_path.write_text(xml_body, encoding="utf-8")
-
-            samples = formula_benchmark.extract_formula_samples_from_xml(xml_path)
-
-        self.assertEqual(len(samples), 1)
-        self.assertEqual(
-            samples[0].raw_mathml,
-            '<math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math>',
-        )
-
     def test_normalize_latex_repairs_identifier_escaped_underscores(self) -> None:
-        """rule: rule-formula-latex-normalization"""
         samples = json.loads(
             golden_criteria_scenario_asset(
                 "formula_latex_normalization", "samples.json"
@@ -112,7 +90,6 @@ class FormulaConversionTests(unittest.TestCase):
             self.assertIn(token, normalized)
 
     def test_normalize_latex_scenario_samples_are_katex_compatible(self) -> None:
-        """rule: rule-formula-latex-normalization"""
         samples = json.loads(
             golden_criteria_scenario_asset(
                 "formula_latex_normalization", "samples.json"

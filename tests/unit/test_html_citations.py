@@ -152,7 +152,6 @@ class HtmlCitationsTests(unittest.TestCase):
     def test_normalize_inline_citation_markdown_renders_numeric_sentinels_as_superscripts(
         self,
     ) -> None:
-        """rule: rule-markdown-inline-citation-normalization"""
         sentinel = make_numeric_citation_sentinel("2, 43")
 
         self.assertEqual(
@@ -172,7 +171,6 @@ class HtmlCitationsTests(unittest.TestCase):
     def test_normalize_inline_citation_markdown_rewrites_marked_ref_prefixes(
         self,
     ) -> None:
-        """rule: rule-markdown-inline-citation-normalization"""
         sentinel = make_numeric_citation_sentinel("21")
 
         normalized = normalize_inline_citation_markdown(
@@ -200,7 +198,6 @@ class HtmlCitationsTests(unittest.TestCase):
     def test_normalize_inline_citation_markdown_preserves_isotope_superscript_spacing(
         self,
     ) -> None:
-        """rule: rule-markdown-inline-citation-normalization"""
         self.assertEqual(
             normalize_inline_citation_markdown("gas of <sup>6</sup>Li atoms"),
             "gas of <sup>6</sup>Li atoms",
@@ -213,7 +210,6 @@ class HtmlCitationsTests(unittest.TestCase):
     def test_normalize_inline_citation_markdown_tightens_only_high_confidence_sup_sub_spacing(
         self,
     ) -> None:
-        """rule: rule-markdown-inline-citation-normalization"""
         sentinel = make_numeric_citation_sentinel("17")
 
         self.assertEqual(
@@ -268,7 +264,6 @@ class HtmlCitationsTests(unittest.TestCase):
     def test_normalize_inline_citation_markdown_preserves_markdown_image_boundaries(
         self,
     ) -> None:
-        """rule: rule-markdown-inline-citation-normalization"""
         normalized = normalize_inline_citation_markdown(
             "sentence.\n\n![Listing 1.](x)\n\ncaption"
         )
@@ -278,7 +273,6 @@ class HtmlCitationsTests(unittest.TestCase):
     def test_normalize_inline_citation_markdown_still_trims_plain_exclamation_spacing(
         self,
     ) -> None:
-        """rule: rule-markdown-inline-citation-normalization"""
         normalized = normalize_inline_citation_markdown("word !")
 
         self.assertEqual(normalized, "word!")

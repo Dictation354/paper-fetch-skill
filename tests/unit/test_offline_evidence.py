@@ -37,10 +37,10 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
     _install_fake_distribution(site_packages, "paper-fetch-skill", "5.6.0")
     _install_fake_distribution(site_packages, "camoufox", "0.5.7")
 
-    formula_package = staging / "formula-tools" / "node_modules" / "katex"
+    formula_package = staging / "formula-tools" / "node_modules" / "mathml-to-latex"
     formula_package.mkdir(parents=True)
     (formula_package / "package.json").write_text(
-        json.dumps({"name": "katex", "version": "0.18.4"}),
+        json.dumps({"name": "mathml-to-latex", "version": "1.8.0"}),
         encoding="utf-8",
     )
     formula_bin = staging / "formula-tools" / "bin"
@@ -127,7 +127,7 @@ def test_evidence_is_derived_from_actual_staged_target(tmp_path: Path) -> None:
         ("paper-fetch-skill", "5.6.0"),
     }
     assert {item["name"] for item in dependency["node_packages"]} == {
-        "katex",
+        "mathml-to-latex",
         "playwright-core",
     }
     assert {item["name"] for item in dependency["native_components"]} == {
@@ -169,7 +169,7 @@ def test_evidence_is_derived_from_actual_staged_target(tmp_path: Path) -> None:
     assert {
         "camoufox",
         "paper-fetch-skill",
-        "katex",
+        "mathml-to-latex",
         "playwright-core",
         "playwright-driver-node",
         "texmath.exe",

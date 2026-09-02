@@ -47,7 +47,7 @@ from ..publisher_identity import normalize_doi
 from ..reason_codes import NO_RESULT, OK, PDF_FALLBACK
 from ..runtime import RuntimeContext
 from ..tracing import download_marker, fulltext_marker, trace_from_markers
-from ..utils import empty_asset_results, normalize_text
+from ..utils import empty_asset_results, extend_unique, normalize_text
 from ._article_markdown_jats import assess_jats_body_availability, parse_jats_xml
 from ._payloads import build_provider_payload
 from ._pdf_common import (
@@ -70,67 +70,6 @@ from .base import (
     map_request_failure,
     summarize_capability_status,
 )
-
-
-PROVIDER_BUNDLE = ProviderBundle(
-    catalog=ProviderSpec(
-        name="frontiers",
-        display_name="Frontiers",
-        official=True,
-        domains=("www.frontiersin.org", "frontiersin.org"),
-        doi_prefixes=("10.3389/",),
-        publisher_aliases=(
-            "frontiers",
-            "frontiers media",
-            "frontiers media s.a.",
-            "frontiers media sa",
-        ),
-        asset_default="body",
-        probe_capability="routing_signal",
-        provider_managed_abstract_only=False,
-        client_factory_path="paper_fetch.providers.frontiers:FrontiersClient",
-        status_order=18,
-        base_domains=("www.frontiersin.org",),
-        landing_path_templates=("/articles/{doi}/full",),
-        xml_path_templates=("/journals/{journal_slug}/articles/{doi}/xml",),
-        pdf_path_templates=(
-            "/journals/{journal_slug}/articles/{doi}/pdf",
-            "/articles/{doi}/pdf",
-        ),
-        emits_html_managed_marker=False,
-        html_capable=False,
-        xml_root_tags=("article",),
-        xml_file_tokens=("10.3389", "frontiers"),
-        body_text_thresholds=BodyTextThresholds(min_chars=1200),
-        routes=(
-            ProviderRouteSpec(name="metadata", kind="metadata"),
-            ProviderRouteSpec(name="xml", kind="xml"),
-            ProviderRouteSpec(
-                name="direct_pdf",
-                kind="pdf",
-                requires_pdf_conversion=True,
-            ),
-            ProviderRouteSpec(
-                name="assets",
-                kind="assets",
-                timeout_seconds=20,
-                concurrency=2,
-                transient_retries=2,
-            ),
-        ),
-    ),
-    html_rules=ProviderHtmlRules(
-        name="frontiers",
-        front_matter=ProviderFrontMatterRules(
-            exact_texts=(),
-            contains_tokens=(),
-            publication_keywords=("frontiers", "frontiers media"),
-        ),
-        availability=AvailabilityPolicy(name="frontiers", no_signals=True),
-    ),
-    sources=("frontiers_xml", "frontiers_pdf"),
-)
-
 
 FRONTIERS_HOST = "https://www.frontiersin.org"
 FRONTIERS_CANONICAL_ARTICLE_PATTERN = re.compile(
@@ -195,12 +134,6 @@ def _is_frontiers_url(value: str | None) -> bool:
     parsed = urllib.parse.urlparse(normalize_text(value))
     host = normalize_text(parsed.hostname or "").lower()
     return host == "frontiersin.org" or host == "www.frontiersin.org"
-
-
-def _append_unique(values: list[str], candidate: str | None) -> None:
-    normalized = normalize_text(candidate)
-    if normalized and normalized not in values:
-        values.append(normalized)
 
 
 def _frontiers_legacy_landing_url(doi: str) -> str:
@@ -284,13 +217,13 @@ def _metadata_frontiers_urls(metadata: Mapping[str, Any]) -> list[str]:
     for key in ("landing_page_url", "source_url", "url"):
         value = normalize_text(str(metadata.get(key) or ""))
         if _is_frontiers_url(value):
-            _append_unique(urls, value)
+            extend_unique(urls, [value])
     for item in metadata.get("fulltext_links") or ():
         if not isinstance(item, Mapping):
             continue
         value = normalize_text(str(item.get("url") or ""))
         if _is_frontiers_url(value):
-            _append_unique(urls, value)
+            extend_unique(urls, [value])
     return urls
 
 
@@ -360,7 +293,7 @@ def _frontiers_asset_graphic_stems(asset: Mapping[str, Any]) -> list[str]:
         "link",
         "preview_url",
     ):
-        _append_unique(stems, _frontiers_graphic_stem(str(asset.get(key) or "")))
+        extend_unique(stems, [_frontiers_graphic_stem(str(asset.get(key) or ""))])
     alternatives = asset.get("alternatives")
     if isinstance(alternatives, Sequence) and not isinstance(
         alternatives, (bytes, bytearray, str)
@@ -369,9 +302,9 @@ def _frontiers_asset_graphic_stems(asset: Mapping[str, Any]) -> list[str]:
             if not isinstance(alternative, Mapping):
                 continue
             for key in ("url", "original_url"):
-                _append_unique(
+                extend_unique(
                     stems,
-                    _frontiers_graphic_stem(str(alternative.get(key) or "")),
+                    [_frontiers_graphic_stem(str(alternative.get(key) or ""))],
                 )
     return stems
 
@@ -517,16 +450,18 @@ def _frontiers_figure_candidates(
         "preview_url",
     )
     values = [normalize_text(str(asset.get(key) or "")) for key in keys]
-    for value in values:
-        if _is_frontiers_original_graphic_url(value):
-            _append_unique(candidates, value)
+    extend_unique(
+        candidates,
+        [value for value in values if _is_frontiers_original_graphic_url(value)],
+    )
     for value in values:
         derived = _frontiers_graphic_url(doi=doi, href=value)
         if derived:
-            _append_unique(candidates, derived)
-    for value in values:
-        if value.startswith(("http://", "https://")):
-            _append_unique(candidates, value)
+            extend_unique(candidates, [derived])
+    extend_unique(
+        candidates,
+        [value for value in values if value.startswith(("http://", "https://"))],
+    )
     return candidates
 
 
@@ -599,12 +534,12 @@ class FrontiersClient(ProviderClient):
         candidates: list[str] = []
         for value in _metadata_frontiers_urls(metadata):
             routes = _canonical_routes_from_url(value)
-            _append_unique(
-                candidates, routes.landing_url if routes is not None else value
+            extend_unique(
+                candidates, [routes.landing_url if routes is not None else value]
             )
         normalized_doi = normalize_doi(doi)
         if normalized_doi:
-            _append_unique(candidates, _frontiers_legacy_landing_url(normalized_doi))
+            extend_unique(candidates, [_frontiers_legacy_landing_url(normalized_doi)])
         return candidates
 
     def route_candidates(
@@ -840,7 +775,6 @@ class FrontiersClient(ProviderClient):
                 fulltext_marker(self.name, "fail", route="xml"),
                 fulltext_marker(self.name, "ok", route=PDF_FALLBACK),
             ],
-            content_needs_local_copy=True,
             needs_local_copy=True,
         )
 
@@ -1230,3 +1164,63 @@ class FrontiersClient(ProviderClient):
 
 
 __all__ = ["FrontiersClient"]
+
+
+PROVIDER_BUNDLE = ProviderBundle(
+    client_factory=FrontiersClient,
+    catalog=ProviderSpec(
+        name="frontiers",
+        display_name="Frontiers",
+        official=True,
+        domains=("www.frontiersin.org", "frontiersin.org"),
+        doi_prefixes=("10.3389/",),
+        publisher_aliases=(
+            "frontiers",
+            "frontiers media",
+            "frontiers media s.a.",
+            "frontiers media sa",
+        ),
+        asset_default="body",
+        probe_capability="routing_signal",
+        provider_managed_abstract_only=False,
+        status_order=18,
+        base_domains=("www.frontiersin.org",),
+        landing_path_templates=("/articles/{doi}/full",),
+        xml_path_templates=("/journals/{journal_slug}/articles/{doi}/xml",),
+        pdf_path_templates=(
+            "/journals/{journal_slug}/articles/{doi}/pdf",
+            "/articles/{doi}/pdf",
+        ),
+        emits_html_managed_marker=False,
+        html_capable=False,
+        xml_root_tags=("article",),
+        xml_file_tokens=("10.3389", "frontiers"),
+        body_text_thresholds=BodyTextThresholds(min_chars=1200),
+        routes=(
+            ProviderRouteSpec(name="metadata", kind="metadata"),
+            ProviderRouteSpec(name="xml", kind="xml"),
+            ProviderRouteSpec(
+                name="direct_pdf",
+                kind="pdf",
+                requires_pdf_conversion=True,
+            ),
+            ProviderRouteSpec(
+                name="assets",
+                kind="assets",
+                timeout_seconds=20,
+                concurrency=2,
+                transient_retries=2,
+            ),
+        ),
+    ),
+    html_rules=ProviderHtmlRules(
+        name="frontiers",
+        front_matter=ProviderFrontMatterRules(
+            exact_texts=(),
+            contains_tokens=(),
+            publication_keywords=("frontiers", "frontiers media"),
+        ),
+        availability=AvailabilityPolicy(name="frontiers"),
+    ),
+    sources=("frontiers_xml", "frontiers_pdf"),
+)

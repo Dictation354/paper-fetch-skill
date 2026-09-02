@@ -11,6 +11,7 @@ from ...extraction.html.ui_tokens import (
     FIGURE_FULL_SIZE_IMAGE_LABEL,
     FIGURE_POWERPOINT_SLIDE_LABEL,
 )
+from ..html.shared import class_tokens as _html_class_tokens
 from ...markdown.images import render_markdown_image
 from ...utils import normalize_text
 from ._ir import MarkdownFigure
@@ -76,7 +77,6 @@ def figure_from_entry(entry: Mapping[str, str]) -> MarkdownFigure:
         label=heading,
         caption=normalize_text(str(entry.get("caption") or "")),
         asset_url=normalize_text(str(entry.get("link") or "")),
-        page_url=normalize_text(str(entry.get("page_url") or "")) or None,
         alt=heading,
     )
 
@@ -116,23 +116,6 @@ def html_node_attr_text(node: Any) -> str:
         else:
             parts.append(normalize_text(str(value or "")))
     return " ".join(part.lower() for part in parts if part)
-
-
-def _html_class_tokens(node: Any) -> set[str]:
-    if not isinstance(node, Tag):
-        return set()
-    raw_classes = (getattr(node, "attrs", None) or {}).get("class") or []
-    if isinstance(raw_classes, str):
-        return {
-            normalize_text(value).lower()
-            for value in raw_classes.split()
-            if normalize_text(value)
-        }
-    return {
-        normalize_text(str(value)).lower()
-        for value in raw_classes
-        if normalize_text(str(value))
-    }
 
 
 def _is_silverchair_figure_section(node: Any) -> bool:

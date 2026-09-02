@@ -78,15 +78,12 @@ def get_cached_payload(
     download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
     deps: MCPDeps = default_mcp_deps(),
 ) -> dict[str, Any]:
+    input_values = locals()
     request = GetCachedRequest.model_validate(
         {
-            "doi": doi,
-            "detail": detail,
-            "preferred_only": preferred_only,
-            "modes": modes,
-            "strategy": strategy,
-            "include_refs": include_refs,
-            "max_tokens": max_tokens,
+            name: input_values[name]
+            for name in GetCachedRequest.model_fields
+            if name != "download_dir"
         }
     )
     runtime_env = deps.build_runtime_env(env)
@@ -107,27 +104,6 @@ def get_cached_payload(
         preferred_only=request.preferred_only,
     )
     return with_schema_version(payload)
-
-
-def cached_entry_payload(
-    *,
-    entry_id: str,
-    env: Mapping[str, str] | None = None,
-    download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
-    deps: MCPDeps = default_mcp_deps(),
-) -> dict[str, Any] | None:
-    runtime_env = deps.build_runtime_env(env)
-    effective_download_dir = _resolve_download_dir(
-        runtime_env,
-        download_dir,
-        deps=deps,
-    )
-    if effective_download_dir is None:
-        return None
-    entry = deps.find_cached_entry(effective_download_dir, entry_id)
-    if entry is None or not _entry_visible_in_runtime_env(entry, runtime_env):
-        return None
-    return entry
 
 
 def list_cached_tool(

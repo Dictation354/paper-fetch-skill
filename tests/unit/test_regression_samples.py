@@ -109,13 +109,6 @@ class ProviderStub:
 
 
 def fetch_article(query: str, **kwargs):
-    runtime_keys = {
-        key: kwargs.pop(key)
-        for key in ("clients", "transport", "env", "download_dir")
-        if key in kwargs
-    }
-    if runtime_keys:
-        kwargs["context"] = paper_fetch.RuntimeContext(**runtime_keys)
     envelope = paper_fetch.fetch_paper(query, modes={"article"}, **kwargs)
     assert envelope.article is not None
     return envelope.article
@@ -430,10 +423,12 @@ class RegressionSampleTests(unittest.TestCase):
             return fetch_article(
                 sample.doi,
                 strategy=paper_fetch.FetchStrategy(),
-                clients={
-                    provider_name: replay_provider,
-                    "crossref": ProviderStub(metadata=metadata),
-                },
+                context=paper_fetch.RuntimeContext(
+                    clients={
+                        provider_name: replay_provider,
+                        "crossref": ProviderStub(metadata=metadata),
+                    }
+                ),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -525,11 +520,15 @@ class RegressionSampleTests(unittest.TestCase):
                     article = fetch_article(
                         sample["doi"],
                         strategy=paper_fetch.FetchStrategy(),
-                        clients={
-                            "springer": springer_provider.SpringerClient(transport, {}),
-                            "crossref": ProviderStub(metadata=metadata),
-                        },
-                        transport=transport,
+                        context=paper_fetch.RuntimeContext(
+                            clients={
+                                "springer": springer_provider.SpringerClient(
+                                    transport, {}
+                                ),
+                                "crossref": ProviderStub(metadata=metadata),
+                            },
+                            transport=transport,
+                        ),
                     )
 
                     self.assertEqual(article.source, "springer_html")
@@ -587,10 +586,12 @@ class RegressionSampleTests(unittest.TestCase):
             article = fetch_article(
                 sample.doi,
                 strategy=paper_fetch.FetchStrategy(),
-                clients={
-                    "elsevier": replay_provider,
-                    "crossref": ProviderStub(metadata=metadata),
-                },
+                context=paper_fetch.RuntimeContext(
+                    clients={
+                        "elsevier": replay_provider,
+                        "crossref": ProviderStub(metadata=metadata),
+                    }
+                ),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -906,16 +907,18 @@ class RegressionSampleTests(unittest.TestCase):
             article = fetch_article(
                 doi,
                 strategy=paper_fetch.FetchStrategy(),
-                clients={
-                    "elsevier": ProviderStub(
-                        metadata=ProviderFailure(
-                            "not_supported",
-                            "Regression fixture omits official metadata.",
+                context=paper_fetch.RuntimeContext(
+                    clients={
+                        "elsevier": ProviderStub(
+                            metadata=ProviderFailure(
+                                "not_supported",
+                                "Regression fixture omits official metadata.",
+                            ),
+                            raw_error=not_found_error,
                         ),
-                        raw_error=not_found_error,
-                    ),
-                    "crossref": ProviderStub(metadata=metadata),
-                },
+                        "crossref": ProviderStub(metadata=metadata),
+                    }
+                ),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve

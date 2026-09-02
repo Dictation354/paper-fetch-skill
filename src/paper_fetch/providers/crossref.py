@@ -18,28 +18,6 @@ from .base import (
 from ..reason_codes import OK
 
 
-PROVIDER_BUNDLE = ProviderBundle(
-    catalog=ProviderSpec(
-        name="crossref",
-        display_name="Crossref",
-        official=False,
-        domains=(),
-        doi_prefixes=(),
-        publisher_aliases=(),
-        asset_default="none",
-        probe_capability="metadata_api",
-        provider_managed_abstract_only=False,
-        client_factory_path="paper_fetch.providers.crossref:CrossrefClient",
-        status_order=0,
-        html_capable=False,
-        api_hosts=("api.crossref.org",),
-        sensitive_headers=("cr-clickthrough-client-token",),
-        routes=(ProviderRouteSpec(name="metadata", kind="metadata"),),
-    ),
-    sources=("crossref_meta",),
-)
-
-
 class CrossrefClient(ProviderClient):
     name = "crossref"
     official_provider = False
@@ -87,3 +65,25 @@ class CrossrefClient(ProviderClient):
             doi_prefix=doi_prefix,
             rows=rows,
         )
+
+
+PROVIDER_BUNDLE = ProviderBundle(
+    client_factory=CrossrefClient,
+    catalog=ProviderSpec(
+        name="crossref",
+        display_name="Crossref",
+        official=False,
+        domains=(),
+        doi_prefixes=(),
+        publisher_aliases=(),
+        asset_default="none",
+        probe_capability="metadata_api",
+        provider_managed_abstract_only=False,
+        status_order=0,
+        html_capable=False,
+        api_hosts=("api.crossref.org",),
+        sensitive_headers=("cr-clickthrough-client-token",),
+        routes=(ProviderRouteSpec(name="metadata", kind="metadata"),),
+    ),
+    sources=("crossref_meta",),
+)

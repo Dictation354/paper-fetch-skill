@@ -10,6 +10,7 @@ from unittest import mock
 from paper_fetch.image_tools import ImageConversionFailure
 from paper_fetch.image_tools import convert as image_convert
 from paper_fetch.image_tools import install as image_install
+from paper_fetch.image_tools import paths as image_paths
 from paper_fetch.image_tools import source_image_format_from_payload
 from paper_fetch.image_tools.paths import (
     DEFAULT_IMAGE_TOOL_TIMEOUT_SECONDS,
@@ -143,6 +144,85 @@ class ImageToolsTests(unittest.TestCase):
                     {"PAPER_FETCH_IMAGE_TOOL_TIMEOUT_SECONDS": value}
                 ),
                 DEFAULT_IMAGE_TOOL_TIMEOUT_SECONDS,
+            )
+
+    def test_path_fingerprint_preserves_file_missing_and_directory_contract(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            directory = Path(tmpdir)
+            regular_file = directory / "image-tool"
+            regular_file.write_bytes(b"tool")
+            missing_path = directory / "missing"
+
+            file_stat = regular_file.stat()
+            directory_stat = directory.stat()
+            self.assertEqual(
+                image_paths._path_fingerprint(regular_file),
+                (
+                    str(regular_file),
+                    True,
+                    int(file_stat.st_mtime_ns),
+                    int(file_stat.st_size),
+                ),
+            )
+            self.assertEqual(
+                image_paths._path_fingerprint(missing_path),
+                (str(missing_path), False, 0, 0),
+            )
+            self.assertEqual(
+                image_paths._path_fingerprint(directory),
+                (
+                    str(directory),
+                    True,
+                    int(directory_stat.st_mtime_ns),
+                    int(directory_stat.st_size),
+                ),
+            )
+
+    def test_working_binary_cache_key_preserves_path_fingerprints(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            directory = Path(tmpdir)
+            regular_file = directory / "image-tool"
+            regular_file.write_bytes(b"tool")
+            missing_path = directory / "missing"
+            file_stat = regular_file.stat()
+
+            cache_key = image_convert._working_binary_cache_key(
+                [regular_file, missing_path, directory],
+                ["--version"],
+                env={
+                    "PAPER_FETCH_IMAGE_TOOL_TIMEOUT_SECONDS": "7",
+                    "LD_LIBRARY_PATH": "/runtime",
+                    "GS_LIB": "/ghostscript",
+                },
+            )
+
+            directory_stat = directory.stat()
+            self.assertEqual(
+                cache_key,
+                (
+                    (str(regular_file), str(missing_path), str(directory)),
+                    (
+                        (
+                            str(regular_file),
+                            True,
+                            int(file_stat.st_mtime_ns),
+                            int(file_stat.st_size),
+                        ),
+                        (str(missing_path), False, 0, 0),
+                        (
+                            str(directory),
+                            True,
+                            int(directory_stat.st_mtime_ns),
+                            int(directory_stat.st_size),
+                        ),
+                    ),
+                    ("--version",),
+                    7,
+                    "/runtime",
+                    "/ghostscript",
+                ),
             )
 
     def test_conversion_subprocess_timeout_raises_conversion_failure(self) -> None:

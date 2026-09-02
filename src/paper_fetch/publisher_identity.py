@@ -18,11 +18,9 @@ from .normalize_journal_name import normalize_journal_name
 from .utils import normalize_text
 
 PUBLISHER_PROVIDER_MAP: dict[str, str] | None = None
-DOI_PREFIX_PROVIDER_MAP: dict[str, str] | None = None
 URL_DOI_ROUTE_SUFFIXES_BY_PROVIDER: dict[str, frozenset[str]] = {}
 URL_DOI_EXTENSION_SUFFIXES_BY_PROVIDER: dict[str, frozenset[str]] = {}
 DOI_CORE_PATTERN = r"10\.\d{4,9}/[^\s\"'<>]+"
-ASCII_DOI_CORE_PATTERN = r"10\.\d{4,9}/[!-~]+"
 DOI_PATTERN = re.compile(DOI_CORE_PATTERN, flags=re.IGNORECASE)
 SICI_DOI_PATTERN = re.compile(
     r"10\.\d{4,9}/"
@@ -285,6 +283,24 @@ def infer_provider_from_url(url: str | None) -> str | None:
     return None
 
 
+def _ordered_provider_signals(
+    *,
+    landing_urls: list[str | None] | None = None,
+    publishers: list[str | None] | None = None,
+    doi: str | None = None,
+) -> list[tuple[str, str]]:
+    signals: list[tuple[str, str]] = []
+    for url in landing_urls or []:
+        if provider := infer_provider_from_url(url):
+            signals.append((provider, "domain"))
+    for publisher in publishers or []:
+        if provider := infer_provider_from_publisher(publisher):
+            signals.append((provider, "publisher"))
+    if provider := infer_provider_from_doi(doi):
+        signals.append((provider, "doi"))
+    return signals
+
+
 def ordered_provider_candidates(
     *,
     landing_urls: list[str | None] | None = None,
@@ -293,22 +309,15 @@ def ordered_provider_candidates(
 ) -> list[tuple[str, str]]:
     candidates: list[tuple[str, str]] = []
     seen: set[str] = set()
-
-    for url in landing_urls or []:
-        provider = infer_provider_from_url(url)
-        if provider and provider not in seen:
-            seen.add(provider)
-            candidates.append((provider, "domain"))
-
-    for publisher in publishers or []:
-        provider = infer_provider_from_publisher(publisher)
-        if provider and provider not in seen:
-            seen.add(provider)
-            candidates.append((provider, "publisher"))
-
-    provider = infer_provider_from_doi(doi)
-    if provider and provider not in seen:
-        candidates.append((provider, "doi"))
+    for provider, signal in _ordered_provider_signals(
+        landing_urls=landing_urls,
+        publishers=publishers,
+        doi=doi,
+    ):
+        if provider in seen:
+            continue
+        seen.add(provider)
+        candidates.append((provider, signal))
     return candidates
 
 
@@ -318,13 +327,7 @@ class ProviderIdentityCandidate:
 
     provider: str
     signal: str
-    signals: tuple[str, ...]
     strength: str
-    conflicting_providers: tuple[str, ...] = ()
-
-    @property
-    def strongly_confirmed(self) -> bool:
-        return self.strength == "strong"
 
 
 def ordered_provider_candidate_evidence(
@@ -341,36 +344,28 @@ def ordered_provider_candidate_evidence(
     global waterfall stop.
     """
 
-    ordered: list[tuple[str, str]] = []
-    signals_by_provider: dict[str, list[str]] = {}
-    for url in landing_urls or []:
-        if provider := infer_provider_from_url(url):
-            ordered.append((provider, "domain"))
-            signals_by_provider.setdefault(provider, []).append("domain")
-    for publisher in publishers or []:
-        if provider := infer_provider_from_publisher(publisher):
-            ordered.append((provider, "publisher"))
-            signals_by_provider.setdefault(provider, []).append("publisher")
-    if provider := infer_provider_from_doi(doi):
-        ordered.append((provider, "doi"))
-        signals_by_provider.setdefault(provider, []).append("doi")
+    ordered = _ordered_provider_signals(
+        landing_urls=landing_urls,
+        publishers=publishers,
+        doi=doi,
+    )
+    signals_by_provider: dict[str, set[str]] = {}
+    for provider, signal in ordered:
+        signals_by_provider.setdefault(provider, set()).add(signal)
 
     result: list[ProviderIdentityCandidate] = []
     seen: set[str] = set()
-    all_providers = frozenset(signals_by_provider)
     for provider, signal in ordered:
         if provider in seen:
             continue
         seen.add(provider)
-        signals = tuple(dict.fromkeys(signals_by_provider[provider]))
+        signals = signals_by_provider[provider]
         strong = "doi" in signals or len(signals) >= 2
         result.append(
             ProviderIdentityCandidate(
                 provider=provider,
                 signal=signal,
-                signals=signals,
                 strength="strong" if strong else "weak",
-                conflicting_providers=tuple(sorted(all_providers - {provider})),
             )
         )
     return result

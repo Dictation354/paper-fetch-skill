@@ -580,7 +580,6 @@ class CopernicusProviderTests(unittest.TestCase):
         )
 
     def test_xml_renderer_extracts_core_jats_structures(self) -> None:
-        """rule: rule-copernicus-xml-jats-rendering"""
         extraction = parse_copernicus_xml(
             _xml_fixture(), source_url=XML_URL, base_metadata={"doi": DOI}
         )

@@ -24,7 +24,7 @@ Canonical runtime behavior lives in [`docs/providers.md`](../docs/providers.md),
 ## Wiley TDM API
 
 - Official source: Wiley TDM API.
-- Runtime role: optional Wiley PDF lane; Wiley HTML and browser PDF/ePDF behavior is documented in [`docs/providers.md`](../docs/providers.md#wiley).
+- Runtime role: optional Wiley PDF lane; Wiley HTML and browser PDF/ePDF behavior is documented in [`docs/providers.md`](../docs/providers.md#wiley-science-pnas-browser-workflow).
 - Env: `WILEY_TDM_CLIENT_TOKEN`
 - Constraints:
   - Absence of this token does not disable Wiley HTML or browser PDF/ePDF attempts when local browser workflow prerequisites are ready.
@@ -48,7 +48,7 @@ Canonical runtime behavior lives in [`docs/providers.md`](../docs/providers.md),
 ## Springer / Science / PNAS / Copernicus / Browser Workflow Providers
 
 - Springer is supported through publisher landing HTML and direct HTTP PDF fallback, not through Springer Nature publisher APIs.
-- Science and PNAS are supported through the shared browser workflow family documented in [`docs/providers.md`](../docs/providers.md#elsevier--springer--wiley--science--pnas--ieee--copernicus-的特殊语义).
+- Science and PNAS are supported through the shared browser workflow family documented in [`docs/providers.md`](../docs/providers.md#elsevier--springer--wiley--science--pnas--ieee--arxiv--copernicus--ams--mdpi--royal-society-publishing--annual-reviews--plos--oxford-academic--acs--iop--aip--tf-的特殊语义).
 - Copernicus is supported through public landing HTML discovery and NLM/JATS XML, with text-only PDF fallback before metadata fallback.
 - These routes do not have publisher API credentials in this runtime.
 - Asset downloads, supplementary scopes, image validation, and PDF text-only fallback behavior are canonical in [`docs/providers.md`](../docs/providers.md#默认输出策略) and [`docs/extraction-rules.md`](../docs/extraction-rules.md).

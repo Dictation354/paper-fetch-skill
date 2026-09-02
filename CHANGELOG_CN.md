@@ -6,11 +6,20 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
-### 破坏性变更——命令、批处理与 manifest 接口
+### 修复——审计一致性
+
+- 批量 MCP 抓取现在与单篇抓取一致地规范化可选字符串；仅含空白的共享 Markdown 文件名视为未指定，manifest 记录的也是规范化后的请求。
+- 异步内联图片抓取只在复现所请求图片确有需要时把已有 article 字段保留到内部缓存；旧的不完整 sidecar 会安全 miss，公开 structured content 仍隐藏未请求的 article。
+- Provider 资源 hook 对正文的更新现在会一致传播到 article 构建、workflow 落盘、acquisition 和 provider 返回正文。
+- 删除未使用的 KaTeX 运行时依赖及安装检查；打包的 Node workspace 只保留 MathML→LaTeX 转换器及其传递依赖，同时维持 KaTeX 兼容的规范化目标。
+- 使 CLI、MCP、浏览器、cache、provider、部署、macOS 与提取文档重新符合仍然存在的能力和契约。
+
+### 破坏性变更——命令、MCP、批处理与 manifest 接口
 
 - CLI 现在只支持子命令形式：请使用 `paper-fetch fetch ...`。删除根级 fetch 参数兼容层、CLI `--no-download`、持久化 `--run-manifest` / `--resume` 以及 `manifest audit|reconcile` 命令；不保留 provider artifact 与资产时改用 `--artifact-mode none`。
 - CLI 与 MCP 批处理可以写入一份最终 `batch-results.jsonl`；只有全部输入取得终态后，才按输入顺序组装并原子提交。删除 append-only attempt、run summary、audit/reconcile 与 resume 语义，同时保留单批次内按 canonical DOI fan-out。目标结果文件已存在且内容不同时，仍需显式传入 `--overwrite` / `overwrite=true`。
 - Schema-v2 manifest record 现在只公开当前 `record_status`、`acceptance` 与 `output_artifacts` 契约。删除旧顶层 `status`、`output_path`、`saved_markdown_path` projection 以及旧 acceptance/cache 迁移 shim；旧版、未知或不完整记录不再猜测或升级，而是 fail closed。
+- 删除 `summarize_paper` 与 `verify_citation_list` MCP prompt 模板。Fetch、resolve、check、cache tools，静态 provider-catalog resource 以及 schema-v2 payload 契约均保持不变。
 
 ### 变更——浏览器与 transport 运行时
 

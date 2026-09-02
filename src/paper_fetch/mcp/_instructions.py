@@ -92,8 +92,8 @@ def server_instructions() -> str:
         "browser_preflight is live and never performs PDF fallback or automatic auth. Do not "
         "bypass login, challenge, paywall, or entitlement boundaries. Read current provider, "
         f"source, runtime, preflight, and asset-default facts from {PROVIDER_CATALOG_RESOURCE_URI}. "
-        "summarize_paper and verify_citation_list are prompt templates. Supporting clients "
-        "receive progress/log updates for fetch, browser preflight, and batch work."
+        "Supporting clients receive progress/log updates for fetch, browser preflight, "
+        "and batch work."
     )
 
 

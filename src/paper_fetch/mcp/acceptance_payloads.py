@@ -5,14 +5,10 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Any
 
-from ..publisher_identity import extract_doi, extract_doi_from_url
 from ..workflow.acceptance import FetchAcceptanceReport
+from ..workflow.batch_routing import expected_doi_from_query
 
-
-def expected_doi_from_query(query: str) -> str | None:
-    """Return a DOI expectation only when the original query carries one."""
-
-    return extract_doi_from_url(query) or extract_doi(query)
+__all__ = ["compact_acceptance_payload", "expected_doi_from_query"]
 
 
 def compact_acceptance_payload(

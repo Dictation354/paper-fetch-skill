@@ -798,13 +798,6 @@ def register_cache_files_for_doi(
     return registered
 
 
-def find_cached_entry(download_dir: Path, entry_id: str) -> dict[str, Any] | None:
-    for entry in list_cache_entries(download_dir):
-        if entry.get("id") == entry_id:
-            return entry
-    return None
-
-
 def _completion_timestamp(entry: dict[str, Any]) -> float:
     completed_at = entry.get("completed_at")
     if isinstance(completed_at, str) and completed_at:
@@ -879,7 +872,6 @@ __all__ = [
     "cache_index_path",
     "cache_lock_dir",
     "fetch_envelope_lock_path",
-    "find_cached_entry",
     "guess_mime_type",
     "list_cache_entries",
     "preferred_cached_entries",

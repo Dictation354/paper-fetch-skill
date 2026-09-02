@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass, field
 from functools import cache
 from importlib import import_module
@@ -23,13 +22,6 @@ from ..provider_catalog import (
     provider_pdf_path_templates,
 )
 from ..quality import html_profiles as _html_profiles
-from ..quality.html_signals import (
-    default_positive_signals,
-    evaluate_datalayer_blocking_signals,
-    evaluate_datalayer_positive_signals,
-    evaluate_text_marker_blocking_signals,
-    evaluate_text_marker_positive_signals,
-)
 from ..utils import normalize_text
 from .browser_workflow.shared import (
     build_browser_workflow_html_candidates,
@@ -59,12 +51,6 @@ __all__ = [
 class PublisherProfile:
     name: str
     hosts: tuple[str, ...]
-    noise_profile: str = "generic"
-    site_rule_overrides: Mapping[str, Any] = field(default_factory=dict)
-    positive_signals: Callable[[str], tuple[list[str], list[str], list[str]]] = (
-        default_positive_signals
-    )
-    blocking_fallback_signals: Callable[[str], list[str]] = lambda _html_text: []
     dom_hooks: DomHooks = field(default_factory=DomHooks)
     markdown_hooks: MarkdownHooks = field(default_factory=MarkdownHooks)
     refine_selected_container: Callable[..., Any] | None = None
@@ -122,66 +108,15 @@ def preferred_html_candidate_from_landing_page(
 GENERIC_PROFILE = PublisherProfile(name="generic", hosts=tuple())
 
 
-def _positive_signals_for_policy(
-    availability: Any, html_text: str
-) -> tuple[list[str], list[str], list[str]]:
-    strong, soft, abstract_only = default_positive_signals(html_text)
-    if availability.datalayer_signal_set is not None:
-        data_strong, data_soft, data_abstract = evaluate_datalayer_positive_signals(
-            html_text, availability.datalayer_signal_set
-        )
-        strong.extend(data_strong)
-        soft.extend(data_soft)
-        abstract_only.extend(data_abstract)
-    if availability.text_marker_signal_set is not None:
-        text_strong, text_soft, text_abstract = evaluate_text_marker_positive_signals(
-            html_text, availability.text_marker_signal_set
-        )
-        strong.extend(text_strong)
-        soft.extend(text_soft)
-        abstract_only.extend(text_abstract)
-    return (
-        _html_profiles.dedupe_signals(strong),
-        _html_profiles.dedupe_signals(soft),
-        _html_profiles.dedupe_signals(abstract_only),
-    )
-
-
-def _blocking_signals_for_policy(availability: Any, html_text: str) -> list[str]:
-    signals: list[str] = []
-    if availability.datalayer_signal_set is not None:
-        signals.extend(
-            evaluate_datalayer_blocking_signals(
-                html_text, availability.datalayer_signal_set
-            )
-        )
-    if availability.text_marker_signal_set is not None:
-        signals.extend(
-            evaluate_text_marker_blocking_signals(
-                html_text, availability.text_marker_signal_set
-            )
-        )
-    return _html_profiles.dedupe_signals(signals)
-
-
 def publisher_profile(publisher: str | None) -> PublisherProfile:
     normalized = normalize_text(publisher or "").lower()
     module = _publisher_module(normalized)
     if module is None:
         return GENERIC_PROFILE
     rules = provider_html_rules(normalized)
-    availability = rules.availability
     return PublisherProfile(
         name=normalized,
         hosts=provider_domains(normalized),
-        noise_profile=normalize_text(rules.noise_profile) or "generic",
-        site_rule_overrides=copy.deepcopy(dict(availability.site_rule_overrides)),
-        positive_signals=lambda html_text: _positive_signals_for_policy(
-            availability, html_text
-        ),
-        blocking_fallback_signals=lambda html_text: _blocking_signals_for_policy(
-            availability, html_text
-        ),
         dom_hooks=rules.dom_hooks,
         markdown_hooks=rules.markdown_hooks,
         refine_selected_container=getattr(module, "refine_selected_container", None),

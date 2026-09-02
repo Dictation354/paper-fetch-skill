@@ -77,8 +77,10 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                             resolved.query,
                             modes={"article", "markdown"},
                             strategy=paper_fetch.FetchStrategy(),
-                            download_dir=output_dir,
-                            clients=clients,
+                            context=RuntimeContext(
+                                download_dir=output_dir,
+                                clients=clients,
+                            ),
                         )
 
                 self.assertTrue(envelope.has_fulltext)
@@ -141,42 +143,44 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                             doi,
                             modes={"article"},
                             strategy=paper_fetch.FetchStrategy(),
-                            download_dir=Path(tmpdir),
-                            clients={
-                                provider_name: FixtureProvider(
-                                    raw_payload=_typed_payload(
-                                        provider=provider_name,
-                                        source_url=landing_url,
-                                        content_type="text/html",
-                                        body=b"<html></html>",
-                                        route_kind="html",
-                                        markdown_text="# Example Article\n\n## Results\n\n"
-                                        + ("Body text " * 80),
-                                        source_trail=[
-                                            f"fulltext:{provider_name}_html_ok"
-                                        ],
+                            context=RuntimeContext(
+                                download_dir=Path(tmpdir),
+                                clients={
+                                    provider_name: FixtureProvider(
+                                        raw_payload=_typed_payload(
+                                            provider=provider_name,
+                                            source_url=landing_url,
+                                            content_type="text/html",
+                                            body=b"<html></html>",
+                                            route_kind="html",
+                                            markdown_text="# Example Article\n\n## Results\n\n"
+                                            + ("Body text " * 80),
+                                            source_trail=[
+                                                f"fulltext:{provider_name}_html_ok"
+                                            ],
+                                        ),
+                                        article=sample_article(doi),
+                                        related_asset_factory=lambda *args, related_asset_calls=related_asset_calls, **kwargs: (
+                                            related_asset_calls.append(
+                                                kwargs["asset_profile"]
+                                            )
+                                            or {"assets": [], "asset_failures": []}
+                                        ),
                                     ),
-                                    article=sample_article(doi),
-                                    related_asset_factory=lambda *args, related_asset_calls=related_asset_calls, **kwargs: (
-                                        related_asset_calls.append(
-                                            kwargs["asset_profile"]
-                                        )
-                                        or {"assets": [], "asset_failures": []}
+                                    "crossref": FixtureProvider(
+                                        metadata={
+                                            "provider": "crossref",
+                                            "official_provider": False,
+                                            "doi": doi,
+                                            "title": "Example Article",
+                                            "landing_page_url": landing_url,
+                                            "authors": ["Alice Example"],
+                                            "fulltext_links": [],
+                                            "references": [],
+                                        }
                                     ),
-                                ),
-                                "crossref": FixtureProvider(
-                                    metadata={
-                                        "provider": "crossref",
-                                        "official_provider": False,
-                                        "doi": doi,
-                                        "title": "Example Article",
-                                        "landing_page_url": landing_url,
-                                        "authors": ["Alice Example"],
-                                        "fulltext_links": [],
-                                        "references": [],
-                                    }
-                                ),
-                            },
+                                },
+                            ),
                         )
 
                     self.assertIsNotNone(envelope.article)
@@ -203,41 +207,43 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                     resolved.query,
                     modes={"article"},
                     strategy=paper_fetch.FetchStrategy(asset_profile="none"),
-                    download_dir=Path(tmpdir),
-                    clients={
-                        "science": FixtureProvider(
-                            raw_payload=_typed_payload(
-                                provider="science",
-                                source_url=resolved.landing_url,
-                                content_type="text/html",
-                                body=b"<html></html>",
-                                route_kind="html",
-                                markdown_text="# Example Article\n\n## Results\n\n"
-                                + ("Body text " * 80),
-                                source_trail=["fulltext:science_html_ok"],
+                    context=RuntimeContext(
+                        download_dir=Path(tmpdir),
+                        clients={
+                            "science": FixtureProvider(
+                                raw_payload=_typed_payload(
+                                    provider="science",
+                                    source_url=resolved.landing_url,
+                                    content_type="text/html",
+                                    body=b"<html></html>",
+                                    route_kind="html",
+                                    markdown_text="# Example Article\n\n## Results\n\n"
+                                    + ("Body text " * 80),
+                                    source_trail=["fulltext:science_html_ok"],
+                                ),
+                                article=sample_article(resolved.doi),
+                                related_asset_factory=lambda *args, **kwargs: (
+                                    _ for _ in ()
+                                ).throw(
+                                    AssertionError(
+                                        "asset downloads should stay disabled when asset_profile='none'"
+                                    )
+                                ),
                             ),
-                            article=sample_article(resolved.doi),
-                            related_asset_factory=lambda *args, **kwargs: (
-                                _ for _ in ()
-                            ).throw(
-                                AssertionError(
-                                    "asset downloads should stay disabled when asset_profile='none'"
-                                )
+                            "crossref": FixtureProvider(
+                                metadata={
+                                    "provider": "crossref",
+                                    "official_provider": False,
+                                    "doi": resolved.doi,
+                                    "title": "Example Article",
+                                    "landing_page_url": resolved.landing_url,
+                                    "authors": ["Alice Example"],
+                                    "fulltext_links": [],
+                                    "references": [],
+                                }
                             ),
-                        ),
-                        "crossref": FixtureProvider(
-                            metadata={
-                                "provider": "crossref",
-                                "official_provider": False,
-                                "doi": resolved.doi,
-                                "title": "Example Article",
-                                "landing_page_url": resolved.landing_url,
-                                "authors": ["Alice Example"],
-                                "fulltext_links": [],
-                                "references": [],
-                            }
-                        ),
-                    },
+                        },
+                    ),
                 )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -267,47 +273,49 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                     resolved.query,
                     modes={"article"},
                     strategy=paper_fetch.FetchStrategy(),
-                    download_dir=Path(tmpdir),
-                    clients={
-                        "science": FixtureProvider(
-                            raw_payload=_typed_payload(
-                                provider="science",
-                                source_url=resolved.landing_url,
-                                content_type="text/html",
-                                body=b"<html></html>",
-                                route_kind="html",
-                                markdown_text="# Example Article\n\n## Results\n\n"
-                                + ("Body text " * 80),
-                                source_trail=["fulltext:science_html_ok"],
+                    context=RuntimeContext(
+                        download_dir=Path(tmpdir),
+                        clients={
+                            "science": FixtureProvider(
+                                raw_payload=_typed_payload(
+                                    provider="science",
+                                    source_url=resolved.landing_url,
+                                    content_type="text/html",
+                                    body=b"<html></html>",
+                                    route_kind="html",
+                                    markdown_text="# Example Article\n\n## Results\n\n"
+                                    + ("Body text " * 80),
+                                    source_trail=["fulltext:science_html_ok"],
+                                ),
+                                article=sample_article(resolved.doi),
+                                related_assets={
+                                    "assets": [
+                                        {
+                                            "kind": "figure",
+                                            "heading": "Figure 1",
+                                            "caption": "Preview figure",
+                                            "path": str(preview_path),
+                                            "section": "body",
+                                            "download_tier": "preview",
+                                        }
+                                    ],
+                                    "asset_failures": [],
+                                },
                             ),
-                            article=sample_article(resolved.doi),
-                            related_assets={
-                                "assets": [
-                                    {
-                                        "kind": "figure",
-                                        "heading": "Figure 1",
-                                        "caption": "Preview figure",
-                                        "path": str(preview_path),
-                                        "section": "body",
-                                        "download_tier": "preview",
-                                    }
-                                ],
-                                "asset_failures": [],
-                            },
-                        ),
-                        "crossref": FixtureProvider(
-                            metadata={
-                                "provider": "crossref",
-                                "official_provider": False,
-                                "doi": resolved.doi,
-                                "title": "Example Article",
-                                "landing_page_url": resolved.landing_url,
-                                "authors": ["Alice Example"],
-                                "fulltext_links": [],
-                                "references": [],
-                            }
-                        ),
-                    },
+                            "crossref": FixtureProvider(
+                                metadata={
+                                    "provider": "crossref",
+                                    "official_provider": False,
+                                    "doi": resolved.doi,
+                                    "title": "Example Article",
+                                    "landing_page_url": resolved.landing_url,
+                                    "authors": ["Alice Example"],
+                                    "fulltext_links": [],
+                                    "references": [],
+                                }
+                            ),
+                        },
+                    ),
                 )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -325,7 +333,6 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
     def test_fetch_paper_accepts_preview_images_with_sufficient_dimensions(
         self,
     ) -> None:
-        """rule: rule-image-download-validates-real-images"""
         resolved = paper_fetch.ResolvedQuery(
             query="10.1126/science.preview.accepted",
             query_kind="doi",
@@ -344,49 +351,51 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                     resolved.query,
                     modes={"article"},
                     strategy=paper_fetch.FetchStrategy(),
-                    download_dir=Path(tmpdir),
-                    clients={
-                        "science": FixtureProvider(
-                            raw_payload=_typed_payload(
-                                provider="science",
-                                source_url=resolved.landing_url,
-                                content_type="text/html",
-                                body=b"<html></html>",
-                                route_kind="html",
-                                markdown_text="# Example Article\n\n## Results\n\n"
-                                + ("Body text " * 80),
-                                source_trail=["fulltext:science_html_ok"],
+                    context=RuntimeContext(
+                        download_dir=Path(tmpdir),
+                        clients={
+                            "science": FixtureProvider(
+                                raw_payload=_typed_payload(
+                                    provider="science",
+                                    source_url=resolved.landing_url,
+                                    content_type="text/html",
+                                    body=b"<html></html>",
+                                    route_kind="html",
+                                    markdown_text="# Example Article\n\n## Results\n\n"
+                                    + ("Body text " * 80),
+                                    source_trail=["fulltext:science_html_ok"],
+                                ),
+                                article=sample_article(resolved.doi),
+                                related_assets={
+                                    "assets": [
+                                        {
+                                            "kind": "figure",
+                                            "heading": "Figure 1",
+                                            "caption": "Accepted preview figure",
+                                            "path": str(preview_path),
+                                            "section": "body",
+                                            "download_tier": "preview",
+                                            "width": 640,
+                                            "height": 480,
+                                        }
+                                    ],
+                                    "asset_failures": [],
+                                },
                             ),
-                            article=sample_article(resolved.doi),
-                            related_assets={
-                                "assets": [
-                                    {
-                                        "kind": "figure",
-                                        "heading": "Figure 1",
-                                        "caption": "Accepted preview figure",
-                                        "path": str(preview_path),
-                                        "section": "body",
-                                        "download_tier": "preview",
-                                        "width": 640,
-                                        "height": 480,
-                                    }
-                                ],
-                                "asset_failures": [],
-                            },
-                        ),
-                        "crossref": FixtureProvider(
-                            metadata={
-                                "provider": "crossref",
-                                "official_provider": False,
-                                "doi": resolved.doi,
-                                "title": "Example Article",
-                                "landing_page_url": resolved.landing_url,
-                                "authors": ["Alice Example"],
-                                "fulltext_links": [],
-                                "references": [],
-                            }
-                        ),
-                    },
+                            "crossref": FixtureProvider(
+                                metadata={
+                                    "provider": "crossref",
+                                    "official_provider": False,
+                                    "doi": resolved.doi,
+                                    "title": "Example Article",
+                                    "landing_page_url": resolved.landing_url,
+                                    "authors": ["Alice Example"],
+                                    "fulltext_links": [],
+                                    "references": [],
+                                }
+                            ),
+                        },
+                    ),
                 )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -411,18 +420,20 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
             result = _probe_has_fulltext(
                 "10.1000/license",
-                clients={
-                    "crossref": FixtureProvider(
-                        metadata={
-                            "provider": "crossref",
-                            "doi": "10.1000/license",
-                            "title": "Licensed Article",
-                            "license_urls": ["https://license.example/test"],
-                            "fulltext_links": [],
-                            "references": [],
-                        }
-                    )
-                },
+                context=RuntimeContext(
+                    clients={
+                        "crossref": FixtureProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "doi": "10.1000/license",
+                                "title": "Licensed Article",
+                                "license_urls": ["https://license.example/test"],
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        )
+                    }
+                ),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -445,20 +456,22 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
             result = _probe_has_fulltext(
                 "10.1000/fulltext",
-                clients={
-                    "crossref": FixtureProvider(
-                        metadata={
-                            "provider": "crossref",
-                            "doi": "10.1000/fulltext",
-                            "title": "Linked Article",
-                            "license_urls": [],
-                            "fulltext_links": [
-                                {"url": "https://fulltext.example/test.pdf"}
-                            ],
-                            "references": [],
-                        }
-                    )
-                },
+                context=RuntimeContext(
+                    clients={
+                        "crossref": FixtureProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "doi": "10.1000/fulltext",
+                                "title": "Linked Article",
+                                "license_urls": [],
+                                "fulltext_links": [
+                                    {"url": "https://fulltext.example/test.pdf"}
+                                ],
+                                "references": [],
+                            }
+                        )
+                    }
+                ),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -478,30 +491,32 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
             result = _probe_has_fulltext(
                 "10.1016/test",
-                clients={
-                    "crossref": FixtureProvider(
-                        metadata={
-                            "provider": "crossref",
-                            "doi": "10.1016/test",
-                            "title": "Crossref Article",
-                            "publisher": "Elsevier BV",
-                            "landing_page_url": "https://example.test/article",
-                            "license_urls": [],
-                            "fulltext_links": [],
-                            "references": [],
-                        }
-                    ),
-                    "elsevier": FixtureProvider(
-                        metadata={
-                            "provider": "elsevier",
-                            "doi": "10.1016/test",
-                            "title": "Official Elsevier Article",
-                            "landing_page_url": "https://example.test/article",
-                            "fulltext_links": [],
-                            "references": [],
-                        }
-                    ),
-                },
+                context=RuntimeContext(
+                    clients={
+                        "crossref": FixtureProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "doi": "10.1016/test",
+                                "title": "Crossref Article",
+                                "publisher": "Elsevier BV",
+                                "landing_page_url": "https://example.test/article",
+                                "license_urls": [],
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                        "elsevier": FixtureProvider(
+                            metadata={
+                                "provider": "elsevier",
+                                "doi": "10.1016/test",
+                                "title": "Official Elsevier Article",
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                    }
+                ),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -522,18 +537,20 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
             result = _probe_has_fulltext(
                 "10.48550/arxiv.2605.06663",
-                clients={
-                    "arxiv": FixtureProvider(
-                        metadata={
-                            "provider": "arxiv",
-                            "doi": "10.48550/arxiv.2605.06663",
-                            "title": "Official arXiv Article",
-                            "landing_page_url": "https://arxiv.org/abs/2605.06663",
-                            "fulltext_links": [],
-                            "references": [],
-                        }
-                    ),
-                },
+                context=RuntimeContext(
+                    clients={
+                        "arxiv": FixtureProvider(
+                            metadata={
+                                "provider": "arxiv",
+                                "doi": "10.48550/arxiv.2605.06663",
+                                "title": "Official arXiv Article",
+                                "landing_page_url": "https://arxiv.org/abs/2605.06663",
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                    }
+                ),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -555,20 +572,22 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
             result = _probe_has_fulltext(
                 "https://example.test/article",
-                transport=FixtureHtmlTransport(
-                    {
-                        "https://example.test/article": {
-                            "body": (
-                                b"<html><head>"
-                                b"<meta name='citation_title' content='Landing Page Article' />"
-                                b"<meta name='citation_pdf_url' content='https://example.test/article.pdf' />"
-                                b"</head><body></body></html>"
-                            )
+                context=RuntimeContext(
+                    transport=FixtureHtmlTransport(
+                        {
+                            "https://example.test/article": {
+                                "body": (
+                                    b"<html><head>"
+                                    b"<meta name='citation_title' content='Landing Page Article' />"
+                                    b"<meta name='citation_pdf_url' content='https://example.test/article.pdf' />"
+                                    b"</head><body></body></html>"
+                                )
+                            }
                         }
-                    }
+                    ),
+                    clients={},
+                    env={"PAPER_FETCH_SKILL_USER_AGENT": "unit-test"},
                 ),
-                clients={},
-                env={"PAPER_FETCH_SKILL_USER_AGENT": "unit-test"},
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -589,34 +608,36 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
             result = _probe_has_fulltext(
                 "10.1007/test",
-                transport=FixtureHtmlTransport(
-                    {
-                        "https://example.test/article": {
-                            "headers": {"content-type": "text/html; charset=utf-8"},
-                            "body": b"<html><head><title>Example</title></head><body>Example</body></html>",
+                context=RuntimeContext(
+                    transport=FixtureHtmlTransport(
+                        {
+                            "https://example.test/article": {
+                                "headers": {"content-type": "text/html; charset=utf-8"},
+                                "body": b"<html><head><title>Example</title></head><body>Example</body></html>",
+                            }
                         }
-                    }
+                    ),
+                    clients={
+                        "crossref": FixtureProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "doi": "10.1007/test",
+                                "title": "Crossref Article",
+                                "publisher": "Springer Science and Business Media LLC",
+                                "landing_page_url": "https://example.test/article",
+                                "license_urls": [],
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                        "springer": FixtureProvider(
+                            metadata=paper_fetch.ProviderFailure(
+                                "not_supported",
+                                "Springer metadata probe should not be used.",
+                            )
+                        ),
+                    },
                 ),
-                clients={
-                    "crossref": FixtureProvider(
-                        metadata={
-                            "provider": "crossref",
-                            "doi": "10.1007/test",
-                            "title": "Crossref Article",
-                            "publisher": "Springer Science and Business Media LLC",
-                            "landing_page_url": "https://example.test/article",
-                            "license_urls": [],
-                            "fulltext_links": [],
-                            "references": [],
-                        }
-                    ),
-                    "springer": FixtureProvider(
-                        metadata=paper_fetch.ProviderFailure(
-                            "not_supported",
-                            "Springer metadata probe should not be used.",
-                        )
-                    ),
-                },
             )
         finally:
             paper_fetch.resolve_paper = original_resolve

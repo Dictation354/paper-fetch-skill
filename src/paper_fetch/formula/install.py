@@ -210,9 +210,7 @@ def ensure_mathml_to_latex(target_dir: Path, *, install_node: bool) -> bool:
         return False
 
     workspace = stage_bundled_node_workspace(target_dir)
-    if (workspace / "node_modules" / "mathml-to-latex").exists() and (
-        workspace / "node_modules" / "katex"
-    ).exists():
+    if (workspace / "node_modules" / "mathml-to-latex").exists():
         log(f"Using existing mathml-to-latex Node dependencies in {workspace}")
         return True
 

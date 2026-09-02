@@ -41,7 +41,6 @@ def build_provider_payload(  # noqa: PLR0913 - explicit typed payload boundary
     warnings: list[str] | None = None,
     trace_markers: list[str] | tuple[str, ...] | None = None,
     needs_local_copy: bool = False,
-    content_needs_local_copy: bool | None = None,
 ) -> RawFulltextPayload:
     content = ProviderContent(
         route_kind=route_kind,
@@ -61,20 +60,13 @@ def build_provider_payload(  # noqa: PLR0913 - explicit typed payload boundary
         html_failure_reason=html_failure_reason,
         html_failure_message=html_failure_message,
         extracted_assets=[dict(item) for item in (extracted_assets or [])],
-        needs_local_copy=needs_local_copy
-        if content_needs_local_copy is None
-        else content_needs_local_copy,
+        needs_local_copy=needs_local_copy,
     )
     return RawFulltextPayload(
         provider=provider,
-        source_url=source_url,
-        content_type=content_type,
-        body=body,
         content=content,
         warnings=list(warnings or []),
         trace=trace_from_markers(list(trace_markers or [])),
-        merged_metadata=merged_metadata,
-        needs_local_copy=needs_local_copy,
     )
 
 

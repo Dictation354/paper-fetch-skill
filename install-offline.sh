@@ -34,41 +34,16 @@ MCP_ENV_KEYS=(
   MATHML_TO_LATEX_NODE_BIN
   PAPER_FETCH_BROWSER_HEADLESS
 )
-OFFLINE_ENV_KEYS=(
-  PAPER_FETCH_DOWNLOAD_DIR
-  PAPER_FETCH_FORMULA_TOOLS_DIR
-  PAPER_FETCH_IMAGE_TOOLS_DIR
-  MATHML_TO_LATEX_NODE_BIN
-  PAPER_FETCH_BROWSER_HEADLESS
-  PYTHONUTF8
-  PYTHONIOENCODING
-)
-SHELL_ENV_KEYS=(
-  PAPER_FETCH_ENV_FILE
-  PAPER_FETCH_DOWNLOAD_DIR
-  PAPER_FETCH_FORMULA_TOOLS_DIR
-  PAPER_FETCH_IMAGE_TOOLS_DIR
-  MATHML_TO_LATEX_NODE_BIN
-  PAPER_FETCH_BROWSER_HEADLESS
-  PYTHONUTF8
-  PYTHONIOENCODING
-)
-ACTIVATE_ENV_KEYS=(
-  PAPER_FETCH_ENV_FILE
-  PAPER_FETCH_DOWNLOAD_DIR
-  PAPER_FETCH_FORMULA_TOOLS_DIR
-  PAPER_FETCH_IMAGE_TOOLS_DIR
-  MATHML_TO_LATEX_NODE_BIN
-  PAPER_FETCH_BROWSER_HEADLESS
-  PYTHONUTF8
-  PYTHONIOENCODING
-)
+OFFLINE_ENV_KEYS=()
+SHELL_ENV_KEYS=()
+ACTIVATE_ENV_KEYS=()
 
 log() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m!!\033[0m %s\n' "$*" >&2; }
 die() { printf '\033[1;31mxx\033[0m %s\n' "$*" >&2; exit 1; }
 
 load_installer_manifest() {
+  derive_env_key_sets
   INSTALLER_MANIFEST_FILE="$BUNDLE_ROOT/installer/manifest.json"
   if [ ! -f "$INSTALLER_MANIFEST_FILE" ] && [ -n "$INSTALL_ROOT" ]; then
     INSTALLER_MANIFEST_FILE="$INSTALL_ROOT/installer/manifest.json"
@@ -105,11 +80,6 @@ print(manifest["mcp"]["name"])
 print("[mcp.env_keys]")
 for key in manifest["mcp"]["env_keys"]:
     print(key)
-env_sets = manifest.get("env_sets", {})
-for section in ("offline_env_keys", "shell_env_keys", "activate_env_keys"):
-    print(f"[env_sets.{section}]")
-    for key in env_sets.get(section, []):
-        print(key)
 ' "$INSTALLER_MANIFEST_FILE")
 
   [ "${values[0]:-}" = "installer_manifest_values" ] || die "Invalid installer manifest payload from $INSTALLER_MANIFEST_FILE"
@@ -121,36 +91,22 @@ for section in ("offline_env_keys", "shell_env_keys", "activate_env_keys"):
   MCP_NAME="${values[6]:-}"
   local section=""
   local loaded_mcp_env_keys=()
-  local loaded_offline_env_keys=()
-  local loaded_shell_env_keys=()
-  local loaded_activate_env_keys=()
   for value in "${values[@]:7}"; do
     case "$value" in
-      "[mcp.env_keys]"|"[env_sets.offline_env_keys]"|"[env_sets.shell_env_keys]"|"[env_sets.activate_env_keys]")
+      "[mcp.env_keys]")
         section="$value"
         continue
         ;;
     esac
     case "$section" in
       "[mcp.env_keys]") loaded_mcp_env_keys+=("$value") ;;
-      "[env_sets.offline_env_keys]") loaded_offline_env_keys+=("$value") ;;
-      "[env_sets.shell_env_keys]") loaded_shell_env_keys+=("$value") ;;
-      "[env_sets.activate_env_keys]") loaded_activate_env_keys+=("$value") ;;
     esac
   done
   if [ "${#loaded_mcp_env_keys[@]}" -gt 0 ]; then
     MCP_ENV_KEYS=("${loaded_mcp_env_keys[@]}")
   fi
-  if [ "${#loaded_offline_env_keys[@]}" -gt 0 ]; then
-    OFFLINE_ENV_KEYS=("${loaded_offline_env_keys[@]}")
-  fi
-  if [ "${#loaded_shell_env_keys[@]}" -gt 0 ]; then
-    SHELL_ENV_KEYS=("${loaded_shell_env_keys[@]}")
-  fi
-  if [ "${#loaded_activate_env_keys[@]}" -gt 0 ]; then
-    ACTIVATE_ENV_KEYS=("${loaded_activate_env_keys[@]}")
-  fi
   normalize_mcp_env_keys
+  derive_env_key_sets
 
   [ -n "$MANAGED_BEGIN" ] || die "installer manifest is missing managed_blocks.offline.begin"
   [ -n "$MANAGED_END" ] || die "installer manifest is missing managed_blocks.offline.end"
@@ -159,9 +115,7 @@ for section in ("offline_env_keys", "shell_env_keys", "activate_env_keys"):
   [ -n "$SKILL_NAME" ] || die "installer manifest is missing skill.name"
   [ -n "$MCP_NAME" ] || die "installer manifest is missing mcp.name"
   [ "${#MCP_ENV_KEYS[@]}" -gt 0 ] || die "installer manifest is missing mcp.env_keys"
-  [ "${#OFFLINE_ENV_KEYS[@]}" -gt 0 ] || die "installer manifest is missing env_sets.offline_env_keys"
-  [ "${#SHELL_ENV_KEYS[@]}" -gt 0 ] || die "installer manifest is missing env_sets.shell_env_keys"
-  [ "${#ACTIVATE_ENV_KEYS[@]}" -gt 0 ] || die "installer manifest is missing env_sets.activate_env_keys"
+  [ "${#OFFLINE_ENV_KEYS[@]}" -gt 0 ] || die "installer manifest mcp.env_keys does not provide offline environment keys"
 }
 
 usage() {
@@ -208,6 +162,18 @@ normalize_mcp_env_keys() {
     filtered+=(PAPER_FETCH_BROWSER_HEADLESS)
   fi
   MCP_ENV_KEYS=("${filtered[@]}")
+}
+
+derive_env_key_sets() {
+  local key
+  SHELL_ENV_KEYS=("${MCP_ENV_KEYS[@]}")
+  ACTIVATE_ENV_KEYS=("${MCP_ENV_KEYS[@]}")
+  OFFLINE_ENV_KEYS=()
+  for key in "${MCP_ENV_KEYS[@]}"; do
+    if [ "$key" != "PAPER_FETCH_ENV_FILE" ]; then
+      OFFLINE_ENV_KEYS+=("$key")
+    fi
+  done
 }
 
 normalize_path() {
@@ -1588,7 +1554,7 @@ main() {
   echo "Open a new shell, or activate the current one with: source $INSTALL_ROOT/activate-offline.sh"
   echo "Default browser backend: Camoufox (headless: $(browser_headless_value))"
   echo "The Camoufox browser binary is not bundled or downloaded during installation."
-  echo "CLI browser requests can prepare it on demand with visible progress; MCP/library requests default to no automatic preparation."
+  echo "CLI, MCP, and library requests do not download, update, or repair the Camoufox runtime."
   echo "Before moving fully offline, run '$INSTALL_ROOT/runtime/paper-fetch-python -m camoufox fetch', then 'paper-fetch browser-preflight'."
   echo "Browser backend: Camoufox."
   echo "Restart Codex, Claude Code, and the Antigravity CLI so they rescan skills and MCP registration."

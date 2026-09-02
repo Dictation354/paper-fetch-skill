@@ -11,7 +11,7 @@ import xml.etree.ElementTree as ET
 
 from ..models import SemanticLosses
 from ..publisher_identity import extract_doi, normalize_doi
-from ..quality.reason_codes import (
+from ..reason_codes import (
     STRUCTURED_ARTICLE_NOT_FULLTEXT,
     STRUCTURED_MISSING_BODY_SECTIONS,
 )

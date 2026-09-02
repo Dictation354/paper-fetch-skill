@@ -62,62 +62,79 @@ ACS_SITE_RULE_OVERRIDES = {
     "drop_text": {"Download Citation", "Get e-Alerts"},
 }
 
-
-PROVIDER_BUNDLE = ProviderBundle(
-    catalog=ProviderSpec(
-        name="acs",
-        display_name="ACS",
-        official=True,
-        domains=("www.acs.org", "pubs.acs.org", "acs.org"),
-        doi_prefixes=("10.1021/",),
-        publisher_aliases=(
-            "american chemical society",
-            "american chemical society (acs)",
-            "acs publications",
+_PROVIDER_SPEC = ProviderSpec(
+    name="acs",
+    display_name="ACS",
+    official=True,
+    domains=("www.acs.org", "pubs.acs.org", "acs.org"),
+    doi_prefixes=("10.1021/",),
+    publisher_aliases=(
+        "american chemical society",
+        "american chemical society (acs)",
+        "acs publications",
+    ),
+    asset_default="body",
+    probe_capability="routing_signal",
+    provider_managed_abstract_only=True,
+    status_order=15,
+    base_domains=("pubs.acs.org",),
+    html_path_templates=("/doi/full/{doi}", "/doi/{doi}"),
+    pdf_path_templates=(
+        *ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
+        "/doi/pdf/{doi}?download=true",
+    ),
+    routes=(
+        ProviderRouteSpec(name="metadata", kind="metadata"),
+        ProviderRouteSpec(
+            name="browser_html",
+            kind="html",
+            browser_required=True,
+            browser_preflight=True,
+            auth_supported=True,
+            requires_playwright=True,
+            concurrency=1,
         ),
-        asset_default="body",
-        probe_capability="routing_signal",
-        provider_managed_abstract_only=True,
-        client_factory_path="paper_fetch.providers.acs:AcsClient",
-        status_order=15,
-        base_domains=("pubs.acs.org",),
-        html_path_templates=("/doi/full/{doi}", "/doi/{doi}"),
-        pdf_path_templates=(
-            *ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
-            "/doi/pdf/{doi}?download=true",
+        ProviderRouteSpec(
+            name="browser_pdf",
+            kind="pdf",
+            browser_required=True,
+            browser_preflight=True,
+            auth_supported=True,
+            requires_playwright=True,
+            requires_pdf_conversion=True,
+            concurrency=1,
         ),
-        routes=(
-            ProviderRouteSpec(name="metadata", kind="metadata"),
-            ProviderRouteSpec(
-                name="browser_html",
-                kind="html",
-                browser_required=True,
-                browser_preflight=True,
-                auth_supported=True,
-                requires_playwright=True,
-                concurrency=1,
-            ),
-            ProviderRouteSpec(
-                name="browser_pdf",
-                kind="pdf",
-                browser_required=True,
-                browser_preflight=True,
-                auth_supported=True,
-                requires_playwright=True,
-                requires_pdf_conversion=True,
-                concurrency=1,
-            ),
-            ProviderRouteSpec(
-                name="assets",
-                kind="assets",
-                browser_optional=True,
-                requires_playwright=True,
-                timeout_seconds=20,
-                concurrency=2,
-                transient_retries=0,
-            ),
+        ProviderRouteSpec(
+            name="assets",
+            kind="assets",
+            browser_optional=True,
+            requires_playwright=True,
+            timeout_seconds=20,
+            concurrency=2,
+            transient_retries=0,
         ),
     ),
+)
+
+ACS_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
+    "acs",
+    catalog=_PROVIDER_SPEC,
+    fallback_author_extractor=_acs_html.extract_authors,
+    policy=browser_workflow.BrowserWorkflowPolicy(
+        blocked_resource_types=("image", "font", "media"),
+        direct_figure_page_fallback=True,
+    ),
+)
+
+
+class AcsClient(browser_workflow.BrowserWorkflowClient):
+    name = ACS_BROWSER_PROFILE.name
+    profile = ACS_BROWSER_PROFILE
+
+
+PROVIDER_BUNDLE = ProviderBundle(
+    client_factory=AcsClient,
+    catalog=_PROVIDER_SPEC,
     html_rules=ProviderHtmlRules(
         name="acs",
         cleanup=ProviderCleanupRules(
@@ -127,7 +144,6 @@ PROVIDER_BUNDLE = ProviderBundle(
         availability=AvailabilityPolicy(
             name="acs",
             site_rule_overrides=ACS_SITE_RULE_OVERRIDES,
-            no_signals=True,
         ),
         front_matter=ProviderFrontMatterRules(
             exact_texts=ACS_FRONT_MATTER_EXACT_TEXTS,
@@ -141,19 +157,3 @@ PROVIDER_BUNDLE = ProviderBundle(
     ),
     sources=("acs",),
 )
-
-
-ACS_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
-    "acs",
-    catalog=PROVIDER_BUNDLE.catalog,
-    fallback_author_extractor=_acs_html.extract_authors,
-    policy=browser_workflow.BrowserWorkflowPolicy(
-        blocked_resource_types=("image", "font", "media"),
-        direct_figure_page_fallback=True,
-    ),
-)
-
-
-class AcsClient(browser_workflow.BrowserWorkflowClient):
-    name = ACS_BROWSER_PROFILE.name
-    profile = ACS_BROWSER_PROFILE

@@ -42,10 +42,13 @@ class FetchCommonTests(unittest.TestCase):
             pyproject = tomllib.load(handle)
 
         dependencies = list(pyproject["project"]["dependencies"])
+        dev_dependencies = list(pyproject["project"]["optional-dependencies"]["dev"])
 
         self.assertIn("pydantic>=2,<3", dependencies)
-        self.assertIn("packaging>=24,<27", dependencies)
         self.assertIn("urllib3>=2.2,<3", dependencies)
+        self.assertNotIn("packaging>=24,<27", dependencies)
+        self.assertIn("packaging>=24,<27", dev_dependencies)
+        self.assertNotIn("build>=1.2,<2", dev_dependencies)
         self.assertTrue(all("==" not in dependency for dependency in dependencies))
 
     def test_runtime_dependencies_do_not_include_pypi_arxiv_package(self) -> None:

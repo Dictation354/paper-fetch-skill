@@ -16,7 +16,7 @@ from ....extraction.image_payloads import is_placeholder_image_url
 from ....extraction.html.signals import (
     CLOUDFLARE_CHALLENGE_TITLE_TOKENS as _CLOUDFLARE_CHALLENGE_TITLE_TOKENS,
 )
-from ....quality.reason_codes import CLOUDFLARE_CHALLENGE
+from ....reason_codes import CLOUDFLARE_CHALLENGE
 from ....runtime import RuntimeContext
 from ....utils import normalize_text
 from ...browser_runtime.types import BrowserFetchedHtml

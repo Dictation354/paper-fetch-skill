@@ -17,7 +17,7 @@
 - `PAPER_FETCH_SKILL_USER_AGENT`：非 browser metadata/API 请求的可选 User-Agent；未设置时使用 `paper_fetch.config.DEFAULT_USER_AGENT`。
 - `CROSSREF_MAILTO`：Crossref polite pool 联系邮箱。
 - `ELSEVIER_API_KEY`：Elsevier 官方全文路线所需的 key 名称。
-- `WILEY_TDM_CLIENT_TOKEN`：Wiley 官方 TDM PDF lane 的可选 token 名称；本地 browser 路线是否可用仍由动态 catalog 与诊断决定。
+- `WILEY_TDM_CLIENT_TOKEN`：Wiley 官方 TDM PDF lane 的可选 token 名称；本地 browser 路线是否可用仍由 runtime catalog 与诊断决定。
 - `XDG_DATA_HOME`：改变 platformdirs 用户数据基目录，因而影响默认下载和本地工具目录。
 - `PAPER_FETCH_RUN_LIVE`：仅用于显式 opt-in 的 live publisher 测试；正常诊断和单元测试不得设置它。
 
@@ -38,7 +38,7 @@
 - `PAPER_FETCH_VIPS_BIN`：libvips `vips` executable 覆盖，用于 TIFF → PNG。
 - `PAPER_FETCH_EPS_DPI`：Ghostscript EPS 输出 DPI，默认 `600`。
 - `PAPER_FETCH_IMAGE_TOOL_TIMEOUT_SECONDS`：后端探测/转换子进程超时，默认 `120` 秒。
-- `PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY`：HTTP/HTML 资产 worker 上限；实际 provider/runtime 限制仍以动态 catalog 和运行时为准。
+- `PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY`：HTTP/HTML 资产 worker 上限；实际 provider/runtime 限制仍以 runtime catalog 和运行时为准。
 
 安装入口是 `paper-fetch-install-image-tools`（已安装环境）或仓库脚本 `./install-image-tools.sh`。`paper-fetch doctor --json` / `provider_status(detail="full")` 会报告 Ghostscript/libvips 的 `ready`、`missing`、`timeout` 或 `error`，不自动安装。对应结构化原因包括 `image_conversion_backend_missing`、`image_conversion_backend_timeout` 和 `image_conversion_backend_error`；它们不能被解释为远端 publisher 资产失败。
 
@@ -56,7 +56,7 @@
 
 ## 诊断顺序
 
-1. 用 `paper-fetch doctor --json` 或 `provider_status(detail="full")` 做无网络静态检查；输出只包含变量名、是否存在和来源层；token, cookie, endpoint, path, and other values are never echoed。安装和宿主 Skill 完整性由安装器独立验证，不影响 doctor 的 provider 健康状态。
-2. 只有动态 catalog 表明目标依赖 browser runtime 且需要真实链路证明时，运行 `browser-preflight` / `browser_preflight`；缺失 runtime 时先显式运行 `python -m camoufox fetch`。
+1. 用 `paper-fetch doctor --json` 或 `provider_status(detail="full")` 做无网络静态检查；输出只包含变量名、是否存在和来源层；token, cookie, endpoint, path, and other values are never echoed。
+2. 只有 runtime catalog 表明目标依赖 browser runtime 且需要真实链路证明时，运行 `browser-preflight` / `browser_preflight`；缺失 runtime 时先显式运行 `python -m camoufox fetch`。
 3. 只有结构化结果为 `challenge` / `auth_required` 时进入人工 auth；`runtime_error` 先修 Camoufox runtime/工具链。
 4. 配置或合法访问状态没有变化时，不重复抓取；重试边界统一遵循 [`failure-handling.md`](failure-handling.md)。

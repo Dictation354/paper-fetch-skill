@@ -6,7 +6,7 @@ from .formula.convert import formula_runtime_env
 from .models import FetchEnvelope, OutputMode, RenderOptions
 from .providers.base import ProviderFailure
 from .providers.registry import build_clients
-from .resolve.query import ResolvedQuery
+from .resolve.query import ResolvedQuery, StructuredResolveRequest
 from .runtime import RuntimeContext
 from .workflow.fulltext import fetch_article
 from .workflow.metadata import (
@@ -14,7 +14,7 @@ from .workflow.metadata import (
     merge_primary_secondary_metadata,
 )
 from .workflow.rendering import build_fetch_envelope
-from .workflow.resolution import resolve_paper
+from .workflow.resolution import resolve_paper as workflow_resolve_paper
 from .workflow.routing import (
     probe_has_fulltext as workflow_probe_has_fulltext,
 )
@@ -36,6 +36,20 @@ __all__ = [
     "probe_has_fulltext",
     "resolve_paper",
 ]
+
+
+def resolve_paper(
+    query: str | StructuredResolveRequest,
+    *,
+    context: RuntimeContext | None = None,
+) -> ResolvedQuery:
+    owns_runtime = context is None
+    runtime = context or RuntimeContext()
+    try:
+        return workflow_resolve_paper(query, context=runtime)
+    finally:
+        if owns_runtime:
+            runtime.close()
 
 
 def probe_has_fulltext(

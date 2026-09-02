@@ -39,7 +39,6 @@ from ..runtime import RuntimeContext
 from ..tracing import download_marker, fulltext_marker, trace_from_markers
 from ..utils import empty_asset_results, normalize_text
 from ._arxiv_assets import (
-    ARXIV_ASSET_RETRY_POLICY,
     ARXIV_IMAGE_ACCEPT,
     inline_arxiv_source_assets_in_markdown,
 )
@@ -61,6 +60,7 @@ from ._arxiv_metadata import (
     _first_header_value,
     _merge_arxiv_metadata_layers,
     _minimal_arxiv_metadata,
+    arxiv_metadata_probe_short_circuit,
     metadata_from_arxiv_result as _metadata_from_arxiv_result,
 )
 from ._payloads import build_provider_payload
@@ -89,55 +89,6 @@ from .base import (
     build_provider_status_check,
     map_request_failure,
     summarize_capability_status,
-)
-
-
-PROVIDER_BUNDLE = ProviderBundle(
-    catalog=ProviderSpec(
-        name="arxiv",
-        display_name="arXiv",
-        official=True,
-        domains=("arxiv.org",),
-        doi_prefixes=("10.48550/",),
-        publisher_aliases=("arxiv",),
-        asset_default="body",
-        probe_capability="metadata_api",
-        provider_managed_abstract_only=False,
-        client_factory_path="paper_fetch.providers.arxiv:ArxivClient",
-        status_order=7,
-        metadata_probe_short_circuit=(
-            "paper_fetch.providers._arxiv_metadata:arxiv_metadata_probe_short_circuit"
-        ),
-        persist_provider_html=True,
-        routes=(
-            ProviderRouteSpec(
-                name="atom_metadata",
-                kind="metadata",
-                transport="api",
-                timeout_seconds=60,
-                qps=1 / 3,
-            ),
-            ProviderRouteSpec(name="official_html", kind="html"),
-            ProviderRouteSpec(
-                name="direct_pdf",
-                kind="pdf",
-                requires_pdf_conversion=True,
-            ),
-            ProviderRouteSpec(
-                name="source_assets",
-                kind="assets",
-                hosts=("arxiv.org",),
-                qps=1 / 3,
-                asset_scope="body",
-            ),
-        ),
-    ),
-    html_rules=ProviderHtmlRules(
-        name="arxiv",
-        availability=AvailabilityPolicy(name="arxiv", no_signals=True),
-    ),
-    asset_retry=ARXIV_ASSET_RETRY_POLICY,
-    sources=("arxiv_html", "arxiv_pdf"),
 )
 
 
@@ -307,10 +258,8 @@ class ArxivClient(ProviderClient):
             api_metadata=api_metadata,
             references=references,
         )
-        payload.merged_metadata = merged_metadata
+        payload.content = replace(payload.content, merged_metadata=merged_metadata)
         payload.warnings = warnings
-        if content is not None:
-            payload.content = replace(content, merged_metadata=merged_metadata)
         return payload
 
     def _fetch_html_payload(
@@ -444,7 +393,6 @@ class ArxivClient(ProviderClient):
                 *pdf_fetch_result_warnings(pdf_result),
                 "Full text was extracted from arXiv PDF fallback after arXiv official HTML was not usable.",
             ],
-            content_needs_local_copy=True,
             needs_local_copy=True,
         )
 
@@ -716,3 +664,49 @@ class ArxivClient(ProviderClient):
 __all__ = [
     "ArxivClient",
 ]
+
+
+PROVIDER_BUNDLE = ProviderBundle(
+    client_factory=ArxivClient,
+    metadata_probe_short_circuit=arxiv_metadata_probe_short_circuit,
+    catalog=ProviderSpec(
+        name="arxiv",
+        display_name="arXiv",
+        official=True,
+        domains=("arxiv.org",),
+        doi_prefixes=("10.48550/",),
+        publisher_aliases=("arxiv",),
+        asset_default="body",
+        probe_capability="metadata_api",
+        provider_managed_abstract_only=False,
+        status_order=7,
+        persist_provider_html=True,
+        routes=(
+            ProviderRouteSpec(
+                name="atom_metadata",
+                kind="metadata",
+                transport="api",
+                timeout_seconds=60,
+                qps=1 / 3,
+            ),
+            ProviderRouteSpec(name="official_html", kind="html"),
+            ProviderRouteSpec(
+                name="direct_pdf",
+                kind="pdf",
+                requires_pdf_conversion=True,
+            ),
+            ProviderRouteSpec(
+                name="source_assets",
+                kind="assets",
+                hosts=("arxiv.org",),
+                qps=1 / 3,
+                asset_scope="body",
+            ),
+        ),
+    ),
+    html_rules=ProviderHtmlRules(
+        name="arxiv",
+        availability=AvailabilityPolicy(name="arxiv"),
+    ),
+    sources=("arxiv_html", "arxiv_pdf"),
+)

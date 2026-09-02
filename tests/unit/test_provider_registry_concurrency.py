@@ -52,32 +52,28 @@ def test_runtime_context_builds_clients_once_under_concurrent_first_access(
 
 
 def test_build_clients_isolates_one_factory_failure(monkeypatch) -> None:
-    specs = (
-        SimpleNamespace(
-            name="broken",
-            client_factory_path="test:broken",
-            official=True,
-        ),
-        SimpleNamespace(
-            name="healthy",
-            client_factory_path="test:healthy",
-            official=True,
-        ),
-    )
     healthy_client = object()
 
-    def factory_for(path: str):
-        if path == "test:broken":
-            raise RuntimeError("factory exploded")
-        return lambda _transport, _env: healthy_client
+    def broken_factory(_transport, _env):
+        raise RuntimeError("factory exploded")
+
+    def healthy_factory(_transport, _env):
+        return healthy_client
+
+    bundles = (
+        SimpleNamespace(
+            catalog=SimpleNamespace(name="broken", official=True),
+            client_factory=broken_factory,
+        ),
+        SimpleNamespace(
+            catalog=SimpleNamespace(name="healthy", official=True),
+            client_factory=healthy_factory,
+        ),
+    )
 
     monkeypatch.setattr(
-        "paper_fetch.providers.registry.ordered_provider_specs",
-        lambda: specs,
-    )
-    monkeypatch.setattr(
-        "paper_fetch.providers.registry._client_factory",
-        factory_for,
+        "paper_fetch.providers.registry.PROVIDER_BUNDLES",
+        bundles,
     )
 
     clients = build_clients(transport=mock.Mock(), env={})
@@ -90,7 +86,7 @@ def test_build_clients_isolates_one_factory_failure(monkeypatch) -> None:
     ("conflict_field", "expected_message"),
     [
         ("status_order", "status_order conflict"),
-        ("client_factory_path", "client factory conflict"),
+        ("client_factory", "client factory conflict"),
         ("sources", "source conflict"),
         ("domains", "domain conflict"),
     ],
@@ -108,22 +104,26 @@ def test_fixed_catalog_conflicts_are_rejected(
         doi_prefixes=(),
         domain_suffixes=(),
         status_order=10_000,
-        client_factory_path=f"test.factory:{conflict_field}",
         domains=(f"{conflict_field}.example.test",),
     )
-    sources = (f"{conflict_field}_source",)
+    sources: tuple[str, ...] = (f"{conflict_field}_source",)
+
+    def client_factory(_transport, _env):
+        return object()
+
     if conflict_field == "status_order":
         catalog = replace(catalog, status_order=existing.catalog.status_order)
-    elif conflict_field == "client_factory_path":
-        catalog = replace(
-            catalog,
-            client_factory_path=existing.catalog.client_factory_path,
-        )
+    elif conflict_field == "client_factory":
+        client_factory = existing.client_factory
     elif conflict_field == "sources":
         sources = existing.sources
     elif conflict_field == "domains":
         catalog = replace(catalog, domains=existing.catalog.domains)
-    candidate = ProviderBundle(catalog=catalog, sources=sources)
+    candidate = ProviderBundle(
+        catalog=catalog,
+        client_factory=client_factory,
+        sources=sources,
+    )
 
     with pytest.raises(ValueError, match=expected_message):
         _registry.validate_provider_bundles((existing, candidate))
@@ -131,7 +131,12 @@ def test_fixed_catalog_conflicts_are_rejected(
 
 def test_fixed_catalog_rejects_duplicate_sources_within_bundle() -> None:
     existing = provider_bundle("elsevier")
+
+    def client_factory(_transport, _env):
+        return object()
+
     candidate = ProviderBundle(
+        client_factory=client_factory,
         catalog=replace(
             existing.catalog,
             name="duplicate_sources",
@@ -140,10 +145,20 @@ def test_fixed_catalog_rejects_duplicate_sources_within_bundle() -> None:
             doi_prefixes=(),
             domains=("duplicate-sources.example.test",),
             status_order=10_000,
-            client_factory_path="test.factory:duplicate_sources",
         ),
         sources=("duplicate_source", "duplicate_source"),
     )
 
     with pytest.raises(ValueError, match="source declared more than once"):
         _registry.validate_provider_bundles((candidate,))
+
+
+def test_provider_bundle_rejects_non_callable_factory() -> None:
+    existing = provider_bundle("elsevier")
+
+    with pytest.raises(TypeError, match="client_factory must be callable"):
+        ProviderBundle(
+            catalog=existing.catalog,
+            client_factory="paper_fetch.providers.elsevier:ElsevierClient",  # type: ignore[arg-type]
+            sources=existing.sources,
+        )

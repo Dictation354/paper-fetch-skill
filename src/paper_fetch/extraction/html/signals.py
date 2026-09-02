@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from ...utils import normalize_text
-from ...quality.reason_codes import (
+from ...reason_codes import (
     ABSTRACT_ONLY,
     AWS_WAF_CHALLENGE,
     CLOUDFLARE_CHALLENGE,

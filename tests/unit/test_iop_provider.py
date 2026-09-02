@@ -327,7 +327,6 @@ def test_iop_candidates_cover_article_html_pdf_fallback_and_doi_org() -> None:
 
 
 def test_iop_rejects_radware_hcaptcha_html_challenge() -> None:
-    """rule: rule-iop-body-challenge-cleanup"""
     challenge_html = """
     <html><head><title>Radware Bot Manager Captcha</title></head>
     <body>
@@ -358,7 +357,6 @@ def test_iop_rejects_radware_hcaptcha_html_challenge() -> None:
 
 
 def test_iop_accepts_loaded_article_body_with_residual_challenge_scripts() -> None:
-    """rule: rule-iop-body-challenge-cleanup"""
     html = _iop_loaded_article_with_residual_challenge_html()
 
     diagnostics = HtmlQualityAssessor("iop").assess(
@@ -398,7 +396,6 @@ def test_iop_accepts_loaded_article_body_with_residual_challenge_scripts() -> No
 def test_iop_extract_markdown_preserves_article_sections_figure_and_references() -> (
     None
 ):
-    """rule: rule-iop-body-challenge-cleanup"""
     markdown, extraction = IopClient(None, {}).extract_markdown(
         _iop_article_html(),
         IOP_SAMPLE_LANDING,
@@ -525,7 +522,6 @@ def test_iop_extracts_high_resolution_candidate_from_standard_figure_url() -> No
 
 
 def test_iop_article_page_discovers_only_supplementary_index_not_ui_assets() -> None:
-    """rule: rule-supplementary-discovery-explicit-scope"""
     html = _iop_supplementary_article_html()
 
     assets = _iop_html.extract_scoped_html_assets(
@@ -547,7 +543,6 @@ def test_iop_article_page_discovers_only_supplementary_index_not_ui_assets() -> 
 def test_iop_real_article_replay_does_not_promote_figure_controls_or_qr_to_supplementary() -> (
     None
 ):
-    """rule: rule-supplementary-discovery-explicit-scope"""
     html = _golden_fixture_text(IOP_SAMPLE_DOI, "original.html")
 
     assets = _iop_html.extract_scoped_html_assets(
@@ -568,7 +563,6 @@ def test_iop_real_article_replay_does_not_promote_figure_controls_or_qr_to_suppl
 
 
 def test_iop_data_page_extracts_only_sm_numbered_real_attachments() -> None:
-    """rule: rule-supplementary-discovery-explicit-scope"""
     assets = _iop_html.extract_supplementary_data_assets(
         _iop_supplementary_data_html(),
         f"{IOP_CURRENT_SUPPLEMENTARY_LANDING}/data",
@@ -610,7 +604,6 @@ def test_iop_data_page_rejects_mismatch_challenge_and_empty_scope(
     html: str,
     expected_reason: str,
 ) -> None:
-    """rule: rule-supplementary-discovery-explicit-scope"""
     with pytest.raises(HtmlExtractionFailure) as exc_info:
         _iop_html.extract_supplementary_data_assets(
             html,
@@ -666,7 +659,6 @@ def _iop_supplementary_test_deps(index_fetcher):
 def test_iop_all_profile_expands_data_index_before_existing_asset_downloader(
     tmp_path: Path,
 ) -> None:
-    """rule: rule-supplementary-discovery-explicit-scope"""
     index_url = f"{IOP_CURRENT_SUPPLEMENTARY_LANDING}/data"
     index_fetcher = _FakeIopSupplementaryIndexFetcher(
         {
@@ -734,7 +726,6 @@ def test_iop_all_profile_expands_data_index_before_existing_asset_downloader(
 def test_iop_unresolved_declared_data_index_records_asset_failure(
     tmp_path: Path,
 ) -> None:
-    """rule: rule-supplementary-discovery-explicit-scope"""
     index_url = f"{IOP_CURRENT_SUPPLEMENTARY_LANDING}/data"
     index_fetcher = _FakeIopSupplementaryIndexFetcher(
         None,
@@ -842,7 +833,6 @@ def test_iop_index_cache_dedupes_signed_indexes_and_attachment_signatures() -> N
 
 
 def test_iop_real_replay_covers_table_and_formula_purposes() -> None:
-    """rule: rule-iop-body-challenge-cleanup"""
     html = _golden_fixture_text(IOP_TABLE_FORMULA_DOI, "original.html")
     client = IopClient(None, {})
     markdown, extraction = client.extract_markdown(

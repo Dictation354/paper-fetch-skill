@@ -41,7 +41,7 @@ Date: 2026-07-29
 入口：`src/paper_fetch/cli.py`
 
 - 解析命令行参数，组装 `FetchStrategy` 与 `RenderOptions`
-- 通过 `FetchPipeline` 创建/关闭 `RuntimeContext` 并调用 service 层
+- 创建/关闭 `RuntimeContext`，通过 `FetchPipeline` 调用 service 层，并负责 CLI 输出与 Markdown 保存生命周期
 - 控制 stdout / stderr / 输出文件 / 退出码
 
 不负责 provider 选择、正文抓取策略、MCP 序列化。
@@ -50,10 +50,10 @@ Date: 2026-07-29
 
 入口：`src/paper_fetch/mcp/`（`server.py`、`fetch_tool.py`、`cache_payloads.py`、`batch.py`、`results.py`、`log_bridge.py`）
 
-- 暴露 MCP tools、prompts 与 resources，校验工具参数
+- 暴露 MCP tools 与静态 provider-catalog resource，校验工具参数
 - 把 service 结果序列化成 JSON-safe payload
 - 通过 `FetchCache` 管理 fetch-envelope sidecar，并由 `list_cached` / `get_cached` 查询
-- 通过 `FetchPipeline` cache hooks 复用 CLI/MCP 共享的 fetch lifecycle
+- 在 MCP adapter 内管理 fetch-envelope cache、Markdown 注册和 cancellation commit guard；`FetchPipeline` 只复用 service 调用
 - 管理 progress、structured log、cancellation
 
 实现边界：
@@ -61,9 +61,8 @@ Date: 2026-07-29
 - MCP runtime 基于官方 Python SDK 2.x 的 `MCPServer` 与 stdio transport，不再维护自定义 stdin reader/stream pump；server 同时服务 2025 握手协议与 2026-07-28 无状态协议，只保留静态 provider catalog resource。
 - payload/tool 入口通过 `paper_fetch.mcp._deps.MCPDeps` 显式注入 runtime env、service、provider registry 与 cache index 依赖；生产默认由 `default_mcp_deps()` 装配，测试通过构造定制 deps 注入。
 - 所有 MCP tool JSON payload 顶层都带 `schema_version=2`；错误 payload 保留兼容字段 `status` / `reason`，并补充 `code`、`http_status`、`error_category`、`retry_after_seconds`、`provider`、`warnings`、顶层唯一完整 `trace` 和 `source_trail` 供 host 做机器判断。v2 的 `quality` 不再复制完整 trace。
-- MCPServer/Pydantic 仍生成并保留完整 typed output contract；注册工具时只从发布到 `tools/list` 的 output schema 移除展示性 `title` 注解和可选字段的 `default: null`。压缩器识别 `properties`、`$defs` 等命名 schema 映射，真实的 `title`/`default` 字段名与全部验证约束保持不变。
+- 当前十个工具都不在 `tools/list` 发布协议级 `outputSchema`。工具结果继续通过 `CallToolResult.structured_content` 返回带 `schema_version=2` 的既有 payload；该版本化 payload 契约不等同于 MCP output schema。
 - `resource://paper-fetch/provider-catalog` 由轻量 MCP catalog adapter 在读取时直接投影 runtime `ProviderSpec` 和 `SOURCE_PROVIDER_MAP`；provider/source、browser/runtime、status/preflight 与资产默认不在 server instructions、tool description 或 skill contract 中维护第二张静态表。
-- MCP 上下文有独立回归预算：server instructions 不超过 1500 字符，`fetch_paper` description 不超过 1200 字符，全部 tool description 合计不超过 5000 字符，`tool_count * instructions_length + descriptions_length` 宿主 narrative 不超过 24000 字符。Native tools/list 总字节和 input/output schema 字节分别快照，新工具需单独说明并更新基线，不把 schema 体积混入文案预算。十工具契约在压缩展示性 output-schema 元数据、同时保留命名字段后的基线分别为 `69459` / `65961` bytes，当前 instructions/fetch description/全部 descriptions/host narrative 为 `1093/985/2601/13531` 字符。
 - `fetch_paper` 和批量工具把阻塞抓取放到有界 `ThreadPoolExecutor`，事件循环继续处理 progress / log / cancellation；批量工具保持输入顺序，遇到 rate-limit status/code/category、HTTP 429 或 retry-after 后停止对应 provider/resource lane 的新提交。
 - async `fetch_paper` 用 `RuntimeContext(cancel_check=...)` 创建 cancel-aware `HttpTransport`，service/workflow 只消费 transport。
 
@@ -96,8 +95,7 @@ Date: 2026-07-29
 - `routing`：provider 候选、probe、fallback eligibility
 - `fulltext`：provider 主链与 abstract-only / metadata-only fallback，并通过 `ArtifactStore` 应用 artifact 写盘策略
 - `rendering`：`FetchEnvelope`、`source_trail` 派生、最终结果组装
-- `pipeline`：CLI/MCP 共享的 `RuntimeContext` 生命周期、service 调用、可选 cache hook 与 Markdown 保存 hook
-- `request_builder`：CLI/MCP 共享的 `FetchPipelineRequest` 装配
+- `pipeline`：在调用方提供的 `RuntimeContext` 中执行 CLI/MCP 真正共享的 service 调用
 
 #### 增量 batch runner 与 provider lane
 
@@ -111,7 +109,7 @@ Date: 2026-07-29
 
 现有 MCP `batch_resolve` / `batch_check` / `batch_fetch` 与 CLI batch 都通过这个 runner 调度。前两个 probe/resolve 工具保持既有兼容调度；`batch_fetch` 在提交前只调用 catalog-backed URL/DOI 身份 helper 推断 provider lane，一个 lane 限流后把该 lane 的后续输入终态化为未调度，其他 lane 继续。它的 `results` 按原 1-based input index 返回，`completion_order` 单独投影完成顺序，progress 使用完整终态计数。
 
-`RuntimeContext` 是 service/workflow 的显式运行时依赖容器，持有 `env`、`transport`、`clients`、`download_dir`、`cancel_check`、`artifact_store`、可选 `fetch_cache`，以及单次 fetch 生命周期内的 `parse_cache`、`session_cache`。Browser provider 只依赖 `paper_fetch.providers.browser_runtime` facade；生产 backend 是 Camoufox，storage/profile 路径由 `browser_runtime.paths` 统一解析。同一 owning thread 在一个 `RuntimeContext` 内复用 Camoufox process，每项操作创建隔离 context/page，batch/进程退出时统一清理。公开 service API 只接受 `context=`；调用方必须先构造 `RuntimeContext`，再交给 `paper_fetch.workflow.pipeline.FetchPipeline`。
+`RuntimeContext` 是 service/workflow 的显式运行时依赖容器，持有 `env`、`transport`、`clients`、`download_dir`、`cancel_check`、`artifact_store`，以及单次 fetch 生命周期内的 `parse_cache`、`session_cache`。Browser provider 只依赖 `paper_fetch.providers.browser_runtime` facade；生产 backend 是 Camoufox，storage/profile 路径由 `browser_runtime.paths` 统一解析。同一 owning thread 在一个 `RuntimeContext` 内复用 Camoufox process，每项操作创建隔离 context/page，batch/进程退出时统一清理。公开 `service` helper 可接受 `context=None`，此时自行创建并关闭 context；pipeline/workflow 内部路径要求调用方显式传递 context。CLI/MCP adapter 按各自目录、artifact 和 cancellation 语义构造 `RuntimeContext`，再交给 `paper_fetch.workflow.pipeline.FetchPipeline`。
 
 #### 统一抓取验收模型
 
@@ -209,7 +207,7 @@ CLI 的 `--batch-results` 与 MCP 的 `batch_results` 都只写一次最终 JSON
 - HTML-to-Markdown 的通用编排入口是 `paper_fetch.extraction.html.renderer`；provider-specific 模块只能传入已选定的 HTML fragment、noise profile、renderer/postprocess hook 和 sidecar 策略。
 - provider-neutral 的 access signals、section semantics、language filtering 固定在 `extraction.html.signals` / `semantics` / `language`；landing fetch helper 是 provider-neutral。
 - table 展开、formula 默认 token/selector、inline TeX 渲染、citation cleanup / numeric payload 等通用能力位于各自 canonical owner；publisher-specific class/selector/pattern 必须通过 `ProviderHtmlRules` 与调用方 `noise_profile` 注入，不进入通用默认规则。
-- availability verdict、reason code 集中在 `paper_fetch.quality.reason_codes` 与 `paper_fetch.reason_codes`；`models.schema.ContentKind` 保持显式 Literal 作为 public wire contract。
+- availability verdict 位于 quality 层，reason code 的 canonical owner 是 `paper_fetch.reason_codes`；`paper_fetch.quality.reason_codes` 仅保留为公开兼容导入路径，生产代码统一依赖 canonical owner。`models.schema.ContentKind` 保持显式 Literal 作为 public wire contract。
 - provider-owned browser workflow 的 DOM / Markdown 后处理只能通过 `ProviderHtmlRules.dom_hooks` / `markdown_hooks` 的 typed callable 注册，不得恢复字符串 stage dispatch 或反射表。
 
 ### 7. Provider 层
@@ -221,7 +219,7 @@ CLI 的 `--batch-results` 与 MCP 的 `batch_results` 都只写一次最终 JSON
 
 能力边界由 `paper_fetch.providers.protocols` 表达：`MetadataProvider`、`FulltextProvider`、`RawFulltextProvider`、`AssetProvider` 用于 workflow typing；`ProviderClient` 是 provider 可继承的 convenience base class。
 
-provider fulltext 内部链路统一接收同一个 `RuntimeContext`：workflow 调用 `FulltextProvider.fetch_result()` 时传入 `artifact_store=` 与 `context=`，context 继续传给 raw fulltext、abstract-only recovery、related assets 和 `to_article_model`，使同一次 fetch 内可 memo 派生 payload 并复用 runtime browser。需要原始 payload 用 `fetch_raw_fulltext()`，需要完整结果用 `fetch_result()`。`RawFulltextPayload` 不提供 `metadata` 兼容视图；route、markdown_text、warnings、trace、diagnostics 等结构化字段必须由 typed fields 传入。
+provider fulltext 内部链路统一接收同一个 `RuntimeContext`：workflow 调用 `FulltextProvider.fetch_result()` 时传入 `artifact_store=` 与 `context=`，context 继续传给 raw fulltext、abstract-only recovery、related assets 和 `to_article_model`，使同一次 fetch 内可 memo 派生 payload 并复用 runtime browser。需要原始 payload 用 `fetch_raw_fulltext()`，需要完整结果用 `fetch_result()`。`RawFulltextPayload` 不提供 `metadata` 兼容视图；route、markdown_text、warnings、trace、diagnostics 等结构化字段必须由 typed fields 传入。`ProviderContent` 唯一持有正文 URL、类型、字节、合并 metadata 与本地复制状态；raw payload 上的同名扩展兼容属性只是投影，不保存副本。
 
 provider 身份与能力配置统一来自 provider entry module 导出的 `PROVIDER_BUNDLE`。内置 provider entry 只由 `paper_fetch.providers._BUILTIN_PROVIDER_ENTRY_MODULES` 显式清单加载；固定 loader 在启动时一次构造按 status 排序的不可变 bundle tuple、provider map、`PROVIDER_CATALOG` 与 source map，并立即验证 provider name/status order/client factory/source 及 alias、DOI prefix、exact/suffix domain 无冲突。运行时没有 mutable registry、导入协调、cache invalidation、源码扫描或第三方 bundle 注入。routing、默认资产策略、MCP status 顺序和 client registry 都从这些不可变映射派生，不维护第二份 provider 行为字典。Crossref 的 provider adapter 是 `paper_fetch.providers.crossref.CrossrefClient`，与 resolve 共同依赖 `paper_fetch.metadata.crossref.CrossrefLookupClient`。
 
@@ -243,7 +241,7 @@ provider 身份与能力配置统一来自 provider entry module 导出的 `PROV
 - arXiv source archive 的流式解包、regular-member 遍历门禁和 LaTeX figure 引用解析集中在 `_arxiv_source_archive.py`；重复或非法名称也计入最多 128 个检查成员，保留成员继续使用共享 `AssetBudget` 的单文件/累计字节 reservation。
 - `FetchCache` 管理 MCP fetch-envelope sidecar reuse/write 语义；当前 sidecar version 为 5，并要求完整 acquisition，旧 sidecar 以 `version_mismatch` 失效后重新抓取，不删除既有 Markdown。MCP cache index 只信任当前版本以及显式注册、仍通过 DOI/hash/scope 校验的条目，不自动迁移、修复或全目录重扫。`get_cached(detail="compact")` 的请求兼容唯一调用 `cached_request_matches()`，质量摘要调用统一 `evaluate_fetch_acceptance()`；public scope 绝不反向读取 API token 或 storage-state sidecar。
 - `CapabilityScopeBuilder` 是 cache capability identity 的唯一 owner。当前 scope digest 绑定版本化 credential facts；成功注入 browser context 的状态另绑定 provider、backend、最终 canonical storage-state 路径和写 sidecar 时的最终内容 SHA-256。`RuntimeContext` 只在 context 创建成功且确实传入 `storage_state` 后记录 use；配置了空 profile/path 不会制造 private scope，实际 use 即使文件随后消失也不会降级成 public。
-- Cache sidecar 的 loader、inspector 与 compact projection 只检查当前请求在可读 scope 中的精确 variant，再单向回退 canonical/public；不会 glob 或自动选择其它历史 variant。public 以及不同 private scope 不能横向读取。旧版本、无 scope、损坏或 DOI/scope 不匹配条目 fail closed。相同 visibility filter 同时约束 cache index、`list_cached`、`get_cached` entry、entry template 和动态 MCP resource。
+- Cache sidecar 的 loader、inspector 与 compact projection 只检查当前请求在可读 scope 中的精确 variant，再单向回退 canonical/public；不会 glob 或自动选择其它历史 variant。public 以及不同 private scope 不能横向读取。旧版本、无 scope、损坏或 DOI/scope 不匹配条目 fail closed。相同 visibility filter 同时约束 cache index、`list_cached`、`get_cached` entry 和 entry template；动态 cache MCP resource 已移除。
 - Cache index 写入在 artifact 成功提交后按 DOI 增量注册，并在锁内原子合并；读取会复核 scope 与文件事实。Loose Markdown 只有在保存时凭 envelope DOI 显式注册后才可命中，文件名或正文 DOI 文本不作为身份凭据。
 - Artifact、fetch-envelope variant/canonical sidecar、Markdown、cache index 与 batch results 使用同一提交协议：目标路径对应进程/跨进程 `FileLock`，每个 writer 在目标同目录创建唯一 staging file，写完 flush/fsync，再在 `RuntimeContext.commit_guard` 的最终临界区内 `os.replace` 并 fsync 目录。取消 fence 与最终 replace 由同一锁线性化；fence 返回后，后台 worker 即使晚返回也不能提交。`overwrite=false` 时相同字节是无改写的幂等成功、不同字节是显式冲突；`overwrite=true` 允许串行原子替换。
 - 单篇 sync/async 入口从 fetch、cache、Markdown 到最终 CLI/MCP 输出贯穿一个 `RuntimeContext`。异步取消先设置 cooperative event 和 commit fence，再用独立 task 等待有界 grace；重复 `CancelledError` 不会跳过该等待。Batch 每个 logical item 使用独立 child context，只共享线程安全 HTTP transport 与 immutable env，不共享 provider client、session、CookieJar、trace/timing/cache；duplicate 与未调度 item 也会幂等关闭。
@@ -268,7 +266,7 @@ Camoufox/Playwright 的 navigation、redirect、子资源与 service worker 使�
 
 ### 10. CI / 回归验证边界
 
-`.github/workflows/ci.yml` 是默认分支 push / pull request 的薄触发器，完整命令事实来源是 reusable `.github/workflows/verify.yml`。CI 运行一次完整 unit、integration、Ruff、生产包 mypy、版本与依赖漏洞门禁，并把全部可执行 exact fixture 按 provider 稳定分成四个 shard。devtools 退出默认门禁，按维护或发布需求显式运行。wheel/sdist 仍分别进入隔离 venv 执行 CLI/import/MCP/resource smoke；release 继续验证依赖、inventory、SBOM、checksum 与 provenance。
+`.github/workflows/ci.yml` 是默认分支 push / pull request 的薄触发器，完整命令事实来源是 reusable `.github/workflows/verify.yml`。CI 运行一次完整 unit、integration、Ruff、生产包 mypy、版本与依赖漏洞门禁，并把全部可执行 exact fixture 按 provider 稳定分成四个 shard。已删除的 devtools 不属于当前验证命令。wheel/sdist 仍分别进入隔离 venv 执行 CLI/import/MCP/resource smoke；release 继续验证依赖、inventory、SBOM、checksum 与 provenance。
 
 pytest 在收集前验证锁定 MCP major 与 trafilatura API 行为；ambient 环境不兼容时会提示先执行 `uv sync --frozen --extra dev --extra full`，常规验证统一通过 `PYTHONPATH=src uv run python -m pytest ...`。运行时 registry、公开入口和行为测试负责验证架构边界，不以私有模块布局或文档措辞作为契约。
 
@@ -317,7 +315,7 @@ workflow 尽量拿到 Crossref metadata 与 publisher metadata（`elsevier` 仍�
 
 ### 6. render / envelope / cache / MCP 暴露
 
-拿到最终 `ArticleModel` 后，workflow.rendering 构造 `FetchEnvelope`，对外结果含 `trace: list[TraceEvent]`、与 trace 同步的兼容字段 `source_trail`、聚合到 `ArticleModel.quality` 与 `FetchEnvelope` 的 `warnings`。随后 `ArtifactStore` 已处理 provider payload / HTML copy / asset 诊断；CLI 决定是否写 Markdown、是否改写相对资源链接（通过 `FetchPipeline` 的 `MarkdownSaveSpec` 执行）；MCP 通过 `FetchCache` hooks 决定是否复用/写入 sidecar、暴露 resources、附带 inline images。
+拿到最终 `ArticleModel` 后，workflow.rendering 构造 `FetchEnvelope`，对外结果含 `trace: list[TraceEvent]`、与 trace 同步的兼容字段 `source_trail` 和 `warnings`。质量状态只由 `Quality` 实例持有；有 article 时 `FetchEnvelope.quality` 与 `ArticleModel.quality` 引用同一实例，envelope 顶层质量字段是兼容投影。随后 `ArtifactStore` 已处理 provider payload / HTML copy / asset 诊断；CLI adapter 决定是否写 Markdown、overwrite 和相对资源链接改写；MCP adapter 负责 `FetchCache` 复用/写入、credential scope、Markdown 注册和 inline images。两者都只通过 `FetchPipeline` 共享显式 context 下的 service 调用。
 
 ## 数据契约与角色边界
 
@@ -331,9 +329,9 @@ workflow 尽量拿到 Crossref metadata 与 publisher metadata（`elsevier` 仍�
 
 ### `FetchEnvelope`
 
-固定返回形状的公开抓取结果。始终承载 `doi`、兼容 `source`、可空的结构化 `acquisition`、`has_fulltext`、`warnings`、`source_trail`、`token_estimate`、`token_estimate_breakdown`；按 `modes` 决定是否附带 `article` / `markdown` / `metadata`。`source` 不因新增字段改值；无法从 provider 原点确认 acquisition 时保持 `null`，不做启发式补全。
+固定返回形状的公开抓取结果。始终承载 `doi`、兼容 `source`、可空的结构化 `acquisition`、`has_fulltext`、`warnings`、`source_trail`、`token_estimate`、`token_estimate_breakdown`；这些顶层质量字段保持旧 Python API 和 wire shape，但直接投影 canonical `quality`，不另存可变副本。按 `modes` 决定是否附带 `article` / `markdown` / `metadata`。`source` 不因新增字段改值；无法从 provider 原点确认 acquisition 时保持 `null`，不做启发式补全。
 
-MCP tool 返回的是在业务 payload 顶层追加 `schema_version=2` 的 JSON-safe 形状；FetchEnvelope sidecar 新写入也使用 v2，但两者仍是不同契约。失败时 `status` 仍是旧客户端可读的粗粒度状态，细粒度失败原因放在 `code` / `error_category`，HTTP 与限流细节放在 `http_status` / `retry_after_seconds`。
+MCP tool 返回的是在业务 payload 顶层追加 `schema_version=2` 的 JSON-safe 形状；FetchEnvelope sidecar 内的业务 payload 也保持该 v2 形状，其缓存 wrapper 版本独立保持 `version=5`，旧 v5 sidecar reader 继续接收历史重复字段并迁移到单个 `Quality` 实例。失败时 `status` 仍是旧客户端可读的粗粒度状态，细粒度失败原因放在 `code` / `error_category`，HTTP 与限流细节放在 `http_status` / `retry_after_seconds`。
 
 ### `ArticleModel`
 
@@ -353,7 +351,7 @@ MCP tool 返回的是在业务 payload 顶层追加 `schema_version=2` 的 JSON-
 
 CLI 与 MCP live 入口都以 `paper_fetch.browser_preflight.run_browser_provider_preflight()` 为唯一 orchestration owner；`paper_fetch.mcp.browser_preflight` 只做 Pydantic 入参、状态分类、progress/cancel 转接和 JSON-safe structured output。共享核心串行保留逐 provider 结果，把 `RuntimeContext.cancel_check` 传入现有 browser HTML bootstrap，并通过 `BrowserRuntimeConfig.persist_storage_state` 控制是否保存；不得复制 provider workflow 或转入 PDF fallback。
 
-诊断语义分三层：`provider_status` / `doctor` 只证明静态配置与本地依赖；CLI `browser-preflight` / MCP `browser_preflight` 才证明一次真实样例页面链路并可能写 storage-state；auth 是明确的人工副作用入口。安装与宿主 Skill 完整性由构建器、安装器和独立 verifier 负责，不参与 doctor 的业务健康状态。三层结果不得相互冒充。
+诊断语义分三层：`provider_status` / `doctor` 只证明静态配置与本地依赖；CLI `browser-preflight` / MCP `browser_preflight` 才证明一次真实样例页面链路并可能写 storage-state；auth 是明确的人工副作用入口。三层结果不得相互冒充。
 
 ### `has_fulltext`
 

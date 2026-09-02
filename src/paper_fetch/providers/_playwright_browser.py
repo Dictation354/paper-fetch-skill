@@ -32,17 +32,15 @@ from ..quality.html_availability import (
     extract_page_title,
 )
 from ..quality.html_signals import looks_like_abstract_redirect
-from ..quality.reason_codes import (
+from ..reason_codes import (
     ABSTRACT_ONLY,
     AWS_WAF_CHALLENGE,
+    BROWSER_CONTEXT_CREATE_FAILED,
+    BROWSER_PAGE_CREATE_FAILED,
     CLOUDFLARE_CHALLENGE,
     PUBLISHER_ACCESS_DENIED,
     PUBLISHER_PAYWALL,
     REDIRECTED_TO_ABSTRACT,
-)
-from ..reason_codes import (
-    BROWSER_CONTEXT_CREATE_FAILED,
-    BROWSER_PAGE_CREATE_FAILED,
 )
 from ..runtime_browser import browser_page_user_agent
 from ..utils import normalize_text
@@ -836,12 +834,6 @@ def _safe_close(value: Any) -> None:
         value.close()
 
 
-def _raise_if_cancelled(runtime_context: RuntimeContext | None) -> None:
-    cancel_check = getattr(runtime_context, "cancel_check", None)
-    if callable(cancel_check) and cancel_check() is True:
-        raise RequestCancelledError("Request cancelled.")
-
-
 def _storage_state_path(config: PlaywrightRuntimeConfig) -> Path | None:
     return _runtime_paths().storage_state_path(config)
 
@@ -932,7 +924,8 @@ def _wait_for_browser_html_readiness(
     body_readiness = None
     selector_wait_attempted = False
     if readiness.wait_for_article_body:
-        _raise_if_cancelled(runtime_context)
+        if runtime_context is not None:
+            runtime_context.raise_if_cancelled()
         remaining_timeout_seconds = max(
             0.0,
             (float(timeout_ms) / 1000.0) - (time.monotonic() - request_started),
@@ -974,7 +967,8 @@ def _wait_for_browser_html_readiness(
             else ("timeout" if body_readiness.attempted else "unsupported")
         )
     elif normalized_selector and wait_seconds > 0:
-        _raise_if_cancelled(runtime_context)
+        if runtime_context is not None:
+            runtime_context.raise_if_cancelled()
         selector_wait_attempted = True
         remaining_timeout_ms = max(
             1,
@@ -1032,7 +1026,8 @@ def _wait_for_browser_html_readiness(
         and not selector_wait_attempted
         and wait_seconds > 0
     ):
-        _raise_if_cancelled(runtime_context)
+        if runtime_context is not None:
+            runtime_context.raise_if_cancelled()
         remaining_wait_ms = max(
             0,
             int(
@@ -1050,7 +1045,8 @@ def _wait_for_browser_html_readiness(
         )
         if fixed_wait_ms > 0:
             page.wait_for_timeout(fixed_wait_ms)
-        _raise_if_cancelled(runtime_context)
+        if runtime_context is not None:
+            runtime_context.raise_if_cancelled()
         candidate_trace["dom_readiness_result"] = "fixed_wait"
     if wait_seconds > 0:
         readiness_elapsed = max(
@@ -1690,7 +1686,8 @@ def fetch_html_with_playwright(
     )
 
     try:
-        _raise_if_cancelled(runtime_context)
+        if runtime_context is not None:
+            runtime_context.raise_if_cancelled()
         manager, browser_context, page = _open_browser_html_context(
             config,
             runtime_context=runtime_context,
@@ -1752,7 +1749,8 @@ def fetch_html_with_playwright(
                 page.route("**/*", route_handler)
 
         for url in candidate_urls:
-            _raise_if_cancelled(runtime_context)
+            if runtime_context is not None:
+                runtime_context.raise_if_cancelled()
             candidate_timeout_ms = remaining_timeout_ms()
             if candidate_timeout_ms <= 0:
                 trace["deadline_exhausted"] = True

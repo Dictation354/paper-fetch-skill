@@ -538,28 +538,7 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         self.assertTrue(browser_tool.annotations.open_world_hint)
 
                         prompts = await session.list_prompts()
-                        self.assertEqual(
-                            sorted(prompt.name for prompt in prompts.prompts),
-                            ["summarize_paper", "verify_citation_list"],
-                        )
-                        summarize_prompt = await session.get_prompt(
-                            "summarize_paper",
-                            {"query": "10.1000/example", "focus": "methods"},
-                        )
-                        self.assertIn(
-                            "token_estimate_breakdown",
-                            summarize_prompt.messages[0].content.text,
-                        )
-                        verify_prompt = await session.get_prompt(
-                            "verify_citation_list",
-                            {
-                                "citations": "Citation A\\nCitation B",
-                                "mode": "metadata",
-                            },
-                        )
-                        self.assertIn(
-                            "batch_check", verify_prompt.messages[0].content.text
-                        )
+                        self.assertEqual(prompts.prompts, [])
 
                         resolved = await session.call_tool(
                             "resolve_paper", {"query": "10.1000/example"}

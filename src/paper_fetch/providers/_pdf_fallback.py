@@ -66,12 +66,6 @@ MAX_PDF_FAILURE_ARTIFACTS = 5
 MAX_PDF_FAILURE_SCREENSHOT_BYTES = 16 * 1024 * 1024
 
 
-def _raise_if_cancelled(context: RuntimeContext | None) -> None:
-    cancel_check = getattr(context, "cancel_check", None)
-    if callable(cancel_check) and cancel_check() is True:
-        raise RequestCancelledError("Request cancelled.")
-
-
 def _transport_cancelled(transport: HttpTransport) -> bool:
     cancel_check = getattr(transport, "_cancel_check", None)
     return bool(callable(cancel_check) and cancel_check())
@@ -308,7 +302,8 @@ def _seed_pdf_browser_page(
     for seed_url in [
         normalize_text(url) for url in seed_urls or [] if normalize_text(url)
     ]:
-        _raise_if_cancelled(request.runtime)
+        if request.runtime is not None:
+            request.runtime.raise_if_cancelled()
         try:
             timeout_ms = (
                 _remaining_pdf_timeout_seconds(
@@ -422,7 +417,8 @@ def _remaining_pdf_timeout_seconds(
     *,
     maximum: int | float,
 ) -> int:
-    _raise_if_cancelled(context)
+    if context is not None:
+        context.raise_if_cancelled()
     remaining = max(0.0, deadline - time.monotonic())
     if context is not None:
         remaining = min(remaining, context.remaining_seconds(float(maximum)))
@@ -860,7 +856,8 @@ def fetch_pdf_with_browser(
     request: PdfRequestContext = PdfRequestContext(),
 ) -> PdfFallbackResult:
     context = request.runtime
-    _raise_if_cancelled(context)
+    if context is not None:
+        context.raise_if_cancelled()
     route_request = _prepare_pdf_browser_route_request(
         request,
         browser_config=browser_config,
@@ -943,7 +940,8 @@ def fetch_pdf_with_browser(
         )
         last_failure = seed_failure or last_failure
         for attempt_index, url in enumerate(candidate_urls):
-            _raise_if_cancelled(context)
+            if context is not None:
+                context.raise_if_cancelled()
             try:
                 goto_timeout_ms = (
                     _remaining_pdf_timeout_seconds(

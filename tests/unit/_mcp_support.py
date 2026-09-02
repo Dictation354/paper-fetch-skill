@@ -248,15 +248,6 @@ def write_binary(path: Path, size: int = 8) -> None:
     path.write_bytes(b"\x89PNG\r\n" + (b"x" * max(0, size - 6)))
 
 
-def fake_service_fetch_with_cached_downloads(
-    query, *, modes=None, context=None, **kwargs
-):
-    download_dir = context.download_dir if context is not None else None
-    if download_dir is not None and not download_dir.exists():
-        create_cached_downloads(download_dir, query)
-    return sample_envelope(modes=set(modes or []), doi=query)
-
-
 async def wait_for_threading_event(event: threading.Event, timeout: float) -> bool:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:

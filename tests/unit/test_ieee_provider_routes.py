@@ -385,7 +385,6 @@ class IeeeProviderRouteTests(unittest.TestCase):
         self.assertTrue(metadata["isDynamicHtml"])
 
     def test_ieee_block_page_detection_is_cached_in_runtime_context(self) -> None:
-        """rule: rule-ieee-html-access-waterfall"""
         context = RuntimeContext(env={})
         html = "<html><body>Your request has been blocked. Verify you are human.</body></html>"
         try:
@@ -407,7 +406,6 @@ class IeeeProviderRouteTests(unittest.TestCase):
             context.close()
 
     def test_ieee_block_page_detection_ignores_nonvisible_html_tags(self) -> None:
-        """rule: rule-ieee-html-access-waterfall"""
         article_number = "10772041"
         source_url = (
             f"https://ieeexplore.ieee.org/rest/document/{article_number}/"
@@ -434,7 +432,6 @@ class IeeeProviderRouteTests(unittest.TestCase):
     def test_ieee_block_page_detection_rejects_visible_challenge_with_article(
         self,
     ) -> None:
-        """rule: rule-ieee-html-access-waterfall"""
         article_number = "10772041"
         html = (
             _dynamic_html(article_number)
@@ -481,7 +478,6 @@ class IeeeProviderRouteTests(unittest.TestCase):
             context.close()
 
     def test_landing_attempt_merges_ieee_keywords_and_reference_text(self) -> None:
-        """rule: rule-ieee-landing-metadata-references"""
         doi = "10.1109/ACCESS.2024.3352924"
         article_number = "10388355"
         landing_url = f"https://ieeexplore.ieee.org/document/{article_number}/"
@@ -574,7 +570,6 @@ class IeeeProviderRouteTests(unittest.TestCase):
     def test_landing_attempt_keeps_metadata_references_when_ieee_payload_is_empty(
         self,
     ) -> None:
-        """rule: rule-ieee-landing-metadata-references"""
         doi = "10.1109/ACCESS.2024.3352924"
         article_number = "10388355"
         landing_url = f"https://ieeexplore.ieee.org/document/{article_number}/"

@@ -15,17 +15,10 @@ $SkillName = [string]$InstallerManifest.skill.name
 $OfflineManagedBegin = [string]$InstallerManifest.managed_blocks.offline.begin
 $OfflineManagedEnd = [string]$InstallerManifest.managed_blocks.offline.end
 $OfflineEnvKeys = @(
-    "PAPER_FETCH_DOWNLOAD_DIR",
-    "PAPER_FETCH_FORMULA_TOOLS_DIR",
-    "PAPER_FETCH_IMAGE_TOOLS_DIR",
-    "MATHML_TO_LATEX_NODE_BIN",
-    "PAPER_FETCH_BROWSER_HEADLESS",
-    "PYTHONUTF8",
-    "PYTHONIOENCODING"
+    $InstallerManifest.mcp.env_keys |
+        ForEach-Object { [string]$_ } |
+        Where-Object { $_ -ne "PAPER_FETCH_ENV_FILE" }
 )
-if ($null -ne $InstallerManifest.env_sets -and $null -ne $InstallerManifest.env_sets.offline_env_keys) {
-    $OfflineEnvKeys = @($InstallerManifest.env_sets.offline_env_keys | ForEach-Object { [string]$_ })
-}
 $WindowsSetupBaseName = [string]$InstallerManifest.packages.windows_setup_base_name
 $EmbeddedPython = $InstallerManifest.embedded_runtimes.windows_cpython_x86_64
 $EmbeddedPythonVersion = [string]$EmbeddedPython.version
@@ -445,7 +438,7 @@ function Write-OfflineReadme {
 
 This installer includes the embedded Python runtime, installed Python packages, formula tools, and image-tools configuration for optional conversion tools.
 The offline build does not bundle Ghostscript/libvips from the build host PATH; AMS EPS/TIFF source figure conversion falls back to webpage JPG/PNG candidates when those tools are unavailable.
-It does not redistribute or install a browser binary for browser-backed providers. CLI, MCP, and library requests only use an already prepared Camoufox runtime. Fully offline hosts must explicitly preinstall the complete Camoufox runtime while online.
+It does not redistribute or install a browser binary for browser-backed providers. CLI, MCP, and library requests only use an already prepared Camoufox runtime. Before moving fully offline, run `python -m camoufox fetch` while online.
 Formula conversion uses the bundled Playwright driver Node via `MATHML_TO_LATEX_NODE_BIN`; do not rely on a bare `node` from PATH in Codex Desktop sessions.
 
 Browser-backed providers use native Camoufox.

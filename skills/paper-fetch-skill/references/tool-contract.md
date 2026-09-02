@@ -10,18 +10,12 @@
 - `resolve_paper(query | title, authors, year)`: 在抓取前规范化 DOI、URL 或标题查询，并尽早暴露歧义。标题输入必须先解析出 DOI 或落地页，再交给 `fetch_paper(...)`。
 - `fetch_paper(...)`: 返回稳定 JSON 载荷；成功响应包含兼容态 `status="ok"`、原值不变的 `source`、可空的 `acquisition={provider,route,representation,transport,fallback_used}`、七分面紧凑 `acceptance`、溯源信息、`token_estimate_breakdown={abstract,body,refs}`，并按需附带 `article`、`markdown`、`metadata`。`acceptance.overall` 才是任务级结论；当 `save_markdown=true` 时，响应会改为紧凑结果，只保留路径、元数据、acceptance 和诊断字段。browser route 只使用已准备的 Camoufox。
 - `acceptance.identity=resolved` 必须有 DOI，或同时具备 verified、unique 的 canonical landing identity；title、单一 publisher domain 或候选域本身不构成唯一身份。冲突 routing signal 下，weak provider 的 `no_access` 会保留诊断并继续 strong DOI/provider candidate，只有 strong identity 的 access boundary 才停止 waterfall。
-- `list_cached(download_dir=..., detail="full|compact")` / `get_cached(doi, download_dir=..., detail="full|compact", preferred_only=false, modes=..., strategy=..., include_refs=..., max_tokens=...)`: 多轮会话重新抓取前，在同一个显式 cache scope 内读取当前索引；已知 DOI 优先使用请求敏感的 `get_cached` compact 结果。
+- `list_cached(download_dir=...)` / `get_cached(doi, download_dir=..., detail="full|compact", preferred_only=false, modes=..., strategy=..., include_refs=..., max_tokens=...)`: 多轮会话重新抓取前，在同一个显式 cache scope 内读取当前索引；已知 DOI 优先使用请求敏感的 `get_cached` compact 结果。
 - `has_fulltext(query)`: 使用解析结果、Crossref 元数据、轻量 Elsevier 元数据探测和落地页 HTML meta 做低成本全文可用性探测，不触发完整抓取流程。
 - `provider_status(provider=None, group=None, detail="full|compact")`: 返回 catalog-backed 本地静态诊断，不调用远程出版商 API；已知 provider 时应筛选，避免把全 catalog checks 放入上下文。
 - `browser_preflight(provider=None, test_url=None, timeout_ms=None, browser_user_agent=None, storage_state_path=None, save_storage_state=true, detail="full|compact")`: 对一个或全部 browser provider 运行 live HTML 预检；会访问出版社页面，默认可能更新过滤后的 storage-state，但不运行 PDF fallback、自动认证或 runtime 安装。
 - `batch_resolve(queries, concurrency)` / `batch_check(queries, mode, concurrency)`: 默认 `concurrency=1`，允许范围 `1..8`，每次最多 `50` 个查询；article check 可能使用已准备的浏览器。
 - `batch_fetch(queries, concurrency, ...)`: 对 `1..50` 篇执行真实全文抓取，复用 `fetch_paper` 的 modes/strategy/cache/artifact/Markdown 参数；默认只返回按输入 index 排列的紧凑 manifest/acceptance 记录，不返回多篇完整正文。
-
-## MCP Prompts（不是 Tools）
-
-- `summarize_paper` 和 `verify_citation_list` 是 MCP prompt 模板，不是普通 tool；不得把它们放进 `tools/call`，也不得把 prompt 渲染本身报告成已经解析、抓取或验收论文。
-- 支持 MCP prompts 的宿主先通过 `prompts/list` 与 `prompts/get` 选择并渲染模板，再按模板调用上面的普通 tools。`summarize_paper` 仍需执行身份解析、本地/cache、必要 fetch 和 [`acceptance.md`](acceptance.md)；`verify_citation_list` 仍需保留原 index，执行 `batch_resolve`、按需 `batch_check`/真实 fetch，并恢复输入顺序。
-- 不支持 MCP prompts 的宿主使用等价工具流程：单篇总结走 `resolve_paper` → 请求敏感的 `get_cached` → 必要的 `fetch_paper` → acceptance → 基于已验收正文总结；citation list / 引用列表走 `batch_resolve` → DOI 去重 → `batch_check(mode="metadata")` 分诊 → 对确需正文的项调用 `fetch_paper`/`batch_fetch` → acceptance/report。重试和限流仍只遵循 [`failure-handling.md`](failure-handling.md)。
 
 ## Browser Preflight Contract
 
@@ -32,7 +26,7 @@
 - 普通 MCP/CLI/library 调用不安装、修复或更新 Camoufox；缺失时返回 `not_configured` 与显式准备命令。
 - 每个 provider 独立返回 `ready`、`challenge`、`auth_required`、`network_timeout`、`extraction_error`、`runtime_error` 或 `cancelled`，并给出唯一 `status/reason_code/stage/message/next_action` 契约。前一个 provider 的 challenge/runtime failure 不会删除其它已完成结果；取消会保留取消前的结果，并停止调度后续 provider。
 - `detail="compact"` 的每项严格只有 `provider/status/reason_code/stage/message/next_action`；`full` 另含 provider label、脱敏目标/最终 URL、title、storage-state 保存诊断和 browser/page diagnostics。顶层始终显式报告 `pdf_fallback_attempted=false`、`auth_attempted=false` 和逐状态汇总。
-- browser runtime 失败沿用 fetch trace 的稳定 code，包括 `browser_runtime_prepare_cancelled`、`browser_runtime_prepare_failed`、`browser_runtime_prepare_timeout`、`browser_runtime_repair_failed`、`cdp_connect_failed`、`browser_context_create_failed`、`browser_page_create_failed`。full diagnostics 在可用时保留 stage、版本状态和有界命令输出；custom binary 不会被自动删除或更新。
+- browser runtime 失败沿用 fetch trace 的结构化 code，例如仍存在的 `browser_context_create_failed` 和 `browser_page_create_failed`；调用方应读取返回 code，而不是维护穷举静态列表。custom binary 不会被自动删除或更新。
 - 支持 progress 的宿主会收到开始、逐 provider 完成和最终完成通知。`challenge` / `auth_required` 的下一步是显式人工 auth；`runtime_error` 先修复静态配置或本地 runtime；`ready` 才继续目标 fetch。
 
 ## Cache Query Contract
@@ -48,7 +42,7 @@
 ## Input / Output Schema Layers
 
 - native MCPServer schema 与 Codex/stdio host-safe schema 分开验证。native schema 保留 `FetchStrategyInput` 的结构化 Pydantic 模型和运行时对象，不把 `strategy` 退化为无约束字典；host-safe schema 由同一组 Pydantic request model 生成并内联嵌套结构，不包含宿主无法解析的 `$ref`。
-- output schema 仍由 typed Pydantic/TypedDict contract 生成；发布到 `tools/list` 时只移除展示性 `title` 注解与可选字段的 `default: null`。真实 `properties.title` / `properties.default` 字段、`required`、枚举、范围及运行时结构化输出验证均保留。
+- 当前十个工具在 `tools/list` 中的 `output_schema` 都为空，不发布协议级 `outputSchema`。`CallToolResult.structured_content` 继续返回带 `schema_version=2` 的版本化 payload；调用方按工具文档和实际字段消费，不把它误称为 output schema。
 - `src/paper_fetch/mcp/schemas.py` 是枚举、范围和规范化的事实源：`modes=article|markdown|metadata`、`include_refs=none|top10|all`、`strategy.asset_profile=none|body|all`、`strategy.require_local_body_assets`、`strategy.require_full_size_body_assets`、`artifact_mode=markdown-assets|all|none`、batch `mode=article|metadata`，以及 cache `detail=full|compact`。Full-size 自动隐含 local；两项默认关闭且只对 `body|all` 生效。工具只暴露当前已实现的字段。
 - batch `queries` 的公开 schema 和运行时验证都要求 `1..50` 项，`concurrency` 要求 `1..8`；所有公开工具输入对象及嵌套 strategy/budget 对象均拒绝未知字段（`additionalProperties=false`）。
 - 兼容请求仍可使用既有 nested `strategy={...}`，包括 `inline_image_budget`；字符串枚举在 Pydantic validator 中继续做去空白和大小写规范化。规范化不是放宽值域，未知枚举、越界数字、过长数组和额外字段会在已注册工具函数执行前失败。
@@ -107,7 +101,7 @@
 - `no_download=true` 会避免写入 provider 载荷、资源文件和 fetch-envelope sidecar。
 - MCP 只有 `save_markdown=false`、`no_download=true`、`prefer_cache=false`、`artifact_mode="none"`、`strategy.asset_profile="none"` 的临时阅读组合才承诺完全不落盘。`no_download=true` 不覆盖 `save_markdown=true` 的显式 Markdown 输出。
 - `save_markdown=true` 会把渲染后的全文 Markdown 写盘。本轮单篇 MCP 响应会设置 `markdown=null`、`article=null`，避免把全文正文放入上下文；仍保留 `metadata`、`quality`、`warnings`、`source_trail`、`trace` 和 `token_estimate_breakdown` 等诊断字段。文件位置由请求的输出目录/文件名确定，并可通过返回路径或 `get_cached` 验收。
-- 传入 `download_dir` 时，MCP 服务器还能在当前会话里暴露这个隔离目录对应的缓存资源。
+- `download_dir` 只定义本次请求与 `list_cached` / `get_cached` 共用的 cache scope；MCP 不把缓存索引或条目暴露为 resource。
 - `strategy.asset_profile="body"` 或 `all` 时，可能额外返回少量关键本地图像，作为 `ImageContent` 输出；但 `save_markdown=true` 时不会附带 inline `ImageContent`。
 - `body`/`all` 的正文图与 supplementary 在同一篇请求中共享固定运行时安全预算：默认 128 文件、单文件 32 MiB、累计 256 MiB、64,000,000 像素、并发最多 4 且受 route cap 限制。Direct 下载使用 hostname 共享连接池；direct 401/403 最多进入一次真正的 browser-byte recovery，browser body/arrayBuffer/bodyB64/canvas/file/PDF bytes 仍经过 MIME、实际字节、像素、累计预算、staging、原子发布和取消检查。预算失败读取 `asset_failures[*].reason` 的稳定 `asset_file_limit_exceeded` / `asset_bytes_per_asset_exceeded` / `asset_bytes_total_exceeded` / `asset_pixel_limit_exceeded` / `asset_content_encoding_unsupported`，不要从 warning 文案推断。
 - Catalog host/sensitive-header 声明只服务 routing 和非授权执行策略，不自动成为 HTTP/PDF/body/supplementary allowlist。基础策略仍逐跳检查 HTTP(S)、标准端口、公网 DNS、userinfo、HTTPS downgrade 和跨域标准敏感头剥离；只有调用方显式传入 `allowed_hosts` 时才额外 fail closed。
@@ -129,14 +123,12 @@
 - fetch-envelope 是否满足当前请求仍唯一由 `cached_request_matches()` 按 modes、strategy、`include_refs` 和 `max_tokens` 严格判断；本地 Markdown 归属规则不会放宽该匹配。
 - 已知 DOI 的本地优先流程使用 `get_cached(doi, download_dir=<scope>, detail="compact", preferred_only=true, modes=..., strategy=..., include_refs=..., max_tokens=...)`；只有 DOI 未知且确需浏览 scope 时使用 `list_cached()`。只有 `request_satisfied=true` 才能把同一请求交给后续 prefer-cache fetch 复用，且继续传同一 `download_dir`。
 
-## Dynamic Provider Catalog
+## Static Provider Catalog
 
 - `resource://paper-fetch/provider-catalog` 是 MCP provider/source/capability 的机器可读权威入口；需要选择 `provider_hint`、`preferred_providers`、status/preflight 路径或解释公开 source 时先读该 resource，不从工具 description 或本文推测静态名单。
 - resource 直接从 runtime `ProviderSpec` 和 `SOURCE_PROVIDER_MAP` 生成，返回 `schema_version`、`tool_version`、provider/source 数量、逐 provider 的 `sources`、带 `transport=api|browser|http` 的 routes、`asset_default` 与 browser/runtime/status/preflight capabilities，以及完整 `source_provider_map`。新 provider 或 source 注册后无需同步第二张表。
 - resource 只描述当前 runtime 能力，不代表本地依赖已就绪或远端页面可访问。本地静态状态继续调用 `provider_status`；browser 真实页面健康度继续调用 open-world `browser_preflight`，并保留人工认证与访问控制边界。
 
-仓库维护中的 exact replay 与 scheduled canary 也不能改变上述语义：exact replay 是
-离线、canonical raw + expected contract 的 extractor 回归；scheduled canary 只观察公开
-direct route，连续三次同 route 失败才产生非阻塞 warning。两者都不证明当前用户的凭据、
-browser runtime 或受保护全文可用，skill 不得据此跳过 `provider_status`、必要的
-`browser_preflight` 或人工授权边界。
+仓库维护中的 exact replay 只提供离线、canonical raw + expected contract 的 extractor
+回归，不证明当前用户的凭据、browser runtime 或受保护全文可用；skill 不得据此跳过
+`provider_status`、必要的 `browser_preflight` 或人工授权边界。

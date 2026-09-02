@@ -35,7 +35,6 @@ from ._paper_fetch_support import sample_article
 
 class ModelsRenderTests(unittest.TestCase):
     def test_short_image_alt_omits_caption_text_and_unbalanced_brackets(self) -> None:
-        """rule: rule-short-markdown-image-alt-labels"""
 
         caption = (
             "Figure 4. Effect of the [IO 4 -] concentration on [EMIM][Ac] membranes."
@@ -196,7 +195,6 @@ class ModelsRenderTests(unittest.TestCase):
     def test_to_ai_markdown_skips_inline_assets_and_labels_additional_tables(
         self,
     ) -> None:
-        """rule: rule-elsevier-consumed-figure-table-dedup"""
         article = sample_article()
         article.assets = [
             Asset(
@@ -354,7 +352,6 @@ class ModelsRenderTests(unittest.TestCase):
     def test_to_ai_markdown_suppresses_trailing_figures_for_body_figures_already_inline(
         self,
     ) -> None:
-        """rule: rule-no-trailing-figures-appendix"""
         article = sample_article()
         article.sections = [
             Section(
@@ -554,8 +551,32 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertNotIn(
             "[Supplementary Data](downloads/supplement.csv)", envelope.markdown
         )
+        self.assertIs(envelope.quality, article.quality)
+        self.assertIs(envelope.warnings, article.quality.warnings)
+        self.assertIs(envelope.source_trail, article.quality.source_trail)
+        self.assertIs(
+            envelope.token_estimate_breakdown,
+            article.quality.token_estimate_breakdown,
+        )
+        self.assertTrue(
+            {
+                "has_fulltext",
+                "content_kind",
+                "has_abstract",
+                "warnings",
+                "source_trail",
+                "token_estimate",
+                "token_estimate_breakdown",
+            }.isdisjoint(vars(envelope))
+        )
         self.assertEqual(envelope.quality.extraction_revision, EXTRACTION_REVISION)
         self.assertEqual(envelope.quality.content_kind, article.quality.content_kind)
+
+        envelope.warnings.append("projected warning")
+        envelope.token_estimate = 321
+
+        self.assertIn("projected warning", article.quality.warnings)
+        self.assertEqual(article.quality.token_estimate, 321)
 
     def test_article_from_markdown_preserves_code_fences_and_ascii_tables(self) -> None:
         article = article_from_markdown(
@@ -607,7 +628,6 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIsNone(article.assets[0].url)
 
     def test_article_from_markdown_preserves_empty_body_parent_headings(self) -> None:
-        """rule: rule-keep-semantic-parent-heading"""
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Structured Article"},
@@ -690,7 +710,6 @@ class ModelsRenderTests(unittest.TestCase):
     def test_article_from_markdown_rewrites_inline_asset_urls_to_downloaded_paths(
         self,
     ) -> None:
-        """rule: rule-preserve-formula-image-fallbacks"""
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Structured Article"},
@@ -996,7 +1015,6 @@ class ModelsRenderTests(unittest.TestCase):
     def test_article_from_markdown_keeps_code_availability_without_counting_it_as_fulltext(
         self,
     ) -> None:
-        """rule: rule-availability-excluded-from-body-metrics"""
         markdown_text = golden_criteria_scenario_asset(
             "availability_body_metrics", "code_availability.md"
         ).read_text(encoding="utf-8")
@@ -1075,7 +1093,6 @@ class ModelsRenderTests(unittest.TestCase):
     def test_article_from_markdown_keeps_headingless_body_flat_without_synthetic_heading(
         self,
     ) -> None:
-        """rule: rule-keep-headingless-body-flat"""
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Headingless Article"},
@@ -1361,7 +1378,6 @@ class ModelsRenderTests(unittest.TestCase):
     def test_article_from_markdown_preserves_explicit_multilingual_abstract_sections(
         self,
     ) -> None:
-        """rule: rule-keep-parallel-multilingual-abstracts"""
         article = article_from_markdown(
             source="wiley_browser",
             metadata={"title": "Markdown Article"},
@@ -1444,7 +1460,6 @@ class ModelsRenderTests(unittest.TestCase):
     def test_article_from_markdown_coerces_dict_object_and_section_hint_in_declared_order(
         self,
     ) -> None:
-        """rule: rule-section-hints-normalize-availability"""
         markdown_text = golden_criteria_scenario_asset(
             "section_hints_availability", "article.md"
         ).read_text(encoding="utf-8")
@@ -1532,7 +1547,6 @@ class ModelsRenderTests(unittest.TestCase):
     def test_article_from_markdown_does_not_duplicate_explicit_abstract_when_section_hints_are_present(
         self,
     ) -> None:
-        """rule: rule-stable-frontmatter-order"""
         article = article_from_markdown(
             source="springer_html",
             metadata={"title": "Markdown Article"},
@@ -1635,7 +1649,6 @@ class ModelsRenderTests(unittest.TestCase):
     def test_article_from_markdown_promotes_repeated_methods_summary_to_methods(
         self,
     ) -> None:
-        """rule: rule-springer-methods-summary"""
         html = golden_criteria_asset("10.1038/nature12915", "original.html").read_text(
             encoding="utf-8",
             errors="ignore",

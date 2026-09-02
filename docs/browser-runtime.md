@@ -31,8 +31,6 @@ provider 只读取显式 `BrowserRuntimeConfig`，不探测 backend、不持有�
 - provider storage-state 目录隔离，默认以 `<provider>-camoufox` 命名。
 - 显式 executable 启动会读取相邻 Camoufox `version.json`，让隔离子进程复用已准备的官方 runtime，而不是从隔离 cache 误判为未安装。
 - Camoufox 启动进度写入 stderr；MCP stdio 的 stdout 始终只承载 JSON-RPC。
-- managed runtime 准备进度同样写入 CLI stderr；MCP 启用准备时通过 logging
-  notification 转发，不污染 JSON-RPC stdout。
 
 ## HTML 策略与资源阻断
 
@@ -163,9 +161,9 @@ WindowServer 或物理显示器。
 
 ## 诊断边界
 
-`doctor`/`provider_status` 不启动或准备 runtime。CLI `browser-preflight` 默认可先按需
-准备；MCP `browser_preflight` 默认关闭准备。之后才执行 live 页面访问和可选
-storage-state 保存。challenge、登录、验证码、付费和 entitlement
+`doctor`/`provider_status` 不启动 runtime。`fetch`、`auth` 和 `browser-preflight`
+也不会下载、更新或修复 runtime；缺失时先显式运行 `python -m camoufox fetch`。
+预检随后才执行 live 页面访问和可选 storage-state 保存。challenge、登录、验证码、付费和 entitlement
 边界始终需要合法用户操作，工具不会自动绕过。
 
 IEEE preflight 不以初始 HTTP 202 或 `/rest/document/` 请求作为终态：它最多等待

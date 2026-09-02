@@ -121,7 +121,6 @@ def test_tandf_provider_bundle_declares_routes_sources_and_browser_runtime() -> 
     assert SOURCE_PROVIDER_MAP["tandf_pdf"] == "tandf"
     assert bundle.sources == ("tandf_html", "tandf_pdf")
     assert bundle.html_rules is not None
-    assert bundle.html_rules.availability.no_signals is True
 
 
 def test_tandf_builtin_auth_and_preflight_target_use_verified_open_article() -> None:

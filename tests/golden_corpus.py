@@ -223,11 +223,14 @@ def _build_elsevier_article(fixture: GoldenCorpusFixture):
     metadata = _base_metadata(fixture)
     raw_payload = RawFulltextPayload(
         provider="elsevier",
-        source_url=fixture.source_url,
-        content_type=fixture.content_type or "text/xml",
-        body=fixture.raw_path.read_bytes(),
+        content=ProviderContent(
+            route_kind="xml",
+            source_url=fixture.source_url,
+            content_type=fixture.content_type or "text/xml",
+            body=fixture.raw_path.read_bytes(),
+            merged_metadata=metadata,
+        ),
         trace=trace_from_markers(["fulltext:elsevier_xml_ok"]),
-        merged_metadata=metadata,
     )
     client = elsevier_provider.ElsevierClient(HttpTransport(), {})
     return client.to_article_model(metadata, raw_payload)
@@ -258,9 +261,6 @@ def _build_springer_article(fixture: GoldenCorpusFixture):
     )
     raw_payload = RawFulltextPayload(
         provider="springer",
-        source_url=fixture.source_url,
-        content_type="text/html",
-        body=html_text.encode("utf-8"),
         content=ProviderContent(
             route_kind="html",
             source_url=fixture.source_url,
@@ -283,7 +283,6 @@ def _build_springer_article(fixture: GoldenCorpusFixture):
             },
         ),
         trace=trace_from_markers(["fulltext:springer_html_ok"]),
-        merged_metadata=merged_metadata,
     )
     client = springer_provider.SpringerClient(HttpTransport(), {})
     return client.to_article_model(merged_metadata, raw_payload)
@@ -323,9 +322,6 @@ def _build_browser_workflow_article(fixture: GoldenCorpusFixture):
         )
         raw_payload = RawFulltextPayload(
             provider=fixture.provider,
-            source_url=fixture.source_url,
-            content_type=fixture.content_type or "application/pdf",
-            body=body,
             content=ProviderContent(
                 route_kind="pdf_fallback",
                 source_url=fixture.source_url,
@@ -342,7 +338,6 @@ def _build_browser_workflow_article(fixture: GoldenCorpusFixture):
                     f"fulltext:{fixture.provider}_pdf_fallback_ok",
                 ]
             ),
-            merged_metadata=metadata,
             warnings=[
                 f"Full text was extracted from {fixture.provider} PDF fallback after the HTML path was not usable.",
             ],
@@ -371,9 +366,6 @@ def _build_browser_workflow_article(fixture: GoldenCorpusFixture):
         )
     raw_payload = RawFulltextPayload(
         provider=fixture.provider,
-        source_url=fixture.source_url,
-        content_type="text/html",
-        body=html_text.encode("utf-8"),
         content=ProviderContent(
             route_kind="html",
             source_url=fixture.source_url,
@@ -384,10 +376,10 @@ def _build_browser_workflow_article(fixture: GoldenCorpusFixture):
                 "extraction": extraction,
                 "availability_diagnostics": extraction.get("availability_diagnostics"),
             },
+            merged_metadata=metadata,
             extracted_assets=list(extraction.get("extracted_assets") or []),
         ),
         trace=trace_from_markers([f"fulltext:{fixture.provider}_html_ok"]),
-        merged_metadata=metadata,
     )
     return client.to_article_model(
         metadata, raw_payload, downloaded_assets=downloaded_assets
@@ -566,9 +558,6 @@ def _build_ieee_article(fixture: GoldenCorpusFixture):
     body = extraction.html_text.encode("utf-8")
     raw_payload = RawFulltextPayload(
         provider="ieee",
-        source_url=fixture.source_url,
-        content_type=fixture.content_type or "text/html",
-        body=body,
         content=ProviderContent(
             route_kind="html",
             source_url=fixture.source_url,
@@ -587,7 +576,6 @@ def _build_ieee_article(fixture: GoldenCorpusFixture):
             extracted_assets=extraction.extracted_assets,
         ),
         trace=trace_from_markers(["fulltext:ieee_html_ok"]),
-        merged_metadata=metadata,
     )
     client = IeeeClient(HttpTransport(), {})
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -676,9 +664,6 @@ def _build_copernicus_article(fixture: GoldenCorpusFixture):
         )
         raw_payload = RawFulltextPayload(
             provider="copernicus",
-            source_url=fixture.source_url,
-            content_type=fixture.content_type or "application/pdf",
-            body=body,
             content=ProviderContent(
                 route_kind="pdf_fallback",
                 source_url=fixture.source_url,
@@ -692,7 +677,6 @@ def _build_copernicus_article(fixture: GoldenCorpusFixture):
             trace=trace_from_markers(
                 ["fulltext:copernicus_xml_fail", "fulltext:copernicus_pdf_fallback_ok"]
             ),
-            merged_metadata=metadata,
             warnings=[
                 "Full text was extracted from Copernicus PDF fallback after the XML route was not usable.",
             ],
@@ -707,9 +691,6 @@ def _build_copernicus_article(fixture: GoldenCorpusFixture):
     metadata = dict(extraction.metadata)
     raw_payload = RawFulltextPayload(
         provider="copernicus",
-        source_url=fixture.source_url,
-        content_type=fixture.content_type or "application/xml",
-        body=body,
         content=ProviderContent(
             route_kind="xml",
             source_url=fixture.source_url,
@@ -728,7 +709,6 @@ def _build_copernicus_article(fixture: GoldenCorpusFixture):
             extracted_assets=extraction.assets,
         ),
         trace=trace_from_markers(["fulltext:copernicus_xml_ok"]),
-        merged_metadata=metadata,
     )
     client = copernicus_provider.CopernicusClient(HttpTransport(), {})
     return client.to_article_model(metadata, raw_payload)
@@ -751,9 +731,6 @@ def _build_royalsocietypublishing_article(fixture: GoldenCorpusFixture):
         )
         raw_payload = RawFulltextPayload(
             provider="royalsocietypublishing",
-            source_url=fixture.source_url,
-            content_type=fixture.content_type or "application/pdf",
-            body=body,
             content=ProviderContent(
                 route_kind="pdf_fallback",
                 source_url=fixture.source_url,
@@ -770,7 +747,6 @@ def _build_royalsocietypublishing_article(fixture: GoldenCorpusFixture):
                     "fulltext:royalsocietypublishing_pdf_fallback_ok",
                 ]
             ),
-            merged_metadata=metadata,
             warnings=[
                 "Full text was extracted from Royal Society Publishing PDF fallback after the HTML route was not usable.",
             ],
@@ -786,9 +762,6 @@ def _build_royalsocietypublishing_article(fixture: GoldenCorpusFixture):
     )
     raw_payload = RawFulltextPayload(
         provider="royalsocietypublishing",
-        source_url=fixture.source_url,
-        content_type=fixture.content_type or "text/html",
-        body=extraction.html_text.encode("utf-8"),
         content=ProviderContent(
             route_kind="html",
             source_url=fixture.source_url,
@@ -809,7 +782,6 @@ def _build_royalsocietypublishing_article(fixture: GoldenCorpusFixture):
             extracted_assets=extraction.extracted_assets,
         ),
         trace=trace_from_markers(["fulltext:royalsocietypublishing_html_ok"]),
-        merged_metadata=extraction.metadata,
     )
     return client.to_article_model(
         extraction.metadata,
@@ -913,9 +885,6 @@ def _build_frontiers_article(fixture: GoldenCorpusFixture):
     )
     raw_payload = RawFulltextPayload(
         provider="frontiers",
-        source_url=fixture.source_url,
-        content_type=fixture.content_type or "text/xml",
-        body=body,
         content=ProviderContent(
             route_kind="xml",
             source_url=fixture.source_url,
@@ -936,7 +905,6 @@ def _build_frontiers_article(fixture: GoldenCorpusFixture):
             extracted_assets=normalized_assets,
         ),
         trace=trace_from_markers(["fulltext:frontiers_xml_ok"]),
-        merged_metadata=article_metadata,
     )
     return frontiers_provider.FrontiersClient(HttpTransport(), {}).to_article_model(
         article_metadata,
@@ -1013,9 +981,6 @@ def _build_arxiv_article(fixture: GoldenCorpusFixture):
         )
         raw_payload = RawFulltextPayload(
             provider="arxiv",
-            source_url=fixture.source_url,
-            content_type=fixture.content_type or "application/pdf",
-            body=body,
             content=ProviderContent(
                 route_kind="pdf_fallback",
                 source_url=fixture.source_url,
@@ -1032,7 +997,6 @@ def _build_arxiv_article(fixture: GoldenCorpusFixture):
                     "fulltext:arxiv_pdf_fallback_ok",
                 ]
             ),
-            merged_metadata=metadata,
             warnings=[
                 "Full text was extracted from arXiv PDF fallback after the HTML route was not usable.",
             ],
@@ -1047,9 +1011,6 @@ def _build_arxiv_article(fixture: GoldenCorpusFixture):
     )
     raw_payload = RawFulltextPayload(
         provider="arxiv",
-        source_url=fixture.source_url,
-        content_type=fixture.content_type or "text/html",
-        body=html_text.encode("utf-8"),
         content=ProviderContent(
             route_kind="html",
             source_url=fixture.source_url,
@@ -1066,7 +1027,6 @@ def _build_arxiv_article(fixture: GoldenCorpusFixture):
             extracted_assets=extraction.extracted_assets,
         ),
         trace=trace_from_markers(["fulltext:arxiv_html_ok"]),
-        merged_metadata=extraction.merged_metadata,
         warnings=extraction.warnings,
     )
     return client.to_article_model(extraction.merged_metadata, raw_payload)

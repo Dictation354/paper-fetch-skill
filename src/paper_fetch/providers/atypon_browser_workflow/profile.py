@@ -45,7 +45,6 @@ from ...extraction.html.shared import (
 )
 from ...quality.html_availability import (
     HTML_CONTAINER_BROWSER_WORKFLOW_FALLBACK_TAGS,
-    HTML_CONTAINER_DROP_BROWSER_WORKFLOW,
     HTML_CONTAINER_SCORE_BROWSER_WORKFLOW,
     HtmlContainerSelectionPolicy,
 )
@@ -183,7 +182,6 @@ def _container_selection_policy(publisher: str) -> HtmlContainerSelectionPolicy:
     profile = _publisher_profile(publisher)
     return HtmlContainerSelectionPolicy(
         score_profile=HTML_CONTAINER_SCORE_BROWSER_WORKFLOW,
-        drop_profile=HTML_CONTAINER_DROP_BROWSER_WORKFLOW,
         fallback_tags=HTML_CONTAINER_BROWSER_WORKFLOW_FALLBACK_TAGS,
         prefer_complete_ancestor=True,
         avoid_page_level_container=True,

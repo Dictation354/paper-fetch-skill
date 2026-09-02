@@ -4,14 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import logging
-from pathlib import Path
 import time
 from typing import Any
 from collections.abc import Mapping, Sequence
 
 from ..artifacts import ArtifactStore
 from ..failure import FailureDiagnostics
-from ..http import HttpTransport
 from ..logging_utils import emit_structured_log
 from ..models import ArticleModel, AssetProfile, metadata_only_article
 from ..provider_catalog import (
@@ -26,6 +24,7 @@ from ..providers.protocols import AssetProvider, FulltextProvider, RawFulltextPr
 from ..reason_codes import (
     ABSTRACT_ONLY,
     ERROR,
+    FULLTEXT,
     METADATA_ONLY,
     IDENTITY_MISMATCH,
     NO_ACCESS,
@@ -34,8 +33,7 @@ from ..reason_codes import (
     PDF_FALLBACK,
     RATE_LIMITED,
 )
-from ..quality.reason_codes import FULLTEXT
-from ..runtime import RUNTIME_UNSET, RuntimeContext, resolve_runtime_context
+from ..runtime import RuntimeContext
 from ..tracing import (
     TraceEvent,
     acquisition_fallback_used,
@@ -524,149 +522,131 @@ def fetch_article(
     query: str,
     *,
     strategy: FetchStrategy,
-    download_dir: Path | None | object = RUNTIME_UNSET,
-    clients: Mapping[str, object] | None | object = RUNTIME_UNSET,
-    transport: HttpTransport | None | object = RUNTIME_UNSET,
-    env: Mapping[str, str] | None | object = RUNTIME_UNSET,
-    context: RuntimeContext | None = None,
+    context: RuntimeContext,
     resolve_paper_fn=None,
 ) -> ArticleModel:
-    owns_runtime = context is None
-    runtime = resolve_runtime_context(
-        context,
-        env=env,
-        transport=transport,
-        clients=clients,
-        download_dir=download_dir,
-    )
+    runtime = context
     assert runtime.env is not None
     assert runtime.transport is not None
     assert runtime.artifact_store is not None
-    try:
-        active_env = runtime.env
-        runtime.fetch_trace = []
-        active_transport = runtime.transport
-        client_registry = dict(runtime.get_clients())
-        resolver = resolve_paper_fn or resolve_paper
-        resolved = resolve_query_with_session_cache(
-            query,
-            resolver=resolver,
-            transport=active_transport,
-            env=active_env,
-            context=runtime,
+    runtime.fetch_trace = []
+    client_registry = dict(runtime.get_clients())
+    resolver = resolve_paper_fn or resolve_paper
+    resolved = resolve_query_with_session_cache(
+        query,
+        resolver=resolver,
+        context=runtime,
+    )
+    source_trail: list[str] = [resolve_marker(resolved.query_kind)]
+    if resolved.doi:
+        source_trail.append(resolve_marker("doi_selected"))
+    if resolved.candidates and not resolved.doi:
+        raise PaperFetchFailure(
+            "ambiguous",
+            "Query resolution is ambiguous; choose one of the DOI candidates.",
+            candidates=resolved.candidates,
         )
-        source_trail: list[str] = [resolve_marker(resolved.query_kind)]
-        if resolved.doi:
-            source_trail.append(resolve_marker("doi_selected"))
-        if resolved.candidates and not resolved.doi:
-            raise PaperFetchFailure(
-                "ambiguous",
-                "Query resolution is ambiguous; choose one of the DOI candidates.",
-                candidates=resolved.candidates,
+
+    metadata, provider_name, metadata_trail = fetch_metadata_for_resolved_query(
+        resolved,
+        clients=client_registry,
+        strategy=strategy,
+        context=runtime,
+    )
+    extend_unique(source_trail, metadata_trail)
+    from ..publisher_identity import normalize_doi
+
+    doi = normalize_doi(safe_text(metadata.get("doi") or resolved.doi)) or None
+    warnings: list[str] = []
+    trace: list[TraceEvent] = []
+
+    article = None
+    provider_failures: list[ProviderFailure] = []
+    provider_candidates = _ranked_fulltext_provider_candidates(
+        resolved=resolved,
+        metadata=metadata,
+        selected_provider=provider_name,
+        strategy=strategy,
+    )
+    for rank, (candidate_provider, signal, identity_strength) in enumerate(
+        provider_candidates,
+        start=1,
+    ):
+        provider_name = candidate_provider
+        source_trail.append(
+            route_marker(
+                f"provider_candidate_{candidate_provider}_{signal}_rank_{rank}"
             )
-
-        metadata, provider_name, metadata_trail = fetch_metadata_for_resolved_query(
-            resolved,
-            clients=client_registry,
-            strategy=strategy,
-            context=runtime,
         )
-        extend_unique(source_trail, metadata_trail)
-        from ..publisher_identity import normalize_doi
-
-        doi = normalize_doi(safe_text(metadata.get("doi") or resolved.doi)) or None
-        warnings: list[str] = []
-        trace: list[TraceEvent] = []
-
-        article = None
-        provider_failures: list[ProviderFailure] = []
-        provider_candidates = _ranked_fulltext_provider_candidates(
-            resolved=resolved,
+        source_trail.append(
+            route_marker(
+                f"provider_candidate_{candidate_provider}_identity_{identity_strength}"
+            )
+        )
+        attempt_outputs = _ProviderAttemptOutputs(
+            warnings=warnings,
+            source_trail=source_trail,
+            trace=trace,
+        )
+        article = _try_official_provider(
+            doi=doi,
             metadata=metadata,
-            selected_provider=provider_name,
+            provider_name=candidate_provider,
             strategy=strategy,
+            artifact_store=runtime.artifact_store,
+            context=runtime,
+            clients=client_registry,
+            outputs=attempt_outputs,
         )
-        for rank, (candidate_provider, signal, identity_strength) in enumerate(
-            provider_candidates,
-            start=1,
-        ):
-            provider_name = candidate_provider
+        provider_failures.extend(attempt_outputs.failures)
+        if article is not None:
             source_trail.append(
-                route_marker(
-                    f"provider_candidate_{candidate_provider}_{signal}_rank_{rank}"
-                )
+                route_marker(f"provider_candidate_{candidate_provider}_accepted")
             )
-            source_trail.append(
-                route_marker(
-                    f"provider_candidate_{candidate_provider}_identity_{identity_strength}"
-                )
-            )
-            attempt_outputs = _ProviderAttemptOutputs(
+            article = finalize_article(
+                article,
                 warnings=warnings,
                 source_trail=source_trail,
                 trace=trace,
             )
-            article = _try_official_provider(
-                doi=doi,
-                metadata=metadata,
-                provider_name=candidate_provider,
-                strategy=strategy,
-                artifact_store=runtime.artifact_store,
-                context=runtime,
-                clients=client_registry,
-                outputs=attempt_outputs,
-            )
-            provider_failures.extend(attempt_outputs.failures)
-            if article is not None:
-                source_trail.append(
-                    route_marker(f"provider_candidate_{candidate_provider}_accepted")
-                )
-                article = finalize_article(
-                    article,
-                    warnings=warnings,
-                    source_trail=source_trail,
-                    trace=trace,
-                )
-                runtime.fetch_trace = project_source_trail_trace(source_trail, trace)
-                break
-            source_trail.append(
-                route_marker(f"provider_candidate_{candidate_provider}_rejected")
-            )
-            if identity_strength == "strong" and any(
-                failure.code == NO_ACCESS for failure in attempt_outputs.failures
-            ):
-                source_trail.append(
-                    route_marker(
-                        f"provider_candidate_{candidate_provider}_access_boundary_stop"
-                    )
-                )
-                break
-            if any(failure.code == NO_ACCESS for failure in attempt_outputs.failures):
-                source_trail.append(
-                    route_marker(
-                        f"provider_candidate_{candidate_provider}_access_boundary_weak_continue"
-                    )
-                )
-        if article is not None:
-            return article
-
-        if provider_emits_html_managed_marker(provider_name):
-            extend_unique(
-                source_trail,
-                [fallback_marker(f"{provider_name}_html_managed_by_provider")],
-            )
-
-        fallback_article = _fallback_to_metadata_only(
-            metadata=metadata,
-            resolved=resolved,
-            strategy=strategy,
-            warnings=warnings,
-            source_trail=source_trail,
-            trace=trace,
-            provider_failure=_primary_provider_failure(provider_failures),
+            runtime.fetch_trace = project_source_trail_trace(source_trail, trace)
+            break
+        source_trail.append(
+            route_marker(f"provider_candidate_{candidate_provider}_rejected")
         )
-        runtime.fetch_trace = project_source_trail_trace(source_trail, trace)
-        return fallback_article
-    finally:
-        if owns_runtime:
-            runtime.close()
+        if identity_strength == "strong" and any(
+            failure.code == NO_ACCESS for failure in attempt_outputs.failures
+        ):
+            source_trail.append(
+                route_marker(
+                    f"provider_candidate_{candidate_provider}_access_boundary_stop"
+                )
+            )
+            break
+        if any(failure.code == NO_ACCESS for failure in attempt_outputs.failures):
+            source_trail.append(
+                route_marker(
+                    f"provider_candidate_{candidate_provider}_access_boundary_weak_continue"
+                )
+            )
+
+    if article is not None:
+        return article
+
+    if provider_emits_html_managed_marker(provider_name):
+        extend_unique(
+            source_trail,
+            [fallback_marker(f"{provider_name}_html_managed_by_provider")],
+        )
+
+    fallback_article = _fallback_to_metadata_only(
+        metadata=metadata,
+        resolved=resolved,
+        strategy=strategy,
+        warnings=warnings,
+        source_trail=source_trail,
+        trace=trace,
+        provider_failure=_primary_provider_failure(provider_failures),
+    )
+    runtime.fetch_trace = project_source_trail_trace(source_trail, trace)
+    return fallback_article

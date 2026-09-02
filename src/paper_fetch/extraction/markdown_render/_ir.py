@@ -12,8 +12,6 @@ class MarkdownTable:
     headers: list[str]
     rows: list[list[str]]
     footnotes: tuple[str, ...] = ()
-    page_url: str | None = None
-    locator: str | None = None
     image_fallback_url: str | None = None
     fallback_message: str = ""
 
@@ -23,7 +21,6 @@ class MarkdownFigure:
     label: str
     caption: str
     asset_url: str
-    page_url: str | None = None
     alt: str = ""
 
 

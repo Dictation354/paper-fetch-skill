@@ -4,7 +4,12 @@ from dataclasses import fields
 import unittest
 import urllib.parse
 
-from paper_fetch.providers import _script_json, browser_workflow
+from paper_fetch.providers import (
+    _pnas_html,
+    _science_html,
+    _script_json,
+    browser_workflow,
+)
 from paper_fetch.providers._atypon_browser_workflow_profiles import (
     ATYPON_BROWSER_WORKFLOW_PROVIDER_NAMES,
     build_html_candidates,
@@ -106,6 +111,35 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
 
         self.assertIsNotNone(publisher_profile("science").is_front_matter_teaser_figure)
         self.assertIsNone(publisher_profile("springer").scoped_asset_extractor)
+
+    def test_pnas_and_science_profiles_keep_module_owned_asset_callbacks(self) -> None:
+        pnas_profile = publisher_profile("pnas")
+        science_profile = publisher_profile("science")
+
+        self.assertIs(
+            pnas_profile.extract_asset_html_scopes,
+            _pnas_html.extract_asset_html_scopes,
+        )
+        self.assertIs(
+            science_profile.extract_asset_html_scopes,
+            _science_html.extract_asset_html_scopes,
+        )
+        self.assertIs(
+            pnas_profile.scoped_asset_extractor,
+            _pnas_html.scoped_asset_extractor,
+        )
+        self.assertIs(
+            science_profile.scoped_asset_extractor,
+            _science_html.scoped_asset_extractor,
+        )
+        self.assertIsNot(
+            pnas_profile.extract_asset_html_scopes,
+            science_profile.extract_asset_html_scopes,
+        )
+        self.assertIsNot(
+            pnas_profile.scoped_asset_extractor,
+            science_profile.scoped_asset_extractor,
+        )
 
     def test_site_rule_merges_default_and_publisher_overrides(self) -> None:
         cases = {

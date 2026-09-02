@@ -9,7 +9,6 @@ from ..failure import FailureDiagnostics
 from ..metadata.types import ProviderMetadata
 from ..models import AssetProfile
 from ..provider_catalog import (
-    default_asset_profile_for_provider,
     default_asset_profile_for_source,
     effective_route_asset_scope,
     provider_names,
@@ -21,11 +20,6 @@ from ..utils import normalize_text
 
 def allowed_preferred_providers() -> frozenset[str]:
     return frozenset(provider_names())
-
-
-def provider_default_asset_profile(provider_name: str | None) -> AssetProfile:
-    normalized = normalize_text(provider_name).lower()
-    return default_asset_profile_for_provider(normalized)
 
 
 def source_default_asset_profile(source_name: str | None) -> AssetProfile:

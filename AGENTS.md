@@ -7,9 +7,10 @@
 ## Testing
 - 默认并行运行测试，复用 `pyproject.toml` 中的 `pytest` 配置，不要在常规 unit / integration 验证中添加 `-n 0`。
 - 完整 unit 验证使用 `PYTHONPATH=src uv run python -m pytest tests/unit -q`。
+- 完整 integration 验证使用 `PYTHONPATH=src uv run python -m pytest tests/integration -q`。
 - 只有 live 测试、依赖共享外部状态的测试，或明确需要排查顺序/竞态问题时，才使用 `-n 0` 串行运行，并在结果中说明原因。
 - 仅当测试命令、依赖、平台矩阵或 CI 契约发生变化时同步 GitHub CI；普通代码修改不改 CI 配置。
-- 每次更改版本号准备发布版本时，需要运行 `integration`，`devtools` 和 `quality` 验证。
+- 每次更改版本号准备发布版本时，需要运行上述完整 unit、integration 以及 `uv run python scripts/sync_version.py --check`；发布候选还需按 `docs/deployment.md` 运行相应 build/install 终验。
 
 ## macOS Adaptation
 - 修改 Unix 安装器、macOS 离线支持矩阵、安全不变量、Camoufox / Playwright 浏览器边界或原生/portable 证据边界时，同步精简后的 `docs/macos-adaptation-contract.toml`、对应测试和相关说明；全平台 release 资产事实继续由 workflow、installer manifest 与 release asset owner 维护，不复制进 macOS 契约。

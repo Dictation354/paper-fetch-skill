@@ -422,7 +422,3 @@ def fulltext_pdf_bytes() -> bytes:
     lines.append("References")
     lines.extend([paragraph] * 6)
     return build_pdf_bytes(lines)
-
-
-def short_pdf_bytes() -> bytes:
-    return build_pdf_bytes(["Journal cover", "Author information", "Downloaded PDF"])

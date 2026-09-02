@@ -17,6 +17,7 @@ from .provider_rules import (
     provider_display_formula_selectors,
     provider_formula_container_tokens,
 )
+from .shared import class_tokens as _class_tokens
 
 from bs4 import Tag
 
@@ -160,23 +161,6 @@ def formula_ancestor_identity_text(node: Any, *, max_depth: int = 6) -> str:
         )
         depth += 1
     return " ".join(part for part in parts if part)
-
-
-def _class_tokens(node: Any) -> set[str]:
-    if not isinstance(node, Tag):
-        return set()
-    raw_classes = (getattr(node, "attrs", None) or {}).get("class") or []
-    if isinstance(raw_classes, str):
-        return {
-            normalize_text(value).lower()
-            for value in raw_classes.split()
-            if normalize_text(value)
-        }
-    return {
-        normalize_text(str(value)).lower()
-        for value in raw_classes
-        if normalize_text(str(value))
-    }
 
 
 def _has_formula_container_identity(

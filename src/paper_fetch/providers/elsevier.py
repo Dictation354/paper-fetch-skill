@@ -116,57 +116,6 @@ from .base import (
     summarize_capability_status,
 )
 
-
-PROVIDER_BUNDLE = ProviderBundle(
-    catalog=ProviderSpec(
-        name="elsevier",
-        display_name="Elsevier",
-        official=True,
-        domains=("sciencedirect.com", "elsevier.com"),
-        doi_prefixes=("10.1016/",),
-        publisher_aliases=(
-            "elsevier",
-            "elsevier bv",
-            "elsevier ltd",
-            "elsevier masson sas",
-        ),
-        asset_default="none",
-        probe_capability="metadata_api",
-        provider_managed_abstract_only=False,
-        client_factory_path="paper_fetch.providers.elsevier:ElsevierClient",
-        status_order=1,
-        api_hosts=("scopus.com", "www.scopus.com"),
-        sensitive_headers=("x-els-apikey",),
-        env_requirements=("ELSEVIER_API_KEY",),
-        xml_root_tags=("full-text-retrieval-response",),
-        xml_file_tokens=("elsevier", "10.1016"),
-        routes=(
-            ProviderRouteSpec(name="metadata_api", kind="metadata"),
-            ProviderRouteSpec(
-                name="xml_api",
-                kind="xml",
-                timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-            ),
-            ProviderRouteSpec(
-                name="pdf_api",
-                kind="pdf",
-                requires_pdf_conversion=True,
-                timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-            ),
-            ProviderRouteSpec(name="object_assets", kind="assets", transport="api"),
-        ),
-    ),
-    html_rules=ProviderHtmlRules(
-        name="elsevier",
-        availability=AvailabilityPolicy(
-            name="elsevier",
-            overrides=ELSEVIER_AVAILABILITY_OVERRIDES,
-        ),
-    ),
-    sources=("elsevier_xml", "elsevier_pdf"),
-)
-
-
 _ELSEVIER_RETRYABLE_BODY_ASSET_TYPES = frozenset({"image", "table_asset"})
 _ELSEVIER_RETRYABLE_ASSET_ERROR_CATEGORIES = DEFAULT_RETRYABLE_ASSET_ERROR_CATEGORIES
 _ELSEVIER_NON_RETRYABLE_ASSET_REASON_TOKENS = (
@@ -1373,3 +1322,53 @@ class ElsevierClient(ProviderClient):
             if not pdf_assets
             else [],
         )
+
+
+PROVIDER_BUNDLE = ProviderBundle(
+    client_factory=ElsevierClient,
+    catalog=ProviderSpec(
+        name="elsevier",
+        display_name="Elsevier",
+        official=True,
+        domains=("sciencedirect.com", "elsevier.com"),
+        doi_prefixes=("10.1016/",),
+        publisher_aliases=(
+            "elsevier",
+            "elsevier bv",
+            "elsevier ltd",
+            "elsevier masson sas",
+        ),
+        asset_default="none",
+        probe_capability="metadata_api",
+        provider_managed_abstract_only=False,
+        status_order=1,
+        api_hosts=("scopus.com", "www.scopus.com"),
+        sensitive_headers=("x-els-apikey",),
+        env_requirements=("ELSEVIER_API_KEY",),
+        xml_root_tags=("full-text-retrieval-response",),
+        xml_file_tokens=("elsevier", "10.1016"),
+        routes=(
+            ProviderRouteSpec(name="metadata_api", kind="metadata"),
+            ProviderRouteSpec(
+                name="xml_api",
+                kind="xml",
+                timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+            ),
+            ProviderRouteSpec(
+                name="pdf_api",
+                kind="pdf",
+                requires_pdf_conversion=True,
+                timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+            ),
+            ProviderRouteSpec(name="object_assets", kind="assets", transport="api"),
+        ),
+    ),
+    html_rules=ProviderHtmlRules(
+        name="elsevier",
+        availability=AvailabilityPolicy(
+            name="elsevier",
+            overrides=ELSEVIER_AVAILABILITY_OVERRIDES,
+        ),
+    ),
+    sources=("elsevier_xml", "elsevier_pdf"),
+)

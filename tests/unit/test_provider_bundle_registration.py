@@ -32,7 +32,6 @@ def _identity_spec(
         asset_default="none",
         probe_capability="routing_signal",
         provider_managed_abstract_only=False,
-        client_factory_path=f"tests:{name}",
         status_order=900 + len(name),
         html_capable=False,
         routes=(ProviderRouteSpec(name="metadata", kind="metadata"),),

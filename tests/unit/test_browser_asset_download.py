@@ -14,7 +14,7 @@ from paper_fetch.extraction.html.assets import (
     browser_asset_recovery_allowed,
     download_assets,
 )
-from paper_fetch.http import RequestFailure
+from paper_fetch.http import RequestCancelledError, RequestFailure
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.providers.browser_workflow import assets as browser_workflow_assets
 from paper_fetch.providers.browser_workflow.fetchers import (
@@ -33,6 +33,43 @@ from tests.unit._browser_workflow_deps import browser_workflow_deps
 
 
 class BrowserWorkflowAssetDownloadTests(TestCase):
+    def test_cancellation_supports_runtime_owner_and_cancel_check_protocol(
+        self,
+    ) -> None:
+        plan = BrowserAssetDownloadPlan(
+            article_id="10.5555/example",
+            output_dir=Path("/tmp/browser-assets"),
+            asset_profile="none",
+            body_assets=[],
+            supplementary_assets=[],
+        )
+        with RuntimeContext(env={}) as context:
+            context.fence_commits()
+            runtime_contexts = (
+                context,
+                SimpleNamespace(cancel_check=lambda: True),
+            )
+            for runtime_context in runtime_contexts:
+                with self.subTest(runtime_context=type(runtime_context).__name__):
+                    recovery = BrowserAssetRecoveryContext(
+                        runtime=None,
+                        provider="science",
+                        user_agent="test-agent",
+                        browser_context_seed={},
+                        browser_cookies=[],
+                        active_seed_urls=[],
+                        runtime_context=runtime_context,
+                    )
+                    with self.assertRaises(RequestCancelledError):
+                        run_browser_asset_download_attempt(
+                            plan,
+                            recovery,
+                            image_fetcher_factory=mock.Mock(),
+                            file_fetcher_factory=mock.Mock(),
+                            download_settings={},
+                            deps=browser_workflow_deps(),
+                        )
+
     def test_direct_then_browser_uses_direct_success_without_browser(self) -> None:
         url = "https://example.test/figure.png"
         transport = mock.Mock()

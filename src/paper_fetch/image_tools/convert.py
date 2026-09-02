@@ -24,6 +24,7 @@ from ..reason_codes import (
 from ..utils import normalize_text
 from .paths import (
     _clear_image_tool_path_caches,
+    _path_fingerprint,
     ghostscript_binary_candidates,
     image_tool_timeout_seconds,
     vips_binary_candidates,
@@ -133,19 +134,6 @@ def source_image_format_from_payload(
         return "tiff"
 
     return ""
-
-
-def _path_fingerprint(path: Path) -> tuple[str, bool, int, int]:
-    try:
-        stat_result = path.stat()
-    except OSError:
-        return (str(path), False, 0, 0)
-    return (
-        str(path),
-        True,
-        int(stat_result.st_mtime_ns),
-        int(stat_result.st_size),
-    )
 
 
 def _working_binary_cache_key(

@@ -344,7 +344,6 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
         )
 
     def test_mdpi_structure_fixture_markdown(self) -> None:
-        """rule: rule-mdpi-body-semantics-chrome-removal"""
         markdown, extraction = _extract_fixture_markdown(MDPI_STRUCTURE_DOI)
 
         self.assertIn("# Simulation of Carbon Dioxide Absorption", markdown)
@@ -355,7 +354,6 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertNotIn("Browse Figures", markdown)
 
     def test_mdpi_table_fixture_markdown(self) -> None:
-        """rule: rule-mdpi-display-object-anchoring-dedupe"""
         markdown, _ = _extract_fixture_markdown(MDPI_TABLE_DOI)
 
         self.assertIn("Table 1", markdown)
@@ -369,7 +367,6 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertNotIn("Google Scholar", markdown)
 
     def test_mdpi_formula_fixture_markdown(self) -> None:
-        """rule: rule-mdpi-formula-inline-display-rendering"""
         markdown, _ = _extract_fixture_markdown(MDPI_FORMULA_DOI)
 
         self.assertIn("Equation (1)", markdown)
@@ -386,7 +383,6 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertNotIn("Download PDF", markdown)
 
     def test_mdpi_figure_fixture_markdown_and_assets(self) -> None:
-        """rule: rule-mdpi-display-object-anchoring-dedupe"""
         markdown, _ = _extract_fixture_markdown(MDPI_FIGURE_DOI)
         assets = _mdpi_html.extract_scoped_html_assets(
             _fixture_html(MDPI_FIGURE_DOI),
@@ -404,7 +400,6 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertNotIn("Article Metrics", markdown)
 
     def test_mdpi_markdown_image_alts_are_short_and_balanced(self) -> None:
-        """rule: rule-mdpi-display-object-anchoring-dedupe"""
         short_alt_pattern = (
             r"^(?:Figure [A-Za-z]?\d+[A-Za-z]?(?:\.\d+[A-Za-z]?)*|"
             r"Table [A-Za-z]?\d+[A-Za-z]?(?:\.\d+[A-Za-z]?)*|Formula|Image)$"
@@ -419,7 +414,6 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
                 self.assertNotIn("[AO10]", "\n".join(_markdown_image_alts(markdown)))
 
     def test_mdpi_display_objects_are_anchored_and_deduplicated(self) -> None:
-        """rule: rule-mdpi-display-object-anchoring-dedupe"""
         figure_markdown, _ = _extract_fixture_markdown(MDPI_FIGURE_DOI)
         first_figure_ref = figure_markdown.index(
             "Figure 1 illustrates the principle of satellite–earth TWSTT."
@@ -443,7 +437,6 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
         )
 
     def test_mdpi_abstract_keywords_do_not_render_as_abstract_body(self) -> None:
-        """rule: rule-mdpi-body-semantics-chrome-removal"""
         for doi in MDPI_HTML_DOIS:
             with self.subTest(doi=doi):
                 markdown, extraction = _extract_fixture_markdown(doi)
@@ -464,7 +457,6 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertNotIn("Keywords:", article.metadata.abstract or "")
 
     def test_mdpi_formula_fallbacks_do_not_fragment_or_emit_unavailable(self) -> None:
-        """rule: rule-mdpi-formula-inline-display-rendering"""
         for doi in (
             MDPI_REFERENCES_DOI,
             "10.3390/ijerph18094484",
@@ -483,7 +475,6 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
     def test_mdpi_paragraph_inline_wrappers_do_not_fragment_variable_explanations(
         self,
     ) -> None:
-        """rule: rule-mdpi-formula-inline-display-rendering"""
         markdown, _ = _mdpi_html.extract_markdown(
             _inline_wrapper_regression_html(),
             "https://www.mdpi.com/1996-1073/16/18/6655",
@@ -515,7 +506,6 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
     def test_mdpi_article_marks_inline_figure_assets_without_duplicate_tail_block(
         self,
     ) -> None:
-        """rule: rule-mdpi-display-object-anchoring-dedupe"""
         figure_url = "https://www.mdpi.com/images/figure-4.png"
         local_path = "/tmp/paper-fetch-mdpi/body_assets/figure-4.png"
         article = article_from_markdown(
@@ -556,7 +546,6 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertNotIn("\n## Figures\n", markdown)
 
     def test_mdpi_supplementary_fixture_markdown_and_all_assets(self) -> None:
-        """rule: rule-mdpi-body-semantics-chrome-removal"""
         markdown, _ = _extract_fixture_markdown(MDPI_SUPPLEMENTARY_DOI)
         body_assets = _mdpi_html.extract_scoped_html_assets(
             _fixture_html(MDPI_SUPPLEMENTARY_DOI),
@@ -579,7 +568,6 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertNotIn("Download Supplementary Material", markdown)
 
     def test_mdpi_references_fixture_markdown(self) -> None:
-        """rule: rule-mdpi-references-numbering-link-cleanup"""
         markdown, extraction = _extract_fixture_markdown(MDPI_REFERENCES_DOI)
         references = extraction["references"]
         article = article_from_markdown(
@@ -605,7 +593,6 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
     def test_mdpi_reference_ui_tokens_are_removed_from_markdown_and_raw_references(
         self,
     ) -> None:
-        """rule: rule-mdpi-references-numbering-link-cleanup"""
         noise_tokens = ("Google Scholar", "CrossRef", "PubMed", "Green Version")
 
         for doi in MDPI_HTML_DOIS:
@@ -624,7 +611,6 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
     def test_mdpi_markdown_removes_abstract_colon_and_preserves_heading_levels(
         self,
     ) -> None:
-        """rule: rule-mdpi-body-semantics-chrome-removal"""
         for doi in MDPI_HTML_DOIS:
             with self.subTest(doi=doi):
                 markdown, _ = _extract_fixture_markdown(doi)

@@ -13,7 +13,6 @@ class AtyponBrowserWorkflowProviderAssetFailureTests(
     AtyponBrowserWorkflowProviderTestCase
 ):
     def test_science_provider_replay_for_adz3492_saves_svg_body_asset(self) -> None:
-        """rule: rule-image-download-validates-real-images"""
         svg_url = (
             "https://www.science.org/cms/10.1126/science.adz3492/asset/"
             "5b0bd6a0-ee3b-43af-aff8-6d8423ba4e21/assets/graphic/science.adz3492-f1.svg"

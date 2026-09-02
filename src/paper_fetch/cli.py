@@ -51,11 +51,6 @@ from .manifest_writer import (
 )
 from .models import FetchEnvelope, OutputMode, RenderOptions
 from .providers.base import ProviderFailure
-from .publisher_identity import (
-    extract_doi,
-    extract_doi_from_url,
-    normalize_doi,
-)
 from .reason_codes import ERROR, NO_ACCESS, RATE_LIMITED
 from .runtime import (
     RuntimeContext,
@@ -78,13 +73,14 @@ from .workflow.batch_runner import (
     run_batch,
 )
 from .workflow.batch_routing import (
+    deduplicate_batch_items,
+    expected_doi_from_query,
+    fanout_batch_items,
     initial_provider_lane,
     provider_lane_limit,
-    resolve_provider_lane,
+    resolve_batch_item_routing,
 )
-from .workflow.pipeline import FetchPipeline, MarkdownSaveSpec
-from .workflow.session_cache import RESOLVED_QUERY_KEY
-from .workflow.request_builder import build_fetch_pipeline_request
+from .workflow.pipeline import FetchPipeline, FetchPipelineRequest
 from .workflow.rendering import rewrite_markdown_asset_links
 from .workflow.rendering import (
     save_markdown_to_disk as save_markdown_to_disk_for_target,
@@ -541,22 +537,6 @@ def _render_options_from_args(args: argparse.Namespace) -> RenderOptions:
     )
 
 
-def _markdown_save_spec(
-    args: argparse.Namespace,
-    *,
-    output_dir: Path,
-    render_options: RenderOptions,
-) -> MarkdownSaveSpec | None:
-    if not args.save_markdown_to_disk:
-        return None
-    return MarkdownSaveSpec(
-        output_dir=output_dir,
-        render=render_options,
-        request_label="--save-markdown",
-        overwrite=bool(getattr(args, "overwrite", False)),
-    )
-
-
 def run_single_fetch(
     args: argparse.Namespace,
     *,
@@ -610,8 +590,8 @@ def _run_single_fetch_with_context(
     render_options = _render_options_from_args(args)
     overwrite = bool(getattr(args, "overwrite", False))
     try:
-        result = FetchPipeline(fetch_paper).run(
-            build_fetch_pipeline_request(
+        envelope = FetchPipeline(fetch_paper).run(
+            FetchPipelineRequest(
                 query=query,
                 modes=modes,
                 strategy=FetchStrategy(
@@ -625,35 +605,32 @@ def _run_single_fetch_with_context(
                     ),
                 ),
                 render=render_options,
-                env=dict(runtime_env),
-                download_dir=output_dir,
-                no_download=False,
-                artifact_mode=artifact_mode,
-                transport=transport,
-                cancel_check=cancel_check,
-                context=context,
-                markdown_save=_markdown_save_spec(
-                    args,
-                    output_dir=output_dir,
-                    render_options=render_options,
-                ),
-            )
+            ),
+            context=context,
         )
+        saved_markdown_path = None
+        if args.save_markdown_to_disk:
+            context.raise_if_cancelled()
+            saved_markdown_path = save_markdown_to_disk_for_target(
+                envelope,
+                output_dir=output_dir,
+                render=render_options,
+                request_label="--save-markdown",
+                overwrite=overwrite,
+                commit_guard=context.commit_guard,
+            )
     except FileExistsError as exc:
         raise OutputOverwriteRequired(
             f"{exc}; rerun with --overwrite after reviewing the existing output"
         ) from exc
     context.raise_if_cancelled()
-    envelope = result.envelope
     if args.primary_output_to_output_dir:
         target = output_dir / _formatted_output_filename(
             envelope,
             output_format=args.format,
             fallback_query=query,
         )
-        if args.format == "markdown" and _same_output_path(
-            result.saved_markdown_path, target
-        ):
+        if args.format == "markdown" and _same_output_path(saved_markdown_path, target):
             primary_output_path = target
         else:
             try:
@@ -673,7 +650,7 @@ def _run_single_fetch_with_context(
         return SingleFetchResult(
             envelope=envelope,
             output_path=primary_output_path,
-            saved_markdown_path=result.saved_markdown_path,
+            saved_markdown_path=saved_markdown_path,
         )
 
     markdown_override = (
@@ -696,9 +673,7 @@ def _run_single_fetch_with_context(
             output_format=args.format,
             fallback_query=query,
         )
-        if args.format == "markdown" and _same_output_path(
-            result.saved_markdown_path, target
-        ):
+        if args.format == "markdown" and _same_output_path(saved_markdown_path, target):
             output_path = target
         else:
             try:
@@ -719,7 +694,7 @@ def _run_single_fetch_with_context(
     if not (
         args.output != "-"
         and args.format == "markdown"
-        and _same_output_path(result.saved_markdown_path, explicit_target)
+        and _same_output_path(saved_markdown_path, explicit_target)
     ):
         try:
             write_output(
@@ -737,7 +712,7 @@ def _run_single_fetch_with_context(
     return SingleFetchResult(
         envelope=envelope,
         output_path=output_path,
-        saved_markdown_path=result.saved_markdown_path,
+        saved_markdown_path=saved_markdown_path,
     )
 
 
@@ -780,23 +755,8 @@ def _manifest_request_parameters(
     }
 
 
-def _manifest_execution_policy(args: argparse.Namespace) -> dict[str, Any]:
-    return {
-        "batch_concurrency": args.batch_concurrency,
-        "continue_on_error": bool(getattr(args, "continue_on_error", True)),
-    }
-
-
-def _expected_doi_for_query(query: str) -> str | None:
-    return (
-        normalize_doi(extract_doi_from_url(query) or extract_doi(query) or "") or None
-    )
-
-
-def _batch_lane_for_query(query: str) -> str:
-    """Infer a provider lane without performing network I/O."""
-
-    return initial_provider_lane(query)
+_expected_doi_for_query = expected_doi_from_query
+_batch_lane_for_query = initial_provider_lane
 
 
 def _resolve_cli_batch_item_lane(
@@ -804,55 +764,11 @@ def _resolve_cli_batch_item_lane(
     *,
     context: RuntimeContext,
 ) -> CliBatchItem:
-    try:
-        lane_key = resolve_provider_lane(
-            item.query,
-            initial_lane=item.lane_key,
-            context=context,
-            resolver=resolve_paper,
-        )
-    except Exception:
-        return item
-    resolved = context.get_session_cache(
-        RESOLVED_QUERY_KEY.materialize(normalize_text(item.query) or item.query)
-    )
-    resolved_doi = normalize_doi(
-        str(
-            (
-                resolved.get("doi")
-                if isinstance(resolved, Mapping)
-                else getattr(resolved, "doi", None)
-            )
-            or ""
-        )
-    )
-    return replace(
+    return resolve_batch_item_routing(
         item,
-        lane_key=lane_key,
-        canonical_doi=resolved_doi or item.canonical_doi,
+        context=context,
+        resolver=resolve_paper,
     )
-
-
-def _deduplicate_cli_batch_items(
-    items: Sequence[CliBatchItem],
-) -> tuple[list[CliBatchItem], dict[int, tuple[CliBatchItem, ...]]]:
-    representatives: list[CliBatchItem] = []
-    owner_by_doi: dict[str, CliBatchItem] = {}
-    duplicates: dict[int, list[CliBatchItem]] = {}
-    for item in items:
-        doi = normalize_doi(item.canonical_doi or "")
-        if not doi:
-            representatives.append(item)
-            continue
-        owner = owner_by_doi.get(doi)
-        if owner is None:
-            owner_by_doi[doi] = item
-            representatives.append(item)
-        else:
-            duplicates.setdefault(owner.index, []).append(item)
-    return representatives, {
-        index: tuple(values) for index, values in duplicates.items()
-    }
 
 
 def _manifest_output_artifacts(
@@ -1235,16 +1151,16 @@ def run_batch_fetch(
                     result.value if result.value is not None else result.item
                     for result in prepared_lanes.results
                 ]
-                scheduled_items, duplicates_by_owner = _deduplicate_cli_batch_items(
+                scheduled_items, duplicates_by_owner = deduplicate_batch_items(
                     logical_items
                 )
 
                 def on_completion(
                     event: BatchCompletionEvent[CliBatchItem, CliFetchOutcome],
                 ) -> None:
-                    fanout_items = (
+                    fanout_items = fanout_batch_items(
                         event.result.item,
-                        *duplicates_by_owner.get(event.result.item.index, ()),
+                        duplicates_by_owner,
                     )
                     for position, fanout_item in enumerate(fanout_items):
                         outcome = event.result.value

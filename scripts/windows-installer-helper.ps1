@@ -25,15 +25,7 @@ $McpEnvKeys = @(
     "MATHML_TO_LATEX_NODE_BIN",
     "PAPER_FETCH_BROWSER_HEADLESS"
 )
-$OfflineEnvKeys = @(
-    "PAPER_FETCH_DOWNLOAD_DIR",
-    "PAPER_FETCH_FORMULA_TOOLS_DIR",
-    "PAPER_FETCH_IMAGE_TOOLS_DIR",
-    "MATHML_TO_LATEX_NODE_BIN",
-    "PAPER_FETCH_BROWSER_HEADLESS",
-    "PYTHONUTF8",
-    "PYTHONIOENCODING"
-)
+$OfflineEnvKeys = @($McpEnvKeys | Where-Object { $_ -ne "PAPER_FETCH_ENV_FILE" })
 $InstallerWarnings = New-Object System.Collections.Generic.List[string]
 
 if ([string]::IsNullOrWhiteSpace($InstallRoot)) {
@@ -55,10 +47,10 @@ function Import-InstallerManifest {
     $script:CodexManagedBegin = [string]$manifest.managed_blocks.codex.begin
     $script:CodexManagedEnd = [string]$manifest.managed_blocks.codex.end
     $script:McpEnvKeys = @($manifest.mcp.env_keys | ForEach-Object { [string]$_ })
-    if ($null -ne $manifest.env_sets -and $null -ne $manifest.env_sets.offline_env_keys) {
-        $script:OfflineEnvKeys = @($manifest.env_sets.offline_env_keys | ForEach-Object { [string]$_ })
-    }
     Normalize-McpEnvKeys
+    $script:OfflineEnvKeys = @(
+        $script:McpEnvKeys | Where-Object { $_ -ne "PAPER_FETCH_ENV_FILE" }
+    )
 
     if ([string]::IsNullOrWhiteSpace($script:SkillName) -or
         [string]::IsNullOrWhiteSpace($script:McpName) -or

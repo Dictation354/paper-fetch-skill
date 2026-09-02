@@ -149,8 +149,6 @@ class HtmlCleanupRules:
     policy: CleanupPolicy
     drop_selectors: tuple[str, ...]
     exact_texts: frozenset[str]
-    prefix_texts: tuple[str, ...]
-    attr_tokens: tuple[str, ...]
     extraction_cleanup_selectors: tuple[str, ...]
     markdown_exact_texts: frozenset[str]
     markdown_prefix_texts: tuple[str, ...]
@@ -166,8 +164,6 @@ def html_cleanup_rules(noise_profile: str | None = None) -> HtmlCleanupRules:
         policy=policy,
         drop_selectors=policy.dom_drop_selectors,
         exact_texts=policy.dom_exact_texts,
-        prefix_texts=policy.dom_prefix_texts,
-        attr_tokens=policy.dom_attr_tokens,
         extraction_cleanup_selectors=policy.extraction_cleanup_selectors,
         markdown_exact_texts=policy.markdown_exact_texts,
         markdown_prefix_texts=policy.markdown_prefix_texts,

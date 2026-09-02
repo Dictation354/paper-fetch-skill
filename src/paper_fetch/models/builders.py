@@ -8,7 +8,7 @@ from collections.abc import Mapping
 
 from ..markdown.citations import normalize_inline_citation_markdown
 from ..publisher_identity import normalize_doi
-from ..quality.reason_codes import FULLTEXT
+from ..reason_codes import FULLTEXT
 from ..tracing import TraceEvent, source_trail_from_trace, trace_from_markers
 from ..utils import normalize_text, safe_text
 from .markdown import (

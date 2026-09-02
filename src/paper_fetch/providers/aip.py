@@ -25,7 +25,7 @@ from ..provider_catalog import (
 )
 from ..publisher_identity import normalize_doi
 from ..reason_codes import PDF_FALLBACK
-from ..utils import normalize_text
+from ..utils import extend_unique, normalize_text
 from . import _aip_html, browser_workflow
 from ._registry import ProviderBundle
 from .base import RawFulltextPayload
@@ -99,62 +99,106 @@ AIP_SUPPLEMENTARY_TEXT_TOKENS = (
     "supporting information",
 )
 
-
-PROVIDER_BUNDLE = ProviderBundle(
-    catalog=ProviderSpec(
-        name="aip",
-        display_name="AIP Publishing",
-        official=True,
-        domains=("pubs.aip.org",),
-        doi_prefixes=("10.1063/",),
-        publisher_aliases=(
-            "aip publishing",
-            "aip publishing llc",
-            "american institute of physics",
-            "aip",
+_PROVIDER_SPEC = ProviderSpec(
+    name="aip",
+    display_name="AIP Publishing",
+    official=True,
+    domains=("pubs.aip.org",),
+    doi_prefixes=("10.1063/",),
+    publisher_aliases=(
+        "aip publishing",
+        "aip publishing llc",
+        "american institute of physics",
+        "aip",
+    ),
+    asset_default="body",
+    probe_capability="routing_signal",
+    provider_managed_abstract_only=True,
+    status_order=17,
+    base_domains=("pubs.aip.org",),
+    html_path_templates=("/doi/full/{doi}", "/doi/{doi}"),
+    pdf_path_templates=ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
+    crossref_pdf_position=0,
+    body_text_thresholds=BodyTextThresholds(min_chars=1200),
+    routes=(
+        ProviderRouteSpec(name="metadata", kind="metadata"),
+        ProviderRouteSpec(
+            name="browser_html",
+            kind="html",
+            browser_required=True,
+            browser_preflight=True,
+            auth_supported=True,
+            requires_playwright=True,
+            concurrency=1,
         ),
-        asset_default="body",
-        probe_capability="routing_signal",
-        provider_managed_abstract_only=True,
-        client_factory_path="paper_fetch.providers.aip:AipClient",
-        status_order=17,
-        base_domains=("pubs.aip.org",),
-        html_path_templates=("/doi/full/{doi}", "/doi/{doi}"),
-        pdf_path_templates=ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
-        crossref_pdf_position=0,
-        body_text_thresholds=BodyTextThresholds(min_chars=1200),
-        routes=(
-            ProviderRouteSpec(name="metadata", kind="metadata"),
-            ProviderRouteSpec(
-                name="browser_html",
-                kind="html",
-                browser_required=True,
-                browser_preflight=True,
-                auth_supported=True,
-                requires_playwright=True,
-                concurrency=1,
-            ),
-            ProviderRouteSpec(
-                name="browser_pdf",
-                kind="pdf",
-                browser_required=True,
-                browser_preflight=True,
-                auth_supported=True,
-                requires_playwright=True,
-                requires_pdf_conversion=True,
-                concurrency=1,
-            ),
-            ProviderRouteSpec(
-                name="assets",
-                kind="assets",
-                browser_optional=True,
-                requires_playwright=True,
-                timeout_seconds=20,
-                concurrency=2,
-                transient_retries=0,
-            ),
+        ProviderRouteSpec(
+            name="browser_pdf",
+            kind="pdf",
+            browser_required=True,
+            browser_preflight=True,
+            auth_supported=True,
+            requires_playwright=True,
+            requires_pdf_conversion=True,
+            concurrency=1,
+        ),
+        ProviderRouteSpec(
+            name="assets",
+            kind="assets",
+            browser_optional=True,
+            requires_playwright=True,
+            timeout_seconds=20,
+            concurrency=2,
+            transient_retries=0,
         ),
     ),
+)
+
+AIP_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
+    "aip",
+    catalog=_PROVIDER_SPEC,
+    article_source_name="aip_html",
+    fallback_author_extractor=_aip_html.extract_authors,
+    policy=browser_workflow.BrowserWorkflowPolicy(
+        persistent_storage_state=False,
+    ),
+)
+
+
+class AipClient(browser_workflow.BrowserWorkflowClient):
+    name = AIP_BROWSER_PROFILE.name
+    profile = AIP_BROWSER_PROFILE
+
+    def html_candidates(self, doi: str, metadata: Mapping[str, Any]) -> list[str]:
+        normalized_doi = normalize_doi(doi)
+        candidates: list[str] = []
+        landing = normalize_text(str(metadata.get("landing_page_url") or ""))
+        if _is_aip_url(landing):
+            extend_unique(candidates, [landing])
+        extend_unique(candidates, super().html_candidates(normalized_doi, metadata))
+        return candidates
+
+    def article_source_for_payload(self, raw_payload: RawFulltextPayload) -> str:
+        content = raw_payload.content
+        route = normalize_text(
+            content.route_kind if content is not None else ""
+        ).lower()
+        if route == PDF_FALLBACK:
+            return "aip_pdf"
+        return "aip_html"
+
+
+def _is_aip_url(value: str | None) -> bool:
+    parsed = urlparse(normalize_text(value))
+    host = normalize_text(parsed.hostname or "").lower()
+    return host == "pubs.aip.org" or host.endswith(".pubs.aip.org")
+
+
+__all__ = ["AipClient"]
+
+
+PROVIDER_BUNDLE = ProviderBundle(
+    client_factory=AipClient,
+    catalog=_PROVIDER_SPEC,
     html_rules=ProviderHtmlRules(
         name="aip",
         cleanup=ProviderCleanupRules(
@@ -175,7 +219,6 @@ PROVIDER_BUNDLE = ProviderBundle(
         availability=AvailabilityPolicy(
             name="aip",
             site_rule_overrides=AIP_SITE_RULE_OVERRIDES,
-            no_signals=True,
         ),
         dom_hooks=DomHooks(
             before_block_normalization=_aip_html.aip_before_block_normalization,
@@ -188,53 +231,3 @@ PROVIDER_BUNDLE = ProviderBundle(
     ),
     sources=("aip_html", "aip_pdf"),
 )
-
-
-AIP_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
-    "aip",
-    catalog=PROVIDER_BUNDLE.catalog,
-    article_source_name="aip_html",
-    fallback_author_extractor=_aip_html.extract_authors,
-    policy=browser_workflow.BrowserWorkflowPolicy(
-        persistent_storage_state=False,
-    ),
-)
-
-
-class AipClient(browser_workflow.BrowserWorkflowClient):
-    name = AIP_BROWSER_PROFILE.name
-    profile = AIP_BROWSER_PROFILE
-
-    def html_candidates(self, doi: str, metadata: Mapping[str, Any]) -> list[str]:
-        normalized_doi = normalize_doi(doi)
-        candidates: list[str] = []
-        landing = normalize_text(str(metadata.get("landing_page_url") or ""))
-        if _is_aip_url(landing):
-            _append_unique(candidates, landing)
-        for candidate in super().html_candidates(normalized_doi, metadata):
-            _append_unique(candidates, candidate)
-        return candidates
-
-    def article_source_for_payload(self, raw_payload: RawFulltextPayload) -> str:
-        content = raw_payload.content
-        route = normalize_text(
-            content.route_kind if content is not None else ""
-        ).lower()
-        if route == PDF_FALLBACK:
-            return "aip_pdf"
-        return "aip_html"
-
-
-def _is_aip_url(value: str | None) -> bool:
-    parsed = urlparse(normalize_text(value))
-    host = normalize_text(parsed.hostname or "").lower()
-    return host == "pubs.aip.org" or host.endswith(".pubs.aip.org")
-
-
-def _append_unique(values: list[str], candidate: str | None) -> None:
-    normalized = normalize_text(candidate)
-    if normalized and normalized not in values:
-        values.append(normalized)
-
-
-__all__ = ["AipClient"]

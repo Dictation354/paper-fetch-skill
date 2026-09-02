@@ -19,8 +19,7 @@ from ..models.markdown import (
     replace_markdown_images,
 )
 from ..provider_catalog import known_article_source_names
-from ..reason_codes import METADATA_ONLY
-from ..quality.reason_codes import FULLTEXT
+from ..reason_codes import FULLTEXT, METADATA_ONLY
 from ..tracing import (
     TraceEvent,
     download_marker,
@@ -345,13 +344,8 @@ def _extend_envelope_status(
     warnings: list[str] | None = None,
     source_trail: list[str] | None = None,
 ) -> None:
-    extend_unique(envelope.warnings, warnings)
-    extend_unique(envelope.source_trail, source_trail)
     extend_unique(envelope.quality.warnings, warnings)
     extend_unique(envelope.quality.source_trail, source_trail)
-    if envelope.article is not None:
-        extend_unique(envelope.article.quality.warnings, warnings)
-        extend_unique(envelope.article.quality.source_trail, source_trail)
 
 
 def save_markdown_to_disk(
@@ -424,13 +418,8 @@ def build_fetch_envelope(
         source=public_source_for_article(article),
         has_fulltext=article.quality.has_fulltext,
         acquisition=article.acquisition,
-        content_kind=article.quality.content_kind,
-        has_abstract=article.quality.has_abstract,
-        warnings=list(article.quality.warnings),
         source_trail=list(article.quality.source_trail),
         trace=list(trace or trace_from_markers(article.quality.source_trail)),
-        token_estimate=article.quality.token_estimate,
-        token_estimate_breakdown=article.quality.token_estimate_breakdown,
         quality=article.quality,
         article=article if "article" in modes else None,
         markdown=markdown,

@@ -316,7 +316,6 @@ $$
     def test_extract_atypon_browser_workflow_markdown_falls_back_complex_table_to_bullets(
         self,
     ) -> None:
-        """rule: rule-table-flatten-or-list"""
         html = golden_criteria_scenario_asset(
             "table_flatten_or_list", "complex_table.html"
         ).read_text(encoding="utf-8")

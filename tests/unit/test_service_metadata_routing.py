@@ -128,38 +128,40 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                 strategy=paper_fetch.FetchStrategy(
                     preferred_providers=["elsevier"],
                 ),
-                clients={
-                    "elsevier": FixtureProvider(
-                        metadata={
-                            "provider": "elsevier",
-                            "official_provider": True,
-                            "doi": "10.1006/jaer.1996.0085",
-                            "title": "Official Elsevier Title",
-                            "landing_page_url": "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852",
-                            "fulltext_links": [],
-                            "references": [],
-                        },
-                        raw_payload=RawFulltextPayload(
-                            provider="elsevier",
-                            source_url="https://api.elsevier.com/content/article/doi/10.1006%2Fjaer.1996.0085",
-                            content_type="text/xml",
-                            body=b"<xml/>",
+                context=RuntimeContext(
+                    clients={
+                        "elsevier": FixtureProvider(
+                            metadata={
+                                "provider": "elsevier",
+                                "official_provider": True,
+                                "doi": "10.1006/jaer.1996.0085",
+                                "title": "Official Elsevier Title",
+                                "landing_page_url": "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852",
+                                "fulltext_links": [],
+                                "references": [],
+                            },
+                            raw_payload=RawFulltextPayload(
+                                provider="elsevier",
+                                source_url="https://api.elsevier.com/content/article/doi/10.1006%2Fjaer.1996.0085",
+                                content_type="text/xml",
+                                body=b"<xml/>",
+                            ),
+                            article=official_article,
                         ),
-                        article=official_article,
-                    ),
-                    "crossref": FixtureProvider(
-                        metadata={
-                            "provider": "crossref",
-                            "official_provider": False,
-                            "doi": "10.1006/jaer.1996.0085",
-                            "title": "Crossref Title",
-                            "publisher": "Elsevier BV",
-                            "landing_page_url": "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852",
-                            "fulltext_links": [],
-                            "references": [],
-                        }
-                    ),
-                },
+                        "crossref": FixtureProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "official_provider": False,
+                                "doi": "10.1006/jaer.1996.0085",
+                                "title": "Crossref Title",
+                                "publisher": "Elsevier BV",
+                                "landing_page_url": "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852",
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                    }
+                ),
             ).article
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -243,37 +245,39 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                 strategy=paper_fetch.FetchStrategy(
                     preferred_providers=["crossref"],
                 ),
-                clients={
-                    "elsevier": FixtureProvider(
-                        metadata={
-                            "provider": "elsevier",
-                            "official_provider": True,
-                            "doi": "10.1016/test",
-                            "title": "Official Elsevier Title",
-                            "landing_page_url": "https://example.test/article",
-                            "fulltext_links": [],
-                            "references": [],
-                        },
-                        raw_payload=RawFulltextPayload(
-                            provider="elsevier",
-                            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
-                            content_type="text/xml",
-                            body=b"<xml/>",
+                context=RuntimeContext(
+                    clients={
+                        "elsevier": FixtureProvider(
+                            metadata={
+                                "provider": "elsevier",
+                                "official_provider": True,
+                                "doi": "10.1016/test",
+                                "title": "Official Elsevier Title",
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            },
+                            raw_payload=RawFulltextPayload(
+                                provider="elsevier",
+                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                content_type="text/xml",
+                                body=b"<xml/>",
+                            ),
+                            article=sample_article(),
                         ),
-                        article=sample_article(),
-                    ),
-                    "crossref": FixtureProvider(
-                        metadata={
-                            "provider": "crossref",
-                            "official_provider": False,
-                            "doi": "10.1016/test",
-                            "title": "Crossref Title",
-                            "landing_page_url": "https://example.test/article",
-                            "fulltext_links": [],
-                            "references": [],
-                        }
-                    ),
-                },
+                        "crossref": FixtureProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "official_provider": False,
+                                "doi": "10.1016/test",
+                                "title": "Crossref Title",
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                    }
+                ),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -309,31 +313,33 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                 "10.1111/test",
                 modes={"markdown"},
                 strategy=paper_fetch.FetchStrategy(),
-                clients={
-                    "wiley": FixtureProvider(
-                        metadata=paper_fetch.ProviderFailure(
-                            "not_supported", "No official metadata."
+                context=RuntimeContext(
+                    clients={
+                        "wiley": FixtureProvider(
+                            metadata=paper_fetch.ProviderFailure(
+                                "not_supported", "No official metadata."
+                            ),
+                            raw_payload=RawFulltextPayload(
+                                provider="wiley",
+                                source_url="https://example.test/wiley.pdf",
+                                content_type="application/pdf",
+                                body=b"%PDF-1.4",
+                            ),
+                            article=official_article,
                         ),
-                        raw_payload=RawFulltextPayload(
-                            provider="wiley",
-                            source_url="https://example.test/wiley.pdf",
-                            content_type="application/pdf",
-                            body=b"%PDF-1.4",
+                        "crossref": FixtureProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "official_provider": False,
+                                "doi": "10.1111/test",
+                                "title": "Example Article",
+                                "landing_page_url": "https://example.test/wiley",
+                                "fulltext_links": [],
+                                "references": [],
+                            }
                         ),
-                        article=official_article,
-                    ),
-                    "crossref": FixtureProvider(
-                        metadata={
-                            "provider": "crossref",
-                            "official_provider": False,
-                            "doi": "10.1111/test",
-                            "title": "Example Article",
-                            "landing_page_url": "https://example.test/wiley",
-                            "fulltext_links": [],
-                            "references": [],
-                        }
-                    ),
-                },
+                    }
+                ),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -382,73 +388,77 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                 "10.1016/test",
                 modes={"article"},
                 strategy=paper_fetch.FetchStrategy(),
-                clients={
-                    "elsevier": FixtureProvider(
-                        metadata={
-                            "provider": "elsevier",
-                            "official_provider": True,
-                            "doi": "10.1016/test",
-                            "title": "Example Article",
-                            "landing_page_url": "https://example.test/article",
-                            "fulltext_links": [],
-                            "references": [],
-                        },
-                        raw_payload=RawFulltextPayload(
-                            provider="elsevier",
-                            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
-                            content_type="text/xml",
-                            body=b"<xml/>",
+                context=RuntimeContext(
+                    clients={
+                        "elsevier": FixtureProvider(
+                            metadata={
+                                "provider": "elsevier",
+                                "official_provider": True,
+                                "doi": "10.1016/test",
+                                "title": "Example Article",
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            },
+                            raw_payload=RawFulltextPayload(
+                                provider="elsevier",
+                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                content_type="text/xml",
+                                body=b"<xml/>",
+                            ),
+                            article=official_article,
                         ),
-                        article=official_article,
-                    ),
-                    "crossref": FixtureProvider(
-                        metadata={
-                            "provider": "crossref",
-                            "official_provider": False,
-                            "doi": "10.1016/test",
-                            "title": "Example Article",
-                            "landing_page_url": "https://example.test/article",
-                            "fulltext_links": [],
-                            "references": [],
-                        }
-                    ),
-                },
+                        "crossref": FixtureProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "official_provider": False,
+                                "doi": "10.1016/test",
+                                "title": "Example Article",
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                    }
+                ),
             )
             with_metadata = _fetch_paper(
                 "10.1016/test",
                 modes={"article", "metadata"},
                 strategy=paper_fetch.FetchStrategy(),
-                clients={
-                    "elsevier": FixtureProvider(
-                        metadata={
-                            "provider": "elsevier",
-                            "official_provider": True,
-                            "doi": "10.1016/test",
-                            "title": "Example Article",
-                            "landing_page_url": "https://example.test/article",
-                            "fulltext_links": [],
-                            "references": [],
-                        },
-                        raw_payload=RawFulltextPayload(
-                            provider="elsevier",
-                            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
-                            content_type="text/xml",
-                            body=b"<xml/>",
+                context=RuntimeContext(
+                    clients={
+                        "elsevier": FixtureProvider(
+                            metadata={
+                                "provider": "elsevier",
+                                "official_provider": True,
+                                "doi": "10.1016/test",
+                                "title": "Example Article",
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            },
+                            raw_payload=RawFulltextPayload(
+                                provider="elsevier",
+                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                content_type="text/xml",
+                                body=b"<xml/>",
+                            ),
+                            article=official_article,
                         ),
-                        article=official_article,
-                    ),
-                    "crossref": FixtureProvider(
-                        metadata={
-                            "provider": "crossref",
-                            "official_provider": False,
-                            "doi": "10.1016/test",
-                            "title": "Example Article",
-                            "landing_page_url": "https://example.test/article",
-                            "fulltext_links": [],
-                            "references": [],
-                        }
-                    ),
-                },
+                        "crossref": FixtureProvider(
+                            metadata={
+                                "provider": "crossref",
+                                "official_provider": False,
+                                "doi": "10.1016/test",
+                                "title": "Example Article",
+                                "landing_page_url": "https://example.test/article",
+                                "fulltext_links": [],
+                                "references": [],
+                            }
+                        ),
+                    }
+                ),
             )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -518,34 +528,36 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                     strategy=paper_fetch.FetchStrategy(
                         allow_metadata_only_fallback=False,
                     ),
-                    clients={
-                        "elsevier": FixtureProvider(
-                            metadata={
-                                "provider": "elsevier",
-                                "official_provider": True,
-                                "doi": "10.1016/test",
-                                "title": "Example Article",
-                                "landing_page_url": "https://example.test/article",
-                                "fulltext_links": [],
-                                "references": [],
-                            },
-                            raw_error=paper_fetch.ProviderFailure(
-                                "no_result", "No full text."
+                    context=RuntimeContext(
+                        clients={
+                            "elsevier": FixtureProvider(
+                                metadata={
+                                    "provider": "elsevier",
+                                    "official_provider": True,
+                                    "doi": "10.1016/test",
+                                    "title": "Example Article",
+                                    "landing_page_url": "https://example.test/article",
+                                    "fulltext_links": [],
+                                    "references": [],
+                                },
+                                raw_error=paper_fetch.ProviderFailure(
+                                    "no_result", "No full text."
+                                ),
                             ),
-                        ),
-                        "crossref": FixtureProvider(
-                            metadata={
-                                "provider": "crossref",
-                                "official_provider": False,
-                                "doi": "10.1016/test",
-                                "title": "Example Article",
-                                "landing_page_url": "https://example.test/article",
-                                "abstract": "Fallback abstract",
-                                "fulltext_links": [],
-                                "references": [],
-                            }
-                        ),
-                    },
+                            "crossref": FixtureProvider(
+                                metadata={
+                                    "provider": "crossref",
+                                    "official_provider": False,
+                                    "doi": "10.1016/test",
+                                    "title": "Example Article",
+                                    "landing_page_url": "https://example.test/article",
+                                    "abstract": "Fallback abstract",
+                                    "fulltext_links": [],
+                                    "references": [],
+                                }
+                            ),
+                        }
+                    ),
                 )
         finally:
             paper_fetch.resolve_paper = original_resolve

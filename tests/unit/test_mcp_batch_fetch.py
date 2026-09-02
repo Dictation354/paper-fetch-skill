@@ -649,14 +649,38 @@ def test_batch_fetch_atomically_writes_input_order_and_refuses_overwrite(
     assert "refusing to overwrite" in second.content[0].text
 
 
+def test_batch_manifest_records_normalized_item_request_parameters(
+    tmp_path: Path,
+) -> None:
+    results_path = tmp_path / "results.jsonl"
+    result = asyncio.run(
+        batch_fetch_tool_async(
+            **_temporary_kwargs(
+                queries=[" 10.1000/one ", " 10.1000/two "],
+                markdown_filename="   ",
+                batch_results=f"  {results_path}  ",
+            )
+        )
+    )
+
+    assert result.is_error is False
+    records = [json.loads(line) for line in results_path.read_text().splitlines()]
+    assert [record["query"] for record in records] == [
+        "10.1000/one",
+        "10.1000/two",
+    ]
+    for record in records:
+        assert record["request"]["parameters"]["markdown_filename"] is None
+
+
 def test_batch_fetch_cancellation_fences_late_markdown_commit(
     tmp_path: Path,
 ) -> None:
     started = threading.Event()
 
-    def fetch(request, *, cancel_check=None, **_kwargs):
+    def fetch(request, *, context, **_kwargs):
         started.set()
-        while cancel_check is None or not cancel_check():
+        while not context.cancelled:
             time.sleep(0.005)
         return _successful_fetch(request)
 

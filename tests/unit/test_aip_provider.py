@@ -180,7 +180,6 @@ def test_aip_provider_bundle_declares_routing_sources_and_browser_runtime() -> N
     assert SOURCE_PROVIDER_MAP["aip_pdf"] == "aip"
     assert bundle.sources == ("aip_html", "aip_pdf")
     assert bundle.html_rules is not None
-    assert bundle.html_rules.availability.no_signals is True
 
 
 def test_aip_candidates_cover_article_html_pdf_fallback_and_landing_url() -> None:

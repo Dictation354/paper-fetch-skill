@@ -60,7 +60,7 @@ from .html_signals import (
     evaluate_text_marker_blocking_signals,
     evaluate_text_marker_positive_signals,
 )
-from .reason_codes import (
+from ..reason_codes import (
     ABSTRACT_ONLY,
     ACCESS_PAGE_URL,
     BODY_SUFFICIENT,
@@ -124,7 +124,6 @@ class HtmlContainerEvidence:
 @dataclass(frozen=True)
 class HtmlContainerSelectionPolicy:
     score_profile: str = HTML_CONTAINER_SCORE_AVAILABILITY
-    drop_profile: str = HTML_CONTAINER_DROP_AVAILABILITY
     fallback_tags: tuple[str, ...] = ()
     prefer_complete_ancestor: bool = False
     avoid_page_level_container: bool = False
@@ -297,24 +296,6 @@ def _detect_html_hard_negative_signals_impl(
             provider_metadata and provider_metadata.get("explicit_no_access")
         ),
         html_text=html_text,
-    )
-
-
-def detect_html_hard_negative_signals(
-    title: str,
-    text: str,
-    response_status: int | None,
-    *,
-    requested_url: str | None = None,
-    final_url: str | None = None,
-) -> list[str]:
-    return _detect_html_hard_negative_signals_impl(
-        title,
-        text,
-        response_status,
-        requested_url=requested_url,
-        final_url=final_url,
-        include_paywall_text=True,
     )
 
 

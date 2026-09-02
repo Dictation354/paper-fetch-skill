@@ -113,7 +113,8 @@ PY
 
 pf_host_print_registered_note() {
     echo "  2. Antigravity MCP server '$PF_MCP_NAME' is registered in $(pf_antigravity_mcp_config_path) and will launch via the current python3 environment."
-    echo "     Browser backend: Camoufox by default; first fetch may download its runtime."
+    echo "     Browser-backed providers require a prepared Camoufox runtime."
+    echo "     Ordinary MCP tools do not install or repair it; run 'python -m camoufox fetch' explicitly before use."
 }
 
 pf_skill_main "$@"

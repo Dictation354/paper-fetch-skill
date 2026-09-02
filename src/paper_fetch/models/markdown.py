@@ -72,7 +72,6 @@ class MarkdownImageMatch:
     url: str
     title: str
     attrs: str
-    attrs_start: int | None
     text: str
 
 
@@ -256,7 +255,6 @@ def _parse_markdown_image_at(text: str, start: int) -> MarkdownImageMatch | None
         return None
 
     attrs = ""
-    attrs_start: int | None = None
     end = destination_close + 1
     attr_probe = end
     while attr_probe < len(text) and text[attr_probe] in " \t":
@@ -264,7 +262,6 @@ def _parse_markdown_image_at(text: str, start: int) -> MarkdownImageMatch | None
     if attr_probe < len(text) and text[attr_probe] == "{":
         attr_close = text.find("}", attr_probe + 1)
         if attr_close >= 0 and "\n" not in text[attr_probe : attr_close + 1]:
-            attrs_start = attr_probe
             attrs = text[attr_probe : attr_close + 1]
             end = attr_close + 1
 
@@ -278,7 +275,6 @@ def _parse_markdown_image_at(text: str, start: int) -> MarkdownImageMatch | None
         url=url,
         title=title,
         attrs=attrs,
-        attrs_start=attrs_start,
         text=text[start:end],
     )
 

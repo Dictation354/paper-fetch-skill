@@ -527,7 +527,7 @@ class _ThreadLocalSharedDocumentFetcher:
             if self._close_after_call:
                 # Browser sync objects must be closed from their owning worker
                 # thread. Closing these thread-local fetchers later from the caller
-                # thread can leave Chromium subprocesses behind.
+                # thread can leave browser subprocesses behind.
                 self._close_fetcher_for_current_thread(fetcher)
 
     def failure_for(self, source_url: str) -> dict[str, Any] | None:

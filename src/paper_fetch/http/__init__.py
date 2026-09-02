@@ -118,7 +118,6 @@ __all__ = [
     "SafeRemoteUrlPolicy",
     "ValidatedRemoteUrl",
     "_CacheKey",
-    "_DiskCacheEntry",
     "_PreparedRequest",
     "build_http_error_message",
     "build_network_error_detail",

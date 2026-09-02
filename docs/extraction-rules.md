@@ -66,7 +66,7 @@ metadata
 
 ### 维护边界
 
-规则只描述用户可见的提取与渲染语义。实现 owner 由代码和 provider-local 测试负责，fixture 身份与预期由 `tests/fixtures/golden_criteria/manifest.json` 负责；本文不维护测试文件清单、兼容锚点治理、unstable DOI 表或 fixture 反向索引。
+规则只描述用户可见的提取与渲染语义。实现 owner 由代码和 provider-local 测试负责，fixture 身份与预期由 `tests/fixtures/golden_criteria/manifest.json` 负责。已发布的显式 HTML anchor ID 继续保留；旧 ID 直接落到对应规范章节，不再显示重复标题。
 
 ## Generic
 
@@ -129,6 +129,10 @@ metadata
   - 去重比较必须能识别远程 URL、绝对路径、相对 `body_assets/...` 路径和 basename 后缀的等价关系；不能只做字符串全等比较。
   - 本规则定义 render-state / caption 去重；本地链接改写和下载诊断字段分别见 [已下载的正文图片和公式图片要改写成正文附近的本地链接](#rule-rewrite-inline-figure-links) 与 [下载资产必须保留诊断字段](#rule-asset-download-diagnostic-fields)。
 
+<a id="rule-springer-supplementary-scope"></a>
+<a id="rule-wiley-supporting-information-assets"></a>
+<a id="rule-atypon-browser-workflow-supplementary-sections"></a>
+<a id="rule-ieee-supplementary-scope"></a>
 <a id="rule-supplementary-discovery-explicit-scope"></a>
 ### Supplementary discovery 必须来自明确附件 scope
 
@@ -151,10 +155,10 @@ metadata
 | Provider | 明确附件 scope | 关键排除 |
 | --- | --- | --- |
 | Springer / Nature | `Supplementary information`、`Supplementary material(s)`、`Supporting information`、`Electronic supplementary material`、`Extended data`、`Extended data figures and tables`；`Source data` 独立落到 `source_data/`。 | 正文 / chrome 里的普通 PDF/CSV/ZIP、`Peer Review File` / `Peer reviewer reports` 不归 supplementary。 |
-| Wiley | `Supporting Information` accordion/content 内的 `downloadSupplement` 或 `sup-*` supporting file 链接。 | 正文 `<figure>` 的 `/cms/asset/...fig-*` 只归 body figure，不并行归 supplementary。 |
-| Science / PNAS | Atypon back matter 的真实 `Supplementary Material(s)` / `Supporting Information` section 子树和 publisher `/doi/suppl/.../suppl_file/...` 附件。 | 正文 Data Availability 链接、页内 `#supplementary-materials` 导航和 supplementary references 中的外部 PDF 不归 supplementary。 |
+| Wiley | `Supporting Information` accordion/content 内的 `downloadSupplement` 或 `sup-*` supporting file 链接；`file` / `filename` / `attachment` / 非布尔 `download` query 可作为落盘 `filename_hint`。 | 正文 `<figure>` 的 `/cms/asset/...fig-*` 只归 body figure，不并行归 supplementary；`download=true` 不作为文件名。 |
+| Science / PNAS | Atypon back matter 的真实 `Supplementary Material(s)` / `Supporting Information` section 子树和 publisher `/doi/suppl/.../suppl_file/...` 附件。 | 正文 figure/formula、Data Availability 链接、页内 `#supplementary-materials` 导航和 supplementary references 中的外部 PDF 不归 supplementary。 |
 | ACS | 当前 Silverchair `.widget-ArticleDataSupplements` 中的稳定 publisher `/article-supplement/` 附件。 | 嵌入 Figshare viewer/downloader、正文 figure/table asset、citation/download chrome 和机构 OpenURL 链接不归 canonical supplementary。 |
-| IEEE | 明确 Supplementary / Supporting Material / Multimedia section，IEEE 附件语义容器，或 landing metadata `sections.multimedia=true` 加 `/rest/document/{article_number}/multimedia` payload。 | 正文 `data` / `dataset` / `code` / `media` / repository 链接和文件后缀不能单独触发 supplementary。 |
+| IEEE | 明确 Supplementary / Supporting Material / Multimedia section，IEEE 附件语义容器，或 landing metadata `sections.multimedia=true` 加 `/rest/document/{article_number}/multimedia` payload；只有 `asset_profile=all` 下载这些附件。 | `asset_profile=body` 只下载正文 figure/table/formula；正文 `data` / `dataset` / `code` / `media` / repository 链接和文件后缀不能单独触发 supplementary。 |
 | Copernicus | NLM/JATS XML 中的 `supplementary-material`、`inline-supplementary-material` 和明确 `xlink:href` 附件节点。 | 正文 Data/Code Availability 普通仓库链接不凭文本或后缀升级为 supplementary。 |
 | IOP | 正文页的 `#supplDataLink` 或同 DOI `/article/{doi}/data[N]` 入口只是索引；复用文章浏览器 cookie/Referer 打开索引页后，只接受 `#supplementarydata` 内 `id=SM数字` 的真实附件。 | `/data` HTML 本身、正文 figure 的 Standard/High-resolution 控件、页脚 WeChat QR 和未编号链接都不归 supplementary；索引 challenge、DOI 不匹配或空附件必须记录 asset failure。 |
 
@@ -245,13 +249,6 @@ metadata
   - 它约束的是“已识别的 provider-owned 元数据要稳定进入最终模型”，不是要求不存在的作者信息凭空生成。
   - 摘要重复去重不归本规则约束；前言摘要族顺序与去重见 [前言摘要族的顺序与去重必须稳定](#rule-stable-frontmatter-order)。
 
-<a id="rule-preserve-subscripts-in-headings"></a>
-### 兼容锚点：标题和节标题里的上下标不能被打平成普通文本
-
-> 参见 [正文、标题和表格里的行内语义格式不能被打平或拆裂](#rule-preserve-inline-semantics-in-body-and-tables)。
-
-兼容锚点保留用于 manifest 和外部引用。标题、节标题、frontmatter、正文、caption 和 table cell 中的 `sub` / `sup` 统一由同一条 inline semantics 规则约束。
-
 <a id="rule-short-markdown-image-alt-labels"></a>
 ### Markdown 图片 alt 只保留短标签
 
@@ -323,12 +320,6 @@ metadata
   - Provider-specific reference payload、bibliography 抽取和 Crossref fallback 优先级不属于本规则。
 
 <a id="rule-image-download-tier-diagnostics"></a>
-### 兼容锚点：图片下载必须验证真实图片、保留 tier 和尺寸诊断
-
-> 参见 [图片下载必须验证真实图片内容](#rule-image-download-validates-real-images)、[下载资产必须保留诊断字段](#rule-asset-download-diagnostic-fields) 和 [浏览器工作流图片下载必须使用 shared browser 主链路](#rule-browser-primary-image-download-path)。
-
-兼容锚点保留用于 manifest 和外部引用。当前规则分别约束真实性校验、诊断字段和 provider-owned 浏览器主链路。
-
 <a id="rule-image-download-validates-real-images"></a>
 ### 图片下载必须验证真实图片内容
 
@@ -583,28 +574,8 @@ metadata
   - 结构信号优先于单一 DOI 现象；fixture 只是证明样本，不构成 DOI 或 publisher 特判。
 
 <a id="rule-availability-section-kind-mapping"></a>
-### 兼容锚点：Availability 标题必须映射到稳定 section kind
-
-> 参见 [Availability section contract 必须保留、归类、排除正文度量并适配 hints](#rule-keep-data-availability-once)。
-
-兼容锚点保留用于 manifest、测试标记和外部引用。
-
 <a id="rule-availability-excluded-from-body-metrics"></a>
-### 兼容锚点：Availability 不计入正文充分性度量
-
-> 参见 [Availability section contract 必须保留、归类、排除正文度量并适配 hints](#rule-keep-data-availability-once)。
-
-兼容锚点保留用于 manifest、测试标记和外部引用。
-覆盖测试包括 [`../tests/unit/test_models_render.py`](../tests/unit/test_models_render.py) 中的 `test_article_from_markdown_keeps_code_availability_without_counting_it_as_fulltext`。
-
 <a id="rule-section-hints-normalize-availability"></a>
-### 兼容锚点：Section hint 必须稳定适配 availability 节
-
-> 参见 [Availability section contract 必须保留、归类、排除正文度量并适配 hints](#rule-keep-data-availability-once)。
-
-兼容锚点保留用于 manifest、测试标记和外部引用。HTML semantics 与 `ArticleModel` 的解耦边界见 [`architecture/overview.md` 的 Extraction 层](architecture/overview.md#6-extraction-层)。
-覆盖测试包括 [`../tests/unit/test_models_render.py`](../tests/unit/test_models_render.py) 中的 `test_article_from_markdown_coerces_dict_object_and_section_hint_in_declared_order`。
-
 <a id="rule-keep-headingless-body-flat"></a>
 ### 无节标题正文必须保持扁平
 
@@ -619,6 +590,7 @@ metadata
   - 这条规则不是说 `## Main Text` 永远不能出现。
   - 它约束的是“没有可靠正文节标题时不要硬造一层节结构”，不是禁止在前言和正文之间加一个必要的边界标题。
 
+<a id="rule-preserve-subscripts-in-headings"></a>
 <a id="rule-preserve-inline-semantics-in-body-and-tables"></a>
 ### 正文、标题和表格里的行内语义格式不能被打平或拆裂
 
@@ -749,12 +721,6 @@ metadata
   - [前言摘要族的顺序与去重必须稳定](#rule-stable-frontmatter-order) 只在 Springer/Nature 页面暴露可识别 frontmatter 结构时适用，不要求所有 Springer 页面生成前言族。
 
 <a id="rule-springer-chrome-heading-normalization"></a>
-### 兼容锚点：Springer chrome 剪枝与编号标题空格规范化
-
-> 参见 [Springer article root 必须避开站点 chrome](#rule-springer-article-root-chrome-pruning) 和 [Springer 编号标题必须规范空格](#rule-springer-numbered-heading-spacing)。
-
-兼容锚点保留用于 manifest 和外部引用。当前规则分别约束 article-root / chrome 剪枝，以及编号标题 inline span 的空格规范化。
-
 <a id="rule-springer-article-root-chrome-pruning"></a>
 ### Springer article root 必须避开站点 chrome
 
@@ -785,12 +751,6 @@ metadata
   - 它不要求所有编号标题都改写成某个统一编号体系，只要求已存在的编号和标题文本不能粘连或重复。
 
 <a id="rule-nature-main-content-direct-children"></a>
-### 兼容锚点：Nature main-content 直接子节点遍历规则
-
-> 参见 [Springer / Nature main-content 必须按直接子节点顺序进入正文](#rule-springer-main-content-direct-children)。
-
-兼容锚点保留用于 manifest 和外部引用。
-
 <a id="rule-springer-main-content-direct-children"></a>
 ### Springer / Nature main-content 必须按直接子节点顺序进入正文
 
@@ -808,19 +768,6 @@ metadata
   - 正文外的 `Data availability` / `Code availability` 仍然允许从 scientific back matter 补回，但已经在正文遍历中出现的 availability 节不能重复输出。
 
 <a id="rule-springer-original-html-artifact"></a>
-### 兼容锚点：Springer 原始 article HTML 落盘
-
-> 参见 [`providers.md` 的 Provider artifact/storage 说明](providers.md#provider-原始-html-artifact)。
-
-兼容锚点保留用于外部引用。原始 HTML 文件名和下载目录形态属于 `artifact-storage`，不是提取 / 渲染规则。
-
-<a id="rule-springer-supplementary-scope"></a>
-### 兼容锚点：Springer supplementary scope
-
-> 参见 [Supplementary discovery 必须来自明确附件 scope](#rule-supplementary-discovery-explicit-scope) 的 provider 差异表。
-
-兼容锚点保留用于 manifest、测试标记和外部引用。Springer / Nature 的 `Source Data` 仍通过 provider-specific helper 独立分流到 `source_data/`。
-
 <a id="rule-springer-access-hint-disclaimer"></a>
 ### 访问提示、预览语和 AI 免责声明不能混进正文
 
@@ -957,12 +904,6 @@ metadata
   - 它约束的是 appendix 资产的实际渲染位置和上下文，而不是正文文字是否能提到它们。
 
 <a id="rule-elsevier-table-placement"></a>
-### 兼容锚点：Elsevier 图表正文位置、去重和复杂表规范化
-
-> 参见 [Elsevier 正文引用到的 figure / table 要就地插回](#rule-elsevier-inline-figure-table-placement)、[Elsevier 已消费图表不得在尾部重复追加](#rule-elsevier-consumed-figure-table-dedup) 和 [Elsevier 复杂 span 表必须区分成功规范化与异常降级](#rule-elsevier-complex-table-span-degradation)。
-
-兼容锚点保留用于 manifest 和外部引用。
-
 <a id="rule-elsevier-inline-figure-table-placement"></a>
 ### Elsevier 正文引用到的 figure / table 要就地插回
 
@@ -1105,13 +1046,6 @@ metadata
   - 结构信号优先于单一 DOI：规则看的是 `Abbreviations` 区块相对正文主线和正文表格的位置，不以 `10.1111_cas.16395` 本身作为特判。
   - 它约束的是“存在该区块时的落点”，不是强制生成一个缺失的缩写表。
 
-<a id="rule-wiley-supporting-information-assets"></a>
-### 兼容锚点：Wiley supplementary scope
-
-> 参见 [Supplementary discovery 必须来自明确附件 scope](#rule-supplementary-discovery-explicit-scope) 的 provider 差异表。
-
-兼容锚点保留用于 manifest、测试标记和外部引用。Wiley `downloadSupplement` 的 `file` / `filename` / `attachment` / `download` query 仍作为 `filename_hint` 保留并优先用于落盘；布尔型 `download=true` 不作为文件名。
-
 <a id="rule-wiley-reference-text"></a>
 ### Wiley 参考文献必须使用可见 citation 文本而不是 DOI-only 或链接 chrome
 
@@ -1129,13 +1063,6 @@ metadata
   - 这条规则只过滤 publisher reference chrome，不会补全原始 HTML 中没有的 bibliographic 字段。
 
 ## Science
-
-<a id="rule-atypon-browser-workflow-supplementary-sections"></a>
-### 兼容锚点：Science / PNAS supplementary section scope
-
-> 参见 [Supplementary discovery 必须来自明确附件 scope](#rule-supplementary-discovery-explicit-scope) 的 provider 差异表。
-
-兼容锚点保留用于 manifest、测试标记和外部引用。Science / PNAS 正文图片和公式图片范围不受 supplementary contract 影响。
 
 - Owner：`paper_fetch.providers._science_html` 与 `paper_fetch.providers.atypon_browser_workflow`；browser-workflow candidate routing 由 Atypon-only `paper_fetch.providers._atypon_browser_workflow_profiles` 暴露。
 - 共享规则另见：
@@ -1222,10 +1149,6 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 ## MDPI
 
 <a id="rule-mdpi-browser-html-cleanup"></a>
-### 兼容锚点：MDPI browser HTML cleanup
-
-> 参见 [display object anchoring / dedupe](#rule-mdpi-display-object-anchoring-dedupe)、[formula inline / display rendering](#rule-mdpi-formula-inline-display-rendering)、[references numbering / link cleanup](#rule-mdpi-references-numbering-link-cleanup) 和 [article body semantics / chrome removal](#rule-mdpi-body-semantics-chrome-removal)。兼容锚点保留用于外部引用。
-
 <a id="rule-mdpi-display-object-anchoring-dedupe"></a>
 ### MDPI display object 必须按正文引用锚定并去重
 
@@ -1378,12 +1301,6 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
   - [Markdown inline citation normalize 不能破坏非引用语义和图片块边界](#rule-markdown-inline-citation-normalization)
 
 <a id="rule-ieee-real-html-semantics"></a>
-### 兼容锚点：IEEE REST HTML 真实语义规则
-
-> 参见 [IEEE REST HTML 必须保留正文结构和标题层级](#rule-ieee-html-structure)、[IEEE landing metadata 和 references payload 必须覆盖 fallback](#rule-ieee-landing-metadata-references)、[IEEE mediastore 正文图表资产必须锚定并去重](#rule-ieee-mediastore-body-assets)；IEEE supplementary / multimedia scope 见 [Supplementary discovery 必须来自明确附件 scope](#rule-supplementary-discovery-explicit-scope)。
-
-兼容锚点保留用于 manifest 和外部引用。
-
 <a id="rule-ieee-html-structure"></a>
 ### IEEE REST HTML 必须保留正文结构和标题层级
 
@@ -1429,13 +1346,6 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
   - 已锚定正文图表不得在尾部 Figures / Tables 附录重复追加，归共享 [正文已内联 figure 时避免重复追加尾部 Figures 附录](#rule-no-trailing-figures-appendix) 约束。
   - 这条规则只约束正文 figure/table/formula 资产；supplementary / multimedia 文件附件见 [Supplementary discovery 必须来自明确附件 scope](#rule-supplementary-discovery-explicit-scope)。
 
-<a id="rule-ieee-supplementary-scope"></a>
-### 兼容锚点：IEEE supplementary / multimedia scope
-
-> 参见 [Supplementary discovery 必须来自明确附件 scope](#rule-supplementary-discovery-explicit-scope) 的 provider 差异表。
-
-兼容锚点保留用于 manifest、测试标记和外部引用。IEEE `asset_profile='body'` 仍只下载正文 figure/table/formula，`asset_profile='all'` 才下载 supplementary / multimedia 文件。
-
 <a id="rule-ieee-html-access-waterfall"></a>
 ### IEEE HTML 可用性与 fallback 顺序
 
@@ -1445,7 +1355,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 - Owner：`paper_fetch.providers._ieee_block_page` 与 `paper_fetch.providers._ieee_browser_html`。
 - provider 路由、REST/DOM readiness 和 PDF fallback 细节参见 [`providers.md` 的 IEEE provider 说明](providers.md#ieee)。
 
-该锚点继续兼容 manifest 与外部引用；本规则只约束检测语义，不改变既有 route 顺序。
+本规则只约束检测语义，不改变既有 route 顺序。
 
 ## Copernicus
 

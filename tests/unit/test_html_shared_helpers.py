@@ -19,10 +19,12 @@ from paper_fetch.extraction.html import assets as html_assets
 from paper_fetch.extraction.html import _metadata as html_metadata
 from paper_fetch.extraction.html import _runtime as html_runtime
 from paper_fetch.extraction.html import shared as html_shared
+from paper_fetch.extraction.html.assets.figures import _tag_class_tokens
 from paper_fetch.extraction.html.cleanup_policy import classify_markdown_cleanup_line
 from paper_fetch.extraction.html.formula_rules import (
     GENERIC_FORMULA_CONTAINER_TOKENS,
     GENERIC_DISPLAY_FORMULA_SELECTORS,
+    _class_tokens as _formula_class_tokens,
     formula_heading_for_image,
     formula_image_url_from_node,
     is_display_formula_node,
@@ -42,7 +44,10 @@ from paper_fetch.extraction.html.provider_rules import (
     provider_supplementary_text_tokens,
 )
 from paper_fetch.extraction.html.inline import normalize_html_inline_text
-from paper_fetch.extraction.markdown_render.figures import is_html_figure_container
+from paper_fetch.extraction.markdown_render.figures import (
+    _html_class_tokens as _markdown_figure_class_tokens,
+    is_html_figure_container,
+)
 from paper_fetch.extraction.html.tables import render_table_markdown
 from paper_fetch.http import HttpTransport
 from paper_fetch.image_tools import ImageConversionFailure, SourceImageConversion
@@ -100,6 +105,39 @@ class _StaticAssetTransport(HttpTransport):
 
 
 class SharedHtmlHelperTests(unittest.TestCase):
+    def test_class_token_parsers_share_html_input_contract(self) -> None:
+        parsers = (
+            ("shared", html_shared.class_tokens),
+            ("html figures", _tag_class_tokens),
+            ("formula rules", _formula_class_tokens),
+            ("markdown figures", _markdown_figure_class_tokens),
+        )
+        for consumer, parser in parsers:
+            with self.subTest(consumer=consumer):
+                self.assertIs(parser, html_shared.class_tokens)
+                soup = BeautifulSoup(
+                    '<div class=" Figure   FIG-SECTION "></div>', "html.parser"
+                )
+                node = soup.find("div")
+                assert node is not None
+                self.assertEqual(parser(node), {"figure", "fig-section"})
+
+                node.attrs["class"] = " Figure \t FIG-SECTION "
+                self.assertEqual(parser(node), {"figure", "fig-section"})
+
+                for raw_classes in (
+                    [" Figure ", "FIG-SECTION"],
+                    (" Figure ", "FIG-SECTION"),
+                    {" Figure ", "FIG-SECTION"},
+                ):
+                    node.attrs["class"] = raw_classes
+                    self.assertEqual(parser(node), {"figure", "fig-section"})
+
+                node.attrs["class"] = None
+                self.assertEqual(parser(node), set())
+                for non_tag in (None, "not-a-tag", object()):
+                    self.assertEqual(parser(non_tag), set())
+
     def test_common_label_patterns_and_extended_data_prefix_helpers(self) -> None:
         self.assertIsNotNone(FIGURE_LABEL_PATTERN.search("see Fig. 2a."))
         self.assertIsNotNone(TABLE_LABEL_PATTERN.search("Table 3 reports values"))
@@ -175,7 +213,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
     def test_parse_html_metadata_does_not_treat_generic_description_as_abstract(
         self,
     ) -> None:
-        """rule: rule-generic-metadata-boundaries"""
         html = golden_criteria_scenario_asset(
             "generic_metadata_boundaries", "generic_description.html"
         ).read_text(encoding="utf-8")
@@ -187,7 +224,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertIsNone(metadata["abstract"])
 
     def test_parse_html_metadata_uses_redirect_stub_lookup_title(self) -> None:
-        """rule: rule-generic-metadata-boundaries"""
         html = golden_criteria_scenario_asset(
             "generic_metadata_boundaries", "redirect_stub.html"
         ).read_text(encoding="utf-8")
@@ -407,7 +443,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
         )
 
     def test_explicit_formula_url_in_figure_caption_is_a_formula_asset(self) -> None:
-        """rule: rule-preserve-formula-image-fallbacks"""
         html = """
 <html>
   <body>
@@ -740,7 +775,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
     def test_wiley_asset_scopes_only_collect_supporting_information_downloads(
         self,
     ) -> None:
-        """rule: rule-wiley-supporting-information-assets"""
         source_url = "https://onlinelibrary.wiley.com/doi/full/10.1111/example"
         html_text = """
 <html>
@@ -817,7 +851,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
     def test_wiley_real_fixture_supporting_information_only_yields_true_supplementary_asset(
         self,
     ) -> None:
-        """rule: rule-wiley-supporting-information-assets"""
         source_url = "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414"
         html_text = golden_criteria_asset(
             "10.1111/gcb.16414", "original.html"
@@ -914,7 +947,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
     def test_download_assets_supplementary_kind_routes_source_data_into_subdirectory(
         self,
     ) -> None:
-        """rule: rule-springer-supplementary-scope"""
         responses = {
             "https://example.test/supplement.pdf": {
                 "status_code": 200,
@@ -971,7 +1003,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
     def test_download_assets_supplementary_kind_with_only_source_data_creates_only_source_data_subdirectory(
         self,
     ) -> None:
-        """rule: rule-springer-supplementary-scope"""
 
         source_url = "https://example.test/source-data-only.csv"
         transport = _StaticAssetTransport(
@@ -1016,7 +1047,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
     def test_wiley_body_figures_are_not_promoted_to_supplementary_without_supporting_information(
         self,
     ) -> None:
-        """rule: rule-wiley-supporting-information-assets"""
         body_html = """
 <section class="article-section__content">
   <figure class="figure" id="example-fig-0001">
@@ -1073,7 +1103,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
     def test_extract_scoped_html_assets_empty_supplementary_scope_does_not_scan_body(
         self,
     ) -> None:
-        """rule: rule-atypon-browser-workflow-supplementary-sections"""
         body_html = """
 <html>
   <body>
@@ -1094,7 +1123,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
     def test_science_real_fixture_supplementary_comes_only_from_supplementary_section(
         self,
     ) -> None:
-        """rule: rule-atypon-browser-workflow-supplementary-sections"""
         source_url = "https://www.science.org/doi/full/10.1126/sciadv.adl6155"
         html_text = golden_criteria_asset(
             "10.1126/sciadv.adl6155", "original.html"
@@ -1133,7 +1161,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
     def test_pnas_real_fixture_supplementary_ignores_body_anchor_to_section(
         self,
     ) -> None:
-        """rule: rule-atypon-browser-workflow-supplementary-sections"""
         source_url = "https://www.pnas.org/doi/full/10.1073/pnas.2509692123"
         html_text = block_asset("10.1073/pnas.2509692123", "raw.html").read_text(
             encoding="utf-8",
@@ -1200,7 +1227,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertEqual(candidates[0], "https://example.test/full.png")
 
     def test_formula_bitmap_download_is_an_accepted_preview(self) -> None:
-        """rule: rule-image-download-validates-real-images"""
         formula_url = "https://example.test/cms/example-math-0001.png"
         formula_body = golden_criteria_asset(
             "10.1371/journal.pone.0015338",
@@ -1589,7 +1615,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertNotIn("Skip to main content", cleaned)
 
     def test_decode_html_uses_http_charset_after_utf8_fails(self) -> None:
-        """rule: rule-html-byte-decoding-and-cleanup-bounds"""
         body = "<html><body><p>Résumé</p></body></html>".encode("iso-8859-1")
 
         decoded = html_runtime.decode_html(
@@ -1600,7 +1625,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertIn("Résumé", decoded)
 
     def test_decode_html_reads_meta_charset_after_utf8_fails(self) -> None:
-        """rule: rule-html-byte-decoding-and-cleanup-bounds"""
         body = (
             '<html><head><meta charset="windows-1252"></head>'
             "<body><p>“quoted”</p></body></html>"
@@ -1611,7 +1635,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertIn("“quoted”", decoded)
 
     def test_decode_html_uses_charset_normalizer_before_replace_fallback(self) -> None:
-        """rule: rule-html-byte-decoding-and-cleanup-bounds"""
         body = b"\xffnot-utf8"
         original = html_runtime._charset_normalizer_from_bytes
 
@@ -1632,7 +1655,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertEqual(decoded, "detected text")
 
     def test_decode_html_short_circuits_valid_utf8(self) -> None:
-        """rule: rule-html-byte-decoding-and-cleanup-bounds"""
         original = html_runtime._charset_normalizer_from_bytes
 
         def fail_if_called(_: bytes):
@@ -1647,7 +1669,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertEqual(decoded, "naïve UTF-8")
 
     def test_no_root_cleanup_skips_per_node_classification(self) -> None:
-        """rule: rule-html-byte-decoding-and-cleanup-bounds"""
         html = """
 <html>
   <body>
@@ -1677,7 +1698,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertNotIn("orcid.org", cleaned)
 
     def test_raw_trafilatura_fallback_skips_large_raw_html(self) -> None:
-        """rule: rule-html-byte-decoding-and-cleanup-bounds"""
         calls: list[str] = []
 
         class _Backend:
@@ -1700,7 +1720,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertIn("Fallback body text remains.", markdown)
 
     def test_extract_article_markdown_falls_back_without_trafilatura(self) -> None:
-        """rule: rule-html-byte-decoding-and-cleanup-bounds"""
         original_import_module = html_runtime.importlib.import_module
         original_trafilatura = html_runtime.trafilatura
 
@@ -1739,7 +1758,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertIn("Fallback body text remains readable.", markdown)
 
     def test_orcid_href_pattern_is_module_constant_used_by_pruning(self) -> None:
-        """rule: rule-html-byte-decoding-and-cleanup-bounds"""
         self.assertIsNotNone(
             html_runtime.ORCID_HREF_PATTERN.search("https://orcid.org/0000")
         )
@@ -1906,10 +1924,10 @@ Learn more
         generic_cleanup = html_runtime.html_cleanup_rules()
         pnas_cleanup = html_runtime.html_cleanup_rules("pnas")
 
-        self.assertIn("toolbar", generic_cleanup.attr_tokens)
-        self.assertIn("toolbar", pnas_cleanup.attr_tokens)
-        self.assertNotIn("signup-alert-ad", generic_cleanup.attr_tokens)
-        self.assertIn("signup-alert-ad", pnas_cleanup.attr_tokens)
+        self.assertIn("toolbar", generic_cleanup.policy.dom_attr_tokens)
+        self.assertIn("toolbar", pnas_cleanup.policy.dom_attr_tokens)
+        self.assertNotIn("signup-alert-ad", generic_cleanup.policy.dom_attr_tokens)
+        self.assertIn("signup-alert-ad", pnas_cleanup.policy.dom_attr_tokens)
         self.assertNotIn(
             "sign up for pnas alerts",
             generic_cleanup.markdown_promo_tokens,
@@ -2170,7 +2188,6 @@ Learn more
     def test_inline_normalization_is_shared_for_body_heading_and_table_text(
         self,
     ) -> None:
-        """rule: rule-preserve-inline-semantics-in-body-and-tables"""
         raw_text = "CO <sub> 2 </sub> emission </sup> +"
 
         self.assertEqual(
@@ -2191,7 +2208,6 @@ Learn more
         )
 
     def test_inline_normalization_preserves_isotope_superscript_spacing(self) -> None:
-        """rule: rule-preserve-inline-semantics-in-body-and-tables"""
         self.assertEqual(
             normalize_html_inline_text("gas of <sup>6</sup>Li atoms"),
             "gas of <sup>6</sup>Li atoms",
@@ -2204,7 +2220,6 @@ Learn more
     def test_inline_normalization_tightens_high_confidence_sup_sub_spacing(
         self,
     ) -> None:
-        """rule: rule-preserve-inline-semantics-in-body-and-tables"""
         self.assertEqual(
             normalize_html_inline_text("[ <sup>17</sup>]"), "[<sup>17</sup>]"
         )
@@ -2241,7 +2256,6 @@ Learn more
     def test_inline_token_joiner_is_shared_by_body_heading_and_table_cells(
         self,
     ) -> None:
-        """rule: rule-preserve-inline-semantics-in-body-and-tables"""
         soup = BeautifulSoup(
             """
 <article>
@@ -2440,7 +2454,6 @@ Learn more
         self.assertEqual(body_text, "Let $x+y$ stay inline.")
 
     def test_formula_rules_detect_real_formula_image_urls(self) -> None:
-        """rule: rule-preserve-formula-image-fallbacks"""
         wiley_html = golden_criteria_asset(
             "10.1111/gcb.15322", "original.html"
         ).read_text(
@@ -2600,7 +2613,6 @@ Learn more
         self.assertEqual(springer_assets[0]["heading"], "Source data")
 
     def test_clean_markdown_registers_springer_nature_profile(self) -> None:
-        """rule: rule-springer-article-root-chrome-pruning"""
         markdown = """
 # Article
 

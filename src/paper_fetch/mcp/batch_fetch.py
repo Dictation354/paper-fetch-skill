@@ -35,14 +35,15 @@ from ..models import (
     AssetProfile,
     FetchEnvelope,
 )
-from ..publisher_identity import normalize_doi
 from ..reason_codes import RATE_LIMITED
 from ..runtime import RuntimeContext
-from ..utils import normalize_text
 from ..workflow.batch_routing import (
+    deduplicate_batch_items,
+    expected_doi_from_query,
+    fanout_batch_items,
     initial_provider_lane,
     provider_lane_limit,
-    resolve_provider_lane,
+    resolve_batch_item_routing,
 )
 from ..workflow.batch_runner import (
     BatchCompletionEvent,
@@ -53,13 +54,9 @@ from ..workflow.batch_runner import (
     BatchRunResult,
     run_batch_async,
 )
-from ..workflow.session_cache import RESOLVED_QUERY_KEY
 from ..workflow.types import effective_asset_profile
 from ._deps import MCPDeps, default_mcp_deps
-from .acceptance_payloads import (
-    compact_acceptance_payload,
-    expected_doi_from_query,
-)
+from .acceptance_payloads import compact_acceptance_payload
 from .batch import _mcp_batch_failure, report_progress
 from .cache_payloads import (
     _MCP_DEFAULT_DOWNLOAD_DIR,
@@ -102,7 +99,6 @@ class _CompactRunState:
     submitted_indices: set[int]
     record_sequences: Mapping[tuple[int, int], int]
     envelopes: Mapping[tuple[int, int], FetchEnvelope]
-    saved_results: Mapping[tuple[int, int], SavedMarkdownResult]
     cache_hits: Mapping[tuple[int, int], bool]
     run_result: BatchRunResult[BatchFetchItem, BatchFetchOutcome] | None
 
@@ -120,12 +116,8 @@ def _raise_for_callback_failures(
     raise RuntimeError(f"could not build complete batch_fetch results: {details}")
 
 
-def _expected_doi(query: str) -> str | None:
-    return normalize_doi(expected_doi_from_query(query) or "") or None
-
-
-def _lane_for_query(query: str) -> str:
-    return initial_provider_lane(query)
+_expected_doi = expected_doi_from_query
+_lane_for_query = initial_provider_lane
 
 
 def _resolve_batch_item_lane(
@@ -134,62 +126,15 @@ def _resolve_batch_item_lane(
     context: RuntimeContext,
     deps: MCPDeps,
 ) -> BatchFetchItem:
-    try:
-        lane_key = resolve_provider_lane(
-            item.query,
-            initial_lane=item.lane_key,
-            context=context,
-            resolver=lambda query, *, context: _call_service_resolve_paper(
-                query,
-                context=context,
-                deps=deps,
-            ),
-        )
-    except Exception:
-        # The fetch attempt remains the owner of resolution errors and diagnostics.
-        return item
-    resolved = context.get_session_cache(
-        RESOLVED_QUERY_KEY.materialize(normalize_text(item.query) or item.query)
-    )
-    resolved_doi = normalize_doi(
-        str(
-            (
-                resolved.get("doi")
-                if isinstance(resolved, Mapping)
-                else getattr(resolved, "doi", None)
-            )
-            or ""
-        )
-    )
-    return replace(
+    return resolve_batch_item_routing(
         item,
-        lane_key=lane_key,
-        canonical_doi=resolved_doi or item.canonical_doi,
+        context=context,
+        resolver=lambda query, *, context: _call_service_resolve_paper(
+            query,
+            context=context,
+            deps=deps,
+        ),
     )
-
-
-def _deduplicate_batch_items(
-    items: Sequence[BatchFetchItem],
-) -> tuple[list[BatchFetchItem], dict[int, tuple[BatchFetchItem, ...]]]:
-    """Return one representative per verified canonical DOI and its fan-out."""
-
-    representatives: list[BatchFetchItem] = []
-    owner_by_doi: dict[str, BatchFetchItem] = {}
-    duplicates: dict[int, list[BatchFetchItem]] = {}
-    for item in items:
-        doi = normalize_doi(item.canonical_doi or "")
-        if not doi:
-            representatives.append(item)
-            continue
-        owner = owner_by_doi.get(doi)
-        if owner is None:
-            owner_by_doi[doi] = item
-            representatives.append(item)
-            continue
-        duplicates.setdefault(owner.index, []).append(item)
-    return representatives, {
-        index: tuple(values) for index, values in duplicates.items()
-    }
 
 
 async def _resolve_batch_item_lanes(
@@ -410,39 +355,6 @@ def _record_from_batch_result(
                 failure.retry_after_seconds if failure is not None else None
             ),
         ),
-        aborted=True,
-        requested_outputs=request.to_fetch_request(item.query).requested_modes(),
-        expected_doi=_expected_doi(item.query),
-        started_at=completed_at,
-        completed_at=completed_at,
-        deps=deps,
-    )
-
-
-def _synthetic_aborted_record(
-    request: BatchFetchRequest,
-    item: BatchFetchItem,
-    *,
-    request_parameters: Mapping[str, Any],
-    run_id: UUID,
-    tool_version: str,
-    code: str,
-    reason: str,
-    deps: ManifestBuilderDependencies,
-) -> ManifestRecord:
-    completed_at = deps.clock()
-    return build_manifest_record(
-        tool_version=tool_version,
-        run_id=run_id,
-        record_id=deterministic_manifest_record_id(
-            run_id, index=item.index, attempt=item.attempt
-        ),
-        index=item.index,
-        attempt=item.attempt,
-        query=item.query,
-        request_parameters=request_parameters,
-        asset_profile=_asset_profile_for_record(request, None),
-        error=_aborted_error_payload(reason=reason, code=code),
         aborted=True,
         requested_outputs=request.to_fetch_request(item.query).requested_modes(),
         expected_doi=_expected_doi(item.query),
@@ -736,7 +648,6 @@ async def _execute_batch_fetch(
     records: dict[int, ManifestRecord] = {}
     record_sequences: dict[tuple[int, int], int] = {}
     envelopes: dict[tuple[int, int], FetchEnvelope] = {}
-    saved_results: dict[tuple[int, int], SavedMarkdownResult] = {}
     cache_hits: dict[tuple[int, int], bool] = {}
     logical_terminal = 0
     run_result: BatchRunResult[BatchFetchItem, BatchFetchOutcome] | None = None
@@ -785,7 +696,7 @@ async def _execute_batch_fetch(
                     deps=deps,
                 )
             logical_items = list(items)
-            items, duplicates_by_owner = _deduplicate_batch_items(logical_items)
+            items, duplicates_by_owner = deduplicate_batch_items(logical_items)
 
             def run_item(item: BatchFetchItem) -> BatchFetchOutcome:
                 started_at = manifest_deps.clock()
@@ -795,12 +706,9 @@ async def _execute_batch_fetch(
                     item_context.reset_request_deadline()
                     envelope = deps.fetch_paper_envelope(
                         fetch_request,
-                        env=runtime_env,
                         download_dir=download_arg,
-                        transport=None,
                         include_article_for_assets=True,
                         context=item_context,
-                        cancel_check=cancelled.is_set,
                         deps=deps,
                     )
                     saved = _save_markdown_result_for_fetch_request(
@@ -837,9 +745,9 @@ async def _execute_batch_fetch(
                 event: BatchCompletionEvent[BatchFetchItem, BatchFetchOutcome],
             ) -> None:
                 nonlocal logical_terminal
-                fanout_items = (
+                fanout_items = fanout_batch_items(
                     event.result.item,
-                    *duplicates_by_owner.get(event.result.item.index, ()),
+                    duplicates_by_owner,
                 )
                 for position, fanout_item in enumerate(fanout_items):
                     outcome = event.result.value
@@ -864,8 +772,6 @@ async def _execute_batch_fetch(
                     if outcome is not None and outcome.envelope is not None:
                         envelopes[key] = outcome.envelope
                         cache_hits[key] = _cache_hit(outcome.envelope)
-                        if outcome.saved_markdown is not None:
-                            saved_results[key] = outcome.saved_markdown
                     logical_terminal += 1
                     records[record.index] = record
                     record_sequences[key] = logical_terminal
@@ -962,7 +868,6 @@ async def _execute_batch_fetch(
             submitted_indices=submitted_indices,
             record_sequences=record_sequences,
             envelopes=envelopes,
-            saved_results=saved_results,
             cache_hits=cache_hits,
             run_result=run_result,
         ),
@@ -998,24 +903,11 @@ async def batch_fetch_tool_async(
     run_id: UUID | None = None,
     tool_version: str | None = None,
 ) -> CallToolResult:
+    input_values = locals()
     request_payload: dict[str, Any] = {
-        "queries": queries,
-        "concurrency": concurrency,
-        "modes": modes,
-        "strategy": strategy,
-        "include_refs": include_refs,
-        "max_tokens": max_tokens,
-        "prefer_cache": prefer_cache,
-        "no_download": no_download,
-        "artifact_mode": artifact_mode,
-        "save_markdown": save_markdown,
-        "markdown_output_dir": markdown_output_dir,
-        "markdown_filename": markdown_filename,
-        "detail": detail,
-        "content_max_chars": content_max_chars,
-        "continue_on_error": continue_on_error,
-        "batch_results": batch_results,
-        "overwrite": overwrite,
+        name: input_values[name]
+        for name in BatchFetchRequest.model_fields
+        if name != "download_dir"
     }
     if download_dir is not _MCP_DEFAULT_DOWNLOAD_DIR:
         request_payload["download_dir"] = (

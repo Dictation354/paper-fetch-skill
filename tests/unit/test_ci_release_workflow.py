@@ -162,15 +162,11 @@ def test_supported_python_and_native_macos_matrix_remains_explicit() -> None:
 
 
 def test_locked_dependency_audit_covers_all_extras_and_fails_directly() -> None:
-    for name, job_name in (
-        ("verify.yml", "quality"),
-        ("dependency-refresh.yml", "latest-compatible"),
-    ):
-        job = _workflow(name)["jobs"][job_name]
-        commands = "\n".join(str(step.get("run") or "") for step in _steps(job))
-        assert "uv export --locked --all-extras" in commands
-        assert "python -m pip_audit" in commands
-        assert all(step.get("continue-on-error") is not True for step in _steps(job))
+    job = _workflow("verify.yml")["jobs"]["quality"]
+    commands = "\n".join(str(step.get("run") or "") for step in _steps(job))
+    assert "uv export --locked --all-extras" in commands
+    assert "python -m pip_audit" in commands
+    assert all(step.get("continue-on-error") is not True for step in _steps(job))
 
 
 def test_python_boundaries_build_once_then_smoke_core_and_full() -> None:

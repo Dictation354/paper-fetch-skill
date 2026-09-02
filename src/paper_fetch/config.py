@@ -267,10 +267,6 @@ def resolve_mcp_download_dir(env: Mapping[str, str] | None = None) -> Path:
     return configured or (resolve_user_data_dir(env) / "downloads")
 
 
-def resolve_repo_root() -> Path:
-    return DEFAULT_REPO_ROOT
-
-
 def parse_positive_int_env(
     env: Mapping[str, str],
     name: str,

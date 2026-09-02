@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 from collections.abc import Mapping, Sequence
 
-from ...http import PDF_MIME_TYPE, RequestCancelledError
+from ...http import PDF_MIME_TYPE
 from ...runtime import RuntimeContext
 from ...tracing import trace_event, trace_from_markers
 from ...reason_codes import PDF_FALLBACK
@@ -18,12 +18,6 @@ from .._pdf_common import (
 )
 from .fetchers import _choose_browser_seed_url
 from .shared import BrowserWorkflowDeps, default_browser_workflow_deps
-
-
-def _raise_if_cancelled(context: RuntimeContext | None) -> None:
-    cancel_check = getattr(context, "cancel_check", None)
-    if callable(cancel_check) and cancel_check() is True:
-        raise RequestCancelledError("Request cancelled.")
 
 
 def fetch_seeded_browser_pdf_payload(
@@ -46,7 +40,8 @@ def fetch_seeded_browser_pdf_payload(
     context: RuntimeContext | None = None,
     deps: BrowserWorkflowDeps | None = None,
 ) -> RawFulltextPayload:
-    _raise_if_cancelled(context)
+    if context is not None:
+        context.raise_if_cancelled()
     deps = deps or default_browser_workflow_deps()
     context_warmer = deps.warm_browser_context
     if deps.pdf_browser_context_seed is not deps.warm_browser_context:
@@ -64,7 +59,8 @@ def fetch_seeded_browser_pdf_payload(
         runtime_context=context,
         lightweight=True,
     )
-    _raise_if_cancelled(context)
+    if context is not None:
+        context.raise_if_cancelled()
     seed_url = _choose_browser_seed_url(
         (browser_context_seed or {}).get("browser_final_url"),
         html_candidates[0] if html_candidates else None,
@@ -90,7 +86,8 @@ def fetch_seeded_browser_pdf_payload(
             runtime=context,
         ),
     )
-    _raise_if_cancelled(context)
+    if context is not None:
+        context.raise_if_cancelled()
     payload_warnings = [str(item) for item in warnings or [] if str(item).strip()]
     pdf_result_warnings = getattr(pdf_result, "warnings", [])
     if isinstance(pdf_result_warnings, Sequence) and not isinstance(
@@ -116,9 +113,6 @@ def fetch_seeded_browser_pdf_payload(
     pdf_diagnostics = getattr(pdf_result, "diagnostics", None)
     return RawFulltextPayload(
         provider=provider,
-        source_url=pdf_result.final_url,
-        content_type=PDF_MIME_TYPE,
-        body=pdf_result.pdf_bytes,
         content=ProviderContent(
             route_kind=PDF_FALLBACK,
             source_url=pdf_result.final_url,
@@ -139,8 +133,8 @@ def fetch_seeded_browser_pdf_payload(
             html_failure_message=html_failure_message,
             suggested_filename=pdf_result.suggested_filename,
             extracted_assets=pdf_fetch_result_assets(pdf_result),
+            needs_local_copy=True,
         ),
         warnings=payload_warnings,
         trace=payload_trace,
-        needs_local_copy=True,
     )

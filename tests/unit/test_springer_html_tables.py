@@ -456,7 +456,6 @@ class SpringerHtmlTableTests(unittest.TestCase):
     def test_generic_extended_data_table_html_image_fallback_renders_table_asset(
         self,
     ) -> None:
-        """rule: rule-springer-inline-table"""
         table_image_url = "https://media.springernature.com/full/table-1-from-html.png"
         responses = {
             GENERIC_EXTENDED_TABLE_LANDING_URL: {
@@ -490,7 +489,6 @@ class SpringerHtmlTableTests(unittest.TestCase):
     def test_generic_extended_data_table_html_image_fallback_uses_body_esm_table_image(
         self,
     ) -> None:
-        """rule: rule-springer-inline-table"""
         responses = {
             GENERIC_EXTENDED_TABLE_LANDING_URL: {
                 "headers": {"content-type": "text/html; charset=utf-8"},
@@ -549,7 +547,6 @@ class SpringerHtmlTableTests(unittest.TestCase):
     def test_generic_extended_data_table_html_image_fallback_rejects_header_only_svg(
         self,
     ) -> None:
-        """rule: rule-springer-inline-table"""
         responses = {
             GENERIC_EXTENDED_TABLE_LANDING_URL: {
                 "headers": {"content-type": "text/html; charset=utf-8"},

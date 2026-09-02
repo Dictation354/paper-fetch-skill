@@ -97,53 +97,6 @@ from .base import (
 
 from bs4 import BeautifulSoup, Tag
 
-
-PROVIDER_BUNDLE = ProviderBundle(
-    catalog=ProviderSpec(
-        name="copernicus",
-        display_name="Copernicus",
-        official=True,
-        domains=(),
-        doi_prefixes=("10.5194/",),
-        publisher_aliases=(
-            "copernicus",
-            "copernicus publications",
-            "copernicus gmbh",
-        ),
-        asset_default="body",
-        probe_capability="routing_signal",
-        provider_managed_abstract_only=False,
-        client_factory_path="paper_fetch.providers.copernicus:CopernicusClient",
-        status_order=8,
-        domain_suffixes=("copernicus.org",),
-        xml_path_templates=("/articles/{volume}/{page}/{year}/{suffix}.xml",),
-        landing_path_templates=("/articles/{volume}/{page}/{year}/",),
-        pdf_path_templates=("/articles/{volume}/{page}/{year}/{suffix}.pdf",),
-        emits_html_managed_marker=False,
-        html_capable=False,
-        xml_root_tags=("article",),
-        xml_file_tokens=("copernicus", "10.5194"),
-        body_text_thresholds=BodyTextThresholds(min_chars=500),
-        routes=(
-            ProviderRouteSpec(name="metadata", kind="metadata"),
-            ProviderRouteSpec(name="xml", kind="xml"),
-            ProviderRouteSpec(
-                name="direct_pdf",
-                kind="pdf",
-                requires_pdf_conversion=True,
-            ),
-            ProviderRouteSpec(
-                name="assets",
-                kind="assets",
-                timeout_seconds=20,
-                concurrency=2,
-                transient_retries=2,
-            ),
-        ),
-    ),
-    sources=("copernicus_xml", "copernicus_pdf"),
-)
-
 MIN_BODY_CHARS = 500
 COPERNICUS_XML_DOI_PATTERN = re.compile(
     r"^10\.5194/(?P<journal>[a-z0-9]+)-(?P<volume>\d+)-(?P<page>.+)-(?P<year>\d{4})$",
@@ -622,7 +575,6 @@ class CopernicusClient(ProviderClient):
                 *pdf_fetch_result_warnings(pdf_result),
                 "Full text was extracted from Copernicus PDF fallback after the XML route was not usable.",
             ],
-            content_needs_local_copy=True,
             needs_local_copy=True,
         )
 
@@ -965,3 +917,50 @@ class CopernicusClient(ProviderClient):
 
 
 __all__ = ["CopernicusClient", "ProviderContent", "RawFulltextPayload"]
+
+
+PROVIDER_BUNDLE = ProviderBundle(
+    client_factory=CopernicusClient,
+    catalog=ProviderSpec(
+        name="copernicus",
+        display_name="Copernicus",
+        official=True,
+        domains=(),
+        doi_prefixes=("10.5194/",),
+        publisher_aliases=(
+            "copernicus",
+            "copernicus publications",
+            "copernicus gmbh",
+        ),
+        asset_default="body",
+        probe_capability="routing_signal",
+        provider_managed_abstract_only=False,
+        status_order=8,
+        domain_suffixes=("copernicus.org",),
+        xml_path_templates=("/articles/{volume}/{page}/{year}/{suffix}.xml",),
+        landing_path_templates=("/articles/{volume}/{page}/{year}/",),
+        pdf_path_templates=("/articles/{volume}/{page}/{year}/{suffix}.pdf",),
+        emits_html_managed_marker=False,
+        html_capable=False,
+        xml_root_tags=("article",),
+        xml_file_tokens=("copernicus", "10.5194"),
+        body_text_thresholds=BodyTextThresholds(min_chars=500),
+        routes=(
+            ProviderRouteSpec(name="metadata", kind="metadata"),
+            ProviderRouteSpec(name="xml", kind="xml"),
+            ProviderRouteSpec(
+                name="direct_pdf",
+                kind="pdf",
+                requires_pdf_conversion=True,
+            ),
+            ProviderRouteSpec(
+                name="assets",
+                kind="assets",
+                timeout_seconds=20,
+                concurrency=2,
+                transient_retries=2,
+            ),
+        ),
+    ),
+    sources=("copernicus_xml", "copernicus_pdf"),
+)

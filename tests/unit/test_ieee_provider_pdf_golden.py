@@ -388,7 +388,6 @@ class IeeeProviderPdfGoldenTests(unittest.TestCase):
         )
 
     def test_real_ieee_html_golden_samples_preserve_semantics(self) -> None:
-        """rule: rule-ieee-html-structure"""
         for label, (doi, article_number) in IEEE_REAL_HTML_SAMPLES.items():
             with self.subTest(label=label):
                 with tempfile.TemporaryDirectory() as tmpdir:
@@ -477,7 +476,6 @@ class IeeeProviderPdfGoldenTests(unittest.TestCase):
                         self.assertGreater(len(article.metadata.keywords), 0)
 
     def test_ieee_tim_fixture_original_html_is_parsed_as_body(self) -> None:
-        """rule: rule-ieee-html-structure"""
         fixture = golden_criteria_asset("10.1109/TIM.2024.3509573", "original.html")
         source_url = (
             "https://ieeexplore.ieee.org/rest/document/10772041/?logAccess=true"

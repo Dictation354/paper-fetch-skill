@@ -4,18 +4,17 @@
 
 ## 命令面
 
-`paper-fetch --help` 会直接列出当前可用的 `fetch`、`auth`、`browser-preflight`、`manifest` 和 `doctor` 子命令；每个子命令都可以用 `--help` 查看有效默认值、枚举和落盘影响：
+`paper-fetch --help` 会直接列出当前可用的 `fetch`、`auth`、`browser-preflight` 和 `doctor` 子命令；每个子命令都可以用 `--help` 查看有效默认值、枚举和落盘影响：
 
 ```bash
 paper-fetch --help
 paper-fetch fetch --help
 paper-fetch auth --help
 paper-fetch browser-preflight --help
-paper-fetch manifest --help
 paper-fetch doctor --help
 ```
 
-抓取必须使用 `paper-fetch fetch ...`。`paper-fetch manifest audit|reconcile` 是可调用的只读检查命令；单篇抓取的 `--manifest <path>` 是结果文件选项，二者不要混淆。`doctor` 是内置的只读、无网络静态诊断命令。
+抓取必须使用 `paper-fetch fetch ...`。单篇抓取的 `--manifest <path>` 是一次性结果文件选项，不是独立子命令。`doctor` 是内置的只读、无网络静态诊断命令。
 
 ## 基本用法
 
@@ -49,7 +48,7 @@ paper-fetch fetch --query "10.1186/1471-2105-11-421" \
   --max-tokens full_text
 ```
 
-用户明确要求正文图时改用 `--artifact-mode markdown-assets --asset-profile body`；明确要求补充材料时改用 `--artifact-mode markdown-assets --asset-profile all`。`--artifact-mode all` 是原始 provider 载荷、HTTP cache 和调试 sidecar 的保留策略，不是补充材料开关。
+用户明确要求正文图时改用 `--artifact-mode markdown-assets --asset-profile body`；明确要求补充材料时改用 `--artifact-mode markdown-assets --asset-profile all`。`--artifact-mode all` 是原始 provider 载荷和调试 sidecar 的保留策略，不是补充材料开关。HTTP transport 只使用进程内存缓存，不保留磁盘 HTTP cache。
 
 CLI 适合单篇或批量本地归档；需要 MCP 宿主内 progress/cancel、结构化批量 acceptance 或不便解析 CLI stdout 时可使用 `batch_fetch`。临时阅读、可缓存阅读、批量可读性分诊和 MCP 批量归档的参数矩阵见技能包的 [`presets.md`](../skills/paper-fetch-skill/references/presets.md)。
 
@@ -70,12 +69,6 @@ paper-fetch fetch --query "10.1186/1471-2105-11-421" \
 该文件包含一条与批量 JSONL 完全相同的 v2 record。主输出、额外 Markdown 和 manifest 都使用目标 path-scoped lock、唯一同目录 staging file、flush/fsync 与原子替换；取消 fence 与最终 replace 由同一临界区线性化。record 随后读取最终文件的 size、SHA256 和 mtime，因此 `output_artifacts` 不描述临时 `.part`。默认不覆盖时，相同字节视为幂等成功且不改写，不同字节明确冲突；人工检查后显式 `--overwrite` 才允许串行原子替换。manifest 路径不能与主输出或额外 Markdown 相同。单篇不能同时使用 `--query-file` 和 `--manifest`；批量结果使用 `--batch-results`。
 
 JSON、manifest v2 与 Markdown YAML front matter 都保留原有 `source`，并增量输出 `acquisition.provider/route/representation/transport/fallback_used`。例如 Wiley TDM PDF 的 `source` 仍是 `wiley_browser`，精确路线另记为 `wiley/tdm_pdf/pdf/api`。若旧 Markdown 没有该块仍可读取，值视为 `null`；新抓取无法确认精确路线时也保持 `null`，对应 provenance 不会被判为 complete。
-
-单篇 manifest 与批量 run 使用同一只读审计逻辑。例如：
-
-```bash
-paper-fetch manifest audit ./papers/example.manifest.json
-```
 
 ## 静态诊断、真实预检与人工认证
 
@@ -127,8 +120,6 @@ MCP 的 `browser_preflight` 直接调用同一个 preflight 核心。无参数�
 - `--url <url>`：覆盖内置样例文章，打开具体失败文章页。
 - `--timeout-ms <ms>`：设置浏览器导航超时。
 - `--browser-user-agent <ua>`：Camoufox 会拒绝该参数，以保持生成的 Firefox 指纹一致。
-- `--browser-auto-prepare` / `--no-browser-auto-prepare`：允许/禁止本次 CLI 命令维护
-  managed Camoufox；默认允许，环境变量可改变默认。
 - storage-state 保存位置优先通过 `PAPER_FETCH_BROWSER_PROFILE_DIR` 或 `PAPER_FETCH_BROWSER_USER_DATA_DIR` 覆盖。
 
 storage-state JSON 是主要复用状态，只是本地辅助状态，不绕过权限，也不是跨机器通用凭据；站点 session 可能按时间、网络、设备或浏览器指纹失效。未配置持久凭证不会阻止正常抓取；抓取仍会按当前 browser workflow 和 provider PDF / abstract-only / metadata fallback 运行。手动 auth 后再次抓取同一 provider 会复用同一个 publisher storage-state 文件。
@@ -212,8 +203,16 @@ Identity acceptance 不再把普通 title 当作唯一论文证明。DOI-less �
   "index": 2,
   "attempt": 1,
   "query": "10.1186/1471-2105-11-421",
+  "request": {
+    "query": "10.1186/1471-2105-11-421",
+    "parameters": {
+      "artifact_mode": "none",
+      "asset_profile": "none",
+      "format": "markdown"
+    }
+  },
+  "request_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   "record_status": "completed",
-  "status": "ok",
   "doi": "10.1186/1471-2105-11-421",
   "source": "publisher_html",
   "acceptance": {
@@ -236,7 +235,6 @@ Identity acceptance 不再把普通 title 当作唯一论文证明。DOI-less �
       "verification_status": "verified"
     }
   ],
-  "output_path": "papers/example.md",
   "warnings": [],
   "error": null
 }

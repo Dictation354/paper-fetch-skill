@@ -110,7 +110,6 @@ class RuntimeContext:
     asset_budget: AssetBudget | None = None
     cancel_check: Callable[[], bool] | None = None
     artifact_store: ArtifactStore | None = None
-    fetch_cache: Any | None = None
     parse_cache: dict[tuple[Hashable, ...], Any] = field(default_factory=dict)
     session_cache: dict[tuple[Hashable, ...], Any] = field(default_factory=dict)
     fetch_trace: list[Any] = field(default_factory=list)
@@ -514,91 +513,3 @@ class RuntimeContext:
                 value = copy.deepcopy(created) if copy_value else created
                 self.session_cache[key] = value
             return copy.deepcopy(value) if copy_value else value
-
-
-def resolve_runtime_context(
-    context: RuntimeContext | None = None,
-    *,
-    env: Mapping[str, str] | None | object = RUNTIME_UNSET,
-    transport: HttpTransport | None | object = RUNTIME_UNSET,
-    clients: Mapping[str, object] | None | object = RUNTIME_UNSET,
-    download_dir: Path | None | object = RUNTIME_UNSET,
-    cancel_check: Callable[[], bool] | None | object = RUNTIME_UNSET,
-    artifact_store: ArtifactStore | None | object = RUNTIME_UNSET,
-    artifact_mode: ArtifactMode | object = RUNTIME_UNSET,
-    fetch_cache: Any | object = RUNTIME_UNSET,
-    parse_cache: dict[tuple[Hashable, ...], Any] | object = RUNTIME_UNSET,
-    session_cache: dict[tuple[Hashable, ...], Any] | object = RUNTIME_UNSET,
-) -> RuntimeContext:
-    """Return an explicit context or build one from internal runtime parts."""
-
-    runtime_parts = {
-        "env": env,
-        "transport": transport,
-        "clients": clients,
-        "download_dir": download_dir,
-        "cancel_check": cancel_check,
-        "artifact_store": artifact_store,
-        "artifact_mode": artifact_mode,
-        "fetch_cache": fetch_cache,
-        "parse_cache": parse_cache,
-        "session_cache": session_cache,
-    }
-    if context is not None:
-        explicit = [
-            name for name, value in runtime_parts.items() if value is not RUNTIME_UNSET
-        ]
-        if explicit:
-            joined = ", ".join(explicit)
-            raise TypeError(
-                f"RuntimeContext cannot be combined with runtime keyword arguments: {joined}"
-            )
-        return context
-
-    resolved_env = None if env is RUNTIME_UNSET else cast(Mapping[str, str] | None, env)
-    resolved_transport = (
-        None if transport is RUNTIME_UNSET else cast(HttpTransport | None, transport)
-    )
-    resolved_clients = (
-        None if clients is RUNTIME_UNSET else cast(Mapping[str, object] | None, clients)
-    )
-    resolved_download_dir = (
-        None if download_dir is RUNTIME_UNSET else cast(Path | None, download_dir)
-    )
-    resolved_cancel_check = (
-        None
-        if cancel_check is RUNTIME_UNSET
-        else cast(Callable[[], bool] | None, cancel_check)
-    )
-    resolved_artifact_store = (
-        None
-        if artifact_store is RUNTIME_UNSET
-        else cast(ArtifactStore | None, artifact_store)
-    )
-    resolved_artifact_mode = (
-        DEFAULT_ARTIFACT_MODE
-        if artifact_mode is RUNTIME_UNSET
-        else cast(ArtifactMode, artifact_mode)
-    )
-    resolved_parse_cache = (
-        {}
-        if parse_cache is RUNTIME_UNSET
-        else cast(dict[tuple[Hashable, ...], Any], parse_cache)
-    )
-    resolved_session_cache = (
-        {}
-        if session_cache is RUNTIME_UNSET
-        else cast(dict[tuple[Hashable, ...], Any], session_cache)
-    )
-    return RuntimeContext(
-        env=resolved_env,
-        transport=resolved_transport,
-        clients=resolved_clients,
-        download_dir=resolved_download_dir,
-        cancel_check=resolved_cancel_check,
-        artifact_store=resolved_artifact_store,
-        artifact_mode=resolved_artifact_mode,
-        fetch_cache=None if fetch_cache is RUNTIME_UNSET else fetch_cache,
-        parse_cache=resolved_parse_cache,
-        session_cache=resolved_session_cache,
-    )

@@ -271,54 +271,6 @@ def resolution_from_attempt(
     )
 
 
-def resolve_asset_downloads_in_order(
-    work_items: list[AssetWorkItem],
-    *,
-    resolver: Callable[[AssetWorkItem], AssetDownloadResolution | None],
-    asset_download_concurrency: int | None,
-    force_worker_thread: bool = False,
-) -> list[AssetDownloadResolution | None]:
-    if not work_items:
-        return []
-    max_workers = asset_download_worker_count(
-        len(work_items), asset_download_concurrency
-    )
-    if max_workers <= 1 and not force_worker_thread:
-        return [resolver(item) for item in work_items]
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = [
-            executor.submit(copy_context().run, resolver, item) for item in work_items
-        ]
-        return [future.result() for future in futures]
-
-
-def collect_downloads_from_resolutions(
-    resolutions: list[AssetDownloadResolution | None],
-    *,
-    saver: Callable[
-        [AssetDownloadResolution], dict[str, Any] | AssetDownloadFailure | None
-    ],
-) -> dict[str, list[dict[str, Any]]]:
-    downloads: list[dict[str, Any]] = []
-    failures: list[dict[str, Any]] = []
-    for resolved in resolutions:
-        if resolved is None:
-            continue
-        if resolved.response is None:
-            if resolved.failure is not None:
-                failures.append(dict(resolved.failure.diagnostic))
-            continue
-        saved = saver(resolved)
-        if isinstance(saved, AssetDownloadFailure):
-            failures.append(dict(saved.diagnostic))
-        elif saved is not None:
-            downloads.append(saved)
-    return {
-        "assets": downloads,
-        "asset_failures": failures,
-    }
-
-
 @dataclass
 class _AssetCollectionState:
     resolver: Callable[[Any], AssetDownloadResolution | None]
@@ -533,8 +485,6 @@ __all__ = [
     "AssetHostRouteDecision",
     "asset_download_worker_count",
     "asset_failure",
-    "collect_downloads_from_resolutions",
     "resolution_from_attempt",
     "resolve_and_collect_downloads_as_completed",
-    "resolve_asset_downloads_in_order",
 ]

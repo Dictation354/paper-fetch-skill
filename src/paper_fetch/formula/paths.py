@@ -97,7 +97,14 @@ def mathml_to_latex_script_candidates(
 
     root = repo_root()
     if root is not None:
-        repo_script = root / "scripts" / FORMULA_NODE_SCRIPT_NAME
+        repo_script = (
+            root
+            / "src"
+            / "paper_fetch"
+            / "resources"
+            / "formula"
+            / FORMULA_NODE_SCRIPT_NAME
+        )
         if repo_script not in candidates:
             candidates.append(repo_script)
 
@@ -124,7 +131,14 @@ def mathml_to_latex_worker_script_candidates(
 
     root = repo_root()
     if root is not None:
-        repo_script = root / "scripts" / FORMULA_NODE_WORKER_SCRIPT_NAME
+        repo_script = (
+            root
+            / "src"
+            / "paper_fetch"
+            / "resources"
+            / "formula"
+            / FORMULA_NODE_WORKER_SCRIPT_NAME
+        )
         if repo_script not in candidates:
             candidates.append(repo_script)
 

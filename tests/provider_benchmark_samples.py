@@ -385,12 +385,3 @@ def iter_provider_benchmark_samples() -> tuple[ProviderBenchmarkSample, ...]:
     return tuple(
         PROVIDER_BENCHMARK_SAMPLES[provider] for provider in official_provider_names()
     )
-
-
-def source_trail_matches(
-    source_trail: list[str] | tuple[str, ...],
-    accepted_groups: tuple[tuple[str, ...], ...],
-) -> bool:
-    return any(
-        all(marker in source_trail for marker in group) for group in accepted_groups
-    )

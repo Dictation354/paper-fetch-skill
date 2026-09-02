@@ -40,8 +40,6 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
             with self.subTest(url=url):
                 profile = springer_provider.springer_site_family_profile(url)
                 self.assertEqual(profile.name, expected)
-                self.assertEqual(profile.html_source, "springer_html")
-                self.assertEqual(profile.pdf_source, "springer_pdf")
 
     def test_springer_ai_alt_disclaimer_cleanup_uses_id_contract_not_full_text(
         self,
@@ -425,7 +423,6 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         return downloaded_assets
 
     def test_springer_paywall_article_markdown_strips_preview_sentence(self) -> None:
-        """rule: rule-springer-access-hint-disclaimer"""
         doi = "10.1007/s00382-018-4286-0"
         source_url = f"https://link.springer.com/article/{doi}"
         html_path = block_asset(doi, "raw.html")
@@ -475,7 +472,6 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         )
 
     def test_nature_fixture_keeps_data_and_code_availability_sections(self) -> None:
-        """rule: rule-keep-data-availability-once"""
         doi = "10.1038/s43247-024-01885-8"
         article, extraction_payload, diagnostics, _ = self._build_article_from_html(
             golden_criteria_asset(doi, "original.html"),
@@ -563,7 +559,6 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
     def test_extract_asset_html_scopes_leave_empty_supplementary_scope_without_supplementary_sections(
         self,
     ) -> None:
-        """rule: rule-springer-supplementary-scope"""
         source_url = "https://www.nature.com/articles/no-supplementary"
         html_text = """
 <html>
@@ -677,7 +672,6 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
     def test_real_nature_fixture_separates_source_data_from_supplementary_assets(
         self,
     ) -> None:
-        """rule: rule-springer-supplementary-scope"""
         source_url = "https://www.nature.com/articles/s41561-022-00912-7"
         html_text = golden_criteria_asset(
             "10.1038/s41561-022-00912-7", "original.html"
@@ -736,7 +730,6 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
     def test_real_nature_fixture_resolves_source_data_links_from_extended_data_descriptions(
         self,
     ) -> None:
-        """rule: rule-springer-supplementary-scope"""
         source_url = "https://www.nature.com/articles/s41558-022-01584-2"
         html_text = golden_criteria_asset(
             "10.1038/s41558-022-01584-2", "original.html"
@@ -794,7 +787,6 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
     def test_real_nature_fixture_skips_peer_review_files_from_supplementary_assets(
         self,
     ) -> None:
-        """rule: rule-springer-supplementary-scope"""
         source_url = "https://www.nature.com/articles/s43247-024-01270-5"
         html_text = golden_criteria_asset(
             "10.1038/s43247-024-01270-5", "original.html"
@@ -1105,7 +1097,6 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
     def test_nature_matters_arising_fixture_keeps_main_content_before_reporting_summary(
         self,
     ) -> None:
-        """rule: rule-springer-main-content-direct-children"""
         sample = golden_criteria_sample_for_doi("10.1038/s41586-020-1941-5")
         doi = str(sample["doi"])
         source_url = str(sample["source_url"])
@@ -1169,7 +1160,6 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         self.assertNotIn("_assets/", markdown)
 
     def test_springer_main_content_scenario_keeps_direct_child_order(self) -> None:
-        """rule: rule-springer-main-content-direct-children"""
         html_text = golden_criteria_scenario_asset(
             "springer_main_content_direct_children", "original.html"
         ).read_text(encoding="utf-8")
@@ -1242,7 +1232,6 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         self.assertNotIn("## Fossil fuel CO 2 emissions", markdown)
 
     def test_springer_markdown_spaces_numbered_inline_heading_spans(self) -> None:
-        """rule: rule-springer-numbered-heading-spacing"""
         html = """
         <html>
           <body>
@@ -1397,7 +1386,6 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
             self.assertNotIn(chrome, markdown)
 
     def test_springer_markdown_ignores_ai_alt_text_when_caption_exists(self) -> None:
-        """rule: rule-springer-caption-precedence"""
         html = r"""
         <html>
           <body>

@@ -86,17 +86,15 @@ from ._waterfall import (
 )
 from ..reason_codes import (
     ABSTRACT_ONLY,
+    AWS_WAF_CHALLENGE,
+    CLOUDFLARE_CHALLENGE,
     ERROR,
+    FULLTEXT,
     NO_ACCESS,
     NO_RESULT,
     NOT_SUPPORTED,
     OK,
     PDF_FALLBACK,
-)
-from ..quality.reason_codes import (
-    AWS_WAF_CHALLENGE,
-    CLOUDFLARE_CHALLENGE,
-    FULLTEXT,
     PUBLISHER_ACCESS_DENIED,
     PUBLISHER_PAYWALL,
     REDIRECTED_TO_ABSTRACT,
@@ -138,90 +136,6 @@ from .base import (
 )
 
 from bs4 import BeautifulSoup, Tag
-
-
-PROVIDER_BUNDLE = ProviderBundle(
-    catalog=ProviderSpec(
-        name="springer",
-        display_name="Springer",
-        official=True,
-        domains=(
-            "springer.com",
-            "springernature.com",
-            "nature.com",
-            "biomedcentral.com",
-        ),
-        doi_prefixes=("10.1038/", "10.1007/", "10.1186/"),
-        publisher_aliases=(
-            "springer",
-            "springer nature",
-            "springer science and business media llc",
-        ),
-        asset_default="body",
-        probe_capability="routing_signal",
-        provider_managed_abstract_only=True,
-        client_factory_path="paper_fetch.providers.springer:SpringerClient",
-        status_order=2,
-        base_domains=("link.springer.com",),
-        pdf_path_templates=("/content/pdf/{doi_quoted}.pdf",),
-        pdf_source_path_templates=(
-            PdfSourcePathTemplate(
-                domain="nature.com",
-                path_prefix="/articles/",
-                path_template="{source_path}.pdf",
-            ),
-        ),
-        persist_provider_html=True,
-        xml_root_tags=("article",),
-        xml_file_tokens=("springer", "nature", "10.1038", "10.1007", "10.1186"),
-        routes=(
-            ProviderRouteSpec(name="metadata", kind="metadata"),
-            ProviderRouteSpec(
-                name="direct_html",
-                kind="html",
-                concurrency=2,
-            ),
-            ProviderRouteSpec(
-                name="direct_pdf",
-                kind="pdf",
-                requires_pdf_conversion=True,
-                concurrency=2,
-            ),
-            ProviderRouteSpec(
-                name="assets",
-                kind="assets",
-                concurrency=2,
-                asset_scope="body",
-            ),
-        ),
-    ),
-    html_rules=ProviderHtmlRules(
-        name="springer_nature",
-        aliases=("springer", "nature"),
-        noise_profile="springer_nature",
-        cleanup=ProviderCleanupRules(
-            markdown_promo_tokens=SPRINGER_NATURE_MARKDOWN_PROMO_TOKENS,
-            chrome_section_headings=SPRINGER_NATURE_CHROME_SECTION_HEADINGS,
-            chrome_attr_tokens=SPRINGER_NATURE_CHROME_ATTR_TOKENS,
-            license_link_hosts=SPRINGER_NATURE_LICENSE_LINK_HOSTS,
-            license_link_path_prefixes=SPRINGER_NATURE_LICENSE_LINK_PATH_PREFIXES,
-            license_word_limit=SPRINGER_NATURE_LICENSE_WORD_LIMIT,
-        ),
-        formula=ProviderFormulaRules(
-            container_tokens=SPRINGER_NATURE_FORMULA_CONTAINER_TOKENS,
-            display_selectors=SPRINGER_NATURE_DISPLAY_FORMULA_SELECTORS,
-        ),
-        assets=ProviderAssetRules(
-            supplementary_text_tokens=SPRINGER_NATURE_SUPPLEMENTARY_TEXT_TOKENS,
-        ),
-        heading=ProviderHeadingRules(normalizations={"online methods": "Methods"}),
-        availability=AvailabilityPolicy(
-            name="springer_nature",
-            overrides=SPRINGER_AVAILABILITY_OVERRIDES,
-        ),
-    ),
-    sources=("springer_html", "springer_pdf"),
-)
 
 MARKDOWN_TEXT_KEY = "markdown_text"
 SPRINGER_FETCH_RESULT_WARNINGS_KEY = "springer_fetch_result_warnings"
@@ -289,8 +203,6 @@ class SpringerSiteFamilyProfile:
     name: str
     domains: tuple[str, ...]
     doi_prefixes: tuple[str, ...]
-    html_source: str = "springer_html"
-    pdf_source: str = "springer_pdf"
 
 
 def _springer_html_failure_code(reason: str | None) -> str:
@@ -1217,7 +1129,7 @@ class SpringerClient(ProviderClient):
             suggested_filename=pdf_result.suggested_filename,
             extracted_assets=pdf_fetch_result_assets(pdf_result),
             html_failure_message=html_failure_message,
-            content_needs_local_copy=True,
+            needs_local_copy=True,
             warnings=[
                 *warnings,
                 *pdf_fetch_result_warnings(pdf_result),
@@ -1227,7 +1139,6 @@ class SpringerClient(ProviderClient):
                 fulltext_marker("springer", "fail", route="html"),
                 fulltext_marker("springer", "ok", route=PDF_FALLBACK),
             ],
-            needs_local_copy=True,
         )
 
     def download_related_assets(
@@ -1617,9 +1528,6 @@ class SpringerClient(ProviderClient):
             raw_payload=provisional_payload
             or RawFulltextPayload(
                 provider="springer",
-                source_url=response_url,
-                content_type="text/html",
-                body=html_text.encode("utf-8"),
                 content=ProviderContent(
                     route_kind="html",
                     source_url=response_url,
@@ -1632,7 +1540,6 @@ class SpringerClient(ProviderClient):
                 trace=trace_from_markers(
                     [fulltext_marker("springer", "fail", route="html")]
                 ),
-                merged_metadata=dict(merged_metadata),
             ),
             provisional_article=attempt_context.get("provisional_article"),
             context={
@@ -1954,3 +1861,87 @@ class SpringerClient(ProviderClient):
             if not pdf_assets
             else [],
         )
+
+
+PROVIDER_BUNDLE = ProviderBundle(
+    client_factory=SpringerClient,
+    catalog=ProviderSpec(
+        name="springer",
+        display_name="Springer",
+        official=True,
+        domains=(
+            "springer.com",
+            "springernature.com",
+            "nature.com",
+            "biomedcentral.com",
+        ),
+        doi_prefixes=("10.1038/", "10.1007/", "10.1186/"),
+        publisher_aliases=(
+            "springer",
+            "springer nature",
+            "springer science and business media llc",
+        ),
+        asset_default="body",
+        probe_capability="routing_signal",
+        provider_managed_abstract_only=True,
+        status_order=2,
+        base_domains=("link.springer.com",),
+        pdf_path_templates=("/content/pdf/{doi_quoted}.pdf",),
+        pdf_source_path_templates=(
+            PdfSourcePathTemplate(
+                domain="nature.com",
+                path_prefix="/articles/",
+                path_template="{source_path}.pdf",
+            ),
+        ),
+        persist_provider_html=True,
+        xml_root_tags=("article",),
+        xml_file_tokens=("springer", "nature", "10.1038", "10.1007", "10.1186"),
+        routes=(
+            ProviderRouteSpec(name="metadata", kind="metadata"),
+            ProviderRouteSpec(
+                name="direct_html",
+                kind="html",
+                concurrency=2,
+            ),
+            ProviderRouteSpec(
+                name="direct_pdf",
+                kind="pdf",
+                requires_pdf_conversion=True,
+                concurrency=2,
+            ),
+            ProviderRouteSpec(
+                name="assets",
+                kind="assets",
+                concurrency=2,
+                asset_scope="body",
+            ),
+        ),
+    ),
+    html_rules=ProviderHtmlRules(
+        name="springer_nature",
+        aliases=("springer", "nature"),
+        noise_profile="springer_nature",
+        cleanup=ProviderCleanupRules(
+            markdown_promo_tokens=SPRINGER_NATURE_MARKDOWN_PROMO_TOKENS,
+            chrome_section_headings=SPRINGER_NATURE_CHROME_SECTION_HEADINGS,
+            chrome_attr_tokens=SPRINGER_NATURE_CHROME_ATTR_TOKENS,
+            license_link_hosts=SPRINGER_NATURE_LICENSE_LINK_HOSTS,
+            license_link_path_prefixes=SPRINGER_NATURE_LICENSE_LINK_PATH_PREFIXES,
+            license_word_limit=SPRINGER_NATURE_LICENSE_WORD_LIMIT,
+        ),
+        formula=ProviderFormulaRules(
+            container_tokens=SPRINGER_NATURE_FORMULA_CONTAINER_TOKENS,
+            display_selectors=SPRINGER_NATURE_DISPLAY_FORMULA_SELECTORS,
+        ),
+        assets=ProviderAssetRules(
+            supplementary_text_tokens=SPRINGER_NATURE_SUPPLEMENTARY_TEXT_TOKENS,
+        ),
+        heading=ProviderHeadingRules(normalizations={"online methods": "Methods"}),
+        availability=AvailabilityPolicy(
+            name="springer_nature",
+            overrides=SPRINGER_AVAILABILITY_OVERRIDES,
+        ),
+    ),
+    sources=("springer_html", "springer_pdf"),
+)

@@ -1091,7 +1091,6 @@ class ArxivProviderTests(unittest.TestCase):
         self.assertTrue(markdown.startswith("$P(A(1,x,y)"))
 
     def test_html_route_renders_ordered_lists_as_markdown_numbers(self) -> None:
-        """rule: rule-html-list-marker-rendering"""
         extraction = _arxiv_html._extract_arxiv_html_markdown(
             _fixture_html("2605.06556v1").decode("utf-8"),
             canonical_arxiv_html_url("2605.06556v1"),
@@ -1151,7 +1150,6 @@ class ArxivProviderTests(unittest.TestCase):
         self.assertEqual(diagnostics["inline_figure_asset_miss_count"], 0)
 
     def test_html_route_uses_dom_id_labels_for_captionless_panel_figures(self) -> None:
-        """rule: rule-arxiv-figure-panel-alt-labels"""
         arxiv_id = "2605.06598v1"
         metadata = _metadata(arxiv_id)
         client = ArxivClient(_html_transport(arxiv_id), {})
@@ -1187,7 +1185,6 @@ class ArxivProviderTests(unittest.TestCase):
         self.assertEqual(diagnostics["inline_figure_asset_miss_count"], 0)
 
     def test_html_route_extracts_multi_image_multi_caption_figures(self) -> None:
-        """rule: rule-arxiv-multi-image-figure-captions"""
         arxiv_id = "2605.06667v1"
         extraction = _arxiv_html._extract_arxiv_html_markdown(
             _fixture_html(arxiv_id).decode("utf-8"),
@@ -1326,7 +1323,6 @@ class ArxivProviderTests(unittest.TestCase):
         self.assertIn("![Figure 9](body_assets/missing.png)", rendered)
 
     def test_html_route_normalizes_footnotes_tables_and_image_alt_noise(self) -> None:
-        """rule: rule-table-flatten-or-list"""
         arxiv_id = "2605.06665v1"
         metadata = _metadata(arxiv_id)
         client = ArxivClient(_html_transport(arxiv_id), {})
@@ -1472,7 +1468,6 @@ class ArxivProviderTests(unittest.TestCase):
         self.assertEqual(extraction.warnings, [])
 
     def test_arxiv_html_metrics_section_remains_renderable_body_content(self) -> None:
-        """rule: rule-arxiv-article-dom-body-heading-hints"""
         arxiv_id = "2605.06667v1"
         metadata = _metadata(arxiv_id)
         client = ArxivClient(_html_transport(arxiv_id), {})

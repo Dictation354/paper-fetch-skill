@@ -13,7 +13,7 @@ from ..asset_fields import (
 )
 from ..ui_tokens import SPRINGER_FULL_SIZE_IMAGE_LABEL
 from ....models import normalize_text
-from ....quality.reason_codes import CLOUDFLARE_CHALLENGE
+from ....reason_codes import CLOUDFLARE_CHALLENGE
 from ...image_payloads import image_dimensions_from_bytes
 from ..signals import (
     CLOUDFLARE_CHALLENGE_TITLE_TOKENS,

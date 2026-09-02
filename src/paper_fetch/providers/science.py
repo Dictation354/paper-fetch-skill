@@ -27,61 +27,77 @@ from ..quality.html_signals import (
 from . import _science_html, browser_workflow
 from ._registry import ProviderBundle
 
-
-PROVIDER_BUNDLE = ProviderBundle(
-    catalog=ProviderSpec(
-        name="science",
-        display_name="Science",
-        official=True,
-        domains=("www.science.org", "science.org"),
-        doi_prefixes=("10.1126/",),
-        publisher_aliases=(
-            "american association for the advancement of science",
-            "aaas",
+_PROVIDER_SPEC = ProviderSpec(
+    name="science",
+    display_name="Science",
+    official=True,
+    domains=("www.science.org", "science.org"),
+    doi_prefixes=("10.1126/",),
+    publisher_aliases=(
+        "american association for the advancement of science",
+        "aaas",
+    ),
+    asset_default="body",
+    probe_capability="routing_signal",
+    provider_managed_abstract_only=True,
+    status_order=4,
+    base_domains=("www.science.org", "science.org"),
+    html_path_templates=("/doi/full/{doi}", "/doi/{doi}"),
+    pdf_path_templates=(
+        *ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
+        "/doi/pdf/{doi}?download=true",
+    ),
+    routes=(
+        ProviderRouteSpec(name="metadata", kind="metadata"),
+        ProviderRouteSpec(
+            name="browser_html",
+            kind="html",
+            browser_required=True,
+            browser_preflight=True,
+            auth_supported=True,
+            requires_playwright=True,
+            concurrency=1,
         ),
-        asset_default="body",
-        probe_capability="routing_signal",
-        provider_managed_abstract_only=True,
-        client_factory_path="paper_fetch.providers.science:ScienceClient",
-        status_order=4,
-        base_domains=("www.science.org", "science.org"),
-        html_path_templates=("/doi/full/{doi}", "/doi/{doi}"),
-        pdf_path_templates=(
-            *ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
-            "/doi/pdf/{doi}?download=true",
+        ProviderRouteSpec(
+            name="browser_pdf",
+            kind="pdf",
+            browser_required=True,
+            browser_preflight=True,
+            auth_supported=True,
+            requires_playwright=True,
+            requires_pdf_conversion=True,
+            concurrency=1,
         ),
-        routes=(
-            ProviderRouteSpec(name="metadata", kind="metadata"),
-            ProviderRouteSpec(
-                name="browser_html",
-                kind="html",
-                browser_required=True,
-                browser_preflight=True,
-                auth_supported=True,
-                requires_playwright=True,
-                concurrency=1,
-            ),
-            ProviderRouteSpec(
-                name="browser_pdf",
-                kind="pdf",
-                browser_required=True,
-                browser_preflight=True,
-                auth_supported=True,
-                requires_playwright=True,
-                requires_pdf_conversion=True,
-                concurrency=1,
-            ),
-            ProviderRouteSpec(
-                name="assets",
-                kind="assets",
-                browser_optional=True,
-                requires_playwright=True,
-                timeout_seconds=20,
-                concurrency=2,
-                transient_retries=0,
-            ),
+        ProviderRouteSpec(
+            name="assets",
+            kind="assets",
+            browser_optional=True,
+            requires_playwright=True,
+            timeout_seconds=20,
+            concurrency=2,
+            transient_retries=0,
         ),
     ),
+)
+
+SCIENCE_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
+    "science",
+    catalog=_PROVIDER_SPEC,
+    fallback_author_extractor=_science_html.extract_authors,
+    policy=browser_workflow.BrowserWorkflowPolicy(
+        blocked_resource_types=("image", "font", "media"),
+    ),
+)
+
+
+class ScienceClient(browser_workflow.BrowserWorkflowClient):
+    name = SCIENCE_BROWSER_PROFILE.name
+    profile = SCIENCE_BROWSER_PROFILE
+
+
+PROVIDER_BUNDLE = ProviderBundle(
+    client_factory=ScienceClient,
+    catalog=_PROVIDER_SPEC,
     html_rules=ProviderHtmlRules(
         name="science",
         aliases=("aaas",),
@@ -111,18 +127,3 @@ PROVIDER_BUNDLE = ProviderBundle(
     ),
     sources=("science",),
 )
-
-
-SCIENCE_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
-    "science",
-    catalog=PROVIDER_BUNDLE.catalog,
-    fallback_author_extractor=_science_html.extract_authors,
-    policy=browser_workflow.BrowserWorkflowPolicy(
-        blocked_resource_types=("image", "font", "media"),
-    ),
-)
-
-
-class ScienceClient(browser_workflow.BrowserWorkflowClient):
-    name = SCIENCE_BROWSER_PROFILE.name
-    profile = SCIENCE_BROWSER_PROFILE

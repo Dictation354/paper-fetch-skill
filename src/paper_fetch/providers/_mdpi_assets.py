@@ -19,7 +19,7 @@ from ..models.markdown import (
     image_references_match,
     iter_markdown_images,
 )
-from ..utils import normalize_text
+from ..utils import extend_unique, normalize_text
 from ._mdpi_dom import (
     MDPI_NOISE_PROFILE,
     MDPI_SUPPLEMENTARY_TEXT_TOKENS,
@@ -32,12 +32,6 @@ _SUPPLEMENTARY_SELECTORS = (
     "div[id*='supplement']",
     "section[id^='app']",
 )
-
-
-def _append_unique(values: list[str], candidate: str | None) -> None:
-    normalized = normalize_text(candidate)
-    if normalized and normalized not in values:
-        values.append(normalized)
 
 
 def mark_inline_assets(markdown_text: str, assets: list[Any], source: str) -> None:
@@ -90,7 +84,7 @@ def extract_pdf_urls(html_text: str, source_url: str | None = None) -> list[str]
         for node in soup.select(selector):
             value = normalize_text(str(node.get(attr) or ""))
             if value:
-                _append_unique(urls, urllib.parse.urljoin(source_url or "", value))
+                extend_unique(urls, [urllib.parse.urljoin(source_url or "", value)])
     return urls
 
 

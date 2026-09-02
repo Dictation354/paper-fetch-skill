@@ -6,11 +6,20 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
-### Breaking — command, batch, and manifest surfaces
+### Fixed — audit consistency
+
+- Batch MCP fetches now normalize optional string fields exactly like single fetches, including treating whitespace-only shared Markdown filenames as unspecified and recording the normalized request in manifests.
+- Async inline-image fetches retain the existing internal article field in cache only when needed to reproduce requested images; old insufficient sidecars safely miss, while public structured content still hides unrequested articles.
+- Provider results now propagate content updates made by asset hooks through article construction, workflow persistence, acquisition, and the returned provider content.
+- Removed the unused KaTeX runtime dependency and installation check; the packaged Node workspace now contains only the MathML-to-LaTeX converter and its transitive dependencies while retaining KaTeX-compatible normalization goals.
+- Aligned CLI, MCP, browser, cache, provider, deployment, macOS, and extraction documentation with the capabilities and contracts that remain implemented.
+
+### Breaking — command, MCP, batch, and manifest surfaces
 
 - The CLI is now command-only: use `paper-fetch fetch ...`. The legacy root-level fetch flags, CLI `--no-download`, durable `--run-manifest` / `--resume`, and the `manifest audit|reconcile` commands were removed. Use `--artifact-mode none` when provider artifacts and assets should not be retained.
 - CLI and MCP batches may write one final `batch-results.jsonl`; it is assembled in input order and committed atomically only after every input reaches a terminal state. Append-only attempts, run summaries, audit/reconcile, and resume semantics were removed, while in-batch canonical-DOI fan-out remains. Existing differing result files still require explicit `--overwrite` / `overwrite=true`.
 - Schema-v2 manifest records now expose only the current `record_status`, `acceptance`, and `output_artifacts` contract. The legacy top-level `status`, `output_path`, and `saved_markdown_path` projection and legacy acceptance/cache migration shims were removed; old, unknown, or incomplete records now fail closed instead of being guessed or upgraded.
+- Removed the `summarize_paper` and `verify_citation_list` MCP prompt templates. The fetch, resolve, check, and cache tools, static provider-catalog resource, and schema-v2 payload contract remain unchanged.
 
 ### Changed — browser and transport runtime
 

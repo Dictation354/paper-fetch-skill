@@ -683,9 +683,9 @@ This package includes an installed Python runtime under `runtime/site-packages`,
 The offline build does not bundle Ghostscript/libvips from the build host PATH; AMS EPS/TIFF source figure conversion falls back to webpage JPG/PNG candidates when those tools are unavailable.
 The `bin/` directory exposes paper-fetch commands only; it does not include a generic `python` wrapper.
 It does not redistribute the Camoufox browser binary for browser-backed providers.
-CLI browser requests may prepare the managed runtime on demand with visible
-progress; MCP/library requests default to no automatic preparation. Before
-moving fully offline, run `./runtime/paper-fetch-python -m camoufox fetch`, then
+CLI, MCP, and library requests do not download, update, or repair the managed
+runtime. Before moving fully offline, run
+`./runtime/paper-fetch-python -m camoufox fetch` while online, then
 run `./bin/paper-fetch browser-preflight` to verify the runtime and provider path.
 EOF
 

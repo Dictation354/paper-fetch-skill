@@ -2,18 +2,30 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from dataclasses import replace
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol
 
 from ..normalize_journal_name import normalize_journal_name
-from ..provider_catalog import ProviderRouteSpec, ProviderSpec
+from ..provider_catalog import (
+    MetadataProbeShortCircuit,
+    ProviderRouteSpec,
+    ProviderSpec,
+)
 
 if TYPE_CHECKING:
     from ..extraction.html.provider_rules import ProviderHtmlRules
-    from ..metadata.types import MetadataMergeRule
-    from ._asset_retry import AssetRetryPolicy
+    from ..http import HttpTransport
+    from .base import ProviderClient
+
+
+class ProviderClientFactory(Protocol):
+    def __call__(
+        self,
+        transport: HttpTransport,
+        env: Mapping[str, str],
+    ) -> ProviderClient: ...
 
 
 @dataclass(frozen=True)
@@ -32,17 +44,23 @@ class ProviderRenderPolicy:
 @dataclass(frozen=True)
 class ProviderBundle:
     catalog: ProviderSpec
+    client_factory: ProviderClientFactory
+    metadata_probe_short_circuit: MetadataProbeShortCircuit | None = None
     html_rules: ProviderHtmlRules | None = None
-    asset_retry: AssetRetryPolicy | None = None
-    metadata_merge: tuple[MetadataMergeRule, ...] = ()
     sources: tuple[str, ...] = ()
     render_policy: ProviderRenderPolicy | None = None
 
     def __post_init__(self) -> None:
         if not self.catalog.name:
             raise ValueError("Provider bundle catalog name is required.")
-        if not isinstance(self.metadata_merge, tuple):
-            raise TypeError("Provider bundle metadata_merge must be a tuple.")
+        if not callable(self.client_factory):
+            raise TypeError("Provider bundle client_factory must be callable.")
+        if self.metadata_probe_short_circuit is not None and not callable(
+            self.metadata_probe_short_circuit
+        ):
+            raise TypeError(
+                "Provider bundle metadata_probe_short_circuit must be callable."
+            )
         if not isinstance(self.sources, tuple):
             raise TypeError("Provider bundle sources must be a tuple.")
         if self.render_policy is not None and not isinstance(
@@ -225,15 +243,11 @@ def validate_provider_bundles(bundles: Iterable[ProviderBundle]) -> None:
                     "Provider status_order conflict: "
                     f"{name} and {existing_name} both use {bundle.catalog.status_order}."
                 )
-            if (
-                bundle.catalog.client_factory_path
-                and existing.catalog.client_factory_path
-                == bundle.catalog.client_factory_path
-            ):
+            if existing.client_factory is bundle.client_factory:
                 raise ValueError(
                     "Provider client factory conflict: "
                     f"{name} and {existing_name} both use "
-                    f"{bundle.catalog.client_factory_path!r}."
+                    f"{bundle.client_factory!r}."
                 )
             duplicate_sources = set(bundle.sources) & set(existing.sources)
             if duplicate_sources:

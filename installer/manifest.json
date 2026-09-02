@@ -2,10 +2,7 @@
   "schema_version": 1,
   "project": "paper-fetch-skill",
   "skill": {
-    "name": "paper-fetch-skill",
-    "display_name": "Paper Fetch Skill",
-    "short_description": "Fetch AI-friendly paper text by DOI, URL, or title",
-    "default_prompt": "Use $paper-fetch-skill whenever you need the text, readability, or full-text availability of a specific paper or a citation list of identifiable papers."
+    "name": "paper-fetch-skill"
   },
   "mcp": {
     "name": "paper-fetch",
@@ -18,37 +15,6 @@
       "PAPER_FETCH_IMAGE_TOOLS_DIR",
       "MATHML_TO_LATEX_NODE_BIN",
       "PAPER_FETCH_BROWSER_HEADLESS"
-    ]
-  },
-  "env_sets": {
-    "offline_env_keys": [
-      "PAPER_FETCH_DOWNLOAD_DIR",
-      "PAPER_FETCH_FORMULA_TOOLS_DIR",
-      "PAPER_FETCH_IMAGE_TOOLS_DIR",
-      "MATHML_TO_LATEX_NODE_BIN",
-      "PAPER_FETCH_BROWSER_HEADLESS",
-      "PYTHONUTF8",
-      "PYTHONIOENCODING"
-    ],
-    "shell_env_keys": [
-      "PAPER_FETCH_ENV_FILE",
-      "PAPER_FETCH_DOWNLOAD_DIR",
-      "PAPER_FETCH_FORMULA_TOOLS_DIR",
-      "PAPER_FETCH_IMAGE_TOOLS_DIR",
-      "MATHML_TO_LATEX_NODE_BIN",
-      "PAPER_FETCH_BROWSER_HEADLESS",
-      "PYTHONUTF8",
-      "PYTHONIOENCODING"
-    ],
-    "activate_env_keys": [
-      "PAPER_FETCH_ENV_FILE",
-      "PAPER_FETCH_DOWNLOAD_DIR",
-      "PAPER_FETCH_FORMULA_TOOLS_DIR",
-      "PAPER_FETCH_IMAGE_TOOLS_DIR",
-      "MATHML_TO_LATEX_NODE_BIN",
-      "PAPER_FETCH_BROWSER_HEADLESS",
-      "PYTHONUTF8",
-      "PYTHONIOENCODING"
     ]
   },
   "managed_blocks": {

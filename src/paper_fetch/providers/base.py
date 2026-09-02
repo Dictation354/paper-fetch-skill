@@ -160,17 +160,123 @@ class PreparedFetchResultPayload:
     context: dict[str, Any] = field(default_factory=dict)
 
 
-@dataclass
+@dataclass(init=False)
 class RawFulltextPayload:
+    """Provider payload whose full-text facts are owned by ``content``.
+
+    The legacy full-text keyword arguments remain as an explicit construction and
+    attribute projection for provider extensions. They are never stored on this
+    wrapper, so updates cannot diverge from ``ProviderContent``.
+    """
+
     provider: str
-    source_url: str
-    content_type: str
-    body: bytes
-    content: ProviderContent | None = None
+    content: ProviderContent
     warnings: list[str] = field(default_factory=list)
     trace: list[TraceEvent] = field(default_factory=list)
-    merged_metadata: Mapping[str, Any] | None = None
-    needs_local_copy: bool = False
+
+    def __init__(
+        self,
+        provider: str,
+        source_url: str | None = None,
+        content_type: str | None = None,
+        body: bytes | None = None,
+        content: ProviderContent | None = None,
+        warnings: list[str] | None = None,
+        trace: list[TraceEvent] | None = None,
+        merged_metadata: Mapping[str, Any] | None = None,
+        needs_local_copy: bool | None = None,
+    ) -> None:
+        if content is None:
+            if source_url is None or content_type is None or body is None:
+                raise TypeError(
+                    "RawFulltextPayload requires content or the legacy "
+                    "source_url/content_type/body projection."
+                )
+            content = ProviderContent(
+                route_kind="raw",
+                source_url=source_url,
+                content_type=content_type,
+                body=body,
+                merged_metadata=merged_metadata,
+                needs_local_copy=bool(needs_local_copy),
+            )
+        elif any(value is not None for value in (source_url, content_type, body)):
+            content = replace(
+                content,
+                source_url=source_url if source_url is not None else content.source_url,
+                content_type=(
+                    content_type if content_type is not None else content.content_type
+                ),
+                body=body if body is not None else content.body,
+                merged_metadata=(
+                    merged_metadata
+                    if merged_metadata is not None
+                    else content.merged_metadata
+                ),
+                needs_local_copy=(
+                    needs_local_copy
+                    if needs_local_copy is not None
+                    else content.needs_local_copy
+                ),
+            )
+        elif merged_metadata is not None or needs_local_copy is not None:
+            content = replace(
+                content,
+                merged_metadata=(
+                    merged_metadata
+                    if merged_metadata is not None
+                    else content.merged_metadata
+                ),
+                needs_local_copy=(
+                    needs_local_copy
+                    if needs_local_copy is not None
+                    else content.needs_local_copy
+                ),
+            )
+        self.provider = provider
+        self.content = content
+        self.warnings = warnings if warnings is not None else []
+        self.trace = trace if trace is not None else []
+
+    @property
+    def source_url(self) -> str:
+        return self.content.source_url
+
+    @source_url.setter
+    def source_url(self, value: str) -> None:
+        self.content = replace(self.content, source_url=value)
+
+    @property
+    def content_type(self) -> str:
+        return self.content.content_type
+
+    @content_type.setter
+    def content_type(self, value: str) -> None:
+        self.content = replace(self.content, content_type=value)
+
+    @property
+    def body(self) -> bytes:
+        return self.content.body
+
+    @body.setter
+    def body(self, value: bytes) -> None:
+        self.content = replace(self.content, body=value)
+
+    @property
+    def merged_metadata(self) -> Mapping[str, Any] | None:
+        return self.content.merged_metadata
+
+    @merged_metadata.setter
+    def merged_metadata(self, value: Mapping[str, Any] | None) -> None:
+        self.content = replace(self.content, merged_metadata=value)
+
+    @property
+    def needs_local_copy(self) -> bool:
+        return self.content.needs_local_copy
+
+    @needs_local_copy.setter
+    def needs_local_copy(self, value: bool) -> None:
+        self.content = replace(self.content, needs_local_copy=value)
 
 
 @dataclass(frozen=True)
@@ -485,18 +591,12 @@ class ProviderClient:
             prepared = self.prepare_fetch_result_payload(
                 doi, metadata, asset_profile=asset_profile, context=context
             )
-            prepared.raw_payload = self._sync_fetch_result_content_local_copy(
-                prepared.raw_payload
-            )
             prepared = self.maybe_recover_fetch_result_payload(
                 doi,
                 metadata,
                 prepared,
                 asset_profile=asset_profile,
                 context=context,
-            )
-            prepared.raw_payload = self._sync_fetch_result_content_local_copy(
-                prepared.raw_payload
             )
             prepared.raw_payload = self.ensure_html_markdown(
                 prepared.raw_payload, metadata, context=context
@@ -505,7 +605,6 @@ class ProviderClient:
                 doi, metadata, prepared.raw_payload
             )
             raw_payload = prepared.raw_payload
-            content = raw_payload.content
             artifact_policy = self.describe_artifacts(raw_payload)
             downloaded_assets: list[Mapping[str, Any]] = []
             asset_failures: list[Mapping[str, Any]] = []
@@ -582,7 +681,7 @@ class ProviderClient:
             return ProviderFetchResult(
                 provider=raw_payload.provider or self.name,
                 article=article,
-                content=content,
+                content=raw_payload.content,
                 warnings=warnings,
                 trace=list(trace or trace_from_markers(article.quality.source_trail)),
                 artifacts=artifacts,
@@ -602,19 +701,6 @@ class ProviderClient:
             transport=getattr(self, "transport", None),
             download_dir=output_dir,
         )
-
-    def _sync_fetch_result_content_local_copy(
-        self, raw_payload: RawFulltextPayload
-    ) -> RawFulltextPayload:
-        content = raw_payload.content
-        if (
-            content is not None
-            and content.needs_local_copy != raw_payload.needs_local_copy
-        ):
-            raw_payload.content = replace(
-                content, needs_local_copy=raw_payload.needs_local_copy
-            )
-        return raw_payload
 
     def html_to_markdown(
         self,
@@ -640,17 +726,15 @@ class ProviderClient:
         context: RuntimeContext,
     ) -> RawFulltextPayload:
         content = raw_payload.content
-        payload_content_type = (
-            content.content_type if content is not None else raw_payload.content_type
-        )
+        payload_content_type = content.content_type
         content_type = normalize_text(payload_content_type).lower()
         if "html" not in content_type:
             return raw_payload
-        if content is not None and normalize_text(content.markdown_text):
+        if normalize_text(content.markdown_text):
             return raw_payload
 
         html_text = decode_html(
-            bytes(raw_payload.body or b""),
+            bytes(content.body or b""),
             content_type=payload_content_type,
         ).strip()
         if not html_text:
@@ -659,7 +743,7 @@ class ProviderClient:
         try:
             markdown_text, extraction = self.html_to_markdown(
                 html_text,
-                raw_payload.source_url,
+                content.source_url,
                 metadata=metadata,
                 context=context,
             )
@@ -676,7 +760,7 @@ class ProviderClient:
             )
             return raw_payload
 
-        diagnostics = dict(content.diagnostics) if content is not None else {}
+        diagnostics = dict(content.diagnostics)
         if extraction:
             extraction_payload = dict(extraction)
             diagnostics.setdefault("extraction", extraction_payload)
@@ -690,14 +774,8 @@ class ProviderClient:
                 "automatic": True,
             },
         )
-        html_content = content or ProviderContent(
-            route_kind="html",
-            source_url=raw_payload.source_url,
-            content_type=raw_payload.content_type,
-            body=raw_payload.body,
-        )
         raw_payload.content = replace(
-            html_content,
+            content,
             markdown_text=markdown_text,
             diagnostics=diagnostics,
         )
@@ -723,15 +801,13 @@ class ProviderClient:
         raw_payload: RawFulltextPayload,
     ) -> RawFulltextPayload:
         content = raw_payload.content
-        merged = dict(raw_payload.merged_metadata or {})
-        if content is not None and isinstance(content.merged_metadata, Mapping):
-            merged.update(content.merged_metadata)
+        merged = dict(content.merged_metadata or {})
         evidence: dict[str, Any] = (
             dict(merged.get("identity_evidence") or {})
             if isinstance(merged.get("identity_evidence"), Mapping)
             else {}
         )
-        content_diagnostics = content.diagnostics if content is not None else {}
+        content_diagnostics = content.diagnostics
         diagnostic_evidence = content_diagnostics.get("identity_evidence")
         if isinstance(diagnostic_evidence, Mapping):
             evidence.update(diagnostic_evidence)
@@ -743,10 +819,9 @@ class ProviderClient:
             str(metadata.get("doi") or "")
         )
         result = validate_extracted_identity(expected, merged, evidence)
-        diagnostics = dict(content.diagnostics) if content is not None else {}
+        diagnostics = dict(content.diagnostics)
         diagnostics["identity"] = result.to_dict()
-        if content is not None:
-            raw_payload.content = replace(content, diagnostics=diagnostics)
+        raw_payload.content = replace(content, diagnostics=diagnostics)
         if result.mismatch:
             raise ProviderFailure(
                 IDENTITY_MISMATCH,

@@ -17,7 +17,6 @@ from paper_fetch.providers import (
 from paper_fetch.quality.html_availability import assess_html_fulltext_availability
 from tests.golden_criteria import (
     doi_to_fixture_slug,
-    fixture_sample_for_doi,
     iter_manifest_samples,
 )
 from tests.paths import FIXTURE_DIR
@@ -201,11 +200,6 @@ def block_dir_for_doi(doi: str) -> Path:
 
 def block_asset(doi: str, filename: str) -> Path:
     return block_dir_for_doi(doi) / filename
-
-
-def block_fixture_for_doi(doi: str) -> BlockFixture:
-    sample = fixture_sample_for_doi(doi, fixture_family="block")
-    return BlockFixture(sample_id=str(sample["sample_id"]), sample=sample)
 
 
 def iter_block_samples() -> tuple[BlockFixture, ...]:

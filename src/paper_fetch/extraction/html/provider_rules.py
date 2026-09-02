@@ -429,7 +429,6 @@ def _availability_container_rules_from_site_rule_overrides(
 ) -> AvailabilityContainerRules:
     site_rule = _merged_site_rule_from_overrides(site_rule_overrides)
     return AvailabilityContainerRules(
-        candidate_selectors=tuple(site_rule.get("candidate_selectors") or ()),
         remove_selectors=tuple(site_rule.get("remove_selectors") or ()),
         drop_keywords=tuple(site_rule.get("drop_keywords") or ()),
         drop_texts=tuple(site_rule.get("drop_text") or ()),
@@ -457,7 +456,6 @@ def _availability_policy_with_defaults(
         datalayer_signal_set=availability.datalayer_signal_set,
         text_marker_signal_set=availability.text_marker_signal_set,
         overrides=availability.overrides,
-        no_signals=availability.no_signals,
         access_block_text_tokens=(
             availability.access_block_text_tokens or cleanup.access_block_text_tokens
         ),
@@ -719,14 +717,6 @@ def _reset_provider_html_rules_cache() -> None:
     _NOISE_PROFILE_LOOKUP_CACHE = None
 
 
-def _availability_container_rules_from_rules(
-    rules: ProviderHtmlRules,
-) -> AvailabilityContainerRules:
-    return _availability_container_rules_from_site_rule_overrides(
-        rules.availability.site_rule_overrides
-    )
-
-
 def _cleanup_policy_from_rules(rules: ProviderHtmlRules) -> CleanupPolicy:
     cleanup = rules.cleanup
     front_matter = rules.front_matter
@@ -806,24 +796,6 @@ def normalize_provider_heading(provider_name: str | None, heading: str | None) -
     return replacement or normalized
 
 
-def _dedupe_tuple(values: list[str]) -> tuple[str, ...]:
-    return tuple(dict.fromkeys(value for value in values if value))
-
-
-def all_provider_formula_container_tokens() -> tuple[str, ...]:
-    values: list[str] = []
-    for rules in PROVIDER_HTML_RULES.values():
-        values.extend(rules.formula.container_tokens)
-    return _dedupe_tuple(values)
-
-
-def all_provider_display_formula_selectors() -> tuple[str, ...]:
-    values: list[str] = []
-    for rules in PROVIDER_HTML_RULES.values():
-        values.extend(rules.formula.display_selectors)
-    return _dedupe_tuple(values)
-
-
 __all__ = [
     "AMS_DOM_POSTPROCESS_CLEANUP_SELECTORS",
     "AMS_FRONT_MATTER_PUBLICATION_KEYWORDS",
@@ -869,8 +841,6 @@ __all__ = [
     "ProviderFrontMatterRules",
     "ProviderHeadingRules",
     "ProviderHtmlRules",
-    "all_provider_display_formula_selectors",
-    "all_provider_formula_container_tokens",
     "asset_rules_for_provider",
     "availability_rules_for_provider",
     "cleanup_policy_for_profile",

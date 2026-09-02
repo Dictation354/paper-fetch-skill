@@ -660,7 +660,6 @@ def test_metadata_only_route_contract_is_service_fallback_after_provider_failure
 
 
 def test_markdown_contract_structure_fixture() -> None:
-    """rule: rule-royalsociety-silverchair-markdown-cleanup"""
 
     # markdown-review: purpose=structure doi=10.1098/rsta.2019.0558
     markdown = _render_markdown_for_fixture("10.1098/rsta.2019.0558")
@@ -774,7 +773,6 @@ def test_markdown_normalization_drops_inline_list_label_dash() -> None:
 
 
 def test_markdown_contract_figure_fixture() -> None:
-    """rule: rule-royalsociety-silverchair-markdown-cleanup"""
 
     # markdown-review: purpose=figure doi=10.1098/rsos.150470
     markdown = _render_markdown_for_fixture("10.1098/rsos.150470")

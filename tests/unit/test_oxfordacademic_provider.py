@@ -7,7 +7,7 @@ from tests.golden_criteria import golden_criteria_asset
 
 from paper_fetch.http import HttpTransport
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
-from paper_fetch.provider_catalog import PROVIDER_CATALOG, SOURCE_PROVIDER_MAP
+from paper_fetch.provider_catalog import SOURCE_PROVIDER_MAP
 from paper_fetch.providers import _oxfordacademic_html
 from paper_fetch.providers._registry import provider_bundle
 from paper_fetch.providers.oxfordacademic import OxfordAcademicClient
@@ -42,9 +42,7 @@ def _extract_html_fixture() -> _oxfordacademic_html.OxfordAcademicExtraction:
 def test_provider_bundle_is_registered() -> None:
     bundle = provider_bundle("oxfordacademic")
 
-    assert PROVIDER_CATALOG["oxfordacademic"].client_factory_path.endswith(
-        "OxfordAcademicClient"
-    )
+    assert bundle.client_factory is OxfordAcademicClient
     assert SOURCE_PROVIDER_MAP["oxfordacademic_html"] == "oxfordacademic"
     assert SOURCE_PROVIDER_MAP["oxfordacademic_pdf"] == "oxfordacademic"
     assert bundle.html_rules is not None

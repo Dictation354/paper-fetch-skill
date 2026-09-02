@@ -13,7 +13,6 @@ from ..service import fetch_paper as service_fetch_paper
 from ..service import probe_has_fulltext as service_probe_has_fulltext
 from ..service import resolve_paper as service_resolve_paper
 from .cache_index import (
-    find_cached_entry,
     list_cache_entries,
     preferred_cached_entries,
     register_markdown_entry,
@@ -30,7 +29,6 @@ class MCPDeps:
     fetch_paper_envelope: Callable[..., Any]
     write_cached_fetch_envelope: Callable[..., Any]
     resolve_mcp_download_dir: Callable[..., Any]
-    find_cached_entry: Callable[..., Any]
     list_cache_entries: Callable[..., Any]
     preferred_cached_entries: Callable[..., Any]
     register_markdown_entry: Callable[..., Any]
@@ -59,7 +57,6 @@ def default_mcp_deps() -> MCPDeps:
         fetch_paper_envelope=_fetch_paper_envelope,
         write_cached_fetch_envelope=_write_cached_fetch_envelope,
         resolve_mcp_download_dir=resolve_mcp_download_dir,
-        find_cached_entry=find_cached_entry,
         list_cache_entries=list_cache_entries,
         preferred_cached_entries=preferred_cached_entries,
         register_markdown_entry=register_markdown_entry,

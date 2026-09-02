@@ -188,7 +188,7 @@
 - 抓取时的落盘目录。
 - 可覆盖默认下载目录，并限定 `list_cached` / `get_cached` 的 cache scope。
 - `RuntimeContext` / `ArtifactStore` 通过 `artifact_mode` 控制 provider payload、原始 HTML、Markdown 保存、资产诊断与 provider structured sidecar 的落盘范围；CLI/MCP fetch 默认 `markdown-assets`，Python API/runtime 未显式设置时默认是 `all`。
-- CLI/MCP fetch 入口通过 `FetchPipeline` 创建运行时并调用 service，MCP 的 fetch-envelope sidecar 和 cache index 仍由 `FetchCache` 管理语义，但原子 JSON 写入复用 `ArtifactStore`。
+- CLI/MCP fetch adapter 各自创建运行时，并通过 `FetchPipeline` 执行共享 service 调用；MCP 的 fetch-envelope sidecar 和 cache index 仍由 `FetchCache` 管理语义，但原子 JSON 写入复用 `ArtifactStore`。
 - MCP 本地 Markdown cache 只接受保存时的 DOI+实际路径显式注册；当前 index、scope 和 preferred 选择规则见 [`providers.md`](providers.md#mcp-download-and-markdown-save)。
 - Python service API 接收显式 `context=`；外层调用方需要先构造 `RuntimeContext(...)`，再传给 service / pipeline。
 - 未显式设置时，CLI / MCP 优先使用用户数据目录下的 `paper-fetch/downloads`；CLI 创建失败才退回 `live-downloads`。

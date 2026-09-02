@@ -25,8 +25,7 @@ from ..extraction.html.tables import (
 from ..models.markdown import normalize_markdown_text
 from ..metadata.types import ProviderMetadata
 from ..quality.html_availability import assess_plain_text_fulltext_availability
-from ..quality.reason_codes import FULLTEXT
-from ..reason_codes import NO_RESULT
+from ..reason_codes import FULLTEXT, NO_RESULT
 from ..utils import normalize_text
 from ._arxiv_parsing import ARXIV_HTML_PARSER
 from ._html_section_markdown import (

@@ -29,7 +29,6 @@ from .fetch_tool import (
     provider_status_tool,
     resolve_paper_tool,
 )
-from .prompts import summarize_paper_prompt, verify_citation_list_prompt
 from .provider_catalog import (
     PROVIDER_CATALOG_RESOURCE_URI,
     provider_catalog_resource_payload,
@@ -171,20 +170,6 @@ def build_server() -> PaperFetchMCPServer:
             mime_type="application/json",
         )
     )
-
-    @server.prompt(
-        name="summarize_paper",
-        description="Template for summarizing one known paper with cache-first and provenance-aware fetch discipline.",
-    )
-    def summarize_paper(query: str, focus: str = "general") -> str:
-        return summarize_paper_prompt(query=query, focus=focus)
-
-    @server.prompt(
-        name="verify_citation_list",
-        description="Template for checking a citation list with batch-first probe discipline.",
-    )
-    def verify_citation_list(citations: str, mode: str = "metadata") -> str:
-        return verify_citation_list_prompt(citations=citations, mode=mode)
 
     @server.tool(
         name="resolve_paper",

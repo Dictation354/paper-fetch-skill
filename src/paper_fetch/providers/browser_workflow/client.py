@@ -17,10 +17,15 @@ from ...extraction.html.signals import HtmlExtractionFailure
 from ...metadata.types import ProviderMetadata
 from ...models import AssetProfile
 from ...publisher_identity import normalize_doi
-from ...quality.reason_codes import (
+from ...reason_codes import (
+    ABSTRACT_ONLY,
     AWS_WAF_CHALLENGE,
     CLOUDFLARE_CHALLENGE,
     FULLTEXT,
+    NO_ACCESS,
+    NO_RESULT,
+    NOT_SUPPORTED,
+    PDF_FALLBACK,
     PUBLISHER_ACCESS_DENIED,
     PUBLISHER_PAYWALL,
     REDIRECTED_TO_ABSTRACT,
@@ -38,13 +43,6 @@ from .shared import (
 from ..browser_runtime import merge_browser_context_seeds
 from .._pdf_fallback import PdfFallbackFailure
 from .._waterfall import ProviderWaterfallStep, run_provider_waterfall
-from ...reason_codes import (
-    ABSTRACT_ONLY,
-    NO_ACCESS,
-    NO_RESULT,
-    NOT_SUPPORTED,
-    PDF_FALLBACK,
-)
 from ..base import (
     PreparedFetchResultPayload,
     ProviderArtifacts,

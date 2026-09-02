@@ -23,7 +23,7 @@ from ..models.markdown import (
 )
 from ..publisher_identity import normalize_doi
 from ..quality.html_signals import TextMarkerRule, TextMarkerSignalSet
-from ..utils import normalize_text
+from ..utils import extend_unique, normalize_text
 from ._html_references import (
     extract_numbered_references_from_soup,
 )
@@ -216,12 +216,6 @@ def iop_pdf_url_from_article_url(url: str | None) -> str | None:
     return f"{parsed.scheme or 'https'}://{parsed.netloc}{path.rstrip('/')}/pdf"
 
 
-def _append_unique(values: list[str], candidate: str | None) -> None:
-    normalized = normalize_text(candidate)
-    if normalized and normalized not in values:
-        values.append(normalized)
-
-
 def extract_pdf_candidate_urls_from_html(
     html_text: str,
     source_url: str,
@@ -248,7 +242,7 @@ def _extract_pdf_candidate_urls_from_soup(
                 continue
             if selector.startswith("a") and "pdf" not in value.lower():
                 continue
-            _append_unique(candidates, urljoin(source_url, value))
+            extend_unique(candidates, [urljoin(source_url, value)])
     return candidates
 
 
@@ -264,8 +258,8 @@ def pdf_candidate_urls(
         str(metadata.get("landing_page_url") or "")
     )
     for value in raw_html_meta_values(metadata, "citation_pdf_url"):
-        _append_unique(
-            candidates, urljoin(base_url or direct_article_url(doi or ""), value)
+        extend_unique(
+            candidates, [urljoin(base_url or direct_article_url(doi or ""), value)]
         )
     for item in metadata.get("fulltext_links") or ():
         if not isinstance(item, Mapping):
@@ -273,15 +267,20 @@ def pdf_candidate_urls(
         url = normalize_text(str(item.get("url") or ""))
         content_type = normalize_text(str(item.get("content_type") or "")).lower()
         if url and ("pdf" in content_type or url.rstrip("/").endswith("/pdf")):
-            _append_unique(candidates, urljoin(base_url, url))
-    _append_unique(candidates, normalize_text(str(metadata.get("pdf_url") or "")))
-    _append_unique(candidates, iop_pdf_url_from_article_url(base_url))
+            extend_unique(candidates, [urljoin(base_url, url)])
+    metadata_pdf_url = normalize_text(str(metadata.get("pdf_url") or ""))
+    if metadata_pdf_url:
+        extend_unique(candidates, [metadata_pdf_url])
+    article_pdf_url = iop_pdf_url_from_article_url(base_url)
+    if article_pdf_url:
+        extend_unique(candidates, [article_pdf_url])
     if html_text:
-        for candidate in extract_pdf_candidate_urls_from_html(html_text, base_url):
-            _append_unique(candidates, candidate)
+        extend_unique(
+            candidates, extract_pdf_candidate_urls_from_html(html_text, base_url)
+        )
     normalized_doi = normalize_doi(str(doi or metadata.get("doi") or ""))
     if normalized_doi:
-        _append_unique(candidates, direct_pdf_url(normalized_doi))
+        extend_unique(candidates, [direct_pdf_url(normalized_doi)])
     return candidates
 
 
@@ -399,11 +398,6 @@ def _parse_citation_reference_meta(value: Any) -> dict[str, str | None]:
         "doi": doi,
         "year": year or None,
     }
-
-
-def extract_figure_captions(html_text: str) -> list[str]:
-    soup = BeautifulSoup(html_text, choose_parser())
-    return _extract_figure_captions_from_soup(soup)
 
 
 def _extract_figure_captions_from_soup(soup: BeautifulSoup) -> list[str]:
@@ -612,8 +606,9 @@ def extract_markdown(
         finalized["references"] = references
         markdown_text = _append_references_markdown(markdown_text, references)
     pdf_candidates = pdf_candidate_urls(metadata or {}, source_url=source_url)
-    for candidate in _extract_pdf_candidate_urls_from_soup(soup, source_url):
-        _append_unique(pdf_candidates, candidate)
+    extend_unique(
+        pdf_candidates, _extract_pdf_candidate_urls_from_soup(soup, source_url)
+    )
     if pdf_candidates:
         finalized["pdf_candidates"] = pdf_candidates
     return markdown_text, finalized
@@ -1038,7 +1033,6 @@ __all__ = [
     "direct_article_url",
     "direct_pdf_url",
     "extract_authors",
-    "extract_figure_captions",
     "extract_markdown",
     "extract_pdf_candidate_urls_from_html",
     "extract_references",

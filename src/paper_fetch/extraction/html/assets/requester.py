@@ -180,15 +180,6 @@ def cookie_header_for_url(
     return request.get_header("Cookie")
 
 
-def cookie_header_from_jar(
-    cookie_jar: http.cookiejar.CookieJar,
-    url: str,
-) -> str | None:
-    request = urllib.request.Request(normalize_text(url))
-    cookie_jar.add_cookie_header(request)
-    return request.get_header("Cookie")
-
-
 def _browser_cookie(
     payload: Mapping[str, Any],
 ) -> http.cookiejar.Cookie | None:
@@ -408,6 +399,5 @@ __all__ = [
     "browser_cookie_jar",
     "build_cookie_seeded_opener",
     "cookie_header_for_url",
-    "cookie_header_from_jar",
     "request_with_opener",
 ]

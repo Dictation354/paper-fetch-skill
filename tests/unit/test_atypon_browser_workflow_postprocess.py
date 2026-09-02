@@ -133,7 +133,6 @@ class AtyponBrowserWorkflowPostprocessTests(unittest.TestCase):
         self.assertNotIn("PowerPoint", markdown)
 
     def test_wiley_real_fixture_appends_abbreviations_after_body_content(self) -> None:
-        """rule: rule-wiley-abbreviations-trailing"""
         markdown, _ = self._extract_fixture_markdown(
             WILEY_ABBREV_FIXTURE,
             "https://onlinelibrary.wiley.com/doi/full/10.1111/cas.16395",
@@ -159,7 +158,6 @@ class AtyponBrowserWorkflowPostprocessTests(unittest.TestCase):
     def test_wiley_abbreviations_scenario_moves_frontmatter_glossary_after_body(
         self,
     ) -> None:
-        """rule: rule-wiley-abbreviations-trailing"""
         markdown, _ = self._extract_fixture_markdown(
             golden_criteria_scenario_asset(
                 "wiley_abbreviations_trailing", "original.html"
@@ -220,7 +218,6 @@ class AtyponBrowserWorkflowPostprocessTests(unittest.TestCase):
     def test_pnas_real_fixture_preserves_figures_equations_and_heading_trimming(
         self,
     ) -> None:
-        """rule: rule-readable-equation-caption-spacing"""
         markdown, _ = self._extract_fixture_markdown(
             PNAS_FULL_FIXTURE,
             "https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
@@ -475,7 +472,6 @@ class AtyponBrowserWorkflowPostprocessTests(unittest.TestCase):
     def test_rewrite_inline_figure_links_ignores_cross_references_in_asset_captions(
         self,
     ) -> None:
-        """rule: rule-rewrite-inline-figure-links"""
         markdown = golden_criteria_scenario_asset(
             "inline_figure_link_rewrite", "article.md"
         ).read_text(encoding="utf-8")

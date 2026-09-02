@@ -65,8 +65,6 @@ def table_from_entry(entry: Mapping[str, Any]) -> MarkdownTable:
             for note in entry.get("footnotes", [])
             if normalize_text(str(note))
         ),
-        page_url=normalize_text(str(entry.get("page_url") or "")) or None,
-        locator=normalize_text(str(entry.get("locator") or "")) or None,
         image_fallback_url=normalize_text(str(entry.get("link") or "")) or None,
         fallback_message=normalize_text(str(entry.get("fallback_message") or "")),
     )

@@ -17,11 +17,13 @@ from paper_fetch.mcp.cache_index import (
 )
 from paper_fetch.mcp.cache_payloads import list_cached_payload
 from paper_fetch.mcp.fetch_cache import (
+    FETCH_ENVELOPE_CACHE_VERSION,
     PUBLIC_CREDENTIAL_SCOPE,
     FetchCache,
     article_from_payload,
     cache_request_fingerprint,
     envelope_from_payload,
+    fetch_envelope_cache_path,
     payload_from_envelope,
     request_cache_payload,
 )
@@ -183,6 +185,49 @@ class McpPayloadCacheTests(unittest.TestCase):
             [event.attempt_id for event in round_trip.trace],
             ["html-1", "html-2"],
         )
+
+    def test_v5_sidecar_reader_projects_legacy_quality_fields_to_one_owner(
+        self,
+    ) -> None:
+        request = FetchPaperRequest(
+            query="10.1000/quality-owner",
+            modes=["article", "markdown"],
+        )
+        envelope = sample_envelope(
+            modes={"article", "markdown"},
+            doi=request.query,
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            download_dir = Path(tmpdir)
+            FetchCache(download_dir).write_fetch_envelope(envelope, request)
+            sidecar = json.loads(
+                fetch_envelope_cache_path(download_dir, request.query).read_text(
+                    encoding="utf-8"
+                )
+            )
+
+        self.assertEqual(FETCH_ENVELOPE_CACHE_VERSION, 5)
+        self.assertEqual(sidecar["version"], 5)
+        self.assertEqual(sidecar["payload"]["schema_version"], 2)
+        self.assertIn("has_fulltext", sidecar["payload"])
+        self.assertIn("token_estimate_breakdown", sidecar["payload"])
+
+        round_trip = envelope_from_payload(sidecar["payload"])
+        assert round_trip.article is not None
+        self.assertIs(round_trip.quality, round_trip.article.quality)
+        self.assertIs(round_trip.warnings, round_trip.quality.warnings)
+        self.assertIs(round_trip.source_trail, round_trip.quality.source_trail)
+        self.assertIs(
+            round_trip.token_estimate_breakdown,
+            round_trip.quality.token_estimate_breakdown,
+        )
+
+        round_trip.warnings.append("cache projection mutation")
+        round_trip.article.quality.token_estimate = 654
+
+        self.assertIn("cache projection mutation", round_trip.article.quality.warnings)
+        self.assertEqual(round_trip.token_estimate, 654)
 
     def test_build_server_omits_output_schemas_for_all_tools(self) -> None:
         server = build_server()
@@ -783,7 +828,6 @@ class McpPayloadCacheTests(unittest.TestCase):
         mocked_fetch.assert_called_once()
 
     def test_article_payload_preserves_asset_download_diagnostics(self) -> None:
-        """rule: rule-asset-download-diagnostic-fields"""
         payload = json.loads(
             golden_criteria_scenario_asset(
                 "asset_download_diagnostics", "article_payload.json"

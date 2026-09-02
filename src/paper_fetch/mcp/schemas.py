@@ -505,17 +505,15 @@ FetchStrategyToolInput: TypeAlias = Annotated[
 ]
 
 
-class FetchPaperRequest(_RequiredQueryRequest):
+class _RenderOptionsRequest(BaseModel):
+    """Shared render fields owned by every fetch-sensitive MCP request."""
+
+    model_config = ConfigDict(extra="forbid")
+
     modes: OutputModesInput = Field(default_factory=lambda: list(DEFAULT_MCP_MODES))
     strategy: FetchStrategyToolInput = Field(default_factory=FetchStrategyInput)
     include_refs: IncludeRefsInput | None = None
     max_tokens: MaxTokensInput = "full_text"
-    prefer_cache: bool = False
-    no_download: bool = False
-    artifact_mode: ArtifactModeInput = DEFAULT_MCP_ARTIFACT_MODE
-    save_markdown: bool = False
-    markdown_output_dir: str | None = None
-    markdown_filename: str | None = None
 
     @field_validator("modes", mode="before")
     @classmethod
@@ -531,6 +529,34 @@ class FetchPaperRequest(_RequiredQueryRequest):
     @classmethod
     def default_strategy_when_null(cls, value: Any) -> Any:
         return {} if value is None else value
+
+    @field_validator("include_refs")
+    @classmethod
+    def normalize_include_refs(cls, value: Any) -> Any:
+        return _normalize_include_refs(value)
+
+    @field_validator("max_tokens", mode="before")
+    @classmethod
+    def validate_max_tokens(cls, value: Any) -> int | str:
+        return _normalize_max_tokens(value)
+
+    def to_render_options(self) -> RenderOptions:
+        return RenderOptions(
+            include_refs=self.include_refs,
+            asset_profile=cast(AssetProfile | None, self.strategy.asset_profile),
+            max_tokens=cast(MaxTokensMode, self.max_tokens),
+        )
+
+
+class _FetchOptionsRequest(_RenderOptionsRequest):
+    """Shared single- and batch-fetch fields and validation."""
+
+    prefer_cache: bool = False
+    no_download: bool = False
+    artifact_mode: ArtifactModeInput = DEFAULT_MCP_ARTIFACT_MODE
+    save_markdown: bool = False
+    markdown_output_dir: str | None = None
+    markdown_filename: str | None = None
 
     @field_validator("artifact_mode")
     @classmethod
@@ -554,28 +580,15 @@ class FetchPaperRequest(_RequiredQueryRequest):
             raise ValueError("markdown_filename must be a file name, not a path.")
         return value
 
-    @field_validator("include_refs")
-    @classmethod
-    def normalize_include_refs(cls, value: Any) -> Any:
-        return _normalize_include_refs(value)
-
-    @field_validator("max_tokens", mode="before")
-    @classmethod
-    def validate_max_tokens(cls, value: Any) -> int | str:
-        return _normalize_max_tokens(value)
-
     def requested_modes(self) -> set[str]:
         requested: set[str] = set(self.modes)
         if self.save_markdown:
             requested.update({"article", "markdown"})
         return requested
 
-    def to_render_options(self) -> RenderOptions:
-        return RenderOptions(
-            include_refs=self.include_refs,
-            asset_profile=cast(AssetProfile | None, self.strategy.asset_profile),
-            max_tokens=cast(MaxTokensMode, self.max_tokens),
-        )
+
+class FetchPaperRequest(_FetchOptionsRequest, _RequiredQueryRequest):
+    pass
 
 
 class FetchPaperToolRequest(FetchPaperRequest):
@@ -620,23 +633,11 @@ class BatchCheckRequest(BaseModel):
         return _normalize_batch_check_mode(value)
 
 
-class BatchFetchRequest(BaseModel):
+class BatchFetchRequest(_FetchOptionsRequest):
     """Typed batch adapter input sharing the single-fetch request semantics."""
-
-    model_config = ConfigDict(extra="forbid")
 
     queries: BatchQueriesInput
     concurrency: ConcurrencyInput = 1
-    modes: OutputModesInput = Field(default_factory=lambda: list(DEFAULT_MCP_MODES))
-    strategy: FetchStrategyToolInput = Field(default_factory=FetchStrategyInput)
-    include_refs: IncludeRefsInput | None = None
-    max_tokens: MaxTokensInput = "full_text"
-    prefer_cache: bool = False
-    no_download: bool = False
-    artifact_mode: ArtifactModeInput = DEFAULT_MCP_ARTIFACT_MODE
-    save_markdown: bool = False
-    markdown_output_dir: str | None = None
-    markdown_filename: str | None = None
     download_dir: str | None = None
     detail: BatchFetchDetailInput = "compact"
     content_max_chars: BatchContentMaxCharsInput = 20_000
@@ -649,63 +650,22 @@ class BatchFetchRequest(BaseModel):
     def normalize_queries(cls, value: Any) -> list[str]:
         return _normalize_query_list(value)
 
-    @field_validator("modes", mode="before")
-    @classmethod
-    def default_modes_when_null(cls, value: Any) -> Any:
-        return list(DEFAULT_MCP_MODES) if value is None else value
-
-    @field_validator("modes")
-    @classmethod
-    def normalize_modes(cls, value: Any) -> list[str]:
-        return _normalize_output_modes(value)
-
-    @field_validator("strategy", mode="before")
-    @classmethod
-    def default_strategy_when_null(cls, value: Any) -> Any:
-        return {} if value is None else value
-
-    @field_validator("artifact_mode")
-    @classmethod
-    def normalize_artifact_mode(cls, value: Any) -> str:
-        return _normalize_artifact_mode(value)
-
-    @field_validator("include_refs")
-    @classmethod
-    def normalize_include_refs(cls, value: Any) -> Any:
-        return _normalize_include_refs(value)
-
-    @field_validator("max_tokens", mode="before")
-    @classmethod
-    def validate_max_tokens(cls, value: Any) -> int | str:
-        return _normalize_max_tokens(value)
-
     @field_validator("detail")
     @classmethod
     def normalize_detail(cls, value: Any) -> str:
         return _normalize_batch_fetch_detail(value)
 
     @field_validator(
-        "markdown_output_dir",
-        "markdown_filename",
         "download_dir",
         "batch_results",
         mode="before",
     )
     @classmethod
-    def normalize_optional_string(cls, value: Any) -> str | None:
+    def normalize_batch_optional_string(cls, value: Any) -> str | None:
         if value is None:
             return None
         normalized = str(value).strip()
         return normalized or None
-
-    @field_validator("markdown_filename")
-    @classmethod
-    def validate_markdown_filename(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        if Path(value).name != value:
-            raise ValueError("markdown_filename must be a file name, not a path.")
-        return value
 
     @model_validator(mode="after")
     def validate_batch_contract(self) -> BatchFetchRequest:
@@ -716,19 +676,11 @@ class BatchFetchRequest(BaseModel):
         return self
 
     def to_fetch_request(self, query: str) -> FetchPaperRequest:
+        request_fields = set(FetchPaperRequest.model_fields)
         return FetchPaperRequest.model_validate(
             {
                 "query": query,
-                "modes": self.modes,
-                "strategy": self.strategy,
-                "include_refs": self.include_refs,
-                "max_tokens": self.max_tokens,
-                "prefer_cache": self.prefer_cache,
-                "no_download": self.no_download,
-                "artifact_mode": self.artifact_mode,
-                "save_markdown": self.save_markdown,
-                "markdown_output_dir": self.markdown_output_dir,
-                "markdown_filename": self.markdown_filename,
+                **self.model_dump(mode="python", include=request_fields),
             }
         )
 
@@ -747,17 +699,11 @@ class ListCachedRequest(BaseModel):
         return normalized or None
 
 
-class GetCachedRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
+class GetCachedRequest(_RenderOptionsRequest):
     doi: str
     download_dir: str | None = None
     detail: CacheDetailInput = "full"
     preferred_only: bool = False
-    modes: OutputModesInput = Field(default_factory=lambda: list(DEFAULT_MCP_MODES))
-    strategy: FetchStrategyToolInput = Field(default_factory=FetchStrategyInput)
-    include_refs: IncludeRefsInput | None = None
-    max_tokens: MaxTokensInput = "full_text"
 
     @field_validator("doi")
     @classmethod
@@ -780,28 +726,13 @@ class GetCachedRequest(BaseModel):
     def normalize_detail(cls, value: Any) -> str:
         return _normalize_cache_detail(value)
 
-    @field_validator("modes", mode="before")
-    @classmethod
-    def default_modes_when_null(cls, value: Any) -> Any:
-        return list(DEFAULT_MCP_MODES) if value is None else value
-
-    @field_validator("modes")
-    @classmethod
-    def normalize_modes(cls, value: Any) -> list[str]:
-        return _normalize_output_modes(value)
-
-    @field_validator("strategy", mode="before")
-    @classmethod
-    def default_strategy_when_null(cls, value: Any) -> Any:
-        return {} if value is None else value
-
     def to_fetch_request(self) -> FetchPaperRequest:
-        return FetchPaperRequest(
-            query=self.doi,
-            modes=self.modes,
-            strategy=self.strategy,
-            include_refs=self.include_refs,
-            max_tokens=self.max_tokens,
+        request_fields = set(FetchPaperRequest.model_fields)
+        return FetchPaperRequest.model_validate(
+            {
+                "query": self.doi,
+                **self.model_dump(mode="python", include=request_fields),
+            }
         )
 
 

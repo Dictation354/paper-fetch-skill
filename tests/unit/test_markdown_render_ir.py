@@ -39,8 +39,6 @@ class MarkdownRenderIrTests(unittest.TestCase):
                 "headers": ["A", "B"],
                 "rows": [["A", "B"], ["1", "2"]],
                 "footnotes": ("Footnote.",),
-                "page_url": None,
-                "locator": None,
                 "image_fallback_url": None,
                 "fallback_message": "",
             },

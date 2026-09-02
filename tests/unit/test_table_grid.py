@@ -33,6 +33,43 @@ def _normalized_xml_table(xml_text: str):
     )
 
 
+def test_xml_table_tag_matching_preserves_supported_name_forms() -> None:
+    for style, prefix in (
+        ("plain", ""),
+        ("clark", "{urn:paper-fetch:test}"),
+        ("colon", "ce:"),
+    ):
+        root = ET.Element(f"{prefix}table")
+        root.append(ET.Comment("non-element nodes must remain ignored"))
+        tgroup = ET.SubElement(
+            root,
+            f"{prefix}tgroup",
+            {"cols": "1"},
+        )
+        ET.SubElement(
+            tgroup,
+            f"{prefix}colspec",
+            {"colname": "c1"},
+        )
+        row = ET.SubElement(tgroup, f"{prefix}row")
+        entry = ET.SubElement(
+            row,
+            f"{prefix}entry",
+            {"colname": "c1"},
+        )
+        entry.text = style
+
+        parsed = parse_xml_table(root, render_cell_text=_xml_cell_text)
+
+        assert parsed.declared_width == 1
+        assert parsed.rows == (
+            TableRow(
+                cells=(TableCell(style, column_start=0),),
+                role="body",
+            ),
+        )
+
+
 def test_html_jats_and_cals_share_multilevel_header_contract() -> None:
     html = BeautifulSoup(
         """

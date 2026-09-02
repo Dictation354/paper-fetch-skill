@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import importlib
 import urllib.parse
 import xml.etree.ElementTree as ET
 from collections.abc import Callable, Mapping as MappingABC
@@ -132,7 +131,6 @@ class ProviderSpec:
     asset_default: AssetDefault
     probe_capability: str
     provider_managed_abstract_only: bool
-    client_factory_path: str
     status_order: int
     domain_suffixes: tuple[str, ...] = ()
     base_domains: tuple[str, ...] = ()
@@ -145,7 +143,6 @@ class ProviderSpec:
     api_hosts: tuple[str, ...] = ()
     api_url_templates: tuple[tuple[str, str], ...] = ()
     sensitive_headers: tuple[str, ...] = ()
-    metadata_probe_short_circuit: MetadataProbeShortCircuit | str | None = None
     persist_provider_html: bool = False
     xml_root_tags: tuple[str, ...] = ()
     xml_file_tokens: tuple[str, ...] = ()
@@ -284,9 +281,6 @@ def _default_route_acceptance(kind: ProviderRouteKind) -> str:
         "pdf": "validated_pdf",
         "assets": "validated_asset",
     }[kind]
-
-
-_METADATA_PROBE_SHORT_CIRCUITS: dict[str, MetadataProbeShortCircuit] = {}
 
 
 def _normalize_catalog_token(value: str | None) -> str:
@@ -693,47 +687,14 @@ def provider_sensitive_header_names() -> frozenset[str]:
     )
 
 
-def _load_callable(callback_path: str) -> MetadataProbeShortCircuit:
-    module_path, _, attribute = callback_path.partition(":")
-    if not module_path or not attribute:
-        raise ValueError(f"Invalid provider callback path: {callback_path!r}")
-    module = importlib.import_module(module_path)
-    callback = getattr(module, attribute)
-    if not callable(callback):
-        raise TypeError(f"Provider callback path is not callable: {callback_path!r}")
-    return callback
-
-
-def register_metadata_probe_short_circuit(
-    provider_name: str,
-    callback: MetadataProbeShortCircuit,
-) -> None:
-    normalized = _normalize_catalog_token(provider_name)
-    if not normalized:
-        raise ValueError(
-            "Provider name is required for metadata probe short-circuit registration."
-        )
-    if not callable(callback):
-        raise TypeError("Metadata probe short-circuit must be callable.")
-    _METADATA_PROBE_SHORT_CIRCUITS[normalized] = callback
-
-
 def provider_metadata_probe_short_circuit(
     provider_name: str | None,
 ) -> MetadataProbeShortCircuit | None:
     normalized = _normalize_catalog_token(provider_name)
     if not normalized:
         return None
-    callback = _METADATA_PROBE_SHORT_CIRCUITS.get(normalized)
-    if callback is not None:
-        return callback
-    spec = _provider_spec(normalized)
-    declared = spec.metadata_probe_short_circuit if spec is not None else None
-    if declared is None:
-        return None
-    callback = _load_callable(declared) if isinstance(declared, str) else declared
-    _METADATA_PROBE_SHORT_CIRCUITS[normalized] = callback
-    return callback
+    bundle = PROVIDER_BUNDLE_MAP.get(normalized)
+    return bundle.metadata_probe_short_circuit if bundle is not None else None
 
 
 def provider_persists_provider_html(provider_name: str | None) -> bool:

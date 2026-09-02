@@ -75,66 +75,6 @@ from .base import (
 )
 from ..reason_codes import NO_RESULT, OK, PDF_FALLBACK
 
-
-PROVIDER_BUNDLE = ProviderBundle(
-    catalog=ProviderSpec(
-        name="plos",
-        display_name="PLOS",
-        official=True,
-        domains=("journals.plos.org",),
-        doi_prefixes=("10.1371/",),
-        publisher_aliases=(
-            "plos",
-            "public library of science",
-            "public library of science (plos)",
-        ),
-        asset_default="body",
-        probe_capability="routing_signal",
-        provider_managed_abstract_only=False,
-        client_factory_path="paper_fetch.providers.plos:PlosClient",
-        status_order=13,
-        domain_suffixes=("plos.org",),
-        xml_path_templates=("/{journal_path}/article/file?id={doi}&type=manuscript",),
-        pdf_path_templates=("/{journal_path}/article/file?id={doi}&type=printable",),
-        emits_html_managed_marker=False,
-        html_capable=False,
-        xml_root_tags=("article",),
-        xml_file_tokens=("10.1371", "plos"),
-        body_text_thresholds=BodyTextThresholds(min_chars=1200),
-        routes=(
-            ProviderRouteSpec(name="metadata", kind="metadata"),
-            ProviderRouteSpec(
-                name="xml",
-                kind="xml",
-                hosts=("plos.org", "doi.org", "storage.googleapis.com"),
-            ),
-            ProviderRouteSpec(
-                name="direct_pdf",
-                kind="pdf",
-                hosts=("plos.org", "storage.googleapis.com"),
-                requires_pdf_conversion=True,
-            ),
-            ProviderRouteSpec(
-                name="assets",
-                kind="assets",
-                hosts=("plos.org", "storage.googleapis.com"),
-                asset_scope="body",
-            ),
-        ),
-    ),
-    html_rules=ProviderHtmlRules(
-        name="plos",
-        front_matter=ProviderFrontMatterRules(
-            exact_texts=(),
-            contains_tokens=(),
-            publication_keywords=("plos", "public library of science"),
-        ),
-        availability=AvailabilityPolicy(name="plos", no_signals=True),
-    ),
-    sources=("plos_xml", "plos_pdf"),
-)
-
-
 PLOS_JOURNAL_PATHS = provider_journal_mapping("plos", "journal_paths")
 PLOS_DOI_JOURNAL_PATTERN = re.compile(
     r"^10\.1371/journal\.(?P<code>[a-z0-9]+)\.", flags=re.IGNORECASE
@@ -620,7 +560,6 @@ class PlosClient(ProviderClient):
                 fulltext_marker(self.name, "fail", route="xml"),
                 fulltext_marker(self.name, "ok", route=PDF_FALLBACK),
             ],
-            content_needs_local_copy=True,
             needs_local_copy=True,
         )
 
@@ -909,3 +848,62 @@ class PlosClient(ProviderClient):
 
 
 __all__ = ["PlosClient"]
+
+
+PROVIDER_BUNDLE = ProviderBundle(
+    client_factory=PlosClient,
+    catalog=ProviderSpec(
+        name="plos",
+        display_name="PLOS",
+        official=True,
+        domains=("journals.plos.org",),
+        doi_prefixes=("10.1371/",),
+        publisher_aliases=(
+            "plos",
+            "public library of science",
+            "public library of science (plos)",
+        ),
+        asset_default="body",
+        probe_capability="routing_signal",
+        provider_managed_abstract_only=False,
+        status_order=13,
+        domain_suffixes=("plos.org",),
+        xml_path_templates=("/{journal_path}/article/file?id={doi}&type=manuscript",),
+        pdf_path_templates=("/{journal_path}/article/file?id={doi}&type=printable",),
+        emits_html_managed_marker=False,
+        html_capable=False,
+        xml_root_tags=("article",),
+        xml_file_tokens=("10.1371", "plos"),
+        body_text_thresholds=BodyTextThresholds(min_chars=1200),
+        routes=(
+            ProviderRouteSpec(name="metadata", kind="metadata"),
+            ProviderRouteSpec(
+                name="xml",
+                kind="xml",
+                hosts=("plos.org", "doi.org", "storage.googleapis.com"),
+            ),
+            ProviderRouteSpec(
+                name="direct_pdf",
+                kind="pdf",
+                hosts=("plos.org", "storage.googleapis.com"),
+                requires_pdf_conversion=True,
+            ),
+            ProviderRouteSpec(
+                name="assets",
+                kind="assets",
+                hosts=("plos.org", "storage.googleapis.com"),
+                asset_scope="body",
+            ),
+        ),
+    ),
+    html_rules=ProviderHtmlRules(
+        name="plos",
+        front_matter=ProviderFrontMatterRules(
+            exact_texts=(),
+            contains_tokens=(),
+            publication_keywords=("plos", "public library of science"),
+        ),
+        availability=AvailabilityPolicy(name="plos"),
+    ),
+    sources=("plos_xml", "plos_pdf"),
+)

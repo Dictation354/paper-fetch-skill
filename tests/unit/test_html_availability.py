@@ -4,11 +4,13 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from paper_fetch import reason_codes as canonical_reason_codes
 from paper_fetch.extraction.html._metadata import parse_html_metadata
 from paper_fetch.extraction.html._runtime import body_metrics
 from paper_fetch.providers import _springer_html as springer_html
 from paper_fetch.providers import browser_workflow
 from paper_fetch.quality import html_availability as html_availability_module
+from paper_fetch.quality import reason_codes as quality_reason_codes
 from paper_fetch.quality.html_availability import (
     HTML_CONTAINER_SCOPE_PAGE,
     HtmlContainerEvidence,
@@ -40,6 +42,18 @@ SPRINGER_PAYWALL_SAMPLE_DOIS = (
     "10.1007/s12652-019-01399-8",
     "10.1007/s13351-020-9829-8",
 )
+
+
+def test_quality_reason_codes_remain_public_compatibility_aliases() -> None:
+    canonical_constants = {
+        name for name in vars(canonical_reason_codes) if name.isupper()
+    }
+    assert set(canonical_reason_codes.__all__) == canonical_constants
+    assert set(quality_reason_codes.__all__) <= set(canonical_reason_codes.__all__)
+    for name in quality_reason_codes.__all__:
+        assert getattr(quality_reason_codes, name) is getattr(
+            canonical_reason_codes, name
+        )
 
 
 def _science_paywall_metadata(_html: str, markdown: str) -> dict[str, str]:
@@ -1118,7 +1132,6 @@ class HtmlAvailabilityTests(unittest.TestCase):
     def test_assess_html_accepts_pnas_fulltext_fixture_despite_institutional_login_chrome(
         self,
     ) -> None:
-        """rule: rule-html-availability-contract"""
         self._assert_accepted_browser_workflow_case("pnas")
 
     def test_body_metrics_excludes_nonliteral_data_availability_when_section_hints_are_present(

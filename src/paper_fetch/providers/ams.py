@@ -26,61 +26,160 @@ from ..extraction.html.provider_rules import (
 from ..publisher_identity import normalize_doi
 from ..provider_catalog import ProviderRouteSpec, ProviderSpec
 from ..quality.html_signals import AMS_TEXT_MARKER_SIGNAL_SET
-from ..utils import normalize_text
+from ..utils import extend_unique, normalize_text
 from . import _ams_html, browser_workflow
 from .base import RawFulltextPayload
 from ._registry import ProviderBundle
 from ..reason_codes import PDF_FALLBACK
 
-
-PROVIDER_BUNDLE = ProviderBundle(
-    catalog=ProviderSpec(
-        name="ams",
-        display_name="AMS",
-        official=True,
-        domains=("journals.ametsoc.org", "ametsoc.org"),
-        doi_prefixes=("10.1175/",),
-        publisher_aliases=(
-            "american meteorological society",
-            "ams",
-            "american meteorological society (ams)",
+_PROVIDER_SPEC = ProviderSpec(
+    name="ams",
+    display_name="AMS",
+    official=True,
+    domains=("journals.ametsoc.org", "ametsoc.org"),
+    doi_prefixes=("10.1175/",),
+    publisher_aliases=(
+        "american meteorological society",
+        "ams",
+        "american meteorological society (ams)",
+    ),
+    asset_default="body",
+    probe_capability="routing_signal",
+    provider_managed_abstract_only=True,
+    status_order=9,
+    base_domains=("journals.ametsoc.org",),
+    crossref_pdf_position=0,
+    routes=(
+        ProviderRouteSpec(name="metadata", kind="metadata"),
+        ProviderRouteSpec(
+            name="browser_html",
+            kind="html",
+            browser_required=True,
+            browser_preflight=True,
+            auth_supported=True,
+            requires_playwright=True,
+            concurrency=1,
         ),
-        asset_default="body",
-        probe_capability="routing_signal",
-        provider_managed_abstract_only=True,
-        client_factory_path="paper_fetch.providers.ams:AmsClient",
-        status_order=9,
-        base_domains=("journals.ametsoc.org",),
-        crossref_pdf_position=0,
-        routes=(
-            ProviderRouteSpec(name="metadata", kind="metadata"),
-            ProviderRouteSpec(
-                name="browser_html",
-                kind="html",
-                browser_required=True,
-                browser_preflight=True,
-                auth_supported=True,
-                requires_playwright=True,
-                concurrency=1,
-            ),
-            ProviderRouteSpec(
-                name="browser_pdf",
-                kind="pdf",
-                browser_required=True,
-                browser_preflight=True,
-                auth_supported=True,
-                requires_playwright=True,
-                requires_pdf_conversion=True,
-                concurrency=1,
-            ),
-            ProviderRouteSpec(
-                name="assets",
-                kind="assets",
-                concurrency=2,
-                asset_scope="body",
-            ),
+        ProviderRouteSpec(
+            name="browser_pdf",
+            kind="pdf",
+            browser_required=True,
+            browser_preflight=True,
+            auth_supported=True,
+            requires_playwright=True,
+            requires_pdf_conversion=True,
+            concurrency=1,
+        ),
+        ProviderRouteSpec(
+            name="assets",
+            kind="assets",
+            concurrency=2,
+            asset_scope="body",
         ),
     ),
+)
+
+AMS_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
+    "ams",
+    catalog=_PROVIDER_SPEC,
+    fallback_author_extractor=_ams_html.extract_authors,
+    policy=browser_workflow.BrowserWorkflowPolicy(
+        blocked_resource_types=("image", "font", "media"),
+    ),
+)
+AMS_SICI_DOI_PATTERN = re.compile(
+    r"^10\.1175/[0-9]{4}-[0-9]{4}\(\d{4}\)\d{3}<[^>]+>2\.0\.co;2$",
+    flags=re.IGNORECASE,
+)
+
+
+def _ams_old_style_doi_url(doi: str) -> str | None:
+    normalized = normalize_text(doi)
+    if not AMS_SICI_DOI_PATTERN.match(normalized):
+        return None
+    return f"https://doi.org/{urllib.parse.quote(normalized, safe='/')}"
+
+
+def _ams_pdf_candidate_urls_from_landing_url(
+    landing_page_url: str | None, *, derive_from_article_url: bool
+) -> list[str]:
+    url = normalize_text(landing_page_url)
+    if not url:
+        return []
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return []
+
+    candidates: list[str] = []
+
+    def append_path(path: str, query: str = "") -> None:
+        candidate = urllib.parse.urlunparse(
+            (parsed.scheme, parsed.netloc, path, "", query, "")
+        )
+        extend_unique(candidates, [candidate])
+
+    path = parsed.path
+    lowered_path = path.lower()
+    if "/downloadpdf/" in lowered_path or lowered_path.endswith(".pdf"):
+        append_path(path, parsed.query)
+        return candidates
+
+    if not derive_from_article_url or not path.startswith("/view/"):
+        return candidates
+
+    suffix = path.removeprefix("/view")
+    for prefix in ("/downloadpdf", "/downloadpdf/view"):
+        append_path(f"{prefix}{suffix}")
+        if suffix.lower().endswith(".xml"):
+            append_path(f"{prefix}{suffix[:-4]}.pdf")
+    return candidates
+
+
+class AmsClient(browser_workflow.BrowserWorkflowClient):
+    name = AMS_BROWSER_PROFILE.name
+    profile = AMS_BROWSER_PROFILE
+
+    def html_candidates(self, doi: str, metadata: Mapping[str, Any]) -> list[str]:
+        candidates: list[str] = []
+        extend_unique(candidates, super().html_candidates(doi, metadata))
+        old_style_doi_url = _ams_old_style_doi_url(doi)
+        if old_style_doi_url:
+            extend_unique(candidates, [old_style_doi_url])
+        return candidates
+
+    def pdf_candidates(self, doi: str, metadata: Mapping[str, Any]) -> list[str]:
+        candidates: list[str] = []
+        normalized_doi = normalize_doi(doi) or normalize_text(doi)
+        old_style_doi = bool(AMS_SICI_DOI_PATTERN.match(normalized_doi))
+        crossref_pdf_url = browser_workflow.extract_pdf_url_from_crossref(metadata)
+        if crossref_pdf_url:
+            extend_unique(candidates, [crossref_pdf_url])
+        for key in ("landing_page_url", "source_url"):
+            extend_unique(
+                candidates,
+                _ams_pdf_candidate_urls_from_landing_url(
+                    str(metadata.get(key) or "") or None,
+                    derive_from_article_url=not old_style_doi,
+                ),
+            )
+        return candidates
+
+    def article_source_for_payload(self, raw_payload: RawFulltextPayload) -> str:
+        if (
+            raw_payload.content is not None
+            and normalize_text(raw_payload.content.route_kind).lower() == PDF_FALLBACK
+        ):
+            return "ams_pdf"
+        return "ams_html"
+
+    def to_article_model(self, *args, **kwargs):
+        article = super().to_article_model(*args, **kwargs)
+        return _ams_html.normalize_article_model(article)
+
+
+PROVIDER_BUNDLE = ProviderBundle(
+    client_factory=AmsClient,
+    catalog=_PROVIDER_SPEC,
     html_rules=ProviderHtmlRules(
         name="ams",
         cleanup=ProviderCleanupRules(
@@ -117,105 +216,3 @@ PROVIDER_BUNDLE = ProviderBundle(
     ),
     sources=("ams_html", "ams_pdf"),
 )
-
-
-AMS_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
-    "ams",
-    catalog=PROVIDER_BUNDLE.catalog,
-    fallback_author_extractor=_ams_html.extract_authors,
-    policy=browser_workflow.BrowserWorkflowPolicy(
-        blocked_resource_types=("image", "font", "media"),
-    ),
-)
-AMS_SICI_DOI_PATTERN = re.compile(
-    r"^10\.1175/[0-9]{4}-[0-9]{4}\(\d{4}\)\d{3}<[^>]+>2\.0\.co;2$",
-    flags=re.IGNORECASE,
-)
-
-
-def _append_unique(candidates: list[str], candidate: str | None) -> None:
-    normalized = normalize_text(candidate)
-    if normalized and normalized not in candidates:
-        candidates.append(normalized)
-
-
-def _ams_old_style_doi_url(doi: str) -> str | None:
-    normalized = normalize_text(doi)
-    if not AMS_SICI_DOI_PATTERN.match(normalized):
-        return None
-    return f"https://doi.org/{urllib.parse.quote(normalized, safe='/')}"
-
-
-def _ams_pdf_candidate_urls_from_landing_url(
-    landing_page_url: str | None, *, derive_from_article_url: bool
-) -> list[str]:
-    url = normalize_text(landing_page_url)
-    if not url:
-        return []
-    parsed = urllib.parse.urlparse(url)
-    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
-        return []
-
-    candidates: list[str] = []
-
-    def append_path(path: str, query: str = "") -> None:
-        candidate = urllib.parse.urlunparse(
-            (parsed.scheme, parsed.netloc, path, "", query, "")
-        )
-        _append_unique(candidates, candidate)
-
-    path = parsed.path
-    lowered_path = path.lower()
-    if "/downloadpdf/" in lowered_path or lowered_path.endswith(".pdf"):
-        append_path(path, parsed.query)
-        return candidates
-
-    if not derive_from_article_url or not path.startswith("/view/"):
-        return candidates
-
-    suffix = path.removeprefix("/view")
-    for prefix in ("/downloadpdf", "/downloadpdf/view"):
-        append_path(f"{prefix}{suffix}")
-        if suffix.lower().endswith(".xml"):
-            append_path(f"{prefix}{suffix[:-4]}.pdf")
-    return candidates
-
-
-class AmsClient(browser_workflow.BrowserWorkflowClient):
-    name = AMS_BROWSER_PROFILE.name
-    profile = AMS_BROWSER_PROFILE
-
-    def html_candidates(self, doi: str, metadata: Mapping[str, Any]) -> list[str]:
-        candidates: list[str] = []
-        for candidate in super().html_candidates(doi, metadata):
-            _append_unique(candidates, candidate)
-        _append_unique(candidates, _ams_old_style_doi_url(doi))
-        return candidates
-
-    def pdf_candidates(self, doi: str, metadata: Mapping[str, Any]) -> list[str]:
-        candidates: list[str] = []
-        normalized_doi = normalize_doi(doi) or normalize_text(doi)
-        old_style_doi = bool(AMS_SICI_DOI_PATTERN.match(normalized_doi))
-        _append_unique(
-            candidates,
-            browser_workflow.extract_pdf_url_from_crossref(metadata),
-        )
-        for key in ("landing_page_url", "source_url"):
-            for candidate in _ams_pdf_candidate_urls_from_landing_url(
-                str(metadata.get(key) or "") or None,
-                derive_from_article_url=not old_style_doi,
-            ):
-                _append_unique(candidates, candidate)
-        return candidates
-
-    def article_source_for_payload(self, raw_payload: RawFulltextPayload) -> str:
-        if (
-            raw_payload.content is not None
-            and normalize_text(raw_payload.content.route_kind).lower() == PDF_FALLBACK
-        ):
-            return "ams_pdf"
-        return "ams_html"
-
-    def to_article_model(self, *args, **kwargs):
-        article = super().to_article_model(*args, **kwargs)
-        return _ams_html.normalize_article_model(article)

@@ -9,7 +9,7 @@ from typing import Any
 from collections.abc import Callable
 
 from ...quality import html_profiles as _html_profiles
-from ...utils import normalize_text
+from ...utils import extend_unique, normalize_text
 from .._pdf_candidates import (
     extract_pdf_url_from_crossref as extract_pdf_url_from_crossref,
 )
@@ -167,12 +167,6 @@ def build_base_urls(
     return base_urls
 
 
-def _append_unique(candidates: list[str], candidate: str | None) -> None:
-    normalized = normalize_text(candidate)
-    if normalized and normalized not in candidates:
-        candidates.append(normalized)
-
-
 def format_doi_path_template(template: str, doi: str) -> str:
     """Format a route template without letting DOI suffixes become URL syntax."""
 
@@ -197,13 +191,14 @@ def build_browser_workflow_html_candidates(
         landing_page_url,
         hosts=hosts,
     )
-    _append_unique(candidates, preferred_candidate)
+    if preferred_candidate:
+        extend_unique(candidates, [preferred_candidate])
     for base in build_base_urls(
         hosts=hosts, base_hosts=base_hosts, landing_page_url=landing_page_url
     ):
         for template in path_templates:
-            _append_unique(
-                candidates, f"{base}{format_doi_path_template(template, doi)}"
+            extend_unique(
+                candidates, [f"{base}{format_doi_path_template(template, doi)}"]
             )
     return candidates
 
@@ -223,9 +218,9 @@ def build_browser_workflow_pdf_candidates(
         hosts=hosts, base_hosts=base_hosts, landing_page_url=base_seed_url
     ):
         for template in path_templates:
-            _append_unique(
+            extend_unique(
                 generated_candidates,
-                f"{base}{format_doi_path_template(template, doi)}",
+                [f"{base}{format_doi_path_template(template, doi)}"],
             )
 
     crossref_candidate = normalize_text(crossref_pdf_url)
@@ -237,9 +232,9 @@ def build_browser_workflow_pdf_candidates(
     insert_at = max(crossref_pdf_position, 0)
     for index, candidate in enumerate(generated_candidates):
         if index == insert_at:
-            _append_unique(candidates, crossref_candidate)
+            extend_unique(candidates, [crossref_candidate])
             inserted = True
-        _append_unique(candidates, candidate)
+        extend_unique(candidates, [candidate])
     if not inserted:
-        _append_unique(candidates, crossref_candidate)
+        extend_unique(candidates, [crossref_candidate])
     return candidates
