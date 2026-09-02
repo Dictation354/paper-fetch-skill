@@ -1615,6 +1615,11 @@ def fetch_html_with_playwright(
         disable_media=disable_media,
         options=options,
     )
+    empty_script_response_urls = frozenset(
+        str(item).strip()
+        for item in options.empty_script_response_urls
+        if str(item).strip()
+    )
     readiness_budget_seconds = options.readiness_budget_seconds
     reuse_runtime_page = options.reuse_runtime_page
 
@@ -1640,6 +1645,7 @@ def fetch_html_with_playwright(
         "blocked_resource_types": sorted(active_blocked_resource_types),
         "blocked_request_count": 0,
         "blocked_request_types": [],
+        "empty_script_response_count": 0,
         "return_image_payload": bool(return_image_payload),
         "return_screenshot": bool(return_screenshot),
         "lightweight_seed_only": bool(lightweight_seed_only),
@@ -1729,6 +1735,25 @@ def fetch_html_with_playwright(
                 resource_type = normalize_text(
                     str(route.request.resource_type or "")
                 ).lower()
+                request_url = str(route.request.url or "")
+                if (
+                    resource_type == "script"
+                    and request_url in empty_script_response_urls
+                ):
+                    try:
+                        route.fulfill(
+                            status=200,
+                            content_type="application/javascript",
+                            body="",
+                        )
+                    except Exception:
+                        with contextlib.suppress(Exception):
+                            route.continue_()
+                    else:
+                        trace["empty_script_response_count"] = (
+                            int(trace.get("empty_script_response_count") or 0) + 1
+                        )
+                    return
                 if resource_type in active_blocked_resource_types:
                     trace["blocked_request_count"] = (
                         int(trace.get("blocked_request_count") or 0) + 1
@@ -1744,7 +1769,7 @@ def fetch_html_with_playwright(
                 with contextlib.suppress(Exception):
                     route.continue_()
 
-        if active_blocked_resource_types:
+        if active_blocked_resource_types or empty_script_response_urls:
             with contextlib.suppress(Exception):
                 page.route("**/*", route_handler)
 

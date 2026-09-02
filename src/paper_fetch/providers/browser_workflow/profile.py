@@ -44,6 +44,7 @@ class BrowserWorkflowPolicy:
     fast_html_attempt: bool = True
     html_readiness_budget_seconds: float | None = None
     blocked_resource_types: frozenset[str] | tuple[str, ...] = frozenset()
+    empty_script_response_urls: frozenset[str] | tuple[str, ...] = frozenset()
     persistent_storage_state: bool = True
     retry_incomplete_html_candidates: bool = False
     direct_figure_page_fallback: bool = False
@@ -55,6 +56,15 @@ class BrowserWorkflowPolicy:
             frozenset(
                 str(item).strip().lower()
                 for item in self.blocked_resource_types
+                if str(item).strip()
+            ),
+        )
+        object.__setattr__(
+            self,
+            "empty_script_response_urls",
+            frozenset(
+                str(item).strip()
+                for item in self.empty_script_response_urls
                 if str(item).strip()
             ),
         )

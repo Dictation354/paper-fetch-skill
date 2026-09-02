@@ -1,0 +1,262 @@
+{
+  "schema_version": 2,
+  "provider": "aip",
+  "route": "html",
+  "failure_code": "empty_article_shell",
+  "stage": "html_extraction",
+  "backend": "camoufox",
+  "attempt": 2,
+  "target": {
+    "url": "https://pubs.aip.org/doi/full/10.1063/5.0129134",
+    "host": "pubs.aip.org",
+    "path": "/doi/full/10.1063/5.0129134",
+    "url_sha256": "4936426ec7b59ab2b7ea98a7e34144b990df38ba9e48626a020a9a596c0d3d3e"
+  },
+  "final": {
+    "url": "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+    "host": "pubs.aip.org",
+    "path": "/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+    "url_sha256": "c9638575685d0f242de9a5697b344dd349fa668864e62f1a53ec44e74873651a"
+  },
+  "response_status": 200,
+  "title_summary": "On-chip on-demand delivery of K+ for in vitro bioelectronics | AIP Advances | AIP Publishing",
+  "page_summary": "On-chip on-demand delivery of K+ for in vitro bioelectronics | AIP Advances | AIP Publishing",
+  "page": {
+    "page_state": {
+      "route": "browser_html",
+      "page_sha256": "fa902288c09e3b3b85a5aa60b60cf194c3e0851481848d6495dacc10a9a78a2b"
+    },
+    "retry_decision": {
+      "retry": false,
+      "reason": "identical_page",
+      "attempt": 2,
+      "candidate_changed": true,
+      "profile_changed": false,
+      "identical_page_state": true,
+      "next_candidate": {
+        "url": "https://pubs.aip.org/doi/10.1063/5.0129134",
+        "host": "pubs.aip.org",
+        "path": "/doi/10.1063/5.0129134",
+        "url_sha256": "da495b5f2bfa79dfe92570a0bf20dcde0b8c918ba482eaa7555a0af03a8c8aa0"
+      }
+    },
+    "browser_runtime": {
+      "backend": "camoufox",
+      "media_blocking": false,
+      "timeout_budget_ms": 104939,
+      "browser_connect_seconds": 0.009,
+      "duration_seconds": 22.025,
+      "remaining_ms": 82913,
+      "browser_context_seed": {
+        "provided": true,
+        "cookie_count": 3,
+        "applied": true,
+        "user_agent_reused": false,
+        "reason": "cookies_applied"
+      },
+      "storage_state_save": {
+        "attempted": false,
+        "staged": false,
+        "saved": false,
+        "path": null,
+        "reason": "storage_state_write_disabled"
+      },
+      "page_events": {
+        "document_requests": [
+          {
+            "url": "https://pubs.aip.org/doi/full/10.1063/5.0129134",
+            "host": "pubs.aip.org",
+            "path": "/doi/full/10.1063/5.0129134",
+            "url_sha256": "4936426ec7b59ab2b7ea98a7e34144b990df38ba9e48626a020a9a596c0d3d3e",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "response_received_ms": 397.804,
+            "status": 301,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "request_finished_ms": 419.707
+          },
+          {
+            "url": "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+            "host": "pubs.aip.org",
+            "path": "/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+            "url_sha256": "c9638575685d0f242de9a5697b344dd349fa668864e62f1a53ec44e74873651a",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "response_received_ms": 1372.301,
+            "status": 200,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "request_finished_ms": 1789.931
+          }
+        ],
+        "failed_requests": [
+          {
+            "url": "https://static.adzerk.net/ados.js",
+            "host": "static.adzerk.net",
+            "path": "/ados.js",
+            "url_sha256": "bcc10a6081feab9d96a9e1e45542ce63154f20eeb445ca7bcf5c9654c6312ca9",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          }
+        ],
+        "failed_scripts": [
+          {
+            "url": "https://static.adzerk.net/ados.js",
+            "host": "static.adzerk.net",
+            "path": "/ados.js",
+            "url_sha256": "bcc10a6081feab9d96a9e1e45542ce63154f20eeb445ca7bcf5c9654c6312ca9",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          }
+        ],
+        "console_errors": [],
+        "page_errors": []
+      },
+      "candidates": [
+        {
+          "url": "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+          "url_sha256": "c9638575685d0f242de9a5697b344dd349fa668864e62f1a53ec44e74873651a",
+          "final_url": "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+          "final_url_sha256": "c9638575685d0f242de9a5697b344dd349fa668864e62f1a53ec44e74873651a",
+          "status": 200,
+          "main_document_response": {
+            "url": "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+            "host": "pubs.aip.org",
+            "path": "/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+            "url_sha256": "c9638575685d0f242de9a5697b344dd349fa668864e62f1a53ec44e74873651a",
+            "status": 200,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "captured_html_bytes": 1056,
+            "navigation_timing": {
+              "available": true,
+              "document_ready_state": "loading",
+              "navigation_entry_present": true,
+              "response_start_ms": 2331,
+              "response_end_ms": 2331,
+              "dom_interactive_ms": 0,
+              "dom_content_loaded_event_end_ms": 0,
+              "load_event_end_ms": 0,
+              "duration_ms": 0,
+              "transfer_size_bytes": 0,
+              "encoded_body_size_bytes": 0,
+              "decoded_body_size_bytes": 0,
+              "navigation_type": "navigate",
+              "next_hop_protocol": "h2",
+              "response_completed": true,
+              "dom_content_loaded_completed": false,
+              "load_event_completed": false
+            },
+            "request_lifecycle": {
+              "response_received_observed": true,
+              "response_received_ms": 2336.758,
+              "request_finished_observed": true,
+              "request_finished_ms": 2746.644,
+              "request_failed_observed": false,
+              "observed_ms": 14105.703
+            }
+          },
+          "navigation_seconds": 2.374,
+          "dom_readiness_seconds": 11.74,
+          "dom_readiness_attempted": true,
+          "dom_readiness_ready": false,
+          "dom_readiness_selector": null,
+          "dom_readiness_text_length": 0,
+          "dom_readiness_paragraph_count": 0,
+          "dom_readiness_heading_count": 0,
+          "dom_readiness_fingerprint_present": false,
+          "duration_seconds": 14.132,
+          "result": "success"
+        },
+        {
+          "url": "https://pubs.aip.org/doi/full/10.1063/5.0129134",
+          "url_sha256": "4936426ec7b59ab2b7ea98a7e34144b990df38ba9e48626a020a9a596c0d3d3e",
+          "final_url": "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+          "final_url_sha256": "c9638575685d0f242de9a5697b344dd349fa668864e62f1a53ec44e74873651a",
+          "status": 200,
+          "main_document_response": {
+            "url": "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+            "host": "pubs.aip.org",
+            "path": "/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+            "url_sha256": "c9638575685d0f242de9a5697b344dd349fa668864e62f1a53ec44e74873651a",
+            "status": 200,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "captured_html_bytes": 1056,
+            "navigation_timing": {
+              "available": true,
+              "document_ready_state": "loading",
+              "navigation_entry_present": true,
+              "response_start_ms": 1790,
+              "response_end_ms": 1790,
+              "dom_interactive_ms": 0,
+              "dom_content_loaded_event_end_ms": 0,
+              "load_event_end_ms": 0,
+              "duration_ms": 0,
+              "transfer_size_bytes": 0,
+              "encoded_body_size_bytes": 0,
+              "decoded_body_size_bytes": 0,
+              "navigation_type": "navigate",
+              "next_hop_protocol": "h2",
+              "response_completed": true,
+              "dom_content_loaded_completed": false,
+              "load_event_completed": false
+            },
+            "request_lifecycle": {
+              "response_received_observed": true,
+              "response_received_ms": 1372.301,
+              "request_finished_observed": true,
+              "request_finished_ms": 1789.931,
+              "request_failed_observed": false,
+              "observed_ms": 21401.799
+            }
+          },
+          "navigation_seconds": 1.808,
+          "dom_readiness_seconds": 20.006,
+          "dom_readiness_attempted": true,
+          "dom_readiness_ready": false,
+          "dom_readiness_selector": null,
+          "dom_readiness_text_length": 0,
+          "dom_readiness_paragraph_count": 0,
+          "dom_readiness_heading_count": 0,
+          "dom_readiness_fingerprint_present": false,
+          "duration_seconds": 21.831,
+          "result": "success"
+        }
+      ]
+    },
+    "html_shape": {
+      "byte_count": 1056,
+      "has_html": true,
+      "has_head": true,
+      "has_body": false,
+      "body_text_length": 0,
+      "body_element_count": 0,
+      "article_container_count": 0
+    }
+  },
+  "raw_html": {
+    "byte_count": 1056,
+    "sha256": "fa902288c09e3b3b85a5aa60b60cf194c3e0851481848d6495dacc10a9a78a2b"
+  },
+  "sanitized_html": {
+    "path": "artifacts/live-provider-analysis-20260902/preflight/aip/diagnostics/aip/10.1063_5.0129134/html-2/page-sanitized.html",
+    "byte_count": 163,
+    "sha256": "e88313860ad413a64cdaf9748a39a609a0c5a821ae7ada18bdb8dce3af5a64bf",
+    "truncated": false
+  },
+  "diagnostic_path": "artifacts/live-provider-analysis-20260902/preflight/aip/diagnostics/aip/10.1063_5.0129134/html-2/diagnostic.json"
+}

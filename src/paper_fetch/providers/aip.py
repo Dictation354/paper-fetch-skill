@@ -159,6 +159,10 @@ AIP_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     article_source_name="aip_html",
     fallback_author_extractor=_aip_html.extract_authors,
     policy=browser_workflow.BrowserWorkflowPolicy(
+        empty_script_response_urls=(
+            "https://static.adzerk.net/ados.js",
+            "https://crossmark-cdn.crossref.org/widget/v2.0/widget.js",
+        ),
         persistent_storage_state=False,
     ),
 )

@@ -51,6 +51,7 @@ class BrowserHtmlFetchOptions:
     return_screenshot: bool = False
     lightweight_seed_only: bool = False
     blocked_resource_types: frozenset[str] | tuple[str, ...] | None = None
+    empty_script_response_urls: frozenset[str] | tuple[str, ...] = frozenset()
     readiness_budget_seconds: float | None = None
     reuse_runtime_page: bool = False
 

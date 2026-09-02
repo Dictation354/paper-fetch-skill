@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from unittest import mock
+from urllib.parse import urlparse
 
 from paper_fetch import publisher_identity
 from paper_fetch.providers import _acs_html
@@ -26,6 +27,9 @@ from paper_fetch.providers.atypon_browser_workflow.asset_scopes import (
     extract_browser_workflow_asset_html_scopes,
 )
 from paper_fetch.providers.browser_workflow import BrowserWorkflowClient
+from paper_fetch.providers.browser_workflow.assets import (
+    _discover_browser_workflow_figure_original_url,
+)
 from paper_fetch.providers.browser_workflow.fetchers.readiness import (
     atypon_body_ready_selectors,
 )
@@ -391,9 +395,65 @@ def test_acs_silverchair_structure_fixture_extracts_complete_current_article() -
     assert len(extraction["references"]) == 45
     assert extraction["references"][0]["year"] == "2018"
     assert sum(asset["kind"] == "figure" for asset in assets) == 8
+    figures = [asset for asset in assets if asset["kind"] == "figure"]
+    assert all(
+        urlparse(figure["full_size_url"]).hostname == "acs.silverchair-cdn.com"
+        for figure in figures
+    )
+    assert [
+        urlparse(figure["full_size_url"]).path.rsplit("/", 1)[-1] for figure in figures
+    ] == [f"ao4c03987_{index:04d}.png" for index in range(1, 9)]
     assert [asset["url"] for asset in assets if asset["kind"] == "supplementary"] == [
         "https://pubs.acs.org/acsodf/article-supplement/358560/pdf/ao4c03987_si_001/"
     ]
+
+    figure_page_fetcher = mock.Mock()
+    assert (
+        _discover_browser_workflow_figure_original_url(
+            figures[0],
+            figure_page_fetcher=figure_page_fetcher,
+            direct_original_first=True,
+        )
+        == ""
+    )
+    figure_page_fetcher.assert_not_called()
+
+
+def test_acs_silverchair_missing_direct_original_keeps_figure_page_fallback() -> None:
+    html = """
+    <div class="article-body">
+      <div class="fig fig-section" data-id="fig1">
+        <a href="/view-large/figure/123/examplef01.tif" aria-label="View large Figure 1">
+          <img src="https://acs.silverchair-cdn.com/acs/journals/m_examplef01.gif"
+               path-from-xml="examplef01.tif" alt="Figure 1">
+        </a>
+        <div class="caption">Figure 1. Preview fallback.</div>
+      </div>
+    </div>
+    """
+
+    body_html, supplementary_html = extract_browser_workflow_asset_html_scopes(
+        html,
+        ACS_SAMPLE_LANDING,
+        "acs",
+    )
+    figures = [
+        asset
+        for asset in _acs_html.scoped_asset_extractor(
+            body_html,
+            ACS_SAMPLE_LANDING,
+            asset_profile="body",
+            supplementary_html_text=supplementary_html,
+        )
+        if asset["kind"] == "figure"
+    ]
+
+    assert len(figures) == 1
+    assert not figures[0].get("full_size_url")
+    assert figures[0]["preview_url"].endswith("/m_examplef01.gif")
+    assert figures[0]["figure_page_url"].endswith(
+        "/view-large/figure/123/examplef01.tif"
+    )
 
 
 def test_acs_silverchair_formula_fixture_preserves_mathml_and_tables() -> None:

@@ -134,6 +134,13 @@ def test_aip_cold_html_retry_reuses_transient_seed_without_persisting_state(
         )
 
     assert mocked_browser.call_count == 2
+    for browser_call in mocked_browser.call_args_list:
+        assert browser_call.kwargs["options"].empty_script_response_urls == frozenset(
+            {
+                "https://static.adzerk.net/ados.js",
+                "https://crossmark-cdn.crossref.org/widget/v2.0/widget.js",
+            }
+        )
     assert "browser_context_seed" not in mocked_browser.call_args_list[0].kwargs
     assert mocked_browser.call_args_list[0].args[0][0] == AIP_STRUCTURE_LANDING
     assert mocked_browser.call_args_list[1].args[0][0] == (
@@ -232,6 +239,12 @@ def test_aip_browser_client_profile_and_author_fallback() -> None:
         "Ada Lovelace",
         "Grace Hopper",
     ]
+    assert client.profile.empty_script_response_urls == frozenset(
+        {
+            "https://static.adzerk.net/ados.js",
+            "https://crossmark-cdn.crossref.org/widget/v2.0/widget.js",
+        }
+    )
 
 
 def test_aip_asset_extraction_prefers_largest_official_srcset_rendition() -> None:

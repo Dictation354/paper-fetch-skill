@@ -1,0 +1,342 @@
+{
+  "schema_version": 2,
+  "provider": "science",
+  "route": "browser_html",
+  "failure_code": "publisher_access_denied",
+  "stage": "block_detection",
+  "backend": "camoufox",
+  "attempt": 1,
+  "target": {
+    "url": "https://www.science.org/doi/10.1126/science.ady3136",
+    "host": "www.science.org",
+    "path": "/doi/10.1126/science.ady3136",
+    "url_sha256": "5bb913faa8fae0ece91db5b176e43d5a98931c8a1b612ab2e17ac644dded98b5"
+  },
+  "final": {
+    "url": "https://www.science.org/doi/10.1126/science.ady3136",
+    "host": "www.science.org",
+    "path": "/doi/10.1126/science.ady3136",
+    "url_sha256": "5bb913faa8fae0ece91db5b176e43d5a98931c8a1b612ab2e17ac644dded98b5"
+  },
+  "response_status": 403,
+  "title_summary": "Hyaluronic acid and tissue mechanics orchestrate mammalian digit tip regeneration | Science",
+  "page_summary": "Hyaluronic acid and tissue mechanics orchestrate mammalian digit tip regeneration | Science Skip to main content Advertisement news careers commentary Journals brought to you by Peking University Cart Log in Become A Member science science advances science immunology science robotics science signaling science translational medicine science partner journals Quick Search anywhere Enter Search Term Quick Search in Journals Enter Search Term Quick Search in Journals Enter Search Term Quick Search in Journals Enter Search Term Quick Search in Journals Enter Search Term Quick Search in Journals Enter Search Term Quick Search in Journals Enter Search Term Searching: Anywhere Anywhere Science Science Advances Science Immunology Science Robotics Science Signaling Science Translational Medicine Advanced Search Search Trending Terms: quantum ebola aging cancer artificial intelligence Log In My Cart Become A Member Donate Quick Search anywhere Enter Search Term science.org Custom publishing prizes",
+  "page": {
+    "browser_runtime": {
+      "backend": "camoufox",
+      "media_blocking": true,
+      "timeout_budget_ms": 15000,
+      "browser_connect_seconds": 0.925,
+      "browser_context_seed": {
+        "provided": false,
+        "cookie_count": 0,
+        "applied": false,
+        "user_agent_reused": false,
+        "reason": "no_compatible_cookies"
+      },
+      "page_events": {
+        "document_requests": [
+          {
+            "url": "https://www.science.org/doi/10.1126/science.ady3136",
+            "host": "www.science.org",
+            "path": "/doi/10.1126/science.ady3136",
+            "url_sha256": "5bb913faa8fae0ece91db5b176e43d5a98931c8a1b612ab2e17ac644dded98b5",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "response_received_ms": 154.039,
+            "status": 403,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "request_finished_ms": 188.994
+          },
+          {
+            "url": "https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/turnstile/f/av0/rch/x6tlz/0x4AAAAAAADnPIDROrmt1Wwj/dark/fbE/new/normal",
+            "host": "challenges.cloudflare.com",
+            "path": "/cdn-cgi/challenge-platform/h/b/turnstile/f/av0/rch/x6tlz/0x4AAAAAAADnPIDROrmt1Wwj/dark/fbE/new/normal",
+            "url_sha256": "e21631df5aaffb41123e2bd22b2bb74f9059d7b2b0f9e996fbba7adb7ebeeb2a",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "response_received_ms": 130.021,
+            "status": 200,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "request_finished_ms": 177.313
+          },
+          {
+            "url": "https://www.science.org/doi/10.1126/science.ady3136",
+            "host": "www.science.org",
+            "path": "/doi/10.1126/science.ady3136",
+            "url_sha256": "5bb913faa8fae0ece91db5b176e43d5a98931c8a1b612ab2e17ac644dded98b5",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "response_received_ms": 265.432,
+            "status": 200,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "request_finished_ms": 1323.165
+          }
+        ],
+        "failed_requests": [
+          {
+            "url": "https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/ci/a34a3573bc4ceb0f/1788327929270/yN7bIxWy16yLztcgThn9iFLmdQOiXUDNwWZzarNQloA-1788327929-1.3.1.1-wxDneNUt9qx.X33YsmGwlHpVSpT6GZ9lGLtFv7w2ZFvTdjw1je8NWFoOyx_7cOQHawGAzlgDyJnoq8jrXBpSSFHuCQQzH4GqJygkbpRonxoPnajHNyEG2nwJruHR49YZ9Fzn.hjwqvjQ2Rmm4.cl9o6YECJ3ZptQ6Ti4Bmx1GfDXgoOOigTIEj_I_XSCMphd6wRhEHqHrCk3fx.I_waZW84ZU4d18FwNR0z_m6oUDAyuJbEkRdlAIwT6RT8zDJJXkXvUM575Q3eVpb7QCMRuUzbnF2tXncy94S0zSAQbIKfL1h7IDxGUNa4N8NpjlF73nuHa2Cp3hrKYHv1S0pCw2k_93teQs68tSdRAZYKYT7JneX.VEhsV2tNvUVV4ZS81Vb7EP56lvcSWSTwoHI5TQUC8tFuZ1n6Sow4NSmVTJGl1MYK7p5r5DaSDRbMMlswQamhBZ_8gEzBkT78bdOcUwmR6qSwCMILbNjnWm.6jKub4jejpuL4nMI4ACLEv.mmUH6nlihFRRCKC8ZD2UjA6O1tnPDvGQ55Wqo4znl6Mk2gdvSlDsQiU1nvl4Z89HfhThqoAOcdpI24ce49LPBVqIpVwEI58wFUJtBZKppxFUA0OonzCYyl9eTmLm69SIP_ORuEZRtLQBFJ4kLzU2PYAdQHvCaBUbp38SlZwYQN_TBLgQmawvj4fXOuml1PvTP6dc8nvAo4JlODbSc1PD_nbZxYqj4oZ4xWQXhxdE7BAcatL8ZvHDuyzu.U4Qu8U70KB",
+            "host": "challenges.cloudflare.com",
+            "path": "/cdn-cgi/challenge-platform/h/b/ci/a34a3573bc4ceb0f/1788327929270/yN7bIxWy16yLztcgThn9iFLmdQOiXUDNwWZzarNQloA-1788327929-1.3.1.1-wxDneNUt9qx.X33YsmGwlHpVSpT6GZ9lGLtFv7w2ZFvTdjw1je8NWFoOyx_7cOQHawGAzlgDyJnoq8jrXBpSSFHuCQQzH4GqJygkbpRonxoPnajHNyEG2nwJruHR49YZ9Fzn.hjwqvjQ2Rmm4.cl9o6YECJ3ZptQ6Ti4Bmx1GfDXgoOOigTIEj_I_XSCMphd6wRhEHqHrCk3fx.I_waZW84ZU4d18FwNR0z_m6oUDAyuJbEkRdlAIwT6RT8zDJJXkXvUM575Q3eVpb7QCMRuUzbnF2tXncy94S0zSAQbIKfL1h7IDxGUNa4N8NpjlF73nuHa2Cp3hrKYHv1S0pCw2k_93teQs68tSdRAZYKYT7JneX.VEhsV2tNvUVV4ZS81Vb7EP56lvcSWSTwoHI5TQUC8tFuZ1n6Sow4NSmVTJGl1MYK7p5r5DaSDRbMMlswQamhBZ_8gEzBkT78bdOcUwmR6qSwCMILbNjnWm.6jKub4jejpuL4nMI4ACLEv.mmUH6nlihFRRCKC8ZD2UjA6O1tnPDvGQ55Wqo4znl6Mk2gdvSlDsQiU1nvl4Z89HfhThqoAOcdpI24ce49LPBVqIpVwEI58wFUJtBZKppxFUA0OonzCYyl9eTmLm69SIP_ORuEZRtLQBFJ4kLzU2PYAdQHvCaBUbp38SlZwYQN_TBLgQmawvj4fXOuml1PvTP6dc8nvAo4JlODbSc1PD_nbZxYqj4oZ4xWQXhxdE7BAcatL8ZvHDuyzu.U4Qu8U70KB",
+            "url_sha256": "d6b3f00edccfec90a92864ac5ff12fdbb40d9e92b6a7ae51c3798f6eea459a57",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/v652eace1692a40cfa3763df669d7439c1639079717194",
+            "host": "static.cloudflareinsights.com",
+            "path": "/beacon.min.js/v652eace1692a40cfa3763df669d7439c1639079717194",
+            "url_sha256": "5accb1148b91c1660aa1a1665039ae59a6fc74b087cfaa63eb898c88b76b6b54",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/v84a3a4012de94ce1a686ba8c167c359c1696973893317",
+            "host": "static.cloudflareinsights.com",
+            "path": "/beacon.min.js/v84a3a4012de94ce1a686ba8c167c359c1696973893317",
+            "url_sha256": "e69be76f65c55cb0e58018ebb303c3638aa85c31c92b05298b242b2fec538418",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516",
+            "host": "static.cloudflareinsights.com",
+            "path": "/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516",
+            "url_sha256": "f3a365d2c5f715188042a7cbd38017aefef60104dd802854f3a26dcadd1ffda2",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496",
+            "host": "static.cloudflareinsights.com",
+            "path": "/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496",
+            "url_sha256": "13eb491ed1a89ef4c514a6715c0d567fa8231a6aec7e06ff6972b05d0de0ad67",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://www.science.org/pb-assets/images/styleguide/logo-dark-1672180581427.svg",
+            "host": "www.science.org",
+            "path": "/pb-assets/images/styleguide/logo-dark-1672180581427.svg",
+            "url_sha256": "45266e291e7ff4297238a7b2f4d4f3cea98e8742a506401a73dacaae168182f4",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://www.science.org/pb-assets/images/styleguide/logo-1672180580750.svg",
+            "host": "www.science.org",
+            "path": "/pb-assets/images/styleguide/logo-1672180580750.svg",
+            "url_sha256": "bd161c389eb4ceb1e8cacbef003a1556b42f30aabc7217612cbe4d8097bd8c0f",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://www.science.org/pb-assets/images/logos/science-logo-1620488349680.svg",
+            "host": "www.science.org",
+            "path": "/pb-assets/images/logos/science-logo-1620488349680.svg",
+            "url_sha256": "18b05e73ce67f5ab46ba7517c66c4e16b26e0d965e5cbcd0fd043c4ac9e5c0b9",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          }
+        ],
+        "failed_scripts": [
+          {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/v652eace1692a40cfa3763df669d7439c1639079717194",
+            "host": "static.cloudflareinsights.com",
+            "path": "/beacon.min.js/v652eace1692a40cfa3763df669d7439c1639079717194",
+            "url_sha256": "5accb1148b91c1660aa1a1665039ae59a6fc74b087cfaa63eb898c88b76b6b54",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/v84a3a4012de94ce1a686ba8c167c359c1696973893317",
+            "host": "static.cloudflareinsights.com",
+            "path": "/beacon.min.js/v84a3a4012de94ce1a686ba8c167c359c1696973893317",
+            "url_sha256": "e69be76f65c55cb0e58018ebb303c3638aa85c31c92b05298b242b2fec538418",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516",
+            "host": "static.cloudflareinsights.com",
+            "path": "/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516",
+            "url_sha256": "f3a365d2c5f715188042a7cbd38017aefef60104dd802854f3a26dcadd1ffda2",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496",
+            "host": "static.cloudflareinsights.com",
+            "path": "/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496",
+            "url_sha256": "13eb491ed1a89ef4c514a6715c0d567fa8231a6aec7e06ff6972b05d0de0ad67",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447",
+            "host": "static.cloudflareinsights.com",
+            "path": "/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447",
+            "url_sha256": "55c88cdf4a2a6380d7deb0f33039bdbf819a48c3926eff11de40ba5467d8a1a7",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://js.trendmd.com/trendmd.min.js",
+            "host": "js.trendmd.com",
+            "path": "/trendmd.min.js",
+            "url_sha256": "fc32bf7ffcd56b1dd087bf8510a54b3f621bee05b1dc828bee21a9250e17d394",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/v3d52b47920f24c319d37e2661827c42b1787588026925",
+            "host": "static.cloudflareinsights.com",
+            "path": "/beacon.min.js/v3d52b47920f24c319d37e2661827c42b1787588026925",
+            "url_sha256": "c6599192d090d1c053eca00b30b47c50033b3289ea6667c13204578a43439512",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          }
+        ],
+        "console_errors": [
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"WebRTC: ICE failed, add a TURN server and see about:webrtc for more details\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://static.cloudflareinsights.com/beacon.min.js/v652eace1692a40cfa3763df669d7439c1639079717194. (Reason: CORS request did not succeed). Status code: (null).\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"None of the “sha512” hashes in the integrity attribute match the content of the subresource at “https://static.cloudflareinsights.com/beacon.min.js/v652eace1692a40cfa3763df669d7439c1639079717194”. The computed hash is “z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGlODJ6+SfaPg==”.\" {file: \"https://www.science.org/doi/10.1126/science.ady3136\" line: 0}]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://static.cloudflareinsights.com/beacon.min.js/v84a3a4012de94ce1a686ba8c167c359c1696973893317. (Reason: CORS request did not succeed). Status code: (null).\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"None of the “sha512” hashes in the integrity attribute match the content of the subresource at “https://static.cloudflareinsights.com/beacon.min.js/v84a3a4012de94ce1a686ba8c167c359c1696973893317”. The computed hash is “z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGlODJ6+SfaPg==”.\" {file: \"https://www.science.org/doi/10.1126/science.ady3136\" line: 0}]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516. (Reason: CORS request did not succeed). Status code: (null).\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"None of the “sha512” hashes in the integrity attribute match the content of the subresource at “https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516”. The computed hash is “z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGlODJ6+SfaPg==”.\" {file: \"https://www.science.org/doi/10.1126/science.ady3136\" line: 0}]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496. (Reason: CORS request did not succeed). Status code: (null).\"]"
+          }
+        ],
+        "page_errors": []
+      },
+      "challenge_signals": [
+        {
+          "reason": "publisher_access_denied",
+          "status": 403,
+          "url": "https://www.science.org/doi/10.1126/science.ady3136",
+          "host": "www.science.org",
+          "path": "/doi/10.1126/science.ady3136",
+          "url_sha256": "5bb913faa8fae0ece91db5b176e43d5a98931c8a1b612ab2e17ac644dded98b5"
+        }
+      ],
+      "candidates": [
+        {
+          "url": "https://www.science.org/doi/10.1126/science.ady3136",
+          "url_sha256": "5bb913faa8fae0ece91db5b176e43d5a98931c8a1b612ab2e17ac644dded98b5",
+          "final_url": "https://www.science.org/doi/10.1126/science.ady3136",
+          "final_url_sha256": "5bb913faa8fae0ece91db5b176e43d5a98931c8a1b612ab2e17ac644dded98b5",
+          "status": 403,
+          "main_document_response": {
+            "url": "https://www.science.org/doi/10.1126/science.ady3136",
+            "host": "www.science.org",
+            "path": "/doi/10.1126/science.ady3136",
+            "url_sha256": "5bb913faa8fae0ece91db5b176e43d5a98931c8a1b612ab2e17ac644dded98b5",
+            "status": 403,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "captured_html_bytes": 333007,
+            "navigation_timing": {
+              "available": true,
+              "document_ready_state": "loading",
+              "navigation_entry_present": true,
+              "response_start_ms": 272,
+              "response_end_ms": 272,
+              "dom_interactive_ms": 0,
+              "dom_content_loaded_event_end_ms": 0,
+              "load_event_end_ms": 0,
+              "duration_ms": 0,
+              "transfer_size_bytes": 0,
+              "encoded_body_size_bytes": 0,
+              "decoded_body_size_bytes": 0,
+              "navigation_type": "navigate",
+              "next_hop_protocol": "h2",
+              "response_completed": true,
+              "dom_content_loaded_completed": false,
+              "load_event_completed": false
+            },
+            "request_lifecycle": {
+              "response_received_observed": true,
+              "response_received_ms": 154.039,
+              "request_finished_observed": true,
+              "request_finished_ms": 188.994,
+              "request_failed_observed": false,
+              "observed_ms": 14907.431
+            }
+          },
+          "navigation_seconds": 0.21,
+          "dom_readiness_seconds": 7.757,
+          "dom_readiness_attempted": true,
+          "dom_readiness_ready": true,
+          "dom_readiness_selector": "[data-extent='bodymatter']",
+          "dom_readiness_text_length": 75357,
+          "dom_readiness_paragraph_count": 0,
+          "dom_readiness_heading_count": 34,
+          "dom_readiness_fingerprint_present": true,
+          "duration_seconds": 16.597,
+          "block_reason": "publisher_access_denied"
+        }
+      ]
+    },
+    "html_shape": {
+      "byte_count": 333007,
+      "has_html": true,
+      "has_head": true,
+      "has_body": true,
+      "body_text_length": 117908,
+      "body_element_count": 3015,
+      "article_container_count": 2
+    }
+  },
+  "raw_html": {
+    "byte_count": 333007,
+    "sha256": "87ef29cfdf64541dedea7a6284f26c3e7e82ceaa31902fb457e87fa593708515"
+  },
+  "sanitized_html": {
+    "path": "artifacts/live-provider-analysis-20260902-fixed/providers/science/diagnostics/science/10.1126_science.ady3136/browser_html-1/page-sanitized.html",
+    "byte_count": 217983,
+    "sha256": "1e7d1b4a5559b5f937f603d60cbbac0ca33eebe26e3d9b9833e670a1fee2e1aa",
+    "truncated": false
+  },
+  "diagnostic_path": "artifacts/live-provider-analysis-20260902-fixed/providers/science/diagnostics/science/10.1126_science.ady3136/browser_html-1/diagnostic.json"
+}

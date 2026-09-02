@@ -1745,6 +1745,75 @@ def test_provider_resource_policy_blocks_only_configured_heavy_types(
     assert trace["navigation_count"] == 1
 
 
+def test_exact_script_response_policy_fulfills_only_matching_script(
+    monkeypatch, tmp_path
+) -> None:
+    context = _Context()
+    config = BrowserRuntimeConfig(
+        provider="aip",
+        doi="10.1063/example",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+        persist_storage_state=False,
+    )
+    monkeypatch.setattr(
+        _playwright_browser,
+        "open_browser_context",
+        lambda *_args, **_kwargs: (None, context),
+    )
+
+    result = _playwright_browser.fetch_html_with_playwright(
+        ["https://pubs.aip.org/article"],
+        publisher="aip",
+        config=config,
+        wait_seconds=0,
+        options=browser_runtime.BrowserHtmlFetchOptions(
+            empty_script_response_urls=frozenset({"https://static.adzerk.net/ados.js"})
+        ),
+    )
+
+    target_script = mock.Mock()
+    target_script.request.resource_type = "script"
+    target_script.request.url = "https://static.adzerk.net/ados.js"
+    context.page.route_handler(target_script)
+
+    failed_target_script = mock.Mock()
+    failed_target_script.request.resource_type = "script"
+    failed_target_script.request.url = "https://static.adzerk.net/ados.js"
+    failed_target_script.fulfill.side_effect = RuntimeError("fulfill failed")
+    context.page.route_handler(failed_target_script)
+
+    passthrough_routes = []
+    for resource_type, url in (
+        ("script", "https://static.adzerk.net/other.js"),
+        ("xhr", "https://static.adzerk.net/ados.js"),
+        ("document", "https://static.adzerk.net/ados.js"),
+    ):
+        route = mock.Mock()
+        route.request.resource_type = resource_type
+        route.request.url = url
+        context.page.route_handler(route)
+        passthrough_routes.append(route)
+
+    target_script.fulfill.assert_called_once_with(
+        status=200,
+        content_type="application/javascript",
+        body="",
+    )
+    target_script.continue_.assert_not_called()
+    target_script.abort.assert_not_called()
+    failed_target_script.continue_.assert_called_once()
+    for route in passthrough_routes:
+        route.continue_.assert_called_once()
+        route.fulfill.assert_not_called()
+        route.abort.assert_not_called()
+
+    trace = result.diagnostics["browser_runtime_trace"]
+    assert trace["empty_script_response_count"] == 1
+    assert trace["blocked_request_count"] == 0
+
+
 def test_pnas_body_readiness_uses_bounded_budget_and_keeps_final_html(
     monkeypatch, tmp_path
 ) -> None:

@@ -642,6 +642,7 @@ def _fetch_browser_html_payload(
         "runtime_context": context,
         "options": BrowserHtmlFetchOptions(
             blocked_resource_types=profile.blocked_resource_types or None,
+            empty_script_response_urls=profile.empty_script_response_urls,
             readiness_budget_seconds=profile.html_readiness_budget_seconds,
         ),
     }

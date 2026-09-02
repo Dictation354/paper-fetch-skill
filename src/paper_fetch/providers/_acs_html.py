@@ -60,6 +60,7 @@ ACS_EMPTY_ABSTRACT_PAIR_PATTERN = re.compile(
     r"(## Abstract\n\n)(## Abstract\n\n)",
     flags=re.IGNORECASE,
 )
+ACS_FIGURE_ID_ATTRIBUTES = ("data-id", "content-id", "id")
 
 
 def _extract_jsonld_authors(html_text: str) -> list[str]:
@@ -117,6 +118,56 @@ def select_content_nodes(container: Any, **_kwargs: Any) -> list[Tag]:
     return [container] if "article-body" in classes else []
 
 
+def _restore_silverchair_figure_download_links(
+    body_container: Any,
+    raw_body_container: Any,
+) -> None:
+    if not isinstance(body_container, Tag) or not isinstance(raw_body_container, Tag):
+        return
+
+    raw_figures: dict[tuple[str, str], list[Tag]] = {}
+    for raw_figure in raw_body_container.select(".fig.fig-section"):
+        if not isinstance(raw_figure, Tag):
+            continue
+        for attribute in ACS_FIGURE_ID_ATTRIBUTES:
+            value = normalize_text(str(raw_figure.get(attribute) or ""))
+            if value:
+                raw_figures.setdefault((attribute, value), []).append(raw_figure)
+
+    for body_figure in body_container.select(".fig.fig-section"):
+        if not isinstance(body_figure, Tag):
+            continue
+        nested_figure = body_figure.select_one(".graphic-wrap, figure")
+        download_link_target = (
+            nested_figure if isinstance(nested_figure, Tag) else body_figure
+        )
+        matching_raw_figures: list[Tag] = []
+        seen_raw_figures: set[int] = set()
+        for attribute in ACS_FIGURE_ID_ATTRIBUTES:
+            value = normalize_text(str(body_figure.get(attribute) or ""))
+            if not value:
+                continue
+            for raw_figure in raw_figures.get((attribute, value), []):
+                if id(raw_figure) not in seen_raw_figures:
+                    seen_raw_figures.add(id(raw_figure))
+                    matching_raw_figures.append(raw_figure)
+
+        existing_hrefs = {
+            normalize_text(str(anchor.get("href") or ""))
+            for anchor in body_figure.find_all("a", href=True)
+        }
+        for raw_figure in matching_raw_figures:
+            for anchor in raw_figure.find_all("a", href=True):
+                href = normalize_text(str(anchor.get("href") or ""))
+                if (
+                    "/downloadfile/downloadimage.aspx" not in href.lower()
+                    or href in existing_hrefs
+                ):
+                    continue
+                download_link_target.append(copy.deepcopy(anchor))
+                existing_hrefs.add(href)
+
+
 def extract_asset_html_scopes(
     body_container: Any,
     supplementary_container: Any,
@@ -141,6 +192,7 @@ def extract_asset_html_scopes(
         for node in atypon_browser_workflow_supplementary_sections(supplementary_source)
         if normalize_text(node.get_text(" ", strip=True))
     )
+    _restore_silverchair_figure_download_links(body_container, raw_body_container)
     return (
         content_fragment_html(body_container, publisher=publisher),
         supplementary_html,
@@ -252,12 +304,15 @@ def scoped_asset_extractor(
     from ..extraction.html.assets.silverchair import (
         promote_silverchair_srcset_originals,
     )
+    from ._html_asset_engine import merge_assets_by_identity
     from .atypon_browser_workflow.asset_scopes import extract_scoped_html_assets
 
-    return extract_scoped_html_assets(
-        promote_silverchair_srcset_originals(body_html_text),
-        source_url,
-        **kwargs,
+    return merge_assets_by_identity(
+        extract_scoped_html_assets(
+            promote_silverchair_srcset_originals(body_html_text),
+            source_url,
+            **kwargs,
+        )
     )
 
 
