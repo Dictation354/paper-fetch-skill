@@ -6,6 +6,13 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.1.1 - 2026-09-02
+
+### 修复——ACS 资产与 AIP 浏览器稳定性
+
+- ACS HTML 提取现在会在资产发现前从原始 Silverchair 正文恢复出版社的图片下载链接，并按资产身份去重；清理后的正文省略这些链接时仍可保留官方图片 rendition。
+- AIP 浏览器尝试现在只对精确匹配的 Adzerk 与 Crossmark widget 脚本 URL 返回空 JavaScript；其它 URL 和资源类型继续正常加载，fulfill 失败时安全放行，避免第三方 TLS 间歇停滞阻塞正文就绪或产生 `insufficient_body`。
+
 ## 6.1.0 - 2026-09-02
 
 ### 修复——审计一致性

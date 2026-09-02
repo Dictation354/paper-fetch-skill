@@ -6,6 +6,13 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.1.1 - 2026-09-02
+
+### Fixed — ACS assets and AIP browser stability
+
+- ACS HTML extraction now restores publisher figure-download links from the raw Silverchair body before asset discovery and deduplicates the resulting assets by identity, preserving access to the official image rendition when the cleaned article body omits those links.
+- AIP browser attempts now neutralize the exact Adzerk and Crossmark widget script URLs with empty JavaScript responses. Other URLs and resource types continue normally, and a failed fulfill safely falls through, preventing intermittent third-party TLS stalls from blocking article readiness or producing insufficient-body results.
+
 ## 6.1.0 - 2026-09-02
 
 ### Fixed — audit consistency
