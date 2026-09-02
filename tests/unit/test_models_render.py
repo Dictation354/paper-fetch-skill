@@ -606,6 +606,39 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIn("    print('kept')", article.sections[0].text)
         self.assertIn("| col_a | col_b |", article.sections[0].text)
 
+    def test_article_from_markdown_strips_html_markdown_equivalent_title(
+        self,
+    ) -> None:
+        metadata_title = (
+            "Absence of canopy temperature variation despite stomatal adjustment "
+            "in <i>Pinus sylvestris</i> under multidecadal soil moisture manipulation"
+        )
+        markdown_title = (
+            "Absence of canopy temperature variation despite stomatal adjustment "
+            "in *Pinus sylvestris* under multidecadal soil moisture manipulation"
+        )
+        article = article_from_markdown(
+            source="wiley_browser",
+            metadata={"title": metadata_title},
+            doi="10.1111/nph.19136",
+            markdown_text=(
+                f"# {markdown_title}\n\n"
+                "## Introduction\n\n"
+                + "Body text for the article. " * 100
+            ),
+        )
+
+        self.assertNotIn(
+            markdown_title, [section.heading for section in article.sections]
+        )
+        rendered = article.to_ai_markdown(
+            include_refs="none",
+            asset_profile="none",
+            max_tokens="full_text",
+        )
+        self.assertIn(f"# {metadata_title}", rendered)
+        self.assertNotIn(f"## {markdown_title}", rendered)
+
     def test_article_from_markdown_normalizes_blank_asset_fields_to_none(self) -> None:
         article = article_from_markdown(
             source="springer_html",

@@ -10,7 +10,7 @@ import urllib.parse
 from typing import Any
 
 from ..common_patterns import EXTENDED_DATA_LABEL, INLINE_WHITESPACE_PATTERN
-from ..utils import normalize_text, safe_text
+from ..utils import normalize_text, safe_text, strip_html_tags
 
 MARKDOWN_FENCE_PATTERN = re.compile(r"^\s*(```+|~~~+)")
 
@@ -585,7 +585,9 @@ def strip_leading_markdown_title_heading(
     if match is None or len(match.group(1)) != 1:
         return normalized_markdown
     heading_text = normalize_text(match.group(2))
-    if _canonical_match_text(heading_text) != _canonical_match_text(normalized_title):
+    canonical_heading = _canonical_match_text(strip_html_tags(heading_text) or "")
+    canonical_title = _canonical_match_text(strip_html_tags(normalized_title) or "")
+    if canonical_heading != canonical_title:
         return normalized_markdown
 
     trimmed_lines = list(lines[:line_index]) + list(lines[line_index + 1 :])
