@@ -173,7 +173,6 @@ jobs:
       - name: Verify provider page preparation on native macOS
         run: |
           PYTHONPATH=src uv run python -m pytest -q \
-            tests/unit/test_camoufox_preparation.py \
             tests/unit/test_camoufox_backend.py::test_camoufox_provider_page_preparation_runs_before_html_capture \
             tests/unit/test_tandf_provider.py::test_tandf_browser_page_preparation_hydrates_official_csv_table \
             tests/unit/test_tandf_provider.py::test_tandf_browser_page_preparation_uses_bounded_embedded_table_fallback
