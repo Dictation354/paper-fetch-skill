@@ -393,8 +393,104 @@ def test_tandf_table_preparation_obeys_exhausted_total_deadline() -> None:
 
     assert result["table_controls"] == 24
     assert result["timed_out"] is True
+    assert result["truncated"] is True
+    assert result["tables_unfinished"] == 24
     links.nth.assert_not_called()
     page.evaluate.assert_not_called()
+
+
+def test_tandf_csv_tables_continue_beyond_first_batch() -> None:
+    def link_for(index: int):
+        table_id = f"t{index:04d}"
+        link = mock.Mock()
+        link.get_attribute.side_effect = lambda name: (
+            f"/action/downloadTable?id={table_id}&downloadType=CSV"
+            if name == "href"
+            else None
+        )
+        link.evaluate.return_value = f"{table_id}-table-wrapper"
+        return link
+
+    links = mock.Mock()
+    links.count.return_value = 25
+    links.nth.side_effect = link_for
+    page = mock.Mock()
+    page.locator.return_value = links
+
+    def evaluate(script, arguments):
+        if script == _tandf_html._TANDF_FETCH_TABLE_CSV_BATCH_SCRIPT:
+            return {
+                "results": [
+                    {
+                        "ok": True,
+                        "contentType": "text/csv",
+                        "text": f"Column\n{entry['tableId']}",
+                    }
+                    for entry in arguments["entries"]
+                ],
+                "timedOut": False,
+                "concurrency": min(4, len(arguments["entries"])),
+            }
+        if script == _tandf_html._TANDF_INJECT_TABLE_SCRIPT:
+            return True
+        if script == _tandf_html._TANDF_READ_EMBEDDED_TABLES_SCRIPT:
+            return {"total": 0, "tables": []}
+        raise AssertionError("unexpected page script")
+
+    page.evaluate.side_effect = evaluate
+
+    result = _tandf_html.prepare_browser_page(page, timeout_ms=10_000)
+
+    assert result["tables_hydrated"] == 25
+    assert result["csv_tables_hydrated"] == 25
+    assert result["truncated"] is False
+    batch_calls = [
+        call
+        for call in page.evaluate.call_args_list
+        if call.args[0] == _tandf_html._TANDF_FETCH_TABLE_CSV_BATCH_SCRIPT
+    ]
+    assert [len(call.args[1]["entries"]) for call in batch_calls] == [24, 1]
+
+
+def test_tandf_embedded_tables_continue_beyond_first_batch() -> None:
+    links = mock.Mock()
+    links.count.return_value = 0
+    page = mock.Mock()
+    page.locator.return_value = links
+
+    def evaluate(script, arguments):
+        if script == _tandf_html._TANDF_READ_EMBEDDED_TABLES_SCRIPT:
+            start = arguments["start"]
+            stop = min(25, start + arguments["batchSize"])
+            return {
+                "total": 25,
+                "tables": [
+                    {
+                        "tableId": f"ut{index:04d}",
+                        "caption": f"Table {index}",
+                        "rows": [["Column"], [str(index)]],
+                    }
+                    for index in range(start, stop)
+                ],
+            }
+        if script == _tandf_html._TANDF_INJECT_TABLE_SCRIPT:
+            return True
+        raise AssertionError("unexpected page script")
+
+    page.evaluate.side_effect = evaluate
+
+    result = _tandf_html.prepare_browser_page(page, timeout_ms=10_000)
+
+    assert result["embedded_tables"] == 25
+    assert result["embedded_tables_hydrated"] == 25
+    assert result["tables_hydrated"] == 25
+    assert result["truncated"] is False
+    embedded_calls = [
+        call
+        for call in page.evaluate.call_args_list
+        if call.args[0] == _tandf_html._TANDF_READ_EMBEDDED_TABLES_SCRIPT
+    ]
+    assert [call.args[1]["start"] for call in embedded_calls] == [0, 24]
 
 
 def test_tandf_article_assets_keep_body_figures_and_scope_supplement() -> None:

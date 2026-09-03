@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 import html as html_lib
 import json
 import re
+import time
 from typing import Any
 from collections.abc import Mapping
 
@@ -29,7 +30,6 @@ from ._script_json import extract_assignment_json
 IEEE_METADATA_ASSIGNMENT = "xplGlobal.document.metadata"
 IEEE_SCRIPT_VALUE_PATTERN_TEMPLATE = r"""["']?{key}["']?\s*:\s*(?P<value>"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|true|false|null|\d+)"""
 IEEE_REFERENCE_PAGE_SIZE = 30
-IEEE_MAX_REFERENCE_PAGES = 20
 
 
 @dataclass(frozen=True)
@@ -456,9 +456,13 @@ def fetch_ieee_reference_metadata(
     references: list[dict[str, str | None]] = []
     seen: set[tuple[str, str]] = set()
     max_expected = max(0, expected_count)
-    for page_index in range(IEEE_MAX_REFERENCE_PAGES):
+    deadline = time.monotonic() + max(0.0, float(timeout))
+    page_index = 0
+    while True:
+        if time.monotonic() >= deadline:
+            break
         start = page_index * IEEE_REFERENCE_PAGE_SIZE
-        if max_expected and start >= max_expected:
+        if max_expected and len(references) >= max_expected:
             break
         response = transport.request(
             "GET",
@@ -481,6 +485,8 @@ def fetch_ieee_reference_metadata(
             break
         added = 0
         for reference in page_references:
+            if max_expected and len(references) >= max_expected:
+                break
             key = (
                 normalize_text(str(reference.get("label") or "")),
                 normalize_text(str(reference.get("raw") or "")),
@@ -490,8 +496,13 @@ def fetch_ieee_reference_metadata(
             seen.add(key)
             references.append(reference)
             added += 1
-        if added == 0 or len(page_references) < IEEE_REFERENCE_PAGE_SIZE:
+        if (
+            (max_expected and len(references) >= max_expected)
+            or added == 0
+            or len(page_references) < IEEE_REFERENCE_PAGE_SIZE
+        ):
             break
+        page_index += 1
     return references
 
 

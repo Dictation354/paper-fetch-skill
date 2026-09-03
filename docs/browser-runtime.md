@@ -99,10 +99,12 @@ Cookie、Authorization、storage-state 或原始失败 HTML。
   cookie opener 再重复 direct。恢复可使用 browser `response.body()`、page-context
   `arrayBuffer()`、已加载图像 canvas、`bodyB64`、download/file bytes 或 PDF viewer
   response body。
-- 同一论文的正文图和 supplementary 共用 `RuntimeContext` 的一个 `AssetBudget`：默认
-  最多 128 个文件、单文件 32 MiB、累计 256 MiB、每图 64,000,000 像素，并发最多
-  4 且可被 route cap 进一步收紧。Content-Length、未知长度 chunk、gzip 压缩/解压、
-  EPS/TIFF/PNG 转换输出和 arXiv source archive 解压都计入该边界。
+- 同一论文的正文图和 supplementary 共用 `RuntimeContext` 的一个 `AssetBudget`：普通
+  provider 默认不限制资产文件数，仍限制单文件 32 MiB、累计 256 MiB、每图
+  64,000,000 像素、并发最多 4，且可被 route cap 进一步收紧。显式有限
+  `max_files` 仍会收紧文件数；不可信 arXiv source archive 另有最多 128 个 regular
+  member 的遍历门禁。Content-Length、未知长度 chunk、gzip 压缩/解压、EPS/TIFF/PNG
+  转换输出和 arXiv source archive 解压都计入对应边界。
 - 每个候选写入目标同目录的唯一排他 staging；成功后 flush/fsync 并原子发布，失败或
   取消则回滚 reservation 并删除 staging。达到文件、字节或像素上限会停止后续 worker，
   对外保留 `asset_file_limit_exceeded`、`asset_bytes_per_asset_exceeded`、

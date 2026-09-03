@@ -99,6 +99,12 @@ def _cleanup_arxiv_source_members(
             member.cleanup()
 
 
+def _arxiv_source_max_members(asset_budget: AssetBudget) -> int:
+    if asset_budget.max_files is None:
+        return _ARXIV_SOURCE_MAX_MEMBERS
+    return min(_ARXIV_SOURCE_MAX_MEMBERS, asset_budget.max_files)
+
+
 def _read_bounded_stream(
     handle: Any,
     *,
@@ -142,10 +148,11 @@ def _retain_arxiv_source_member(
 ) -> None:
     if not name or name in files:
         return
-    if len(files) >= min(_ARXIV_SOURCE_MAX_MEMBERS, asset_budget.max_files):
+    maximum = _arxiv_source_max_members(asset_budget)
+    if len(files) >= maximum:
         diagnostic = {
             "boundary": "arxiv_archive_member_count",
-            "max_files": min(_ARXIV_SOURCE_MAX_MEMBERS, asset_budget.max_files),
+            "max_files": maximum,
         }
         asset_budget.cancel(ASSET_FILE_LIMIT_EXCEEDED, diagnostic=diagnostic)
         raise AssetBudgetExceeded(
@@ -190,7 +197,7 @@ def _check_arxiv_archive_member_count(
 ) -> None:
     """Bound archive traversal independently of retained/deduplicated files."""
 
-    maximum = min(_ARXIV_SOURCE_MAX_MEMBERS, asset_budget.max_files)
+    maximum = _arxiv_source_max_members(asset_budget)
     if encountered_regular_members <= maximum:
         return
     diagnostic = {

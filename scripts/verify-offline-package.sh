@@ -753,7 +753,7 @@ PY
 
 if [ "$SKIP_FETCH_SMOKE" != "1" ]; then
   log "Running paper-fetch DOI smoke"
-  paper-fetch --query "10.1186/1471-2105-11-421" --format json --output "$TMP_ROOT/fetch-smoke.json"
+  paper-fetch fetch --query "10.1186/1471-2105-11-421" --format json --output "$TMP_ROOT/fetch-smoke.json"
   "$RUNTIME_PYTHON" - "$TMP_ROOT/fetch-smoke.json" <<'PY'
 import json
 import sys

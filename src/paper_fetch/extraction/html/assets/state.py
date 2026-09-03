@@ -298,6 +298,10 @@ class _AssetCollectionState:
     def consume(self, index: int, resolved: AssetDownloadResolution | None) -> None:
         if resolved is None:
             return
+        if self.asset_budget.internally_cancelled:
+            if resolved.reservation is not None:
+                resolved.reservation.rollback()
+            return
         if resolved.response is None:
             if resolved.reservation is not None:
                 resolved.reservation.rollback()
@@ -313,6 +317,12 @@ class _AssetCollectionState:
         save_started_at = time.monotonic()
         try:
             saved = self.saver(resolved)
+        except AssetBudgetExceeded as exc:
+            if resolved.reservation is not None:
+                resolved.reservation.rollback()
+            if exc.fatal and self.asset_budget.internally_cancelled:
+                return
+            raise
         except BaseException:
             if resolved.reservation is not None:
                 resolved.reservation.rollback()
@@ -320,6 +330,10 @@ class _AssetCollectionState:
         if isinstance(saved, AssetDownloadFailure):
             if resolved.reservation is not None:
                 resolved.reservation.rollback()
+            if self.asset_budget.internally_cancelled and saved.diagnostic.get(
+                "reason"
+            ) in {ASSET_CANCELLED, "empty_response_body"}:
+                return
             timed_failure = dict(saved.diagnostic)
             if isinstance(resolved.response, Mapping):
                 for key in (_ASSET_TIMING_INTERNAL_KEY, _ASSET_STARTED_INTERNAL_KEY):
@@ -428,6 +442,9 @@ def resolve_and_collect_downloads_as_completed(
     asset_budget: AssetBudget,
     force_worker_thread: bool = False,
     route_concurrency_cap: int | None = None,
+    terminal_failure_factory: (
+        Callable[[AssetWorkItem, Mapping[str, Any]], dict[str, Any]] | None
+    ) = None,
 ) -> dict[str, list[dict[str, Any]]]:
     """Persist each completed asset immediately, then restore input order."""
 
@@ -459,6 +476,30 @@ def resolve_and_collect_downloads_as_completed(
             work_items,
             max_workers=max_workers,
         )
+
+    if asset_budget.internally_cancelled:
+        diagnostic = asset_budget.diagnostic
+        reason = str(diagnostic.get("reason") or ASSET_CANCELLED)
+        for index, (item, outcome) in enumerate(zip(work_items, outcomes, strict=True)):
+            if outcome is not None:
+                continue
+            failure = (
+                terminal_failure_factory(item, diagnostic)
+                if terminal_failure_factory is not None
+                else {"reason": reason, **diagnostic}
+            )
+            queued = state.queued_at_by_id.get(id(item), queued_at)
+            outcomes[index] = (
+                "failure",
+                _finalize_asset_timing(
+                    _timed_mapping(
+                        failure,
+                        queued_at=queued,
+                        queue_seconds=time.monotonic() - queued,
+                    ),
+                    status="failed",
+                ),
+            )
 
     return {
         "assets": [

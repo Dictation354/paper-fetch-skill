@@ -233,11 +233,22 @@ def build_ieee_landing_attempt(
     merged_metadata = ieee_metadata._merge_ieee_metadata(
         metadata, landing_metadata, response_url
     )
-    try:
-        reference_count = int(landing_metadata.get("referenceCount") or 0)
-    except (TypeError, ValueError):
+    raw_reference_count = landing_metadata.get("referenceCount")
+    if raw_reference_count is None:
         reference_count = 0
-    if reference_count > 0:
+        reference_count_known = False
+    else:
+        try:
+            reference_count = int(raw_reference_count)
+            reference_count_known = reference_count >= 0
+        except (TypeError, ValueError):
+            reference_count = 0
+            reference_count_known = False
+    sections = landing_metadata.get("sections")
+    references_advertised = isinstance(sections, Mapping) and ieee_metadata._boolish(
+        sections.get("references")
+    )
+    if reference_count > 0 or (references_advertised and not reference_count_known):
         try:
             reference_metadata = client._fetch_reference_metadata(
                 article_number,

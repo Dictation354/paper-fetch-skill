@@ -35,6 +35,24 @@ from ._mcp_support import (
 )
 
 
+class _ThreadBoundManager:
+    def __init__(self) -> None:
+        self.owner_thread = threading.get_ident()
+        self.closed_threads: list[int] = []
+
+    def close(self) -> None:
+        closing_thread = threading.get_ident()
+        if closing_thread != self.owner_thread:
+            raise RuntimeError("manager closed from a non-owner thread")
+        self.closed_threads.append(closing_thread)
+
+
+def _attach_thread_bound_manager(context: RuntimeContext) -> _ThreadBoundManager:
+    manager = _ThreadBoundManager()
+    context._camoufox_browser_managers[(manager.owner_thread, True, "")] = manager
+    return manager
+
+
 class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
     async def test_blocking_cancel_grace_fences_late_artifact_commit(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -399,6 +417,69 @@ class McpAsyncToolTests(unittest.IsolatedAsyncioTestCase):
         await wait_for_threading_event(cancelled_seen, 1.0)
 
         self.assertTrue(cancelled_seen.is_set())
+
+    async def test_fetch_paper_tool_async_closes_camoufox_on_owner_thread(self) -> None:
+        managers: list[_ThreadBoundManager] = []
+        event_loop_thread = threading.get_ident()
+
+        def fake_fetch_paper(query, **kwargs):
+            managers.append(_attach_thread_bound_manager(kwargs["context"]))
+            return sample_envelope(modes=kwargs["modes"], doi=query)
+
+        result = await fetch_paper_tool_async(
+            query="10.1000/example",
+            deps=mcp_test_deps(service_fetch_paper=fake_fetch_paper),
+        )
+
+        self.assertFalse(result.is_error)
+        self.assertEqual(len(managers), 1)
+        self.assertNotEqual(managers[0].owner_thread, event_loop_thread)
+        self.assertEqual(managers[0].closed_threads, [managers[0].owner_thread])
+
+    async def test_fetch_paper_tool_async_closes_owner_camoufox_on_provider_error(
+        self,
+    ) -> None:
+        managers: list[_ThreadBoundManager] = []
+
+        def fake_fetch_paper(_query, **kwargs):
+            managers.append(_attach_thread_bound_manager(kwargs["context"]))
+            raise ProviderFailure("provider_failed", "provider failed")
+
+        result = await fetch_paper_tool_async(
+            query="10.1000/example",
+            deps=mcp_test_deps(service_fetch_paper=fake_fetch_paper),
+        )
+
+        self.assertTrue(result.is_error)
+        self.assertEqual(managers[0].closed_threads, [managers[0].owner_thread])
+        self.assertIn("provider failed", result.structured_content["reason"])
+
+    async def test_fetch_paper_tool_async_closes_owner_camoufox_on_cancellation(
+        self,
+    ) -> None:
+        started = threading.Event()
+        managers: list[_ThreadBoundManager] = []
+
+        def fake_fetch_paper(_query, **kwargs):
+            context = kwargs["context"]
+            managers.append(_attach_thread_bound_manager(context))
+            started.set()
+            while not context.transport.cancelled:
+                time.sleep(0.005)
+            raise RequestCancelledError("Request cancelled.")
+
+        task = asyncio.create_task(
+            fetch_paper_tool_async(
+                query="10.1000/example",
+                deps=mcp_test_deps(service_fetch_paper=fake_fetch_paper),
+            )
+        )
+        await wait_for_threading_event(started, 1.0)
+        task.cancel()
+        with self.assertRaises(asyncio.CancelledError):
+            await task
+
+        self.assertEqual(managers[0].closed_threads, [managers[0].owner_thread])
 
     async def test_batch_resolve_tool_async_sets_cancellation_flag_for_worker_transport(
         self,

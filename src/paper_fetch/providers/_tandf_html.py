@@ -148,7 +148,7 @@ _TANDF_TABLE_DOWNLOAD_SELECTOR = (
     '.tableDownloadOption[id$="-table-wrapper"] '
     'a[href*="/action/downloadTable"][href*="downloadType=CSV"]'
 )
-_TANDF_MAX_DYNAMIC_TABLES = 24
+_TANDF_TABLE_BATCH_SIZE = 24
 _TANDF_MAX_TABLE_ROWS = 1_000
 _TANDF_MAX_TABLE_COLUMNS = 100
 _TANDF_MAX_TABLE_CSV_CHARS = 2_000_000
@@ -159,11 +159,11 @@ _TANDF_ADJACENT_SENTENCE_RE = re.compile(
     r"(?P<sentence>[^.!?\n]{40,}[.!?])\s+(?P=sentence)(?=\s|$)"
 )
 _TANDF_READ_EMBEDDED_TABLES_SCRIPT = r"""
-({ maxTables, maxRows, maxColumns, maxChars }) => {
+({ start, batchSize, maxRows, maxColumns, maxChars }) => {
   const source = window.tandf && window.tandf.tfviewerdata;
   const entries = source && Array.isArray(source.tables) ? source.tables : [];
   const tables = [];
-  entries.slice(0, maxTables).forEach((entry) => {
+  entries.slice(start, start + batchSize).forEach((entry) => {
     const tableId = entry && typeof entry.id === "string" ? entry.id : "";
     const content = entry && typeof entry.content === "string" ? entry.content : "";
     if (!/^[A-Za-z0-9_-]+$/.test(tableId) || !content || content.length > maxChars) {
@@ -192,7 +192,6 @@ _TANDF_READ_EMBEDDED_TABLES_SCRIPT = r"""
   });
   return {
     total: entries.length,
-    truncated: entries.length > maxTables,
     tables,
   };
 }
@@ -348,56 +347,57 @@ def _hydrate_tandf_embedded_tables(selected: Tag, root: Tag) -> int:
     if not isinstance(entries, list):
         return 0
     hydrated = 0
-    for entry in entries[:_TANDF_MAX_DYNAMIC_TABLES]:
-        if not isinstance(entry, Mapping):
-            continue
-        table_id = normalize_text(str(entry.get("id") or ""))
-        content = str(entry.get("content") or "")
-        if (
-            not re.fullmatch(r"[A-Za-z0-9_-]+", table_id)
-            or not content
-            or len(content) > _TANDF_MAX_TABLE_CSV_CHARS
-        ):
-            continue
-        controls = selected.find(id=f"{table_id}-table-wrapper")
-        target = controls.find_parent(class_="tableView") if controls else None
-        if not isinstance(target, Tag):
-            continue
-        existing = target.find("table")
-        if (
-            isinstance(existing, Tag)
-            and normalize_text(
-                str(existing.get("data-paper-fetch-hydrated-table") or "")
+    for batch_start in range(0, len(entries), _TANDF_TABLE_BATCH_SIZE):
+        for entry in entries[batch_start : batch_start + _TANDF_TABLE_BATCH_SIZE]:
+            if not isinstance(entry, Mapping):
+                continue
+            table_id = normalize_text(str(entry.get("id") or ""))
+            content = str(entry.get("content") or "")
+            if (
+                not re.fullmatch(r"[A-Za-z0-9_-]+", table_id)
+                or not content
+                or len(content) > _TANDF_MAX_TABLE_CSV_CHARS
+            ):
+                continue
+            controls = selected.find(id=f"{table_id}-table-wrapper")
+            target = controls.find_parent(class_="tableView") if controls else None
+            if not isinstance(target, Tag):
+                continue
+            existing = target.find("table")
+            if (
+                isinstance(existing, Tag)
+                and normalize_text(
+                    str(existing.get("data-paper-fetch-hydrated-table") or "")
+                )
+                != table_id
+            ):
+                continue
+            fragment = BeautifulSoup(content, choose_parser())
+            table = fragment.find("table")
+            if not isinstance(table, Tag) or not _bounded_embedded_table(table):
+                continue
+            footnotes = fragment.select_one(".NLM_table-wrap-foot")
+            table["data-paper-fetch-hydrated-table"] = table_id
+            hydrated_table = table.extract()
+            if isinstance(existing, Tag):
+                # Browser capture intentionally injects a bounded row matrix.  The
+                # already-loaded publisher payload remains in the captured page and
+                # preserves richer rowspan/colspan semantics, so replay restores that
+                # representation before the shared table normalizer runs.
+                existing.replace_with(hydrated_table)
+            else:
+                target.append(hydrated_table)
+            previous_footnotes = selected.find(
+                attrs={"data-paper-fetch-hydrated-table-footnotes": table_id}
             )
-            != table_id
-        ):
-            continue
-        fragment = BeautifulSoup(content, choose_parser())
-        table = fragment.find("table")
-        if not isinstance(table, Tag) or not _bounded_embedded_table(table):
-            continue
-        footnotes = fragment.select_one(".NLM_table-wrap-foot")
-        table["data-paper-fetch-hydrated-table"] = table_id
-        hydrated_table = table.extract()
-        if isinstance(existing, Tag):
-            # Browser capture intentionally injects a bounded row matrix.  The
-            # already-loaded publisher payload remains in the captured page and
-            # preserves richer rowspan/colspan semantics, so replay restores that
-            # representation before the shared table normalizer runs.
-            existing.replace_with(hydrated_table)
-        else:
-            target.append(hydrated_table)
-        previous_footnotes = selected.find(
-            attrs={"data-paper-fetch-hydrated-table-footnotes": table_id}
-        )
-        if isinstance(previous_footnotes, Tag):
-            previous_footnotes.decompose()
-        if isinstance(footnotes, Tag):
-            footnotes["data-paper-fetch-hydrated-table-footnotes"] = table_id
-            # Keep notes adjacent to, but outside, the table-like container: the
-            # shared normalizer replaces that container with a Markdown placeholder.
-            target.insert_after(footnotes.extract())
-        hydrated += 1
+            if isinstance(previous_footnotes, Tag):
+                previous_footnotes.decompose()
+            if isinstance(footnotes, Tag):
+                footnotes["data-paper-fetch-hydrated-table-footnotes"] = table_id
+                # Keep notes adjacent to, but outside, the table-like container: the
+                # shared normalizer replaces that container with a Markdown placeholder.
+                target.insert_after(footnotes.extract())
+            hydrated += 1
     return hydrated
 
 
@@ -846,14 +846,19 @@ def _tandf_table_deadline(timeout_ms: int | None) -> float | None:
 
 def _collect_tandf_csv_table_entries(
     links: Any,
-    count: int,
+    start: int,
+    stop: int,
     deadline: float | None,
     result: dict[str, Any],
 ) -> list[dict[str, str]]:
     entries: list[dict[str, str]] = []
-    for index in range(min(count, _TANDF_MAX_DYNAMIC_TABLES)):
+    for index in range(start, stop):
         if deadline is not None and time.monotonic() >= deadline:
             result["timed_out"] = True
+            result["truncated"] = True
+            result["tables_unfinished"] = result.get("tables_unfinished", 0) + (
+                stop - index
+            )
             break
         link = links.nth(index)
         controls_id = normalize_text(
@@ -956,6 +961,9 @@ def _hydrate_tandf_csv_table_batch(
         if deadline is not None and time.monotonic() >= deadline:
             result["timed_out"] = True
             result["table_failures"] += len(entries) - index
+            result["tables_unfinished"] = result.get("tables_unfinished", 0) + (
+                len(entries) - index
+            )
             break
         response = batch_results[index] if index < len(batch_results) else None
         table_id = entry["tableId"]
@@ -1009,59 +1017,73 @@ def _hydrate_tandf_embedded_tables_from_page(
 ) -> None:
     if deadline is not None and time.monotonic() >= deadline:
         result["timed_out"] = True
+        result["truncated"] = True
         return
-    try:
-        embedded = page.evaluate(
-            _TANDF_READ_EMBEDDED_TABLES_SCRIPT,
-            {
-                "maxTables": _TANDF_MAX_DYNAMIC_TABLES,
-                "maxRows": _TANDF_MAX_TABLE_ROWS,
-                "maxColumns": _TANDF_MAX_TABLE_COLUMNS,
-                "maxChars": _TANDF_MAX_TABLE_CSV_CHARS,
-            },
-        )
-    except Exception:
-        result["embedded_table_error"] = True
-        return
-    if not isinstance(embedded, Mapping):
-        return
-    result["embedded_tables"] = max(0, int(embedded.get("total") or 0))
-    result["truncated"] = bool(result["truncated"] or embedded.get("truncated"))
-    entries = embedded.get("tables")
-    if not isinstance(entries, list):
-        return
-    for entry in entries[:_TANDF_MAX_DYNAMIC_TABLES]:
-        if not isinstance(entry, Mapping):
-            result["table_failures"] += 1
-            continue
-        table_id = normalize_text(str(entry.get("tableId") or ""))
-        if table_id in hydrated_table_ids:
-            continue
-        rows = _tandf_embedded_rows(entry.get("rows"))
-        if not re.fullmatch(r"[A-Za-z0-9_-]+", table_id) or not rows:
-            result["table_failures"] += 1
-            continue
-        try:
-            hydrated = bool(
-                page.evaluate(
-                    _TANDF_INJECT_TABLE_SCRIPT,
-                    {
-                        "tableId": table_id,
-                        "caption": _clean_tandf_accessible_control_text(
-                            entry.get("caption")
-                        ),
-                        "rows": rows,
-                    },
+    start = 0
+    total: int | None = None
+    while total is None or start < total:
+        if deadline is not None and time.monotonic() >= deadline:
+            result["timed_out"] = True
+            result["truncated"] = True
+            if total is not None:
+                result["tables_unfinished"] = result.get("tables_unfinished", 0) + max(
+                    0, total - start
                 )
+            return
+        try:
+            embedded = page.evaluate(
+                _TANDF_READ_EMBEDDED_TABLES_SCRIPT,
+                {
+                    "start": start,
+                    "batchSize": _TANDF_TABLE_BATCH_SIZE,
+                    "maxRows": _TANDF_MAX_TABLE_ROWS,
+                    "maxColumns": _TANDF_MAX_TABLE_COLUMNS,
+                    "maxChars": _TANDF_MAX_TABLE_CSV_CHARS,
+                },
             )
         except Exception:
-            hydrated = False
-        if hydrated:
-            result["tables_hydrated"] += 1
-            result["embedded_tables_hydrated"] += 1
-            hydrated_table_ids.add(table_id)
-        else:
-            result["table_failures"] += 1
+            result["embedded_table_error"] = True
+            return
+        if not isinstance(embedded, Mapping):
+            return
+        total = max(0, int(embedded.get("total") or 0))
+        result["embedded_tables"] = total
+        entries = embedded.get("tables")
+        if not isinstance(entries, list):
+            return
+        for entry in entries:
+            if not isinstance(entry, Mapping):
+                result["table_failures"] += 1
+                continue
+            table_id = normalize_text(str(entry.get("tableId") or ""))
+            if table_id in hydrated_table_ids:
+                continue
+            rows = _tandf_embedded_rows(entry.get("rows"))
+            if not re.fullmatch(r"[A-Za-z0-9_-]+", table_id) or not rows:
+                result["table_failures"] += 1
+                continue
+            try:
+                hydrated = bool(
+                    page.evaluate(
+                        _TANDF_INJECT_TABLE_SCRIPT,
+                        {
+                            "tableId": table_id,
+                            "caption": _clean_tandf_accessible_control_text(
+                                entry.get("caption")
+                            ),
+                            "rows": rows,
+                        },
+                    )
+                )
+            except Exception:
+                hydrated = False
+            if hydrated:
+                result["tables_hydrated"] += 1
+                result["embedded_tables_hydrated"] += 1
+                hydrated_table_ids.add(table_id)
+            else:
+                result["table_failures"] += 1
+        start += _TANDF_TABLE_BATCH_SIZE
 
 
 def prepare_browser_page(
@@ -1088,17 +1110,34 @@ def prepare_browser_page(
     links = locator(_TANDF_TABLE_DOWNLOAD_SELECTOR)
     count = max(0, int(links.count()))
     result["table_controls"] = count
-    result["truncated"] = count > _TANDF_MAX_DYNAMIC_TABLES
     deadline = _tandf_table_deadline(timeout_ms)
-    entries = _collect_tandf_csv_table_entries(links, count, deadline, result)
-    batch_results = _fetch_tandf_csv_table_batch(page, entries, deadline, result)
-    hydrated_table_ids = _hydrate_tandf_csv_table_batch(
-        page,
-        entries,
-        batch_results,
-        deadline,
-        result,
-    )
+    hydrated_table_ids: set[str] = set()
+    for start in range(0, count, _TANDF_TABLE_BATCH_SIZE):
+        if deadline is not None and time.monotonic() >= deadline:
+            result["timed_out"] = True
+            result["truncated"] = True
+            result["tables_unfinished"] = result.get("tables_unfinished", 0) + (
+                count - start
+            )
+            break
+        stop = min(count, start + _TANDF_TABLE_BATCH_SIZE)
+        entries = _collect_tandf_csv_table_entries(links, start, stop, deadline, result)
+        batch_results = _fetch_tandf_csv_table_batch(page, entries, deadline, result)
+        hydrated_table_ids.update(
+            _hydrate_tandf_csv_table_batch(
+                page,
+                entries,
+                batch_results,
+                deadline,
+                result,
+            )
+        )
+        if result.get("timed_out"):
+            result["truncated"] = True
+            result["tables_unfinished"] = result.get("tables_unfinished", 0) + (
+                count - stop
+            )
+            break
     _hydrate_tandf_embedded_tables_from_page(
         page,
         hydrated_table_ids,

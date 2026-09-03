@@ -398,6 +398,18 @@ def _converted_figure_response_impl(
             or asset_budget is None
         ):
             return dict(response), ""
+        try:
+            with source_path.open("rb") as source_stream:
+                source_prefix = source_stream.read(8192)
+        except OSError:
+            return dict(response), ""
+        source_format = source_image_format_from_payload(
+            source_prefix,
+            content_type=header_value(response.get("headers"), "content-type"),
+            source_url=source_url,
+        )
+        if source_format not in {"eps", "tiff"}:
+            return dict(response), ""
         converted_path = _unique_asset_staging_path(source_path.parent)
         converted_reservation = asset_budget.reserve()
         converted_reservation.register_staging(converted_path)
@@ -2100,6 +2112,19 @@ def download_assets(
                 reason=ASSET_FILE_LIMIT_EXCEEDED,
             ),
             "max_files": active_budget.max_files,
+            "asset_timing": {
+                "queue_ms": 0.0,
+                "candidate_resolution_ms": 0.0,
+                "dns_policy_validation_ms": 0.0,
+                "connect_to_headers_ttfb_ms": 0.0,
+                "body_stream_ms": 0.0,
+                "browser_recovery_ms": 0.0,
+                "retry_wait_ms": 0.0,
+                "conversion_ms": 0.0,
+                "save_ms": 0.0,
+                "total_ms": 0.0,
+                "status": "failed",
+            },
         }
         for asset, is_admitted in zip(asset_items, admitted, strict=True)
         if not is_admitted
@@ -2195,6 +2220,17 @@ def download_assets(
         ),
         asset_budget=active_budget,
         route_concurrency_cap=route_concurrency_cap,
+        terminal_failure_factory=lambda asset, diagnostic: {
+            **kind.failure_template(
+                asset,
+                normalize_text(
+                    str(asset.get("original_url") or asset.get("url") or "")
+                ),
+                reason=normalize_text(str(diagnostic.get("reason") or ""))
+                or ASSET_CANCELLED,
+            ),
+            **dict(diagnostic),
+        },
     )
     collected["asset_failures"].extend(rejected_failures)
     return collected

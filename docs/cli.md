@@ -346,8 +346,9 @@ full-size satisfaction，以及 body discovered/attempted/local/preview/remote-o
 语义完成的 table/formula/figure 不属于本地文件义务。
 
 `body` 与 `all` 不会放宽运行时安全上限。同一篇论文的正文与补充资产共享默认预算：
-最多 128 个文件、单文件 32 MiB、累计 256 MiB、单图 64,000,000 像素，并发最多 4
-且受 provider route 限制。达到上限会删除未发布的 staging、停止剩余下载，并在
+普通 provider 不设文件数上限，单文件 32 MiB、累计 256 MiB、单图 64,000,000 像素，
+并发最多 4 且受 provider route 限制；arXiv source archive 仍独立限制最多 128 个
+regular member。达到显式文件数、字节或像素上限会删除未发布的 staging、停止剩余下载，并在
 `asset_failures[*].reason` 返回稳定的 `asset_file_limit_exceeded`、
 `asset_bytes_per_asset_exceeded`、`asset_bytes_total_exceeded` 或
 `asset_pixel_limit_exceeded`；已完成正文不会因此被覆盖。

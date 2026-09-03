@@ -753,26 +753,29 @@ async def fetch_paper_tool_async(
         def fetch_and_save() -> FetchEnvelope:
             nonlocal markdown_saved
             assert runtime_context is not None
-            envelope = deps.fetch_paper_envelope(
-                request,
-                download_dir=download_dir,
-                include_article_for_assets=True,
-                context=runtime_context,
-                deps=deps,
-            )
-            runtime_context.raise_if_cancelled()
-            markdown_saved = (
-                _save_markdown_for_fetch_request(
-                    envelope,
+            try:
+                envelope = deps.fetch_paper_envelope(
                     request,
-                    env=runtime_env,
                     download_dir=download_dir,
+                    include_article_for_assets=True,
                     context=runtime_context,
                     deps=deps,
                 )
-                is not None
-            )
-            return envelope
+                runtime_context.raise_if_cancelled()
+                markdown_saved = (
+                    _save_markdown_for_fetch_request(
+                        envelope,
+                        request,
+                        env=runtime_env,
+                        download_dir=download_dir,
+                        context=runtime_context,
+                        deps=deps,
+                    )
+                    is not None
+                )
+                return envelope
+            finally:
+                runtime_context.close_camoufox_for_current_thread()
 
         loop = asyncio.get_running_loop()
         bridge = PaperFetchLogBridge(ctx=ctx, loop=loop) if ctx is not None else None

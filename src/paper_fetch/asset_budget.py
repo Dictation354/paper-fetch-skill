@@ -18,7 +18,7 @@ from .reason_codes import (
     ASSET_PIXEL_LIMIT_EXCEEDED,
 )
 
-DEFAULT_ASSET_MAX_FILES = 128
+DEFAULT_ASSET_MAX_FILES: int | None = None
 DEFAULT_ASSET_MAX_BYTES_PER_ASSET = 32 * 1024 * 1024
 DEFAULT_ASSET_MAX_BYTES_TOTAL = 256 * 1024 * 1024
 DEFAULT_ASSET_MAX_PIXELS = 64_000_000
@@ -122,7 +122,7 @@ class AssetBudget:
     def __init__(
         self,
         *,
-        max_files: int = DEFAULT_ASSET_MAX_FILES,
+        max_files: int | None = DEFAULT_ASSET_MAX_FILES,
         max_bytes_per_asset: int = DEFAULT_ASSET_MAX_BYTES_PER_ASSET,
         max_bytes_total: int = DEFAULT_ASSET_MAX_BYTES_TOTAL,
         max_pixels: int = DEFAULT_ASSET_MAX_PIXELS,
@@ -130,7 +130,7 @@ class AssetBudget:
         route_concurrency_cap: int | None = None,
         cancel_check: Callable[[], bool] | None = None,
     ) -> None:
-        self.max_files = max(0, int(max_files))
+        self.max_files = None if max_files is None else max(0, int(max_files))
         self.max_bytes_per_asset = max(0, int(max_bytes_per_asset))
         self.max_bytes_total = max(0, int(max_bytes_total))
         self.max_pixels = max(0, int(max_pixels))
@@ -180,7 +180,7 @@ class AssetBudget:
         with self._lock:
             return dict(self._stop_diagnostic)
 
-    def snapshot(self) -> dict[str, int | bool | str]:
+    def snapshot(self) -> dict[str, int | bool | str | None]:
         with self._lock:
             return {
                 "max_files": self.max_files,
@@ -227,7 +227,10 @@ class AssetBudget:
                 if occurrence <= self._admitted_work.get(key, 0):
                     admitted.append(True)
                     continue
-                if self._admitted_file_count >= self.max_files:
+                if (
+                    self.max_files is not None
+                    and self._admitted_file_count >= self.max_files
+                ):
                     admitted.append(False)
                     continue
                 self._admitted_work[key] = occurrence
@@ -275,6 +278,7 @@ class AssetBudget:
             )
             if (
                 not transient
+                and self.max_files is not None
                 and self._retained_files + reserved_files >= self.max_files
             ):
                 diagnostic = {
@@ -457,7 +461,10 @@ class AssetBudget:
             reserved_files = sum(
                 1 for item in self._reservations.values() if item.counts_file
             )
-            if self._retained_files + reserved_files >= self.max_files:
+            if (
+                self.max_files is not None
+                and self._retained_files + reserved_files >= self.max_files
+            ):
                 diagnostic = {
                     "max_files": self.max_files,
                     "retained_files": self._retained_files,

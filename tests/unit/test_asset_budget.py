@@ -95,7 +95,7 @@ def _transport_with_response(
 def test_asset_budget_defaults_and_route_concurrency_cap() -> None:
     budget = AssetBudget(route_concurrency_cap=2)
 
-    assert budget.max_files == DEFAULT_ASSET_MAX_FILES == 128
+    assert budget.max_files is DEFAULT_ASSET_MAX_FILES is None
     assert (
         budget.max_bytes_per_asset
         == DEFAULT_ASSET_MAX_BYTES_PER_ASSET
@@ -551,10 +551,14 @@ def test_compressed_length_budget_failure_cancels_pending_asset_work(
     )
 
     assert result["assets"] == []
-    assert result["asset_failures"]
+    assert len(result["asset_failures"]) == len(assets)
     assert {failure["reason"] for failure in result["asset_failures"]} == {
         ASSET_BYTES_PER_ASSET_EXCEEDED
     }
+    assert all(
+        failure["asset_timing"]["status"] == "failed"
+        for failure in result["asset_failures"]
+    )
     # At most the two already-running workers reach the transport. Queued work
     # observes the shared cancellation fence before it can issue a request.
     assert 1 <= request_count <= 2
@@ -771,6 +775,26 @@ def test_arxiv_archive_counts_duplicate_regular_members_before_deduplication(
     assert raised.value.reason_code == ASSET_FILE_LIMIT_EXCEEDED
     assert raised.value.diagnostic["encountered_regular_members"] == 3
     assert budget.diagnostic["boundary"] == "arxiv_archive_member_count"
+    assert not list(tmp_path.glob(".paper-fetch-arxiv-member-*.part"))
+
+
+def test_arxiv_archive_keeps_independent_128_member_gate(tmp_path: Path) -> None:
+    archive_path = tmp_path / "too-many-members.zip"
+    with zipfile.ZipFile(archive_path, "w") as archive:
+        for index in range(129):
+            archive.writestr(f"member-{index}.tex", b"x")
+
+    budget = AssetBudget(max_bytes_per_asset=64, max_bytes_total=16_384)
+    with pytest.raises(AssetBudgetExceeded) as raised:
+        _arxiv_assets._read_arxiv_source_files_from_path(
+            archive_path,
+            staging_dir=tmp_path,
+            asset_budget=budget,
+        )
+
+    assert raised.value.reason_code == ASSET_FILE_LIMIT_EXCEEDED
+    assert raised.value.diagnostic["encountered_regular_members"] == 129
+    assert raised.value.diagnostic["max_files"] == 128
     assert not list(tmp_path.glob(".paper-fetch-arxiv-member-*.part"))
 
 
@@ -997,7 +1021,7 @@ def test_download_assets_publishes_streamed_file_and_commits_budget(
         response,
         max_response_bytes=1024,
     )
-    budget = AssetBudget(max_files=2, max_bytes_per_asset=1024, max_bytes_total=1024)
+    budget = AssetBudget(max_files=1, max_bytes_per_asset=1024, max_bytes_total=1024)
 
     result = download_assets(
         FIGURE_KIND,
@@ -1099,6 +1123,96 @@ class _SessionReuseTransport:
             "downloaded_bytes": len(payload),
             "body_preview": payload,
         }
+
+
+def test_default_budget_downloads_more_than_128_assets(tmp_path: Path) -> None:
+    transport = _SessionReuseTransport()
+    assets = [
+        {
+            "kind": "supplementary",
+            "source_url": f"https://publisher.example/file-{index}.bin",
+        }
+        for index in range(129)
+    ]
+
+    result = download_assets(
+        SUPPLEMENTARY_KIND,
+        transport,  # type: ignore[arg-type]
+        article_id="10.1234/unbounded-files",
+        assets=assets,
+        output_dir=tmp_path,
+        user_agent="test",
+        asset_profile="all",
+        options=AssetDownloadOptions(
+            asset_download_concurrency=4,
+            allowed_hosts=("publisher.example",),
+        ),
+    )
+
+    assert len(result["assets"]) == 129
+    assert result["asset_failures"] == []
+
+
+def test_explicit_file_budget_still_rejects_excess_assets(tmp_path: Path) -> None:
+    result = download_assets(
+        SUPPLEMENTARY_KIND,
+        _SessionReuseTransport(),  # type: ignore[arg-type]
+        article_id="10.1234/finite-files",
+        assets=[
+            {
+                "kind": "supplementary",
+                "source_url": f"https://publisher.example/file-{index}.bin",
+            }
+            for index in range(2)
+        ],
+        output_dir=tmp_path,
+        user_agent="test",
+        asset_profile="all",
+        options=AssetDownloadOptions(
+            asset_budget=AssetBudget(max_files=1),
+            allowed_hosts=("publisher.example",),
+        ),
+    )
+
+    assert len(result["assets"]) == 1
+    assert len(result["asset_failures"]) == 1
+    assert result["asset_failures"][0]["reason"] == ASSET_FILE_LIMIT_EXCEEDED
+    assert result["asset_failures"][0]["asset_timing"]["status"] == "failed"
+
+
+def test_pixel_budget_terminalizes_all_pending_assets(tmp_path: Path) -> None:
+    assets = [
+        {
+            "kind": "figure",
+            "url": f"https://publisher.example/figure-{index}.png",
+        }
+        for index in range(10)
+    ]
+    result = download_assets(
+        FIGURE_KIND,
+        _SessionReuseTransport(),  # type: ignore[arg-type]
+        article_id="10.1234/pixel-stop",
+        assets=assets,
+        output_dir=tmp_path,
+        user_agent="test",
+        asset_profile="body",
+        options=AssetDownloadOptions(
+            asset_budget=AssetBudget(max_pixels=0, max_concurrency=2),
+            asset_download_concurrency=2,
+            allowed_hosts=("publisher.example",),
+            candidate_builder=lambda _transport, *, asset, **_kwargs: [asset["url"]],
+        ),
+    )
+
+    assert result["assets"] == []
+    assert len(result["asset_failures"]) == len(assets)
+    assert {failure["reason"] for failure in result["asset_failures"]} == {
+        ASSET_PIXEL_LIMIT_EXCEEDED
+    }
+    assert all(
+        failure["asset_timing"]["status"] == "failed"
+        for failure in result["asset_failures"]
+    )
 
 
 def test_streaming_assets_use_transport_without_replaying_article_urls(

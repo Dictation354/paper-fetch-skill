@@ -1,6 +1,8 @@
 # ruff: noqa: F403,F405
 from __future__ import annotations
 
+import json
+
 from paper_fetch.providers import (
     _ieee_block_page,
     _ieee_browser_html,
@@ -156,6 +158,142 @@ def _browser_landing_attempt(
         article_number=article_number,
         landing_metadata={},
     )
+
+
+class _PagedReferenceTransport:
+    def __init__(self, page_factory):
+        self.page_factory = page_factory
+        self.urls: list[str] = []
+
+    def request(self, _method, url, **_kwargs):
+        self.urls.append(url)
+        start = (
+            int(url.split("start=", 1)[1].split("&", 1)[0]) if "start=" in url else 0
+        )
+        payload = {"references": self.page_factory(start)}
+        return {"body": json.dumps(payload).encode("utf-8")}
+
+
+def _reference_page(start: int, count: int = 30) -> list[dict[str, object]]:
+    return [
+        {
+            "order": str(index + 1),
+            "text": f"Reference {index + 1}",
+        }
+        for index in range(start, start + count)
+    ]
+
+
+def test_ieee_reference_pagination_continues_past_twentieth_page() -> None:
+    transport = _PagedReferenceTransport(lambda start: _reference_page(start))
+
+    references = _ieee_metadata.fetch_ieee_reference_metadata(
+        transport,
+        "123456",
+        headers={},
+        decode_body=lambda body: body.decode("utf-8"),
+        expected_count=601,
+    )
+
+    assert len(references) == 601
+    assert references[-1]["label"] == "601"
+    assert any("start=600" in url for url in transport.urls)
+    assert len(transport.urls) == 21
+
+
+def test_ieee_reference_pagination_stops_on_short_page() -> None:
+    transport = _PagedReferenceTransport(lambda start: _reference_page(start, 5))
+
+    references = _ieee_metadata.fetch_ieee_reference_metadata(
+        transport,
+        "123456",
+        headers={},
+        decode_body=lambda body: body.decode("utf-8"),
+    )
+
+    assert len(references) == 5
+    assert len(transport.urls) == 1
+
+
+def test_ieee_reference_pagination_stops_on_repeated_page() -> None:
+    transport = _PagedReferenceTransport(lambda _start: _reference_page(0))
+
+    references = _ieee_metadata.fetch_ieee_reference_metadata(
+        transport,
+        "123456",
+        headers={},
+        decode_body=lambda body: body.decode("utf-8"),
+    )
+
+    assert len(references) == 30
+    assert len(transport.urls) == 2
+
+
+def test_ieee_reference_pagination_obeys_total_deadline() -> None:
+    transport = _PagedReferenceTransport(lambda start: _reference_page(start))
+
+    with mock.patch.object(
+        _ieee_metadata.time,
+        "monotonic",
+        side_effect=[0.0, 0.0, 2.0],
+    ):
+        references = _ieee_metadata.fetch_ieee_reference_metadata(
+            transport,
+            "123456",
+            headers={},
+            timeout=1,
+            decode_body=lambda body: body.decode("utf-8"),
+        )
+
+    assert len(references) == 30
+    assert len(transport.urls) == 1
+
+
+def test_ieee_landing_fetches_advertised_references_with_unknown_count() -> None:
+    doi = "10.1109/TEST.2026.1"
+    article_number = "123456"
+    document_url = f"https://ieeexplore.ieee.org/document/{article_number}/"
+    references_url = (
+        f"https://ieeexplore.ieee.org/rest/document/{article_number}/references"
+    )
+    landing_metadata = {
+        "articleNumber": article_number,
+        "doi": doi,
+        "title": "Unknown Reference Count",
+        "sections": {"references": "true"},
+    }
+    html_text = (
+        "<script>xplGlobal = {document: {}}; xplGlobal.document.metadata = "
+        + json.dumps(landing_metadata)
+        + ";</script>"
+    )
+    transport = RecordingTransport(
+        {
+            ("GET", references_url): {
+                "status_code": 200,
+                "headers": {"content-type": "application/json"},
+                "body": json.dumps({"references": _reference_page(0, count=1)}).encode(
+                    "utf-8"
+                ),
+                "url": references_url,
+            }
+        }
+    )
+    client = IeeeClient(transport, {})
+
+    attempt = _ieee_landing.build_ieee_landing_attempt(
+        client,
+        doi,
+        {"doi": doi},
+        landing_url=document_url,
+        response_url=document_url,
+        html_text=html_text,
+        acquisition_source="direct_http",
+    )
+
+    assert len(attempt.merged_metadata["references"]) == 1
+    assert attempt.merged_metadata["references"][0]["raw"] == "Reference 1"
+    assert [call["url"] for call in transport.calls] == [references_url]
 
 
 class IeeeProviderRouteTests(unittest.TestCase):
