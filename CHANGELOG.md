@@ -6,6 +6,17 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.1.2 - 2026-09-03
+
+### Fixed — asset completeness and provider pagination
+
+- Standard provider fetches no longer impose a default 128-file asset cap; the per-file, aggregate-byte, pixel, and worker limits remain in force, and arXiv source archives retain their independent 128-regular-member traversal guard. Explicit finite file budgets are still enforced, fatal budget stops now return a timed failure for every admitted unfinished asset, and ordinary streamed figures no longer reserve a conversion output slot unless their payload is actually EPS or TIFF.
+- IEEE reference retrieval now continues beyond 20 pages, stopping at the advertised count or on an empty, short, or duplicate page while respecting one wall-clock deadline. Landing pages that advertise references without a count now fetch them as well.
+- Taylor & Francis dynamic CSV and embedded tables are hydrated in batches of 24 until all discovered tables are processed or the page deadline expires. Deadline truncation now reports the unfinished table count, and offline replay restores all bounded same-page table payloads.
+- Async MCP fetches close each Camoufox manager on its owner worker thread on success, provider failure, and cooperative cancellation.
+- Article rendering now recognizes metadata titles containing HTML emphasis as equivalent to Markdown-emphasized leading headings, preventing duplicate article titles.
+- Offline package verification now uses the supported `paper-fetch fetch` subcommand for its DOI smoke test.
+
 ## 6.1.1 - 2026-09-02
 
 ### Fixed — ACS assets and AIP browser stability

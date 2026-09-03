@@ -6,6 +6,17 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.1.2 - 2026-09-03
+
+### 修复——资产完整性与 provider 分页
+
+- 普通 provider 抓取不再默认限制最多 128 个资产；单文件、累计字节、像素和 worker 上限继续生效，arXiv source archive 仍保留独立的 128 个 regular member 遍历门禁。显式有限文件预算继续执行；致命预算终止现在会为每个已准入但未完成的资产返回带 timing 的失败；普通流式图片只有在载荷实际为 EPS 或 TIFF 时才预留转换输出名额。
+- IEEE references 现在可以继续抓取超过 20 页，并在达到已声明数量、遇到空页、短页、重复页或总 wall-clock deadline 时停止；landing page 声明存在 references 但未给出数量时也会抓取。
+- Taylor & Francis 动态 CSV 表格和同页内嵌表格现在按每批 24 张持续 hydration，直到处理完全部已发现表格或页面 deadline 到期。deadline 截断会报告未完成表格数，离线 replay 也会恢复全部符合边界的同页表格 payload。
+- 异步 MCP 抓取在成功、provider 失败和协作取消路径中，都会由 owner worker 线程关闭各自的 Camoufox manager。
+- 文章渲染现在会把带 HTML 强调标记的 metadata 标题与 Markdown 强调形式的开头标题识别为等价，避免重复文章标题。
+- 离线包验证的 DOI smoke test 现在使用受支持的 `paper-fetch fetch` 子命令。
+
 ## 6.1.1 - 2026-09-02
 
 ### 修复——ACS 资产与 AIP 浏览器稳定性

@@ -623,8 +623,7 @@ class ModelsRenderTests(unittest.TestCase):
             doi="10.1111/nph.19136",
             markdown_text=(
                 f"# {markdown_title}\n\n"
-                "## Introduction\n\n"
-                + "Body text for the article. " * 100
+                "## Introduction\n\n" + "Body text for the article. " * 100
             ),
         )
 

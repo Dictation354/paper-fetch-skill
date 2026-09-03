@@ -1183,12 +1183,8 @@ exit 73
         self.assertIn(r"\sum\limits_{i}^{n}x^{i}", script)
         self.assertIn("PYTHONUTF8", script)
         self.assertIn("PYTHONIOENCODING", script)
-        self.assertIn(
-            'paper-fetch fetch --query "10.1186/1471-2105-11-421"', script
-        )
-        self.assertNotIn(
-            'paper-fetch --query "10.1186/1471-2105-11-421"', script
-        )
+        self.assertIn('paper-fetch fetch --query "10.1186/1471-2105-11-421"', script)
+        self.assertNotIn('paper-fetch --query "10.1186/1471-2105-11-421"', script)
         self.assertIn("paper-fetch doctor", script)
         self.assertIn("scripts/skill_integrity.py", script)
         self.assertNotIn(".venv/bin", script)
