@@ -23,6 +23,7 @@ from ..provider_catalog import (
 )
 from ..quality import html_profiles as _html_profiles
 from ..utils import normalize_text
+from . import _ams_assets, _ams_dom, _ams_markdown
 from .browser_workflow.shared import (
     build_browser_workflow_html_candidates,
     build_browser_workflow_pdf_candidates,
@@ -87,6 +88,8 @@ def _publisher_module(publisher: str | None) -> ModuleType | None:
     normalized = normalize_text(publisher or "").lower()
     if normalized not in ATYPON_BROWSER_WORKFLOW_PROVIDER_NAMES:
         return None
+    if normalized == "ams":
+        return _ams_dom
     return import_module(f"._{normalized}_html", package=__package__)
 
 
@@ -114,6 +117,18 @@ def publisher_profile(publisher: str | None) -> PublisherProfile:
     if module is None:
         return GENERIC_PROFILE
     rules = provider_html_rules(normalized)
+    if normalized == "ams":
+        return PublisherProfile(
+            name=normalized,
+            hosts=provider_domains(normalized),
+            dom_hooks=rules.dom_hooks,
+            markdown_hooks=rules.markdown_hooks,
+            refine_selected_container=_ams_dom.refine_selected_container,
+            select_content_nodes=_ams_dom.select_content_nodes,
+            finalize_extraction=_ams_markdown.finalize_extraction,
+            extract_asset_html_scopes=_ams_assets.extract_asset_html_scopes,
+            scoped_asset_extractor=_ams_assets.scoped_asset_extractor,
+        )
     return PublisherProfile(
         name=normalized,
         hosts=provider_domains(normalized),

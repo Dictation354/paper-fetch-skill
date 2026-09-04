@@ -98,16 +98,3 @@ def warm_browser_context(
 
 def storage_state_path(config: BrowserRuntimeConfig):
     return DEFAULT_CAMOUFOX_BACKEND.storage_state_path(config)
-
-
-def save_storage_state(
-    context: Any,
-    config: BrowserRuntimeConfig,
-    *,
-    filter_url: str | None = None,
-):
-    return DEFAULT_CAMOUFOX_BACKEND.save_storage_state(
-        context,
-        config,
-        filter_url=filter_url,
-    )

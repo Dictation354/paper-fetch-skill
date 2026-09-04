@@ -22,13 +22,12 @@ from ..provider_catalog import (
     BodyTextThresholds,
     ProviderRouteSpec,
     ProviderSpec,
+    host_matches_domain,
 )
 from ..publisher_identity import normalize_doi
-from ..reason_codes import PDF_FALLBACK
 from ..utils import extend_unique, normalize_text
 from . import _aip_html, browser_workflow
 from ._registry import ProviderBundle
-from .base import RawFulltextPayload
 
 
 # SITE_UI_COPY_REGRESSION_MARKER: AIP article navigation/action labels owned by provider cleanup policy.
@@ -156,7 +155,6 @@ _PROVIDER_SPEC = ProviderSpec(
 AIP_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     "aip",
     catalog=_PROVIDER_SPEC,
-    article_source_name="aip_html",
     fallback_author_extractor=_aip_html.extract_authors,
     policy=browser_workflow.BrowserWorkflowPolicy(
         empty_script_response_urls=(
@@ -181,20 +179,12 @@ class AipClient(browser_workflow.BrowserWorkflowClient):
         extend_unique(candidates, super().html_candidates(normalized_doi, metadata))
         return candidates
 
-    def article_source_for_payload(self, raw_payload: RawFulltextPayload) -> str:
-        content = raw_payload.content
-        route = normalize_text(
-            content.route_kind if content is not None else ""
-        ).lower()
-        if route == PDF_FALLBACK:
-            return "aip_pdf"
-        return "aip_html"
-
 
 def _is_aip_url(value: str | None) -> bool:
-    parsed = urlparse(normalize_text(value))
-    host = normalize_text(parsed.hostname or "").lower()
-    return host == "pubs.aip.org" or host.endswith(".pubs.aip.org")
+    hostname = urlparse(normalize_text(value)).hostname
+    return any(
+        host_matches_domain(hostname, domain) for domain in _PROVIDER_SPEC.domains
+    )
 
 
 __all__ = ["AipClient"]

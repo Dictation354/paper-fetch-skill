@@ -2301,13 +2301,6 @@ def fetch_html_with_playwright(
 fetch_html_with_playwright.paper_fetch_html_fetcher_name = "camoufox"  # type: ignore[attr-defined]
 
 
-def fetch_html_with_playwright_fast(*args: Any, **kwargs: Any) -> BrowserFetchedHtml:
-    return fetch_html_with_playwright(*args, **kwargs)
-
-
-fetch_html_with_playwright_fast.paper_fetch_html_fetcher_name = "camoufox_fast"  # type: ignore[attr-defined]
-
-
 def warm_browser_context_with_playwright(
     candidate_urls: list[str],
     *,

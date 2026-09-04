@@ -5,6 +5,9 @@ import unittest
 import urllib.parse
 
 from paper_fetch.providers import (
+    _ams_assets,
+    _ams_dom,
+    _ams_markdown,
     _pnas_html,
     _science_html,
     _script_json,
@@ -111,6 +114,19 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
 
         self.assertIsNotNone(publisher_profile("science").is_front_matter_teaser_figure)
         self.assertIsNone(publisher_profile("springer").scoped_asset_extractor)
+        ams_profile = publisher_profile("ams")
+        self.assertIs(
+            ams_profile.refine_selected_container,
+            _ams_dom.refine_selected_container,
+        )
+        self.assertIs(
+            ams_profile.finalize_extraction,
+            _ams_markdown.finalize_extraction,
+        )
+        self.assertIs(
+            ams_profile.scoped_asset_extractor,
+            _ams_assets.scoped_asset_extractor,
+        )
 
     def test_pnas_and_science_profiles_keep_module_owned_asset_callbacks(self) -> None:
         pnas_profile = publisher_profile("pnas")
@@ -443,26 +459,49 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
                     client.profile, browser_workflow.ProviderBrowserProfile
                 )
 
-    def test_provider_profile_article_source_label_and_hooks(self) -> None:
+    def test_provider_catalog_article_source_label_and_profile_hooks(self) -> None:
         cases = (
-            (ScienceClient(None, {}), None, "Science", "science"),
-            (PnasClient(None, {}), None, "PNAS", "pnas"),
+            (ScienceClient(None, {}), "science", "Science", "science"),
+            (PnasClient(None, {}), "pnas", "PNAS", "pnas"),
             (WileyClient(None, {}), "wiley_browser", "Wiley", "wiley"),
-            (AmsClient(None, {}), None, "AMS", "ams"),
-            (AcsClient(None, {}), None, "ACS", "acs"),
+            (AmsClient(None, {}), "ams_html", "AMS", "ams"),
+            (AcsClient(None, {}), "acs", "ACS", "acs"),
         )
 
-        for client, article_source_name, label, markdown_publisher in cases:
+        for client, article_source, label, markdown_publisher in cases:
             with self.subTest(provider=client.name):
-                self.assertEqual(
-                    client.profile.article_source_name, article_source_name
-                )
-                self.assertEqual(
-                    client.article_source(), article_source_name or client.name
-                )
+                self.assertEqual(client.article_source(), article_source)
                 self.assertEqual(client.provider_label(), label)
                 self.assertEqual(client.profile.markdown_publisher, markdown_publisher)
                 self.assertTrue(client.profile.shared_browser_image_fetcher)
+
+        self.assertNotIn(
+            "article_source_name",
+            {field.name for field in fields(browser_workflow.ProviderBrowserProfile)},
+        )
+
+    def test_article_source_uses_exact_route_and_kind_compatibility(self) -> None:
+        cases = (
+            (AipClient(None, {}), "browser_pdf", "aip_pdf"),
+            (AipClient(None, {}), None, "aip_pdf"),
+            (WileyClient(None, {}), "tdm_pdf", "wiley_browser"),
+            (WileyClient(None, {}), None, "wiley_browser"),
+        )
+        for client, route_name, expected_source in cases:
+            with self.subTest(provider=client.name, route_name=route_name):
+                payload = RawFulltextPayload(
+                    provider=client.name,
+                    content=ProviderContent(
+                        route_kind="pdf_fallback",
+                        route_name=route_name,
+                        source_url="https://example.test/article.pdf",
+                        content_type="application/pdf",
+                        body=b"%PDF-test",
+                    ),
+                )
+                self.assertEqual(
+                    client.article_source_for_payload(payload), expected_source
+                )
 
     def test_shared_author_helpers_preserve_provider_strategies(self) -> None:
         science_html = """

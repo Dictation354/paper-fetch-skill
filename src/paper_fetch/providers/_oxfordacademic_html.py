@@ -18,6 +18,7 @@ from ..extraction.html.renderer import clean_rendered_markdown
 from ..extraction.html.semantics import collect_html_section_hints
 from ..extraction.html.tables import render_table_markdown
 from ..models import AssetProfile
+from ..provider_catalog import host_matches_domain
 from ..publisher_identity import normalize_doi
 from ..utils import extend_unique, normalize_text
 from ._html_section_markdown import (
@@ -134,9 +135,8 @@ class OxfordAcademicExtraction:
 
 
 def is_oxfordacademic_url(value: str | None) -> bool:
-    parsed = urlparse(normalize_text(value))
-    host = normalize_text(parsed.hostname or "").lower()
-    return host == "academic.oup.com" or host.endswith(".academic.oup.com")
+    hostname = urlparse(normalize_text(value)).hostname
+    return host_matches_domain(hostname, "academic.oup.com")
 
 
 def _nodes_with_class(

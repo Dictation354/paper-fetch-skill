@@ -14,9 +14,13 @@ from ..extraction.html.provider_rules import (
     ProviderHtmlRules,
 )
 from ..models import AssetProfile
-from ..provider_catalog import BodyTextThresholds, ProviderRouteSpec, ProviderSpec
+from ..provider_catalog import (
+    BodyTextThresholds,
+    ProviderRouteSpec,
+    ProviderSpec,
+    host_matches_domain,
+)
 from ..publisher_identity import normalize_doi
-from ..reason_codes import PDF_FALLBACK
 from ..runtime import RuntimeContext
 from ..utils import empty_asset_results, extend_unique, normalize_text
 from . import _annualreviews_html, browser_workflow
@@ -80,7 +84,6 @@ _PROVIDER_SPEC = ProviderSpec(
 ANNUALREVIEWS_BROWSER_PROFILE = browser_workflow.make_browser_profile(
     "annualreviews",
     catalog=_PROVIDER_SPEC,
-    article_source_name="annualreviews_html",
     fallback_author_extractor=_annualreviews_html.extract_authors,
     policy=browser_workflow.BrowserWorkflowPolicy(
         blocked_resource_types=("image", "font", "media"),
@@ -90,10 +93,9 @@ ANNUALREVIEWS_BROWSER_PROFILE = browser_workflow.make_browser_profile(
 
 
 def _is_annualreviews_url(value: str | None) -> bool:
-    parsed = urlparse(normalize_text(value))
-    host = normalize_text(parsed.hostname or "").lower()
-    return host in {"annualreviews.org", "www.annualreviews.org"} or host.endswith(
-        ".annualreviews.org"
+    hostname = urlparse(normalize_text(value)).hostname
+    return any(
+        host_matches_domain(hostname, domain) for domain in _PROVIDER_SPEC.domains
     )
 
 
@@ -151,15 +153,6 @@ class AnnualreviewsClient(browser_workflow.BrowserWorkflowClient):
             final_url,
             metadata=metadata,
         )
-
-    def article_source_for_payload(self, raw_payload: RawFulltextPayload) -> str:
-        content = raw_payload.content
-        route = normalize_text(
-            content.route_kind if content is not None else ""
-        ).lower()
-        if route == PDF_FALLBACK:
-            return "annualreviews_pdf"
-        return "annualreviews_html"
 
     def to_article_model(
         self,

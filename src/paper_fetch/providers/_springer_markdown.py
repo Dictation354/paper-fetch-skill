@@ -15,7 +15,7 @@ from ._springer_dom import (
     _remove_springer_ai_alt_disclaimers as _remove_springer_ai_alt_disclaimers,
     extract_html_extraction_sidecars,
 )
-from ._springer_references import (
+from ._html_references import (
     extract_numbered_references_from_html,
 )
 

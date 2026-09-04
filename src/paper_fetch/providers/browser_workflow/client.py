@@ -16,6 +16,7 @@ from ...extraction.html import decode_html
 from ...extraction.html.signals import HtmlExtractionFailure
 from ...metadata.types import ProviderMetadata
 from ...models import AssetProfile
+from ...provider_catalog import provider_route, provider_routes
 from ...publisher_identity import normalize_doi
 from ...reason_codes import (
     ABSTRACT_ONLY,
@@ -81,7 +82,6 @@ _BROWSER_WORKFLOW_ACCESS_FAILURE_REASONS = frozenset(
 
 class BrowserWorkflowClient(ProviderClient):
     name = "browser_workflow"
-    article_source_name: str | None = None
     profile: ProviderBrowserProfile | None = None
     route_order: tuple[str, ...] = ()
 
@@ -114,16 +114,46 @@ class BrowserWorkflowClient(ProviderClient):
         )
 
     def article_source(self) -> str:
-        if self.article_source_name:
-            return self.article_source_name
-        profile = self.profile
-        if profile is not None and profile.article_source_name:
-            return profile.article_source_name
-        return self.name
+        return self._article_source_for_route(route_kind="html")
 
     def article_source_for_payload(self, raw_payload: RawFulltextPayload) -> str:
-        del raw_payload
-        return self.article_source()
+        content = raw_payload.content
+        return self._article_source_for_route(
+            route_name=content.route_name if content is not None else None,
+            route_kind=content.route_kind if content is not None else None,
+        )
+
+    def _article_source_for_route(
+        self,
+        *,
+        route_name: str | None = None,
+        route_kind: str | None = None,
+    ) -> str:
+        route = provider_route(self.name, route_name) if route_name else None
+        if route is not None and route.source:
+            return route.source
+
+        normalized_kind = normalize_text(route_kind).lower()
+        catalog_kind = "pdf" if normalized_kind == PDF_FALLBACK else normalized_kind
+        matching_sources = tuple(
+            dict.fromkeys(
+                candidate.source
+                for candidate in provider_routes(self.name)
+                if candidate.kind == catalog_kind and candidate.source
+            )
+        )
+        if len(matching_sources) == 1:
+            return matching_sources[0]
+        html_sources = tuple(
+            dict.fromkeys(
+                candidate.source
+                for candidate in provider_routes(self.name)
+                if candidate.kind == "html" and candidate.source
+            )
+        )
+        if len(html_sources) == 1:
+            return html_sources[0]
+        return self.name
 
     def require_profile(self) -> ProviderBrowserProfile:
         profile = self.profile

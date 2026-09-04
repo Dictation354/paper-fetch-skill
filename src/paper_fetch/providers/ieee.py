@@ -96,8 +96,6 @@ from .base import (
 
 __all__ = ["IeeeClient"]
 
-_FETCH_PDF_WITH_BROWSER = fetch_pdf_with_playwright = fetch_pdf_with_browser
-
 
 def _pdf_failure_diagnostics(failure: PdfFetchFailure | None) -> dict[str, Any] | None:
     if failure is None:
@@ -422,11 +420,7 @@ class IeeeClient(ProviderClient):
             )
 
             def run_browser_pdf(active_artifact_dir: Path):
-                return (
-                    fetch_pdf_with_playwright
-                    if fetch_pdf_with_playwright is not _FETCH_PDF_WITH_BROWSER
-                    else fetch_pdf_with_browser
-                )(
+                return fetch_pdf_with_browser(
                     candidates,
                     artifact_dir=active_artifact_dir,
                     asset_profile=effective_asset_profile,

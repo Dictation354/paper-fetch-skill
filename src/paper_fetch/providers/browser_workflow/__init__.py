@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from importlib import import_module
-import time as time
 from typing import Any
 
 _EXPORTS: dict[str, tuple[str, str]] = {
@@ -27,11 +26,6 @@ _EXPORTS: dict[str, tuple[str, str]] = {
         "paper_fetch.extraction.html.signals",
         "HtmlExtractionFailure",
     ),
-    "_IMAGE_DOCUMENT_FETCH_TIMEOUT_MS": (
-        ".fetchers",
-        "_IMAGE_DOCUMENT_FETCH_TIMEOUT_MS",
-    ),
-    "_MemoizedFigurePageFetcher": (".fetchers", "_MemoizedFigurePageFetcher"),
     "_MemoizedImageDocumentFetcher": (".fetchers", "_MemoizedImageDocumentFetcher"),
     "_SharedBrowserFileDocumentFetcher": (
         ".fetchers",
@@ -41,48 +35,14 @@ _EXPORTS: dict[str, tuple[str, str]] = {
         ".fetchers",
         "_SharedBrowserImageDocumentFetcher",
     ),
-    "_ThreadLocalSharedBrowserFileDocumentFetcher": (
-        ".fetchers",
-        "_ThreadLocalSharedBrowserFileDocumentFetcher",
-    ),
-    "_ThreadLocalSharedBrowserImageDocumentFetcher": (
-        ".fetchers",
-        "_ThreadLocalSharedBrowserImageDocumentFetcher",
-    ),
-    "_assets_matching_download_failures": (
-        ".assets",
-        "_assets_matching_download_failures",
-    ),
-    "_browser_workflow_html_payload": (
-        ".html_extraction",
-        "_browser_workflow_html_payload",
-    ),
-    "_browser_workflow_image_download_candidates": (
-        ".assets",
-        "_browser_workflow_image_download_candidates",
-    ),
-    "_build_shared_browser_file_fetcher": (
-        ".fetchers",
-        "_build_shared_browser_file_fetcher",
-    ),
     "_build_shared_browser_image_fetcher": (
         ".fetchers",
         "_build_shared_browser_image_fetcher",
     ),
-    "_cached_browser_workflow_assets": (".assets", "_cached_browser_workflow_assets"),
-    "_cached_browser_workflow_markdown": (
-        ".html_extraction",
-        "_cached_browser_workflow_markdown",
-    ),
-    "_choose_browser_seed_url": (".fetchers", "_choose_browser_seed_url"),
-    "_compact_failure_diagnostic": (".fetchers", "_compact_failure_diagnostic"),
-    "_fetch_browser_html_payload": (".bootstrap", "_fetch_browser_html_payload"),
     "_fetch_browser_html_payload_with_fast_path": (
         ".bootstrap",
         "_fetch_browser_html_payload_with_fast_path",
     ),
-    "_merge_download_attempt_results": (".assets", "_merge_download_attempt_results"),
-    "_normalized_response_headers": (".fetchers", "_normalized_response_headers"),
     "bootstrap_browser_workflow": (".bootstrap", "bootstrap_browser_workflow"),
     "browser_workflow_article_from_payload": (
         ".article",
@@ -120,7 +80,7 @@ _EXPORTS: dict[str, tuple[str, str]] = {
     ),
     "fetch_pdf_with_browser": (
         "paper_fetch.providers._pdf_fallback",
-        "fetch_pdf_with_playwright",
+        "fetch_pdf_with_browser",
     ),
     "fetch_seeded_browser_pdf_payload": (
         ".pdf_fallback",
@@ -146,12 +106,10 @@ _EXPORTS: dict[str, tuple[str, str]] = {
     ),
 }
 
-__all__ = [*_EXPORTS, "time"]
+__all__ = [*_EXPORTS]
 
 
 def __getattr__(name: str) -> Any:
-    if name == "time":
-        return time
     if name not in _EXPORTS:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
     module_name, attribute_name = _EXPORTS[name]

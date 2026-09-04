@@ -18,7 +18,6 @@ from ..models.markdown import (
     image_reference_candidates,
     replace_markdown_images,
 )
-from ..provider_catalog import known_article_source_names
 from ..reason_codes import FULLTEXT, METADATA_ONLY
 from ..tracing import (
     TraceEvent,
@@ -59,8 +58,6 @@ def finalize_article(
 def public_source_for_article(article: ArticleModel) -> str:
     if fallback_marker(METADATA_ONLY) in article.quality.source_trail:
         return METADATA_ONLY
-    if article.source in known_article_source_names():
-        return article.source
     return article.source
 
 

@@ -146,7 +146,6 @@ WILEY_TDM_API_TEMPLATE_NAME = "tdm_pdf"
 WILEY_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     "wiley",
     catalog=_PROVIDER_SPEC,
-    article_source_name="wiley_browser",
     fallback_author_extractor=_wiley_html.extract_authors,
     policy=browser_workflow.BrowserWorkflowPolicy(),
 )

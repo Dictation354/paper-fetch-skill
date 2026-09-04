@@ -1177,9 +1177,6 @@ def fetch_pdf_with_browser(
     raise last_failure
 
 
-fetch_pdf_with_playwright = fetch_pdf_with_browser
-
-
 def _stream_pdf_candidate(
     transport: HttpTransport,
     url: str,

@@ -19,6 +19,7 @@ from ..models.markdown import (
     image_references_match,
     iter_markdown_images,
 )
+from ..mdpi_url import is_mdpi_url
 from ..utils import extend_unique, normalize_text
 from ._mdpi_dom import (
     MDPI_NOISE_PROFILE,
@@ -93,8 +94,7 @@ def mdpi_pdf_url_from_landing_url(url: str | None) -> str | None:
     if not candidate:
         return None
     parsed = urllib.parse.urlparse(candidate)
-    host = normalize_text(parsed.hostname or "").lower()
-    if host not in {"www.mdpi.com", "mdpi.com"}:
+    if not is_mdpi_url(candidate):
         return None
     path = parsed.path.rstrip("/")
     if not path:

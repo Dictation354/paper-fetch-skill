@@ -21,6 +21,7 @@ from ..models.markdown import (
     image_references_match,
     iter_markdown_images,
 )
+from ..provider_catalog import host_matches_domain
 from ..publisher_identity import normalize_doi
 from ..quality.html_signals import TextMarkerRule, TextMarkerSignalSet
 from ..utils import extend_unique, normalize_text
@@ -191,9 +192,8 @@ IOP_HOSTS = {"iopscience.iop.org"}
 
 
 def is_iop_url(value: str | None) -> bool:
-    parsed = urlparse(normalize_text(value))
-    host = normalize_text(parsed.hostname or "").lower()
-    return host in IOP_HOSTS or any(host.endswith(f".{known}") for known in IOP_HOSTS)
+    hostname = urlparse(normalize_text(value)).hostname
+    return any(host_matches_domain(hostname, known) for known in IOP_HOSTS)
 
 
 def direct_article_url(doi: str) -> str:

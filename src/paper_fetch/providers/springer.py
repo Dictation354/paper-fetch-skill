@@ -61,7 +61,7 @@ from ..utils import (
     extend_unique,
     normalize_text,
 )
-from . import _springer_html
+from . import _springer_assets, _springer_authors, _springer_dom, _springer_markdown
 from ..extraction.html.assets import html_asset_identity_key
 from ._asset_retry import (
     AssetRetryPolicy,
@@ -324,7 +324,7 @@ def _cached_springer_html_payload(
     )
     return context.get_or_set_parse_cache(
         key,
-        lambda: _springer_html.extract_html_payload(
+        lambda: _springer_markdown.extract_html_payload(
             html_text,
             title=title,
             source_url=source_url,
@@ -355,7 +355,7 @@ def _cached_springer_scoped_assets(
     )
     return context.get_or_set_parse_cache(
         key,
-        lambda: _springer_html.extract_scoped_html_assets(
+        lambda: _springer_assets.extract_scoped_html_assets(
             body_html,
             source_url,
             asset_profile=asset_profile,
@@ -720,7 +720,7 @@ class SpringerClient(ProviderClient):
                         ),
                     ),
                     max_redirects=5,
-                    metadata_parser=_springer_html.parse_html_metadata,
+                    metadata_parser=_springer_dom.parse_html_metadata,
                     retry_on_transient=True,
                 )
             except RequestFailure as exc:
@@ -756,8 +756,8 @@ class SpringerClient(ProviderClient):
                 last_result = build_landing_html_result(
                     response,
                     current_url=landing_url,
-                    decoder=_springer_html.decode_html,
-                    metadata_parser=_springer_html.parse_html_metadata,
+                    decoder=_springer_dom.decode_html,
+                    metadata_parser=_springer_dom.parse_html_metadata,
                 )
                 query = urllib.parse.parse_qs(
                     urllib.parse.urlsplit(last_result.final_url).query
@@ -832,7 +832,7 @@ class SpringerClient(ProviderClient):
                 asset,
             )
 
-        table_html = _springer_html.decode_html(
+        table_html = _springer_dom.decode_html(
             response["body"],
             content_type=_springer_response_content_type(response),
         )
@@ -861,7 +861,7 @@ class SpringerClient(ProviderClient):
             return markdown, None, None
 
         if allow_image_asset:
-            image_url = _springer_html.extract_springer_table_image_url(
+            image_url = _springer_assets.extract_springer_table_image_url(
                 table_html,
                 response_url,
                 label=fallback_label,
@@ -984,12 +984,12 @@ class SpringerClient(ProviderClient):
             landing_url,
             context=context,
         )
-        html_text = _springer_html.decode_html(
+        html_text = _springer_dom.decode_html(
             response["body"],
             content_type=_springer_response_content_type(response),
         )
-        html_metadata = _springer_html.parse_html_metadata(html_text, response_url)
-        merged_metadata = _springer_html.merge_html_metadata(metadata, html_metadata)
+        html_metadata = _springer_dom.parse_html_metadata(html_text, response_url)
+        merged_metadata = _springer_dom.merge_html_metadata(metadata, html_metadata)
         if not merged_metadata.get("doi"):
             merged_metadata["doi"] = normalized_doi
         prepared_html, table_entries, table_warnings, table_assets = (
@@ -1006,13 +1006,13 @@ class SpringerClient(ProviderClient):
             title=str(merged_metadata.get("title") or ""),
         )
         asset_body_html, asset_supplementary_html = (
-            _springer_html.extract_asset_html_scopes(
+            _springer_assets.extract_asset_html_scopes(
                 prepared_html,
                 response_url,
                 title=str(merged_metadata.get("title") or "") or None,
             )
         )
-        asset_source_data_html = _springer_html.extract_source_data_html_scope(
+        asset_source_data_html = _springer_assets.extract_source_data_html_scope(
             prepared_html,
             response_url,
             title=str(merged_metadata.get("title") or "") or None,
@@ -1020,7 +1020,7 @@ class SpringerClient(ProviderClient):
         markdown_text = inject_inline_table_blocks(
             extraction_payload[MARKDOWN_TEXT_KEY],
             table_entries=table_entries,
-            clean_markdown_fn=_springer_html.clean_markdown,
+            clean_markdown_fn=_springer_markdown.clean_markdown,
         )
         normalized_markdown_text = normalize_text(markdown_text)
         appended_table_markdown: list[str] = []
@@ -1029,7 +1029,7 @@ class SpringerClient(ProviderClient):
             if rendered_table and rendered_table not in normalized_markdown_text:
                 appended_table_markdown.append(str(entry.get("markdown") or ""))
         if appended_table_markdown:
-            markdown_text = _springer_html.clean_markdown(
+            markdown_text = _springer_markdown.clean_markdown(
                 "\n\n".join([markdown_text, *appended_table_markdown])
             )
         abstract_sections = list(extraction_payload["abstract_sections"])
@@ -1165,7 +1165,7 @@ class SpringerClient(ProviderClient):
             asset_profile=asset_profile,
         )
         if not article_assets:
-            html_text = _springer_html.decode_html(
+            html_text = _springer_dom.decode_html(
                 raw_payload.body,
                 content_type=raw_payload.content_type,
             )
@@ -1177,13 +1177,13 @@ class SpringerClient(ProviderClient):
                 )
             )
             asset_body_html, asset_supplementary_html = (
-                _springer_html.extract_asset_html_scopes(
+                _springer_assets.extract_asset_html_scopes(
                     html_text,
                     raw_payload.source_url,
                     title=title or None,
                 )
             )
-            asset_source_data_html = _springer_html.extract_source_data_html_scope(
+            asset_source_data_html = _springer_assets.extract_source_data_html_scope(
                 html_text,
                 raw_payload.source_url,
                 title=title or None,
@@ -1213,7 +1213,7 @@ class SpringerClient(ProviderClient):
             or normalize_text(str(metadata.get("title") or ""))
             or raw_payload.source_url
         )
-        return _springer_html.download_assets_for_springer(
+        return _springer_assets.download_assets_for_springer(
             self.transport,
             article_id=article_id,
             assets=article_assets,
@@ -1762,13 +1762,15 @@ class SpringerClient(ProviderClient):
             if isinstance(extraction_payload, Mapping)
             else []
         )
-        extracted_authors = _springer_html.normalize_display_authors(extracted_authors)
+        extracted_authors = _springer_authors.normalize_display_authors(
+            extracted_authors
+        )
         if (
             not extracted_authors
             and "html" in normalize_text(raw_payload.content_type).lower()
         ):
             html_text = bytes(raw_payload.body or b"").decode("utf-8", errors="replace")
-            extracted_authors = _springer_html.extract_authors(html_text)
+            extracted_authors = _springer_authors.extract_authors(html_text)
         if extracted_authors:
             existing_authors = [
                 normalize_text(str(item))
@@ -1809,7 +1811,7 @@ class SpringerClient(ProviderClient):
                 markdown_text = rewrite_inline_figure_links(
                     markdown_text,
                     figure_assets=inline_figure_assets,
-                    clean_markdown_fn=_springer_html.clean_markdown,
+                    clean_markdown_fn=_springer_markdown.clean_markdown,
                 )
         availability_diagnostics = (
             dict(content.diagnostics.get("availability_diagnostics") or {})

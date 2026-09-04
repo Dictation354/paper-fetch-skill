@@ -13,7 +13,7 @@ from paper_fetch.models import (
     Quality,
     Section,
 )
-from paper_fetch.providers import _ams_html
+from paper_fetch.providers import _ams_assets
 from paper_fetch.quality.assets import (
     build_asset_quality_summary,
     logical_asset_kind,
@@ -318,7 +318,7 @@ def test_missing_path_and_explicit_failure_are_definite_and_classified(
 
 def test_ams_body_figures_formulas_and_tables_keep_separate_kinds() -> None:
     source_url = "https://journals.ametsoc.org/view/journals/clim/37/24/article.xml"
-    ams_assets = _ams_html.scoped_asset_extractor(
+    ams_assets = _ams_assets.scoped_asset_extractor(
         """
         <article><section>
           <figure id="fig1">

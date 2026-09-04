@@ -8,7 +8,14 @@ import unittest
 from unittest import mock
 
 from paper_fetch.models import article_from_markdown
-from paper_fetch.providers import _ams_html, browser_runtime, browser_workflow
+from paper_fetch.providers import (
+    _ams_assets,
+    _ams_authors,
+    _ams_markdown,
+    _ams_references,
+    browser_runtime,
+    browser_workflow,
+)
 from paper_fetch.providers.ams import AmsClient
 from paper_fetch.quality.assets import build_asset_quality_summary
 from paper_fetch.providers.atypon_browser_workflow.asset_scopes import (
@@ -372,7 +379,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         </article>
         """
 
-        assets = _ams_html.scoped_asset_extractor(
+        assets = _ams_assets.scoped_asset_extractor(
             html,
             AMS_LANDING_URL,
             asset_profile="body",
@@ -434,7 +441,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         </article>
         """
 
-        assets = _ams_html.scoped_asset_extractor(
+        assets = _ams_assets.scoped_asset_extractor(
             html,
             "https://journals.ametsoc.org/view/journals/hydr/20/1/jhm-d-18-0159_1.xml",
             asset_profile="body",
@@ -515,7 +522,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         </article>
         """
 
-        assets = _ams_html.scoped_asset_extractor(
+        assets = _ams_assets.scoped_asset_extractor(
             html,
             AMS_LANDING_URL,
             asset_profile="body",
@@ -589,7 +596,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
             AMS_LANDING_URL,
             "ams",
         )
-        assets = _ams_html.scoped_asset_extractor(
+        assets = _ams_assets.scoped_asset_extractor(
             body_html,
             AMS_LANDING_URL,
             asset_profile="body",
@@ -608,7 +615,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self,
     ) -> None:
         doi = "10.1175/jamc-d-24-0048.1"
-        assets = _ams_html.scoped_asset_extractor(
+        assets = _ams_assets.scoped_asset_extractor(
             _fixture_html(doi),
             _fixture_source_url(doi),
             asset_profile="body",
@@ -646,7 +653,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         </article>
         """
 
-        assets = _ams_html.scoped_asset_extractor(
+        assets = _ams_assets.scoped_asset_extractor(
             html,
             AMS_LANDING_URL,
             asset_profile="body",
@@ -659,7 +666,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
 
     def test_ams_author_and_reference_helpers_use_shared_extractors(self) -> None:
         self.assertEqual(
-            _ams_html.extract_authors(
+            _ams_authors.extract_authors(
                 """
                 <html><head>
                   <meta name="dc.Creator" content="Ada Example">
@@ -669,7 +676,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
             ["Ada Example"],
         )
         self.assertEqual(
-            _ams_html.extract_authors(
+            _ams_authors.extract_authors(
                 """
                 <html><body>
                   <div class="authors"><a>Grace Fallback</a></div>
@@ -679,7 +686,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
             ["Grace Fallback"],
         )
 
-        references = _ams_html.extract_references(
+        references = _ams_references.extract_references(
             """
             <html><head>
               <meta name="citation_reference" content="Stale meta reference">
@@ -773,7 +780,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         for doi, full_size_path in cases:
             with self.subTest(doi=doi):
                 markdown, _ = _extract_fixture_markdown(doi)
-                assets = _ams_html.scoped_asset_extractor(
+                assets = _ams_assets.scoped_asset_extractor(
                     _fixture_html(doi),
                     _fixture_source_url(doi),
                     asset_profile="body",
@@ -1037,7 +1044,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertIn("10<sup>−5</sup>", mwr_markdown)
         self.assertIn("*K*<sub>DP</sub>", mwr_markdown)
 
-        normalized = _ams_html._normalize_ams_markdown_text(
+        normalized = _ams_markdown._normalize_ams_markdown_text(
             "*Z*<sub>H</sub>(Montazeri et al. 2025) and *f*<sub>n</sub>(x)."
         )
         self.assertIn("*Z*<sub>H</sub> (Montazeri et al. 2025)", normalized)
@@ -1054,7 +1061,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
                 markdown_text=markdown,
                 section_hints=list(extraction.get("section_hints") or []),
             )
-            rendered = _ams_html.normalize_article_model(article).to_ai_markdown(
+            rendered = _ams_markdown.normalize_article_model(article).to_ai_markdown(
                 max_tokens="full_text"
             )
             for forbidden in (
@@ -1111,7 +1118,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
             ]
         )
 
-        normalized = _ams_html.ams_normalize_markdown(markdown)
+        normalized = _ams_markdown.ams_normalize_markdown(markdown)
 
         self.assertLess(
             normalized.index("## Acknowledgments"),
@@ -1131,7 +1138,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
     ) -> None:
         doi = "10.1175/jamc-d-24-0048.1"
         markdown, extraction = _extract_fixture_markdown(doi)
-        assets = _ams_html.scoped_asset_extractor(
+        assets = _ams_assets.scoped_asset_extractor(
             _fixture_html(doi),
             _fixture_source_url(doi),
             asset_profile="body",

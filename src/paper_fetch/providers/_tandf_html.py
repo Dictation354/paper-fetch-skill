@@ -16,6 +16,7 @@ from bs4 import BeautifulSoup, NavigableString, Tag
 
 from ..extraction.html.parsing import choose_parser
 from ..models import normalize_markdown_text
+from ..provider_catalog import host_matches_domain
 from ..reason_codes import OFFICIAL_FULL_SIZE_NOT_EXPOSED
 from ..utils import normalize_text
 from ._html_authors import (
@@ -1263,10 +1264,9 @@ def _mark_tandf_accepted_figure_previews(
         item: dict[str, Any] = dict(asset)
         preview_url = normalize_text(item.get("preview_url"))
         parsed = urlparse(preview_url)
-        host = normalize_text(parsed.hostname).lower()
         if (
             normalize_text(item.get("kind")).lower() == "figure"
-            and (host == "tandfonline.com" or host.endswith(".tandfonline.com"))
+            and host_matches_domain(parsed.hostname, "tandfonline.com")
             and parsed.path.lower().startswith("/cms/asset/")
         ):
             item["preview_accepted"] = "true"

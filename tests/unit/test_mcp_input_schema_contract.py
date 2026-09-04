@@ -9,6 +9,7 @@ from pydantic import BaseModel, ValidationError
 
 from paper_fetch.mcp.schemas import (
     BatchFetchRequest,
+    BrowserPreflightRequest,
     FetchPaperRequest,
     FetchPaperToolRequest,
     GetCachedRequest,
@@ -201,6 +202,58 @@ def test_single_and_batch_fetch_normalize_optional_paths_consistently() -> None:
     assert batch.markdown_filename == single.markdown_filename == "paper.md"
     assert batch.download_dir == "./cache"
     assert batch.batch_results == "./results.jsonl"
+
+
+@pytest.mark.parametrize(
+    ("request_type", "required_arguments", "field_name"),
+    [
+        (
+            FetchPaperToolRequest,
+            {"query": "10.1000/example"},
+            "markdown_output_dir",
+        ),
+        (
+            FetchPaperToolRequest,
+            {"query": "10.1000/example"},
+            "markdown_filename",
+        ),
+        (FetchPaperToolRequest, {"query": "10.1000/example"}, "download_dir"),
+        (
+            BatchFetchRequest,
+            {"queries": ["10.1000/example"]},
+            "markdown_output_dir",
+        ),
+        (
+            BatchFetchRequest,
+            {"queries": ["10.1000/example"]},
+            "markdown_filename",
+        ),
+        (BatchFetchRequest, {"queries": ["10.1000/example"]}, "download_dir"),
+        (BatchFetchRequest, {"queries": ["10.1000/example"]}, "batch_results"),
+        (ListCachedRequest, {}, "download_dir"),
+        (GetCachedRequest, {"doi": "10.1000/example"}, "download_dir"),
+        (BrowserPreflightRequest, {"provider": "wiley"}, "storage_state_path"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        (None, None),
+        ("", None),
+        (" \t ", None),
+        ("  value with  internal space  ", "value with  internal space"),
+    ],
+)
+def test_optional_string_fields_share_strip_only_normalization(
+    request_type: type[BaseModel],
+    required_arguments: dict[str, object],
+    field_name: str,
+    value: str | None,
+    expected: str | None,
+) -> None:
+    request = request_type.model_validate({**required_arguments, field_name: value})
+
+    assert getattr(request, field_name) == expected
 
 
 def test_batch_fetch_treats_blank_shared_filename_as_unspecified() -> None:

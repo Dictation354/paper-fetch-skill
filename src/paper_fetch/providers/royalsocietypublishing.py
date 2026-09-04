@@ -16,13 +16,17 @@ from ..extraction.html.provider_rules import (
 )
 from ..extraction.html.signals import HtmlExtractionFailure
 from ..models import AssetProfile
-from ..provider_catalog import BodyTextThresholds, ProviderRouteSpec, ProviderSpec
+from ..provider_catalog import (
+    BodyTextThresholds,
+    ProviderRouteSpec,
+    ProviderSpec,
+    host_matches_domain,
+)
 from ..publisher_identity import normalize_doi
 from ..quality.html_availability import (
     HtmlQualityAssessor,
     availability_failure_message,
 )
-from ..reason_codes import PDF_FALLBACK
 from ..runtime import RuntimeContext
 from ..utils import empty_asset_results, extend_unique, normalize_text
 from . import _royalsocietypublishing_html as royal_html
@@ -82,7 +86,6 @@ _PROVIDER_SPEC = ProviderSpec(
 ROYAL_SOCIETY_BROWSER_PROFILE = browser_workflow.make_browser_profile(
     "royalsocietypublishing",
     catalog=_PROVIDER_SPEC,
-    article_source_name="royalsocietypublishing_html",
     fallback_author_extractor=royal_html.extract_authors,
     policy=browser_workflow.BrowserWorkflowPolicy(
         blocked_resource_types=("image", "font", "media"),
@@ -92,10 +95,9 @@ ROYAL_SOCIETY_BROWSER_PROFILE = browser_workflow.make_browser_profile(
 
 
 def _is_royal_society_url(value: str | None) -> bool:
-    parsed = urlparse(normalize_text(value))
-    host = normalize_text(parsed.hostname or "").lower()
-    return host == "royalsocietypublishing.org" or host.endswith(
-        ".royalsocietypublishing.org"
+    hostname = urlparse(normalize_text(value)).hostname
+    return any(
+        host_matches_domain(hostname, domain) for domain in _PROVIDER_SPEC.domains
     )
 
 
@@ -187,15 +189,6 @@ class RoyalsocietypublishingClient(browser_workflow.BrowserWorkflowClient):
             "extracted_assets": extraction.extracted_assets,
         }
         return extraction.markdown_text, extraction_payload
-
-    def article_source_for_payload(self, raw_payload: RawFulltextPayload) -> str:
-        content = raw_payload.content
-        route = normalize_text(
-            content.route_kind if content is not None else ""
-        ).lower()
-        if route == PDF_FALLBACK:
-            return "royalsocietypublishing_pdf"
-        return "royalsocietypublishing_html"
 
     def to_article_model(
         self,

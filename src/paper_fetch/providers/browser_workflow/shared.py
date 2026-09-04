@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Any
 from collections.abc import Callable
 
+from ...provider_catalog import host_matches_domain
 from ...quality import html_profiles as _html_profiles
 from ...utils import extend_unique, normalize_text
 from .._pdf_candidates import (
@@ -81,7 +82,7 @@ def default_browser_workflow_deps() -> BrowserWorkflowDeps:
         probe_runtime_status,
         warm_browser_context,
     )
-    from .._pdf_fallback import fetch_pdf_with_playwright
+    from .._pdf_fallback import fetch_pdf_with_browser
     from ..atypon_browser_workflow import extract_atypon_browser_workflow_markdown
     from .assets import (
         _assets_matching_download_failures,
@@ -103,7 +104,7 @@ def default_browser_workflow_deps() -> BrowserWorkflowDeps:
         fetch_html_with_browser=fetch_html_with_browser,
         warm_browser_context=warm_browser_context,
         fetch_seeded_browser_pdf_payload=fetch_seeded_browser_pdf_payload,
-        fetch_pdf_with_browser=fetch_pdf_with_playwright,
+        fetch_pdf_with_browser=fetch_pdf_with_browser,
         download_assets=download_assets,
         split_body_and_supplementary_assets=split_body_and_supplementary_assets,
         bootstrap_browser_workflow=bootstrap_browser_workflow,
@@ -129,9 +130,8 @@ def preferred_html_candidate_from_landing_page(
     if not candidate:
         return None
     parsed = urllib.parse.urlparse(candidate)
-    hostname = normalize_text(parsed.hostname or "").lower()
     if parsed.scheme not in {"http", "https"} or not any(
-        hostname == token or hostname.endswith(f".{token}") for token in hosts
+        host_matches_domain(parsed.hostname, host) for host in hosts
     ):
         return None
     unquoted_candidate = normalize_text(urllib.parse.unquote(candidate)).lower()
@@ -156,9 +156,7 @@ def build_base_urls(
         parsed = urllib.parse.urlparse(preferred)
         hostname = normalize_text(parsed.hostname or "").lower()
         if parsed.scheme in {"http", "https"} and hostname:
-            if any(
-                hostname == token or hostname.endswith(f".{token}") for token in hosts
-            ):
+            if any(host_matches_domain(hostname, host) for host in hosts):
                 base_urls.append(f"{parsed.scheme}://{hostname}")
     for host in base_hosts or hosts:
         candidate = f"https://{host}"

@@ -76,7 +76,6 @@ DEFAULT_BROWSER_WORKFLOW_POLICY = BrowserWorkflowPolicy()
 @dataclass(frozen=True)
 class ProviderBrowserProfile:
     name: str
-    article_source_name: str | None
     label: str
     hosts: tuple[str, ...]
     base_hosts: tuple[str, ...]
@@ -100,7 +99,6 @@ def make_browser_profile(
     *,
     catalog: ProviderSpec,
     fallback_author_extractor: Callable[[str], list[str]],
-    article_source_name: str | None = None,
     html_readiness: BrowserHtmlReadiness | None = None,
     markdown_publisher: str | None = None,
     shared_browser_image_fetcher: bool = True,
@@ -110,7 +108,6 @@ def make_browser_profile(
 
     return ProviderBrowserProfile(
         name=name,
-        article_source_name=article_source_name,
         label=catalog.display_name,
         hosts=catalog.domains,
         base_hosts=catalog.base_domains,
@@ -130,14 +127,12 @@ def make_atypon_browser_profile(
     *,
     catalog: ProviderSpec,
     fallback_author_extractor: Callable[[str], list[str]],
-    article_source_name: str | None = None,
     html_readiness: BrowserHtmlReadiness | None = None,
     policy: BrowserWorkflowPolicy = DEFAULT_BROWSER_WORKFLOW_POLICY,
 ) -> ProviderBrowserProfile:
     return make_browser_profile(
         name,
         catalog=catalog,
-        article_source_name=article_source_name,
         fallback_author_extractor=fallback_author_extractor,
         html_readiness=html_readiness,
         policy=policy,

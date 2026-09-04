@@ -19,6 +19,7 @@ from paper_fetch.extraction.html.assets import download as asset_impl
 from paper_fetch.providers import browser_runtime, browser_workflow
 from paper_fetch.providers.browser_workflow import fetchers as browser_fetchers
 from paper_fetch.providers.browser_workflow.fetchers import context as fetcher_context
+from paper_fetch.providers.browser_workflow.fetchers import image as image_fetcher
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.crossref import CrossrefClient
 from paper_fetch.providers.elsevier import (
@@ -1020,7 +1021,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         )
 
         with mock.patch.object(
-            browser_workflow.time, "monotonic", side_effect=[0.0, 16.0]
+            image_fetcher.time, "monotonic", side_effect=[0.0, 16.0]
         ):
             result = fetcher._wait_for_primary_image(
                 page, "https://example.test/cdn/figure.jpg"

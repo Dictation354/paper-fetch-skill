@@ -49,7 +49,6 @@ from ..browser_runtime.api import (
     DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS,
     DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS,
     fetch_html_with_browser,
-    load_runtime_config,
 )
 from ..atypon_browser_workflow import (
     extract_browser_workflow_asset_html_scopes,
@@ -440,7 +439,6 @@ __all__ = [
     "_fetch_browser_html_payload_with_fast_path",
     "extract_atypon_browser_workflow_markdown",
     "extract_browser_workflow_asset_html_scopes",
-    "fetch_html_with_fast_browser",
     "rewrite_inline_figure_links",
 ]
 
@@ -513,54 +511,6 @@ def _cached_browser_workflow_assets(
         )
 
     return context.get_or_set_parse_cache(key, extract_assets, copy_value=True)
-
-
-def fetch_html_with_fast_browser(
-    candidate_urls: list[str],
-    *,
-    publisher: str,
-    user_agent: str | None = None,
-    headless: bool = True,
-    timeout_ms: int = _FAST_BROWSER_HTML_TIMEOUT_MS,
-    context: RuntimeContext | None = None,
-    browser_config: Any | None = None,
-) -> BrowserFetchedHtml:
-    config = (
-        browser_config
-        if isinstance(browser_config, BrowserRuntimeConfig)
-        else load_runtime_config(
-            context.env if context is not None and context.env is not None else {},
-            provider=publisher,
-            doi="fast-browser",
-        )
-    )
-    if not isinstance(config, BrowserRuntimeConfig):
-        raise HtmlExtractionFailure(
-            "browser_runtime_unavailable",
-            f"Browser runtime is not available for fast {publisher} HTML preflight.",
-        )
-    if config.headless != headless:
-        from dataclasses import replace
-
-        config = replace(
-            config,
-            headless=headless,
-            user_agent=None,
-            timeout_ms=timeout_ms or config.timeout_ms,
-        )
-    return fetch_html_with_browser(
-        candidate_urls,
-        publisher=publisher,
-        config=config,
-        wait_seconds=_FAST_BROWSER_HTML_WAIT_SECONDS,
-        warm_wait_seconds=_FAST_BROWSER_HTML_WARM_WAIT_SECONDS,
-        max_timeout_ms=timeout_ms,
-        disable_media=True,
-        runtime_context=context,
-    )
-
-
-fetch_html_with_fast_browser.paper_fetch_html_fetcher_name = "selected_browser_fast"  # type: ignore[attr-defined]
 
 
 def _browser_workflow_html_payload(

@@ -27,10 +27,8 @@ from ..publisher_identity import normalize_doi
 from ..provider_catalog import ProviderRouteSpec, ProviderSpec
 from ..quality.html_signals import AMS_TEXT_MARKER_SIGNAL_SET
 from ..utils import extend_unique, normalize_text
-from . import _ams_html, browser_workflow
-from .base import RawFulltextPayload
+from . import _ams_authors, _ams_dom, _ams_markdown, browser_workflow
 from ._registry import ProviderBundle
-from ..reason_codes import PDF_FALLBACK
 
 _PROVIDER_SPEC = ProviderSpec(
     name="ams",
@@ -82,7 +80,7 @@ _PROVIDER_SPEC = ProviderSpec(
 AMS_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     "ams",
     catalog=_PROVIDER_SPEC,
-    fallback_author_extractor=_ams_html.extract_authors,
+    fallback_author_extractor=_ams_authors.extract_authors,
     policy=browser_workflow.BrowserWorkflowPolicy(
         blocked_resource_types=("image", "font", "media"),
     ),
@@ -164,17 +162,9 @@ class AmsClient(browser_workflow.BrowserWorkflowClient):
             )
         return candidates
 
-    def article_source_for_payload(self, raw_payload: RawFulltextPayload) -> str:
-        if (
-            raw_payload.content is not None
-            and normalize_text(raw_payload.content.route_kind).lower() == PDF_FALLBACK
-        ):
-            return "ams_pdf"
-        return "ams_html"
-
     def to_article_model(self, *args, **kwargs):
         article = super().to_article_model(*args, **kwargs)
-        return _ams_html.normalize_article_model(article)
+        return _ams_markdown.normalize_article_model(article)
 
 
 PROVIDER_BUNDLE = ProviderBundle(
@@ -202,16 +192,16 @@ PROVIDER_BUNDLE = ProviderBundle(
             display_selectors=("div.formula",),
         ),
         dom_hooks=DomHooks(
-            before_block_normalization=_ams_html.ams_before_block_normalization,
-            after_block_normalization=_ams_html.ams_after_block_normalization,
-            body_container=_ams_html.ams_body_container,
-            asset_body_container=_ams_html.ams_asset_body_container,
-            asset_figure_extraction=_ams_html.ams_asset_figure_extraction,
+            before_block_normalization=_ams_dom.ams_before_block_normalization,
+            after_block_normalization=_ams_dom.ams_after_block_normalization,
+            body_container=_ams_dom.ams_body_container,
+            asset_body_container=_ams_dom.ams_asset_body_container,
+            asset_figure_extraction=_ams_dom.ams_asset_figure_extraction,
         ),
         markdown_hooks=MarkdownHooks(
-            normalize_markdown=_ams_html.ams_normalize_markdown,
-            classify_heading=_ams_html.ams_classify_heading,
-            keep_unknown_abstract_block=_ams_html.ams_keep_unknown_abstract_block,
+            normalize_markdown=_ams_markdown.ams_normalize_markdown,
+            classify_heading=_ams_markdown.ams_classify_heading,
+            keep_unknown_abstract_block=_ams_markdown.ams_keep_unknown_abstract_block,
         ),
     ),
     sources=("ams_html", "ams_pdf"),

@@ -78,6 +78,13 @@ def _coerce_optional_string_list(value: Any) -> Any:
     return value
 
 
+def _normalize_optional_string(value: Any) -> str | None:
+    if value is None:
+        return None
+    normalized = str(value).strip()
+    return normalized or None
+
+
 def _normalize_output_modes(value: Any) -> list[str]:
     if value is None:
         return list(DEFAULT_MCP_MODES)
@@ -566,10 +573,7 @@ class _FetchOptionsRequest(_RenderOptionsRequest):
     @field_validator("markdown_output_dir", "markdown_filename", mode="before")
     @classmethod
     def normalize_optional_string(cls, value: Any) -> str | None:
-        if value is None:
-            return None
-        normalized = str(value).strip()
-        return normalized or None
+        return _normalize_optional_string(value)
 
     @field_validator("markdown_filename")
     @classmethod
@@ -597,10 +601,7 @@ class FetchPaperToolRequest(FetchPaperRequest):
     @field_validator("download_dir", mode="before")
     @classmethod
     def normalize_download_dir(cls, value: Any) -> str | None:
-        if value is None:
-            return None
-        normalized = str(value).strip()
-        return normalized or None
+        return _normalize_optional_string(value)
 
 
 class BatchResolveRequest(BaseModel):
@@ -662,10 +663,7 @@ class BatchFetchRequest(_FetchOptionsRequest):
     )
     @classmethod
     def normalize_batch_optional_string(cls, value: Any) -> str | None:
-        if value is None:
-            return None
-        normalized = str(value).strip()
-        return normalized or None
+        return _normalize_optional_string(value)
 
     @model_validator(mode="after")
     def validate_batch_contract(self) -> BatchFetchRequest:
@@ -693,10 +691,7 @@ class ListCachedRequest(BaseModel):
     @field_validator("download_dir", mode="before")
     @classmethod
     def normalize_download_dir(cls, value: Any) -> str | None:
-        if value is None:
-            return None
-        normalized = str(value).strip()
-        return normalized or None
+        return _normalize_optional_string(value)
 
 
 class GetCachedRequest(_RenderOptionsRequest):
@@ -716,10 +711,7 @@ class GetCachedRequest(_RenderOptionsRequest):
     @field_validator("download_dir", mode="before")
     @classmethod
     def normalize_download_dir(cls, value: Any) -> str | None:
-        if value is None:
-            return None
-        normalized = str(value).strip()
-        return normalized or None
+        return _normalize_optional_string(value)
 
     @field_validator("detail")
     @classmethod
@@ -771,10 +763,7 @@ class BrowserPreflightRequest(BaseModel):
     @field_validator("storage_state_path", mode="before")
     @classmethod
     def normalize_storage_state_path(cls, value: Any) -> str | None:
-        if value is None:
-            return None
-        normalized = str(value).strip()
-        return normalized or None
+        return _normalize_optional_string(value)
 
     @field_validator("test_url")
     @classmethod

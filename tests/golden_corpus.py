@@ -27,14 +27,16 @@ from paper_fetch.providers import (
     _tandf_html,
     _pnas_html,
     _science_html,
-    _ams_html,
+    _ams_authors,
+    _ams_references,
     _annualreviews_html,
     _atypon_browser_workflow_profiles as atypon_browser_workflow_profiles,
     _arxiv_html,
     _ieee_html,
     _ieee_metadata,
     _iop_html,
-    _mdpi_html,
+    _mdpi_authors,
+    _mdpi_dom,
     _oxfordacademic_html,
     _royalsocietypublishing_html,
     _wiley_html,
@@ -1100,8 +1102,8 @@ def _lightweight_atypon_browser_workflow_summary(
     metadata = parse_html_metadata(html_text, fixture.source_url)
     browser_helpers = {
         "ams": (
-            _ams_html.extract_authors,
-            _ams_html.blocking_fallback_signals,
+            _ams_authors.extract_authors,
+            _ams_references.blocking_fallback_signals,
         ),
         "acs": (
             _acs_html.extract_authors,
@@ -1159,7 +1161,7 @@ def _lightweight_mdpi_summary(fixture: GoldenCorpusFixture) -> dict[str, Any]:
     html_text = fixture.raw_path.read_text(encoding="utf-8", errors="ignore")
     metadata = parse_html_metadata(html_text, fixture.source_url)
     article_html, title, abstract_text, _container_text_length = (
-        _mdpi_html._article_container_html(
+        _mdpi_dom._article_container_html(
             html_text,
             metadata,
         )
@@ -1178,7 +1180,7 @@ def _lightweight_mdpi_summary(fixture: GoldenCorpusFixture) -> dict[str, Any]:
         "doi": normalize_doi(str(metadata.get("doi") or fixture.doi)),
         "has": {
             "title": bool(normalize_text(title or metadata.get("title"))),
-            "authors": bool(_mdpi_html.extract_authors(html_text)),
+            "authors": bool(_mdpi_authors.extract_authors(html_text)),
             "abstract": bool(normalize_text(abstract_text)),
             "body": bool(section_hints),
         },

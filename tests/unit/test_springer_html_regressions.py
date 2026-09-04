@@ -4,12 +4,15 @@ import re
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from bs4 import BeautifulSoup
 
 from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.http import HttpTransport
+from paper_fetch.providers import _springer_authors as springer_authors
 from paper_fetch.providers import _springer_html as springer_html
+from paper_fetch.providers import _springer_markdown as springer_markdown
 from paper_fetch.providers import html_springer_nature, springer as springer_provider
 from paper_fetch.providers._asset_retry import merge_asset_retry_results
 from paper_fetch.markdown.citations import normalize_inline_citation_markdown
@@ -28,6 +31,39 @@ from tests.golden_criteria import (
 
 
 class SpringerHtmlRegressionTests(unittest.TestCase):
+    def test_springer_compat_facade_does_not_mutate_canonical_dependencies(
+        self,
+    ) -> None:
+        canonical_markdown = springer_markdown.extract_article_markdown
+        canonical_authors = springer_authors.extract_authors
+
+        with (
+            mock.patch.object(
+                springer_html, "extract_article_markdown"
+            ) as facade_markdown,
+            mock.patch.object(springer_html, "extract_authors") as facade_authors,
+        ):
+            springer_html.extract_html_payload(
+                "<html><body><article><p>Springer body.</p></article></body></html>",
+                "https://link.springer.com/article/10.1007/example",
+            )
+
+        self.assertIs(
+            springer_markdown.extract_article_markdown,
+            canonical_markdown,
+        )
+        self.assertIs(springer_authors.extract_authors, canonical_authors)
+        facade_markdown.assert_not_called()
+        facade_authors.assert_not_called()
+        for removed_name in (
+            "_AUTHOR_PIPELINE",
+            "extract_html_extraction_sidecars",
+            "extract_numbered_references_from_html",
+            "figure_download_candidates",
+        ):
+            with self.subTest(removed_name=removed_name):
+                self.assertFalse(hasattr(springer_html, removed_name))
+
     def test_springer_internal_site_family_profiles_cover_three_public_families(
         self,
     ) -> None:

@@ -374,14 +374,5 @@ class CamoufoxBackend:
     def storage_state_path(self, config: BrowserRuntimeConfig) -> Path | None:
         return runtime_paths.storage_state_path(config)
 
-    def save_storage_state(
-        self,
-        context: Any,
-        config: BrowserRuntimeConfig,
-        *,
-        filter_url: str | None = None,
-    ) -> Mapping[str, Any]:
-        return runtime_paths.save_storage_state(context, config, filter_url=filter_url)
-
 
 DEFAULT_CAMOUFOX_BACKEND = CamoufoxBackend()

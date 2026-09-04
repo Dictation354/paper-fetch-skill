@@ -7,7 +7,9 @@ from pathlib import Path
 from unittest import mock
 
 from paper_fetch.http import RequestFailure
+from paper_fetch.providers import _springer_dom as springer_dom
 from paper_fetch.providers import _springer_html as springer_html
+from paper_fetch.providers import _springer_markdown as springer_markdown
 from paper_fetch.providers import (
     browser_runtime,
     browser_workflow,
@@ -590,7 +592,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                 client, "_fetch_html_response", return_value=(response, landing_url)
             ),
             mock.patch.object(
-                springer_html,
+                springer_markdown,
                 "extract_article_markdown",
                 return_value=f"# {SPRINGER_SAMPLE.title}\n\n## Results\n\n"
                 + ("Body text " * 120),
@@ -638,7 +640,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                 client, "_fetch_html_response", return_value=(response, landing_url)
             ),
             mock.patch.object(
-                springer_html,
+                springer_dom,
                 "parse_html_metadata",
                 return_value={
                     "title": SPRINGER_SAMPLE.title,
@@ -649,7 +651,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                 },
             ),
             mock.patch.object(
-                springer_html,
+                springer_markdown,
                 "extract_article_markdown",
                 return_value=f"# {SPRINGER_SAMPLE.title}\n\n## Results\n\n"
                 + ("Body text " * 120),
@@ -857,7 +859,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                 client, "_fetch_html_response", return_value=(response, landing_url)
             ),
             mock.patch.object(
-                springer_html,
+                springer_markdown,
                 "extract_article_markdown",
                 return_value=f"# {SPRINGER_SAMPLE.title}\n\nShort abstract only.",
             ),
@@ -985,7 +987,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                 client, "_fetch_html_response", return_value=(response, landing_url)
             ),
             mock.patch.object(
-                springer_html,
+                springer_markdown,
                 "extract_html_payload",
                 return_value={
                     "markdown_text": f"# {SPRINGER_SAMPLE.title}\n\n## Abstract\n\nHTML abstract only.",
@@ -1101,7 +1103,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                 client, "_fetch_html_response", return_value=(response, landing_url)
             ),
             mock.patch.object(
-                springer_html,
+                springer_markdown,
                 "extract_html_payload",
                 return_value={
                     "markdown_text": f"# {SPRINGER_SAMPLE.title}\n\nAccess restricted.",
@@ -1154,7 +1156,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                 client, "_fetch_html_response", return_value=(response, landing_url)
             ),
             mock.patch.object(
-                springer_html,
+                springer_markdown,
                 "extract_html_payload",
                 return_value={
                     "markdown_text": f"# {SPRINGER_SAMPLE.title}\n\n## Abstract\n\nHTML abstract only.",
@@ -1223,7 +1225,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                 client, "_fetch_html_response", return_value=(response, landing_url)
             ),
             mock.patch.object(
-                springer_html,
+                springer_markdown,
                 "extract_html_payload",
                 return_value={
                     "markdown_text": f"# {SPRINGER_SAMPLE.title}\n\n## Abstract\n\nHTML abstract only.",

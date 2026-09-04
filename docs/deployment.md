@@ -617,20 +617,22 @@ PAPER_FETCH_RUN_FULL_GOLDEN=1 PYTHONPATH=src uv run python -m pytest tests/integ
 publisher catalog 不是宽松的全文 smoke：每个已执行样本都请求 `asset_profile=body` 并按默认 provider policy 要求 `acceptance.overall=complete`，同时写出 `live-acceptance.json`。无论 preflight/fetch 成功或失败，每个 provider 都先追加 terminal record；JSON 从 runtime catalog 计算总数、已记录/未记录 provider、已记录结果是否全 complete，以及全 catalog 是否全部执行并 complete。每个 provider 还记录外层 wall time、browser readiness、导航数和逐资产 timing。需要离线或 full-size 验收时，另以公开的两个严格布尔约束运行并读取同一 v2 acceptance。challenge/no-access skip 不会被伪装为全量完成；只有机器可读的 preflight `challenge` / `auth_required`、fetch/MCP `status=no_access`，或成功 metadata fallback 中仅由 `ProviderFailure(NO_ACCESS)` 产生的精确 access-boundary marker，才按合法访问边界 skip。解析失败、空壳、正文不足和其它未知错误仍是 hard failure。非 challenge/auth/cancelled 的 preflight 失败必须保留可读取的隐私安全诊断 artifact。Live fixture 的环境 mapping repr 不显示值；JUnit、acceptance、diagnostics 和待上传目录必须先通过 sentinel 扫描。live 测试依赖共享外部状态和 Camoufox 线程边界，必须串行运行；JUnit 使用与 `record_property` 兼容的 legacy family：
 
 ```bash
-PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_LIVE_ARTIFACT_DIR=artifacts/live-publishers \
+PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_LIVE_ARTIFACT_DIR=failures/live-publishers \
   PYTHONPATH=src uv run python -m pytest \
   tests/live/test_live_publishers.py tests/live/test_live_mcp.py \
   -q -n 0 -o junit_family=legacy \
-  --junitxml=artifacts/live-publishers.xml
+  --junitxml=failures/live-publishers.xml
 ```
 
 普通 publisher/MCP live tests 只保留上述本地入口，不由 GitHub Actions 定时或手动触发。只有在具备相应出版社访问授权和凭据的本机网络环境中才应运行；JUnit 和诊断目录也由本地操作者自行保存。
+
+`failures/` 已被 Git 忽略；live 输出属于一次性、本机和外部状态相关的运维证据，不作为仓库 fixture，也不得用 `git add -f` 提交。确需在仓库外长期归档一次运行时，最小记录为 JUnit 与 `live-acceptance.json`；IEEE 专项再保留 `asset-hashes.json`。原始全文、图片和页面诊断只在排查对应失败所需的期间保留。
 
 需要验证 AIP 冷启动 HTML 稳定性时，额外显式启用五个隔离 profile 的串行测试；每次都必须得到 `aip_html` 与完整 acceptance，不能以 `aip_pdf` 降级通过：
 
 ```bash
 PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_RUN_AIP_COLD_STABILITY=1 \
-  PAPER_FETCH_LIVE_ARTIFACT_DIR=artifacts/aip-cold-start \
+  PAPER_FETCH_LIVE_ARTIFACT_DIR=failures/aip-cold-start \
   PYTHONPATH=src uv run python -m pytest \
   tests/live/test_live_publishers.py::test_aip_cold_start_stability_uses_html_for_five_fresh_profiles \
   -q -n 0
@@ -642,13 +644,13 @@ IEEE 大型 GIF 资产专项与普通 publisher suite 分离；未确认 runner 
 
 ```bash
 PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_RUN_IEEE_BROWSER_LIVE=1 \
-  PAPER_FETCH_LIVE_ARTIFACT_DIR=artifacts/live-ieee-protected \
+  PAPER_FETCH_LIVE_ARTIFACT_DIR=failures/live-ieee-protected \
   PYTHONPATH=src uv run python -m pytest \
   tests/live/test_live_ieee_protected.py -q -n 0 \
-  -o junit_family=legacy --junitxml=artifacts/live-ieee-protected.xml
+  -o junit_family=legacy --junitxml=failures/live-ieee-protected.xml
 ```
 
-该专项要求统一 `acceptance.overall=complete`、13 个正文资产全部为 `full_size`，目标大型 GIF 有有效 header、可解析且非零的尺寸，并由生成的 Markdown 使用本地路径引用。测试保持 direct-first：本轮 direct 成功时接受 `final_fetcher=direct_http`；只有 direct 失败并进入恢复时，才硬性核对 Camoufox backend 以及 `direct(403) -> browser` trace。每次 `run-*` 目录会保存 `asset-hashes.json`，其中包含目标 SHA-256、全部正文资产 size/hash、fetcher/recovery trace 和 acceptance。该模块同样只保留本地入口；授权操作者应单独保存 JUnit 和整个 `artifacts/live-ieee-protected/`。
+该专项要求统一 `acceptance.overall=complete`、13 个正文资产全部为 `full_size`，目标大型 GIF 有有效 header、可解析且非零的尺寸，并由生成的 Markdown 使用本地路径引用。测试保持 direct-first：本轮 direct 成功时接受 `final_fetcher=direct_http`；只有 direct 失败并进入恢复时，才硬性核对 Camoufox backend 以及 `direct(403) -> browser` trace。每次 `run-*` 目录会保存 `asset-hashes.json`，其中包含目标 SHA-256、全部正文资产 size/hash、fetcher/recovery trace 和 acceptance。该模块同样只保留本地入口；授权操作者按上述最小证据边界在仓库外保存 JUnit、`live-acceptance.json` 和 `asset-hashes.json`。
 
 专项 preflight 若在 15 秒 readiness 窗口后仍停留于 AWS WAF HTTP 202 页面，会保留页面关闭前采集的脱敏诊断并以 `aws_waf_challenge` skip；这代表当前网络/会话仍未取得文章 DOM，不可解释为已成功访问。只有后续抓取和上述资产硬门全部通过，才可关闭 PF-LIVE-007。
 

@@ -10,7 +10,7 @@ from paper_fetch import service as paper_fetch
 from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.http import HttpTransport, RequestFailure
-from paper_fetch.providers import _springer_html as springer_html_helper
+from paper_fetch.providers import _springer_markdown as springer_markdown_helper
 from paper_fetch.providers import pnas as pnas_provider, science as science_provider
 from paper_fetch.providers.base import (
     ProviderArtifacts,

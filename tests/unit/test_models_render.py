@@ -578,6 +578,29 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIn("projected warning", article.quality.warnings)
         self.assertEqual(article.quality.token_estimate, 321)
 
+    def test_build_fetch_envelope_preserves_source_unless_metadata_only(self) -> None:
+        cases = (
+            ("wiley_browser", [], "wiley_browser"),
+            ("custom_runtime_source", [], "custom_runtime_source"),
+            (
+                "custom_runtime_source",
+                ["fallback:metadata_only"],
+                "metadata_only",
+            ),
+        )
+
+        for source, source_trail, expected in cases:
+            with self.subTest(source=source, source_trail=source_trail):
+                article = sample_article()
+                article.source = source
+                article.quality.source_trail = source_trail
+
+                envelope = paper_fetch.build_fetch_envelope(
+                    article, modes={"article"}, render=RenderOptions()
+                )
+
+                self.assertEqual(envelope.source, expected)
+
     def test_article_from_markdown_preserves_code_fences_and_ascii_tables(self) -> None:
         article = article_from_markdown(
             source="springer_html",

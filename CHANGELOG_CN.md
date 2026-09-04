@@ -6,6 +6,10 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+### 变更——浏览器运行时 API
+
+- 删除未使用的即时 `browser_runtime.save_storage_state` facade 及其 backend/path 转发链。Browser fetch 与 preflight 仍会先暂存 provider 范围内的状态，并且只在验收通过后原子提交。
+
 ## 6.1.2 - 2026-09-03
 
 ### 修复——资产完整性与 provider 分页

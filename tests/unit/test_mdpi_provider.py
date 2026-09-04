@@ -11,7 +11,7 @@ from paper_fetch.extraction.html.signals import HtmlExtractionFailure
 from paper_fetch.http import RequestFailure
 from paper_fetch.models import article_from_markdown
 from paper_fetch.models.markdown import iter_markdown_images
-from paper_fetch.providers import _mdpi_html, browser_runtime
+from paper_fetch.providers import _mdpi_assets, _mdpi_markdown, browser_runtime
 from paper_fetch.providers.mdpi import MdpiClient
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
 from tests.unit._browser_workflow_deps import install_browser_workflow_deps
@@ -147,7 +147,7 @@ def _inline_wrapper_regression_html() -> str:
 
 @cache
 def _extract_fixture_markdown(doi: str) -> tuple[str, dict[str, object]]:
-    return _mdpi_html.extract_markdown(
+    return _mdpi_markdown.extract_markdown(
         _fixture_html(doi),
         _fixture_source_url(doi),
         metadata=_fixture_metadata(doi),
@@ -384,7 +384,7 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
 
     def test_mdpi_figure_fixture_markdown_and_assets(self) -> None:
         markdown, _ = _extract_fixture_markdown(MDPI_FIGURE_DOI)
-        assets = _mdpi_html.extract_scoped_html_assets(
+        assets = _mdpi_assets.extract_scoped_html_assets(
             _fixture_html(MDPI_FIGURE_DOI),
             _fixture_source_url(MDPI_FIGURE_DOI),
             asset_profile="body",
@@ -475,7 +475,7 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
     def test_mdpi_paragraph_inline_wrappers_do_not_fragment_variable_explanations(
         self,
     ) -> None:
-        markdown, _ = _mdpi_html.extract_markdown(
+        markdown, _ = _mdpi_markdown.extract_markdown(
             _inline_wrapper_regression_html(),
             "https://www.mdpi.com/1996-1073/16/18/6655",
             metadata={
@@ -547,12 +547,12 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
 
     def test_mdpi_supplementary_fixture_markdown_and_all_assets(self) -> None:
         markdown, _ = _extract_fixture_markdown(MDPI_SUPPLEMENTARY_DOI)
-        body_assets = _mdpi_html.extract_scoped_html_assets(
+        body_assets = _mdpi_assets.extract_scoped_html_assets(
             _fixture_html(MDPI_SUPPLEMENTARY_DOI),
             _fixture_source_url(MDPI_SUPPLEMENTARY_DOI),
             asset_profile="body",
         )
-        all_assets = _mdpi_html.extract_scoped_html_assets(
+        all_assets = _mdpi_assets.extract_scoped_html_assets(
             _fixture_html(MDPI_SUPPLEMENTARY_DOI),
             _fixture_source_url(MDPI_SUPPLEMENTARY_DOI),
             asset_profile="all",

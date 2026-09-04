@@ -267,7 +267,7 @@ class IeeeProviderPdfGoldenTests(unittest.TestCase):
                 ) as mocked_direct,
                 mock.patch.object(
                     ieee_provider,
-                    "fetch_pdf_with_playwright",
+                    "fetch_pdf_with_browser",
                     return_value=browser_result,
                 ) as mocked_browser,
             ):
@@ -354,7 +354,7 @@ class IeeeProviderPdfGoldenTests(unittest.TestCase):
             ),
             mock.patch.object(
                 ieee_provider,
-                "fetch_pdf_with_playwright",
+                "fetch_pdf_with_browser",
                 side_effect=PdfFetchFailure(
                     "publisher_access_challenge",
                     "Browser PDF fallback reached an access or challenge page.",

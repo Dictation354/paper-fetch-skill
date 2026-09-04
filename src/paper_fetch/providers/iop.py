@@ -22,7 +22,6 @@ from ..extraction.html.provider_rules import (
 from ..models import AssetProfile
 from ..provider_catalog import BodyTextThresholds, ProviderRouteSpec, ProviderSpec
 from ..publisher_identity import normalize_doi
-from ..reason_codes import PDF_FALLBACK
 from ..runtime import RuntimeContext
 from ..utils import empty_asset_results, extend_unique, normalize_text
 from . import _iop_html, browser_workflow
@@ -102,7 +101,6 @@ _PROVIDER_SPEC = ProviderSpec(
 IOP_BROWSER_PROFILE = browser_workflow.make_browser_profile(
     "iop",
     catalog=_PROVIDER_SPEC,
-    article_source_name="iop_html",
     fallback_author_extractor=_iop_html.extract_authors,
     policy=browser_workflow.BrowserWorkflowPolicy(
         blocked_resource_types=("image", "font", "media"),
@@ -228,15 +226,6 @@ class IopClient(browser_workflow.BrowserWorkflowClient):
             final_url,
             metadata=metadata,
         )
-
-    def article_source_for_payload(self, raw_payload: RawFulltextPayload) -> str:
-        content = raw_payload.content
-        route = normalize_text(
-            content.route_kind if content is not None else ""
-        ).lower()
-        if route == PDF_FALLBACK:
-            return "iop_pdf"
-        return "iop_html"
 
     def _resolve_supplementary_data_assets(
         self,

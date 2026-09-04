@@ -522,21 +522,3 @@ def commit_staged_storage_state(
         result["reason"] = "save_failed"
         result["error"] = normalize_text(str(exc)) or exc.__class__.__name__
         return result
-
-
-def save_storage_state(
-    context: Any,
-    config: BrowserRuntimeConfig,
-    *,
-    filter_url: str | None = None,
-) -> dict[str, Any]:
-    stage, staged_result = stage_storage_state(
-        context,
-        config,
-        filter_url=filter_url,
-    )
-    if stage is None:
-        return staged_result
-    committed = commit_staged_storage_state(stage, config)
-    committed["borrowed_context"] = staged_result["borrowed_context"]
-    return committed

@@ -16,10 +16,9 @@ from ..mdpi_url import is_mdpi_url, mdpi_landing_url_from_doi
 from ..models import AssetProfile
 from ..provider_catalog import ProviderRouteSpec, ProviderSpec
 from ..publisher_identity import normalize_doi
-from ..reason_codes import PDF_FALLBACK
 from ..runtime import RuntimeContext
 from ..utils import empty_asset_results, normalize_text
-from . import _mdpi_html, browser_workflow
+from . import _mdpi_assets, _mdpi_authors, _mdpi_dom, _mdpi_markdown, browser_workflow
 from ._registry import ProviderBundle, ProviderRenderPolicy
 from .base import RawFulltextPayload
 from .browser_runtime import BrowserHtmlReadiness
@@ -73,8 +72,7 @@ _PROVIDER_SPEC = ProviderSpec(
 MDPI_BROWSER_PROFILE = browser_workflow.make_browser_profile(
     "mdpi",
     catalog=_PROVIDER_SPEC,
-    article_source_name="mdpi_html",
-    fallback_author_extractor=_mdpi_html.extract_authors,
+    fallback_author_extractor=_mdpi_authors.extract_authors,
     html_readiness=BrowserHtmlReadiness(wait_for_article_body=True),
     policy=browser_workflow.BrowserWorkflowPolicy(
         blocked_resource_types=("image", "font", "media"),
@@ -133,7 +131,7 @@ class MdpiClient(browser_workflow.BrowserWorkflowClient):
             metadata,
             str(metadata.get("doi") or normalized_doi or ""),
         )
-        pdf_from_landing = _mdpi_html.mdpi_pdf_url_from_landing_url(landing)
+        pdf_from_landing = _mdpi_assets.mdpi_pdf_url_from_landing_url(landing)
         if pdf_from_landing:
             candidates.append(pdf_from_landing)
         candidates.extend(_metadata_pdf_urls(metadata))
@@ -146,20 +144,11 @@ class MdpiClient(browser_workflow.BrowserWorkflowClient):
         *,
         metadata: Mapping[str, Any],
     ) -> tuple[str, dict[str, Any]]:
-        return _mdpi_html.extract_markdown(
+        return _mdpi_markdown.extract_markdown(
             html_text,
             final_url,
             metadata=metadata,
         )
-
-    def article_source_for_payload(self, raw_payload: RawFulltextPayload) -> str:
-        content = raw_payload.content
-        route = normalize_text(
-            content.route_kind if content is not None else ""
-        ).lower()
-        if route == PDF_FALLBACK:
-            return "mdpi_pdf"
-        return "mdpi_html"
 
     def download_related_assets(
         self,
@@ -185,7 +174,7 @@ class MdpiClient(browser_workflow.BrowserWorkflowClient):
         if not normalized_doi:
             return empty_asset_results()
         html_text = raw_payload.body.decode("utf-8", errors="replace")
-        assets = _mdpi_html.extract_scoped_html_assets(
+        assets = _mdpi_assets.extract_scoped_html_assets(
             html_text,
             raw_payload.source_url,
             asset_profile=asset_profile,
@@ -208,27 +197,27 @@ PROVIDER_BUNDLE = ProviderBundle(
     catalog=_PROVIDER_SPEC,
     html_rules=ProviderHtmlRules(
         name="mdpi",
-        noise_profile=_mdpi_html.MDPI_NOISE_PROFILE,
+        noise_profile=_mdpi_dom.MDPI_NOISE_PROFILE,
         cleanup=ProviderCleanupRules(
-            markdown_promo_tokens=_mdpi_html.MDPI_MARKDOWN_PROMO_TOKENS,
-            extraction_cleanup_selectors=_mdpi_html.MDPI_EXTRACTION_CLEANUP_SELECTORS,
-            post_content_break_tokens=_mdpi_html.MDPI_POST_CONTENT_BREAK_TOKENS,
+            markdown_promo_tokens=_mdpi_dom.MDPI_MARKDOWN_PROMO_TOKENS,
+            extraction_cleanup_selectors=_mdpi_dom.MDPI_EXTRACTION_CLEANUP_SELECTORS,
+            post_content_break_tokens=_mdpi_dom.MDPI_POST_CONTENT_BREAK_TOKENS,
         ),
         front_matter=ProviderFrontMatterRules(
-            exact_texts=_mdpi_html.MDPI_FRONT_MATTER_EXACT_TEXTS,
-            contains_tokens=_mdpi_html.MDPI_FRONT_MATTER_CONTAINS_TOKENS,
+            exact_texts=_mdpi_dom.MDPI_FRONT_MATTER_EXACT_TEXTS,
+            contains_tokens=_mdpi_dom.MDPI_FRONT_MATTER_CONTAINS_TOKENS,
             publication_keywords=("mdpi",),
         ),
         assets=ProviderAssetRules(
-            supplementary_text_tokens=_mdpi_html.MDPI_SUPPLEMENTARY_TEXT_TOKENS,
+            supplementary_text_tokens=_mdpi_dom.MDPI_SUPPLEMENTARY_TEXT_TOKENS,
         ),
         availability=AvailabilityPolicy(
             name="mdpi",
-            site_rule_overrides=_mdpi_html.MDPI_SITE_RULE_OVERRIDES,
+            site_rule_overrides=_mdpi_dom.MDPI_SITE_RULE_OVERRIDES,
         ),
     ),
     sources=("mdpi_html", "mdpi_pdf"),
     render_policy=ProviderRenderPolicy(
-        mark_inline_assets=_mdpi_html.mark_inline_assets,
+        mark_inline_assets=_mdpi_assets.mark_inline_assets,
     ),
 )

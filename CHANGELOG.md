@@ -6,6 +6,10 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+### Changed — browser runtime API
+
+- Removed the unused eager `browser_runtime.save_storage_state` facade and its backend/path forwarding chain. Browser fetch and preflight continue to stage provider-scoped state and atomically commit it only after acceptance.
+
 ## 6.1.2 - 2026-09-03
 
 ### Fixed — asset completeness and provider pagination

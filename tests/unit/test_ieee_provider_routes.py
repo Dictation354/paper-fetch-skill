@@ -1572,7 +1572,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
             ),
             mock.patch.object(
                 ieee_provider,
-                "fetch_pdf_with_playwright",
+                "fetch_pdf_with_browser",
                 side_effect=PdfFetchFailure(
                     "publisher_access_challenge", "Browser PDF reached an access page."
                 ),

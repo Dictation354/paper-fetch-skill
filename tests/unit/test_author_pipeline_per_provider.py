@@ -8,7 +8,7 @@ import pytest
 from paper_fetch.providers import (
     _arxiv_authors,
     _arxiv_html,
-    _ams_html,
+    _ams_authors,
     _ieee_metadata,
     _pnas_html,
     _science_html,
@@ -75,7 +75,7 @@ def _jsonld(payload: object) -> str:
             ["Wiley Meta"],
         ),
         (
-            _ams_html.extract_authors,
+            _ams_authors.extract_authors,
             """
             <html>
               <head><meta name="citation_author" content="AMS Meta"></head>
@@ -154,12 +154,12 @@ def test_provider_author_pipelines_stop_on_first_non_empty_step(
             ["Wiley DOM Fallback"],
         ),
         (
-            _ams_html.extract_authors,
+            _ams_authors.extract_authors,
             '<div property="author"><span property="name">AMS Property</span></div>',
             ["AMS Property"],
         ),
         (
-            _ams_html.extract_authors,
+            _ams_authors.extract_authors,
             '<div class="authors"><a>AMS Selector Fallback</a></div>',
             ["AMS Selector Fallback"],
         ),

@@ -597,7 +597,7 @@ metadata
 - 这条规则约束的是：标题、节标题、frontmatter、正文段落、图表 caption 和 Markdown 表格单元格里已经识别出的上下标、斜体变量、变量下标和 inline MathML operator，必须先保留为 text / citation / sup-sub / math / br 等结构化 inline token，再由 shared joiner 或 provider-owned inline renderer 统一决定空格；不能在清洗或渲染时被打平成普通空格文本，也不能被错误地拆成断开的 token。行内 HTML spacing 只在 citation、括号脚注和高置信 symbol-shape tight 场景收紧，默认保留 prose 空格。
 - 如果违反，用户会看到：`CO<sub>2</sub>` 变成 `CO 2`、`TCID<sub>50</sub>` 变成 `TCID50`，`of <sup>6</sup>Li` 变成 `of<sup>6</sup>Li`，`*h*<sub>0</sub>` 变成 `h0`，或者 `*x*` 和 `<sub>i</sub>` 被拆散到两行，看起来像坏标题、坏表格或坏公式。
 - 它对应的阶段是：`html-cleanup`、`table-rendering`、`markdown-normalization`、`final-rendering`。
-- Owner：`paper_fetch.extraction.html.inline`；AMS 覆盖由 `paper_fetch.providers._ams_html` compatibility facade 暴露，canonical owner 是 `paper_fetch.providers._ams_dom` / `paper_fetch.providers._ams_markdown`。
+- Owner：`paper_fetch.extraction.html.inline`；AMS 覆盖的 canonical owner 是 `paper_fetch.providers._ams_dom` / `paper_fetch.providers._ams_markdown`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1126_science.abp8622/original.html`](../tests/fixtures/golden_criteria/10.1126_science.abp8622/original.html)
   - 这个样本能证明 frontmatter / summary / main text 里的 `CO<sub>2</sub>` 和 `log<sub>10</sub>` 需要保持原有上下标语义。
@@ -634,7 +634,7 @@ metadata
 - 这条规则约束的是：AMS/BAMS HTML 中 `.footnoteGroup` 里的正文脚注要作为正文说明区的一部分集中输出，而不是在正文末尾散落成无标题 URL 或孤立段落。正文中的 `<sup>n</sup>` 标记必须保留，脚注条目使用 `<sup>n</sup> text`。
 - 如果违反，用户会看到：正文出现 `<sup>1</sup>` 但找不到对应脚注，或者 `https://www.top500.org.`、`https://git-scm.com/docs.` 这类脚注 URL 直接漂在 Acknowledgments 前面。
 - 它对应的阶段是：`html-cleanup`、`markdown-normalization`。
-- Owner：`paper_fetch.providers._ams_html` compatibility facade；canonical owner 是 `paper_fetch.providers._ams_dom` / `paper_fetch.providers._ams_markdown`。
+- Owner：`paper_fetch.providers._ams_dom` / `paper_fetch.providers._ams_markdown`。
 - 代表性 HTML：
   - [`../tests/fixtures/golden_criteria/10.1175_bams-d-24-0223.1/original.html`](../tests/fixtures/golden_criteria/10.1175_bams-d-24-0223.1/original.html)
 - 边界说明：
@@ -727,7 +727,7 @@ metadata
 - 这条规则约束的是：Springer / Springer Nature HTML 提取必须先选到可信 article root，再剪掉保存文章、期刊 CTA、Aims and scope、Submit manuscript、重复标题块、`About this article` / 权限许可等站点 chrome；正文之外的科学 back matter 只保留 `Acknowledgements`、`Data Availability`、`Author Contributions` 这类论文内容节。
 - 如果违反，用户会看到：多语言摘要和正文之间插入 `Save article`、`View saved research`、重复论文标题或 Creative Commons 许可长文。
 - 它对应的阶段是：`provider-html-or-xml-extraction`、`html-cleanup`、`section-classification`。
-- Owner：`paper_fetch.extraction.html.renderer`、`paper_fetch.providers.html_springer_nature`、`paper_fetch.providers._springer_html` compatibility facade 与 canonical `paper_fetch.providers._springer_dom` / `paper_fetch.providers._springer_markdown`。
+- Owner：`paper_fetch.extraction.html.renderer`、`paper_fetch.providers.html_springer_nature` 与 `paper_fetch.providers._springer_dom` / `paper_fetch.providers._springer_markdown`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1007_s10584-011-0143-4/article.html`](../tests/fixtures/golden_criteria/10.1007_s10584-011-0143-4/article.html)
   - [`../tests/fixtures/golden_criteria/10.1007_s13158-025-00473-x/bilingual.html`](../tests/fixtures/golden_criteria/10.1007_s13158-025-00473-x/bilingual.html)
@@ -757,7 +757,7 @@ metadata
 - 这条规则约束的是：Nature HTML 的 `div.main-content` 不能只因为存在直接 `section` 就只渲染这些 `section`；必须按直接子节点顺序处理正文 `div.c-article-section__content`、可渲染正文 `div` 和 `section`，否则 Matters Arising 这类页面会把正文段落漏掉，只剩 `Reporting summary`。
 - 如果违反，用户会看到：`Forest age and water yield` 这类文章缺少真正正文，只剩 `Reporting summary` / Extended Data Table 占位，`Data availability` 也可能被错误地当成唯一正文。
 - 它对应的阶段是：`provider-html-or-xml-extraction`、`section-classification`。
-- Owner：`paper_fetch.providers.html_springer_nature`、`paper_fetch.providers._springer_html` compatibility facade 与 canonical `paper_fetch.providers._springer_dom`。
+- Owner：`paper_fetch.providers.html_springer_nature` 与 `paper_fetch.providers._springer_dom`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1038_s41586-020-1941-5/original.html`](../tests/fixtures/golden_criteria/10.1038_s41586-020-1941-5/original.html)
   - [`../tests/fixtures/golden_criteria/_scenarios/springer_main_content_direct_children/original.html`](../tests/fixtures/golden_criteria/_scenarios/springer_main_content_direct_children/original.html)
@@ -774,7 +774,7 @@ metadata
 - 这条规则约束的是：publisher 页面用来告诉用户“这里只是预览”“这是访问提示”“这段 alt 可能由 AI 生成”的站点说明，不能被当成论文正文或摘要输出。
 - 如果违反，用户会看到：摘要或正文里多出 `This is a preview of subscription content`、`The alternative text for this image may have been generated using AI.` 这类明显不是论文内容的提示句。
 - 它对应的阶段是：`html-cleanup`、`markdown-normalization`。
-- Owner：`paper_fetch.providers.html_springer_nature`、`paper_fetch.providers._springer_html`、`paper_fetch.providers._springer_dom` / `paper_fetch.providers._springer_markdown` 与 `paper_fetch.extraction.html._runtime`。
+- Owner：`paper_fetch.providers.html_springer_nature`、`paper_fetch.providers._springer_dom` / `paper_fetch.providers._springer_markdown` 与 `paper_fetch.extraction.html._runtime`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/block/10.1007_s00382-018-4286-0/raw.html`](../tests/fixtures/block/10.1007_s00382-018-4286-0/raw.html)
   - [`../tests/fixtures/golden_criteria/10.1038_s44221-022-00024-x/original.html`](../tests/fixtures/golden_criteria/10.1038_s44221-022-00024-x/original.html)
@@ -789,7 +789,7 @@ metadata
 - 这条规则约束的是：图已经有正式图题或图注时，渲染链必须优先使用这些正式内容，不能再把站点塞进来的 `data-title`、`alt`、朗读文本、下载入口和展示控件重新拼回图注里。
 - 如果违反，用户会看到：同一张图的标题后面又多出一段重复、破碎或格式错乱的说明，常见表现是残留的 LaTeX、拆开的希腊字母、重复 caption、`PowerPoint slide` 或 `Full size image`。
 - 它对应的阶段是：`asset-discovery`、`final-rendering`。
-- Owner：`paper_fetch.providers._springer_html` compatibility facade、canonical `paper_fetch.providers._springer_dom` / `paper_fetch.providers._springer_assets` / `paper_fetch.providers._springer_markdown` 与 `paper_fetch.providers.html_springer_nature`。
+- Owner：`paper_fetch.providers._springer_dom` / `paper_fetch.providers._springer_assets` / `paper_fetch.providers._springer_markdown` 与 `paper_fetch.providers.html_springer_nature`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1038_nature12915/original.html`](../tests/fixtures/golden_criteria/10.1038_nature12915/original.html)
   - [`../tests/fixtures/golden_criteria/10.1038_nature13376/original.html`](../tests/fixtures/golden_criteria/10.1038_nature13376/original.html)
@@ -805,7 +805,7 @@ metadata
 - 这条规则约束的是：早期 Nature 文章里如果同时存在 `Methods Summary` 和 `Online Methods` / 早期方法结构证据，最终结构必须归一成“`Methods Summary` 一次、`Methods` 一次”，不能重复堆出两个同义方法章节。
 - 如果违反，用户会看到：文档里出现两个 `Methods Summary`，或者 `Online Methods`、`Methods` 混着出现，方法学结构会看起来像重复拼装。
 - 它对应的阶段是：`provider-html-or-xml-extraction`、`article-assembly`、`final-rendering`。
-- Owner：`paper_fetch.providers._springer_html` compatibility facade、canonical `paper_fetch.providers._springer_assets` / `paper_fetch.providers._springer_markdown` 与 `paper_fetch.models.ArticleModel`。
+- Owner：`paper_fetch.providers._springer_assets` / `paper_fetch.providers._springer_markdown` 与 `paper_fetch.models.ArticleModel`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1038_nature12915/original.html`](../tests/fixtures/golden_criteria/10.1038_nature12915/original.html)
   - 这个样本能证明早期 Nature 的 `Methods Summary` 与 `Online Methods` 需要按正文结构归一处理。
@@ -820,7 +820,7 @@ metadata
 - 这条规则约束的是：正文里如果先放了一个 table 占位，后续拿到 table page 时要把真实表格插回原位置；如果 table page 最终没拿到真正的表，也不能把内部占位符直接漏给用户。对于 Springer/Nature inline table 节点，只要 label 是 `Extended Data Table N` 且存在匹配的 `/tables/N` 页面链接，若 table page 实际是图片响应或只能从 HTML 中提取 full-size image，应输出 `kind="table"` 的 table 图片资产；若解析失败，应输出明确的 `[Table body unavailable: ...]` 降级占位。
 - 如果违反，用户会看到：正文里残留像 `PAPER_FETCH_TABLE_PLACEHOLDER` 这样的内部标记，Extended Data Table 直接消失，或者文章因为某个 table page 没拿到表就整体变成异常结果。
 - 它对应的阶段是：`provider-html-or-xml-extraction`、`table-rendering`、`asset-discovery`、`final-rendering`。
-- Owner：`paper_fetch.providers.springer`、`paper_fetch.providers._springer_html` compatibility facade、canonical `paper_fetch.providers._springer_assets` 与 `paper_fetch.extraction.html.tables`。
+- Owner：`paper_fetch.providers.springer`、`paper_fetch.providers._springer_assets` 与 `paper_fetch.extraction.html.tables`。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/original.html`](../tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/original.html)
   - [`../tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/table1.html`](../tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/table1.html)
@@ -1124,7 +1124,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 - AMS figure 资产候选必须优先使用源 HTML 的 `Download Figure` EPS/TIFF 链接，并保留网页 full-size JPG/PNG 作为回退；PowerPoint 下载项不是图片资产。EPS/TIFF 下载请求必须继承浏览器 UA/Referer，下载成功后应通过图片转换后端转成 PNG 用于 Markdown，本地同时保留原始源文件和转换元数据。
 - 如果违反，用户会看到：BAMS 正文在 section 2 后提前截断，图表只剩文末附录或只剩 `Table 1.` 文本无图片，`Fig . 1.` 这类标签噪声泄漏，同一公式同时出现 LaTeX 和粘连的可见 fallback 文本，`UE1` 被误渲染成重复的 `Equation 1.`，或者 caption 里出现 `ϕ 2`、正文里出现 `νn` / `</sub>(i.e.` 这类行内语义退化。
 - 它对应的阶段是：`provider-html-or-xml-extraction`、`asset-discovery`、`asset-link-rewrite`、`formula-rendering`、`final-rendering`。
-- Owner：`paper_fetch.providers._ams_html` compatibility facade、canonical `paper_fetch.providers._ams_dom` / `paper_fetch.providers._ams_assets` / `paper_fetch.providers._ams_markdown`、`paper_fetch.providers.atypon_browser_workflow`、`paper_fetch.extraction.html.figure_links` 与 `paper_fetch.models.render`。
+- Owner：`paper_fetch.providers._ams_dom` / `paper_fetch.providers._ams_assets` / `paper_fetch.providers._ams_markdown`、`paper_fetch.providers.atypon_browser_workflow`、`paper_fetch.extraction.html.figure_links` 与 `paper_fetch.models.render`。
 - 代表性 HTML：
   - [`../tests/fixtures/golden_criteria/10.1175_bams-d-24-0223.1/original.html`](../tests/fixtures/golden_criteria/10.1175_bams-d-24-0223.1/original.html)
   - [`../tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/original.html`](../tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/original.html)
@@ -1155,7 +1155,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 - 这条规则约束的是：MDPI figure、table、HTML `<table>` 和正文中的 inline figure asset 必须在 DOM 阶段按正文首次 `Figure N` / `Fig. N` / `Table N` 引用附近回填；已经插入正文的 display object 不得在 Conclusions 后或尾部 appendix 再次出现；未引用对象只按源顺序插入 References 前；Markdown image alt 只能使用短标签，caption 不得写入 `![alt]` 并破坏 Markdown 语法。
 - 如果违反，用户会看到：figure/table 统一落在文末，正文引用后没有可见对象，裸 `Figure 1.` / `Table 1.` 与完整 caption 重复，HTML table 被拆成散乱字段，或者带 `[AO10]` 的 caption 进入图片 alt 导致 Markdown 图片语法异常。
 - 它对应的阶段是：`provider-html-or-xml-extraction`、`table-rendering`、`asset-discovery`、`asset-link-rewrite`、`final-rendering`。
-- Owner：`paper_fetch.providers._mdpi_html` compatibility facade、canonical `paper_fetch.providers._mdpi_dom` / `paper_fetch.providers._mdpi_assets` / `paper_fetch.providers._mdpi_markdown` 与 `paper_fetch.models.render`。
+- Owner：`paper_fetch.providers._mdpi_dom` / `paper_fetch.providers._mdpi_assets` / `paper_fetch.providers._mdpi_markdown` 与 `paper_fetch.models.render`。
 - 代表性 HTML：
   - [`../tests/fixtures/golden_criteria/10.3390_su12072826/original.html`](../tests/fixtures/golden_criteria/10.3390_su12072826/original.html)
   - [`../tests/fixtures/golden_criteria/10.3390_rs16010010/original.html`](../tests/fixtures/golden_criteria/10.3390_rs16010010/original.html)
@@ -1170,7 +1170,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 - 这条规则约束的是：MDPI MathML 必须进入共享 MathML -> LaTeX 转换链路；`.html-disp-formula-info` 和 `math[display=block]` 渲染成 `$$ ... $$` Markdown 块并保留源站 `(1)` / `(2)` 编号；段落内 inline 公式、变量、上下标和 `html-italic` / `html-bold` 样式 wrapper 必须保持行内；没有 MathML 的 HTML-only 化学式 / 反应式必须保留 `<sub>` / `<sup>` 语义并压缩成单个公式块。
 - 如果违反，用户会看到：`lnYit=β0+∑...` / `∂Ci∂t=...` 被压成无 LaTeX 分隔符的 Unicode 拼接文本，`where L is ...` / `C is a modelling constant` / `ω<sub>eng</sub> is ...` 被空行切成独立 `L`、`C`、`<sup>−1</sup>` 段，HTML-only 公式出现 `IO`、`<sub>4</sub>`、`<sup>−</sup>` 独立碎片行，或可解析公式输出 `[Formula unavailable]`。
 - 它对应的阶段是：`provider-html-or-xml-extraction`、`html-cleanup`、`formula-rendering`、`markdown-normalization`。
-- Owner：`paper_fetch.providers._mdpi_html` compatibility facade、canonical `paper_fetch.providers._mdpi_dom` / `paper_fetch.providers._mdpi_markdown` 与 `paper_fetch.extraction.html.formula_rules`。
+- Owner：`paper_fetch.providers._mdpi_dom` / `paper_fetch.providers._mdpi_markdown` 与 `paper_fetch.extraction.html.formula_rules`。
 - 代表性 HTML：
   - [`../tests/fixtures/golden_criteria/10.3390_math11030657/original.html`](../tests/fixtures/golden_criteria/10.3390_math11030657/original.html)
   - [`../tests/fixtures/golden_criteria/10.3390_w15040758/original.html`](../tests/fixtures/golden_criteria/10.3390_w15040758/original.html)
@@ -1185,7 +1185,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 - 这条规则约束的是：MDPI reference `li data-content` 里的出版社编号必须写回 raw citation，并在最终 References 中保留为编号列表；Google Scholar / CrossRef / PubMed / Green Version 等 UI 链接不能进入 Markdown 或 reference raw text；全文 references 优先于 metadata / Crossref fallback。
 - 如果违反，用户会看到：参考文献从 `1.` / `2.` 编号退化成 bullet，被 `[ Google Scholar ]`、`[ CrossRef ]`、`[ PubMed ]` 或 Green Version 链接打断，或者 provider 已解析的全文 reference 被 metadata fallback 覆盖。
 - 它对应的阶段是：`provider-html-or-xml-extraction`、`html-cleanup`、`references-rendering`、`final-rendering`。
-- Owner：`paper_fetch.providers._mdpi_html` compatibility facade、canonical `paper_fetch.providers._mdpi_references` / `paper_fetch.providers._mdpi_markdown` 与 `paper_fetch.models.render`。
+- Owner：`paper_fetch.providers._mdpi_references` / `paper_fetch.providers._mdpi_markdown` 与 `paper_fetch.models.render`。
 - 代表性 HTML：
   - [`../tests/fixtures/golden_criteria/10.3390_w15040758/original.html`](../tests/fixtures/golden_criteria/10.3390_w15040758/original.html)
 - 边界说明：
@@ -1198,7 +1198,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 - 这条规则约束的是：MDPI selected-browser HTML 只能从 article container 中抽取题名、摘要、正文 section、references、figures、tables、formula 和明确 supplementary section；article menu、下载按钮、分享/引用/metrics、SciProfiles 等站点 chrome 不能进入最终 Markdown，也不能通过全页后缀扫描把正文外链接误判为 supplementary；`#html-keywords` 只进入 `metadata.keywords`，不能进入 Abstract 或独立 Markdown section。
 - 如果违反，用户会看到：`Browse Figures`、`Download PDF`、`Article Metrics`、`Share and Cite` 等站点 chrome 混入正文，摘要标题后的单独冒号或 `Keywords:` 残留到正文，`data-nested="2"` 的小节被错误渲染成四级 heading，或者 `asset_profile=body` 下载到正文 scope 外的 supplementary 文件。
 - 它对应的阶段是：`provider-html-or-xml-extraction`、`html-cleanup`、`asset-discovery`、`markdown-normalization`。
-- Owner：`paper_fetch.providers._mdpi_html` compatibility facade；canonical owner 是 `paper_fetch.providers._mdpi_dom` / `paper_fetch.providers._mdpi_assets` / `paper_fetch.providers._mdpi_markdown`。
+- Owner：`paper_fetch.providers._mdpi_dom` / `paper_fetch.providers._mdpi_assets` / `paper_fetch.providers._mdpi_markdown`。
 - 代表性 HTML：
   - [`../tests/fixtures/golden_criteria/10.3390_membranes15030093/original.html`](../tests/fixtures/golden_criteria/10.3390_membranes15030093/original.html)
   - [`../tests/fixtures/golden_criteria/10.3390_s23010001/original.html`](../tests/fixtures/golden_criteria/10.3390_s23010001/original.html)

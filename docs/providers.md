@@ -52,9 +52,9 @@ Browser HTML/PDF fallback、HTTP streaming 和 HTML assets 的高参数入口内
 - 尤其 `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` / `tandf` 的浏览器与 PDF/ePDF 路径，仍受 publisher 访问权限、paywall/challenge 与远端站点行为影响。
 - Provider/source/domain/API/fallback marker、候选 URL 模板、HTML artifact 持久化、XML provider 推断与正文阈值的事实来源是 `paper_fetch.provider_catalog.ProviderSpec`。`SOURCE_PROVIDER_MAP` 登记实际 envelope / `ArticleModel.source` 值；例如 Springer HTML / PDF fallback 分别公开 `springer_html` / `springer_pdf`，二者都映射到 `springer` provider。
 - MCP 宿主不应从工具 description 或本文抽取名单；请通过 `resources/list` 发现并用 `resources/read` 读取静态 `resource://paper-fetch/provider-catalog`。该 JSON 直接从启动时构造的不可变 runtime `ProviderBundle`/catalog 投影，包含 provider/source、逐 route transport/timeout/concurrency/QPS/retry/acceptance/assets、status/preflight 能力和资产默认值；它不是本地就绪或远端可访证明。
-- `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `royalsocietypublishing` / `acs` / `iop` / `aip` / `mdpi` / `tandf` 只保留一套 provider-owned 浏览器栈，canonical runtime 是 `paper_fetch.providers.browser_workflow` 包入口。
-- browser workflow 的 bootstrap、PDF/ePDF fallback、article assembly、asset retry helper、client 基类和 browser fetchers 由 `browser_workflow/` 子包维护；storage-state 默认面向 provider catalog 中的浏览器 provider。
-- publisher 差异通过各 provider 模块 callback 下沉；browser-PDF executor 继续共享 `_pdf_fallback`，公开入口使用 `browser_workflow` 包。
+- `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `royalsocietypublishing` / `acs` / `iop` / `aip` / `mdpi` / `tandf` 共用一套 provider-owned 浏览器栈。`paper_fetch.providers.browser_workflow` 包入口只聚合 provider 直接使用的 profile、client、工作流函数和少量测试 seam；具体实现的 canonical owner 是对应子模块。
+- browser workflow 的 bootstrap、PDF/ePDF fallback、article assembly、asset retry helper、client 基类和 browser fetchers 分别由 `browser_workflow/` 下的对应子模块维护；storage-state 默认面向 provider catalog 中的浏览器 provider。
+- publisher 差异通过各 provider 模块 callback 下沉；browser-PDF executor 继续共享 `_pdf_fallback`。内部 helper 应从 `browser_workflow` 对应子模块导入，不属于包入口公开契约。
 - browser-workflow 的 HTML bootstrap 通过 `RuntimeContext` 复用所选 backend manager；每次操作使用隔离 context，Camoufox 同步对象保持 caller-thread 绑定。
 - Live smoke 与 provider regression 的代表性 DOI 由 `tests/provider_benchmark_samples.py` 和 golden fixture manifest 维护；它们不构成第二套运行时能力 catalog。
 
@@ -153,7 +153,7 @@ resolve DOI / landing URL
 
 - 路由信号来自 `www.mdpi.com` / `mdpi.com` 域名、Crossref publisher alias `MDPI AG`，以及 DOI prefix `10.3390/`。MDPI 经典数字 article URL 会在解析阶段按 provider-owned ISSN 映射推导 DOI（例如 `2072-4292/18/10/1673` -> `10.3390/rs18101673`），MDPI DOI / DOI URL 会在 provider 阶段反推对应数字 article URL，这样已知期刊 URL 不需要先用普通 HTTP 抓 landing page，Crossref landing 缺失时也不只剩 `doi.org` 候选。
 - HTML 成功公开 `source="mdpi_html"`；PDF fallback 成功公开 `source="mdpi_pdf"`。
-- MDPI HTML cleanup 由 `paper_fetch.providers._mdpi_html` compatibility facade 暴露，canonical owner 分拆到 `_mdpi_dom`、`_mdpi_markdown`、`_mdpi_assets`、`_mdpi_authors` 和 `_mdpi_references`，去掉页面导航、SciProfiles 弹层、分享/引用/metrics chrome、Google Scholar / CrossRef / PubMed / Green Version reference linkout UI，同时保留正文 section、references、figures、tables、formula 和 supplementary section；MDPI reference `li data-content` 中的出版社编号会写回 raw citation，使最终 References 保持编号列表。HTML MathML 在该阶段复用共享转换器输出 `$...$` / `$$...$$` LaTeX Markdown，并保留源站公式编号。`.html-disp-formula-info` / `math[display=block]` 保持 display 公式块；段落内只承载变量、inline MathML、citation、`<sub>` / `<sup>` 或 `html-italic` / `html-bold` 的 MDPI wrapper 会转为 inline，避免变量解释被空行切碎。没有 MathML 的 HTML-only 化学式 / 反应式会保留 `<sub>` / `<sup>` 行内语义，压缩成单个公式块，不输出碎片行。
+- MDPI HTML cleanup 的 canonical owner 分拆到 `_mdpi_dom`、`_mdpi_markdown`、`_mdpi_assets`、`_mdpi_authors` 和 `_mdpi_references`，去掉页面导航、SciProfiles 弹层、分享/引用/metrics chrome、Google Scholar / CrossRef / PubMed / Green Version reference linkout UI，同时保留正文 section、references、figures、tables、formula 和 supplementary section；MDPI reference `li data-content` 中的出版社编号会写回 raw citation，使最终 References 保持编号列表。HTML MathML 在该阶段复用共享转换器输出 `$...$` / `$$...$$` LaTeX Markdown，并保留源站公式编号。`.html-disp-formula-info` / `math[display=block]` 保持 display 公式块；段落内只承载变量、inline MathML、citation、`<sub>` / `<sup>` 或 `html-italic` / `html-bold` 的 MDPI wrapper 会转为 inline，避免变量解释被空行切碎。没有 MathML 的 HTML-only 化学式 / 反应式会保留 `<sub>` / `<sup>` 行内语义，压缩成单个公式块，不输出碎片行。
 - MDPI HTML renderer 会把正文 figure / table display object 按正文首次 `Figure N` / `Fig. N` / `Table N` 引用锚定；无正文引用的对象按源顺序插入 References 前。caption、label 和 popup display 副本在 DOM 阶段去重，避免裸 `Figure N.` / `Table N.` 或重复 caption 泄漏到 Markdown。
 - MDPI HTML `<table>` 复用共享 HTML table renderer 输出 Markdown table；复杂表格展不平时降级为单个去重文本块，不拆成散乱字段。正文 figure / table / formula 图片统一使用短 alt Markdown 图片行，例如 `![Figure 1](...)`；完整 caption 只保留在下一段或结构化表格标题中。
 - MDPI `#html-keywords` 会写入 extraction payload 的 `keywords` 并合并进 `metadata.keywords`，不会作为独立 Markdown section，也不会混入 Abstract。
@@ -296,7 +296,7 @@ resolve
   - 对外 provider/source 保持 `springer`、`springer_html`、`springer_pdf` 不变；内部先用 `springer_site_family_profile()` 将 route 分类为 `nature`、`springerlink` 或 `bmc`，并把 family 写入 diagnostics，避免三类站点逻辑继续以隐式条件混合。
   - HTML 成功时公开 `source="springer_html"`；PDF fallback 成功时公开 `source="springer_pdf"`。
   - Nature/Springer 的 `Client Challenge` 与 `_fs-ch-` 壳页按 access boundary fail closed，不会生成 provisional abstract/metadata article；若 direct PDF 也不可用，最终保留 `no_access`。
-  - Springer HTML cleanup / payload 由 `paper_fetch.providers._springer_html` compatibility facade 暴露；canonical owner 拆到 `_springer_dom`、`_springer_markdown`、`_springer_assets`、`_springer_authors` 和 `_springer_references`。
+  - Springer 生产路径直接调用 canonical split owner：DOM/metadata、payload/Markdown、assets、authors 分别由 `_springer_dom`、`_springer_markdown`、`_springer_assets`、`_springer_authors` 负责，通用编号引用由 `_html_references` 负责。`_springer_html` 仅保留静态 compatibility re-export，不承担编排或 patch seam。
 - `wiley`
   - 使用 provider 自管 HTML + 官方 API PDF + publisher PDF/ePDF waterfall。
   - 固定顺序是 `selected-browser HTML -> browser-seeded publisher PDF/ePDF -> Wiley TDM API PDF -> abstract-only / metadata-only`。

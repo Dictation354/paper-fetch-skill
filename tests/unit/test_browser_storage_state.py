@@ -7,10 +7,13 @@ from unittest import mock
 
 from filelock import Timeout as FileLockTimeout
 
+from paper_fetch.providers import browser_runtime
+from paper_fetch.providers.browser_runtime import api as browser_runtime_api
 from paper_fetch.providers.browser_runtime.paths import (
     commit_staged_storage_state,
     stage_storage_state,
 )
+from paper_fetch.providers.browser_runtime.backends.camoufox import CamoufoxBackend
 from paper_fetch.providers.browser_runtime import paths as storage_paths
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.providers.browser_runtime.types import (
@@ -40,6 +43,14 @@ def _config(tmp_path: Path) -> BrowserRuntimeConfig:
 
 def _cookie(name: str, value: str, domain: str) -> dict[str, str]:
     return {"name": name, "value": value, "domain": domain, "path": "/"}
+
+
+def test_storage_state_write_contract_is_explicitly_staged_then_committed() -> None:
+    assert "save_storage_state" not in browser_runtime.__all__
+    assert not hasattr(browser_runtime, "save_storage_state")
+    assert not hasattr(browser_runtime_api, "save_storage_state")
+    assert not hasattr(CamoufoxBackend(), "save_storage_state")
+    assert not hasattr(storage_paths, "save_storage_state")
 
 
 def test_storage_state_stage_does_not_modify_existing_file(tmp_path: Path) -> None:

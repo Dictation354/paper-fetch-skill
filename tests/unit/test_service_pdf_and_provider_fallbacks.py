@@ -565,21 +565,23 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
             }
         )
         original_resolve = paper_fetch.resolve_paper
-        original_extract = springer_html_helper.extract_article_markdown
+        original_extract = springer_markdown_helper.extract_article_markdown
         try:
             paper_fetch.resolve_paper = lambda *args, **kwargs: resolved
-            springer_html_helper.extract_article_markdown = lambda html, url: "\n".join(
-                [
-                    "# HTML Springer Article",
-                    "",
-                    "## Introduction",
-                    ("Important body text for HTML fallback. " * 30).strip(),
-                    "",
-                    "## Results",
-                    ("More important body text for HTML fallback. " * 30).strip(),
-                    "",
-                    "**Figure 1.** Figure showing a woodland canopy.",
-                ]
+            springer_markdown_helper.extract_article_markdown = lambda html, url: (
+                "\n".join(
+                    [
+                        "# HTML Springer Article",
+                        "",
+                        "## Introduction",
+                        ("Important body text for HTML fallback. " * 30).strip(),
+                        "",
+                        "## Results",
+                        ("More important body text for HTML fallback. " * 30).strip(),
+                        "",
+                        "**Figure 1.** Figure showing a woodland canopy.",
+                    ]
+                )
             )
             with tempfile.TemporaryDirectory() as tmpdir:
                 article = fetch_paper_model(
@@ -620,7 +622,7 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
                 self.assertNotIn("## Figures", markdown)
         finally:
             paper_fetch.resolve_paper = original_resolve
-            springer_html_helper.extract_article_markdown = original_extract
+            springer_markdown_helper.extract_article_markdown = original_extract
 
         self.assertIn("fulltext:springer_html_ok", article.quality.source_trail)
         self.assertIn(
