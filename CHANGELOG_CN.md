@@ -6,9 +6,19 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
-### 变更——浏览器运行时 API
+## 6.1.3 - 2026-09-04
 
+### 变更——provider 与 browser 所有权
+
+- 文章来源 provenance 现在读取 catalog 中各 route 显式声明的 source：优先按精确 route name 选择，并兼容只携带 route kind 的 PDF recovery payload。ACS、Science、PNAS 的通用 source 与 Wiley 共用的 browser source 保持不变。
+- Browser landing page、provider 与资产 URL 检查统一复用 catalog hostname matcher，同时保留 provider domain、route host、候选构造集合及 MDPI/Frontiers 精确网络边界的不同语义。
+- 删除 AMS/MDPI HTML compatibility facade、Springer 专用引用再导出、15 个无人消费的 browser-workflow 根私有导出、旧 Playwright 命名 PDF alias，以及两个未使用的 fast-browser wrapper。保留的 Springer facade 现在是静态兼容导出，调用时不再改写 canonical extraction 模块。
 - 删除未使用的即时 `browser_runtime.save_storage_state` facade 及其 backend/path 转发链。Browser fetch 与 preflight 仍会先暂存 provider 范围内的状态，并且只在验收通过后原子提交。
+
+### 变更——schema 与仓库维护
+
+- MCP request schema 现在让 fetch、batch、cache 与 browser-preflight 路径字段复用同一个精确 optional-string 规范化 helper；路径值仍只去除首尾空白。同时删除 article-source rendering 中返回值相同的无效分支。
+- 删除 240 个已跟踪的一次性 live 调查产物。维护者 live 验证改写到被忽略的 `failures/` scope；长期仓外保留只需 JUnit 与 `live-acceptance.json`，IEEE 受保护资产专项再保留 `asset-hashes.json`。
 
 ## 6.1.2 - 2026-09-03
 

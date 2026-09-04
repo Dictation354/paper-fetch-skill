@@ -6,9 +6,19 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
-### Changed — browser runtime API
+## 6.1.3 - 2026-09-04
 
+### Changed — provider and browser ownership
+
+- Article provenance now resolves from each catalog route's declared source, with exact route-name selection and a compatibility path for PDF recovery payloads that only identify the route kind. Existing generic ACS, Science, and PNAS sources and the shared Wiley browser source remain unchanged.
+- Browser landing-page, provider, and asset URL checks now reuse the catalog hostname matcher while preserving the distinct provider-domain, route-host, candidate-construction, and exact MDPI/Frontiers network boundaries.
+- Removed the AMS and MDPI HTML compatibility facades, the Springer-only reference re-export, fifteen unconsumed private browser-workflow root exports, the legacy Playwright-named PDF alias, and two unused fast-browser wrappers. The remaining Springer facade is now a static compatibility export and no longer mutates canonical extraction modules when called.
 - Removed the unused eager `browser_runtime.save_storage_state` facade and its backend/path forwarding chain. Browser fetch and preflight continue to stage provider-scoped state and atomically commit it only after acceptance.
+
+### Changed — schema and repository maintenance
+
+- MCP request schemas now share one exact optional-string normalization helper across fetch, batch, cache, and browser-preflight path fields; path values still trim only leading and trailing whitespace. Removed an equivalent no-op article-source rendering branch.
+- Removed 240 tracked one-off live investigation artifacts. Maintainer live verification now writes to the ignored `failures/` scope; only JUnit and `live-acceptance.json` need long-term external retention, with `asset-hashes.json` added for the IEEE protected-asset run.
 
 ## 6.1.2 - 2026-09-03
 
