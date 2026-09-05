@@ -475,16 +475,9 @@ def extract_scoped_html_assets(
     )
 
 
-def figure_download_candidates(
-    transport,
-    *,
-    asset: Mapping[str, Any],
-    user_agent: str,
-    figure_page_fetcher: FigurePageFetcher | None = None,
-) -> list[str]:
+def _known_figure_candidates(asset: Mapping[str, Any]) -> list[str]:
     direct_full_size_url = normalize_text(str(asset.get("full_size_url") or ""))
     primary_url = normalize_text(str(asset.get("url") or ""))
-    preview_url = normalize_text(str(asset.get("preview_url") or "")) or primary_url
     candidates: list[str] = []
     if direct_full_size_url:
         candidates.append(direct_full_size_url)
@@ -493,6 +486,20 @@ def figure_download_candidates(
         candidates.append(promoted_preview)
     if primary_url and looks_like_full_size_asset_url(primary_url):
         candidates.append(primary_url)
+    return list(dict.fromkeys(candidates))
+
+
+def figure_download_candidates(
+    transport,
+    *,
+    asset: Mapping[str, Any],
+    user_agent: str,
+    figure_page_fetcher: FigurePageFetcher | None = None,
+) -> list[str]:
+    candidates = _known_figure_candidates(asset)
+    preview_url = normalize_text(
+        str(asset.get("preview_url") or asset.get("url") or "")
+    )
 
     figure_page_url = normalize_text(str(asset.get("figure_page_url") or ""))
     if figure_page_url:
@@ -564,7 +571,10 @@ def download_assets_for_springer(
         options=AssetDownloadOptions(
             figure_page_fetcher=figure_page_fetcher,
             browser_context_seed=browser_context_seed,
-            candidate_builder=figure_download_candidates,
+            candidate_builder=lambda _transport, *, asset, **_kwargs: (
+                _known_figure_candidates(asset)
+            ),
+            _fallback_candidate_builder=figure_download_candidates,
             asset_download_concurrency=asset_download_concurrency,
             provider_name="springer",
             runtime_context=runtime_context,

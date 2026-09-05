@@ -133,6 +133,9 @@ class AssetResolutionOptions:
     provider_name: str | None = None
     route_name: str | None = None
     host_recovery_circuit: AssetHostRecoveryCircuit | None = None
+    _fallback_candidate_url_resolver: (
+        Callable[[Mapping[str, Any]], list[str]] | None
+    ) = None
 
 
 @dataclass(frozen=True)
@@ -155,6 +158,7 @@ class AssetDownloadOptions:
     artifact_store: Any | None = None
     runtime_context: Any | None = None
     host_recovery_circuit: AssetHostRecoveryCircuit | None = None
+    _fallback_candidate_builder: Callable[..., list[str]] | None = None
 
 
 _BROWSER_RECOVERABLE_NETWORK_CATEGORIES = {
@@ -1287,7 +1291,7 @@ def _resolve_asset_download_impl(
     )(asset)
     preview_url, full_size_url = _resolution_preview_fields(kind, asset, candidate_urls)
 
-    if not candidate_urls:
+    if not candidate_urls and active_options._fallback_candidate_url_resolver is None:
         failure = (
             kind.failure_template(
                 asset,
@@ -1311,8 +1315,25 @@ def _resolve_asset_download_impl(
             full_size_url=full_size_url,
         )
 
+    def staged_candidates():
+        nonlocal full_size_url
+        yield from candidate_urls
+        fallback = active_options._fallback_candidate_url_resolver
+        if fallback is not None:
+            if active_budget.internally_cancelled:
+                return
+            active_budget.raise_if_cancelled()
+            remaining = list(dict.fromkeys(fallback(asset)))
+            # Resolve the figure page only after known originals fail, without
+            # resetting conversion/access failures or scheduling the asset twice.
+            _, full_size_url = _resolution_preview_fields(
+                kind, asset, [*candidate_urls, *remaining]
+            )
+            seen = set(candidate_urls)
+            yield from (url for url in remaining if url not in seen)
+
     last_attempt: _AssetDownloadAttempt | None = None
-    for candidate_url in candidate_urls:
+    for candidate_url in staged_candidates():
         candidate = _AssetDownloadCandidate(candidate_url)
         parsed = urllib.parse.urlparse(candidate_url)
         if parsed.scheme not in {"http", "https"}:
@@ -1632,9 +1653,20 @@ def resolve_asset_download(
     candidate_started_at = time.monotonic()
     candidate_urls = list(candidate_resolver(asset))
     candidate_seconds = time.monotonic() - candidate_started_at
+    fallback_resolver = active_options._fallback_candidate_url_resolver
+
+    def timed_fallback(asset: Mapping[str, Any]) -> list[str]:
+        nonlocal candidate_seconds
+        started = time.monotonic()
+        try:
+            return list(fallback_resolver(asset)) if fallback_resolver else []
+        finally:
+            candidate_seconds += time.monotonic() - started
+
     prepared_options = replace(
         active_options,
         candidate_url_resolver=lambda _asset: list(candidate_urls),
+        _fallback_candidate_url_resolver=timed_fallback if fallback_resolver else None,
     )
 
     decision: AssetHostRouteDecision | None = None
@@ -2181,6 +2213,19 @@ def download_assets(
             figure_page_fetcher=figure_page_fetcher,
         )
 
+    def fallback_candidate_url_resolver(asset: Mapping[str, Any]) -> list[str]:
+        builder = active_options._fallback_candidate_builder
+        return (
+            builder(
+                transport,
+                asset=asset,
+                user_agent=user_agent,
+                figure_page_fetcher=figure_page_fetcher,
+            )
+            if builder is not None
+            else []
+        )
+
     collected = _resolve_and_collect_downloads_as_completed(
         asset_items,
         resolver=lambda asset: resolve_asset_download(
@@ -2194,6 +2239,12 @@ def download_assets(
                 browser_cookies=browser_cookies,
                 document_fetcher=active_document_fetcher,
                 candidate_url_resolver=candidate_url_resolver,
+                _fallback_candidate_url_resolver=(
+                    fallback_candidate_url_resolver
+                    if kind.name == "figure"
+                    and active_options._fallback_candidate_builder is not None
+                    else None
+                ),
                 fetch_policy=fetch_policy,
                 asset_budget=active_budget,
                 staging_dir=asset_dir,

@@ -812,3 +812,88 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
             asset_failures=result["asset_failures"],
         )
         self.assertEqual(len(article.quality.asset_failures), 2)
+
+
+class IeeeArticleOriginalTests(unittest.TestCase):
+    def test_article_links_recover_figures_and_tables_without_reloading_seed(self):
+        page = mock.MagicMock()
+        context = mock.MagicMock()
+        session = _ieee_asset_recovery._SharedBrowserPageSession(
+            preserve_seed_page=True
+        )
+        session.bind(manager=None, context=context, page=page)
+        wrapped = mock.Mock(browser_backend="camoufox", requires_caller_thread=True)
+        fetcher = _ieee_asset_recovery._IeeePreviewWarmImageFetcher(wrapped, session)
+        original = "https://ieeexplore.ieee.org/mediastore/fig-large.gif"
+        preview = original.replace("large", "small")
+        for figure in (True, False, True):
+            with self.subTest(figure=figure):
+                page.locator.return_value.evaluate_all.return_value = {
+                    "href": "/mediastore/fig-large.gif",
+                    "figure": figure,
+                }
+                response = mock.Mock(url=original, status=200)
+                response.all_headers.return_value = {"content-type": "image/png"}
+                response.body.return_value = png_header(820, 219)
+                response.request.resource_type = "image" if figure else "document"
+                context.expect_event.return_value.__enter__.return_value.value = (
+                    response
+                )
+                result = fetcher(original, {"url": preview})
+                self.assertEqual(result["body"], response.body.return_value)
+                predicate = context.expect_event.call_args.kwargs["predicate"]
+                self.assertTrue(predicate(response))
+                self.assertFalse(predicate(mock.Mock(url=original + "other")))
+        self.assertEqual(wrapped.call_args_list, [mock.call(preview, {"url": preview})])
+        page.goto.assert_not_called()
+        page.expect_popup.return_value.__enter__.return_value.value.close.assert_called_once()
+        self.assertTrue(session.preserve_seed_page)
+
+    def test_missing_entry_and_invalid_original_keep_fallback_and_diagnostics(self):
+        for entry, body in (
+            (None, b""),
+            ({"href": "/large.gif", "figure": True}, b"<html>Error</html>"),
+            ({"href": "/large.gif", "figure": False}, None),
+        ):
+            with self.subTest(entry=entry):
+                page = mock.MagicMock()
+                context = mock.MagicMock()
+                session = _ieee_asset_recovery._SharedBrowserPageSession(
+                    preserve_seed_page=True
+                )
+                session.bind(manager=None, context=context, page=page)
+                page.locator.return_value.evaluate_all.return_value = entry
+                response = mock.Mock(
+                    url="https://ieeexplore.ieee.org/large.gif", status=200
+                )
+                response.all_headers.return_value = {"content-type": "image/gif"}
+                response.body.return_value = body
+                if body is None:
+                    response.body.side_effect = TimeoutError("original response failed")
+                context.expect_event.return_value.__enter__.return_value.value = (
+                    response
+                )
+                wrapped = mock.Mock(
+                    return_value=None,
+                    browser_backend="camoufox",
+                    requires_caller_thread=True,
+                )
+                wrapped.failure_for.return_value = {"reason": "non_image_response"}
+                fetcher = _ieee_asset_recovery._IeeePreviewWarmImageFetcher(
+                    wrapped, session
+                )
+                self.assertIsNone(
+                    fetcher(
+                        response.url, {"url": "https://ieeexplore.ieee.org/small.gif"}
+                    )
+                )
+                wrapped.assert_called_with(
+                    response.url, {"url": "https://ieeexplore.ieee.org/small.gif"}
+                )
+                self.assertEqual(
+                    fetcher.failure_for(response.url)["recovery_attempts"][0]["stage"],
+                    "article_original",
+                )
+                page.goto.assert_not_called()
+                if entry and not entry["figure"]:
+                    page.expect_popup.return_value.__enter__.return_value.value.close.assert_called_once()

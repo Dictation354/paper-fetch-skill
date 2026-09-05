@@ -1622,6 +1622,11 @@ def fetch_html_with_playwright(
     )
     readiness_budget_seconds = options.readiness_budget_seconds
     reuse_runtime_page = options.reuse_runtime_page
+    pnas_metrics_request = None
+    if normalize_text(publisher).lower() == "pnas":
+        from .pnas import _is_sidebar_metrics_url
+
+        pnas_metrics_request = _is_sidebar_metrics_url
 
     last_failure: PlaywrightBrowserFailure | None = None
     latest_browser_context_seed: Mapping[str, Any] | None = None
@@ -1730,6 +1735,46 @@ def fetch_html_with_playwright(
             document_request_diagnostics,
         ) = _install_page_diagnostic_listeners(page, trace)
 
+        # Science can replace an initial denied document through an automatic
+        # main-frame navigation while readiness waits. Keep response ownership
+        # separate from the bounded, serializable diagnostic event summaries.
+        science_document_requests: dict[int, Any] = {}
+        science_document_responses: list[Any] = []
+        science_finished_requests: set[int] = set()
+        if normalize_text(publisher).lower() == "science":
+
+            def science_request_started(request: Any) -> None:
+                if (
+                    _diagnostic_event_value(
+                        getattr(request, "is_navigation_request", False)
+                    )
+                    and _diagnostic_event_attr(request, "resource_type") == "document"
+                    and getattr(page, "main_frame", None) is not None
+                    and _diagnostic_event_attr(request, "frame")
+                    is getattr(page, "main_frame", None)
+                ):
+                    science_document_requests[id(request)] = request
+
+            def science_response_received(response: Any) -> None:
+                if (
+                    id(_diagnostic_event_attr(response, "request"))
+                    in science_document_requests
+                ):
+                    science_document_responses.append(response)
+
+            def science_request_finished(request: Any) -> None:
+                if id(request) in science_document_requests:
+                    science_finished_requests.add(id(request))
+
+            for event, callback in (
+                ("request", science_request_started),
+                ("response", science_response_received),
+                ("requestfinished", science_request_finished),
+            ):
+                if callable(getattr(page, "on", None)):
+                    page.on(event, callback)
+                    page_diagnostic_listeners.append((event, callback))
+
         def route_handler(route: Any) -> None:
             try:
                 resource_type = normalize_text(
@@ -1754,7 +1799,10 @@ def fetch_html_with_playwright(
                             int(trace.get("empty_script_response_count") or 0) + 1
                         )
                     return
-                if resource_type in active_blocked_resource_types:
+                sidebar_metrics = bool(
+                    pnas_metrics_request and pnas_metrics_request(request_url)
+                )
+                if resource_type in active_blocked_resource_types or sidebar_metrics:
                     trace["blocked_request_count"] = (
                         int(trace.get("blocked_request_count") or 0) + 1
                     )
@@ -1762,6 +1810,10 @@ def fetch_html_with_playwright(
                     trace["blocked_request_types"] = sorted(
                         observed_blocked_resource_types
                     )
+                    if sidebar_metrics:
+                        trace["blocked_sidebar_metrics_count"] = (
+                            int(trace.get("blocked_sidebar_metrics_count") or 0) + 1
+                        )
                     route.abort()
                     return
                 route.continue_()
@@ -1769,7 +1821,11 @@ def fetch_html_with_playwright(
                 with contextlib.suppress(Exception):
                     route.continue_()
 
-        if active_blocked_resource_types or empty_script_response_urls:
+        if (
+            active_blocked_resource_types
+            or empty_script_response_urls
+            or pnas_metrics_request
+        ):
             with contextlib.suppress(Exception):
                 page.route("**/*", route_handler)
 
@@ -1794,6 +1850,9 @@ def fetch_html_with_playwright(
             }
             trace["candidates"].append(candidate_trace)
             candidate_started = time.monotonic()
+            science_document_requests.clear()
+            science_document_responses.clear()
+            science_finished_requests.clear()
             try:
                 logger.debug(
                     "browser_request backend=%s provider=%s action=request wait_seconds=%s url=%s",
@@ -1956,6 +2015,26 @@ def fetch_html_with_playwright(
                     title = (
                         extract_page_title(BeautifulSoup(html, choose_parser())) or ""
                     )
+                if science_document_responses:
+                    current_response = science_document_responses[-1]
+                    current_url = normalize_text(
+                        str(_diagnostic_event_attr(current_response, "url") or "")
+                    )
+                    target_doi = normalize_doi(config.doi)
+                    if (
+                        id(_diagnostic_event_attr(current_response, "request"))
+                        in science_finished_requests
+                        and id(_diagnostic_event_attr(current_response, "request"))
+                        == next(reversed(science_document_requests))
+                        and urllib.parse.urldefrag(current_url)[0]
+                        == urllib.parse.urldefrag(final_url)[0]
+                        and urllib.parse.urlsplit(current_url).hostname
+                        in {"science.org", "www.science.org"}
+                        and target_doi
+                        and normalize_doi(extract_doi_from_url(current_url))
+                        == target_doi
+                    ):
+                        response = current_response
                 status = _browser_response_status(response, zero_as_none=False)
                 headers = _browser_response_headers(response)
                 candidate_trace["status"] = status

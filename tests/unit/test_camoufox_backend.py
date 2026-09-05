@@ -2489,3 +2489,191 @@ def test_ieee_required_selector_preserves_aws_waf_timeout_diagnostic(
         assert diagnostic["diagnostic_path"]
     finally:
         runtime.close()
+
+
+def test_aip_normal_load_does_not_register_routes(monkeypatch, tmp_path):
+    from paper_fetch.providers.aip import AIP_BROWSER_PROFILE
+
+    context = _Context()
+    monkeypatch.setattr(
+        _playwright_browser, "open_browser_context", lambda *a, **k: (None, context)
+    )
+    profile = AIP_BROWSER_PROFILE
+    _playwright_browser.fetch_html_with_playwright(
+        ["https://pubs.aip.org/doi/10.1063/example"],
+        publisher="aip",
+        config=BrowserRuntimeConfig(
+            provider="aip",
+            doi="10.1063/example",
+            artifact_dir=tmp_path,
+            headless=True,
+            user_agent=None,
+            persist_storage_state=False,
+        ),
+        wait_seconds=0,
+        disable_media=profile.fast_html_attempt,
+        options=browser_runtime.BrowserHtmlFetchOptions(
+            blocked_resource_types=profile.blocked_resource_types or None,
+            empty_script_response_urls=profile.empty_script_response_urls,
+        ),
+    )
+    assert context.page.route_handler is None
+    assert context.route_handler is None
+
+
+@pytest.mark.parametrize("provider", ["pnas", "science"])
+def test_pnas_sidebar_route_is_exact_and_provider_local(
+    monkeypatch, tmp_path, provider
+):
+    context = _Context()
+    monkeypatch.setattr(
+        _playwright_browser, "open_browser_context", lambda *a, **k: (None, context)
+    )
+    result = _playwright_browser.fetch_html_with_playwright(
+        ["https://www.pnas.org/doi/10.1073/example"],
+        publisher=provider,
+        config=BrowserRuntimeConfig(
+            provider=provider,
+            doi="10.1073/example",
+            artifact_dir=tmp_path,
+            headless=True,
+            user_agent=None,
+            persist_storage_state=False,
+        ),
+        wait_seconds=0,
+        disable_media=True,
+    )
+    target = "https://www.pnas.org/pb/widgets/fullSideBarMetric/getResponse"
+    for url, resource_type, blocked in (
+        (target, "xhr", True),
+        (target + "?article=/doi/10.1073/example", "fetch", True),
+        (target + "/extra", "xhr", False),
+        (target.replace("www.pnas.org", "other.test"), "xhr", False),
+        ("https://www.pnas.org/doi/10.1073/example", "document", False),
+        ("https://www.pnas.org/login", "xhr", False),
+        ("https://www.pnas.org/mathjax.js", "script", False),
+        ("https://www.pnas.org/image.png", "image", False),
+        ("https://www.pnas.org/references", "fetch", False),
+    ):
+        route = mock.Mock()
+        route.request.url = url
+        route.request.resource_type = resource_type
+        context.page.route_handler(route)
+        assert route.abort.called == (blocked and provider == "pnas")
+        assert route.continue_.called != (blocked and provider == "pnas")
+    trace = result.diagnostics["browser_runtime_trace"]
+    assert trace.get("blocked_sidebar_metrics_count", 0) == (
+        2 if provider == "pnas" else 0
+    )
+
+
+@pytest.mark.parametrize(
+    "scenario",
+    [
+        "replaced",
+        "denied",
+        "iframe",
+        "different_doi",
+        "unrelated",
+        "unfinished",
+        "isolation",
+    ],
+)
+def test_science_final_document_response_ownership(monkeypatch, tmp_path, scenario):
+    context = _Context()
+    page = context.page
+    page.main_frame = object()
+    listeners = {}
+    page.on = lambda event, callback: listeners.setdefault(event, []).append(callback)
+    page.remove_listener = lambda event, callback: listeners[event].remove(callback)
+
+    def emit(event, value):
+        for callback in list(listeners.get(event, [])):
+            callback(value)
+
+    def response(status, url, *, main=True, finished=True):
+        request = SimpleNamespace(
+            url=url,
+            resource_type="document",
+            frame=page.main_frame if main else object(),
+            is_navigation_request=lambda: True,
+        )
+        result = SimpleNamespace(
+            url=url,
+            request=request,
+            status=status,
+            headers={"content-type": "text/html", "x-document-status": str(status)},
+        )
+        emit("request", request)
+        emit("response", result)
+        if finished:
+            emit("requestfinished", request)
+        return result
+
+    count = 0
+    url = "https://www.science.org/doi/full/10.1126/example"
+
+    def goto(target, **kwargs):
+        nonlocal count
+        count += 1
+        page.url = target
+        return response(403, target)
+
+    page.goto = goto
+
+    def readiness(*args, **kwargs):
+        if scenario == "denied" or (scenario == "isolation" and count == 2):
+            return
+        target = page.url
+        if scenario == "different_doi":
+            target = "https://www.science.org/doi/full/10.1126/different"
+            page.url = target
+        if scenario == "unrelated":
+            target = "https://other.test/doi/full/10.1126/example"
+            page.url = target
+        response(
+            200, target, main=scenario != "iframe", finished=scenario != "unfinished"
+        )
+
+    monkeypatch.setattr(
+        _playwright_browser, "_wait_for_browser_html_readiness", readiness
+    )
+    monkeypatch.setattr(
+        _playwright_browser, "open_browser_context", lambda *a, **k: (None, context)
+    )
+    if scenario == "isolation":
+        page.title = lambda: "Just a moment..." if count == 1 else "Article"
+        page.content = lambda: (
+            "<html><body>Just a moment... Verify you are human</body></html>"
+            if count == 1
+            else "<html><body><main>Full text</main></body></html>"
+        )
+    kwargs = dict(
+        publisher="science",
+        config=BrowserRuntimeConfig(
+            provider="science",
+            doi="10.1126/example",
+            artifact_dir=tmp_path,
+            headless=True,
+            user_agent=None,
+            persist_storage_state=False,
+        ),
+        wait_seconds=0,
+    )
+    if scenario == "replaced":
+        result = _playwright_browser.fetch_html_with_playwright([url], **kwargs)
+        assert result.response_status == 200
+        assert result.response_headers["x-document-status"] == "200"
+        trace = result.diagnostics["browser_runtime_trace"]
+        assert [
+            item["status"] for item in trace["page_events"]["document_requests"]
+        ] == [403, 200]
+        assert trace["navigation_count"] == 1
+    else:
+        with pytest.raises(browser_runtime.BrowserRuntimeFailure):
+            _playwright_browser.fetch_html_with_playwright(
+                [url, url] if scenario == "isolation" else [url], **kwargs
+            )
+        if scenario == "isolation":
+            assert count == 2
+    assert all(not callbacks for callbacks in listeners.values())

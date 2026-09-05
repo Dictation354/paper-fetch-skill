@@ -39,8 +39,14 @@ browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默�
 
 - PNAS 只执行一次完整 HTML attempt，候选依次为 canonical `/doi/{doi}`、
   `/doi/full/{doi}` 和 DOI resolver。它不再等待失效的 bodymatter selector，而是在
-  固定 8 秒总预算内检查正文长度、段落数和连续两次稳定指纹；预算耗尽后仍对最后
-  一份 HTML 做 block detection 与正文抽取。
+  配置为 8 秒的 readiness 预算内检查正文长度、段落数和连续两次稳定指纹；预算
+  检查在同步浏览器调用返回后执行，不能打断正在等待的 `evaluate`，因此实际耗时
+  可能超过预算。预算耗尽后仍对最后一份 HTML 做 block detection 与正文抽取。
+- AIP 直接使用正常 HTML attempt，不启用媒体阻断或空脚本替换，因此正常加载期间
+  不注册请求拦截；继续使用非持久会话及现有正文 readiness。
+- Science 在自动主框架导航后，使用当前候选中已完成、URL 与当前页面一致且 DOI
+  匹配的最新主文档响应采集状态和响应头。初始拒绝响应仍保留在 trace 中；iframe、
+  未完成响应和其他论文的响应不能替代文章状态，访问与正文检查继续执行。
 - Wiley 主文档返回 401/403 时不再在 `commit` 后立即结束候选，而是在既有 route
   deadline/readiness 预算内继续检查正文。只有正文 selector 达到阈值并连续两次保持
   同一指纹、citation meta/canonical/`.epub-doi` 中的 DOI 与请求精确匹配，且现有
@@ -49,12 +55,36 @@ browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默�
   availability；结果与 trace 始终保留真实 401/403，失败候选继续尝试下一 Wiley URL。
 - PNAS、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP 与 Taylor & Francis
   的正文导航只阻断 `image`、`font`、`media`；document、stylesheet、JavaScript、
-  XHR/fetch 保持放行。Wiley、IEEE、AIP 与 Science 的既有策略不变。
+  XHR/fetch 保持放行。PNAS 另外精确跳过 `www.pnas.org` 的
+  `/pb/widgets/fullSideBarMetric/getResponse` 侧栏统计接口，按 hostname 和 pathname
+  匹配，并记录 `blocked_sidebar_metrics_count`；不扩展到其他 XHR/fetch 或 provider。
 - ACS 的 `200 + 正确文章标题 + 无 body` 继续归类为 `empty_article_shell`。诊断只保留
   主文档状态、request lifecycle、失败 request/script、console/page error、challenge
   signal、无 query 的 URL 摘要、页面 SHA-256 与 storage-state 指纹；相同
   route/profile/storage/page SHA 立即停止，只有候选 URL、profile 或 storage-state
   确实变化时才允许一次重试。
+
+### PNAS 性能与无浏览器获取的已知边界
+
+2026-09-05 对 DOI `10.1073/pnas.2406303121` 的三组冷会话对照没有证明侧栏统计
+拦截带来稳定提速。追加采样中，预检约 26.77 秒、正式抓取约 16.26 秒；预检的
+DOM readiness 和 HTML 读取分别约 9.12、6.93 秒，正式抓取的正文与资产解析
+合计约 5.95 秒。浏览器主线程约 80% 的非空采样栈涉及 HTML 解析，图片下载累计
+仅约 0.72 秒。以上为单篇、带采样器的诊断结果，不作为性能保证。
+
+同次浏览器响应的原始 HTML 与最终 DOM 经现有解析器生成的 Markdown 逐字相同；
+不带 profiler 的离线解析分别约 2.35、3.91 秒。这是待验证的优化方向，当前流程
+仍使用 DOM，也没有把原始响应获取改为普通 HTTP。
+
+该环境中，普通 HTTP 请求 PNAS 正文、全文和 PDF 入口均返回 403，复用已有会话
+cookie 也未成功。同一 DOI 经 [PMC 官方 API](https://pmc.ncbi.nlm.nih.gov/tools/oai/)
+和 [Cloud 数据服务](https://pmc.ncbi.nlm.nih.gov/tools/pmcaws/) 可无需浏览器取得
+发表版本 XML、PDF、四张图及补充材料，文件通过官方校验值核对。但 PMC 图像分辨率
+低于 PNAS 原图，例如图 1 为 689×504，而 PNAS 原图为 2067×1512。已知 PNAS 原图
+URL 可以直接 HTTP 下载，完全无浏览器发现这些 URL 的冷启动路径尚未证实。
+项目尚未接入 PMC 获取路径，不能将归档图视为现有原图验收的等价替代。
+
+### 主文档诊断
 
 主文档诊断会同时记录响应头声明的 `content_length_bytes`、`page.content()` 实际序列化的
 `captured_html_bytes`、是否声明 transfer encoding、Playwright 是否观察到
@@ -94,6 +124,11 @@ Cookie、Authorization、storage-state 或原始失败 HTML。
 
 ## 二进制资产与资源预算
 
+- Springer/Nature 先下载并验收已知原图，失败或无原图候选时才解析图页，最后考虑
+  预览降级。两个阶段在同一次资产解析中复用预算、失败来源和落盘；表格页面补齐保留。
+- IEEE 浏览器恢复复用已就绪的文章页，按原图 URL 匹配文章入口并提前监听响应。
+  图片点击站内查看器；普通表格链接用浏览器原生新标签动作打开，取得原始图像字节后
+  关闭临时标签。逐资产串行操作，保留文章页和原有预览降级、失败报告及质量验收。
 - 图片、附件和 PDF 默认先按 URL 走共享 hostname pool 的 direct stream。direct
   401/403 最多进入一次真正的 browser-byte recovery；同一 URL/同一会话状态不再先经
   cookie opener 再重复 direct。恢复可使用 browser `response.body()`、page-context

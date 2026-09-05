@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import re
 import threading
@@ -35,6 +36,14 @@ from .browser_workflow.fetchers import (
     _restore_runtime_shared_page_session,
 )
 from .browser_workflow.shared import default_browser_workflow_deps
+from .browser_workflow.fetchers.image import (
+    _ImageFetchBudget,
+    _looks_like_image_response_payload,
+)
+from .browser_workflow.fetchers.context import (
+    _browser_response_headers,
+    _browser_response_status,
+)
 
 IEEE_ASSET_ARTICLE_READY_TIMEOUT_SECONDS = 15.0
 IEEE_ASSET_ARTICLE_READY_POLL_MS = 250
@@ -59,14 +68,20 @@ articleNumber => {
 
 
 class _IeeePreviewWarmImageFetcher:
-    """Warm one IEEE preview before the first large-image browser recovery."""
+    """Recover originals through IEEE's article links in the shared session."""
 
-    def __init__(self, fetcher: _MemoizedImageDocumentFetcher) -> None:
+    def __init__(
+        self,
+        fetcher: _MemoizedImageDocumentFetcher,
+        shared_page_session: _SharedBrowserPageSession | None = None,
+    ) -> None:
         self._fetcher = fetcher
         self.browser_backend = fetcher.browser_backend
         self.requires_caller_thread = fetcher.requires_caller_thread
         self._warm_lock = threading.Lock()
         self._preview_warm_attempted = False
+        self._shared_page_session = shared_page_session
+        self._article_failures: dict[str, dict[str, Any]] = {}
 
     def __call__(
         self, image_url: str, asset: Mapping[str, Any]
@@ -84,10 +99,113 @@ class _IeeePreviewWarmImageFetcher:
             ):
                 self._preview_warm_attempted = True
                 self._fetcher(preview_url, asset)
+            if normalized_url and normalized_url != preview_url:
+                payload = self._fetch_article_original(normalized_url)
+                if payload is not None:
+                    return payload
             return self._fetcher(normalized_url or image_url, asset)
 
+    def _fetch_article_original(self, image_url: str) -> dict[str, Any] | None:
+        session = self._shared_page_session
+        if session is None or session.page is None or session.context is None:
+            return None
+        page = session.page
+        budget = _ImageFetchBudget(10.0)
+        popup = None
+        figure = False
+        try:
+            # Match the actual original URL, including table links without a
+            # data-fig-id. An asset label alone cannot establish this identity.
+            entry = page.locator("#article a[href]").evaluate_all(
+                """(nodes, target) => {
+                    const node = nodes.find(n => n.href === target && n.querySelector('img'));
+                    return node ? {href: node.getAttribute('href'),
+                                   figure: Boolean(node.dataset.figId)} : null;
+                }""",
+                image_url,
+            )
+            if not isinstance(entry, Mapping):
+                self._article_failures[image_url] = {
+                    "reason": "article_image_entry_missing"
+                }
+                return None
+            figure = bool(entry.get("figure"))
+            link = page.locator(f"#article a[href={json.dumps(entry['href'])}]").first
+            with session.context.expect_event(
+                "response",
+                predicate=lambda response: (
+                    response.url == image_url
+                    and response.request.resource_type
+                    == ("image" if figure else "document")
+                ),
+                timeout=budget.timeout_ms(10000),
+            ) as response_info:
+                if figure:
+                    link.click(timeout=budget.timeout_ms(10000))
+                else:
+                    # Plain table links navigate the document. Use the browser's
+                    # native new-tab action to keep the seeded article intact.
+                    with page.expect_popup(
+                        timeout=budget.timeout_ms(10000)
+                    ) as popup_info:
+                        link.click(
+                            modifiers=["ControlOrMeta"],
+                            timeout=budget.timeout_ms(10000),
+                        )
+                    popup = popup_info.value
+            response = response_info.value
+            headers = _browser_response_headers(response)
+            status = _browser_response_status(response)
+            body = response.body()
+            content_type = header_value(headers, "content-type")
+            if (
+                status is None
+                or not 200 <= status < 300
+                or not content_type.lower().startswith("image/")
+                or not _looks_like_image_response_payload(content_type, body, image_url)
+            ):
+                self._article_failures[image_url] = {
+                    "reason": "article_original_invalid_response",
+                    "status": status,
+                    "content_type": content_type,
+                }
+                return None
+            return {
+                "status_code": status,
+                "headers": headers,
+                "body": body,
+                "url": response.url,
+            }
+        except Exception as exc:
+            self._article_failures[image_url] = {
+                "reason": "article_original_load_failed",
+                "error_type": type(exc).__name__,
+            }
+            return None
+        finally:
+            if popup is not None:
+                with contextlib.suppress(Exception):
+                    popup.close()
+            if figure:
+                with contextlib.suppress(Exception):
+                    close = page.locator(
+                        '.close-container button[aria-label="Close modal"]'
+                    ).first
+                    if close.is_visible():
+                        close.click(timeout=1000)
+
     def failure_for(self, image_url: str) -> dict[str, Any] | None:
-        return self._fetcher.failure_for(image_url)
+        failure = self._fetcher.failure_for(image_url)
+        article_failure = self._article_failures.get(image_url)
+        if article_failure is not None:
+            return {
+                **(failure or article_failure),
+                "recovery_attempts": [
+                    {"stage": "article_original", **article_failure},
+                    *list((failure or {}).get("recovery_attempts") or []),
+                ],
+            }
+        return failure
 
     def close(self) -> None:
         self._fetcher.close()
@@ -324,7 +442,7 @@ def download_ieee_assets_with_browser(
             )
         )
         memoized_fetcher.browser_backend = "camoufox"
-        return _IeeePreviewWarmImageFetcher(memoized_fetcher)
+        return _IeeePreviewWarmImageFetcher(memoized_fetcher, shared_page_session)
 
     def file_fetcher_factory(**request: Any):
         if not request.get("attempt_supplementary_assets"):

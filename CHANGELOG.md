@@ -6,6 +6,14 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+### Fixed — publisher browser and asset retrieval
+
+- AIP now uses the normal HTML attempt without media interception or the Adzerk/Crossmark empty-script responses, preserving its existing non-persistent session and article readiness checks.
+- IEEE original-image recovery now follows the matching article link in the shared browser session. Figures use the publisher viewer; table-image links open a temporary browser tab. Recovery validates the original response bytes and retains per-asset failure reporting and preview fallback.
+- Springer/Nature now downloads known original-image candidates before requesting figure pages. Figure-page discovery runs only when needed, within the same asset resolution and budget; table-page completion and preview provenance remain intact.
+- Science now associates the final page with the latest completed main-frame navigation response for the current candidate, matching URL and DOI. An initial denied response no longer overrides a subsequently loaded article; iframe and unrelated responses cannot replace the article status.
+- PNAS now blocks only the exact sidebar metrics endpoint and reports `blocked_sidebar_metrics_count`. Three cold-session comparisons did not demonstrate a consistent speedup; browser page processing remains a performance limitation. The documented PMC browser-free experiment is not an implemented retrieval route.
+
 ## 6.1.3 - 2026-09-04
 
 ### Changed — provider and browser ownership

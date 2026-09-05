@@ -724,3 +724,107 @@ class SpringerHtmlTableTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SpringerOriginalFirstTests(unittest.TestCase):
+    def test_original_first_and_figure_page_recovery_share_file_budget(self):
+        from paper_fetch.asset_budget import AssetBudget
+        from paper_fetch.providers import _springer_assets
+
+        direct = "https://media.springernature.com/full/original.png"
+        restored = "https://media.springernature.com/full/restored.png"
+        preview = "https://media.springernature.com/preview.png"
+        figure_page = SPRINGER_NATURE_LANDING_URL + "/figures/1"
+        for scenario in (
+            "direct",
+            "failed",
+            "missing",
+            "preview",
+            "cancelled",
+            "duplicate",
+        ):
+            with (
+                self.subTest(scenario=scenario),
+                tempfile.TemporaryDirectory() as tmpdir,
+            ):
+                budget = AssetBudget(max_files=1)
+                context = RuntimeContext(env={}, asset_budget=budget)
+                calls = []
+
+                def request(
+                    _method,
+                    url,
+                    *,
+                    calls=calls,
+                    scenario=scenario,
+                    budget=budget,
+                    **kwargs,
+                ):
+                    calls.append(url)
+                    if scenario == "cancelled":
+                        budget.cancel()
+                    if url == figure_page:
+                        target = direct if scenario == "duplicate" else restored
+                        return {
+                            "url": url,
+                            "body": f'<meta property="og:image" content="{target}">'.encode(),
+                            "headers": {"content-type": "text/html"},
+                            "status_code": 200,
+                        }
+                    failed = (url == direct and scenario != "direct") or (
+                        url == restored and scenario == "preview"
+                    )
+                    return {
+                        "url": url,
+                        "body": b"<html>Access denied</html>"
+                        if failed
+                        else png_header(820, 640),
+                        "headers": {
+                            "content-type": "text/html" if failed else "image/png"
+                        },
+                        "status_code": 403 if failed else 200,
+                    }
+
+                transport = FakeTransport({})
+                transport.request = request
+                asset = {
+                    "kind": "figure",
+                    "heading": "Fig. 1",
+                    "url": preview,
+                    "preview_url": preview,
+                    "figure_page_url": figure_page,
+                }
+                if scenario != "missing":
+                    asset["full_size_url"] = direct
+                result = _springer_assets.download_assets_for_springer(
+                    transport,
+                    article_id=SPRINGER_NATURE_DOI,
+                    assets=[asset],
+                    output_dir=Path(tmpdir),
+                    user_agent="test",
+                    asset_profile="body",
+                    runtime_context=context,
+                )
+                if scenario == "cancelled":
+                    self.assertNotIn(figure_page, calls)
+                    self.assertFalse(result["assets"])
+                    continue
+                self.assertEqual(len(result["assets"]), 1)
+                self.assertFalse(result["asset_failures"])
+                downloaded = result["assets"][0]
+                self.assertTrue(Path(downloaded["path"]).is_file())
+                self.assertEqual(calls.count(direct), 0 if scenario == "missing" else 1)
+                if scenario == "direct":
+                    self.assertEqual(calls, [direct])
+                else:
+                    self.assertEqual(calls.count(figure_page), 1)
+                self.assertEqual(
+                    downloaded["download_tier"],
+                    "preview" if scenario in {"preview", "duplicate"} else "full_size",
+                )
+                self.assertEqual(len(list(Path(tmpdir).rglob("*.png"))), 1)
+                if scenario in {"preview", "duplicate"}:
+                    self.assertIn(
+                        "official_full_size_access_restricted",
+                        downloaded.get("provenance", []),
+                    )

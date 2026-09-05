@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from urllib.parse import urlsplit
+
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.provider_rules import (
     ATYPON_FRONT_MATTER_CONTAINS_TOKENS,
@@ -75,6 +77,15 @@ _PROVIDER_SPEC = ProviderSpec(
         ),
     ),
 )
+
+
+def _is_sidebar_metrics_url(url: str) -> bool:
+    parsed = urlsplit(url)
+    return (
+        parsed.hostname == "www.pnas.org"
+        and parsed.path == "/pb/widgets/fullSideBarMetric/getResponse"
+    )
+
 
 PNAS_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     "pnas",

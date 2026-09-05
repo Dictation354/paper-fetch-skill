@@ -666,6 +666,7 @@ CLI、Python API、MCP 当前默认值如下：
 - Copernicus XML 成功路径会从 JATS/XML 抽取正文图、表、公式和明确 supplementary links；同一 figure 的 `graphic` / `inline-graphic` alternatives 按 original/full/high/large 与 preview/thumb/small/low 标记排序，最高质量官方 `graphic` 进入 `full_size_url`，只有预览时明确记录未暴露原图。
 - AIP 在进入共享 asset extractor 前提升最大宽度的官方 Silverchair `srcset` rendition；Taylor & Francis 对只暴露 `/cms/asset/` accepted preview 的 figure 保留当前分辨率，并记录 `official_full_size_not_exposed`。
 - Springer HTML 成功路径只从 cleaned body/content scope 抽取正文图片。
+- Springer/Nature 优先下载已知原图，仅在候选失败或缺失时解析图页，再考虑预览；同次资产解析保留预算、失败来源和落盘语义，表格页面补齐照常执行。
 - Springer/Nature HTML route 每个 attempt 创建独立的安全 cookie-aware opener，重定向链内保存并回放 cookie；若 final URL 首次出现 `cookies_not_supported`，丢弃 session 并用全新 opener 完整重试一次，第二次仍失败才进入既有 PDF waterfall。session 不跨 fetch/provider 共享，Cookie/Set-Cookie/Authorization 不进入 diagnostics。
 - Elsevier XML 的 `body` 只下载 `image` / `table_asset`；公式上下文引用的 `fx*` 官方对象按正文 `image` 下载，普通附录 Figure 的 `fx*` 仍保持 `appendix_image` 分类。
 - Elsevier XML 的 `all` 额外下载 `supplementary` references。
@@ -1048,6 +1049,7 @@ IEEE direct landing/REST HTML/PDF/资产与 selected-browser recovery 路线当�
 - selected-browser HTML recovery 会同时等待当前文章号的 `/rest/document/{article_number}/` 响应和页面 DOM `#article`。REST 候选只有在状态为 2xx（或运行时未提供状态）、content type 为 HTML/XML（或未提供）、正文包含 `#article` 且文章号匹配时才可用；所有已捕获候选都会按新到旧检查，因此较新的 shell/error 或其它文章响应不会覆盖较早的有效全文。
 - readiness 窗口内 REST 未就绪但 DOM 已出现 `#article` 时直接使用 DOM；若只收到无效 REST，则分类为可重试的 `browser_rest_wait_timeout`，完全没有有效 REST/DOM 时分类为 `browser_article_not_ready`。已知 challenge/access 页面仍优先保留原 block 分类。`artifact_mode=all` 时会通过共享 page diagnostics 保存脱敏后的无效 REST 与 DOM 证据。
 - IEEE 资产共享页使用同样的 15 秒 seed readiness 窗口：必须出现包含当前文章号的 `#article` 才能开始 large 恢复，performance resource 中仅出现 `/rest/document/{article_number}/` 不会提前放行。首次 large 恢复前只预热一次对应 preview；最终资产通过可选的 `browser_backend`、`final_fetcher` 和 `recovery_attempts` 保留 direct 失败、browser large 恢复以及必要时的 preview fallback。
+- IEEE 原图恢复按 URL 匹配已就绪文章页的实际链接，提前监听原始图像响应；图片点击站内查看器，普通表格链接用原生新标签动作打开并在取回后关闭。逐资产串行操作并保留文章页，入口失败记入 `recovery_attempts` 后继续既有恢复路径。
 - IEEE multimedia discovery 在同一 `RuntimeContext` 内按文章号和脱敏后的规范 URL memoize；重复 URL 或仅签名参数轮换不会重复请求，成功的 direct/browser discovery 可被后续资产阶段复用，签名原文不进入 memo key。
 - 页面自身的 REST 子请求保持正常放行；DOM-only 验证可以不消费 REST response body，但不能通过网络拦截制造不符合真实页面行为的失败。IEEE block-page 检测只扫描去除 `script/style/svg/noscript/template` 后的可见文本，因此内联脚本中的 `captcha` 不会覆盖已经就绪的真实 `#article`；可见 challenge/access 文案仍会被拒绝。
 - 原始 HTML 中的 `*.token.awswaf.com` / `awswaf` 或响应头 `x-amzn-waf-action` 会把持续存在的验证页精确分类为 `aws_waf_challenge`，同时在 diagnostics 保留 `challenge_provider=aws_waf` 与兼容字段 `legacy_reason_code=cloudflare_challenge`；对外 `status` 仍为 `challenge`。该分类基于等待结束后的页面证据，不会把已恢复为匹配文章 DOM 的初始 HTTP 202 误判成最终失败。
@@ -1100,8 +1102,10 @@ IEEE direct landing/REST HTML/PDF/资产与 selected-browser recovery 路线当�
 #### Browser HTML readiness
 
 - `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `royalsocietypublishing` / `acs` / `iop` / `aip` / `mdpi` / `tandf` 的 browser HTML fetch 会先等待 provider 正文 DOM 命中并连续两次轮询稳定，再执行 pre-extraction challenge / paywall 判定。
-- PNAS 是明确例外于通用 fast attempt 的单次完整导航：候选固定按 canonical `/doi/{doi}`、`/doi/full/{doi}`、DOI resolver 排序；readiness 与解析器统一使用 `#bodymatter`、`#bodymatter .bodymatter`、`#bodymatter .core-container` 和 `#bodymatter .article__body`，正文已满足抽取条件时不再等待站点上不存在的顶层 `.core-container`。总预算仍最多 8 秒，超时后继续检查最后 HTML，不跳过 block detection 或抽取。
+- PNAS 是明确例外于通用 fast attempt 的单次完整导航：候选固定按 canonical `/doi/{doi}`、`/doi/full/{doi}`、DOI resolver 排序；readiness 与解析器统一使用 `#bodymatter`、`#bodymatter .bodymatter`、`#bodymatter .core-container` 和 `#bodymatter .article__body`，正文已满足抽取条件时不再等待站点上不存在的顶层 `.core-container`。readiness 预算配置为 8 秒，但同步浏览器调用不能被预算检查打断，实际耗时可能超出；超时后继续检查最后 HTML，不跳过 block detection 或抽取。
+- AIP 直接进入正常 HTML attempt，不启用媒体拦截或 Adzerk/Crossmark 空脚本替换；非持久会话和正文 readiness 保持不变。
 - Wiley 优先尝试已验证的 `/doi/{doi}`。导航返回 401/403 时继续执行有界正文 readiness 和 DOI/阻断信号复核；未确认的候选保持 fail closed 并继续下一 URL，已确认候选还须通过 Markdown/全文 availability，且始终保留真实 HTTP 状态。Science 在保持正文/资源发现回归通过的前提下阻断 image/font/media。
+- Science 的最终状态取自当前候选中最新、已完成且与当前 URL 和目标 DOI 匹配的主框架导航响应；初始响应保留在 trace 中，iframe、未完成或无关响应不能覆盖文章状态。
 - Royal Society 的 Silverchair `.widget-ArticleFulltext .article-body`、`.widget-ArticleFulltext`、`.article-body` 与 `.article-content` 已进入稳定正文 selector 表，正文出现后不再落入固定 8 秒等待。
 - 快速 HTML attempt 已取得 challenge/paywall/access-boundary 证据，而保守重试随后耗尽共享 deadline 时，最终保留首个稳定 reason code，并把重试 timeout 与两轮 attempt 写入 diagnostics；不会用后续超时覆盖可执行的 `auth`/entitlement 结论。
 - browser HTML fast path 失败后的正常重试复用首轮内存 `BrowserContextSeed` 中与目标 provider 匹配的 cookies，不覆盖 Camoufox 指纹/User-Agent，也不提前提交未通过正文验收的 storage-state；诊断保留两轮状态、HTTP status、DOM readiness 和脱敏页面形态。
@@ -1112,6 +1116,7 @@ IEEE direct landing/REST HTML/PDF/资产与 selected-browser recovery 路线当�
 
 - `browser_preflight` 只报告本次预检，不缓存 HTML、候选 URL 或 runtime/storage fingerprint 供正式 fetch 复用。正式 fetch 独立导航并重新执行身份、阻断和正文验收；PDF fallback、challenge、空壳或失败结果同样不形成 route hint。
 - PNAS、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、T&F 与 Science 的正文导航阻断 image/font/media，但继续加载 document、stylesheet、JavaScript、XHR/fetch；IEEE 自定义 HTML route 使用同一重资源集合。Wiley 与 AIP 不新增资源阻断。diagnostics/source trail 记录实际阻断类型、导航数与 readiness。
+- PNAS 额外精确拦截 `www.pnas.org/pb/widgets/fullSideBarMetric/getResponse`，按 hostname/pathname 匹配并记录 `blocked_sidebar_metrics_count`。该改动尚未证明稳定提速；PMC 无浏览器实验及原图质量限制见 [browser runtime 说明](browser-runtime.md#pnas-性能与无浏览器获取的已知边界)，当前获取流程尚未接入 PMC。
 
 #### Browser-backed 原图发现
 

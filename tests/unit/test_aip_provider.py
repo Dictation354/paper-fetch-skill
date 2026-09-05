@@ -4,7 +4,6 @@ from pathlib import Path
 from unittest import mock
 
 from paper_fetch import publisher_identity
-from paper_fetch.extraction.html.signals import HtmlExtractionFailure
 from paper_fetch.provider_catalog import (
     PROVIDER_CATALOG,
     SOURCE_PROVIDER_MAP,
@@ -35,7 +34,7 @@ AIP_TABLE_FORMULA_DOI = "10.1063/5.0188905"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_aip_cold_html_retry_reuses_transient_seed_without_persisting_state(
+def test_aip_normal_html_load_keeps_transient_seed_without_persisting_state(
     tmp_path,
 ) -> None:
     client = AipClient(transport=None, env={})
@@ -59,12 +58,6 @@ def test_aip_cold_html_retry_reuses_transient_seed_without_persisting_state(
         ],
         "browser_final_url": AIP_STRUCTURE_LANDING,
     }
-    first_stage = browser_runtime.BrowserStagedStorageState(
-        path=state_path,
-        provider="aip",
-        filter_url=AIP_STRUCTURE_LANDING,
-        payload={"cookies": list(seed["browser_cookies"]), "origins": []},
-    )
     second_stage = browser_runtime.BrowserStagedStorageState(
         path=state_path,
         provider="aip",
@@ -73,17 +66,6 @@ def test_aip_cold_html_retry_reuses_transient_seed_without_persisting_state(
     )
     mocked_browser = mock.Mock(
         side_effect=[
-            browser_runtime.BrowserFetchedHtml(
-                source_url=AIP_STRUCTURE_LANDING,
-                final_url=AIP_STRUCTURE_LANDING,
-                html="<html><head><title>AIP article</title></head></html>",
-                response_status=200,
-                response_headers={"content-type": "text/html"},
-                title="AIP article",
-                summary="AIP article",
-                browser_context_seed=seed,
-                staged_storage_state=first_stage,
-            ),
             browser_runtime.BrowserFetchedHtml(
                 source_url=AIP_STRUCTURE_LANDING,
                 final_url=AIP_STRUCTURE_LANDING,
@@ -99,10 +81,6 @@ def test_aip_cold_html_retry_reuses_transient_seed_without_persisting_state(
     )
     mocked_extractor = mock.Mock(
         side_effect=[
-            HtmlExtractionFailure(
-                "article_container_not_found",
-                "Could not identify the main article container.",
-            ),
             (
                 "# AIP article\n\n## Results\n\n" + ("Body text " * 120),
                 {
@@ -133,33 +111,23 @@ def test_aip_cold_html_retry_reuses_transient_seed_without_persisting_state(
             },
         )
 
-    assert mocked_browser.call_count == 2
+    assert mocked_browser.call_count == 1
     for browser_call in mocked_browser.call_args_list:
-        assert browser_call.kwargs["options"].empty_script_response_urls == frozenset(
-            {
-                "https://static.adzerk.net/ados.js",
-                "https://crossmark-cdn.crossref.org/widget/v2.0/widget.js",
-            }
-        )
+        assert not browser_call.kwargs["options"].empty_script_response_urls
+        assert not browser_call.kwargs["options"].blocked_resource_types
+        assert not browser_call.kwargs.get("disable_media", False)
     assert "browser_context_seed" not in mocked_browser.call_args_list[0].kwargs
     assert mocked_browser.call_args_list[0].args[0][0] == AIP_STRUCTURE_LANDING
-    assert mocked_browser.call_args_list[1].args[0][0] == (
-        f"https://pubs.aip.org/doi/full/{AIP_STRUCTURE_DOI}"
-    )
-    assert mocked_browser.call_args_list[1].args[0][-1] == AIP_STRUCTURE_LANDING
-    retry_seed = mocked_browser.call_args_list[1].kwargs["browser_context_seed"]
-    assert retry_seed["browser_cookies"][0]["name"] == "__cf_bm"
-    assert retry_seed["browser_cookies"][0]["value"] == "transient-session"
     commit_state.assert_not_called()
     assert not state_path.exists()
     assert raw_payload.content is not None
     assert raw_payload.content.route_kind == "html"
     attempts = raw_payload.content.diagnostics["html_attempts"]
-    assert [attempt["result"] for attempt in attempts] == [
-        "extraction_failure",
-        "success",
-    ]
-    assert attempts[0]["failure_code"] == "empty_article_shell"
+    assert [attempt["result"] for attempt in attempts] == ["success"]
+    assert (
+        raw_payload.content.browser_context_seed["browser_cookies"]
+        == seed["browser_cookies"]
+    )
     assert raw_payload.content.diagnostics["browser_runtime_trace"][
         "storage_state_save"
     ] == {
@@ -239,12 +207,10 @@ def test_aip_browser_client_profile_and_author_fallback() -> None:
         "Ada Lovelace",
         "Grace Hopper",
     ]
-    assert client.profile.empty_script_response_urls == frozenset(
-        {
-            "https://static.adzerk.net/ados.js",
-            "https://crossmark-cdn.crossref.org/widget/v2.0/widget.js",
-        }
-    )
+    assert not client.profile.empty_script_response_urls
+    assert not client.profile.blocked_resource_types
+    assert not client.profile.fast_html_attempt
+    assert not client.profile.persistent_storage_state
 
 
 def test_aip_asset_extraction_prefers_largest_official_srcset_rendition() -> None:
