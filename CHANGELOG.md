@@ -6,6 +6,8 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.1.4 - 2026-09-05
+
 ### Fixed — publisher browser and asset retrieval
 
 - AIP now uses the normal HTML attempt without media interception or the Adzerk/Crossmark empty-script responses, preserving its existing non-persistent session and article readiness checks.

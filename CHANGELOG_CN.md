@@ -6,6 +6,8 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.1.4 - 2026-09-05
+
 ### 修复——出版社浏览器与资产获取
 
 - AIP 直接使用正常 HTML attempt，取消媒体拦截及 Adzerk/Crossmark 空脚本响应，保留现有非持久会话和正文 readiness 检查。
