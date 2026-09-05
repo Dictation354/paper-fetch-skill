@@ -51,7 +51,6 @@ from .results import _tool_result, error_payload_from_exception, with_schema_ver
 from .schemas import (
     FetchPaperRequest,
     FetchStrategyInput,
-    HasFulltextRequest,
     InlineImageBudget,
     ProviderStatusRequest,
     ResolvePaperRequest,
@@ -384,30 +383,6 @@ def resolve_paper_payload(
             runtime_context.close()
 
 
-def has_fulltext_payload(
-    *,
-    query: str,
-    env: Mapping[str, str] | None = None,
-    transport: HttpTransport | None = None,
-    context: RuntimeContext | None = None,
-    deps: MCPDeps = default_mcp_deps(),
-) -> dict[str, Any]:
-    request = HasFulltextRequest(query=query)
-    runtime_context = context or RuntimeContext(
-        env=deps.build_runtime_env(env), transport=transport
-    )
-    try:
-        probe_result = _call_service_probe_has_fulltext(
-            request.query, context=runtime_context, deps=deps
-        )
-        payload = probe_result.to_dict()
-        payload.pop("title", None)
-        return with_schema_version(payload)
-    finally:
-        if context is None:
-            runtime_context.close()
-
-
 def fetch_paper_payload(
     *,
     query: str,
@@ -640,25 +615,6 @@ def resolve_paper_tool(
                 title=title,
                 authors=authors,
                 year=year,
-                env=env,
-                deps=deps,
-            ),
-            is_error=False,
-        )
-    except Exception as error:
-        return _tool_result(error_payload_from_exception(error), is_error=True)
-
-
-def has_fulltext_tool(
-    *,
-    query: str,
-    env: Mapping[str, str] | None = None,
-    deps: MCPDeps = default_mcp_deps(),
-) -> CallToolResult:
-    try:
-        return _tool_result(
-            has_fulltext_payload(
-                query=query,
                 env=env,
                 deps=deps,
             ),

@@ -43,7 +43,7 @@ from ..workflow.types import allowed_preferred_providers
 from ..utils import dedupe_authors
 
 IncludeRefsMode = Literal["none", "top10", "all"]
-BatchCheckMode = Literal["article", "metadata"]
+BatchCheckMode = Literal["metadata"]
 CacheDetail = Literal["full", "compact"]
 BrowserPreflightDetail = Literal["full", "compact"]
 BatchFetchDetail = Literal["compact", "bounded"]
@@ -405,10 +405,6 @@ class _RequiredQueryRequest(BaseModel):
         if not normalized:
             raise ValueError("query must not be empty.")
         return normalized
-
-
-class HasFulltextRequest(_RequiredQueryRequest):
-    pass
 
 
 def _normalize_query_list(value: Any) -> list[str]:
@@ -795,7 +791,6 @@ class BrowserPreflightRequest(BaseModel):
 
 MCP_TOOL_REQUEST_MODELS: dict[str, type[BaseModel]] = {
     "resolve_paper": ResolvePaperRequest,
-    "has_fulltext": HasFulltextRequest,
     "fetch_paper": FetchPaperToolRequest,
     "list_cached": ListCachedRequest,
     "get_cached": GetCachedRequest,

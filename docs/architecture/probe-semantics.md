@@ -1,8 +1,8 @@
-# `has_fulltext` Probe 语义说明
+# `batch_check` Probe 语义说明
 
 这份文档解决：
 
-- `has_fulltext()` MCP tool 到底在回答什么问题
+- `batch_check()` MCP tool 到底在回答什么问题
 - 它和 `fetch_paper().has_fulltext` 有什么差别
 - 使用哪些证据、会返回哪些状态
 
@@ -26,19 +26,21 @@
 
 这很适合作为最终答案，但它不便宜。
 
-因此系统额外公开了一个 MCP 工具：
+因此单篇和批量低成本探测统一使用 MCP 工具：
 
 ```text
-has_fulltext(query)
+batch_check(queries=[query])
 ```
+
+该入口的 `mode` 默认且仅允许 `"metadata"`。独立 `has_fulltext` 工具已移除，MCP 共九个工具；底层 Python `probe_has_fulltext` 服务保持不变。
 
 它的目标不是“模拟完整抓取”，而是“用更便宜的信号给出一个有用但保守的预判”。
 
 ## 结论
 
-`has_fulltext()` 与 `fetch_paper().has_fulltext` 不是同一个语义层级：
+`batch_check()` 与 `fetch_paper().has_fulltext` 不是同一个语义层级：
 
-- `has_fulltext()`
+- `batch_check()`
   - 便宜
   - 快
   - 允许保守和不确定
@@ -52,7 +54,7 @@ has_fulltext(query)
 
 ## 证据来源
 
-`has_fulltext()` 只使用廉价信号，不会触发完整正文抓取瀑布。
+`batch_check()` 只使用廉价信号，不会触发完整正文抓取瀑布。
 
 具体包括：
 
@@ -108,7 +110,7 @@ has_fulltext(query)
 
 ## warnings 的作用
 
-`has_fulltext()` 返回里还会带 `warnings`。
+`batch_check()` 的每项结果还会带 `warnings`，单篇从 `results[0].warnings` 读取。
 
 这些 `warnings` 主要用来表达：
 
@@ -119,19 +121,31 @@ has_fulltext(query)
 
 调用方应把这些 warning 理解为“证据不足”或“当前探测能力受限”，而不是把它们直接解释成负结论。
 
-## 与 `batch_check(mode="metadata")` 的关系
+## 调用和返回
 
-`batch_check(mode="metadata")` 复用的就是同一条廉价 probe 逻辑。
+`batch_check(queries, mode="metadata", concurrency=1)` 复用 Python `probe_has_fulltext` 的廉价 probe 逻辑，不触发完整正文抓取，不写下载目录。
 
-这意味着：
+- 顶层保持 `schema_version=2`、`mode="metadata"`、按输入顺序的 `results`、`aborted`、`abort_reason` 和 `progress`。
+- 单篇也传 `queries=[query]`，从 `results[0]` 读取 `probe_state`、`evidence`、`warnings` 及逐项 `error`。歧义候选位于 `error.candidates`，不再依赖旧单篇工具顶层错误。
+- 成功项的 `has_fulltext/content_kind/has_abstract/source/acquisition/token_estimate/token_estimate_breakdown` 保持 null，`source_trail/trace` 保持空数组；`likely_has_fulltext` 仅在 `likely_yes` 时为 true，否则为 null。
+- 逐项保留稳定 1-based `index`、`query`、`status`、`error` 和 `provider_lane`，progress 区分 `terminal/completed/not_scheduled`。
 
-- 它不会触发完整正文抓取
-- 它不会把正文或 provider payload 落盘
-- 它更适合 citation list 批量预判，而不是最终抓取
+`batch_check(mode="article")` 已移除；真实抓取使用 `batch_fetch`，并通过每项 `acceptance` 判断结果。无需落盘的正文检查使用：
 
-相对地：
+```python
+batch_fetch(
+    queries=[...],
+    modes=["article"],
+    detail="compact",
+    save_markdown=False,
+    no_download=True,
+    prefer_cache=False,
+    artifact_mode="none",
+    strategy={"asset_profile": "none"},
+)
+```
 
-- `batch_check(mode="article")` 仍保留完整抓取语义
+不传 `batch_results`；这是显式调用组合，不改变 `batch_fetch` 默认行为。
 
 ## 为什么 probe 不能等价于最终 fetch verdict
 
@@ -148,7 +162,7 @@ has_fulltext(query)
 
 ## 非目标
 
-`has_fulltext()` 不负责：
+`batch_check()` 不负责：
 
 - CLI 级 `has_fulltext` 命令
 - 让 probe 结果强制等于 `fetch_paper().has_fulltext`

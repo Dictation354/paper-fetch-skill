@@ -276,7 +276,7 @@ resolve
 
 - 系统会先尽可能拿到 Crossref metadata。
 - `elsevier` 和 `arxiv` 会参加 provider metadata probe；`arxiv` 通过项目内部 Atom API client 调用官方 arXiv API，使用 catalog 编译出的 60 秒超时、2 次 transient retry 与跨 worker/同 scope 至少 3 秒 pacing。每个 scope 使用串行 start gate；迟到的 `Retry-After` 移动队首后，后续 waiter 仍按实际起点间隔三秒，而不是在 cooldown deadline 一起放行。该调用获取 title、authors、abstract、published、categories、arXiv DOI、abs URL 和 PDF URL。
-- `springer`、`wiley`、`science`、`pnas`、`ieee`、`copernicus`、`ams`、`mdpi`、`royalsocietypublishing`、`annualreviews`、`plos`、`frontiers`、`oxfordacademic`、`acs`、`iop`、`aip`、`tandf` 在 `probe_official_provider()` 和 `has_fulltext()` 中都只依赖 Crossref / landing-page / DOI 信号，不调用 publisher metadata API。
+- `springer`、`wiley`、`science`、`pnas`、`ieee`、`copernicus`、`ams`、`mdpi`、`royalsocietypublishing`、`annualreviews`、`plos`、`frontiers`、`oxfordacademic`、`acs`、`iop`、`aip`、`tandf` 在 `probe_official_provider()` 和 `probe_has_fulltext()` 中都只依赖 Crossref / landing-page / DOI 信号，不调用 publisher metadata API。
 - 最终会合并 primary / secondary metadata，统一生成正文抓取需要的元数据。
 
 ### 3. provider 全文主路径
@@ -712,7 +712,7 @@ CLI、Python API、MCP 当前默认值如下：
 - `parse_cache` 避免 Elsevier XML、Springer HTML、browser-workflow Markdown 和 HTML asset 重复解析。
 - IEEE dynamic HTML block-page token 判定也按 payload 缓存。
 - 同一个 `RuntimeContext` 生命周期内还会复用 `session_cache`。
-- workflow session cache key 由 `paper_fetch.workflow.session_cache.SessionCacheKey` 常量统一生成；`has_fulltext` 与 `fetch_paper` 可共享 query resolution、Crossref DOI metadata、Elsevier metadata probe 和 landing page probe。
+- workflow session cache key 由 `paper_fetch.workflow.session_cache.SessionCacheKey` 常量统一生成；`probe_has_fulltext` 与 `fetch_paper` 可共享 query resolution、Crossref DOI metadata、Elsevier metadata probe 和 landing page probe。
 - fetch 阶段命中 landing probe 时，会把 citation PDF URL 合并到 metadata `fulltext_links`。
 - PNAS 正文 HTML、正文图片/文件 fetcher 与 PDF/ePDF fallback 仍按阶段创建独立 browser context/page。
 - `RawFulltextPayload` 不提供 `metadata` 兼容视图；route、正文、diagnostics、assets、warnings 与 trace 使用对应 typed 字段。

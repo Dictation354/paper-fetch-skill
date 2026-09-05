@@ -61,7 +61,7 @@ Date: 2026-07-29
 - MCP runtime 基于官方 Python SDK 2.x 的 `MCPServer` 与 stdio transport，不再维护自定义 stdin reader/stream pump；server 同时服务 2025 握手协议与 2026-07-28 无状态协议，只保留静态 provider catalog resource。
 - payload/tool 入口通过 `paper_fetch.mcp._deps.MCPDeps` 显式注入 runtime env、service、provider registry 与 cache index 依赖；生产默认由 `default_mcp_deps()` 装配，测试通过构造定制 deps 注入。
 - 所有 MCP tool JSON payload 顶层都带 `schema_version=2`；错误 payload 保留兼容字段 `status` / `reason`，并补充 `code`、`http_status`、`error_category`、`retry_after_seconds`、`provider`、`warnings`、顶层唯一完整 `trace` 和 `source_trail` 供 host 做机器判断。v2 的 `quality` 不再复制完整 trace。
-- 当前十个工具都不在 `tools/list` 发布协议级 `outputSchema`。工具结果继续通过 `CallToolResult.structured_content` 返回带 `schema_version=2` 的既有 payload；该版本化 payload 契约不等同于 MCP output schema。
+- 当前九个工具都不在 `tools/list` 发布协议级 `outputSchema`。工具结果继续通过 `CallToolResult.structured_content` 返回带 `schema_version=2` 的既有 payload；该版本化 payload 契约不等同于 MCP output schema。
 - `resource://paper-fetch/provider-catalog` 由轻量 MCP catalog adapter 在读取时直接投影 runtime `ProviderSpec` 和 `SOURCE_PROVIDER_MAP`；provider/source、browser/runtime、status/preflight 与资产默认不在 server instructions、tool description 或 skill contract 中维护第二张静态表。
 - `fetch_paper` 和批量工具把阻塞抓取放到有界 `ThreadPoolExecutor`，事件循环继续处理 progress / log / cancellation；批量工具保持输入顺序，遇到 rate-limit status/code/category、HTTP 429 或 retry-after 后停止对应 provider/resource lane 的新提交。
 - async `fetch_paper` 用 `RuntimeContext(cancel_check=...)` 创建 cancel-aware `HttpTransport`，service/workflow 只消费 transport。
@@ -355,7 +355,7 @@ CLI 与 MCP live 入口都以 `paper_fetch.browser_preflight.run_browser_provide
 
 ### `has_fulltext`
 
-区分两个层面：`fetch_paper().has_fulltext` 是完整抓取瀑布后的最终 verdict；MCP 的 `has_fulltext()` 是只用更弱信号的廉价 probe。两者不要求逐案完全一致（见 [`probe-semantics.md`](probe-semantics.md)）。
+区分两个层面：`fetch_paper().has_fulltext` 是完整抓取瀑布后的最终 verdict；MCP 的 `batch_check(queries=[query])` 是只用更弱信号的廉价 probe，`mode` 默认且仅允许 `"metadata"`。独立 `has_fulltext` 工具和 article check 已移除，真实批量抓取使用 `batch_fetch` 并读取 acceptance。两者不要求逐案完全一致（见 [`probe-semantics.md`](probe-semantics.md)）。
 
 ## 关键例外与调用方容易误解的点
 

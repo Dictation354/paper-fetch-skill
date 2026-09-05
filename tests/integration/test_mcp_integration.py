@@ -494,7 +494,6 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                                 "browser_preflight",
                                 "fetch_paper",
                                 "get_cached",
-                                "has_fulltext",
                                 "list_cached",
                                 "provider_status",
                                 "resolve_paper",
@@ -562,15 +561,30 @@ class McpStdioIntegrationTests(unittest.IsolatedAsyncioTestCase):
                         )
 
                         probe = await session.call_tool(
-                            "has_fulltext", {"query": "10.1000/example"}
+                            "batch_check", {"queries": ["10.1000/example"]}
                         )
                         self.assertFalse(probe.is_error)
                         self.assertEqual(
-                            probe.structured_content["state"], "likely_yes"
+                            probe.structured_content["results"][0]["probe_state"],
+                            "likely_yes",
                         )
                         self.assertEqual(
-                            probe.structured_content["evidence"],
+                            probe.structured_content["results"][0]["evidence"],
                             ["crossref_fulltext_link"],
+                        )
+
+                        removed_probe = await session.call_tool(
+                            "has_fulltext", {"query": "10.1000/example"}
+                        )
+                        self.assertTrue(removed_probe.is_error)
+                        article_check = await session.call_tool(
+                            "batch_check",
+                            {"queries": ["10.1000/example"], "mode": "article"},
+                        )
+                        self.assertTrue(article_check.is_error)
+                        self.assertEqual(probe.structured_content["mode"], "metadata")
+                        self.assertIsNone(
+                            probe.structured_content["results"][0]["error"]
                         )
 
                         provider_status = await session.call_tool("provider_status", {})

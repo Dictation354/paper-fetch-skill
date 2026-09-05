@@ -238,7 +238,6 @@ class McpPayloadCacheTests(unittest.TestCase):
         server = build_server()
         expected = {
             "resolve_paper": {"read_only_hint": True, "open_world_hint": True},
-            "has_fulltext": {"read_only_hint": True, "open_world_hint": True},
             "fetch_paper": {
                 "read_only_hint": False,
                 "destructive_hint": False,

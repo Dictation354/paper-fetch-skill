@@ -96,7 +96,7 @@
 - [`architecture/overview.md`](architecture/overview.md)
   - 讲当前系统分层、端到端业务流程、数据契约和扩展点。
 - [`architecture/probe-semantics.md`](architecture/probe-semantics.md)
-  - 讲 `has_fulltext()` 的 probe 语义与边界。
+  - 讲 `batch_check()` 的单篇/批量 probe 语义与边界。
 
 ## 术语表
 

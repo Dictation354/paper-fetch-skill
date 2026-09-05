@@ -25,7 +25,6 @@ from .cache_payloads import (
 )
 from .fetch_tool import (
     fetch_paper_tool_async,
-    has_fulltext_tool,
     provider_status_tool,
     resolve_paper_tool,
 )
@@ -190,15 +189,6 @@ def build_server() -> PaperFetchMCPServer:
             year=year,
             deps=deps,
         )
-
-    @server.tool(
-        name="has_fulltext",
-        description="Probe whether a paper likely has accessible full text using cheap metadata and landing-page signals.",
-        annotations=_read_only_annotations(open_world=True),
-        structured_output=False,
-    )
-    def has_fulltext(query: str) -> CallToolResult:
-        return has_fulltext_tool(query=query, deps=deps)
 
     @server.tool(
         name="fetch_paper",
@@ -387,9 +377,12 @@ def build_server() -> PaperFetchMCPServer:
     @server.tool(
         name="batch_check",
         description=(
-            "Check multiple papers without returning full bodies, with optional cross-host concurrency. "
-            "Success items keep only lightweight provenance fields. Browser routes require "
-            "an already prepared Camoufox runtime."
+            "Probe one or more papers using cheap metadata and landing-page signals, "
+            "with optional cross-host concurrency. mode defaults to metadata and accepts "
+            "only metadata; article mode and the standalone has_fulltext tool are removed. "
+            "Read probe_state, evidence, and errors from input-ordered results (results[0] "
+            "for one query). Never fetches full bodies or writes downloads. Use batch_fetch "
+            "for real fetching and judge results by acceptance."
         ),
         annotations=_read_only_annotations(open_world=True),
         structured_output=False,

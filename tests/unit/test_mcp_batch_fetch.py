@@ -584,18 +584,35 @@ def test_batch_fetch_reports_cache_hit_without_returning_cached_body() -> None:
     assert all("content" not in item for item in payload["results"])
 
 
+@pytest.mark.parametrize("modes", [None, ["article"]])
 def test_batch_fetch_no_download_temporary_read_does_not_write_selected_scope(
     tmp_path: Path,
+    modes,
 ) -> None:
     result = asyncio.run(
         batch_fetch_tool_async(
-            **_temporary_kwargs(download_dir=tmp_path, deps=_deps(_successful_fetch))
+            **_temporary_kwargs(
+                modes=modes,
+                detail="compact",
+                save_markdown=False,
+                prefer_cache=False,
+                download_dir=tmp_path,
+                deps=_deps(_successful_fetch),
+            )
         )
     )
 
     assert result.is_error is False
     assert list(tmp_path.iterdir()) == []
     assert result.structured_content["persisted"] is False
+    assert all(
+        item["acceptance"]["content"] == "fulltext"
+        for item in result.structured_content["results"]
+    )
+    assert all(
+        "article" not in item and "markdown" not in item
+        for item in result.structured_content["results"]
+    )
 
 
 def test_batch_fetch_archive_returns_verified_hash_and_path(

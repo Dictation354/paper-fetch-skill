@@ -8,6 +8,7 @@ from jsonschema import Draft202012Validator
 from pydantic import BaseModel, ValidationError
 
 from paper_fetch.mcp.schemas import (
+    BatchCheckRequest,
     BatchFetchRequest,
     BrowserPreflightRequest,
     FetchPaperRequest,
@@ -29,7 +30,6 @@ def test_public_tool_schemas_are_valid_and_forbid_unknown_fields() -> None:
         "browser_preflight",
         "fetch_paper",
         "get_cached",
-        "has_fulltext",
         "list_cached",
         "provider_status",
         "resolve_paper",
@@ -38,6 +38,23 @@ def test_public_tool_schemas_are_valid_and_forbid_unknown_fields() -> None:
         assert schema.get("additionalProperties") is False
         assert '"$ref"' not in json.dumps(schema)
         Draft202012Validator.check_schema(schema)
+
+
+@pytest.mark.parametrize("native", [False, True])
+def test_batch_check_schema_accepts_only_metadata(native: bool) -> None:
+    server = build_server()
+    tools = asyncio.run(server.list_native_tools() if native else server.list_tools())
+    schema = next(tool.input_schema for tool in tools if tool.name == "batch_check")
+    validator = Draft202012Validator(schema)
+    arguments = {"queries": ["10.1000/example"]}
+
+    assert validator.is_valid(arguments)
+    assert validator.is_valid({**arguments, "mode": "metadata"})
+    assert not validator.is_valid({**arguments, "mode": "article"})
+    assert schema["properties"]["mode"]["default"] == "metadata"
+    assert BatchCheckRequest.model_validate(arguments).mode == "metadata"
+    with pytest.raises(ValidationError, match="unsupported batch_check mode"):
+        BatchCheckRequest.model_validate({**arguments, "mode": "article"})
 
 
 @pytest.mark.parametrize(

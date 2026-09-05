@@ -2,7 +2,7 @@
 
 把每个目标作为独立状态项推进，整批任务共享意图、输出和并发策略。唯一阶段顺序如下，不得插入后端确认或保存确认作为额外阶段：
 
-> 输入规范化 → resolve/batch_resolve → DOI 去重 → 仅歧义项阻塞 → 本地/cache → 意图 → 后端 → 必要状态检查 → fetch → acceptance → report
+> 输入规范化 → resolve/batch_resolve → DOI 去重 → 仅歧义项阻塞 → 意图 → 本地/cache → 后端 → 必要状态检查 → fetch → acceptance → report
 
 阶段依赖必须有序；一个阶段内身份独立的论文可以受控并发。某个目标暂停时，除非用户要求整批原子完成，否则继续推进其余身份明确的目标。
 
@@ -14,10 +14,12 @@
 - `insufficient_identity`：现有标识和书目信息不足以唯一定位目标。
 - `manual_auth`：必须由用户完成人工登录或明确授权。
 - `lawful_access_boundary`：付费、许可范围或其他合法访问边界需要用户决定或补充权限。
-- `overwrite_existing`：继续会覆盖已有且可用的成果。
+- `overwrite_existing`：继续会覆盖已有且可用的成果，且用户尚未授权该覆盖。
 - `material_output_choice`：多个无法自动推断的选择会实质改变产物内容、位置或资产集合。
 
 其它事项一律不标为 BLOCKING。尤其不得因为尚未讨论保存、选择 CLI/MCP、目标较多、命中缓存、普通降级或某个目标失败而暂停整批任务。保存目录只有在完成下述推断后仍不唯一时，才归入 `material_output_choice`。
+
+沿用用户在当前任务中的明确选择和已有授权，不因进入新阶段而重复询问。BLOCKING 用于仍需用户决定的事项；缺少工具或 runtime 时报告该执行面的能力限制，并继续其它可执行目标，不强行安装环境。
 
 ## 状态机
 
@@ -45,36 +47,36 @@
 - 继续推进其它身份唯一的目标；用户要求整批原子完成时，才等待所有身份项就绪。
 - 用户消歧后从规范身份恢复状态项，并保留原始条目映射。
 
-### 5. 本地/cache
+### 5. 意图
 
-- 严格执行 [`presets.md`](presets.md) 的本地优先决策树：已核验本地 fulltext → 同 scope 精确 DOI cache → 严格请求匹配的 prefer-cache → 正常 fetch。
-- 先检查用户已提供且身份可证明的全文文件。已知 DOI 时调用 `get_cached(doi, download_dir=<scope>, detail="compact", preferred_only=true, modes=..., strategy=..., include_refs=..., max_tokens=...)`，不要全量调用 `list_cached()`；请求参数必须与后续 `fetch_paper(..., prefer_cache=true)` 相同，且始终传相同 `download_dir`。
-- 只有文件身份、内容级别和当前任务意图相符时才复用。`get_cached` 不联网；顶层 `status=hit` 只证明存在条目，FetchEnvelope 只有在 `request_satisfied=true` 时才满足本次请求。该判断仍由 `cached_request_matches()` 严格完成，不匹配时正常进入 fetch。
-- 缓存命中不是自动验收通过，metadata-only 也不是全文。合格本地全文或精确缓存命中可跳过联网抓取，但仍必须进入 acceptance 和 report。
-
-### 6. 意图
-
-- 从用户目标确定本次是临时阅读、可缓存阅读、单篇本地归档、批量可读性分诊或批量本地归档，并按 [`presets.md`](presets.md) 记录需要的正文、引用、cache、artifact、资产和最终文件。
+- 从用户目标确定本次是临时阅读、可缓存阅读、单篇本地归档、批量可读性分诊或批量本地归档，读取 [`presets.md`](presets.md) 的共同规则和当前预设，确定正文、引用、cache、artifact、资产及最终文件参数。预设只补全未指定项，用户明确的路径、资产范围和执行面直接沿用。
 - 普通阅读、总结、比较、翻译、批判或信息提取默认不要求先讨论保存；用户已明确产物目标时直接沿用。
 - 需要本地归档时，按以下优先级推断保存目录：用户显式路径 → 项目配置或唯一已有约定 → 唯一合理的 `papers/` → 仍无法唯一确定时请求选择。
-- 使用实际目录和文件判断已有成果。继续会覆盖可用成果时以 `overwrite_existing` 暂停；目录选择会实质改变产物且无法唯一推断时以 `material_output_choice` 暂停。
+- 使用实际目录和文件判断已有成果。继续会覆盖可用成果且尚未获得该覆盖授权时以 `overwrite_existing` 暂停；已有授权直接沿用。目录选择会实质改变产物且无法唯一推断时以 `material_output_choice` 暂停。
+
+### 6. 本地/cache
+
+- 按 [`presets.md`](presets.md#本地优先决策树) 先检查合格本地全文，再执行当前预设适用的 cache 分支。临时阅读不要求选择 cache scope；没有指定 scope 或用户禁止使用缓存时跳过缓存查询，保持完全不落盘预设。
+- 先检查用户已提供且身份可证明的全文文件。需要缓存复用且已知 DOI/scope 时调用 `get_cached(doi, download_dir=<scope>, detail="compact", preferred_only=true, modes=..., strategy=..., include_refs=..., max_tokens=...)`，不要全量调用 `list_cached()`；参数使用上一步确定的值，与后续 prefer-cache fetch 保持一致。
+- 只有文件身份、内容级别和当前任务意图相符时才复用。`get_cached` 不联网；顶层 `status=hit` 只证明存在条目，FetchEnvelope 只有在 `request_satisfied=true` 时才满足本次请求。不匹配时正常进入 fetch，不放宽严格请求匹配。
+- 缓存命中不是自动验收通过，metadata-only 也不是全文。合格本地全文或精确缓存命中可跳过联网抓取，但仍必须进入 acceptance 和 report。
 
 ### 7. 后端
 
 - 根据去重后的规范目标、任务意图、产物形式和当前可用能力自主选择执行面。去重后的数量可以辅助并发规划，但不得成为单独的硬阈值。
 - 批量本地归档默认使用 CLI；需要 MCP 宿主内 progress/cancel、结构化 acceptance 或不便解析 CLI stdout 时使用 `batch_fetch`。少量阅读或结构化抽取默认使用 MCP。用户明确禁止某个执行面时切换到可用的另一个执行面。
-- 不因选择 CLI 或 MCP 请求额外确认，也不在二者之间建立等待往返。正常 CLI 单篇/批量流程、最终结果文件和窄 fallback 都读取 [`cli-workflow.md`](cli-workflow.md)。
+- 不因选择 CLI 或 MCP 请求额外确认。按选定执行面的预设矩阵核对落盘语义；使用 CLI 时再读 [`cli-workflow.md`](cli-workflow.md) 的单篇或批量章节，入口不可用时再读窄 fallback。
 
 ### 8. 必要状态检查
 
 - 仅当 provider 凭证、浏览器运行时、人工登录或合法访问上下文可能影响目标时调用 `provider_status()`，并按 [`environment.md`](environment.md) 处理。
-- 对 runtime `capabilities.browser_available=true`（由 provider routes 派生） 的 provider，在首次联网抓取前先用 `provider_status(provider=...)` 确认静态 runtime；缺失时显式运行 `python -m camoufox fetch`，需要真实链路证明时再运行 MCP `browser_preflight(provider=...)` 或 CLI `paper-fetch browser-preflight --provider ...`。live preflight 可能联网并写 storage-state，不能当作只读检查。
-- 预检的 `challenge` / `auth_required` 才转入显式人工 `auth`；`runtime_error` 先修本地运行时，`ready` 才继续 fetch。预检不执行 PDF fallback 或自动 auth，也不得尝试绕过 challenge。
+- 对 runtime `capabilities.browser_available=true`（由 provider routes 派生） 的 provider，在首次联网抓取前先用 `provider_status(provider=...)` 确认静态 runtime；缺失时按 [`environment.md`](environment.md#运行时准备与授权) 处理。只有需要真实链路证明时才运行 MCP `browser_preflight(provider=...)` 或 CLI `paper-fetch browser-preflight --provider ...`；它可能联网并写 storage-state，不能当作只读检查。
+- 实际 fetch 或按需预检的 `challenge` / `auth_required` 才转入显式人工 `auth`；`runtime_error` 按运行时准备与授权规则处理。已执行 live 预检时，以 `ready` 作为该预检允许继续 fetch 的结论，不额外要求每次抓取都做 live 预检。预检不执行 PDF fallback 或自动 auth，也不得尝试绕过 challenge。
 - 需要人工登录/授权时使用 `manual_auth` 暂停；遇到付费、许可或合法访问边界时使用 `lawful_access_boundary` 暂停。不得绕过登录、验证码、付费墙或访问控制。
 
 ### 9. fetch
 
-- 对尚未由合格本地/cache 满足的目标执行抓取或分诊；按意图使用 `has_fulltext(...)`、`batch_check(...)`、`fetch_paper(...)` 或 `batch_fetch(...)`，CLI 只接收规范目标并按选定的批量归档参数运行。目标明确需要 browser 且静态状态显示 managed runtime 未准备时，报告 runtime 边界，不让普通 fetch 隐式准备环境。
+- 对尚未由合格本地/cache 满足的目标执行抓取或分诊；按意图使用 `batch_check(queries=[query])`（单篇探测）或 `batch_check(...)`（批量探测）、`fetch_paper(...)` 或 `batch_fetch(...)`，CLI 只接收规范目标并按选定的批量归档参数运行。目标明确需要 browser 且静态状态显示 managed runtime 未准备时，报告 runtime 边界，不让普通 fetch 隐式准备环境。
 - `batch_check(mode="metadata")` 只给出 `likely_yes` / `unknown` 的低成本探测，不代表已抓取全文；超过 50 条时按原始 1-based index 分块并在合并后恢复原顺序。
 - `batch_fetch` 才是 MCP 的真实批量全文入口；单块最多 50 条，默认只返回 input-ordered compact record/acceptance，实际完成顺序另列。可选 `batch_results` 只写最终 input-ordered JSONL，不提供恢复；临时阅读不应为获得正文而取消 compact 上限。
 - 同一阶段内允许在 runtime 限制和 provider 速率约束下受控并发；不要求所有论文严格逐篇串行，浏览器资产下载仍服从 runtime 自身的串行约束。
@@ -89,6 +91,6 @@
 
 ### 11. report
 
-- 汇总规范身份、原始条目映射、去重结果、本地/cache 复用、所选后端、实际产物路径和 acceptance 结论。
-- 明确区分 complete、degraded、limited、failed、action_required，并列出可操作的警告、阻塞项和下一步。
-- 对批量任务逐项报告，同时给出成功、降级、失败和待人工处理的汇总；不得把 fetch 完成当作最终成功。
+- 按 [`acceptance.md`](acceptance.md#最终报告) 区分普通阅读、归档和失败报告；保留身份、来源、acceptance 结论及影响任务的降级，技术细节按需展示。
+- 批量结果保留原始条目映射、去重结果及逐项状态，并汇总 complete、degraded、limited、failed、action_required、取消与未调度项；不得把 fetch 完成当作最终成功。
+- 获取和验收完成后，宿主用已核验的文本继续用户要求的总结、比较、翻译或提取；若材料不足，说明具体限制并完成证据支持的部分。paper-fetch 的职责仍限于身份解析、获取、验收和报告。

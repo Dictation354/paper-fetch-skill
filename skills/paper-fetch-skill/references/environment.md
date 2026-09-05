@@ -29,7 +29,13 @@
 - `PAPER_FETCH_BROWSER_USER_AGENT`：publisher direct 路线的可选浏览器 UA；它与 `PAPER_FETCH_SKILL_USER_AGENT` 分离。Camoufox 忽略该值，以保持生成的 Firefox 指纹一致。
 - `PAPER_FETCH_WILEY_STORAGE_STATE_JSON`、`PAPER_FETCH_WILEY_PROFILE_DIR`：Wiley 的兼容 storage/profile 覆盖。常规流程优先使用 provider-scoped storage-state；人工验证只在 preflight/fetch 明确要求时运行 `paper-fetch auth <provider>`。
 
-静态 `paper-fetch doctor --provider <name> --detail full --json` / MCP `provider_status` 不启动 Camoufox，也不访问出版社页面。需要 live 证明时再运行 CLI `paper-fetch browser-preflight --provider <name>` 或 MCP `browser_preflight(provider=...)`；两者只使用已准备的 runtime，缺失时需显式运行 `python -m camoufox fetch`。它们可能更新过滤后的 storage-state，但不会运行 PDF fallback 或自动认证。MCP preflight is open-world：它会访问远端页面、非只读且可能写 storage-state。
+静态 `paper-fetch doctor --provider <name> --detail full --json` / MCP `provider_status` 不启动 Camoufox，也不访问出版社页面。需要 live 证明时再运行 CLI `paper-fetch browser-preflight --provider <name>` 或 MCP `browser_preflight(provider=...)`；两者只使用已准备的 runtime。它们可能更新过滤后的 storage-state，但不会运行 PDF fallback 或自动认证。MCP preflight is open-world：它会访问远端页面、非只读且可能写 storage-state。
+
+## 运行时准备与授权
+
+普通 MCP/CLI/library 工具不自动安装、修复或更新 Camoufox。缺失 runtime 或返回 `runtime_error` 时，代理先说明缺失能力和准备命令 `python -m camoufox fetch`，或诊断给出的具体修复动作。只有当前任务已有适用的安装/修复授权时才执行，已有授权无需再次确认；单纯请求获取论文不授权安装环境。未获授权时报告该执行面的限制，继续其它可执行目标。
+
+运行时准备不授予出版社访问权限。只有实际 fetch 或按需 preflight 明确返回 `challenge` / `auth_required` 时才由用户执行人工 auth；不自动登录或绕过访问控制。
 
 ## 图片与资产工具
 
@@ -57,6 +63,6 @@
 ## 诊断顺序
 
 1. 用 `paper-fetch doctor --json` 或 `provider_status(detail="full")` 做无网络静态检查；输出只包含变量名、是否存在和来源层；token, cookie, endpoint, path, and other values are never echoed。
-2. 只有 runtime catalog 表明目标依赖 browser runtime 且需要真实链路证明时，运行 `browser-preflight` / `browser_preflight`；缺失 runtime 时先显式运行 `python -m camoufox fetch`。
-3. 只有结构化结果为 `challenge` / `auth_required` 时进入人工 auth；`runtime_error` 先修 Camoufox runtime/工具链。
+2. 只有 runtime catalog 表明目标依赖 browser runtime 且需要真实链路证明时，运行 `browser-preflight` / `browser_preflight`；缺失 runtime 时按[运行时准备与授权](#运行时准备与授权)处理。
+3. 只有结构化结果为 `challenge` / `auth_required` 时进入人工 auth；`runtime_error` 同样按上述授权规则处理，不因诊断建议自动扩大任务为环境修复。
 4. 配置或合法访问状态没有变化时，不重复抓取；重试边界统一遵循 [`failure-handling.md`](failure-handling.md)。

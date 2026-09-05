@@ -1,6 +1,6 @@
 # 任务预设与落盘矩阵
 
-把已确认的任务意图映射成下面五个预设。先按 [`workflow.md`](workflow.md) 完成身份解析和本地/cache 检查，再使用本文件；不要用预设跳过 acceptance 和 report。
+按 [`workflow.md`](workflow.md) 完成身份解析后，读取共同规则和当前任务对应的预设，先确定请求参数及必要的 scope，再检查本地/cache。预设只补全用户未指定项；执行面确定后核对对应落盘矩阵，批量超过 50 条时再读分块规则。不要用预设跳过 acceptance 和 report。
 
 ## 目录
 
@@ -233,20 +233,22 @@ CLI 不提供 cache-only `prefer_cache`。`--artifact-mode none` 不会禁止显
 
 ## 本地优先决策树
 
-固定顺序是：已核验本地 fulltext → 同 scope 精确 DOI cache → 严格请求匹配的 prefer-cache → 正常 fetch。
+先按任务意图确定参数，再按适用分支执行：已核验本地 fulltext → 同 scope 精确 DOI cache → 严格请求匹配的 prefer-cache → 正常 fetch。
 
-对每个已经规范化的目标严格按以下顺序执行：
+临时阅读未指定 cache scope 或用户禁止使用缓存时，跳过第 2、3 步，不为查缓存而要求目录；若本地全文未满足任务，直接使用临时阅读预设。临时阅读已指定 scope 且允许读取缓存时，可只读检查并复用合格本地 Markdown；需要由 `fetch_paper` 返回结构化正文时仍保持 `prefer_cache=false, download_dir=null`，不把缓存查询 scope 带入完全不落盘请求。可缓存阅读和归档则使用各自预设的 scope 与缓存参数。
+
+对每个已经规范化的目标按以下顺序执行适用步骤：
 
 1. **已核验本地 fulltext**：先检查用户提供或工作区已有的文件。只复用身份可证明、`has_fulltext=true` / `content_kind=fulltext`、内容和当前资产意图相符的文件；命中后不调用网络工具，直接进入 acceptance。
 2. **同 scope 精确 DOI cache**：已知 DOI 时调用 `get_cached(doi=<normalized-doi>, download_dir=<scope>)`，实际常规参数补全为 `detail="compact", preferred_only=true, modes=..., strategy=..., include_refs=..., max_tokens=...`；不要为已知 DOI 全量调用 `list_cached()`。`get_cached` 只扫描该 scope，不联网。若 `preferred.markdown` 是已证明的合格 fulltext，读取它并进入 acceptance；不能仅凭顶层 `status=hit` 宣称请求匹配。
 3. **严格请求匹配的 prefer-cache**：仍需结构化响应或只有 fetch-envelope 时，先要求 compact cache 结果的 `request_satisfied=true`，再用同一个 `download_dir` 调用 `fetch_paper(..., prefer_cache=true)`，并显式传与当前意图相同的 `modes`、`strategy`、`include_refs` 和 `max_tokens`。该布尔值直接复用 `cached_request_matches()` 严格匹配并检查 payload modes；不匹配不得复用。
-4. **正常 fetch**：sidecar 缺失或请求不匹配时，上一步的 `fetch_paper` 自动进入正常抓取。不要因 cache miss 停止，也不要放宽请求匹配。
+4. **正常 fetch**：本地/cache 未满足任务时，按选定预设调用 `fetch_paper`；可缓存请求保持 `prefer_cache=true`，工具在 cache miss 时进入正常抓取。不要因 cache miss 停止，也不要放宽请求匹配。
 
-从 `get_cached` 到 `fetch_paper` 始终传相同的 `download_dir`。只有 DOI 未知且任务确实需要浏览 scope 时才使用 `list_cached()`；它不能替代身份解析。
+使用第 3 步的 prefer-cache 复用时，从 `get_cached` 到 `fetch_paper` 始终传相同的 `download_dir` 和请求参数。只有 DOI 未知且任务确实需要浏览 scope 时才使用 `list_cached()`；它不能替代身份解析。
 
 ## 批量分块与证据等级
 
 - 在输入规范化时为每条原始输入固定 1-based `index`，去重和分块后仍保留原 index 到规范目标的映射。
 - 对超过 50 条的分诊按原顺序切块；例如 113 条必须拆成 `[1..50]`、`[51..100]`、`[101..113]`。每块最多 50 条，并显式传 `concurrency`。给每条块内结果重新附上分块前的原 index，收集后按该 index 排序合并；不得用完成顺序或块内 `1..N` 重新编号。
 - `batch_check(mode="metadata")` 是 likely probe：`likely_yes` 表示有可读信号，`unknown` 表示证据不足。二者都不是已抓取全文。
-- 只有 `batch_check(mode="article")` 或后续 `fetch_paper` 才执行真实抓取；仍需通过 acceptance 才能报告全文完成。
+- 真实抓取使用 `batch_fetch` 或 `fetch_paper`，并通过 acceptance 才能报告全文完成；已移除 article check。无需落盘的正文检查参数见 [Batch Probe Contract](tool-contract.md#batch-probe-contract)。

@@ -1,6 +1,6 @@
 # Failure Handling
 
-本文件是代理级重试、限流和失败报告的唯一长规则事实源。`SKILL.md` 与其它 reference 只保留链接、运行时事实或简短护栏，不另建重试规则。
+出现失败、限流、需解释的降级或准备重试时，读取总尝试次数及对应决策表行；批量任务再读分诊和并发。本文件是代理级重试、限流和失败报告的唯一长规则事实源。`SKILL.md` 与其它 reference 只保留链接、运行时事实或简短护栏，不另建重试规则。
 
 ## 目录
 
@@ -21,7 +21,7 @@
 ## 批量分诊和并发
 
 - `batch_check(mode="metadata")` 是较低成本的 likely probe，只产生 `probe_state=likely_yes|unknown` 的证据。`likely_yes` 表示存在可读信号，不能报告成已经抓取正文、已经验收全文或已验证 `has_fulltext=true`。
-- `batch_check(mode="article")` 会为每项执行真实 article fetch，成本和副作用都更高；其 `has_fulltext` / `content_kind` 仍须经过 acceptance 才能成为完成结论。
+- 独立 `has_fulltext` 和 `batch_check(mode="article")` 已移除。单篇探测调用 `batch_check(queries=[query])`，读取 `results[0].error`（歧义候选也在其中）；真实正文检查使用 `batch_fetch` 并读取 acceptance，无落盘参数见 [Batch Probe Contract](tool-contract.md#batch-probe-contract)。
 - 在切块前给输入保留原始 1-based `index`。每次 `batch_resolve` / `batch_check` 最多 50 条；超过 50 条时按原顺序切为连续块，例如 113 条为 `1..50`、`51..100`、`101..113`。把块内结果映射回原 index，最终按原 index 排序，不按完成顺序或块内序号重新编号。
 - `batch_fetch` 同样每次最多 50 条，并直接返回 input-ordered terminal records 与独立 `completion_order`；不要按完成顺序重排。单项普通失败默认继续，其结构化 acceptance/error 进入最终报告；显式 `continue_on_error=false` 才停止全批后续新提交。
 - 阶段之间保持依赖有序：先 resolve/去重，再 probe 或 fetch，最后 acceptance/report。同一阶段内身份独立的条目可使用显式 `concurrency=1..8` 受控并发；根据 provider、宿主容量和任务规模选择，不假定默认并发为 3。
@@ -48,7 +48,7 @@
 | `no_access` / `not_configured` / HTTP 401/403：缺少凭证、授权、entitlement 或合法访问上下文 | `missing_env` 已补齐，或用户完成手动认证/授权且状态可观察地改变；不得自动 auth | 认证状态未变、合法访问边界不允许继续、用户不授权，或达到 attempt 3 | `status/code`、provider、`http_status`、`missing_env`、所需用户动作、attempt |
 | `rate_limited` / HTTP 429 / 出现 `retry_after_seconds`：provider 或资源 lane 限流 | 停止同 provider 新提交并尊重 Retry-After；无该字段时使用工具记录的 cooldown/policy，明确报告服务端未给时长 | 冷却尚未结束、任务不适合等待、冷却后仍限流，或达到 attempt 3 | provider/lane、`http_status`、`retry_after_seconds` 或 cooldown、未调度 index、attempt |
 | `network_error` / `timeout` / `tls_error` / `dns_error` / `connection_reset` / `connection_closed`，或已返回的 HTTP 5xx | 确认底层 transport 已结束；等待/backoff 后观察网络状态变化，或在契约允许时改变 provider route/环境；不得立即原样重跑 | 网络/路由状态无变化、相同瞬态重复，或达到 attempt 3 | `error_category`、`http_status`、provider/route、等待或环境变化、attempt |
-| browser transient：trace/preflight 出现 `browser_context_create_failed`、`browser_page_create_failed` 或 `camoufox_request_failed`，且不含确定性 challenge/auth 证据 | 先读取 `backend/code/stage/runtime_state/version/diagnostic_path` 并检查静态配置；`provider_status()` 不是 live 健康证明。runtime 缺失时显式运行 `python -m camoufox fetch`。只有 browser profile、认证状态、运行时健康、请求参数或环境发生变化才重试 | 无状态变化、preflight 为 challenge/auth_required/runtime_error 且未解决、相同失败重复，或达到 attempt 3 | provider、backend、精确 browser code/stage、runtime 状态/版本、diagnostic artifact、preflight/trace、变化项、`source_trail`、attempt |
+| browser transient：trace/preflight 出现 `browser_context_create_failed`、`browser_page_create_failed` 或 `camoufox_request_failed`，且不含确定性 challenge/auth 证据 | 先读取 `backend/code/stage/runtime_state/version/diagnostic_path` 并检查静态配置；`provider_status()` 不是 live 健康证明。runtime 缺失或异常时按 [`environment.md`](environment.md#运行时准备与授权) 的已有授权规则处理。只有 browser profile、认证状态、运行时健康、请求参数或环境发生变化才重试 | 无状态变化、preflight 为 challenge/auth_required/runtime_error 且未解决、相同失败重复，或达到 attempt 3 | provider、backend、精确 browser code/stage、runtime 状态/版本、diagnostic artifact、preflight/trace、变化项、`source_trail`、attempt |
 | `cancelled` / `request_cancelled`：用户、宿主或 cooperative cancellation 终止 | 只有用户明确恢复任务并重新确认仍需执行时才开始新的尝试；批量先保留 cancelled/not-scheduled index | 未恢复、任务已过期，或达到 attempt 3 | 已完成/取消/未调度 index、产物、恢复条件、attempt |
 | 未分类 `error`：结构化字段不足，且不匹配上述类别 | 先收集 `reason`、trace、provider status 与实际产物；只有诊断导出具体参数/状态变化时重试 | 无可执行变化、同错重复，或达到 attempt 3 | `status/code/error_category`、`reason`、provider、trace/产物、诊断和 attempt |
 
@@ -66,4 +66,4 @@
 
 ## 最终报告
 
-每项至少报告原始 1-based index/query、规范 identity、最终 `status/code/error_category`、provider/source、尝试总数、每次有意义变化、Retry-After/cooldown、降级或 acceptance、实际产物路径，以及仍需用户完成的动作。批量还要报告已完成、失败、限流、取消和未调度的 index；不得用完成顺序替代输入顺序。
+按 [`acceptance.md`](acceptance.md#最终报告) 展示受影响目标、原因、降级和必要动作；决策表中的技术字段供失败核对、诊断或审计时展开，不要求每次阅读任务全部列出。保留每次有意义变化、尝试次数和 Retry-After/cooldown 证据；批量保留已完成、失败、限流、取消和未调度的原 index，不用完成顺序替代输入顺序。

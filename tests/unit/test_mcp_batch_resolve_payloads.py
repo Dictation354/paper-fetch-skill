@@ -8,6 +8,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+import pytest
+
 from paper_fetch.http import RequestFailure
 from paper_fetch.mcp import batch as mcp_batch
 from paper_fetch.mcp.batch import (
@@ -20,7 +22,6 @@ from paper_fetch.mcp.cache_payloads import get_cached_payload, list_cached_paylo
 from paper_fetch.mcp.fetch_tool import (
     fetch_paper_payload,
     fetch_paper_tool_async,
-    has_fulltext_tool,
     resolve_paper_payload,
     resolve_paper_tool,
 )
@@ -30,7 +31,7 @@ from paper_fetch.mcp.server import build_server
 from paper_fetch.models import EXTRACTION_REVISION, RenderOptions
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.runtime import RuntimeContext
-from paper_fetch.service import FetchStrategy, PaperFetchFailure
+from paper_fetch.service import FetchStrategy, HasFulltextProbeResult, PaperFetchFailure
 from paper_fetch.tracing import trace_event
 
 from ._mcp_support import (
@@ -535,24 +536,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         self.assertEqual(len(set(transport_ids)), 1)
         mocked_fetch.assert_not_called()
 
-    def test_batch_check_payload_article_mode_keeps_breakdown(self) -> None:
-        payload = batch_check_payload(
-            queries=["10.1000/one"],
-            mode="article",
-            deps=mcp_test_deps(
-                service_fetch_paper=lambda *_args, **_kwargs: sample_envelope(
-                    modes={"article"}, doi="10.1000/one"
-                )
-            ),
-        )
-
-        self.assertEqual(payload["results"][0]["token_estimate"], 128)
-        self.assertEqual(
-            payload["results"][0]["token_estimate_breakdown"],
-            {"abstract": 32, "body": 96, "refs": 24},
-        )
-
-    def test_batch_check_article_context_trace_and_request_state_are_isolated(
+    def test_batch_check_probe_context_trace_and_request_state_are_isolated(
         self,
     ) -> None:
         barrier = threading.Barrier(2)
@@ -560,7 +544,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         transport_ids: list[int] = []
         session_ids: list[int] = []
 
-        def fake_fetch(query, *, context=None, modes=None, **_kwargs):
+        def fake_probe(query, *, context=None):
             assert context is not None
             context_ids.append(id(context))
             transport_ids.append(id(context.transport))
@@ -571,22 +555,23 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             context.session_cache[("query",)] = query
             context.diagnostic_artifacts.append({"query": query})
             barrier.wait(timeout=2)
-            envelope = sample_envelope(modes=modes, doi=query)
-            envelope.trace = list(context.fetch_trace)
-            return envelope
+            self.assertEqual(context.session_cache[("query",)], query)
+            self.assertEqual(context.diagnostic_artifacts, [{"query": query}])
+            self.assertEqual(context.fetch_trace[0].code, query)
+            return sample_probe_result(query, doi=query, title=query)
 
         payload = batch_check_payload(
             queries=["10.1000/one", "10.1000/two"],
-            mode="article",
+            mode="metadata",
             concurrency=2,
-            deps=mcp_test_deps(service_fetch_paper=fake_fetch),
+            deps=mcp_test_deps(service_probe_has_fulltext=fake_probe),
         )
 
         self.assertEqual(len(set(context_ids)), 2)
         self.assertEqual(len(set(session_ids)), 2)
         self.assertEqual(len(set(transport_ids)), 1)
         self.assertEqual(
-            [item["trace"][0]["code"] for item in payload["results"]],
+            [item["title"] for item in payload["results"]],
             ["10.1000/one", "10.1000/two"],
         )
 
@@ -621,16 +606,16 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
     def test_batch_check_payload_aborts_on_rate_limit(self) -> None:
         seen_queries: list[str] = []
 
-        def fake_fetch_paper(query, **kwargs):
+        def fake_probe(query, **kwargs):
             seen_queries.append(query)
             if query == "10.1000/two":
                 raise ProviderFailure("rate_limited", "Slow down.")
-            return sample_envelope(modes=kwargs["modes"], doi=query)
+            return sample_probe_result(query, doi=query)
 
         payload = batch_check_payload(
             queries=["10.1000/one", "10.1000/two", "10.1000/three"],
-            mode="article",
-            deps=mcp_test_deps(service_fetch_paper=fake_fetch_paper),
+            mode="metadata",
+            deps=mcp_test_deps(service_probe_has_fulltext=fake_probe),
         )
 
         self.assertTrue(payload["aborted"])
@@ -645,7 +630,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             "title-b": "provider-b",
             "title-a-later": "provider-a",
         }
-        fetch_calls: list[str] = []
+        probe_calls: list[str] = []
 
         def fake_resolve(query, *, context=None):
             resolved = sample_resolved_query(query)
@@ -653,23 +638,23 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             resolved.provider_hint = providers[query]
             return resolved
 
-        def fake_fetch_paper(query, **kwargs):
-            fetch_calls.append(query)
+        def fake_probe(query, **kwargs):
+            probe_calls.append(query)
             if query == "title-a-first":
                 raise ProviderFailure("rate_limited", "provider A cooldown")
-            return sample_envelope(modes=kwargs["modes"], doi="10.1000/title-b")
+            return sample_probe_result(query, doi="10.1000/title-b")
 
         payload = batch_check_payload(
             queries=list(providers),
-            mode="article",
+            mode="metadata",
             concurrency=1,
             deps=mcp_test_deps(
                 service_resolve_paper=fake_resolve,
-                service_fetch_paper=fake_fetch_paper,
+                service_probe_has_fulltext=fake_probe,
             ),
         )
 
-        self.assertEqual(fetch_calls, ["title-a-first", "title-b"])
+        self.assertEqual(probe_calls, ["title-a-first", "title-b"])
         self.assertEqual(
             [item["provider_lane"] for item in payload["results"]],
             ["provider-a", "provider-b", "provider-a"],
@@ -685,23 +670,23 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             "10.1002/other",
             "10.1016/later",
         ]
-        fetch_calls: list[str] = []
+        probe_calls: list[str] = []
 
-        def fake_fetch_paper(query, **kwargs):
-            fetch_calls.append(query)
+        def fake_probe(query, **kwargs):
+            probe_calls.append(query)
             if query == queries[0]:
                 raise ProviderFailure("rate_limited", "Elsevier cooldown")
-            return sample_envelope(modes=kwargs["modes"], doi=query)
+            return sample_probe_result(query, doi=query)
 
         resolver = mock.Mock()
         result = asyncio.run(
             batch_check_tool_async(
                 queries=queries,
-                mode="article",
+                mode="metadata",
                 concurrency=1,
                 deps=mcp_test_deps(
                     service_resolve_paper=resolver,
-                    service_fetch_paper=fake_fetch_paper,
+                    service_probe_has_fulltext=fake_probe,
                 ),
             )
         )
@@ -709,7 +694,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         payload = result.structured_content
         self.assertFalse(result.is_error)
         resolver.assert_not_called()
-        self.assertEqual(fetch_calls, queries[:2])
+        self.assertEqual(probe_calls, queries[:2])
         self.assertEqual(
             [item["provider_lane"] for item in payload["results"]],
             ["elsevier", "wiley", "elsevier"],
@@ -728,19 +713,19 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
 
         self.assertEqual(payload["results"][0]["provider_lane"], "wiley")
 
-    def test_batch_check_uses_catalog_source_when_title_lane_stays_generic(
+    def test_batch_check_uses_probe_doi_when_title_lane_stays_generic(
         self,
     ) -> None:
         payload = batch_check_payload(
             queries=["An unresolved title"],
-            mode="article",
+            mode="metadata",
             deps=mcp_test_deps(
                 service_resolve_paper=mock.Mock(
                     side_effect=RuntimeError("resolver unavailable")
                 ),
-                service_fetch_paper=lambda *_args, **_kwargs: sample_envelope(
-                    modes={"article"},
-                    doi="10.1000/unknown-prefix",
+                service_probe_has_fulltext=lambda query, **_kwargs: sample_probe_result(
+                    query,
+                    doi="10.1016/example",
                 ),
             ),
         )
@@ -789,48 +774,94 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             result.structured_content["reason"],
         )
 
-    def test_has_fulltext_tool_serializes_probe_result(self) -> None:
+    def test_single_batch_check_serializes_probe_result(self) -> None:
         server = build_server()
-        result = has_fulltext_tool(
-            query="10.1000/example",
-            deps=mcp_test_deps(
-                service_probe_has_fulltext=lambda *_args, **_kwargs: (
-                    sample_probe_result("10.1000/example", title="Example Article")
-                )
-            ),
+        result = asyncio.run(
+            batch_check_tool_async(
+                queries=["10.1000/example"],
+                deps=mcp_test_deps(
+                    service_probe_has_fulltext=lambda *_args, **_kwargs: (
+                        sample_probe_result("10.1000/example", title="Example Article")
+                    )
+                ),
+            )
         )
 
         self.assertFalse(result.is_error)
-        self.assertEqual(result.structured_content["doi"], "10.1000/example")
-        self.assertEqual(result.structured_content["state"], "likely_yes")
+        payload = result.structured_content
+        self.assertEqual(payload["schema_version"], 2)
+        self.assertEqual(payload["mode"], "metadata")
         self.assertEqual(
-            result.structured_content["evidence"], ["crossref_fulltext_link"]
+            payload["progress"],
+            {"total": 1, "terminal": 1, "completed": 1, "not_scheduled": 0},
         )
-        self.assertNotIn("title", result.structured_content)
-        assert_mcp_tool_omits_output_schema(
-            server, "has_fulltext", result.structured_content
+        self.assertEqual(len(payload["results"]), 1)
+        item = payload["results"][0]
+        self.assertEqual(item["index"], 1)
+        self.assertEqual(item["doi"], "10.1000/example")
+        self.assertEqual(item["probe_state"], "likely_yes")
+        self.assertEqual(item["evidence"], ["crossref_fulltext_link"])
+        self.assertEqual(item["title"], "Example Article")
+        self.assertEqual(item["status"], "succeeded")
+        self.assertIsNone(item["error"])
+        assert_mcp_tool_omits_output_schema(server, "batch_check", payload)
+
+    def test_single_batch_check_keeps_unknown_as_successful_probe(self) -> None:
+        result = asyncio.run(
+            batch_check_tool_async(
+                queries=["10.1000/example"],
+                deps=mcp_test_deps(
+                    service_probe_has_fulltext=lambda query, **_kwargs: (
+                        HasFulltextProbeResult(
+                            query=query,
+                            doi=query,
+                            title=None,
+                            state="unknown",
+                            evidence=[],
+                            warnings=["No readable signal"],
+                        )
+                    )
+                ),
+            )
         )
 
-    def test_has_fulltext_tool_keeps_ambiguous_error_payload(self) -> None:
+        self.assertFalse(result.is_error)
+        item = result.structured_content["results"][0]
+        self.assertEqual(item["status"], "succeeded")
+        self.assertEqual(item["probe_state"], "unknown")
+        self.assertIsNone(item["likely_has_fulltext"])
+        self.assertIsNone(item["has_fulltext"])
+        self.assertIsNone(item["error"])
+        self.assertEqual(item["evidence"], [])
+        self.assertEqual(item["warnings"], ["No readable signal"])
+
+    def test_single_batch_check_keeps_ambiguous_item_error_payload(self) -> None:
         error = PaperFetchFailure(
             "ambiguous",
             "Query resolution is ambiguous; choose one of the DOI candidates.",
             candidates=[{"doi": "10.1000/one"}],
         )
         server = build_server()
-        result = has_fulltext_tool(
-            query="Example title",
-            deps=mcp_test_deps(service_probe_has_fulltext=mock.Mock(side_effect=error)),
+        result = asyncio.run(
+            batch_check_tool_async(
+                queries=["Example title"],
+                deps=mcp_test_deps(
+                    service_resolve_paper=mock.Mock(side_effect=error),
+                    service_probe_has_fulltext=mock.Mock(side_effect=error),
+                ),
+            )
         )
 
-        self.assertTrue(result.is_error)
-        self.assertEqual(result.structured_content["status"], "ambiguous")
-        self.assertEqual(
-            result.structured_content["candidates"], [{"doi": "10.1000/one"}]
-        )
-        assert_mcp_tool_omits_output_schema(
-            server, "has_fulltext", result.structured_content
-        )
+        self.assertFalse(result.is_error)
+        payload = result.structured_content
+        self.assertNotIn("error", payload)
+        item = payload["results"][0]
+        self.assertEqual(item["status"], "failed")
+        self.assertEqual(item["query"], "Example title")
+        self.assertEqual(item["index"], 1)
+        self.assertEqual(item["error"]["status"], "ambiguous")
+        self.assertEqual(item["error"]["candidates"], [{"doi": "10.1000/one"}])
+        assert_mcp_tool_omits_output_schema(server, "batch_check", payload)
 
     def test_fetch_paper_tool_error_payload_survives_without_output_schema(
         self,
@@ -863,3 +894,56 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         self.assertTrue(result.is_error)
         self.assertIn("greater than or equal to 0", result.structured_content["reason"])
         mocked_fetch.assert_not_called()
+
+
+@pytest.mark.parametrize("asynchronous", [False, True])
+def test_batch_check_only_probes_without_writing_downloads(tmp_path, asynchronous):
+    download_dir = tmp_path / "downloads"
+    fetch = mock.Mock(side_effect=AssertionError("probe must not fetch full text"))
+    probe_calls = []
+
+    def probe(query, *, context):
+        assert context.download_dir is None
+        probe_calls.append(query)
+        return sample_probe_result(query)
+
+    kwargs = dict(
+        queries=["  10.1000/example  ", "https://doi.org/10.1000/example"],
+        concurrency=2,
+        env={"PAPER_FETCH_DOWNLOAD_DIR": str(download_dir)},
+        deps=mcp_test_deps(service_probe_has_fulltext=probe, service_fetch_paper=fetch),
+    )
+    if asynchronous:
+        result = asyncio.run(batch_check_tool_async(**kwargs))
+        assert not result.is_error
+        payload = result.structured_content
+    else:
+        payload = batch_check_payload(**kwargs)
+
+    assert len(probe_calls) == 1
+    assert [item["index"] for item in payload["results"]] == [1, 2]
+    assert [item["query"] for item in payload["results"]] == [
+        "10.1000/example",
+        "https://doi.org/10.1000/example",
+    ]
+    assert all(item["probe_state"] == "likely_yes" for item in payload["results"])
+    assert list(tmp_path.iterdir()) == []
+    fetch.assert_not_called()
+
+
+def test_batch_check_article_mode_returns_input_error_without_running_services():
+    probe = mock.Mock()
+    fetch = mock.Mock()
+    kwargs = dict(
+        queries=["10.1000/example"],
+        mode="article",
+        deps=mcp_test_deps(service_probe_has_fulltext=probe, service_fetch_paper=fetch),
+    )
+    with pytest.raises(ValueError, match="unsupported batch_check mode"):
+        batch_check_payload(**kwargs)
+    result = asyncio.run(batch_check_tool_async(**kwargs))
+    assert result.is_error
+    assert result.structured_content["status"] == "error"
+    assert "unsupported batch_check mode" in result.structured_content["reason"]
+    probe.assert_not_called()
+    fetch.assert_not_called()

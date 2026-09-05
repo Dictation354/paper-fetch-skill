@@ -47,10 +47,6 @@ from .results import (
 )
 from .schemas import BatchCheckRequest, BatchResolveRequest
 
-_BATCH_CHECK_MODES = {
-    "article": ["article"],
-    "metadata": ["metadata"],
-}
 DEFAULT_ASYNC_CANCEL_GRACE_SECONDS = 1.0
 
 
@@ -139,54 +135,28 @@ async def run_blocking_call(
 
 
 def _batch_check_success_payload(
-    query: str, payload: Mapping[str, Any], *, mode: str
+    query: str, payload: Mapping[str, Any]
 ) -> dict[str, Any]:
-    title = None
-    if mode == "metadata":
-        title = payload.get("title")
-        return with_schema_version(
-            {
-                "query": query,
-                "doi": payload.get("doi"),
-                "title": title,
-                "has_fulltext": None,
-                "likely_has_fulltext": (
-                    True if payload.get("state") == "likely_yes" else None
-                ),
-                "content_kind": None,
-                "has_abstract": None,
-                "probe_state": payload.get("state"),
-                "evidence": list(payload.get("evidence") or []),
-                "warnings": list(payload.get("warnings") or []),
-                "source": None,
-                "acquisition": None,
-                "source_trail": [],
-                "trace": [],
-                "token_estimate": None,
-                "token_estimate_breakdown": None,
-            }
-        )
-    article = payload.get("article") or {}
-    if isinstance(article, Mapping):
-        metadata = article.get("metadata") or {}
-        if isinstance(metadata, Mapping):
-            title = metadata.get("title")
-
     return with_schema_version(
         {
             "query": query,
             "doi": payload.get("doi"),
-            "title": title,
-            "source": payload.get("source"),
-            "acquisition": payload.get("acquisition"),
-            "has_fulltext": payload.get("has_fulltext"),
-            "content_kind": payload.get("content_kind"),
-            "has_abstract": payload.get("has_abstract"),
+            "title": payload.get("title"),
+            "has_fulltext": None,
+            "likely_has_fulltext": (
+                True if payload.get("state") == "likely_yes" else None
+            ),
+            "content_kind": None,
+            "has_abstract": None,
+            "probe_state": payload.get("state"),
+            "evidence": list(payload.get("evidence") or []),
             "warnings": list(payload.get("warnings") or []),
-            "source_trail": list(payload.get("source_trail") or []),
-            "trace": list(payload.get("trace") or []),
-            "token_estimate": payload.get("token_estimate"),
-            "token_estimate_breakdown": payload.get("token_estimate_breakdown"),
+            "source": None,
+            "acquisition": None,
+            "source_trail": [],
+            "trace": [],
+            "token_estimate": None,
+            "token_estimate_breakdown": None,
         }
     )
 
@@ -194,27 +164,16 @@ def _batch_check_success_payload(
 def _run_batch_check_item(
     query: str,
     *,
-    mode: str,
     context: RuntimeContext,
-    requested_modes: list[str],
     deps: MCPDeps = default_mcp_deps(),
 ) -> dict[str, Any]:
     from . import fetch_tool
 
     try:
-        if mode == "metadata":
-            payload = fetch_tool._call_service_probe_has_fulltext(
-                query, context=context, deps=deps
-            ).to_dict()
-        else:
-            payload = fetch_tool.fetch_paper_payload(
-                query=query,
-                modes=requested_modes,
-                download_dir=None,
-                context=context,
-                deps=deps,
-            )
-        return _batch_check_success_payload(query, payload, mode=mode)
+        payload = fetch_tool._call_service_probe_has_fulltext(
+            query, context=context, deps=deps
+        ).to_dict()
+        return _batch_check_success_payload(query, payload)
     finally:
         context.close_camoufox_for_current_thread()
 
@@ -487,8 +446,6 @@ async def _run_batch_async(
 def _run_batch_check_sync(
     *,
     items: list[_BatchCheckItem],
-    mode: str,
-    requested_modes: list[str],
     concurrency: int,
     deps: MCPDeps,
 ) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
@@ -503,9 +460,7 @@ def _run_batch_check_sync(
         def check() -> dict[str, Any]:
             return _run_batch_check_item(
                 item.query,
-                mode=mode,
                 context=item.context,
-                requested_modes=requested_modes,
                 deps=deps,
             )
 
@@ -530,8 +485,6 @@ def _run_batch_check_sync(
 async def _run_batch_check_async(
     *,
     items: list[_BatchCheckItem],
-    mode: str,
-    requested_modes: list[str],
     concurrency: int,
     deps: MCPDeps,
     ctx: Context | None,
@@ -549,9 +502,7 @@ async def _run_batch_check_async(
         def check() -> dict[str, Any]:
             return _run_batch_check_item(
                 item.query,
-                mode=mode,
                 context=item.context,
-                requested_modes=requested_modes,
                 deps=deps,
             )
 
@@ -671,7 +622,6 @@ def batch_check_payload(
     runtime_context = RuntimeContext(env=runtime_env, download_dir=None)
     item_contexts: list[RuntimeContext] = []
     try:
-        requested_modes = _BATCH_CHECK_MODES[request.mode]
         items: list[_BatchCheckItem] = []
         for index, query in enumerate(request.queries):
             child = runtime_context.new_request_context()
@@ -687,8 +637,6 @@ def batch_check_payload(
             )
         results, abort_reason = _run_batch_check_sync(
             items=items,
-            mode=request.mode,
-            requested_modes=requested_modes,
             concurrency=request.concurrency,
             deps=deps,
         )
@@ -811,7 +759,6 @@ async def batch_check_tool_async(
     bridge = PaperFetchLogBridge(ctx=ctx, loop=loop) if ctx is not None else None
 
     try:
-        requested_modes = _BATCH_CHECK_MODES[request.mode]
         with ExitStack() as stack:
             if bridge is not None:
                 stack.enter_context(bridge)
@@ -831,8 +778,6 @@ async def batch_check_tool_async(
                     )
                 results, abort_reason = await _run_batch_check_async(
                     items=items,
-                    mode=request.mode,
-                    requested_modes=requested_modes,
                     concurrency=request.concurrency,
                     deps=deps,
                     ctx=ctx,

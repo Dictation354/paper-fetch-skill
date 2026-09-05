@@ -146,7 +146,6 @@ class StaticSkillTests(unittest.TestCase):
             "list_cached",
             "get_cached",
             "batch_check",
-            "has_fulltext",
             "provider_status",
             "browser_preflight",
         ):
