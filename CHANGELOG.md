@@ -6,6 +6,19 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.1.5 - 2026-09-05
+
+### Breaking — unified MCP probe entry point
+
+- Removed the standalone `has_fulltext` MCP tool without an alias, reducing the tool count from ten to nine. Use `batch_check(queries=[query])` for a single paper and read `probe_state`, evidence, warnings, and item errors from `results[0]`; ambiguous candidates now live in the item error instead of the former single-tool top-level error.
+- `batch_check` now accepts only `mode="metadata"`, which remains the default. Removed its article-fetch path while preserving schema-v2 metadata fields, input order, canonical-DOI deduplication, isolated item contexts, shared transport, provider-lane limits, cancellation, and progress. The Python `probe_has_fulltext` service and provider-catalog resource remain unchanged.
+- Replace article checks with `batch_fetch` and judge each result by `acceptance`. For body checks without disk output, explicitly use `modes=["article"]`, `detail="compact"`, `save_markdown=false`, `no_download=true`, `prefer_cache=false`, `artifact_mode="none"`, and `strategy={"asset_profile":"none"}`, without `batch_results`. Existing `batch_fetch` defaults are unchanged.
+
+### Changed — skill workflow guidance
+
+- Determine task intent and request parameters before local/cache checks; temporary reading does not require selecting a cache directory. Preserve the five presets and reuse explicit user choices and existing authorization without repeated confirmation.
+- Make reference reading and acceptance reporting depend on the task, clarify runtime preparation and access boundaries, and continue the requested summary, comparison, translation, or extraction after obtaining verified text.
+
 ## 6.1.4 - 2026-09-05
 
 ### Fixed — publisher browser and asset retrieval

@@ -6,6 +6,19 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.1.5 - 2026-09-05
+
+### 不兼容变更——统一 MCP 探测入口
+
+- 删除独立 `has_fulltext` MCP 工具，不保留别名，工具总数从十个收敛为九个。单篇改用 `batch_check(queries=[query])`，从 `results[0]` 读取 `probe_state`、证据、警告和逐项错误；歧义候选现在位于逐项 error，不再使用旧单篇工具的顶层错误语义。
+- `batch_check` 仅接受默认的 `mode="metadata"`，删除 article 抓取路径；保留 schema-v2 metadata 字段、输入顺序、规范 DOI 去重、逐项 context 隔离、共享 transport、provider lane 限流、取消与进度语义。底层 Python `probe_has_fulltext` 服务及 provider catalog resource 保持不变。
+- 正文检查改用 `batch_fetch`，以每项 `acceptance` 判断结果。无需落盘时显式使用 `modes=["article"]`、`detail="compact"`、`save_markdown=false`、`no_download=true`、`prefer_cache=false`、`artifact_mode="none"`、`strategy={"asset_profile":"none"}`，且不传 `batch_results`；不改变 `batch_fetch` 现有默认值。
+
+### 变更——技能工作流指引
+
+- 在本地/cache 检查前确定任务意图和请求参数，临时阅读不要求选择缓存目录。保留五个预设，沿用用户明确选择和已有授权，避免重复确认。
+- 按任务选择需要阅读的参考章节和验收报告细节，明确 runtime 准备与访问边界；获得已核验文本后继续完成用户要求的总结、比较、翻译或提取。
+
 ## 6.1.4 - 2026-09-05
 
 ### 修复——出版社浏览器与资产获取
