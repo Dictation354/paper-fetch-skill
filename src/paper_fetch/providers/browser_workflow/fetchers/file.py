@@ -152,8 +152,6 @@ class _SharedBrowserFileDocumentFetcher(_BaseBrowserDocumentFetcher):
                 except Exception:
                     if attempt == 2:
                         raise
-            # Locator actionability checks also survive a panel redraw.
-            link.click(trial=True, timeout=remaining_ms())
             phase = "download_timeout"
             page.on("response", capture_response)
             with page.expect_event(
@@ -164,7 +162,9 @@ class _SharedBrowserFileDocumentFetcher(_BaseBrowserDocumentFetcher):
                 timeout=remaining_ms(),
             ):
                 with page.expect_download(timeout=remaining_ms()) as pending:
-                    link.click(timeout=remaining_ms())
+                    # The panel can hide again during its opening animation.
+                    # Activate the discovered link without another layout wait.
+                    link.evaluate("(anchor) => anchor.click()", timeout=remaining_ms())
                 download = pending.value
             remaining_ms()
             path = download.path()

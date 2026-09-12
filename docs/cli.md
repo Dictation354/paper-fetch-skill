@@ -285,6 +285,8 @@ Identity acceptance 不再把普通 title 当作唯一论文证明。DOI-less �
 | `json` | `<paper-stem>.json` |
 | `both` | `<paper-stem>.both.json` |
 
+年份取出版日期中第一个不与其他数字相连的四位数字：例如 `20 October 2020`、`October 20, 2020` 和 `2020-10-20` 均提取 `2020`。日期为空或没有符合条件的年份时，文件名中的年份使用 `unknown`；出版日期元数据保持原值。
+
 需要精确文件名时，显式使用 `--output <path>`。
 
 ## 输出格式

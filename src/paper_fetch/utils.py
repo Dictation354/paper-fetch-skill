@@ -180,7 +180,7 @@ def _extract_last_name(author: str) -> str:
 def _extract_year(published: str | None) -> str | None:
     if not published:
         return None
-    m = re.match(r"(\d{4})", published.strip())
+    m = re.search(r"(?<!\d)(\d{4})(?!\d)", published.strip())
     return m.group(1) if m else None
 
 

@@ -682,7 +682,7 @@ CLI、Python API、MCP 当前默认值如下：
 
 - `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` / `tandf` 的 `asset_profile=all` 会把可识别 supplementary 作为独立文件附件下载。Annual Reviews 从原始 `#supplementary_data` 接受官方 `/deliver/fulltext/` PDF / MPG 直链，且 `itemId` 必须匹配父论文 DOI；IOP 只把文章页的同 DOI `/data[N]` 当索引，并从索引明确的 `SM数字` 或 `supp数字` 链接下载真实附件。
 - 这条链路不因 supplementary 失败重新下载已成功的正文 figure。
-- `wiley` supplementary 只从 `Supporting Information` 区块抽取，并在文章浏览器会话内点击下载：正文就绪后按需展开目标面板，每轮最多等待 5 秒确认链接可见；仍折叠时重新定位控件，最多点击 3 次，已展开时不重复点击。链接可交互后使用下载事件和对应响应取得文件与元信息。页面操作共享 60 秒文件时限并受剩余请求预算约束；缺失链接、面板未就绪、验证页或下载超时保留诊断，不改回 API 文件请求或刷新会话后重复点击。
+- `wiley` supplementary 只从 `Supporting Information` 区块抽取，并在文章浏览器会话内点击下载：正文就绪后按需展开目标面板，每轮最多等待 5 秒确认链接可见；仍折叠时重新定位控件，最多点击 3 次，已展开时不重复点击。链接首次可见后立即通过页面 DOM 激活该链接，不再执行试点击或等待布局稳定，避免面板在动画期间重新隐藏导致下载停滞；仍使用浏览器下载事件和对应响应取得文件与元信息。页面操作共享 60 秒文件时限并受剩余请求预算约束；缺失链接、面板未就绪、验证页或下载超时保留诊断，不改回 API 文件请求或刷新会话后重复点击。
 - `wiley` 只接受 `/action/downloadSupplement`、结构化 supplementary link 属性或 `sup-*` supporting file 链接。
 - 正文 `<figure>` 里的 `/cms/asset/...fig-*.jpg|png|webp` 只保留为 figure 资产。
 - `downloadSupplement` query 中的 `file`、`filename`、`attachment`、`download` 优先作为真实文件名。

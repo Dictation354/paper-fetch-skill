@@ -15,6 +15,35 @@ from tests.paths import REPO_ROOT
 
 
 class FetchCommonTests(unittest.TestCase):
+    def test_extract_year_from_publication_dates(self) -> None:
+        cases = [
+            ("20 October 2020", "2020"),
+            ("October 20, 2020", "2020"),
+            ("2020-10-20", "2020"),
+            ("2020", "2020"),
+            (" \t20 October 2020\n", "2020"),
+            (" \t2020\n", "2020"),
+            ("2020-10-20T12:34:56Z", "2020"),
+            ("Published 2020; revised 2021", "2020"),
+            (None, None),
+            ("", None),
+            (" \t\n", None),
+            ("October twenty", None),
+            ("20201", None),
+            ("12020", None),
+            ("1234567890", None),
+            ("Published 120201", None),
+        ]
+        for published, expected in cases:
+            with self.subTest(published=published):
+                year = utils._extract_year(published)
+                self.assertEqual(year, expected)
+                if expected is None:
+                    self.assertEqual(
+                        utils.format_paper_stem(["Annu Panwar"], year, "Title"),
+                        "Panwar_unknown_Title",
+                    )
+
     def test_sanitize_filename_truncates_long_values_with_stable_hash_suffix(
         self,
     ) -> None:

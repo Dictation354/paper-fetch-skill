@@ -530,6 +530,45 @@ class McpPayloadCacheTests(unittest.TestCase):
             self.assertEqual(captured["modes"], {"article", "markdown"})
             self.assertIn("download:markdown_saved", payload["source_trail"])
 
+    def test_fetch_paper_payload_auto_filename_extracts_year_from_english_date(
+        self,
+    ) -> None:
+        title = (
+            "Imprints of evaporative conditions and vegetation type "
+            "in diurnal temperature variations"
+        )
+        envelope = sample_envelope(
+            modes={"article", "markdown"}, doi="10.5194/hess-24-4923-2020"
+        )
+        assert envelope.article is not None
+        envelope.article.metadata = Metadata(
+            title=title,
+            authors=["Annu Panwar", "Maik Renner", "Axel Kleidon"],
+            published="20 October 2020",
+        )
+        envelope.markdown = f"# {title}\n\nExample body.\n"
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            download_dir = Path(tmpdir)
+            payload = fetch_paper_payload(
+                query=envelope.doi,
+                save_markdown=True,
+                download_dir=download_dir,
+                deps=mcp_test_deps(
+                    build_runtime_env=lambda _env=None: {},
+                    service_fetch_paper=lambda *_args, **_kwargs: envelope,
+                ),
+            )
+
+            saved_path = download_dir / (
+                "Panwar_et_al_2020_Imprints_of_evaporative_conditions_and_vegetation_"
+                "type_in_diurnal_temperature_variations.md"
+            )
+            self.assertTrue(saved_path.exists())
+            self.assertIn(f"# {title}", saved_path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["metadata"]["published"], "20 October 2020")
+            self.assertIn("download:markdown_saved", payload["source_trail"])
+
     def test_fetch_paper_payload_save_markdown_skips_when_fulltext_markdown_unavailable(
         self,
     ) -> None:

@@ -2539,6 +2539,26 @@ class CliTests(unittest.TestCase):
                 expected_names,
             )
 
+    def test_formatted_output_filename_extracts_year_from_english_date(self) -> None:
+        article = sample_article("10.5194/hess-24-4923-2020")
+        article.metadata = Metadata(
+            title=(
+                "Imprints of evaporative conditions and vegetation type "
+                "in diurnal temperature variations"
+            ),
+            authors=["Annu Panwar", "Maik Renner", "Axel Kleidon"],
+            published="20 October 2020",
+        )
+
+        self.assertEqual(
+            paper_fetch_cli._formatted_output_filename(
+                build_envelope(article), output_format="markdown"
+            ),
+            "Panwar_et_al_2020_Imprints_of_evaporative_conditions_and_vegetation_"
+            "type_in_diurnal_temperature_variations.md",
+        )
+        self.assertEqual(article.metadata.published, "20 October 2020")
+
     def test_formatted_output_filename_prefers_fallback_query_doi(self) -> None:
         envelope = build_envelope(
             ArticleModel(

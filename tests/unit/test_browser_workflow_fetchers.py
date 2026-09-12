@@ -1116,11 +1116,10 @@ def test_wiley_file_fetcher_clicks_supporting_panel_and_preserves_response(
     callbacks = {}
     page.on.side_effect = lambda event, callback: callbacks.update({event: callback})
 
-    def click(**kwargs):
-        if not kwargs.get("trial"):
-            callbacks["response"](response)
+    def activate_link(expression, **kwargs):
+        callbacks["response"](response)
 
-    link.click.side_effect = click
+    link.evaluate.side_effect = activate_link
     fetcher = file_fetchers._SharedBrowserFileDocumentFetcher(
         browser_context_seed_getter=lambda: {"browser_final_url": article_url},
         seed_urls_getter=lambda: [article_url],
@@ -1148,6 +1147,7 @@ def test_wiley_file_fetcher_clicks_supporting_panel_and_preserves_response(
         assert fetcher.failure_for(url)["reason"] == "wiley_supplement_panel_not_ready"
         assert control.click.call_count == 3
         link.click.assert_not_called()
+        link.evaluate.assert_not_called()
         page.expect_download.assert_not_called()
         return
     else:
@@ -1162,9 +1162,8 @@ def test_wiley_file_fetcher_clicks_supporting_panel_and_preserves_response(
     assert control.click.call_count == (
         2 if outcome == "first_click_ignored" else int(collapsed)
     )
-    assert link.click.call_count == 2
-    assert link.click.call_args_list[0].kwargs["trial"] is True
-    assert "trial" not in link.click.call_args_list[1].kwargs
+    link.click.assert_not_called()
+    link.evaluate.assert_called_once()
     fetcher._context.request.get.assert_not_called()
     page.goto.assert_not_called()
     if outcome != "challenge":
@@ -1244,9 +1243,12 @@ def test_wiley_file_click_caps_operations_by_remaining_request_budget():
 
 
 @pytest.mark.browser
-@pytest.mark.parametrize("ignored_click", [False, True])
+@pytest.mark.parametrize(
+    "ignored_click, reclose_after_visible",
+    [(False, False), (True, False), (False, True)],
+)
 def test_wiley_click_survives_collapsed_panel_redraw_in_browser(
-    monkeypatch, ignored_click
+    monkeypatch, ignored_click, reclose_after_visible
 ):
     import json
     import os
@@ -1259,7 +1261,7 @@ def test_wiley_click_survives_collapsed_panel_redraw_in_browser(
     if not executable or not Path(executable).is_file():
         pytest.skip("requires the existing local Camoufox executable")
     camoufox = pytest.importorskip("camoufox.sync_api")
-    from camoufox import DefaultAddons, utils
+    from camoufox import DefaultAddons, pkgman, utils
 
     version_file = next(
         parent / "version.json"
@@ -1271,6 +1273,9 @@ def test_wiley_click_survives_collapsed_panel_redraw_in_browser(
         "installed_verstr",
         lambda: json.loads(version_file.read_text())["version"],
     )
+    # Font/config resources must use the preserved runtime too, not the
+    # isolated empty cache where Camoufox would try an online installation.
+    monkeypatch.setattr(pkgman, "camoufox_path", lambda: version_file.parent)
     article_url = "https://example.test/article"
     file_url = "https://example.test/supplement.docx"
     body = b"PK\x03\x04real-browser-supplement"
@@ -1289,6 +1294,24 @@ def test_wiley_click_survives_collapsed_panel_redraw_in_browser(
             'onclick="this.parentElement.innerHTML=',
             "onclick=\"if (!this.dataset.ready) { const replacement = this.cloneNode(true); this.replaceWith(replacement); setTimeout(() => replacement.dataset.ready = 'true', 200); return; } this.parentElement.innerHTML=",
         )
+    reclosed = []
+    if reclose_after_visible:
+        from playwright.sync_api import Locator
+
+        original_wait_for = Locator.wait_for
+
+        def wait_then_reclose(locator, **kwargs):
+            result = original_wait_for(locator, **kwargs)
+            if kwargs.get("state") == "visible":
+                # Reproduce the live page hiding the panel after visibility
+                # succeeds but before the download action starts.
+                locator.evaluate(
+                    "(anchor) => anchor.closest('.accordion').style.display = 'none'"
+                )
+                reclosed.append(not locator.is_visible())
+            return result
+
+        monkeypatch.setattr(Locator, "wait_for", wait_then_reclose)
     requests = []
     finished = []
 
@@ -1332,4 +1355,5 @@ def test_wiley_click_survives_collapsed_panel_redraw_in_browser(
         )
         assert requests.count(file_url) == 1
         assert file_url in finished, "download request does not emit requestfinished"
+        assert reclosed == ([True] if reclose_after_visible else [])
         context.close()
