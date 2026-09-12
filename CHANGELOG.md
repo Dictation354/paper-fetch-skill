@@ -6,6 +6,16 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.2.3 - 2026-09-12
+
+### Fixed — Wiley supplementary downloads
+
+- Supporting-file links now activate through the page DOM as soon as they become visible, avoiding download stalls when the panel hides again during its opening animation. Downloads retain browser events, matching response metadata, and the shared request budget.
+
+### Fixed — publication years in output filenames
+
+- CLI and MCP automatic filenames now extract the first four-digit year not adjacent to other digits anywhere in the publication date, including `20 October 2020` and `October 20, 2020`. Missing or unrecognized years still use `unknown`; publication-date metadata retains its original value.
+
 ## 6.2.2 - 2026-09-09
 
 ### Changed — automatic Camoufox runtime preparation
