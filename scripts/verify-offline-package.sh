@@ -537,7 +537,7 @@ if [ "$TARGET_PLATFORM" = "macos" ]; then
   log "Verifying recursive macOS quarantine rejection before user writes"
   xattr -w com.apple.quarantine '0081;00000000;paper-fetch-audit;' "$QUARANTINED_NATIVE"
   QUARANTINE_LOG="$TMP_ROOT/quarantine-install.log"
-  if PATH="$GUARD_DIR:$PATH" "$INSTALLER_PATH" \
+  if PATH="$GUARD_DIR:$PATH" "$INSTALLER_PATH" --non-interactive \
     --install-dir "$INSTALL_ROOT" \
     --preset=headless \
     --skip-smoke \
@@ -560,7 +560,7 @@ if [ "$TARGET_PLATFORM" = "macos" ]; then
 fi
 
 log "Running initial installer with network/build command guard"
-PATH="$GUARD_DIR:$PATH" "$INSTALLER_PATH" \
+PATH="$GUARD_DIR:$PATH" "$INSTALLER_PATH" --non-interactive \
   --install-dir "$INSTALL_ROOT" \
   --preset=headless \
   --skip-smoke \
@@ -582,12 +582,13 @@ PY
 mkdir -p "$INSTALL_ROOT/src" "$INSTALL_ROOT/tests" "$INSTALL_ROOT/wheelhouse" "$INSTALL_ROOT/dist"
 
 log "Running owned upgrade with network/build command guard"
-PATH="$GUARD_DIR:$PATH" "$INSTALLER_PATH" \
+PATH="$GUARD_DIR:$PATH" "$INSTALLER_PATH" --non-interactive \
   --install-dir "$INSTALL_ROOT" \
   --preset=headless \
   "$INSTALL_USER_CONFIG_FLAG"
 
 log "Verifying installed runtime package layout"
+"$RUNTIME_PYTHON" -m paper_fetch.offline_setup --install-root "$INSTALL_ROOT" --non-interactive
 [ -d "$INSTALL_ROOT/runtime/site-packages/paper_fetch" ] || die "Offline install is missing installed paper_fetch runtime."
 [ -x "$RUNTIME_PYTHON" ] || die "Offline install is missing private Python launcher."
 [ ! -e "$INSTALL_ROOT/bin/python" ] || die "Offline install should not expose a generic Python wrapper."

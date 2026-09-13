@@ -51,6 +51,20 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             validator.validate_contract(contract),
         )
 
+    def test_optional_download_cannot_change_core_offline_boundary(self) -> None:
+        contract = validator.load_contract()
+        contract["browser"]["core_install_downloads_runtime"] = True
+        contract["browser"]["optional_install_download_requires_consent"] = False
+        contract["browser"]["optional_install_failure_preserves_core"] = False
+        diagnostic = "\n".join(validator.validate_contract(contract))
+        self.assertIn("core_install_downloads_runtime must be false", diagnostic)
+        self.assertIn(
+            "optional_install_download_requires_consent must be true", diagnostic
+        )
+        self.assertIn(
+            "optional_install_failure_preserves_core must be true", diagnostic
+        )
+
     def test_release_policy_requires_one_source_revision(self) -> None:
         contract = validator.load_contract()
         contract["release"]["single_source_revision"] = False

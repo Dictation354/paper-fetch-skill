@@ -142,3 +142,18 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
         assert page.url == "about:blank"
     finally:
         persistent_manager.close()
+
+    # The offline wizard reuses this cache and verifies only about:blank, with
+    # no launch-time update, addon/fingerprint download or provider state.
+    from paper_fetch.offline_setup import Setup
+    from paper_fetch.providers.browser_runtime import preparation
+
+    monkeypatch.setattr(
+        preparation,
+        "prepare_camoufox_managed_runtime",
+        lambda: pytest.fail("optional wizard must reuse the valid native bundle"),
+    )
+    setup = Setup(tmp_path, tmp_path / "offline.env")
+    setup.browser(selected=True)
+    assert "Camoufox local launch: ready" in setup.summary()
+    assert "Publisher access: not tested" in setup.summary()

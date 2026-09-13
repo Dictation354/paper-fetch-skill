@@ -34,7 +34,9 @@ validated_purge_paths = true
 # Provider 的响应选择、请求阻断及临时资产标签复用既有 Camoufox runtime；
 # 这些页面策略不改变下列 runtime 分发边界，也不提供原生 macOS 验证证据。
 runtime_bundle_built_in = false
-install_downloads_runtime = false
+core_install_downloads_runtime = false
+optional_install_download_requires_consent = true
+optional_install_failure_preserves_core = true
 managed_runtime_preparation = true
 native_bundle_gate = true
 # CLI stdin cancellation leaves browser cleanup on the owning request worker.

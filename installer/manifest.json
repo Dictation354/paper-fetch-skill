@@ -66,5 +66,23 @@
       "verification": "sha256-before-inno-compile",
       "evidence": "offline-manifest-dependency-manifest-cyclonedx"
     }
+  },
+  "optional_windows_tools": {
+    "ghostscript": {
+      "version": "10.08.0",
+      "architecture": "x86_64",
+      "url": "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs10080/gs10080w64.exe",
+      "sha256": "52a91b8bf09298788d7a57b9206127026c23eacd75405f0a131e26dc381dce50",
+      "installation": "official-exe",
+      "requires_admin": true
+    },
+    "libvips": {
+      "version": "8.18.6",
+      "architecture": "x86_64",
+      "url": "https://github.com/libvips/build-win64-mxe/releases/download/v8.18.6/vips-dev-x64-all-8.18.6.zip",
+      "sha256": "e36b34f9c955e66fa47ec7c02b756026fad5560c5db6ff7884123be04792f89c",
+      "installation": "complete-zip",
+      "requires_admin": false
+    }
   }
 }

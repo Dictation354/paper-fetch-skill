@@ -683,8 +683,12 @@ This package includes an installed Python runtime under `runtime/site-packages`,
 The offline build does not bundle Ghostscript/libvips from the build host PATH; AMS EPS/TIFF source figure conversion falls back to webpage JPG/PNG candidates when those tools are unavailable.
 The `bin/` directory exposes paper-fetch commands only; it does not include a generic `python` wrapper.
 It does not redistribute the Camoufox browser binary for browser-backed providers.
-CLI, MCP, and library requests do not download, update, or repair the managed
-runtime. Before moving fully offline, run
+After core smoke checks, the optional terminal wizard can save hidden Elsevier/Wiley credentials,
+install missing system/image tools, and prepare and locally test Camoufox. All installs default
+to No. Use `--non-interactive` (also automatic without a terminal) to skip every optional step.
+Failures/cancellation preserve the core installation; external `--reuse-env-file` stays read-only.
+Skipping Camoufox does not disable CLI/MCP/library automatic preparation before browser launch.
+Before moving fully offline, use the optional wizard or run
 `./runtime/paper-fetch-python -m camoufox fetch` while online, then
 run `./bin/paper-fetch browser-preflight` to verify the runtime and provider path.
 EOF

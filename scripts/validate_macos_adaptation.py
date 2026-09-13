@@ -160,11 +160,13 @@ def validate_contract(
     browser = contract.get("browser", {})
     for key in (
         "runtime_bundle_built_in",
-        "install_downloads_runtime",
+        "core_install_downloads_runtime",
     ):
         if browser.get(key) is not False:
             errors.append(f"browser.{key} must be false")
     for key in (
+        "optional_install_download_requires_consent",
+        "optional_install_failure_preserves_core",
         "managed_runtime_preparation",
         "native_bundle_gate",
         "cooperative_cancel_owner_thread_cleanup",

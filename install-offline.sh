@@ -8,6 +8,7 @@ PYTHON_BIN="${PAPER_FETCH_OFFLINE_PYTHON_BIN:-python3}"
 PRESET="headless"
 MERGE_USER_CONFIG=0
 RUN_SMOKE=1
+NON_INTERACTIVE=0
 UNINSTALL=0
 PURGE=0
 INSTALL_ROOT=""
@@ -135,6 +136,7 @@ Options:
   --no-user-config        Do not touch the platform user config. This is the default.
   --reuse-env-file <path> Use an existing offline.env without modifying it.
   --skip-smoke            Skip local command smoke checks after installation.
+  --non-interactive       Skip optional configuration; never download or elevate.
   --uninstall             Remove user-level shell, skill, and MCP integration without deleting the install directory.
   --purge                 Remove user-level integration and delete the install directory.
   -h, --help              Show this help.
@@ -232,6 +234,9 @@ while (($#)); do
       ;;
     --skip-smoke)
       RUN_SMOKE=0
+      ;;
+    --non-interactive)
+      NON_INTERACTIVE=1
       ;;
     --uninstall)
       UNINSTALL=1
@@ -1424,6 +1429,26 @@ run_smoke_checks() {
   env "${env_args[@]}" "$(mcp_python_bin)" -c 'from paper_fetch.mcp.fetch_tool import provider_status_payload; payload = provider_status_payload(); assert "providers" in payload'
 }
 
+run_optional_configuration() {
+  if [ "$NON_INTERACTIVE" = "1" ] || [ ! -t 0 ] || [ ! -t 1 ]; then
+    log "Optional configuration skipped (non-interactive); no downloads or elevation."
+    return 0
+  fi
+  if [ "$RUN_SMOKE" != "1" ]; then
+    warn "Optional configuration skipped because core smoke checks were skipped."
+    return 0
+  fi
+  local args=(--install-root "$INSTALL_ROOT" --env-file "$OFFLINE_ENV_FILE")
+  if [ "$REUSE_ENV_FILE" = "1" ]; then
+    args+=(--reuse-env-file)
+  fi
+  # A child cancellation must not terminate the successful core installation.
+  trap ':' INT
+  "$(mcp_python_bin)" -m paper_fetch.offline_setup "${args[@]}" \
+    || warn "Optional configuration cancelled or failed; core installation remains complete."
+  trap - INT
+}
+
 same_directory() {
   local left="$1"
   local right="$2"
@@ -1546,6 +1571,7 @@ main() {
   register_antigravity_mcp
 
   run_smoke_checks
+  run_optional_configuration
 
   echo
   echo "Offline installation complete."
@@ -1553,8 +1579,8 @@ main() {
   echo "Install directory: $INSTALL_ROOT"
   echo "Open a new shell, or activate the current one with: source $INSTALL_ROOT/activate-offline.sh"
   echo "Default browser backend: Camoufox (headless: $(browser_headless_value))"
-  echo "The Camoufox browser binary is not bundled or downloaded during installation."
-  echo "CLI, MCP, and library requests do not download, update, or repair the Camoufox runtime."
+  echo "The Camoufox browser binary is not bundled. Optional setup downloads it only with your consent."
+  echo "Skipping optional setup does not disable runtime automatic Camoufox preparation."
   echo "Before moving fully offline, run '$INSTALL_ROOT/runtime/paper-fetch-python -m camoufox fetch', then 'paper-fetch browser-preflight'."
   echo "Browser backend: Camoufox."
   echo "Restart Codex, Claude Code, and the Antigravity CLI so they rescan skills and MCP registration."

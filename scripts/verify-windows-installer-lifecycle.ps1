@@ -68,6 +68,10 @@ function Invoke-InstalledSmoke {
         "-InstallRoot", $InstallRoot
     )
     Invoke-NativeChecked -FilePath $cli -Arguments @("browser-preflight", "--help")
+    Invoke-NativeChecked -FilePath $runtime -Arguments @(
+        "-X", "utf8", "-m", "paper_fetch.offline_setup",
+        "--install-root", $InstallRoot, "--non-interactive"
+    )
 }
 
 function Wait-ForUninstallCompletion {
@@ -120,9 +124,11 @@ function Assert-ExactPreservedInstallTree {
 
     $expectedFiles = @(
         "downloads/user-owned.txt",
+        "image-tools/libvips/lifecycle-fixture/user-owned.txt",
+        "optional-tools.json",
         "offline.env"
     ) | Sort-Object
-    $expectedDirectories = @("downloads")
+    $expectedDirectories = @("downloads", "image-tools", "image-tools/libvips", "image-tools/libvips/lifecycle-fixture") | Sort-Object
     $actualFiles = @()
     $actualDirectories = @()
 
@@ -192,6 +198,19 @@ try {
     New-Item -ItemType Directory -Force -Path (Split-Path -Parent $externalUserPayload) | Out-Null
     Set-Content -LiteralPath $externalUserPayload -Encoding UTF8 -Value "preserve"
 
+    # Optional content has a separate owner and must survive the old Inno
+    # uninstaller during upgrade as well as default silent final uninstall.
+    $optionalPayload = Join-Path $installRoot "image-tools/libvips/lifecycle-fixture/user-owned.txt"
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $optionalPayload) | Out-Null
+    Set-Content -LiteralPath $optionalPayload -Encoding UTF8 -Value "optional-preserve"
+    $optionalInventory = Join-Path $installRoot "optional-tools.json"
+    Set-Content -LiteralPath $optionalInventory -Encoding UTF8 -Value '{"schema_version":1,"tools":{}}'
+    $optionalHash = (Get-FileHash -LiteralPath $optionalPayload).Hash
+    $inventoryHash = (Get-FileHash -LiteralPath $optionalInventory).Hash
+    if (Test-Path -LiteralPath (Join-Path $installRoot "optional-setup-results.txt")) {
+        throw "Silent install must not run optional configuration."
+    }
+
     Write-Host "==> In-place overwrite upgrade with the same verified EXE"
     Invoke-NativeChecked -FilePath $SetupPath -Arguments $installArguments
     Invoke-InstalledSmoke -InstallRoot $installRoot
@@ -203,6 +222,14 @@ try {
     }
     if (-not (Test-Path -LiteralPath $externalUserPayload -PathType Leaf)) {
         throw "Overwrite upgrade did not preserve external user content."
+    }
+
+    if ((Get-FileHash -LiteralPath $optionalPayload).Hash -ne $optionalHash -or
+        (Get-FileHash -LiteralPath $optionalInventory).Hash -ne $inventoryHash) {
+        throw "Upgrade changed optional tool content or ownership inventory."
+    }
+    if (Test-Path -LiteralPath (Join-Path $installRoot "optional-setup-results.txt")) {
+        throw "Silent upgrade must not run optional configuration."
     }
 
     $uninstallers = @(Get-ChildItem -LiteralPath $installRoot -Filter "unins*.exe" -File)

@@ -41,7 +41,7 @@ core 运行时要求 MCP Python SDK 2.x（`mcp>=2,<3`）。server 使用 v2
 - 如果存在 `.env.example` 且用户配置文件还不存在，按 `platformdirs` 创建配置：
   Linux 常见路径是 `~/.config/paper-fetch/.env`，macOS 是
   `~/Library/Application Support/paper-fetch/.env`
-- 安装 Python 依赖、外部公式后端和图片转换后端；不在安装阶段下载 Camoufox 浏览器 binary，使用 browser route 前需显式准备
+- 安装 Python 依赖、外部公式后端和图片转换后端；源码在线安装入口不下载 Camoufox 浏览器 binary；browser route 启动前保留运行时自动准备机制
 - 安装结束时提示 Elsevier 官方 API key 的申请入口和配置位置；抓取 Elsevier 全文前需要从 <https://dev.elsevier.com/> 申请并设置 `ELSEVIER_API_KEY`
 
 补充说明：
@@ -175,6 +175,20 @@ Windows 目标机运行安装器即可：
 
 Windows 安装器默认安装到 `%LOCALAPPDATA%\PaperFetchSkill`，不要求管理员权限。安装器会复制运行组件，写入用户 PATH，复制 Codex / Claude Code / Antigravity skill，并执行 best-effort 基础 smoke check。检测到 `codex` CLI 时会用 `codex mcp remove/add` 注册 MCP；没有 Codex CLI 时会备份并更新 `%USERPROFILE%\.codex\config.toml` 中的 `mcp_servers.paper-fetch`。检测到 `claude` CLI 时会用 `claude mcp remove/add -s user` 注册；没有 Claude CLI 时只安装 skill 并跳过 Claude MCP 注册。Antigravity MCP 写入 `%USERPROFILE%\.gemini\antigravity-cli\mcp_config.json`，并保留其它 server。用户级 skill / PATH / MCP 集成或 smoke check 失败时不会回滚已复制的 runtime，详细警告写入 `%LOCALAPPDATA%\PaperFetchSkill\install-helper.log`；可修正本机环境后手动重跑 `%LOCALAPPDATA%\PaperFetchSkill\scripts\windows-installer-helper.ps1 -Action Install`。
 
+核心安装及 smoke 检查成功后，三平台提供可选配置向导。Linux/macOS 使用终端，`--non-interactive`、无可交互终端或 `--skip-smoke` 时跳过；Windows 使用 Inno 密码输入框和默认未选中的组件选项，`/SILENT`、`/VERYSILENT` 不进入可选阶段。下载、安装均默认关闭，各组件独立选择；可选阶段断网、拒绝、取消、sudo/UAC 或功能验证失败不会回滚核心安装。
+
+- Elsevier API Key 与 Wiley TDM Token 隐藏输入，留空保留旧值，只更新明确填写的 `ELSEVIER_API_KEY` / `WILEY_TDM_CLIENT_TOKEN`。凭据按 dotenv 转义、去重并原子保存，POSIX 文件权限为 `0600`，Windows 使用用户专属 DACL；不会进入命令行、日志或宿主注册参数。`--reuse-env-file` 的外部文件保持只读，向导提供手动配置说明。
+- Linux 实际加载 GTK、X11/XCB、音频等共享库；不能确认时报告“未验证”。Debian/Ubuntu 根据当前 APT sources 的候选解析 `t64` 包名，先显示确切清单和命令，再分别询问浏览器系统库、Ghostscript 和 libvips 安装。仅 APT 子进程使用 sudo（由 sudo 收取密码），不刷新软件源、不全系统升级。缺包时给出建议，包锁/权限失败保留现有结果并重新检测；其它发行版仅检测和提示。
+- macOS 保持 15+ arm64、CPython ABI、quarantine 和原生验证边界。已有 Homebrew 时可分别安装 `ghostscript`、`vips`，使用实际 prefix 下的绝对路径，无 `sudo brew`；无 Homebrew 时仅提供 [官方说明](https://brew.sh/)，不安装 Homebrew/Xcode/CLT，不清除 quarantine。
+- Windows 图片工具固定于 `installer/manifest.json`：已从官方 release 下载并核验 [Ghostscript 10.08.0 x64 EXE](https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/tag/gs10080)、[libvips 8.18.6 x64 all ZIP](https://github.com/libvips/build-win64-mxe/releases/tag/v8.18.6) 的 SHA-256；用户安装时不查询 latest。下载先进入临时目录，摘要通过后才执行或解压；ZIP 拒绝路径逃逸、链接、重复路径及特殊文件，保留完整 DLL 和资源。
+- Ghostscript 使用 [官方安装器](https://github.com/ArtifexSoftware/ghostpdl/blob/master/psi/nsisinst.nsi)，可见运行，使用末尾 `/D=<install-dir>\image-tools\ghostscript\<version>`；官方安装器要求管理员权限并写系统注册表。检测 PATH、配置和官方注册位置，优先复用有效工具；目标版本已注册但失效时仅给出修复提示。用户在官方向导更改目录时，以注册及转换验证确认的位置为准，外部目录不归 paper-fetch 清理。libvips 完整解压到 `image-tools\libvips\<version>`。
+- 图片工具必须完成真实 EPS/TIFF → PNG 转换、PNG 解码与像素检查，才将绝对路径保存到既有 `PAPER_FETCH_GHOSTSCRIPT_BIN` / `PAPER_FETCH_VIPS_BIN`。版本探测成功不等于转换就绪。Windows 用独立 `optional-tools.json` 记录版本、来源、目录、归属、文件摘要及验证状态，与 release payload 清单分开。
+- Camoufox 以普通用户使用既有 channel/pin/cache 准备规则；已有有效版本直接复用，不默认更新。随后只启动本地 `about:blank` 验证，分别报告准备、启动与“站点访问未测试”，不访问出版社、不登录、不保存 provider state。**跳过仅影响本次安装，后续运行时自动准备仍启用**；不代表预置后已验证完全断网的浏览器支持。
+
+Windows 耗时步骤有进度窗口和控制台结果，可用 Ctrl+C 取消当前可选步骤；官方 Ghostscript 向导及 UAC 可直接取消。完成后显示汇总，并写入不含凭据的 `optional-setup-results.txt`。Unix 汇总输出到终端。重启已运行的宿主/MCP 后配置生效。需要重试时可使用安装目录绝对运行时执行 `-m paper_fetch.offline_setup --install-root <install-dir>`（Unix）；Windows 重新运行 EXE 向导。
+
+本次实施的已完成验证与尚未完成的原生终验见 [可选向导验证记录](offline-optional-setup-validation.md)。
+
 离线更新：
 
 - Windows：下载新版 `paper-fetch-skill-windows-x86_64-setup.exe` 并直接运行。安装路径和 `AppId` 固定；安装器先备份 `offline.env`，再通过固定版本与摘要的 UninsIS 1.7.0 静默运行同 `AppId` 的既有卸载器，并等待 Inno 的 TEMP 第二阶段删除原卸载器 EXE 后才覆盖新版 runtime-only payload。旧卸载器只移除自身管理的文件，不递归清空目录，因此 `offline.env`、`downloads/` 和其它用户自建文件会保留；UninsIS 的 LGPL 与 provenance notice 随安装器分发，新版 helper 只替换 managed runtime block，并重新写入 PATH、skill 和 MCP 注册。
@@ -191,6 +205,8 @@ source ~/.local/share/paper-fetch-skill/activate-offline.sh
 
 离线卸载：
 
+Windows 正式卸载默认保留可选工具，交互窗口提供默认关闭的清理复选框，静默卸载（包括升级先卸载）始终保留。清理仅接受 `optional-tools.json` 中本向导拥有的版本目录：Ghostscript 校对注册路径和官方卸载器摘要后调用对应可见卸载器；UAC 取消、路径不符或失败时保留并报告位置。libvips 仅删除清单内摘要未变的文件，新增/修改文件保留。清理报告保存为 `optional-cleanup-results.txt`。Linux/macOS 不卸载 APT/Homebrew 工具；任何平台均不清理共享 Camoufox 缓存。
+
 - Windows：在“设置 > 应用 > 已安装的应用”中卸载 `Paper Fetch Skill`，或运行 `%LOCALAPPDATA%\PaperFetchSkill\unins000.exe`。卸载器会删除其管理的 runtime、wrapper、bundled skill 和元数据，删除安装器复制的 Codex / Claude Code / Antigravity skill、用户 PATH 中的安装目录 `bin`，并移除安装器管理的 MCP 注册；`offline.env`、`downloads/` 内用户文件、其它安装根用户内容及用户手写的其它 Codex / Claude / Antigravity 配置会保留。
 - Linux：运行 `~/.local/share/paper-fetch-skill/install-offline.sh --uninstall`，自定义目录则运行该目录下的 `install-offline.sh --install-dir <path> --uninstall`。该路径不做 checksum、Python ABI 或 bundle asset 检查，只删除 `~/.codex/skills/paper-fetch-skill`、`~/.claude/skills/paper-fetch-skill`、`~/.gemini/antigravity-cli/skills/paper-fetch-skill`，清理 shell 启动文件、用户配置和 Codex fallback config 中的 installer managed block，并通过可用的 `codex` / `claude` CLI 和 Antigravity `mcp_config.json` 移除 MCP；不会删除固定安装目录、`bin/`、`runtime/`、`offline.env`、`downloads/`，也不会删除用户配置中的非 managed 内容。需要删除固定安装目录时显式运行 `install-offline.sh --purge`。
 - macOS：卸载命令与 Linux 相同；如果使用自定义安装目录，运行该目录下的 `install-offline.sh --install-dir <path> --uninstall`。卸载只清理 `~/Library/Application Support/paper-fetch/.env` 的 managed block，保留用户自写内容。`--purge` 会在删除任何用户集成之前拒绝 `/`、HOME 及其祖先、尚未安装的当前 bundle root 等危险目标，并要求目标目录中的 schema 3 `offline-manifest.json` 证明 project / entrypoint 所有权且存在 `runtime/python-bin` 安装标记；校验失败时不会做部分卸载。
@@ -203,7 +219,7 @@ source ~/.local/share/paper-fetch-skill/activate-offline.sh
 - Linux / macOS 安装时会把通过 `PAPER_FETCH_OFFLINE_PYTHON_BIN` / `python3` 选中的解释器路径写入 `runtime/python-bin`，后续 `runtime/paper-fetch-python` 私有 launcher、CLI wrapper 和 MCP 都复用该解释器；`bin/` 不暴露通用 `python` wrapper，避免全局 PATH 前置后遮蔽用户自己的 Python
 - Windows 安装器固定使用包内 CPython 3.13.13 x64 embeddable runtime；版本、python.org URL 与官方 SHA-256 `8766a8775746235e23cf5aee5027ab1060bb981d93110577adcf3508aa0cbd55` 均来自 `installer/manifest.json`，构建器在解压前校验，目标机不需要预装 Python
 - Linux 构建阶段用临时 wheelhouse 把项目和依赖安装进 `runtime/site-packages`，然后只把安装后的 runtime、`bin/` 启动器、公式工具和 skill 放进自解压 `.sh` payload；目标机安装阶段不运行 pip，不包含源码树、`dist/` 或 `wheelhouse/`
-- Playwright 和 Camoufox Python 依赖随 Linux / macOS `runtime/site-packages` 和 Windows embedded runtime 分发；Camoufox 浏览器 binary 不随包分发，安装器和静态诊断不下载；fetch、auth 和 preflight 在实际启动浏览器前自动补全或更新 managed runtime。未固定版本时检查所选渠道最新兼容版本，固定时只补全对应版本；更新失败且本地版本有效时提示并继续使用，否则报告准备失败。显式 binary 由用户维护。进入受限网络或离线环境前应在联网阶段运行 `python -m camoufox fetch` 预置 binary，并运行 preflight 做启动/provider 验证。当前验证尚未覆盖预置后真正断网的 Camoufox launch，因此不能宣称完整离线浏览器支持
+- Playwright 和 Camoufox Python 依赖随 Linux / macOS `runtime/site-packages` 和 Windows embedded runtime 分发；Camoufox 浏览器 binary 不随包分发，核心安装和静态诊断不下载，可选向导仅在用户明确选择时下载；fetch、auth 和 preflight 在实际启动浏览器前自动补全或更新 managed runtime。未固定版本时检查所选渠道最新兼容版本，固定时只补全对应版本；更新失败且本地版本有效时提示并继续使用，否则报告准备失败。显式 binary 由用户维护。进入受限网络或离线环境前应在联网阶段运行 `python -m camoufox fetch` 预置 binary，并运行 preflight 做启动/provider 验证。当前验证尚未覆盖预置后真正断网的 Camoufox launch，因此不能宣称完整离线浏览器支持
 - Linux `.sh` payload 不包含仓库源码快照和 `tests/` 目录；离线安装目标是运行已打包工具，不在目标机执行项目测试
 - Linux、macOS、Windows 离线包都携带原生 texmath 0.13.2，分别位于 `formula-tools/bin/texmath` 和 `formula-tools/bin/texmath.exe`，并将它作为首选公式后端；`mathml-to-latex>=1.8.0,<2.0.0` 和随 Playwright 分发的 Node 作为二级转换回退。项目不随包安装或调用 KaTeX renderer/validator；KaTeX 只描述 LaTeX 规范化的兼容目标。`src/paper_fetch/resources/formula` 是 Node manifest、lockfile 和转换脚本的唯一源码位置；checkout runtime 直接引用它，Python 安装器和离线构建将它暂存到 `formula-tools`。lockfile 当前解析为 `mathml-to-latex` 1.8.0 及其实际传递依赖，unit test 会拒绝声明或解析结果漂移。目标机不编译 texmath，也不运行 `npm install`。CI / release 公式构建固定使用 `haskell-actions/setup` v2.12.0 的完整 SHA、GHC 9.10.3 和 Cabal 3.12.1.0；v2.12.0 随附的 GHCup 0.2.6.2 只更新构建工具链，不改变 texmath 0.13.2、公式入口、安装布局或产物接口。macOS 构建会把非系统 Mach-O dylib 复制到 `formula-tools/lib`，用 `@rpath` / `@loader_path` 重写引用，并对 texmath 与随包 dylib 做 ad-hoc codesign
 - Linux / macOS 会配置安装目录内 `image-tools` 作为图片转换工具查找目录；离线构建不会把构建机 PATH 上的 Ghostscript/libvips 符号链接固化进包内。运行时找到 Ghostscript 时可转 EPS，找到 libvips 时可转 TIFF；缺少对应工具时只影响 AMS `Download Figure` 源图转换，网页 JPG/PNG 候选仍可回退

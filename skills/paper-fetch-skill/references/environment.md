@@ -66,3 +66,9 @@
 2. 只有 runtime catalog 表明目标依赖 browser runtime 且需要真实链路证明时，运行 `browser-preflight` / `browser_preflight`；缺失 runtime 时按[运行时准备与授权](#运行时准备与授权)处理。
 3. 只有结构化结果为 `challenge` / `auth_required` 时进入人工 auth；`runtime_error` 同样按上述授权规则处理，不因诊断建议自动扩大任务为环境修复。
 4. 配置或合法访问状态没有变化时，不重复抓取；重试边界统一遵循 [`failure-handling.md`](failure-handling.md)。
+
+## 离线安装后的可选配置
+
+Linux/macOS 离线安装器及 Windows EXE 在核心 smoke 成功后提供可选向导，源码在线安装入口不变。凭据隐藏输入，留空保留旧值；下载/安装默认关闭。Unix `--non-interactive`、无终端及 Windows `/SILENT`、`/VERYSILENT` 全部跳过；`--reuse-env-file` 保持外部配置只读。Linux 仅为 Debian/Ubuntu 提供经确认的 APT 辅助安装，macOS 仅复用已有 Homebrew，Windows 使用摘要固定的官方 Ghostscript EXE（需要 UAC、系统注册表）和完整 libvips ZIP。图片工具通过实际 EPS/TIFF 转换后保存绝对路径，桌面 MCP 无需依赖 shell PATH。
+
+Camoufox 可选择准备并验证本地空白页，不访问 provider、不保存登录状态；下载、启动与站点访问状态分开报告。跳过本次安装不会关闭后续运行时自动准备。可选失败/取消不影响核心安装，升级保留凭据与可选工具；卸载默认保留可选工具和共享浏览器缓存。配置后重启已运行的宿主/MCP；完整说明见项目 `docs/deployment.md`。
