@@ -6,6 +6,17 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 6.2.4 - 2026-09-13
+
+### Added — optional offline setup
+
+- Linux/macOS offline installers and the Windows EXE now offer an optional setup wizard after core installation succeeds: securely save Elsevier/Wiley credentials, detect or install supported system/image tools, and prepare Camoufox with a local blank-page launch check. Downloads and installations default to off; non-interactive and silent installs skip the wizard, and optional failures preserve the successful core installation.
+- Linux supports separate APT choices for browser libraries and image tools; macOS reuses existing Homebrew. Windows pins verified official Ghostscript EXE and libvips ZIP assets, validates actual image conversion, and records tool ownership. Upgrades preserve credentials and optional tools; optional uninstall cleanup preserves user-added files and shared caches. Skipping Camoufox retains its existing launch-time preparation behavior.
+
+### Fixed — Taylor & Francis formulas and figures
+
+- HTML extraction now distinguishes formula references from inline math using explicit DOM semantics, preserves equation labels and subitem headings, and reports conversion losses through acceptance. Full-size official figures replace matching previews; the extraction revision advances to invalidate outdated cached extraction results.
+
 ## 6.2.3 - 2026-09-12
 
 ### Fixed — Wiley supplementary downloads

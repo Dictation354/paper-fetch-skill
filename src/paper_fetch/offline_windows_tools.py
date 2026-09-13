@@ -11,6 +11,7 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 import urllib.request
 import zipfile
@@ -114,6 +115,8 @@ def extract_zip(archive: Path, destination: Path) -> None:
 
 
 def registered_ghostscript() -> list[dict[str, str]]:
+    if sys.platform != "win32":
+        raise OSError("Ghostscript registry detection requires Windows")
     import winreg
 
     result = {}
@@ -174,6 +177,8 @@ def registered_ghostscript() -> list[dict[str, str]]:
 
 def run_official(executable: Path, parameters: str = "") -> int:
     """Run the visible official installer/uninstaller, allowing its required UAC."""
+    if sys.platform != "win32":
+        raise OSError("The official Ghostscript installer requires Windows")
     from ctypes import wintypes
 
     class ShellExecuteInfo(ctypes.Structure):
