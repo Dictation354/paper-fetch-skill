@@ -207,11 +207,18 @@ var
   Details: TNewStaticText;
 begin
   if UninstallSilent then exit;
+#if Ver >= 0x06060000
+  { Inno Setup 6.6+ requires dimensions at construction; they are read-only. }
+  Form := CreateCustomForm(ScaleX(480), ScaleY(150), False, False);
+#else
   Form := CreateCustomForm;
+#endif
   try
     Form.Caption := 'Optional tools';
+#if Ver < 0x06060000
     Form.ClientWidth := ScaleX(480);
     Form.ClientHeight := ScaleY(150);
+#endif
     CleanupTools := TNewCheckBox.Create(Form);
     CleanupTools.Parent := Form;
     CleanupTools.SetBounds(ScaleX(20), ScaleY(20), ScaleX(440), ScaleY(20));
