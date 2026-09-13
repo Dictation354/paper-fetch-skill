@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import asdict
+
+from ...models import SemanticLosses
 from typing import Any
 
 from ...metadata.types import ProviderMetadata
@@ -81,7 +84,8 @@ def extract_browser_workflow_markdown(
         _content_fragment_html(asset_container, publisher=publisher), source_url
     )
 
-    table_entries = _normalize_special_blocks(container, publisher)
+    losses = SemanticLosses()
+    table_entries = _normalize_special_blocks(container, publisher, losses)
     abstract_sections = _abstract_section_payloads(container)
     abstract_block_texts = _abstract_block_texts_from_payloads(abstract_sections)
     body_container = _clone_container(container)
@@ -146,6 +150,7 @@ def extract_browser_workflow_markdown(
         )
 
     extraction_payload = {
+        "semantic_losses": asdict(losses),
         "title": title,
         "abstract_text": normalize_text(abstract_sections[0]["text"])
         if abstract_sections

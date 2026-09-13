@@ -25,6 +25,7 @@ from ...extraction.html.shared import (
 )
 from ...markdown.images import render_markdown_image
 from ...utils import normalize_text
+from ...models import SemanticLosses
 from .._article_markdown_math import render_external_mathml_expression
 from .profile import _dedupe_top_level_nodes
 
@@ -139,7 +140,9 @@ def _equation_label(node: Tag) -> str:
     return ""
 
 
-def _display_formula_replacement(node: Tag, soup: BeautifulSoup) -> Tag | None:
+def _display_formula_replacement(
+    node: Tag, soup: BeautifulSoup, losses: SemanticLosses | None = None
+) -> Tag | None:
     latex = _structured_latex_from_math_node(node, display_mode=True)
     replacement = soup.new_tag("div")
     label = _equation_label(node)
@@ -151,13 +154,19 @@ def _display_formula_replacement(node: Tag, soup: BeautifulSoup) -> Tag | None:
         return replacement
     image_markdown = _formula_image_markdown(node)
     if image_markdown:
+        if losses is not None:
+            losses.formula_fallback_count += 1
         _append_text_block(replacement, image_markdown, soup=soup)
         return replacement
     text_fallback = _display_formula_text_fallback(node)
     if text_fallback:
+        if losses is not None:
+            losses.formula_fallback_count += 1
         for line in ("$$", text_fallback, "$$"):
             _append_text_block(replacement, line, soup=soup)
         return replacement
+    if losses is not None:
+        losses.formula_missing_count += 1
     _append_text_block(replacement, "[Formula unavailable]", soup=soup)
     return replacement
 
@@ -192,7 +201,9 @@ def _insert_split_paragraph(
     segment.decompose()
 
 
-def _split_paragraph_display_formula_blocks(parent: Tag, soup: BeautifulSoup) -> bool:
+def _split_paragraph_display_formula_blocks(
+    parent: Tag, soup: BeautifulSoup, losses: SemanticLosses | None = None
+) -> bool:
     formula_nodes: dict[int, Tag] = {}
     for formula_node in _display_formula_nodes(parent):
         direct_child = _direct_child_with_parent(formula_node, parent)
@@ -207,7 +218,7 @@ def _split_paragraph_display_formula_blocks(parent: Tag, soup: BeautifulSoup) ->
         if matched_formula_node is None:
             pending_children.append(child)
             continue
-        replacement = _display_formula_replacement(matched_formula_node, soup)
+        replacement = _display_formula_replacement(matched_formula_node, soup, losses)
         if pending_children:
             _insert_split_paragraph(parent, pending_children, soup)
             pending_children = []
@@ -219,7 +230,9 @@ def _split_paragraph_display_formula_blocks(parent: Tag, soup: BeautifulSoup) ->
     return True
 
 
-def _normalize_display_formula_blocks(container: Tag) -> None:
+def _normalize_display_formula_blocks(
+    container: Tag, losses: SemanticLosses | None = None
+) -> None:
     soup = _soup_root(container)
     if soup is None:
         return
@@ -231,13 +244,13 @@ def _normalize_display_formula_blocks(container: Tag) -> None:
         parent = node.parent
         if not _is_non_table_paragraph_node(parent) or id(parent) in handled_parents:
             continue
-        if _split_paragraph_display_formula_blocks(parent, soup):
+        if _split_paragraph_display_formula_blocks(parent, soup, losses):
             handled_parents.add(id(parent))
 
     for node in nodes:
         if not isinstance(node, Tag) or node.parent is None:
             continue
-        replacement = _display_formula_replacement(node, soup)
+        replacement = _display_formula_replacement(node, soup, losses)
         if replacement is None:
             continue
         node.replace_with(replacement)
@@ -257,16 +270,26 @@ def _inline_math_replacement_target(node: Tag) -> Tag:
     return node
 
 
-def _normalize_inline_math_nodes(container: Tag) -> None:
+def _normalize_inline_math_nodes(
+    container: Tag, losses: SemanticLosses | None = None
+) -> None:
     for math_node in list(container.find_all("math")):
         if not isinstance(math_node, Tag) or math_node.parent is None:
             continue
         if _is_display_formula_math(math_node):
             continue
-        latex = _latex_from_math_node(math_node, display_mode=False)
-        if not latex:
+        latex = _structured_latex_from_math_node(math_node, display_mode=False)
+        target = _inline_math_replacement_target(math_node)
+        if latex:
+            target.replace_with(f"${latex}$")
             continue
-        _inline_math_replacement_target(math_node).replace_with(f"${latex}$")
+        image = _formula_image_markdown(math_node)
+        if losses is not None:
+            if image:
+                losses.formula_fallback_count += 1
+            else:
+                losses.formula_missing_count += 1
+        target.replace_with(image or "[Formula unavailable]")
 
 
 def _has_class_token(node: Tag, token: str) -> bool:
@@ -306,7 +329,9 @@ def _normalize_iop_inline_tex_formula_nodes(container: Tag) -> None:
             node.replace_with(markdown)
 
 
-def _normalize_inline_formula_image_nodes(container: Tag) -> None:
+def _normalize_inline_formula_image_nodes(
+    container: Tag, losses: SemanticLosses | None = None
+) -> None:
     for image in list(container.find_all("img")):
         if not isinstance(image, Tag) or image.parent is None:
             continue
@@ -316,6 +341,8 @@ def _normalize_inline_formula_image_nodes(container: Tag) -> None:
         if latex:
             image.replace_with(_inline_latex_markdown(latex))
             continue
+        if losses is not None:
+            losses.formula_fallback_count += 1
         image.replace_with(_formula_image_markdown(image))
 
 

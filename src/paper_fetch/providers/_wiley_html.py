@@ -341,7 +341,13 @@ def _drop_abstract_sections_from_body_container(container: Any) -> None:
 
 
 def wiley_before_block_normalization(container: Any) -> None:
-    del container
+    # Wiley calls numbered display layouts "inline-equation". Map that
+    # publisher convention before the shared nearest-container classifier.
+    for node in container.select("div.inline-equation"):
+        if node.select_one(".inline-equation__label") is not None:
+            node["class"] = [
+                token for token in node.get("class", []) if token != "inline-equation"
+            ] + ["display-equation"]
 
 
 def wiley_after_block_normalization(container: Any) -> None:

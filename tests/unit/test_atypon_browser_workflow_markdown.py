@@ -574,6 +574,9 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
 
         container = soup.select_one(".article-section__content")
         self.assertIsNotNone(container)
+        from paper_fetch.providers._wiley_html import wiley_before_block_normalization
+
+        wiley_before_block_normalization(container)
         atypon_browser_workflow_normalization._normalize_display_formula_blocks(
             container
         )
@@ -627,6 +630,9 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
 
         container = soup.select_one(".article-section__content")
         self.assertIsNotNone(container)
+        from paper_fetch.providers._wiley_html import wiley_before_block_normalization
+
+        wiley_before_block_normalization(container)
         atypon_browser_workflow_normalization._normalize_display_formula_blocks(
             container
         )

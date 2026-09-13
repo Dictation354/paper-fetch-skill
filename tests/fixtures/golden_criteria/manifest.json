@@ -1741,7 +1741,7 @@
     "10.1007_s11430-021-9892-6__block": {
       "doi": "10.1007/s11430-021-9892-6",
       "publisher": "springer",
-      "title": "Estimation of China\u2019s terrestrial ecosystem carbon sink: Methods, progress and prospects",
+      "title": "Estimation of China’s terrestrial ecosystem carbon sink: Methods, progress and prospects",
       "source_url": "https://link.springer.com/article/10.1007/s11430-021-9892-6",
       "origin_kind": "real_replay",
       "usage_kind": "content",
@@ -2325,7 +2325,7 @@
         "extracted.md": "tests/fixtures/golden_criteria/10.1175_bams-d-24-0223.1/extracted.md"
       },
       "fixture_family": "golden",
-      "title": "What Makes a Successful Community Model for Research and Operations? Lessons Learned from WAVEWATCH III\u00ae",
+      "title": "What Makes a Successful Community Model for Research and Operations? Lessons Learned from WAVEWATCH III®",
       "landing_url": "https://journals.ametsoc.org/view/journals/bams/107/5/BAMS-D-24-0223.1.xml",
       "route_kind": "html",
       "content_type": "text/html",
@@ -2358,7 +2358,7 @@
         "original.html": "tests/fixtures/golden_criteria/10.1175_jtech-d-24-0028.1/original.html"
       },
       "fixture_family": "golden",
-      "title": "Assessing Air\u2013Sea Surface Turbulent Heat Fluxes from Reanalyses Using Concurrent Shipboard Measurements",
+      "title": "Assessing Air–Sea Surface Turbulent Heat Fluxes from Reanalyses Using Concurrent Shipboard Measurements",
       "landing_url": "https://journals.ametsoc.org/view/journals/atot/41/12/JTECH-D-24-0028.1.xml",
       "route_kind": "html",
       "content_type": "text/html"
@@ -3403,6 +3403,24 @@
         "original.html": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/expected.json",
         "extracted.md": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/extracted.md"
+      }
+    },
+    "10.1080_17538947.2022.2137254": {
+      "doi": "10.1080/17538947.2022.2137254",
+      "publisher": "tandf",
+      "source_url": "https://www.tandfonline.com/doi/full/10.1080/17538947.2022.2137254",
+      "origin_kind": "real_replay",
+      "usage_kind": "content",
+      "fixture_family": "golden",
+      "title": "A new approach to LST modeling and normalization under clear-sky conditions based on a local optimization strategy",
+      "landing_url": "https://www.tandfonline.com/doi/full/10.1080/17538947.2022.2137254",
+      "route_kind": "html",
+      "content_type": "text/html",
+      "expected_outcome": "fulltext",
+      "assets": {
+        "original.html": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/original.html",
+        "expected.json": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/expected.json",
+        "review.md": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/review.md"
       }
     }
   }

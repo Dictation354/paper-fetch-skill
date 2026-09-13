@@ -41,6 +41,7 @@ from ...extraction.html.tables import (
 )
 from ...markdown.citations import numeric_citation_payload_from_html_node
 from ...markdown.images import render_markdown_image
+from ...models import SemanticLosses
 from ...utils import normalize_text
 from .._atypon_browser_workflow_profiles import publisher_profile as _publisher_profile
 from .formulas import (
@@ -659,17 +660,19 @@ def _normalize_figure_blocks(container: Tag, publisher: str) -> None:
         node.replace_with(block)
 
 
-def _normalize_special_blocks(container: Tag, publisher: str) -> list[dict[str, str]]:
+def _normalize_special_blocks(
+    container: Tag, publisher: str, losses: SemanticLosses | None = None
+) -> list[dict[str, str]]:
     profile = _publisher_profile(publisher)
     hook = profile.dom_hooks.before_block_normalization
     if hook is not None:
         hook(container)
     _normalize_abstract_blocks(container)
-    _normalize_display_formula_blocks(container)
+    _normalize_display_formula_blocks(container, losses)
     if normalize_text(publisher).lower() == "iop":
         _normalize_iop_inline_tex_formula_nodes(container)
-    _normalize_inline_math_nodes(container)
-    _normalize_inline_formula_image_nodes(container)
+    _normalize_inline_math_nodes(container, losses)
+    _normalize_inline_formula_image_nodes(container, losses)
     _normalize_boxed_text_blocks(container)
     table_entries = _normalize_table_blocks(container)
     _normalize_figure_blocks(container, publisher)

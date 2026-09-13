@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import cache
+import json
 from pathlib import Path
 import re
 from unittest import mock
@@ -520,10 +521,14 @@ def test_tandf_article_assets_keep_body_figures_and_scope_supplement() -> None:
     figures = [asset for asset in body_assets if asset["kind"] == "figure"]
     assert len(figures) == 9
     assert all(asset.get("preview_accepted") == "true" for asset in figures)
-    assert all(not asset.get("full_size_url") for asset in figures)
+    assert all(asset.get("full_size_url") != asset["preview_url"] for asset in figures)
     assert all(
-        asset.get("provenance") == ["official_full_size_not_exposed"]
+        "official_full_size_not_exposed" not in asset.get("provenance", [])
         for asset in figures
+    )
+    assert figures[0]["full_size_url"] == (
+        "https://www.tandfonline.com/cms/asset/2330a6f2-d28c-421f-bbdd-f618a6fd564c/"
+        "tgrs_a_2667034_f0001_c.jpg"
     )
     assert any("_f0006_c.jpg" in asset["preview_url"] for asset in figures)
     assert not [asset for asset in body_assets if asset["kind"] == "supplementary"]
@@ -535,6 +540,51 @@ def test_tandf_article_assets_keep_body_figures_and_scope_supplement() -> None:
     )
     assert supplementary[0]["url"].endswith("tgrs_a_2667034_sm1980.docx")
     assert supplementary[0]["filename_hint"] == "tgrs_a_2667034_sm1980.docx"
+
+
+@pytest.mark.parametrize(
+    ("entry_id", "original", "promoted"),
+    [
+        (
+            "F0002",
+            "/cms/asset/3eb40468-4dd1-4d1d-83de-9b03067fd963/tjde_a_2137254_f0002_oc.jpg",
+            True,
+        ),
+        ("F0003", "/cms/asset/original/figure.jpg", False),
+        ("F0002", "https://other.example/cms/asset/figure.jpg", False),
+        ("F0002", "javascript:alert(1)", False),
+        ("F0002", "https://[broken/cms/asset/figure.jpg", False),
+    ],
+)
+def test_tandf_viewer_original_survives_body_scope_cleanup(
+    entry_id: str, original: str, promoted: bool
+) -> None:
+    preview = (
+        "/cms/asset/d019a1ff-f502-4d07-9371-ab8bc365f975/tjde_a_2137254_f0002_oc.jpg"
+    )
+    payload = {"figures": [{"id": entry_id, "content": f'<img src="{original}"/>'}]}
+    html = f'''<div class="hlFld-Fulltext"><div class="figureView">
+      <div class="short-legend">Figure 2. Conceptual model.</div>
+      <a data-popup-event-type="fig" data-id="F0002"><img src="{preview}"/></a>
+      <button data-popup-event-type="fig" data-id="F0002">Display full size</button>
+      </div></div><script>tandf.tfviewerdata={json.dumps(payload)};</script>'''
+    source = "https://www.tandfonline.com/doi/full/10.1080/17538947.2022.2137254"
+    body, supplementary = extract_browser_workflow_asset_html_scopes(
+        html, source, "tandf"
+    )
+    assert "<script" not in body
+    assets = _tandf_html.scoped_asset_extractor(
+        body, source, asset_profile="body", supplementary_html_text=supplementary
+    )
+    assert len(assets) == 1
+    asset = assets[0]
+    assert asset["preview_url"] == "https://www.tandfonline.com" + preview
+    if promoted:
+        assert asset["full_size_url"] == "https://www.tandfonline.com" + original
+        assert "official_full_size_not_exposed" not in asset.get("provenance", [])
+    else:
+        assert not asset.get("full_size_url")
+        assert asset["provenance"] == ["official_full_size_not_exposed"]
 
 
 def test_tandf_download_related_assets_contract_marker(monkeypatch, tmp_path) -> None:
@@ -676,13 +726,13 @@ def test_tandf_formula_dom_repair_preserves_complex_math_structure() -> None:
     container = soup.select_one(".hlFld-Fulltext")
     assert isinstance(container, Tag)
 
-    _tandf_html.tandf_before_block_normalization(container)
-
     complex_inline = [
         node
         for node in container.select(".NLM_disp-formula.inline-formula")
         if node.find("mtable") is not None
     ]
+    _tandf_html.tandf_before_block_normalization(container)
+
     assert len(complex_inline) == 11
     assert all("disp-formula" in (node.get("class") or ()) for node in complex_inline)
 

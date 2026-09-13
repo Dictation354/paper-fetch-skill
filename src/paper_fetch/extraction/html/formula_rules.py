@@ -49,13 +49,15 @@ GENERIC_DISPLAY_FORMULA_SELECTORS = (
     *(
         f".{token}"
         for token in GENERIC_FORMULA_CONTAINER_TOKENS
-        if token != "inline-eqn"
+        if token not in {"inline-eqn", "inline-equation"}
     ),
     "math[display='block']",
     "div[role='math']",
 )
 GENERIC_DISPLAY_FORMULA_IDENTITY_TOKENS = tuple(
-    token for token in GENERIC_FORMULA_CONTAINER_TOKENS if token != "inline-eqn"
+    token
+    for token in GENERIC_FORMULA_CONTAINER_TOKENS
+    if token not in {"inline-eqn", "inline-equation"}
 )
 MATHML_SCRIPT_TYPES = frozenset(
     {
@@ -166,11 +168,14 @@ def formula_ancestor_identity_text(node: Any, *, max_depth: int = 6) -> str:
 def _has_formula_container_identity(
     node: Any, *, noise_profile: str | None = None, max_depth: int = 6
 ) -> bool:
-    identity = formula_ancestor_identity_text(node, max_depth=max_depth)
-    return any(
-        token in identity
-        for token in formula_container_tokens_for_profile(noise_profile)
-    )
+    current = node
+    for _ in range(max_depth):
+        if not isinstance(current, Tag):
+            break
+        if is_formula_container(current, noise_profile=noise_profile):
+            return True
+        current = current.parent
+    return False
 
 
 def _silverchair_content_id_looks_like_figure(node: Any) -> bool:
@@ -220,33 +225,68 @@ def html_node_is_figure_asset_context(
     return False
 
 
-def is_formula_container(node: Any, *, noise_profile: str | None = None) -> bool:
+def is_formula_reference(node: Any) -> bool:
+    """References may share formula classes, but contain prose rather than math."""
     if not isinstance(node, Tag):
         return False
-    identity = formula_node_identity_text(node)
-    role = normalize_text(
-        str((getattr(node, "attrs", None) or {}).get("role") or "")
-    ).lower()
-    return role == "math" or any(
-        token in identity
-        for token in formula_container_tokens_for_profile(noise_profile)
+    attrs = node.attrs or {}
+    if node.name in {"a", "xref"}:
+        return True
+    if _class_tokens(node) & {"ref-lnk", "xref", "cross-ref", "cross-reference"}:
+        return True
+    return any(
+        normalize_text(str(attrs.get(key) or "")).lower()
+        in {"equation", "disp-formula", "inline-formula", "eq", "eqn"}
+        for key in ("ref-type", "data-ref-type", "data-label")
+    )
+
+
+def _formula_identity_tokens(node: Tag) -> set[str]:
+    attrs = node.attrs or {}
+    return _class_tokens(node) | {
+        normalize_text(str(value or "")).lower()
+        for value in (
+            node.name,
+            *(
+                attrs.get(key)
+                for key in ("role", "data-type", "data-test", "data-container-section")
+            ),
+        )
+    }
+
+
+def is_formula_container(node: Any, *, noise_profile: str | None = None) -> bool:
+    if not isinstance(node, Tag) or is_formula_reference(node):
+        return False
+    tokens = _formula_identity_tokens(node)
+    return "math" in tokens or bool(
+        tokens & set(formula_container_tokens_for_profile(noise_profile))
     )
 
 
 def is_display_formula_node(node: Any, *, noise_profile: str | None = None) -> bool:
-    if not isinstance(node, Tag):
+    if not isinstance(node, Tag) or is_formula_reference(node):
         return False
-    attrs = getattr(node, "attrs", None) or {}
-    if normalize_text(str(attrs.get("display") or "")).lower() == "block":
-        return True
-    identity = formula_ancestor_identity_text(node)
-    return (
-        any(
-            token in identity
-            for token in display_formula_identity_tokens_for_profile(noise_profile)
-        )
-        or normalize_text(str(attrs.get("role") or "")).lower() == "math"
-    )
+    current: Any = node
+    while isinstance(current, Tag):
+        if is_formula_reference(current):
+            return False
+        tokens = _formula_identity_tokens(current)
+        display = normalize_text(str(current.get("display") or "")).lower()
+        if display == "inline" or tokens & {
+            "inline-equation",
+            "inline-eqn",
+            "inline-formula",
+        }:
+            return False
+        if display == "block" or tokens & set(
+            display_formula_identity_tokens_for_profile(noise_profile)
+        ):
+            return True
+        if current.name == "div" and current.get("role") == "math":
+            return True
+        current = current.parent
+    return False
 
 
 def _candidate_urls(tag: Any) -> list[str]:
@@ -307,15 +347,13 @@ def looks_like_formula_image(
         return bool(EXPLICIT_FORMULA_IMAGE_URL_PATTERN.search(candidate_url))
     if FORMULA_IMAGE_URL_PATTERN.search(candidate_url):
         return True
-    identity = formula_ancestor_identity_text(node)
     alt_blob = " ".join(
         normalize_text(str(node.get(attr) or "")).lower()
         for attr in ("alt", "title", "aria-label")
     )
-    return bool(FORMULA_IMAGE_URL_PATTERN.search(alt_blob)) or any(
-        token in identity
-        for token in formula_container_tokens_for_profile(noise_profile)
-    )
+    return bool(
+        FORMULA_IMAGE_URL_PATTERN.search(alt_blob)
+    ) or _has_formula_container_identity(node, noise_profile=noise_profile)
 
 
 def formula_heading_for_image(
@@ -326,14 +364,10 @@ def formula_heading_for_image(
     current: Any = node
     depth = 0
     while isinstance(current, Tag) and depth < 6:
-        identity = formula_node_identity_text(current)
         candidate_id = normalize_text(
             str((getattr(current, "attrs", None) or {}).get("id") or "")
         )
-        if candidate_id and any(
-            token in identity
-            for token in formula_container_tokens_for_profile(noise_profile)
-        ):
+        if candidate_id and is_formula_container(current, noise_profile=noise_profile):
             return candidate_id
         current = (
             current.parent
@@ -393,4 +427,9 @@ def display_formula_nodes(
         except Exception:
             continue
         nodes.extend(match for match in matches if isinstance(match, Tag))
-    return nodes
+    unique = {
+        id(node): node
+        for node in nodes
+        if is_display_formula_node(node, noise_profile=noise_profile)
+    }
+    return list(unique.values())

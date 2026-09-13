@@ -287,6 +287,9 @@ def browser_workflow_article_from_payload(
         markdown_text=markdown_text,
         abstract_sections=abstract_sections,
         section_hints=section_hints,
+        semantic_losses=extraction_payload.get("semantic_losses")
+        if isinstance(extraction_payload, Mapping)
+        else None,
         assets=assets,
         warnings=warnings,
         trace=trace,

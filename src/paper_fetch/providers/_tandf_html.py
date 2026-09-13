@@ -10,7 +10,7 @@ import io
 import re
 import time
 from typing import Any
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urljoin, urlparse
 
 from bs4 import BeautifulSoup, NavigableString, Tag
 
@@ -329,21 +329,80 @@ def _bounded_embedded_table(table: Tag) -> bool:
     return any(row.find(["th", "td"], recursive=False) is not None for row in rows)
 
 
-def _hydrate_tandf_embedded_tables(selected: Tag, root: Tag) -> int:
-    """Hydrate tables from the bounded same-page payload in replayed HTML."""
-
-    payload: Mapping[str, Any] | None = None
+def _tandf_viewer_payload(root: Tag) -> Mapping[str, Any]:
     for script in root.find_all("script"):
         script_text = script.string if script.string is not None else script.get_text()
         if "tandf.tfviewerdata" not in script_text:
             continue
         candidate = extract_assignment_json(script_text, "tandf.tfviewerdata")
         if isinstance(candidate, Mapping):
-            payload = candidate
-            break
-    if payload is None:
-        return 0
+            return candidate
+    return {}
 
+
+def _hydrate_tandf_figure_originals(selected: Tag, root: Tag) -> int:
+    """Associate popup originals with body figures before scripts are removed."""
+
+    entries = _tandf_viewer_payload(root).get("figures")
+    if not isinstance(entries, list):
+        return 0
+    originals: dict[str, set[str]] = {}
+    for entry in entries:
+        if not isinstance(entry, Mapping):
+            continue
+        figure_id = entry.get("id")
+        content = entry.get("content")
+        if (
+            not isinstance(figure_id, str)
+            or not re.fullmatch(r"[A-Za-z0-9_-]+", figure_id)
+            or not isinstance(content, str)
+            or len(content) > _TANDF_MAX_TABLE_CSV_CHARS
+        ):
+            continue
+        fragment = BeautifulSoup(content, choose_parser())
+        images = fragment.select("img[src]")
+        if len(images) != 1:
+            continue
+        try:
+            original = urljoin("https://www.tandfonline.com", str(images[0]["src"]))
+            parsed = urlparse(original)
+        except ValueError:
+            continue
+        if (
+            parsed.scheme != "https"
+            or not host_matches_domain(parsed.hostname, "tandfonline.com")
+            or not parsed.path.startswith("/cms/asset/")
+            or parsed.username is not None
+            or parsed.password is not None
+        ):
+            continue
+        originals.setdefault(figure_id, set()).add(original)
+    hydrated = 0
+    for figure in selected.select(".figureView"):
+        ids = {
+            str(control.get("data-id"))
+            for control in figure.select('[data-popup-event-type="fig"][data-id]')
+        }
+        if len(ids) != 1:
+            continue
+        candidates = originals.get(ids.pop(), set())
+        images = figure.select("img[src]")
+        if len(candidates) != 1 or len(images) != 1:
+            continue
+        image = images[0]
+        original = next(iter(candidates))
+        preview = urljoin("https://www.tandfonline.com", str(image["src"]))
+        if original == preview or image.get("data-full-size"):
+            continue
+        image["data-full-size"] = original
+        hydrated += 1
+    return hydrated
+
+
+def _hydrate_tandf_embedded_tables(selected: Tag, root: Tag) -> int:
+    """Hydrate tables from the bounded same-page payload in replayed HTML."""
+
+    payload = _tandf_viewer_payload(root)
     entries = payload.get("tables")
     if not isinstance(entries, list):
         return 0
@@ -485,7 +544,7 @@ def _append_tandf_contributor_notes(selected: Tag, root: Tag) -> bool:
 
 
 def prepare_html_for_extraction(html_text: str) -> str:
-    """Materialize same-page tables and back matter before shared cleanup."""
+    """Materialize same-page tables, figure URLs and back matter before cleanup."""
 
     if not normalize_text(html_text):
         return html_text
@@ -494,9 +553,15 @@ def prepare_html_for_extraction(html_text: str) -> str:
     if not isinstance(selected, Tag):
         return html_text
     hydrated = _hydrate_tandf_embedded_tables(selected, soup)
+    figures_hydrated = _hydrate_tandf_figure_originals(selected, soup)
     funding_appended = _append_tandf_funding(selected, soup)
     contributors_appended = _append_tandf_contributor_notes(selected, soup)
-    if not hydrated and not funding_appended and not contributors_appended:
+    if (
+        not hydrated
+        and not figures_hydrated
+        and not funding_appended
+        and not contributors_appended
+    ):
         return html_text
     return str(soup)
 
@@ -622,17 +687,48 @@ def _strip_promoted_formula_leading_punctuation(wrapper: Tag) -> None:
         return
 
 
+def _separate_tandf_inline_formula_punctuation(container: Tag) -> None:
+    for wrapper in container.select(".NLM_disp-formula"):
+        if "disp-formula" in (wrapper.get("class") or []):
+            continue
+        math = wrapper.find("math")
+        if not isinstance(math, Tag):
+            continue
+        children = [child for child in math.children if isinstance(child, Tag)]
+        trailing_space: list[Tag] = []
+        while children and children[-1].name == "mspace":
+            trailing_space.append(children.pop())
+        if (
+            children
+            and children[-1].name == "mo"
+            and children[-1].text in {",", ";", ":"}
+        ):
+            punctuation = children[-1].get_text()
+            children[-1].decompose()
+            for space in trailing_space:
+                space.decompose()
+            math.insert_after(punctuation + (" " if trailing_space else ""))
+
+
 def _normalize_tandf_formula_containers(container: Any) -> None:
     """Repair bounded publisher MathML artifacts before shared conversion."""
 
     if not isinstance(container, Tag):
         return
+    for wrapper in container.select(".NLM_disp-formula.disp-formula"):
+        label = wrapper.select_one(".disp_formula_label_div")
+        if isinstance(label, Tag):
+            number = re.fullmatch(r"\((\d+[A-Za-z]?)\)", normalize_text(label.text))
+            if number:
+                wrapper["data-equation-label"] = f"Equation {number.group(1)}."
     promoted_wrappers: list[Tag] = []
     for wrapper in container.select(".NLM_disp-formula"):
         if wrapper.find("mtable") is not None:
             classes = list(wrapper.get("class") or ())
             if "disp-formula" not in classes:
-                wrapper["class"] = [*classes, "disp-formula"]
+                wrapper["class"] = [c for c in classes if c != "inline-formula"] + [
+                    "disp-formula"
+                ]
                 promoted_wrappers.append(wrapper)
             _restore_tandf_complex_tuple_commas(wrapper)
     for wrapper in promoted_wrappers:
@@ -735,12 +831,59 @@ def _normalize_tandf_reference_controls(container: Any) -> None:
             node.decompose()
 
 
+def _drop_tandf_formula_previews(container: Tag) -> None:
+    for reference in container.select('a[data-label="equation"][data-rid]'):
+        target_id = reference.get("data-rid")
+        wrapper = reference.find_parent(class_="ref-lnk")
+        preview = wrapper.find_next_sibling() if isinstance(wrapper, Tag) else None
+        if (
+            isinstance(preview, Tag)
+            and preview.get("id") == target_id
+            and "hidden" in (preview.get("class") or [])
+            and preview.select_one(".NLM_disp-formula, .NLM_disp-formula-image")
+        ):
+            preview.decompose()
+
+
+def _normalize_tandf_subitem_headings(container: Tag) -> None:
+    for table in list(container.select("table.listgroup")):
+        rows = table.find_all("tr")
+        if len(rows) != 1:
+            continue
+        cells = rows[0].find_all("td", recursive=False)
+        if len(cells) != 2 or not re.fullmatch(
+            r"[a-z]\)", normalize_text(cells[0].text)
+        ):
+            continue
+        heading = cells[1].find(["b", "strong"])
+        if heading is None or normalize_text(heading.text) != normalize_text(
+            cells[1].text
+        ):
+            continue
+        paragraph = BeautifulSoup("<p><b></b></p>", choose_parser()).p
+        paragraph.b.string = (
+            f"{normalize_text(cells[0].text)} {normalize_text(heading.text)}"
+        )
+        table.replace_with(paragraph)
+    for paragraph in container.find_all("p"):
+        bolds = paragraph.find_all(["b", "strong"], recursive=False)
+        if len(bolds) == 2 and re.fullmatch(r"[a-z]\)", normalize_text(bolds[0].text)):
+            if normalize_text(paragraph.text) == " ".join(
+                normalize_text(b.text) for b in bolds
+            ):
+                bolds[0].string = normalize_text(paragraph.text)
+                bolds[1].decompose()
+
+
 def tandf_before_block_normalization(container: Any) -> None:
+    _drop_tandf_formula_previews(container)
+    _normalize_tandf_subitem_headings(container)
     _normalize_tandf_reference_controls(container)
     _decompose_matching(container)
     _drop_duplicate_highlights(container)
     _drop_adjacent_duplicate_tandf_sentences(container)
     _normalize_tandf_formula_containers(container)
+    _separate_tandf_inline_formula_punctuation(container)
     _prefer_mathml_over_formula_placeholders(container)
     _normalize_tandf_figure_containers(container)
     _normalize_tandf_table_containers(container)
@@ -781,6 +924,7 @@ def tandf_normalize_markdown(markdown_text: str) -> str:
     """Remove article-control blocks left after structural DOM cleanup."""
 
     text = _CHROME_BLOCK_RE.sub("\n", markdown_text)
+    text = text.replace("\u2063", "")
     text = _EMPTY_SUPPLEMENTARY_HEADING_RE.sub("", text)
     text = text.replace("X2*D_LST_AT2", "X<sup>2</sup>*D_LST_AT2")
     text = text.replace("X3*D_LST_AT3", "X<sup>3</sup>*D_LST_AT3")
@@ -831,6 +975,7 @@ def refine_selected_container(node: Tag, **_kwargs: Any) -> Tag:
         candidate = node.select_one(".hlFld-Fulltext")
         selected = candidate if isinstance(candidate, Tag) else node
     _hydrate_tandf_embedded_tables(selected, root)
+    _hydrate_tandf_figure_originals(selected, root)
     _append_tandf_funding(selected, root)
     _append_tandf_contributor_notes(selected, root)
     # Availability cleanup removes interactive buttons before block normalization,
