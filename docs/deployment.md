@@ -414,6 +414,9 @@ Linux/WSL 先用项目 Python 执行 `scripts/validate_macos_adaptation.py`，�
 `scripts/test-macos-contract.sh`；Windows 对应 `.ps1`。`/mnt/*` 仅可作静态验证，
 Mach-O、Zsh、xattr、Gatekeeper 与原生安装须由相应平台提供证据。
 
+Windows 构建任务在 checkout 前启用 Git `core.longpaths`，以完整检出保留原始采集文件名的 fixture；该设置仅作用于临时 CI runner。
+Integration CI 使用同一固定 Haskell 工具链和现有安装器准备 texmath、Node 公式后端，再运行真实进程契约测试。
+
 <a id="release-checklist"></a>
 ### 发布前检查
 

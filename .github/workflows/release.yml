@@ -113,6 +113,9 @@ jobs:
             target: windows-x86_64-cp313
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Enable long source paths on Windows
+        if: runner.os == 'Windows'
+        run: git config --global core.longpaths true
       - name: Check out verified release source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
